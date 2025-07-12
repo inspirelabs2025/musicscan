@@ -2,3 +2,6 @@ project_id = "ssxbpyqnjfiyubsuonar"
 
 [functions.analyze-vinyl-images]
 verify_jwt = false
+
+[functions.test-discogs]
+verify_jwt = false

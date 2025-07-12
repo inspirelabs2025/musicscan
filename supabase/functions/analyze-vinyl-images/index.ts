@@ -11,6 +11,25 @@ const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// Function to clean JSON from markdown code blocks
+function cleanJsonFromMarkdown(text: string): string {
+  // Remove markdown code blocks (```json ... ``` or ``` ... ```)
+  let cleaned = text.replace(/```json\s*\n/g, '').replace(/```\s*\n/g, '').replace(/\n```/g, '').replace(/```/g, '');
+  
+  // Trim whitespace
+  cleaned = cleaned.trim();
+  
+  // Find the first { and last } to extract just the JSON object
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+  
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  }
+  
+  return cleaned;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -144,8 +163,12 @@ serve(async (req) => {
       
       console.log(`✅ Image ${i + 1} analysis result:`, result);
       
+      // Clean markdown JSON blocks from OpenAI response
+      const cleanedResult = cleanJsonFromMarkdown(result);
+      console.log(`🧹 Cleaned result for image ${i + 1}:`, cleanedResult);
+      
       try {
-        const parsedResult = JSON.parse(result);
+        const parsedResult = JSON.parse(cleanedResult);
         analysisResults.push({
           step: i + 1,
           type: ['catalog', 'matrix', 'additional'][i],
@@ -154,6 +177,8 @@ serve(async (req) => {
         });
       } catch (parseError) {
         console.error(`❌ Failed to parse JSON for image ${i + 1}:`, parseError);
+        console.error('Original result:', result);
+        console.error('Cleaned result:', cleanedResult);
         analysisResults.push({
           step: i + 1,
           type: ['catalog', 'matrix', 'additional'][i],

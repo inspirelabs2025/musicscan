@@ -66,14 +66,34 @@ export function DiscogsTest() {
               </pre>
             </div>
 
+            {results.authenticationTests?.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-semibold">Authentication Tests:</h3>
+                {results.authenticationTests.map((test: any, index: number) => (
+                  <div key={index} className={`p-4 border rounded-lg ${
+                    test.success 
+                      ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800' 
+                      : 'bg-red-50 border-red-200 dark:bg-red-900/10 dark:border-red-800'
+                  }`}>
+                    <h4 className="font-medium flex items-center gap-2">
+                      {test.success ? '✅' : '❌'} {test.method}
+                    </h4>
+                    <p className="text-sm">Status: {test.status}</p>
+                    {test.error && <p className="text-sm text-red-600 dark:text-red-400">{test.error}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {results.searchResults?.length > 0 && (
               <div className="space-y-3">
                 <h3 className="font-semibold">Search Results:</h3>
                 {results.searchResults.map((result: any, index: number) => (
                   <div key={index} className="p-4 bg-secondary/10 border border-secondary/20 rounded-lg">
                     <h4 className="font-medium capitalize">{result.strategy.replace('_', ' ')}</h4>
-                    <p className="text-sm text-muted-foreground">Query: {result.query}</p>
-                    <p className="text-sm">Status: {result.status} | Results: {result.resultsCount}</p>
+                     <p className="text-sm text-muted-foreground">Query: {result.query}</p>
+                     <p className="text-sm">Status: {result.status} | Results: {result.resultsCount}</p>
+                     {result.authMethod && <p className="text-xs text-muted-foreground">Auth: {result.authMethod}</p>}
                     
                     {result.results?.length > 0 && (
                       <div className="mt-2">

@@ -22,19 +22,26 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log(`🔍 Starting Discogs API test with Gilbert Bécaud data`);
+    console.log(`🔍 Starting Discogs API authentication test with Gilbert Bécaud data`);
     
-    // Get Discogs API credentials
+    // Get all possible Discogs API credentials
     const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
     const discogsConsumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET');
+    const discogsToken = Deno.env.get('DISCOGS_TOKEN');
     
-    if (!discogsConsumerKey || !discogsConsumerSecret) {
-      console.error('❌ Missing Discogs API credentials');
+    console.log(`📋 Credential Status:
+    - Consumer Key: ${discogsConsumerKey ? `✅ (${discogsConsumerKey.substring(0, 8)}...)` : '❌ Missing'}
+    - Consumer Secret: ${discogsConsumerSecret ? `✅ (${discogsConsumerSecret.substring(0, 8)}...)` : '❌ Missing'} 
+    - Personal Token: ${discogsToken ? `✅ (${discogsToken.substring(0, 8)}...)` : '❌ Missing'}`);
+
+    if (!discogsConsumerKey && !discogsToken) {
+      console.error('❌ No Discogs API credentials found');
       return new Response(
         JSON.stringify({ 
-          error: 'Missing Discogs API credentials',
-          hasKey: !!discogsConsumerKey,
-          hasSecret: !!discogsConsumerSecret
+          error: 'No Discogs API credentials found. Need either Consumer Key/Secret or Personal Access Token',
+          hasConsumerKey: !!discogsConsumerKey,
+          hasConsumerSecret: !!discogsConsumerSecret,
+          hasPersonalToken: !!discogsToken
         }),
         { 
           status: 500, 
@@ -43,157 +50,168 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`✅ Discogs credentials found - Key: ${discogsConsumerKey.substring(0, 8)}...`);
-
     const results = {
       testData: TEST_DATA,
+      authenticationTests: [],
       searchResults: [],
       errors: [],
       timestamp: new Date().toISOString()
     };
 
-    // Test Strategy 1: Simple artist + title search
-    try {
-      console.log(`🔍 Test 1: Basic search - "${TEST_DATA.artist} ${TEST_DATA.title}"`);
-      const basicQuery = `${TEST_DATA.artist} ${TEST_DATA.title}`;
-      const basicUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(basicQuery)}&type=release&key=${discogsConsumerKey}&secret=${discogsConsumerSecret}&per_page=10`;
+    // Function to test authentication methods
+    async function testAuthentication(method: string, url: string, headers: Record<string, string>) {
+      console.log(`🔐 Testing ${method} authentication`);
+      console.log(`📡 Request URL: ${url}`);
+      console.log(`📋 Headers:`, Object.keys(headers).join(', '));
       
-      console.log(`📡 Request URL: ${basicUrl}`);
-      
-      const basicResponse = await fetch(basicUrl, {
-        headers: {
-          'User-Agent': 'VinylScanner-Test/1.0'
-        }
-      });
-
-      console.log(`📨 Response status: ${basicResponse.status}`);
-      
-      if (basicResponse.ok) {
-        const basicData = await basicResponse.json();
-        console.log(`✅ Basic search succeeded - Found ${basicData.results?.length || 0} results`);
+      try {
+        const response = await fetch(url, { headers });
+        const responseText = await response.text();
         
-        results.searchResults.push({
-          strategy: 'basic_search',
-          query: basicQuery,
-          url: basicUrl,
-          status: basicResponse.status,
-          resultsCount: basicData.results?.length || 0,
-          results: basicData.results?.slice(0, 3) || [], // First 3 results
-          pagination: basicData.pagination
-        });
-      } else {
-        const errorText = await basicResponse.text();
-        console.error(`❌ Basic search failed: ${basicResponse.status} - ${errorText}`);
-        results.errors.push({
-          strategy: 'basic_search',
-          status: basicResponse.status,
-          error: errorText
-        });
+        console.log(`📨 ${method} Response: ${response.status}`);
+        
+        const authTest = {
+          method,
+          url,
+          status: response.status,
+          success: response.ok,
+          error: response.ok ? null : responseText,
+          timestamp: new Date().toISOString()
+        };
+        
+        results.authenticationTests.push(authTest);
+        
+        if (response.ok) {
+          console.log(`✅ ${method} authentication successful!`);
+          return { success: true, data: JSON.parse(responseText) };
+        } else {
+          console.error(`❌ ${method} authentication failed: ${response.status} - ${responseText}`);
+          return { success: false, error: responseText };
+        }
+      } catch (error) {
+        console.error(`❌ ${method} authentication exception:`, error);
+        const authTest = {
+          method,
+          url,
+          status: 0,
+          success: false,
+          error: error.message,
+          timestamp: new Date().toISOString()
+        };
+        results.authenticationTests.push(authTest);
+        return { success: false, error: error.message };
       }
-    } catch (error) {
-      console.error(`❌ Basic search exception:`, error);
-      results.errors.push({
-        strategy: 'basic_search',
-        error: error.message
-      });
     }
 
+    // Test 1: Personal Access Token authentication (if available)
+    let workingAuth = null;
+    
+    if (discogsToken) {
+      const tokenUrl = `https://api.discogs.com/database/search?q=test&type=release&per_page=1`;
+      const tokenHeaders = {
+        'User-Agent': 'VinylScanner-Test/1.0',
+        'Authorization': `Discogs token=${discogsToken}`
+      };
+      
+      const tokenResult = await testAuthentication('Personal Access Token', tokenUrl, tokenHeaders);
+      if (tokenResult.success) {
+        workingAuth = { type: 'token', token: discogsToken };
+      }
+    }
+
+    // Test 2: Consumer Key/Secret authentication (if available and token didn't work)
+    if (!workingAuth && discogsConsumerKey && discogsConsumerSecret) {
+      const keySecretUrl = `https://api.discogs.com/database/search?q=test&type=release&per_page=1&key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`;
+      const keySecretHeaders = {
+        'User-Agent': 'VinylScanner-Test/1.0'
+      };
+      
+      const keySecretResult = await testAuthentication('Consumer Key/Secret', keySecretUrl, keySecretHeaders);
+      if (keySecretResult.success) {
+        workingAuth = { type: 'key_secret', key: discogsConsumerKey, secret: discogsConsumerSecret };
+      }
+    }
+
+    if (!workingAuth) {
+      console.error('❌ No working authentication method found');
+      return new Response(
+        JSON.stringify(results, null, 2),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    console.log(`🎉 Found working authentication: ${workingAuth.type}`);
+
+    // Now perform actual searches with working authentication
+    async function makeAuthenticatedRequest(query: string, strategy: string) {
+      let url: string;
+      let headers: Record<string, string> = { 'User-Agent': 'VinylScanner-Test/1.0' };
+      
+      if (workingAuth.type === 'token') {
+        url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&per_page=10`;
+        headers['Authorization'] = `Discogs token=${workingAuth.token}`;
+      } else {
+        url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&per_page=10&key=${workingAuth.key}&secret=${workingAuth.secret}`;
+      }
+
+      console.log(`🔍 ${strategy}: "${query}"`);
+      console.log(`📡 Request URL: ${url}`);
+      
+      try {
+        const response = await fetch(url, { headers });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`✅ ${strategy} succeeded - Found ${data.results?.length || 0} results`);
+          
+          results.searchResults.push({
+            strategy,
+            query,
+            url: url.replace(/key=[^&]*/, 'key=***').replace(/secret=[^&]*/, 'secret=***').replace(/token=[^&]*/, 'token=***'),
+            status: response.status,
+            resultsCount: data.results?.length || 0,
+            results: data.results?.slice(0, 3) || [],
+            pagination: data.pagination,
+            authMethod: workingAuth.type
+          });
+        } else {
+          const errorText = await response.text();
+          console.error(`❌ ${strategy} failed: ${response.status} - ${errorText}`);
+          results.errors.push({
+            strategy,
+            status: response.status,
+            error: errorText,
+            authMethod: workingAuth.type
+          });
+        }
+      } catch (error) {
+        console.error(`❌ ${strategy} exception:`, error);
+        results.errors.push({
+          strategy,
+          error: error.message,
+          authMethod: workingAuth.type
+        });
+      }
+    }
+
+    // Test Strategy 1: Simple artist + title search
+    await makeAuthenticatedRequest(`${TEST_DATA.artist} ${TEST_DATA.title}`, 'basic_search');
+    
     // Add delay between requests
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Test Strategy 2: Catalog number search
-    try {
-      console.log(`🔍 Test 2: Catalog search - "${TEST_DATA.catalog}"`);
-      const catalogUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(TEST_DATA.catalog)}&type=release&key=${discogsConsumerKey}&secret=${discogsConsumerSecret}&per_page=10`;
-      
-      console.log(`📡 Request URL: ${catalogUrl}`);
-      
-      const catalogResponse = await fetch(catalogUrl, {
-        headers: {
-          'User-Agent': 'VinylScanner-Test/1.0'
-        }
-      });
-
-      console.log(`📨 Response status: ${catalogResponse.status}`);
-      
-      if (catalogResponse.ok) {
-        const catalogData = await catalogResponse.json();
-        console.log(`✅ Catalog search succeeded - Found ${catalogData.results?.length || 0} results`);
-        
-        results.searchResults.push({
-          strategy: 'catalog_search',
-          query: TEST_DATA.catalog,
-          url: catalogUrl,
-          status: catalogResponse.status,
-          resultsCount: catalogData.results?.length || 0,
-          results: catalogData.results?.slice(0, 3) || [],
-          pagination: catalogData.pagination
-        });
-      } else {
-        const errorText = await catalogResponse.text();
-        console.error(`❌ Catalog search failed: ${catalogResponse.status} - ${errorText}`);
-        results.errors.push({
-          strategy: 'catalog_search',
-          status: catalogResponse.status,
-          error: errorText
-        });
-      }
-    } catch (error) {
-      console.error(`❌ Catalog search exception:`, error);
-      results.errors.push({
-        strategy: 'catalog_search',
-        error: error.message
-      });
-    }
-
+    await makeAuthenticatedRequest(TEST_DATA.catalog, 'catalog_search');
+    
     // Add delay between requests
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Test Strategy 3: Combined search with label
-    try {
-      console.log(`🔍 Test 3: Combined search - "${TEST_DATA.artist} ${TEST_DATA.title} ${TEST_DATA.label}"`);
-      const combinedQuery = `${TEST_DATA.artist} ${TEST_DATA.title} ${TEST_DATA.label}`;
-      const combinedUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(combinedQuery)}&type=release&key=${discogsConsumerKey}&secret=${discogsConsumerSecret}&per_page=10`;
-      
-      console.log(`📡 Request URL: ${combinedUrl}`);
-      
-      const combinedResponse = await fetch(combinedUrl, {
-        headers: {
-          'User-Agent': 'VinylScanner-Test/1.0'
-        }
-      });
-
-      console.log(`📨 Response status: ${combinedResponse.status}`);
-      
-      if (combinedResponse.ok) {
-        const combinedData = await combinedResponse.json();
-        console.log(`✅ Combined search succeeded - Found ${combinedData.results?.length || 0} results`);
-        
-        results.searchResults.push({
-          strategy: 'combined_search',
-          query: combinedQuery,
-          url: combinedUrl,
-          status: combinedResponse.status,
-          resultsCount: combinedData.results?.length || 0,
-          results: combinedData.results?.slice(0, 3) || [],
-          pagination: combinedData.pagination
-        });
-      } else {
-        const errorText = await combinedResponse.text();
-        console.error(`❌ Combined search failed: ${combinedResponse.status} - ${errorText}`);
-        results.errors.push({
-          strategy: 'combined_search',
-          status: combinedResponse.status,
-          error: errorText
-        });
-      }
-    } catch (error) {
-      console.error(`❌ Combined search exception:`, error);
-      results.errors.push({
-        strategy: 'combined_search',
-        error: error.message
-      });
-    }
+    const combinedQuery = `${TEST_DATA.artist} ${TEST_DATA.title} ${TEST_DATA.label}`;
+    await makeAuthenticatedRequest(combinedQuery, 'combined_search');
 
     console.log(`🏁 Test completed - ${results.searchResults.length} successful searches, ${results.errors.length} errors`);
     

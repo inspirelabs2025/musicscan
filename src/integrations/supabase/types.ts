@@ -403,6 +403,84 @@ export type Database = {
         }
         Relationships: []
       }
+      vinyl2_scan: {
+        Row: {
+          additional_image: string | null
+          artist: string | null
+          calculated_advice_price: number | null
+          catalog_image: string | null
+          catalog_number: string | null
+          condition_grade: string | null
+          country: string | null
+          created_at: string
+          currency: string | null
+          discogs_id: number | null
+          discogs_url: string | null
+          format: string | null
+          genre: string | null
+          highest_price: number | null
+          id: string
+          label: string | null
+          lowest_price: number | null
+          matrix_image: string | null
+          matrix_number: string | null
+          median_price: number | null
+          title: string | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          additional_image?: string | null
+          artist?: string | null
+          calculated_advice_price?: number | null
+          catalog_image?: string | null
+          catalog_number?: string | null
+          condition_grade?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          discogs_id?: number | null
+          discogs_url?: string | null
+          format?: string | null
+          genre?: string | null
+          highest_price?: number | null
+          id?: string
+          label?: string | null
+          lowest_price?: number | null
+          matrix_image?: string | null
+          matrix_number?: string | null
+          median_price?: number | null
+          title?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          additional_image?: string | null
+          artist?: string | null
+          calculated_advice_price?: number | null
+          catalog_image?: string | null
+          catalog_number?: string | null
+          condition_grade?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          discogs_id?: number | null
+          discogs_url?: string | null
+          format?: string | null
+          genre?: string | null
+          highest_price?: number | null
+          id?: string
+          label?: string | null
+          lowest_price?: number | null
+          matrix_image?: string | null
+          matrix_number?: string | null
+          median_price?: number | null
+          title?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

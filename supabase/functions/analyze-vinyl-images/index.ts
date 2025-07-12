@@ -32,6 +32,68 @@ function cleanJsonFromMarkdown(text: string): string {
   return cleaned;
 }
 
+// Helper function to normalize text for comparison (removes accents, converts to lowercase)
+const normalizeText = (text: string): string => {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+};
+
+// Helper function to calculate Levenshtein distance
+const levenshteinDistance = (str1: string, str2: string): number => {
+  const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+  
+  for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+  for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+  
+  for (let j = 1; j <= str2.length; j++) {
+    for (let i = 1; i <= str1.length; i++) {
+      const substitutionCost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      matrix[j][i] = Math.min(
+        matrix[j][i - 1] + 1,
+        matrix[j - 1][i] + 1,
+        matrix[j - 1][i - 1] + substitutionCost
+      );
+    }
+  }
+  
+  return matrix[str2.length][str1.length];
+};
+
+// Helper function to calculate similarity score
+const calculateSimilarity = (str1: string, str2: string): number => {
+  const distance = levenshteinDistance(normalizeText(str1), normalizeText(str2));
+  const maxLength = Math.max(str1.length, str2.length);
+  return maxLength === 0 ? 1 : (maxLength - distance) / maxLength;
+};
+
+// Helper function to generate catalog number variants
+const generateCatalogVariants = (catalogNumber: string): string[] => {
+  if (!catalogNumber) return [];
+  
+  const variants = new Set<string>();
+  const cleaned = catalogNumber.trim();
+  
+  // Add original
+  variants.add(cleaned);
+  
+  // Add without spaces
+  variants.add(cleaned.replace(/\s+/g, ''));
+  
+  // Add with different separators
+  variants.add(cleaned.replace(/[.\-_]/g, ' '));
+  variants.add(cleaned.replace(/\s+/g, '.'));
+  variants.add(cleaned.replace(/\s+/g, '-'));
+  variants.add(cleaned.replace(/\s+/g, '_'));
+  
+  // Add with spaces around separators
+  variants.add(cleaned.replace(/([.\-_])/g, ' $1 ').replace(/\s+/g, ' '));
+  
+  return Array.from(variants);
+};
+
 // Function to search Discogs for releases with improved search strategy
 async function searchDiscogsRelease(artist: string, title: string, catalogNumber: string | null) {
   if (!discogsConsumerKey || !discogsConsumerSecret) {
@@ -42,60 +104,101 @@ async function searchDiscogsRelease(artist: string, title: string, catalogNumber
   try {
     console.log('🔍 Searching Discogs for:', { artist, title, catalogNumber });
     
-    // Try multiple search strategies in order of specificity
+    // Normalize input data
+    const normalizedArtist = artist ? normalizeText(artist) : '';
+    const normalizedTitle = title ? normalizeText(title) : '';
+    
+    // Generate catalog number variants
+    const catalogVariants = catalogNumber ? generateCatalogVariants(catalogNumber) : [];
+    console.log('📋 Catalog variants to try:', catalogVariants);
+    
+    // Try multiple search strategies with catalog variants
     const searchStrategies = [];
     
-    // Strategy 1: Catalog number only (most specific)
-    if (catalogNumber) {
+    // Strategy 1: Try all catalog number variants
+    for (const catalogVariant of catalogVariants) {
       searchStrategies.push({
-        query: catalogNumber,
-        params: { catno: catalogNumber },
-        name: 'catalog-only'
+        query: catalogVariant,
+        params: { catno: catalogVariant },
+        name: `catalog-variant-${catalogVariant}`,
+        priority: 1
       });
     }
     
-    // Strategy 2: Artist + Title + Catalog number
-    if (catalogNumber && artist && title) {
-      searchStrategies.push({
-        query: `${artist} ${title}`,
-        params: { catno: catalogNumber, artist, release_title: title },
-        name: 'full-match'
-      });
+    // Strategy 2: Normalized artist + title with catalog variants
+    if (artist && title) {
+      for (const catalogVariant of catalogVariants) {
+        // Try both normalized and original versions
+        searchStrategies.push({
+          query: `${artist} ${title}`,
+          params: { catno: catalogVariant, artist, release_title: title },
+          name: `full-match-original-${catalogVariant}`,
+          priority: 2
+        });
+        
+        searchStrategies.push({
+          query: `${normalizedArtist} ${normalizedTitle}`,
+          params: { catno: catalogVariant, artist: normalizedArtist, release_title: normalizedTitle },
+          name: `full-match-normalized-${catalogVariant}`,
+          priority: 2
+        });
+      }
     }
     
-    // Strategy 3: Artist + Title only
+    // Strategy 3: Artist + Title only (normalized and original)
     if (artist && title) {
       searchStrategies.push({
         query: `${artist} ${title}`,
         params: { artist, release_title: title },
-        name: 'artist-title'
+        name: 'artist-title-original',
+        priority: 3
+      });
+      
+      searchStrategies.push({
+        query: `${normalizedArtist} ${normalizedTitle}`,
+        params: { artist: normalizedArtist, release_title: normalizedTitle },
+        name: 'artist-title-normalized',
+        priority: 3
       });
     }
     
-    // Strategy 4: General search (fallback)
+    // Strategy 4: General search variations
     if (artist || title) {
-      const query = `${artist || ''} ${title || ''}`.trim();
-      searchStrategies.push({
-        query,
-        params: {},
-        name: 'general'
-      });
+      const queries = [
+        `${artist || ''} ${title || ''}`.trim(),
+        `${normalizedArtist || ''} ${normalizedTitle || ''}`.trim()
+      ].filter(q => q.length > 0);
+      
+      for (const query of queries) {
+        searchStrategies.push({
+          query,
+          params: {},
+          name: `general-${queries.indexOf(query)}`,
+          priority: 4
+        });
+      }
     }
+    
+    // Sort strategies by priority
+    searchStrategies.sort((a, b) => a.priority - b.priority);
+    
+    console.log(`🎯 Will try ${searchStrategies.length} search strategies`);
     
     // Try each strategy until we find results
     for (const strategy of searchStrategies) {
-      console.log(`🎯 Trying search strategy: ${strategy.name}`);
+      console.log(`🎯 Trying search strategy: ${strategy.name} (priority ${strategy.priority})`);
       
       const params = new URLSearchParams({
         q: strategy.query,
         type: 'release',
         key: discogsConsumerKey,
         secret: discogsConsumerSecret,
-        per_page: '10',
+        per_page: '25',
         ...strategy.params
       });
       
       const searchUrl = `https://api.discogs.com/database/search?${params.toString()}`;
+      console.log(`🔗 Search URL: ${searchUrl}`);
       
       const response = await fetch(searchUrl, {
         headers: {
@@ -109,29 +212,64 @@ async function searchDiscogsRelease(artist: string, title: string, catalogNumber
       }
       
       const data = await response.json();
+      console.log(`📊 Strategy ${strategy.name} returned ${data.results?.length || 0} results`);
       
       if (data.results && data.results.length > 0) {
-        // Find the best match based on catalog number if available
-        let bestMatch = data.results[0];
+        // Enhanced matching with similarity scoring
+        let bestMatch = null;
+        let bestScore = 0;
         
-        if (catalogNumber) {
-          const catalogMatch = data.results.find(result => 
-            result.catno && result.catno.toLowerCase().includes(catalogNumber.toLowerCase())
-          );
-          if (catalogMatch) {
-            bestMatch = catalogMatch;
+        for (const result of data.results) {
+          let score = 0;
+          
+          // Score based on catalog number matching
+          if (catalogNumber && result.catno) {
+            const catalogSimilarity = calculateSimilarity(catalogNumber, result.catno);
+            score += catalogSimilarity * 40; // High weight for catalog match
+            console.log(`📋 Catalog similarity for "${result.catno}": ${catalogSimilarity.toFixed(2)}`);
+          }
+          
+          // Score based on artist matching
+          if (artist && result.artist) {
+            const artistSimilarity = calculateSimilarity(artist, result.title.split(' - ')[0] || result.artist);
+            score += artistSimilarity * 30; // High weight for artist match
+            console.log(`🎤 Artist similarity for "${result.title}": ${artistSimilarity.toFixed(2)}`);
+          }
+          
+          // Score based on title matching
+          if (title && result.title) {
+            const titlePart = result.title.includes(' - ') ? result.title.split(' - ')[1] : result.title;
+            const titleSimilarity = calculateSimilarity(title, titlePart);
+            score += titleSimilarity * 30; // High weight for title match
+            console.log(`🎵 Title similarity for "${titlePart}": ${titleSimilarity.toFixed(2)}`);
+          }
+          
+          console.log(`📊 Result "${result.title}" (ID: ${result.id}) scored: ${score.toFixed(2)}`);
+          
+          if (score > bestScore && score > 50) { // Minimum threshold
+            bestScore = score;
+            bestMatch = result;
           }
         }
         
-        console.log(`✅ Found Discogs release using ${strategy.name}:`, bestMatch.id);
-        return {
-          discogs_id: bestMatch.id,
-          discogs_url: `https://www.discogs.com/release/${bestMatch.id}`,
-          strategy_used: strategy.name
-        };
+        // Fallback to first result if no good match found
+        if (!bestMatch && data.results.length > 0) {
+          bestMatch = data.results[0];
+          console.log('🔄 Using fallback to first result');
+        }
+        
+        if (bestMatch) {
+          console.log(`✅ Found Discogs release using ${strategy.name} with score ${bestScore.toFixed(2)}:`, bestMatch.id);
+          return {
+            discogs_id: bestMatch.id,
+            discogs_url: `https://www.discogs.com/release/${bestMatch.id}`,
+            strategy_used: strategy.name,
+            match_score: bestScore
+          };
+        }
       }
       
-      console.log(`📭 No results for strategy: ${strategy.name}`);
+      console.log(`📭 No suitable results for strategy: ${strategy.name}`);
     }
     
     console.log('📭 No Discogs results found with any strategy');

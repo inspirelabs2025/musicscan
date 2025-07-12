@@ -205,15 +205,19 @@ async function searchDiscogsRelease(artist: string, title: string, catalogNumber
         'User-Agent': 'VinylScanner/1.0'
       };
       
-      // Use token authentication if available, otherwise fall back to consumer key/secret
-      if (discogsToken) {
-        headers['Authorization'] = `Discogs token=${discogsToken}`;
-      }
+      // Only use Consumer Key/Secret authentication (no Authorization header)
+      // This prevents conflicts between authentication methods
       
       const response = await fetch(searchUrl, { headers });
       
       if (!response.ok) {
-        console.error(`❌ Discogs search failed for ${strategy.name}:`, response.statusText);
+        const errorText = await response.text();
+        console.error(`❌ Discogs search failed for ${strategy.name}:`, {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
+          url: searchUrl
+        });
         continue;
       }
       
@@ -333,23 +337,21 @@ function flexibleConditionsMatch(requestedCondition: string, discogsCondition: s
 // Enhanced function to get comprehensive pricing data from Discogs
 async function getDiscogsPriceAnalysisById(
   releaseId: number, 
-  condition: string = 'Very Good',
-  discogsToken?: string
+  condition: string = 'Very Good'
 ) {
-  if (!releaseId || !discogsToken) {
-    console.log('❌ Missing releaseId or discogsToken for price analysis');
+  if (!releaseId || !discogsConsumerKey || !discogsConsumerSecret) {
+    console.log('❌ Missing releaseId or Discogs API keys for price analysis');
     return null;
   }
 
   try {
     console.log(`🔍 Starting price analysis for release ${releaseId} with condition: "${condition}"`);
     
-    // Get the listings for this release
-    const listingsUrl = `https://api.discogs.com/marketplace/listings/release/${releaseId}?sort=price&sort_order=asc&per_page=100`;
+    // Get the listings for this release using Consumer Key/Secret
+    const listingsUrl = `https://api.discogs.com/marketplace/listings/release/${releaseId}?sort=price&sort_order=asc&per_page=100&key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`;
     
     const listingsRes = await fetch(listingsUrl, {
       headers: {
-        "Authorization": `Discogs token=${discogsToken}`,
         "User-Agent": "VinylVoyagerApp/1.0"
       }
     });
@@ -653,8 +655,7 @@ serve(async (req) => {
       if (discogsData?.discogs_id) {
         pricingData = await getDiscogsPriceAnalysisById(
           discogsData.discogs_id, 
-          'Very Good',
-          discogsToken
+          'Very Good'
         );
         
         // Update database record with Discogs data

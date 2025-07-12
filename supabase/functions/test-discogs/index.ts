@@ -121,9 +121,10 @@ Deno.serve(async (req) => {
 
     // Test 2: Consumer Key/Secret authentication (if available and token didn't work)
     if (!workingAuth && discogsConsumerKey && discogsConsumerSecret) {
-      const keySecretUrl = `https://api.discogs.com/database/search?q=test&type=release&per_page=1&key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`;
+      const keySecretUrl = `https://api.discogs.com/database/search?q=test&type=release&per_page=1`;
       const keySecretHeaders = {
-        'User-Agent': 'VinylScanner-Test/1.0'
+        'User-Agent': 'VinylScanner-Test/1.0',
+        'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`
       };
       
       const keySecretResult = await testAuthentication('Consumer Key/Secret', keySecretUrl, keySecretHeaders);
@@ -154,7 +155,8 @@ Deno.serve(async (req) => {
         url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&per_page=10`;
         headers['Authorization'] = `Discogs token=${workingAuth.token}`;
       } else {
-        url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&per_page=10&key=${workingAuth.key}&secret=${workingAuth.secret}`;
+        url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&per_page=10`;
+        headers['Authorization'] = `Discogs key=${workingAuth.key}, secret=${workingAuth.secret}`;
       }
 
       console.log(`🔍 ${strategy}: "${query}"`);

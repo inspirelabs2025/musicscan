@@ -12,6 +12,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
 const discogsConsumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET');
+const discogsToken = Deno.env.get('DISCOGS_TOKEN');
 
 // Function to clean JSON from markdown code blocks
 function cleanJsonFromMarkdown(text: string): string {
@@ -200,11 +201,16 @@ async function searchDiscogsRelease(artist: string, title: string, catalogNumber
       const searchUrl = `https://api.discogs.com/database/search?${params.toString()}`;
       console.log(`🔗 Search URL: ${searchUrl}`);
       
-      const response = await fetch(searchUrl, {
-        headers: {
-          'User-Agent': 'VinylScanner/1.0'
-        }
-      });
+      const headers: Record<string, string> = {
+        'User-Agent': 'VinylScanner/1.0'
+      };
+      
+      // Use token authentication if available, otherwise fall back to consumer key/secret
+      if (discogsToken) {
+        headers['Authorization'] = `Discogs token=${discogsToken}`;
+      }
+      
+      const response = await fetch(searchUrl, { headers });
       
       if (!response.ok) {
         console.error(`❌ Discogs search failed for ${strategy.name}:`, response.statusText);
@@ -282,67 +288,116 @@ async function searchDiscogsRelease(artist: string, title: string, catalogNumber
 
 // Function to get comprehensive pricing data from Discogs
 async function getDiscogsPricing(discogsId: number) {
-  if (!discogsConsumerKey || !discogsConsumerSecret) {
-    return { lowest_price: null, median_price: null, highest_price: null };
-  }
-
   try {
     console.log(`💰 Getting pricing data for Discogs ID: ${discogsId}`);
     
-    // Try multiple pricing endpoints
-    const pricingEndpoints = [
-      {
-        url: `https://api.discogs.com/marketplace/stats/${discogsId}?key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`,
-        name: 'marketplace-stats'
-      },
-      {
-        url: `https://api.discogs.com/releases/${discogsId}?key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`,
-        name: 'release-info'
-      }
-    ];
-    
-    for (const endpoint of pricingEndpoints) {
-      console.log(`💰 Trying ${endpoint.name} endpoint...`);
+    // Strategy 1: Try marketplace listings if token is available
+    if (discogsToken) {
+      console.log('🎯 Using authenticated marketplace listings endpoint...');
       
-      const response = await fetch(endpoint.url, {
+      const listingsUrl = `https://api.discogs.com/marketplace/listings/release/${discogsId}?sort=price&sort_order=asc&per_page=100`;
+      
+      const listingsResponse = await fetch(listingsUrl, {
+        headers: {
+          'Authorization': `Discogs token=${discogsToken}`,
+          'User-Agent': 'VinylScanner/1.0'
+        }
+      });
+      
+      if (listingsResponse.ok) {
+        const listingsData = await listingsResponse.json();
+        console.log(`📊 Found ${listingsData.listings?.length || 0} marketplace listings`);
+        
+        if (listingsData.listings && listingsData.listings.length > 0) {
+          const prices = listingsData.listings
+            .map(listing => listing.price?.value)
+            .filter(price => price && price > 0)
+            .sort((a, b) => a - b);
+          
+          if (prices.length > 0) {
+            const lowest = prices[0];
+            const highest = prices[prices.length - 1];
+            const median = prices[Math.floor(prices.length / 2)];
+            
+            console.log('✅ Retrieved marketplace pricing:', { lowest, median, highest, count: prices.length });
+            return { lowest_price: lowest, median_price: median, highest_price: highest };
+          }
+        }
+      } else {
+        console.warn(`⚠️ Marketplace listings failed: ${listingsResponse.status} ${listingsResponse.statusText}`);
+      }
+    }
+    
+    // Strategy 2: Try authenticated release info endpoint 
+    if (discogsToken) {
+      console.log('🎯 Using authenticated release info endpoint...');
+      
+      const releaseUrl = `https://api.discogs.com/releases/${discogsId}`;
+      
+      const releaseResponse = await fetch(releaseUrl, {
+        headers: {
+          'Authorization': `Discogs token=${discogsToken}`,
+          'User-Agent': 'VinylScanner/1.0'
+        }
+      });
+      
+      if (releaseResponse.ok) {
+        const releaseData = await releaseResponse.json();
+        console.log('📊 Release info response received');
+        
+        if (releaseData.estimated_weight || releaseData.community) {
+          // Generate estimates based on community data
+          const haveCount = releaseData.community?.have || 0;
+          const wantCount = releaseData.community?.want || 0;
+          const rating = releaseData.community?.rating?.average || 3.0;
+          
+          // Calculate demand factor
+          const demandFactor = wantCount > 0 ? Math.min(wantCount / Math.max(haveCount, 1), 10) : 1;
+          const ratingFactor = rating / 5.0;
+          
+          // Base price estimation
+          const basePrice = Math.max(5, rating * 5 * demandFactor);
+          
+          console.log('✅ Retrieved community-based pricing estimate:', { 
+            basePrice, 
+            have: haveCount, 
+            want: wantCount, 
+            rating,
+            demandFactor 
+          });
+          
+          return {
+            lowest_price: Math.round(basePrice * 0.6 * 100) / 100,
+            median_price: Math.round(basePrice * 100) / 100,
+            highest_price: Math.round(basePrice * 2.5 * 100) / 100
+          };
+        }
+      }
+    }
+    
+    // Strategy 3: Fallback to consumer key/secret if available
+    if (discogsConsumerKey && discogsConsumerSecret) {
+      console.log('🎯 Using consumer key/secret fallback...');
+      
+      const fallbackUrl = `https://api.discogs.com/releases/${discogsId}?key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`;
+      
+      const fallbackResponse = await fetch(fallbackUrl, {
         headers: {
           'User-Agent': 'VinylScanner/1.0'
         }
       });
       
-      if (!response.ok) {
-        console.error(`❌ ${endpoint.name} API failed:`, response.statusText);
-        continue;
-      }
-      
-      const data = await response.json();
-      console.log(`📊 ${endpoint.name} response:`, JSON.stringify(data, null, 2));
-      
-      if (endpoint.name === 'marketplace-stats') {
-        // Handle marketplace stats response
-        if (data && (data.lowest_price || data.highest_price)) {
-          const lowest = data.lowest_price?.value || null;
-          const highest = data.highest_price?.value || null;
-          const median = lowest && highest ? (lowest + highest) / 2 : (lowest || highest);
+      if (fallbackResponse.ok) {
+        const data = await fallbackResponse.json();
+        
+        if (data.community && data.community.have > 10) {
+          const estimatedBase = Math.max(5, data.community.rating * 8);
           
-          console.log('✅ Retrieved marketplace stats:', { lowest, median, highest });
+          console.log('✅ Retrieved fallback pricing estimate:', estimatedBase);
           return {
-            lowest_price: lowest,
-            median_price: median,
-            highest_price: highest
-          };
-        }
-      } else if (endpoint.name === 'release-info') {
-        // Handle release info response - look for estimated_weight, community rating, etc.
-        if (data && data.community && data.community.have > 10) {
-          // Estimate pricing based on community data and rating
-          const estimatedBase = Math.max(5, data.community.rating * 10);
-          
-          console.log('✅ Retrieved community-based pricing estimate:', estimatedBase);
-          return {
-            lowest_price: estimatedBase * 0.7,
-            median_price: estimatedBase,
-            highest_price: estimatedBase * 2.5
+            lowest_price: Math.round(estimatedBase * 0.7 * 100) / 100,
+            median_price: Math.round(estimatedBase * 100) / 100,
+            highest_price: Math.round(estimatedBase * 2.0 * 100) / 100
           };
         }
       }

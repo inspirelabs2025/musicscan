@@ -602,6 +602,15 @@ serve(async (req) => {
       console.log('🎵 Starting Discogs search and pricing lookup...');
       console.log(`🔍 Search params: Artist="${combinedData.artist}", Title="${combinedData.title}", Catalog="${combinedData.catalog_number}"`);
       
+      // Test API credentials BEFORE calling search function
+      console.log('🔑 API Status Check:', {
+        openAI: !!openAIApiKey,
+        discogsKey: !!discogsConsumerKey, 
+        discogsSecret: !!discogsConsumerSecret,
+        discogsKeyLength: discogsConsumerKey?.length || 0,
+        discogsSecretLength: discogsConsumerSecret?.length || 0
+      });
+      
       discogsData = await searchDiscogsRelease(
         combinedData.artist, 
         combinedData.title, 

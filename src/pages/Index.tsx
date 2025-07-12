@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Camera, Disc3, ScanLine, TrendingUp, Upload } from "lucide-react";
+import { Camera, Disc3, ScanLine, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { FileUpload } from "@/components/FileUpload";
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [uploadedFiles, setUploadedFiles] = useState<{[key: number]: string}>({});
 
   const steps = [
     {
@@ -93,7 +95,7 @@ const Index = () => {
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = currentStep === index;
-            const isCompleted = currentStep > index;
+            const isCompleted = uploadedFiles[index] !== undefined;
             
             return (
               <Card 
@@ -128,49 +130,35 @@ const Index = () => {
         </div>
 
         {/* Upload Area */}
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Upload className="w-5 h-5" />
-              <span>Stap {currentStep + 1}: {steps[currentStep].title}</span>
-            </CardTitle>
-            <CardDescription>
-              {steps[currentStep].description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="border-2 border-dashed border-primary/20 rounded-lg p-8 text-center hover:border-primary/40 transition-colors">
-              <div className="space-y-4">
-                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  <Camera className="w-10 h-10 text-primary" />
-                </div>
-                <div>
-                  <p className="text-lg font-medium mb-2">
-                    Sleep een foto hierheen of klik om te uploaden
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Ondersteunde formaten: JPG, PNG, HEIC (max 10MB)
-                  </p>
-                </div>
-                <Button size="lg" className="mt-4">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Kies Foto
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <FileUpload
+          step={currentStep + 1}
+          stepTitle={steps[currentStep].title}
+          stepDescription={steps[currentStep].description}
+          onFileUploaded={(url) => {
+            setUploadedFiles(prev => ({
+              ...prev,
+              [currentStep]: url
+            }));
+            
+            // Auto-advance to next step if not the last step
+            if (currentStep < steps.length - 1) {
+              setTimeout(() => {
+                setCurrentStep(currentStep + 1);
+              }, 1500);
+            }
+          }}
+        />
 
         {/* Progress Indicator */}
         <div className="max-w-2xl mx-auto mt-8">
           <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
             <span>Voortgang</span>
-            <span>{currentStep + 1} / {steps.length}</span>
+            <span>{Object.keys(uploadedFiles).length} / {steps.length} voltooid</span>
           </div>
           <div className="w-full bg-secondary rounded-full h-2">
             <div 
               className="bg-gradient-vinyl h-2 rounded-full transition-all duration-500"
-              style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+              style={{ width: `${(Object.keys(uploadedFiles).length / steps.length) * 100}%` }}
             />
           </div>
         </div>

@@ -1,1 +1,4 @@
 project_id = "ssxbpyqnjfiyubsuonar"
+
+[functions.analyze-vinyl-images]
+verify_jwt = false

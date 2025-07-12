@@ -1,13 +1,26 @@
-import { useState } from "react";
-import { Camera, Disc3, ScanLine, TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Camera, Disc3, ScanLine, TrendingUp, Loader2, CheckCircle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/FileUpload";
+import { useVinylAnalysis } from "@/hooks/useVinylAnalysis";
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [uploadedFiles, setUploadedFiles] = useState<{[key: number]: string}>({});
+  const { isAnalyzing, analysisResult, analyzeImages } = useVinylAnalysis();
+
+  // Check if all 3 photos are uploaded to trigger analysis
+  useEffect(() => {
+    const allPhotosUploaded = Object.keys(uploadedFiles).length === 3;
+    
+    if (allPhotosUploaded && !isAnalyzing && !analysisResult) {
+      console.log('🚀 All 3 photos uploaded, starting OCR analysis...');
+      const imageUrls = [uploadedFiles[0], uploadedFiles[1], uploadedFiles[2]];
+      analyzeImages(imageUrls);
+    }
+  }, [uploadedFiles, isAnalyzing, analysisResult, analyzeImages]);
 
   const steps = [
     {
@@ -129,7 +142,58 @@ const Index = () => {
           })}
         </div>
 
-        {/* Upload Area */}
+        {/* Analysis Status */}
+        {(isAnalyzing || analysisResult) && (
+          <Card className="max-w-2xl mx-auto mb-8">
+            <CardContent className="p-6">
+              {isAnalyzing ? (
+                <div className="text-center space-y-4">
+                  <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+                  <div>
+                    <h3 className="text-lg font-semibold">OCR Analyse Bezig...</h3>
+                    <p className="text-sm text-muted-foreground">
+                      AI analyseert je foto's voor catalogusnummer, matrixnummer en albuminfo
+                    </p>
+                  </div>
+                </div>
+              ) : analysisResult && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center space-x-2 text-green-600">
+                    <CheckCircle className="w-6 h-6" />
+                    <h3 className="text-lg font-semibold">Analyse Voltooid!</h3>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p><strong>Artiest:</strong> {analysisResult.ocrResults?.artist || 'Niet gevonden'}</p>
+                      <p><strong>Titel:</strong> {analysisResult.ocrResults?.title || 'Niet gevonden'}</p>
+                      <p><strong>Jaar:</strong> {analysisResult.ocrResults?.year || 'Niet gevonden'}</p>
+                    </div>
+                    <div>
+                      <p><strong>Catalogusnummer:</strong> {analysisResult.ocrResults?.catalog_number || 'Niet gevonden'}</p>
+                      <p><strong>Matrixnummer:</strong> {analysisResult.ocrResults?.matrix_number || 'Niet gevonden'}</p>
+                      <p><strong>Label:</strong> {analysisResult.ocrResults?.label || 'Niet gevonden'}</p>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    className="w-full mt-4"
+                    onClick={() => {
+                      // TODO: Navigate to Discogs search/price analysis
+                      console.log('Starting Discogs search with:', analysisResult.ocrResults);
+                    }}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Zoek op Discogs & Analyseer Prijs
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Upload Area - only show if analysis not started */}
+        {!isAnalyzing && !analysisResult && (
         <FileUpload
           step={currentStep + 1}
           stepTitle={steps[currentStep].title}
@@ -149,6 +213,8 @@ const Index = () => {
             }
           }}
         />
+
+        )}
 
         {/* Progress Indicator */}
         <div className="max-w-2xl mx-auto mt-8">

@@ -351,18 +351,19 @@ async function getDiscogsPriceAnalysisById(
     console.log(`🔍 Starting price analysis for release ${releaseId}`);
     
     // Try marketplace stats endpoint first
-    const statsUrl = `https://api.discogs.com/marketplace/stats/${releaseId}?currency=EUR`;
+    const statsUrl = `https://api.discogs.com/marketplace/stats/${releaseId}`;
     
     const statsRes = await fetch(statsUrl, {
       headers: {
-        "User-Agent": "VinylVoyagerApp/1.0 +https://vinylvoyager.app",
-        "Accept": "application/vnd.discogs.v2.json+json",
-        'Authorization': discogsToken ? `Discogs token=${discogsToken}` : `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`
+        "Authorization": `Discogs token=${discogsToken}`,
+        "User-Agent": "VinylVoyager/1.0",
+        "Accept": "application/json"
       }
     });
 
     if (!statsRes.ok) {
-      console.warn(`❌ Discogs stats error: ${statsRes.status} ${statsRes.statusText}`);
+      const errorText = await statsRes.text();
+      console.warn(`❌ Discogs stats error: ${statsRes.status} ${statsRes.statusText}`, errorText);
       return await fallbackToMarketplaceListings(releaseId, condition);
     }
 
@@ -410,18 +411,19 @@ async function fallbackToMarketplaceListings(releaseId: number, condition: strin
   try {
     console.log(`🔄 Fetching marketplace listings for release ${releaseId}`);
     
-    const listingsUrl = `https://api.discogs.com/marketplace/listings?release_id=${releaseId}&page=1&per_page=100&currency=EUR`;
+    const listingsUrl = `https://api.discogs.com/marketplace/listings?release_id=${releaseId}&page=1&per_page=100`;
     
     const listingsRes = await fetch(listingsUrl, {
       headers: {
-        "User-Agent": "VinylVoyagerApp/1.0 +https://vinylvoyager.app",
-        "Accept": "application/vnd.discogs.v2.json+json",
-        'Authorization': discogsToken ? `Discogs token=${discogsToken}` : `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`
+        "Authorization": `Discogs token=${discogsToken}`,
+        "User-Agent": "VinylVoyager/1.0",
+        "Accept": "application/json"
       }
     });
 
     if (!listingsRes.ok) {
-      console.warn(`❌ Discogs listings error: ${listingsRes.status} ${listingsRes.statusText}`);
+      const errorText = await listingsRes.text();
+      console.warn(`❌ Discogs listings error: ${listingsRes.status} ${listingsRes.statusText}`, errorText);
       return null;
     }
 

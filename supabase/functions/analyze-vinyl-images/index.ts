@@ -192,8 +192,6 @@ async function searchDiscogsRelease(artist: string, title: string, catalogNumber
       const params = new URLSearchParams({
         q: strategy.query,
         type: 'release',
-        key: discogsConsumerKey,
-        secret: discogsConsumerSecret,
         per_page: '25',
         ...strategy.params
       });
@@ -202,11 +200,9 @@ async function searchDiscogsRelease(artist: string, title: string, catalogNumber
       console.log(`🔗 Search URL: ${searchUrl}`);
       
       const headers: Record<string, string> = {
-        'User-Agent': 'VinylScanner/1.0'
+        'User-Agent': 'VinylScanner/1.0',
+        'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`
       };
-      
-      // Only use Consumer Key/Secret authentication (no Authorization header)
-      // This prevents conflicts between authentication methods
       
       const response = await fetch(searchUrl, { headers });
       
@@ -348,11 +344,12 @@ async function getDiscogsPriceAnalysisById(
     console.log(`🔍 Starting price analysis for release ${releaseId} with condition: "${condition}"`);
     
     // Get the listings for this release using Consumer Key/Secret
-    const listingsUrl = `https://api.discogs.com/marketplace/listings/release/${releaseId}?sort=price&sort_order=asc&per_page=100&key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`;
+    const listingsUrl = `https://api.discogs.com/marketplace/listings/release/${releaseId}?sort=price&sort_order=asc&per_page=100`;
     
     const listingsRes = await fetch(listingsUrl, {
       headers: {
-        "User-Agent": "VinylVoyagerApp/1.0"
+        "User-Agent": "VinylVoyagerApp/1.0",
+        'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`
       }
     });
 

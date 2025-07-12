@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/FileUpload";
+import { DiscogsTest } from "@/components/DiscogsTest";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVinylAnalysis } from "@/hooks/useVinylAnalysis";
 
 const Index = () => {
@@ -78,218 +80,230 @@ const Index = () => {
             Upload 3 foto's van je LP of CD en krijg direct de Discogs informatie 
             met accurate prijsinschattingen gebaseerd op de actuele marktwaarde.
           </p>
+        </div>
+
+        <Tabs defaultValue="scan" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="scan">Vinyl Scanner</TabsTrigger>
+            <TabsTrigger value="test">Discogs Test</TabsTrigger>
+          </TabsList>
           
-          <div className="flex items-center justify-center space-x-8 mb-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 mx-auto">
-                <Camera className="w-8 h-8 text-primary" />
-              </div>
-              <p className="text-sm font-medium">Foto Scan</p>
-            </div>
-            <div className="w-8 h-px bg-border"></div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 mx-auto">
-                <ScanLine className="w-8 h-8 text-primary" />
-              </div>
-              <p className="text-sm font-medium">Discogs ID</p>
-            </div>
-            <div className="w-8 h-px bg-border"></div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 mx-auto">
-                <TrendingUp className="w-8 h-8 text-primary" />
-              </div>
-              <p className="text-sm font-medium">Waardering</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Steps Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          {steps.map((step, index) => {
-            const Icon = step.icon;
-            const isActive = currentStep === index;
-            const isCompleted = uploadedFiles[index] !== undefined;
-            
-            return (
-              <Card 
-                key={index} 
-                className={`transition-all duration-300 cursor-pointer hover:shadow-lg ${
-                  isActive ? 'ring-2 ring-primary shadow-lg scale-105' : ''
-                } ${isCompleted ? 'bg-muted/50' : ''}`}
-                onClick={() => setCurrentStep(index)}
-              >
-                <CardHeader className="text-center">
-                  <div className={`w-16 h-16 rounded-full ${step.color} flex items-center justify-center mx-auto mb-4 ${
-                    isActive ? 'animate-scan-pulse' : ''
-                  }`}>
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  <CardTitle className="text-lg">
-                    Stap {index + 1}: {step.title}
-                  </CardTitle>
-                  <CardDescription>{step.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button 
-                    className={`w-full ${isCompleted ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                    variant={isActive ? "default" : "outline"}
-                  >
-                    {isCompleted ? '✓ Voltooid' : isActive ? 'Upload Foto' : 'Start Stap'}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Analysis Status */}
-        {(isAnalyzing || analysisResult) && (
-          <Card className="max-w-2xl mx-auto mb-8">
-            <CardContent className="p-6">
-              {isAnalyzing ? (
-                <div className="text-center space-y-4">
-                  <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
-                  <div>
-                    <h3 className="text-lg font-semibold">OCR Analyse Bezig...</h3>
-                    <p className="text-sm text-muted-foreground">
-                      AI analyseert je foto's voor catalogusnummer, matrixnummer en albuminfo
-                    </p>
-                  </div>
+          <TabsContent value="scan" className="space-y-8">
+            <div className="flex items-center justify-center space-x-8 mb-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 mx-auto">
+                  <Camera className="w-8 h-8 text-primary" />
                 </div>
-              ) : analysisResult && (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-center space-x-2 text-green-600">
-                    <CheckCircle className="w-6 h-6" />
-                    <h3 className="text-lg font-semibold">Analyse Voltooid!</h3>
-                  </div>
-                  
-                  {/* OCR Results */}
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <h4 className="font-semibold mb-3 text-primary">📀 Album Informatie</h4>
-                    <div className="grid md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p><strong>Artiest:</strong> {analysisResult.ocrResults?.artist || 'Niet gevonden'}</p>
-                        <p><strong>Titel:</strong> {analysisResult.ocrResults?.title || 'Niet gevonden'}</p>
-                        <p><strong>Jaar:</strong> {analysisResult.ocrResults?.year || 'Niet gevonden'}</p>
-                        <p><strong>Genre:</strong> {analysisResult.ocrResults?.genre || 'Niet gevonden'}</p>
-                      </div>
-                      <div>
-                        <p><strong>Catalogusnummer:</strong> {analysisResult.ocrResults?.catalog_number || 'Niet gevonden'}</p>
-                        <p><strong>Matrixnummer:</strong> {analysisResult.ocrResults?.matrix_number || 'Niet gevonden'}</p>
-                        <p><strong>Label:</strong> {analysisResult.ocrResults?.label || 'Niet gevonden'}</p>
-                        <p><strong>Land:</strong> {analysisResult.ocrResults?.country || 'Niet gevonden'}</p>
-                      </div>
-                    </div>
-                  </div>
+                <p className="text-sm font-medium">Foto Scan</p>
+              </div>
+              <div className="w-8 h-px bg-border"></div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 mx-auto">
+                  <ScanLine className="w-8 h-8 text-primary" />
+                </div>
+                <p className="text-sm font-medium">Discogs ID</p>
+              </div>
+              <div className="w-8 h-px bg-border"></div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 mx-auto">
+                  <TrendingUp className="w-8 h-8 text-primary" />
+                </div>
+                <p className="text-sm font-medium">Waardering</p>
+              </div>
+            </div>
 
-                  {/* Discogs & Pricing Results */}
-                  {analysisResult.discogsData?.discogs_id && (
-                    <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
-                      <h4 className="font-semibold mb-3 text-green-700 dark:text-green-400">
-                        🎵 Discogs Match Gevonden!
-                      </h4>
-                      <div className="space-y-2 text-sm">
-                        <p><strong>Discogs ID:</strong> {analysisResult.discogsData.discogs_id}</p>
-                        <p>
-                          <strong>Discogs URL:</strong> 
-                          <a 
-                            href={analysisResult.discogsData.discogs_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline ml-2"
-                          >
-                            Bekijk op Discogs →
-                          </a>
+            {/* Steps Cards */}
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+                const isActive = currentStep === index;
+                const isCompleted = uploadedFiles[index] !== undefined;
+                
+                return (
+                  <Card 
+                    key={index} 
+                    className={`transition-all duration-300 cursor-pointer hover:shadow-lg ${
+                      isActive ? 'ring-2 ring-primary shadow-lg scale-105' : ''
+                    } ${isCompleted ? 'bg-muted/50' : ''}`}
+                    onClick={() => setCurrentStep(index)}
+                  >
+                    <CardHeader className="text-center">
+                      <div className={`w-16 h-16 rounded-full ${step.color} flex items-center justify-center mx-auto mb-4 ${
+                        isActive ? 'animate-scan-pulse' : ''
+                      }`}>
+                        <Icon className="w-8 h-8 text-white" />
+                      </div>
+                      <CardTitle className="text-lg">
+                        Stap {index + 1}: {step.title}
+                      </CardTitle>
+                      <CardDescription>{step.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button 
+                        className={`w-full ${isCompleted ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                        variant={isActive ? "default" : "outline"}
+                      >
+                        {isCompleted ? '✓ Voltooid' : isActive ? 'Upload Foto' : 'Start Stap'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Analysis Status */}
+            {(isAnalyzing || analysisResult) && (
+              <Card className="max-w-2xl mx-auto mb-8">
+                <CardContent className="p-6">
+                  {isAnalyzing ? (
+                    <div className="text-center space-y-4">
+                      <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+                      <div>
+                        <h3 className="text-lg font-semibold">OCR Analyse Bezig...</h3>
+                        <p className="text-sm text-muted-foreground">
+                          AI analyseert je foto's voor catalogusnummer, matrixnummer en albuminfo
                         </p>
                       </div>
                     </div>
-                  )}
-
-                  {/* Pricing Information */}
-                  {analysisResult.pricingData && (
-                    analysisResult.pricingData.lowest_price || 
-                    analysisResult.pricingData.median_price || 
-                    analysisResult.pricingData.highest_price
-                  ) ? (
-                    <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                      <h4 className="font-semibold mb-3 text-blue-700 dark:text-blue-400 flex items-center">
-                        <TrendingUp className="w-4 h-4 mr-2" />
-                        💰 Prijsinformatie
-                      </h4>
-                      <div className="grid grid-cols-3 gap-4 text-center">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-sm text-muted-foreground">Laagste Prijs</p>
-                          <p className="text-lg font-bold text-green-600">
-                            €{analysisResult.pricingData.lowest_price || 'N/A'}
-                          </p>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-sm text-muted-foreground">Gemiddelde</p>
-                          <p className="text-lg font-bold text-blue-600">
-                            €{analysisResult.pricingData.median_price || 'N/A'}
-                          </p>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-sm text-muted-foreground">Hoogste Prijs</p>
-                          <p className="text-lg font-bold text-red-600">
-                            €{analysisResult.pricingData.highest_price || 'N/A'}
-                          </p>
+                  ) : analysisResult && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-center space-x-2 text-green-600">
+                        <CheckCircle className="w-6 h-6" />
+                        <h3 className="text-lg font-semibold">Analyse Voltooid!</h3>
+                      </div>
+                      
+                      {/* OCR Results */}
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <h4 className="font-semibold mb-3 text-primary">📀 Album Informatie</h4>
+                        <div className="grid md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p><strong>Artiest:</strong> {analysisResult.ocrResults?.artist || 'Niet gevonden'}</p>
+                            <p><strong>Titel:</strong> {analysisResult.ocrResults?.title || 'Niet gevonden'}</p>
+                            <p><strong>Jaar:</strong> {analysisResult.ocrResults?.year || 'Niet gevonden'}</p>
+                            <p><strong>Genre:</strong> {analysisResult.ocrResults?.genre || 'Niet gevonden'}</p>
+                          </div>
+                          <div>
+                            <p><strong>Catalogusnummer:</strong> {analysisResult.ocrResults?.catalog_number || 'Niet gevonden'}</p>
+                            <p><strong>Matrixnummer:</strong> {analysisResult.ocrResults?.matrix_number || 'Niet gevonden'}</p>
+                            <p><strong>Label:</strong> {analysisResult.ocrResults?.label || 'Niet gevonden'}</p>
+                            <p><strong>Land:</strong> {analysisResult.ocrResults?.country || 'Niet gevonden'}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="bg-yellow-50 dark:bg-yellow-950/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
-                      <h4 className="font-semibold mb-2 text-yellow-700 dark:text-yellow-400">
-                        ⚠️ Geen Prijsdata Beschikbaar
-                      </h4>
-                      <p className="text-sm text-yellow-600 dark:text-yellow-300">
-                        Er kon geen prijsinformatie worden gevonden voor dit album op Discogs.
-                      </p>
+
+                      {/* Discogs & Pricing Results */}
+                      {analysisResult.discogsData?.discogs_id && (
+                        <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                          <h4 className="font-semibold mb-3 text-green-700 dark:text-green-400">
+                            🎵 Discogs Match Gevonden!
+                          </h4>
+                          <div className="space-y-2 text-sm">
+                            <p><strong>Discogs ID:</strong> {analysisResult.discogsData.discogs_id}</p>
+                            <p>
+                              <strong>Discogs URL:</strong> 
+                              <a 
+                                href={analysisResult.discogsData.discogs_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline ml-2"
+                              >
+                                Bekijk op Discogs →
+                              </a>
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Pricing Information */}
+                      {analysisResult.pricingData && (
+                        analysisResult.pricingData.lowest_price || 
+                        analysisResult.pricingData.median_price || 
+                        analysisResult.pricingData.highest_price
+                      ) ? (
+                        <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                          <h4 className="font-semibold mb-3 text-blue-700 dark:text-blue-400 flex items-center">
+                            <TrendingUp className="w-4 h-4 mr-2" />
+                            💰 Prijsinformatie
+                          </h4>
+                          <div className="grid grid-cols-3 gap-4 text-center">
+                            <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                              <p className="text-sm text-muted-foreground">Laagste Prijs</p>
+                              <p className="text-lg font-bold text-green-600">
+                                €{analysisResult.pricingData.lowest_price || 'N/A'}
+                              </p>
+                            </div>
+                            <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                              <p className="text-sm text-muted-foreground">Gemiddelde</p>
+                              <p className="text-lg font-bold text-blue-600">
+                                €{analysisResult.pricingData.median_price || 'N/A'}
+                              </p>
+                            </div>
+                            <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                              <p className="text-sm text-muted-foreground">Hoogste Prijs</p>
+                              <p className="text-lg font-bold text-red-600">
+                                €{analysisResult.pricingData.highest_price || 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-yellow-50 dark:bg-yellow-950/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
+                          <h4 className="font-semibold mb-2 text-yellow-700 dark:text-yellow-400">
+                            ⚠️ Geen Prijsdata Beschikbaar
+                          </h4>
+                          <p className="text-sm text-yellow-600 dark:text-yellow-300">
+                            Er kon geen prijsinformatie worden gevonden voor dit album op Discogs.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Upload Area - only show if analysis not started */}
-        {!isAnalyzing && !analysisResult && (
-        <FileUpload
-          step={currentStep + 1}
-          stepTitle={steps[currentStep].title}
-          stepDescription={steps[currentStep].description}
-          isCompleted={uploadedFiles[currentStep] !== undefined}
-          onFileUploaded={(url) => {
-            setUploadedFiles(prev => ({
-              ...prev,
-              [currentStep]: url
-            }));
-            
-            // Auto-advance to next step if not the last step
-            if (currentStep < steps.length - 1) {
-              setTimeout(() => {
-                setCurrentStep(currentStep + 1);
-              }, 1500);
-            }
-          }}
-        />
+            {/* Upload Area - only show if analysis not started */}
+            {!isAnalyzing && !analysisResult && (
+              <FileUpload
+                step={currentStep + 1}
+                stepTitle={steps[currentStep].title}
+                stepDescription={steps[currentStep].description}
+                isCompleted={uploadedFiles[currentStep] !== undefined}
+                onFileUploaded={(url) => {
+                  setUploadedFiles(prev => ({
+                    ...prev,
+                    [currentStep]: url
+                  }));
+                  
+                  // Auto-advance to next step if not the last step
+                  if (currentStep < steps.length - 1) {
+                    setTimeout(() => {
+                      setCurrentStep(currentStep + 1);
+                    }, 1500);
+                  }
+                }}
+              />
+            )}
 
-        )}
-
-        {/* Progress Indicator */}
-        <div className="max-w-2xl mx-auto mt-8">
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-            <span>Voortgang</span>
-            <span>{Object.keys(uploadedFiles).length} / {steps.length} voltooid</span>
-          </div>
-          <div className="w-full bg-secondary rounded-full h-2">
-            <div 
-              className="bg-gradient-vinyl h-2 rounded-full transition-all duration-500"
-              style={{ width: `${(Object.keys(uploadedFiles).length / steps.length) * 100}%` }}
-            />
-          </div>
-        </div>
+            {/* Progress Indicator */}
+            <div className="max-w-2xl mx-auto mt-8">
+              <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+                <span>Voortgang</span>
+                <span>{Object.keys(uploadedFiles).length} / {steps.length} voltooid</span>
+              </div>
+              <div className="w-full bg-secondary rounded-full h-2">
+                <div 
+                  className="bg-gradient-vinyl h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${(Object.keys(uploadedFiles).length / steps.length) * 100}%` }}
+                />
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="test" className="mt-8">
+            <DiscogsTest />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

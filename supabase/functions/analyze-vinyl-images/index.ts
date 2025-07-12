@@ -350,7 +350,7 @@ async function getDiscogsPriceAnalysisById(
   try {
     console.log(`🔍 Starting price analysis for release ${releaseId}`);
     
-    // Use the marketplace stats endpoint for direct statistics
+    // Try marketplace stats endpoint first
     const statsUrl = `https://api.discogs.com/marketplace/stats/${releaseId}`;
     
     const statsRes = await fetch(statsUrl, {
@@ -362,12 +362,12 @@ async function getDiscogsPriceAnalysisById(
 
     if (!statsRes.ok) {
       console.warn(`❌ Discogs stats error: ${statsRes.status} ${statsRes.statusText}`);
-      return null;
+      return await fallbackToMarketplaceListings(releaseId, condition);
     }
 
     const statsData = await statsRes.json();
     
-    console.log(`📊 Marketplace stats for release ${releaseId}:`, JSON.stringify(statsData, null, 2));
+    console.log(`📊 Raw marketplace stats response:`, JSON.stringify(statsData, null, 2));
 
     // Extract the statistics directly from the API response
     const result = {
@@ -378,11 +378,97 @@ async function getDiscogsPriceAnalysisById(
       currency: statsData.lowest_price?.currency || 'EUR'
     };
 
-    console.log(`💰 Price statistics: Low: ${result.lowest_price}, Median: ${result.median_price}, High: ${result.highest_price}, For Sale: ${result.num_for_sale}`);
+    console.log(`💰 Stats API result: Low: ${result.lowest_price}, Median: ${result.median_price}, High: ${result.highest_price}, For Sale: ${result.num_for_sale}`);
+
+    // If we're missing median or highest price, fall back to listings
+    if (result.num_for_sale > 0 && (!result.median_price || !result.highest_price)) {
+      console.log(`🔄 Stats API incomplete (missing median/highest), falling back to listings`);
+      const listingsResult = await fallbackToMarketplaceListings(releaseId, condition);
+      
+      if (listingsResult) {
+        // Merge results, preferring calculated values from listings
+        return {
+          lowest_price: result.lowest_price || listingsResult.lowest_price,
+          median_price: listingsResult.median_price || result.median_price,
+          highest_price: listingsResult.highest_price || result.highest_price,
+          num_for_sale: result.num_for_sale || listingsResult.num_for_sale,
+          currency: result.currency || listingsResult.currency
+        };
+      }
+    }
 
     return result;
   } catch (err) {
     console.error("❌ Discogs price analysis by ID failed:", err);
+    return await fallbackToMarketplaceListings(releaseId, condition);
+  }
+}
+
+// Fallback function to get pricing from marketplace listings
+async function fallbackToMarketplaceListings(releaseId: number, condition: string = 'Very Good') {
+  try {
+    console.log(`🔄 Fetching marketplace listings for release ${releaseId}`);
+    
+    const listingsUrl = `https://api.discogs.com/marketplace/listings?release_id=${releaseId}&page=1&per_page=100`;
+    
+    const listingsRes = await fetch(listingsUrl, {
+      headers: {
+        "User-Agent": "VinylVoyagerApp/1.0",
+        'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`
+      }
+    });
+
+    if (!listingsRes.ok) {
+      console.warn(`❌ Discogs listings error: ${listingsRes.status} ${listingsRes.statusText}`);
+      return null;
+    }
+
+    const listingsData = await listingsRes.json();
+    console.log(`📋 Found ${listingsData.listings?.length || 0} listings`);
+
+    if (!listingsData.listings || listingsData.listings.length === 0) {
+      console.log(`📭 No listings found for release ${releaseId}`);
+      return null;
+    }
+
+    // Extract prices from listings
+    const prices: number[] = [];
+    
+    for (const listing of listingsData.listings) {
+      if (listing.price?.value && typeof listing.price.value === 'number') {
+        prices.push(listing.price.value);
+      }
+    }
+
+    if (prices.length === 0) {
+      console.log(`💰 No valid prices found in listings`);
+      return null;
+    }
+
+    // Sort prices to calculate statistics
+    prices.sort((a, b) => a - b);
+    
+    const lowest_price = prices[0];
+    const highest_price = prices[prices.length - 1];
+    const median_price = prices.length % 2 === 0 
+      ? (prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2
+      : prices[Math.floor(prices.length / 2)];
+
+    const currency = listingsData.listings[0]?.price?.currency || 'EUR';
+
+    const result = {
+      lowest_price,
+      median_price,
+      highest_price,
+      num_for_sale: prices.length,
+      currency
+    };
+
+    console.log(`💰 Calculated from listings: Low: ${result.lowest_price}, Median: ${result.median_price}, High: ${result.highest_price}, For Sale: ${result.num_for_sale}`);
+    
+    return result;
+  } catch (err) {
+    console.error("❌ Marketplace listings fallback failed:", err);
     return null;
   }
 }

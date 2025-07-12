@@ -157,35 +157,96 @@ const Index = () => {
                   </div>
                 </div>
               ) : analysisResult && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="flex items-center justify-center space-x-2 text-green-600">
                     <CheckCircle className="w-6 h-6" />
                     <h3 className="text-lg font-semibold">Analyse Voltooid!</h3>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p><strong>Artiest:</strong> {analysisResult.ocrResults?.artist || 'Niet gevonden'}</p>
-                      <p><strong>Titel:</strong> {analysisResult.ocrResults?.title || 'Niet gevonden'}</p>
-                      <p><strong>Jaar:</strong> {analysisResult.ocrResults?.year || 'Niet gevonden'}</p>
-                    </div>
-                    <div>
-                      <p><strong>Catalogusnummer:</strong> {analysisResult.ocrResults?.catalog_number || 'Niet gevonden'}</p>
-                      <p><strong>Matrixnummer:</strong> {analysisResult.ocrResults?.matrix_number || 'Niet gevonden'}</p>
-                      <p><strong>Label:</strong> {analysisResult.ocrResults?.label || 'Niet gevonden'}</p>
+                  {/* OCR Results */}
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <h4 className="font-semibold mb-3 text-primary">📀 Album Informatie</h4>
+                    <div className="grid md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p><strong>Artiest:</strong> {analysisResult.ocrResults?.artist || 'Niet gevonden'}</p>
+                        <p><strong>Titel:</strong> {analysisResult.ocrResults?.title || 'Niet gevonden'}</p>
+                        <p><strong>Jaar:</strong> {analysisResult.ocrResults?.year || 'Niet gevonden'}</p>
+                        <p><strong>Genre:</strong> {analysisResult.ocrResults?.genre || 'Niet gevonden'}</p>
+                      </div>
+                      <div>
+                        <p><strong>Catalogusnummer:</strong> {analysisResult.ocrResults?.catalog_number || 'Niet gevonden'}</p>
+                        <p><strong>Matrixnummer:</strong> {analysisResult.ocrResults?.matrix_number || 'Niet gevonden'}</p>
+                        <p><strong>Label:</strong> {analysisResult.ocrResults?.label || 'Niet gevonden'}</p>
+                        <p><strong>Land:</strong> {analysisResult.ocrResults?.country || 'Niet gevonden'}</p>
+                      </div>
                     </div>
                   </div>
-                  
-                  <Button 
-                    className="w-full mt-4"
-                    onClick={() => {
-                      // TODO: Navigate to Discogs search/price analysis
-                      console.log('Starting Discogs search with:', analysisResult.ocrResults);
-                    }}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Zoek op Discogs & Analyseer Prijs
-                  </Button>
+
+                  {/* Discogs & Pricing Results */}
+                  {analysisResult.discogsData?.discogs_id && (
+                    <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                      <h4 className="font-semibold mb-3 text-green-700 dark:text-green-400">
+                        🎵 Discogs Match Gevonden!
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <p><strong>Discogs ID:</strong> {analysisResult.discogsData.discogs_id}</p>
+                        <p>
+                          <strong>Discogs URL:</strong> 
+                          <a 
+                            href={analysisResult.discogsData.discogs_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline ml-2"
+                          >
+                            Bekijk op Discogs →
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pricing Information */}
+                  {analysisResult.pricingData && (
+                    analysisResult.pricingData.lowest_price || 
+                    analysisResult.pricingData.median_price || 
+                    analysisResult.pricingData.highest_price
+                  ) ? (
+                    <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                      <h4 className="font-semibold mb-3 text-blue-700 dark:text-blue-400 flex items-center">
+                        <TrendingUp className="w-4 h-4 mr-2" />
+                        💰 Prijsinformatie
+                      </h4>
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-sm text-muted-foreground">Laagste Prijs</p>
+                          <p className="text-lg font-bold text-green-600">
+                            €{analysisResult.pricingData.lowest_price || 'N/A'}
+                          </p>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-sm text-muted-foreground">Gemiddelde</p>
+                          <p className="text-lg font-bold text-blue-600">
+                            €{analysisResult.pricingData.median_price || 'N/A'}
+                          </p>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-sm text-muted-foreground">Hoogste Prijs</p>
+                          <p className="text-lg font-bold text-red-600">
+                            €{analysisResult.pricingData.highest_price || 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-yellow-50 dark:bg-yellow-950/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
+                      <h4 className="font-semibold mb-2 text-yellow-700 dark:text-yellow-400">
+                        ⚠️ Geen Prijsdata Beschikbaar
+                      </h4>
+                      <p className="text-sm text-yellow-600 dark:text-yellow-300">
+                        Er kon geen prijsinformatie worden gevonden voor dit album op Discogs.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

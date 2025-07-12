@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Camera, Upload, X, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +10,7 @@ interface FileUploadProps {
   stepDescription: string;
   onFileUploaded?: (url: string) => void;
   accept?: string;
+  isCompleted?: boolean; // Add prop to track if this step is completed
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -17,13 +18,24 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   stepTitle,
   stepDescription,
   onFileUploaded,
-  accept = "image/*"
+  accept = "image/*",
+  isCompleted = false
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   
   const { uploading, uploadFile, addFile } = useFileUpload();
+
+  // Reset uploadedUrl when step changes or component mounts
+  useEffect(() => {
+    if (!isCompleted) {
+      setUploadedUrl(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, [step, isCompleted]);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -101,7 +113,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           </p>
         </div>
 
-        {uploadedUrl ? (
+        {uploadedUrl || isCompleted ? (
           // Success state
           <div className="space-y-4">
             <div className="flex items-center justify-center p-8 bg-green-50 dark:bg-green-950/20 rounded-lg border-2 border-green-200 dark:border-green-800">

@@ -134,6 +134,7 @@ const Index = () => {
           step={currentStep + 1}
           stepTitle={steps[currentStep].title}
           stepDescription={steps[currentStep].description}
+          isCompleted={uploadedFiles[currentStep] !== undefined}
           onFileUploaded={(url) => {
             setUploadedFiles(prev => ({
               ...prev,

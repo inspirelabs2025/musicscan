@@ -286,128 +286,147 @@ async function searchDiscogsRelease(artist: string, title: string, catalogNumber
   }
 }
 
-// Function to get comprehensive pricing data from Discogs
-async function getDiscogsPricing(discogsId: number) {
+// Interface for Discogs listing data
+interface DiscogsListing {
+  price: number;
+  currency: string;
+  condition: string;
+  sleeve_condition: string;
+  shipping_price?: number;
+  seller_location?: string;
+}
+
+// Helper function for flexible condition matching
+function flexibleConditionsMatch(requestedCondition: string, discogsCondition: string): boolean {
+  if (!requestedCondition || !discogsCondition) return false;
+  
+  const normalize = (str: string) => str.toLowerCase().trim();
+  const requested = normalize(requestedCondition);
+  const discogs = normalize(discogsCondition);
+  
+  // Exact match
+  if (requested === discogs) return true;
+  
+  // Check for partial matches
+  if (requested.includes(discogs) || discogs.includes(requested)) return true;
+  
+  // Map common condition variations
+  const conditionMap: Record<string, string[]> = {
+    'mint': ['m', 'mint (m)', 'nm', 'near mint', 'near mint (nm)'],
+    'near mint': ['nm', 'near mint (nm)', 'mint', 'm', 'mint (m)'],
+    'very good': ['vg', 'very good (vg)', 'vg+', 'very good plus', 'very good plus (vg+)'],
+    'good': ['g', 'good (g)', 'vg', 'very good'],
+    'fair': ['f', 'fair (f)', 'poor'],
+    'poor': ['p', 'poor (p)', 'fair']
+  };
+  
+  for (const [key, variants] of Object.entries(conditionMap)) {
+    if ((requested.includes(key) || variants.some(v => requested.includes(v))) &&
+        (discogs.includes(key) || variants.some(v => discogs.includes(v)))) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+// Enhanced function to get comprehensive pricing data from Discogs
+async function getDiscogsPriceAnalysisById(
+  releaseId: number, 
+  condition: string = 'Very Good',
+  discogsToken?: string
+) {
+  if (!releaseId || !discogsToken) {
+    console.log('❌ Missing releaseId or discogsToken for price analysis');
+    return null;
+  }
+
   try {
-    console.log(`💰 Getting pricing data for Discogs ID: ${discogsId}`);
+    console.log(`🔍 Starting price analysis for release ${releaseId} with condition: "${condition}"`);
     
-    // Strategy 1: Try marketplace listings if token is available
-    if (discogsToken) {
-      console.log('🎯 Using authenticated marketplace listings endpoint...');
+    // Get the listings for this release
+    const listingsUrl = `https://api.discogs.com/marketplace/listings/release/${releaseId}?sort=price&sort_order=asc&per_page=100`;
+    
+    const listingsRes = await fetch(listingsUrl, {
+      headers: {
+        "Authorization": `Discogs token=${discogsToken}`,
+        "User-Agent": "VinylVoyagerApp/1.0"
+      }
+    });
+
+    if (!listingsRes.ok) {
+      console.warn(`❌ Discogs listings error: ${listingsRes.status} ${listingsRes.statusText}`);
+      return null;
+    }
+
+    const listingsData = await listingsRes.json();
+    
+    if (!listingsData.listings || listingsData.listings.length === 0) {
+      console.log(`❌ No listings found for release ${releaseId}`);
+      return null;
+    }
+
+    const listings: DiscogsListing[] = listingsData.listings.map((listing: any) => ({
+      price: parseFloat(listing.price.value),
+      currency: listing.price.currency,
+      condition: listing.condition,
+      sleeve_condition: listing.sleeve_condition,
+      shipping_price: listing.shipping_price ? parseFloat(listing.shipping_price.value) : undefined,
+      seller_location: listing.seller.location
+    }));
+
+    console.log(`📊 Found ${listings.length} total listings`);
+    
+    // LOG ALL EXACT CONDITION STRINGS from Discogs API
+    const allConditions = [...new Set(listings.map(l => l.condition))];
+    console.log(`🎯 EXACT Discogs condition strings found:`, allConditions);
+    console.log(`🔎 Requested condition for filtering: "${condition}"`);
+
+    // Enhanced condition matching with debug info
+    let matchingListings = listings;
+    if (condition) {
+      console.log(`🔍 Starting condition matching for: "${condition}"`);
       
-      const listingsUrl = `https://api.discogs.com/marketplace/listings/release/${discogsId}?sort=price&sort_order=asc&per_page=100`;
-      
-      const listingsResponse = await fetch(listingsUrl, {
-        headers: {
-          'Authorization': `Discogs token=${discogsToken}`,
-          'User-Agent': 'VinylScanner/1.0'
+      matchingListings = listings.filter(item => {
+        const isMatch = flexibleConditionsMatch(condition, item.condition);
+        if (isMatch) {
+          console.log(`✅ MATCH: "${condition}" matches "${item.condition}"`);
+        } else {
+          console.log(`❌ NO MATCH: "${condition}" does not match "${item.condition}"`);
         }
+        return isMatch;
       });
       
-      if (listingsResponse.ok) {
-        const listingsData = await listingsResponse.json();
-        console.log(`📊 Found ${listingsData.listings?.length || 0} marketplace listings`);
-        
-        if (listingsData.listings && listingsData.listings.length > 0) {
-          const prices = listingsData.listings
-            .map(listing => listing.price?.value)
-            .filter(price => price && price > 0)
-            .sort((a, b) => a - b);
-          
-          if (prices.length > 0) {
-            const lowest = prices[0];
-            const highest = prices[prices.length - 1];
-            const median = prices[Math.floor(prices.length / 2)];
-            
-            console.log('✅ Retrieved marketplace pricing:', { lowest, median, highest, count: prices.length });
-            return { lowest_price: lowest, median_price: median, highest_price: highest };
-          }
-        }
-      } else {
-        console.warn(`⚠️ Marketplace listings failed: ${listingsResponse.status} ${listingsResponse.statusText}`);
-      }
+      console.log(`📈 Condition matching results:`);
+      console.log(`   - Total listings: ${listings.length}`);
+      console.log(`   - Matching condition "${condition}": ${matchingListings.length}`);
+      console.log(`   - Match percentage: ${((matchingListings.length / listings.length) * 100).toFixed(1)}%`);
     }
     
-    // Strategy 2: Try authenticated release info endpoint 
-    if (discogsToken) {
-      console.log('🎯 Using authenticated release info endpoint...');
-      
-      const releaseUrl = `https://api.discogs.com/releases/${discogsId}`;
-      
-      const releaseResponse = await fetch(releaseUrl, {
-        headers: {
-          'Authorization': `Discogs token=${discogsToken}`,
-          'User-Agent': 'VinylScanner/1.0'
-        }
-      });
-      
-      if (releaseResponse.ok) {
-        const releaseData = await releaseResponse.json();
-        console.log('📊 Release info response received');
-        
-        if (releaseData.estimated_weight || releaseData.community) {
-          // Generate estimates based on community data
-          const haveCount = releaseData.community?.have || 0;
-          const wantCount = releaseData.community?.want || 0;
-          const rating = releaseData.community?.rating?.average || 3.0;
-          
-          // Calculate demand factor
-          const demandFactor = wantCount > 0 ? Math.min(wantCount / Math.max(haveCount, 1), 10) : 1;
-          const ratingFactor = rating / 5.0;
-          
-          // Base price estimation
-          const basePrice = Math.max(5, rating * 5 * demandFactor);
-          
-          console.log('✅ Retrieved community-based pricing estimate:', { 
-            basePrice, 
-            have: haveCount, 
-            want: wantCount, 
-            rating,
-            demandFactor 
-          });
-          
-          return {
-            lowest_price: Math.round(basePrice * 0.6 * 100) / 100,
-            median_price: Math.round(basePrice * 100) / 100,
-            highest_price: Math.round(basePrice * 2.5 * 100) / 100
-          };
-        }
-      }
+    if (matchingListings.length === 0) {
+      console.log(`❌ No listings match the specified condition: "${condition}"`);
+      console.log(`💡 Available conditions: ${allConditions.join(', ')}`);
+      return {
+        lowest_price: null,
+        median_price: null,
+        highest_price: null
+      };
     }
-    
-    // Strategy 3: Fallback to consumer key/secret if available
-    if (discogsConsumerKey && discogsConsumerSecret) {
-      console.log('🎯 Using consumer key/secret fallback...');
-      
-      const fallbackUrl = `https://api.discogs.com/releases/${discogsId}?key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`;
-      
-      const fallbackResponse = await fetch(fallbackUrl, {
-        headers: {
-          'User-Agent': 'VinylScanner/1.0'
-        }
-      });
-      
-      if (fallbackResponse.ok) {
-        const data = await fallbackResponse.json();
-        
-        if (data.community && data.community.have > 10) {
-          const estimatedBase = Math.max(5, data.community.rating * 8);
-          
-          console.log('✅ Retrieved fallback pricing estimate:', estimatedBase);
-          return {
-            lowest_price: Math.round(estimatedBase * 0.7 * 100) / 100,
-            median_price: Math.round(estimatedBase * 100) / 100,
-            highest_price: Math.round(estimatedBase * 2.0 * 100) / 100
-          };
-        }
-      }
-    }
-    
-    console.log('📭 No pricing data available from any endpoint');
-    return { lowest_price: null, median_price: null, highest_price: null };
-  } catch (error) {
-    console.error('❌ Error getting Discogs pricing:', error);
-    return { lowest_price: null, median_price: null, highest_price: null };
+
+    // Sort by price
+    const sorted = [...matchingListings].sort((a, b) => a.price - b.price);
+    const median = sorted[Math.floor(sorted.length / 2)];
+
+    console.log(`💰 Final price range for condition "${condition}": ${sorted[0].price} - ${sorted[sorted.length - 1].price} (${sorted.length} listings)`);
+
+    return {
+      lowest_price: sorted[0].price,
+      median_price: median.price,
+      highest_price: sorted[sorted.length - 1].price
+    };
+  } catch (err) {
+    console.error("❌ Discogs price analysis by ID failed:", err);
+    return null;
   }
 }
 
@@ -632,7 +651,11 @@ serve(async (req) => {
       );
       
       if (discogsData?.discogs_id) {
-        pricingData = await getDiscogsPricing(discogsData.discogs_id);
+        pricingData = await getDiscogsPriceAnalysisById(
+          discogsData.discogs_id, 
+          'Very Good',
+          discogsToken
+        );
         
         // Update database record with Discogs data
         const { error: updateError } = await supabase

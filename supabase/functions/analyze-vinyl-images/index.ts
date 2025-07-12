@@ -97,6 +97,13 @@ const generateCatalogVariants = (catalogNumber: string): string[] => {
 
 // Function to search Discogs for releases with improved search strategy
 async function searchDiscogsRelease(artist: string, title: string, catalogNumber: string | null) {
+  console.log('🔐 Checking Discogs API credentials...', {
+    hasKey: !!discogsConsumerKey,
+    hasSecret: !!discogsConsumerSecret,
+    keyLength: discogsConsumerKey?.length || 0,
+    secretLength: discogsConsumerSecret?.length || 0
+  });
+  
   if (!discogsConsumerKey || !discogsConsumerSecret) {
     console.log('⚠️ Discogs API keys not configured, skipping Discogs search');
     return null;
@@ -593,6 +600,7 @@ serve(async (req) => {
     
     if (combinedData.artist && combinedData.title) {
       console.log('🎵 Starting Discogs search and pricing lookup...');
+      console.log(`🔍 Search params: Artist="${combinedData.artist}", Title="${combinedData.title}", Catalog="${combinedData.catalog_number}"`);
       
       discogsData = await searchDiscogsRelease(
         combinedData.artist, 
@@ -600,6 +608,7 @@ serve(async (req) => {
         combinedData.catalog_number
       );
       
+      console.log('🎯 Discogs search result:', JSON.stringify(discogsData, null, 2));
       if (discogsData?.discogs_id) {
         pricingData = await getDiscogsPriceAnalysisById(
           discogsData.discogs_id, 

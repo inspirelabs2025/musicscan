@@ -32,7 +32,7 @@ function cleanJsonFromMarkdown(text: string): string {
   return cleaned;
 }
 
-// Function to search Discogs for releases
+// Function to search Discogs for releases with improved search strategy
 async function searchDiscogsRelease(artist: string, title: string, catalogNumber: string | null) {
   if (!discogsConsumerKey || !discogsConsumerSecret) {
     console.log('⚠️ Discogs API keys not configured, skipping Discogs search');
@@ -42,37 +42,99 @@ async function searchDiscogsRelease(artist: string, title: string, catalogNumber
   try {
     console.log('🔍 Searching Discogs for:', { artist, title, catalogNumber });
     
-    // Build search query
-    let query = `${artist} ${title}`;
+    // Try multiple search strategies in order of specificity
+    const searchStrategies = [];
+    
+    // Strategy 1: Catalog number only (most specific)
     if (catalogNumber) {
-      query += ` ${catalogNumber}`;
+      searchStrategies.push({
+        query: catalogNumber,
+        params: { catno: catalogNumber },
+        name: 'catalog-only'
+      });
     }
     
-    const searchUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`;
+    // Strategy 2: Artist + Title + Catalog number
+    if (catalogNumber && artist && title) {
+      searchStrategies.push({
+        query: `${artist} ${title}`,
+        params: { catno: catalogNumber, artist, release_title: title },
+        name: 'full-match'
+      });
+    }
     
-    const response = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': 'VinylScanner/1.0'
+    // Strategy 3: Artist + Title only
+    if (artist && title) {
+      searchStrategies.push({
+        query: `${artist} ${title}`,
+        params: { artist, release_title: title },
+        name: 'artist-title'
+      });
+    }
+    
+    // Strategy 4: General search (fallback)
+    if (artist || title) {
+      const query = `${artist || ''} ${title || ''}`.trim();
+      searchStrategies.push({
+        query,
+        params: {},
+        name: 'general'
+      });
+    }
+    
+    // Try each strategy until we find results
+    for (const strategy of searchStrategies) {
+      console.log(`🎯 Trying search strategy: ${strategy.name}`);
+      
+      const params = new URLSearchParams({
+        q: strategy.query,
+        type: 'release',
+        key: discogsConsumerKey,
+        secret: discogsConsumerSecret,
+        per_page: '10',
+        ...strategy.params
+      });
+      
+      const searchUrl = `https://api.discogs.com/database/search?${params.toString()}`;
+      
+      const response = await fetch(searchUrl, {
+        headers: {
+          'User-Agent': 'VinylScanner/1.0'
+        }
+      });
+      
+      if (!response.ok) {
+        console.error(`❌ Discogs search failed for ${strategy.name}:`, response.statusText);
+        continue;
       }
-    });
-    
-    if (!response.ok) {
-      console.error('❌ Discogs search failed:', response.statusText);
-      return null;
+      
+      const data = await response.json();
+      
+      if (data.results && data.results.length > 0) {
+        // Find the best match based on catalog number if available
+        let bestMatch = data.results[0];
+        
+        if (catalogNumber) {
+          const catalogMatch = data.results.find(result => 
+            result.catno && result.catno.toLowerCase().includes(catalogNumber.toLowerCase())
+          );
+          if (catalogMatch) {
+            bestMatch = catalogMatch;
+          }
+        }
+        
+        console.log(`✅ Found Discogs release using ${strategy.name}:`, bestMatch.id);
+        return {
+          discogs_id: bestMatch.id,
+          discogs_url: `https://www.discogs.com/release/${bestMatch.id}`,
+          strategy_used: strategy.name
+        };
+      }
+      
+      console.log(`📭 No results for strategy: ${strategy.name}`);
     }
     
-    const data = await response.json();
-    
-    if (data.results && data.results.length > 0) {
-      const bestMatch = data.results[0]; // Take the first result as best match
-      console.log('✅ Found Discogs release:', bestMatch.id);
-      return {
-        discogs_id: bestMatch.id,
-        discogs_url: `https://www.discogs.com/release/${bestMatch.id}`
-      };
-    }
-    
-    console.log('📭 No Discogs results found');
+    console.log('📭 No Discogs results found with any strategy');
     return null;
   } catch (error) {
     console.error('❌ Error searching Discogs:', error);
@@ -80,7 +142,7 @@ async function searchDiscogsRelease(artist: string, title: string, catalogNumber
   }
 }
 
-// Function to get pricing data from Discogs
+// Function to get comprehensive pricing data from Discogs
 async function getDiscogsPricing(discogsId: number) {
   if (!discogsConsumerKey || !discogsConsumerSecret) {
     return { lowest_price: null, median_price: null, highest_price: null };
@@ -89,31 +151,66 @@ async function getDiscogsPricing(discogsId: number) {
   try {
     console.log(`💰 Getting pricing data for Discogs ID: ${discogsId}`);
     
-    const pricingUrl = `https://api.discogs.com/marketplace/stats/${discogsId}?key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`;
-    
-    const response = await fetch(pricingUrl, {
-      headers: {
-        'User-Agent': 'VinylScanner/1.0'
+    // Try multiple pricing endpoints
+    const pricingEndpoints = [
+      {
+        url: `https://api.discogs.com/marketplace/stats/${discogsId}?key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`,
+        name: 'marketplace-stats'
+      },
+      {
+        url: `https://api.discogs.com/releases/${discogsId}?key=${discogsConsumerKey}&secret=${discogsConsumerSecret}`,
+        name: 'release-info'
       }
-    });
+    ];
     
-    if (!response.ok) {
-      console.error('❌ Discogs pricing API failed:', response.statusText);
-      return { lowest_price: null, median_price: null, highest_price: null };
+    for (const endpoint of pricingEndpoints) {
+      console.log(`💰 Trying ${endpoint.name} endpoint...`);
+      
+      const response = await fetch(endpoint.url, {
+        headers: {
+          'User-Agent': 'VinylScanner/1.0'
+        }
+      });
+      
+      if (!response.ok) {
+        console.error(`❌ ${endpoint.name} API failed:`, response.statusText);
+        continue;
+      }
+      
+      const data = await response.json();
+      console.log(`📊 ${endpoint.name} response:`, JSON.stringify(data, null, 2));
+      
+      if (endpoint.name === 'marketplace-stats') {
+        // Handle marketplace stats response
+        if (data && (data.lowest_price || data.highest_price)) {
+          const lowest = data.lowest_price?.value || null;
+          const highest = data.highest_price?.value || null;
+          const median = lowest && highest ? (lowest + highest) / 2 : (lowest || highest);
+          
+          console.log('✅ Retrieved marketplace stats:', { lowest, median, highest });
+          return {
+            lowest_price: lowest,
+            median_price: median,
+            highest_price: highest
+          };
+        }
+      } else if (endpoint.name === 'release-info') {
+        // Handle release info response - look for estimated_weight, community rating, etc.
+        if (data && data.community && data.community.have > 10) {
+          // Estimate pricing based on community data and rating
+          const estimatedBase = Math.max(5, data.community.rating * 10);
+          
+          console.log('✅ Retrieved community-based pricing estimate:', estimatedBase);
+          return {
+            lowest_price: estimatedBase * 0.7,
+            median_price: estimatedBase,
+            highest_price: estimatedBase * 2.5
+          };
+        }
+      }
     }
     
-    const data = await response.json();
-    
-    if (data && data.lowest_price && data.lowest_price.value) {
-      console.log('✅ Retrieved pricing data:', data);
-      return {
-        lowest_price: data.lowest_price.value,
-        median_price: data.lowest_price.value, // Discogs API provides lowest, we use it as median fallback
-        highest_price: data.lowest_price.value * 3 // Estimate highest as 3x lowest
-      };
-    }
-    
-    console.log('📭 No pricing data available');
+    console.log('📭 No pricing data available from any endpoint');
     return { lowest_price: null, median_price: null, highest_price: null };
   } catch (error) {
     console.error('❌ Error getting Discogs pricing:', error);

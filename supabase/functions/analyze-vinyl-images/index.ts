@@ -356,7 +356,7 @@ async function getDiscogsPriceAnalysisById(
     const statsRes = await fetch(statsUrl, {
       headers: {
         "User-Agent": "VinylVoyagerApp/1.0",
-        'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`
+        'Authorization': discogsToken ? `Discogs token=${discogsToken}` : `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`
       }
     });
 

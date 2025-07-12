@@ -341,88 +341,39 @@ async function getDiscogsPriceAnalysisById(
   }
 
   try {
-    console.log(`🔍 Starting price analysis for release ${releaseId} with condition: "${condition}"`);
+    console.log(`🔍 Starting price analysis for release ${releaseId}`);
     
-    // Get the listings for this release using Consumer Key/Secret
-    const listingsUrl = `https://api.discogs.com/marketplace/listings/release/${releaseId}?sort=price&sort_order=asc&per_page=100`;
+    // Use the marketplace stats endpoint for direct statistics
+    const statsUrl = `https://api.discogs.com/marketplace/stats/${releaseId}`;
     
-    const listingsRes = await fetch(listingsUrl, {
+    const statsRes = await fetch(statsUrl, {
       headers: {
         "User-Agent": "VinylVoyagerApp/1.0",
         'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`
       }
     });
 
-    if (!listingsRes.ok) {
-      console.warn(`❌ Discogs listings error: ${listingsRes.status} ${listingsRes.statusText}`);
+    if (!statsRes.ok) {
+      console.warn(`❌ Discogs stats error: ${statsRes.status} ${statsRes.statusText}`);
       return null;
     }
 
-    const listingsData = await listingsRes.json();
+    const statsData = await statsRes.json();
     
-    if (!listingsData.listings || listingsData.listings.length === 0) {
-      console.log(`❌ No listings found for release ${releaseId}`);
-      return null;
-    }
+    console.log(`📊 Marketplace stats for release ${releaseId}:`, JSON.stringify(statsData, null, 2));
 
-    const listings: DiscogsListing[] = listingsData.listings.map((listing: any) => ({
-      price: parseFloat(listing.price.value),
-      currency: listing.price.currency,
-      condition: listing.condition,
-      sleeve_condition: listing.sleeve_condition,
-      shipping_price: listing.shipping_price ? parseFloat(listing.shipping_price.value) : undefined,
-      seller_location: listing.seller.location
-    }));
-
-    console.log(`📊 Found ${listings.length} total listings`);
-    
-    // LOG ALL EXACT CONDITION STRINGS from Discogs API
-    const allConditions = [...new Set(listings.map(l => l.condition))];
-    console.log(`🎯 EXACT Discogs condition strings found:`, allConditions);
-    console.log(`🔎 Requested condition for filtering: "${condition}"`);
-
-    // Enhanced condition matching with debug info
-    let matchingListings = listings;
-    if (condition) {
-      console.log(`🔍 Starting condition matching for: "${condition}"`);
-      
-      matchingListings = listings.filter(item => {
-        const isMatch = flexibleConditionsMatch(condition, item.condition);
-        if (isMatch) {
-          console.log(`✅ MATCH: "${condition}" matches "${item.condition}"`);
-        } else {
-          console.log(`❌ NO MATCH: "${condition}" does not match "${item.condition}"`);
-        }
-        return isMatch;
-      });
-      
-      console.log(`📈 Condition matching results:`);
-      console.log(`   - Total listings: ${listings.length}`);
-      console.log(`   - Matching condition "${condition}": ${matchingListings.length}`);
-      console.log(`   - Match percentage: ${((matchingListings.length / listings.length) * 100).toFixed(1)}%`);
-    }
-    
-    if (matchingListings.length === 0) {
-      console.log(`❌ No listings match the specified condition: "${condition}"`);
-      console.log(`💡 Available conditions: ${allConditions.join(', ')}`);
-      return {
-        lowest_price: null,
-        median_price: null,
-        highest_price: null
-      };
-    }
-
-    // Sort by price
-    const sorted = [...matchingListings].sort((a, b) => a.price - b.price);
-    const median = sorted[Math.floor(sorted.length / 2)];
-
-    console.log(`💰 Final price range for condition "${condition}": ${sorted[0].price} - ${sorted[sorted.length - 1].price} (${sorted.length} listings)`);
-
-    return {
-      lowest_price: sorted[0].price,
-      median_price: median.price,
-      highest_price: sorted[sorted.length - 1].price
+    // Extract the statistics directly from the API response
+    const result = {
+      lowest_price: statsData.lowest_price?.value || null,
+      median_price: statsData.median_price?.value || null, 
+      highest_price: statsData.highest_price?.value || null,
+      num_for_sale: statsData.num_for_sale || 0,
+      currency: statsData.lowest_price?.currency || 'EUR'
     };
+
+    console.log(`💰 Price statistics: Low: ${result.lowest_price}, Median: ${result.median_price}, High: ${result.highest_price}, For Sale: ${result.num_for_sale}`);
+
+    return result;
   } catch (err) {
     console.error("❌ Discogs price analysis by ID failed:", err);
     return null;

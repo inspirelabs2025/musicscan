@@ -110,8 +110,10 @@ serve(async (req) => {
             2. Album/track title
             3. Year of release
             4. Format (LP, CD, 7", 12", etc.)
-            5. Any other identifying text
-            6. Barcode if visible
+            5. Genre (Rock, Jazz, Pop, etc.)
+            6. Country of release
+            7. Any other identifying text
+            8. Barcode if visible
             
             Respond in JSON format:
             {
@@ -119,6 +121,8 @@ serve(async (req) => {
               "title": "album_title_or_null",
               "year": "year_or_null",
               "format": "format_or_null",
+              "genre": "genre_or_null",
+              "country": "country_or_null",
               "barcode": "barcode_or_null",
               "additional_info": "any_other_text",
               "confidence": 0.0-1.0
@@ -189,7 +193,7 @@ serve(async (req) => {
       }
     }
 
-    // Combine results for Discogs search
+    // Combine results for database storage
     const combinedData = {
       catalog_number: analysisResults[0]?.analysis?.catalog_number || null,
       matrix_number: analysisResults[1]?.analysis?.matrix_number || null,
@@ -198,12 +202,15 @@ serve(async (req) => {
       year: analysisResults[2]?.analysis?.year || null,
       format: analysisResults[2]?.analysis?.format || null,
       label: analysisResults[0]?.analysis?.label || null,
-      barcode: analysisResults[2]?.analysis?.barcode || null
+      barcode: analysisResults[2]?.analysis?.barcode || null,
+      genre: analysisResults[2]?.analysis?.genre || null,
+      country: analysisResults[2]?.analysis?.country || null,
+      additional_info: analysisResults[2]?.analysis?.additional_info || null
     };
 
     console.log('🎯 Combined OCR results:', combinedData);
 
-    // Save to database
+    // Save comprehensive OCR results to database
     const { data: insertData, error: insertError } = await supabase
       .from('vinyl2_scan')
       .insert({
@@ -216,7 +223,9 @@ serve(async (req) => {
         title: combinedData.title,
         year: combinedData.year ? parseInt(combinedData.year) : null,
         format: combinedData.format,
-        label: combinedData.label
+        label: combinedData.label,
+        genre: combinedData.genre,
+        country: combinedData.country
       })
       .select()
       .single();

@@ -486,6 +486,18 @@ serve(async (req) => {
   try {
     console.log('🎵 Starting vinyl image analysis...');
     
+    // Check if OpenAI API key is available
+    if (!openAIApiKey) {
+      console.error('❌ OpenAI API key not found');
+      return new Response(
+        JSON.stringify({ error: 'OpenAI API key not configured' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
     const { imageUrls, scanId } = await req.json();
     
     if (!imageUrls || imageUrls.length !== 3) {
@@ -598,7 +610,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'gpt-4.1-2025-04-14',
           messages: [analysisPrompts[i]],
           max_tokens: 500,
           temperature: 0.1,

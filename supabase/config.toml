@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.test-discogs]
 verify_jwt = false
+
+[functions.test-catalog-search]
+verify_jwt = false

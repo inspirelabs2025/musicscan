@@ -20,9 +20,11 @@ serve(async (req) => {
       throw new Error('Catalog number is required');
     }
 
-    const DISCOGS_TOKEN = Deno.env.get('DISCOGS_TOKEN');
-    if (!DISCOGS_TOKEN) {
-      throw new Error('Discogs token not configured');
+    const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
+    const discogsConsumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET');
+    
+    if (!discogsConsumerKey || !discogsConsumerSecret) {
+      throw new Error('DISCOGS_CONSUMER_KEY and DISCOGS_CONSUMER_SECRET environment variables are required');
     }
 
     console.log(`🎵 Searching for catalog: "${catalog_number}", artist: "${artist}", title: "${title}"`);
@@ -41,7 +43,7 @@ serve(async (req) => {
       try {
         const response = await fetch(searchUrl, {
           headers: {
-            'Authorization': `Discogs token=${DISCOGS_TOKEN}`,
+            'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`,
             'User-Agent': 'VinylScanner/2.0'
           }
         });

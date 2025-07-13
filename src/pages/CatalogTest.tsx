@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 interface SearchResult {
   discogs_id: string;
   discogs_url: string;
+  sell_url: string;
+  api_url: string;
   title: string;
   artist: string;
   year?: string;
@@ -135,10 +137,13 @@ const CatalogTest = () => {
                   <Label htmlFor="catalog">Catalogusnummer *</Label>
                   <Input
                     id="catalog"
-                    placeholder="bijv. CBS 81227"
+                    placeholder="bijv. 5C062.13024, CBS 81227, MOTOWN 5149"
                     value={catalogNumber}
                     onChange={(e) => setCatalogNumber(e.target.value)}
                   />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Test voorbeelden: 5C062.13024, CBS 81227, ATCO SD 33-329
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="artist">Artiest (optioneel)</Label>
@@ -231,37 +236,62 @@ const CatalogTest = () => {
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-2 pt-2 border-t">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(result.discogs_url)}
-                        >
-                          <Copy className="w-4 h-4 mr-2" />
-                          Kopieer URL
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
-                        >
-                          <a 
-                            href={result.discogs_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
+                      <div className="space-y-2 pt-2 border-t">
+                        <div className="text-xs text-muted-foreground font-semibold">URL Types:</div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(result.discogs_url)}
                           >
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            Open Discogs
-                          </a>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(`https://www.discogs.com/sell/release/${result.discogs_id}`)}
-                        >
-                          <Copy className="w-4 h-4 mr-2" />
-                          Marketplace URL
-                        </Button>
+                            <Copy className="w-4 h-4 mr-1" />
+                            Release Info
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                          >
+                            <a 
+                              href={result.discogs_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="w-4 h-4 mr-1" />
+                              Open Release
+                            </a>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(result.sell_url)}
+                          >
+                            <Copy className="w-4 h-4 mr-1" />
+                            Marketplace
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                          >
+                            <a 
+                              href={result.sell_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="w-4 h-4 mr-1" />
+                              Open Marketplace
+                            </a>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(result.api_url)}
+                          >
+                            <Copy className="w-4 h-4 mr-1" />
+                            API URL
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}

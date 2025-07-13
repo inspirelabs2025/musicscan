@@ -209,6 +209,8 @@ Deno.serve(async (req) => {
     const formattedResults = uniqueResults.slice(0, 10).map(result => ({
       discogs_id: result.id?.toString() || '',
       discogs_url: `https://www.discogs.com/release/${result.id}`,
+      sell_url: `https://www.discogs.com/sell/release/${result.id}`,
+      api_url: `https://api.discogs.com/releases/${result.id}`,
       title: result.title || '',
       artist: result.title?.split(' - ')[0] || '',
       year: result.year?.toString() || '',

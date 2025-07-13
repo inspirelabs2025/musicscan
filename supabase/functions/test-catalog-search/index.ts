@@ -180,16 +180,21 @@ Deno.serve(async (req) => {
         const html = await response.text();
         console.log(`✅ Retrieved HTML, length: ${html.length}`);
         
-        // Extract statistics using regex patterns
+        // Extract statistics using HTML-aware regex patterns
         const stats = {
-          have: parseInt(html.match(/Have:\s?(\d+)/)?.[1] || '0'),
-          want: parseInt(html.match(/Want:\s?(\d+)/)?.[1] || '0'),
-          avg_rating: parseFloat(html.match(/Avg Rating:\s?([\d.]+)\s?\/\s?5/)?.[1] || '0'),
-          rating_count: parseInt(html.match(/Ratings:\s?(\d+)/)?.[1] || '0'),
-          last_sold: html.match(/Last Sold:\s?([0-9]{2} \w{3} \d{2})/)?.[1] || null,
-          lowest_price: html.match(/Lowest:\s?(€[\d.,]+)/)?.[1] || null,
-          median_price: html.match(/Median:\s?(€[\d.,]+)/)?.[1] || null,
-          highest_price: html.match(/Highest:\s?(€[\d.,]+)/)?.[1] || null
+          have: parseInt(html.match(/<span>Have:<\/span>\s*<a[^>]*>(\d+)<\/a>/)?.[1] || 
+                html.match(/Have:\s?(\d+)/)?.[1] || '0'),
+          want: parseInt(html.match(/<span>Want:<\/span>\s*<a[^>]*>(\d+)<\/a>/)?.[1] || 
+                html.match(/Want:\s?(\d+)/)?.[1] || '0'),
+          avg_rating: parseFloat(html.match(/<span class="rating_value">([\d.]+)<\/span>/)?.[1] || 
+                      html.match(/Avg Rating:\s?([\d.]+)\s?\/\s?5/)?.[1] || '0'),
+          rating_count: parseInt(html.match(/<span class="rating_count">(\d+)<\/span>/)?.[1] || 
+                        html.match(/Ratings:\s?(\d+)/)?.[1] || '0'),
+          last_sold: html.match(/<span>Last Sold:<\/span>\s*<a[^>]*>([0-9]{2} \w{3} \d{2})<\/a>/)?.[1] || 
+                     html.match(/Last Sold:\s?([0-9]{2} \w{3} \d{2})/)?.[1] || null,
+          lowest_price: html.match(/Lowest:\s*(€[\d.,]+)/)?.[1] || null,
+          median_price: html.match(/Median:\s*(€[\d.,]+)/)?.[1] || null,
+          highest_price: html.match(/Highest:\s*(€[\d.,]+)/)?.[1] || null
         };
 
         console.log(`📊 Extracted stats:`, stats);

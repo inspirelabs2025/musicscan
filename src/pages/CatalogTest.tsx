@@ -242,14 +242,6 @@ const CatalogTest = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => copyToClipboard(result.discogs_url)}
-                          >
-                            <Copy className="w-4 h-4 mr-1" />
-                            Release Info
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
                             asChild
                           >
                             <a 
@@ -258,16 +250,8 @@ const CatalogTest = () => {
                               rel="noopener noreferrer"
                             >
                               <ExternalLink className="w-4 h-4 mr-1" />
-                              Open Release
+                              Release Info
                             </a>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyToClipboard(result.sell_url)}
-                          >
-                            <Copy className="w-4 h-4 mr-1" />
-                            Marketplace
                           </Button>
                           <Button
                             variant="outline"
@@ -280,16 +264,31 @@ const CatalogTest = () => {
                               rel="noopener noreferrer"
                             >
                               <ExternalLink className="w-4 h-4 mr-1" />
-                              Open Marketplace
+                              Marketplace
                             </a>
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => copyToClipboard(result.api_url)}
+                            asChild
                           >
-                            <Copy className="w-4 h-4 mr-1" />
-                            API URL
+                            <a 
+                              href={result.api_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="w-4 h-4 mr-1" />
+                              API URL
+                            </a>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(result.sell_url)}
+                            className="text-xs"
+                          >
+                            <Copy className="w-3 h-3 mr-1" />
+                            Kopieer Marketplace
                           </Button>
                         </div>
                       </div>

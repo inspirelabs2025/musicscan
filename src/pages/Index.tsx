@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Camera, Disc3, ScanLine, TrendingUp, Loader2, CheckCircle, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +82,14 @@ const Index = () => {
             Upload 3 foto's van je LP of CD en krijg direct de Discogs informatie 
             met accurate prijsinschattingen gebaseerd op de actuele marktwaarde.
           </p>
+        </div>
+
+        <div className="mb-6 text-center">
+          <Link to="/vinyl-scan-complete">
+            <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white">
+              🎵 Complete Vinyl Scan (Nieuw!)
+            </Button>
+          </Link>
         </div>
 
         <Tabs defaultValue="scan" className="w-full">

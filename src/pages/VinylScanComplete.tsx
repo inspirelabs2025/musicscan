@@ -6,14 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileUpload } from '@/components/FileUpload';
 import { useVinylAnalysis } from '@/hooks/useVinylAnalysis';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const VinylScanComplete = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [selectedCondition, setSelectedCondition] = useState<string>('');
+  const [calculatedAdvicePrice, setCalculatedAdvicePrice] = useState<number | null>(null);
+  const [isSavingCondition, setIsSavingCondition] = useState(false);
   
   const { 
     isAnalyzing, 
@@ -77,10 +82,78 @@ const VinylScanComplete = () => {
     return 100;
   };
 
+  // Condition multipliers based on median price
+  const conditionMultipliers: Record<string, number> = {
+    'Mint (M)': 1.5,
+    'Near Mint (NM or M-)': 1.4,
+    'Very Good Plus (VG+)': 1.2,
+    'Very Good (VG)': 0.8,
+    'Good Plus (G+)': 0.6,
+    'Good (G)': 0.4,
+    'Fair (F) / Poor (P)': 0.2
+  };
+
+  // Calculate advice price based on condition and median price
+  const calculateAdvicePrice = (condition: string, medianPrice: string | null) => {
+    if (!condition || !medianPrice) return null;
+    const price = parseFloat(medianPrice.replace(',', '.'));
+    const multiplier = conditionMultipliers[condition];
+    return Math.round(price * multiplier * 100) / 100; // Round to 2 decimals
+  };
+
+  // Update database with condition and calculated price
+  const updateVinylScanWithCondition = async (condition: string, advicePrice: number) => {
+    if (!analysisResult?.scanId) return;
+
+    setIsSavingCondition(true);
+    try {
+      const { error } = await supabase
+        .from('vinyl2_scan')
+        .update({
+          condition_grade: condition,
+          calculated_advice_price: advicePrice
+        })
+        .eq('id', analysisResult.scanId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Conditie Opgeslagen! ✅",
+        description: `Adviesprijs: €${advicePrice.toFixed(2)}`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error updating vinyl scan:', error);
+      toast({
+        title: "Fout bij Opslaan",
+        description: "Kon conditie niet opslaan in database",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingCondition(false);
+    }
+  };
+
+  // Handle condition selection
+  const handleConditionChange = (condition: string) => {
+    setSelectedCondition(condition);
+    
+    const medianPrice = searchResults[0]?.pricing_stats?.median_price;
+    if (medianPrice) {
+      const advicePrice = calculateAdvicePrice(condition, medianPrice);
+      if (advicePrice) {
+        setCalculatedAdvicePrice(advicePrice);
+        updateVinylScanWithCondition(condition, advicePrice);
+      }
+    }
+  };
+
   const resetScan = () => {
     setCurrentStep(1);
     setUploadedFiles([]);
     setAnalysisResult(null);
+    setSelectedCondition('');
+    setCalculatedAdvicePrice(null);
   };
 
   return (
@@ -285,6 +358,55 @@ const VinylScanComplete = () => {
                                 <ExternalLink className="h-4 w-4 mr-1" />
                                 Marketplace
                               </Button>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Condition Assessment Section */}
+                  {searchResults.length > 0 && searchResults[0]?.pricing_stats?.median_price && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5" />
+                          Conditie Assessment
+                        </CardTitle>
+                        <CardDescription>
+                          Selecteer de staat van uw LP om een adviesprijs te berekenen
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Conditie van de LP:</label>
+                          <Select value={selectedCondition} onValueChange={handleConditionChange}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Kies de conditie van uw LP" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(conditionMultipliers).map(([condition, multiplier]) => (
+                                <SelectItem key={condition} value={condition}>
+                                  {condition} ({multiplier > 1 ? '+' : ''}{Math.round((multiplier - 1) * 100)}%)
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {selectedCondition && calculatedAdvicePrice && (
+                          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm text-green-800 mb-1">Berekende Adviesprijs:</p>
+                                <p className="text-2xl font-bold text-green-900">€{calculatedAdvicePrice.toFixed(2)}</p>
+                                <p className="text-xs text-green-700">
+                                  Gebaseerd op mediaan €{searchResults[0]?.pricing_stats?.median_price} × {conditionMultipliers[selectedCondition]}
+                                </p>
+                              </div>
+                              {isSavingCondition && (
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+                              )}
                             </div>
                           </div>
                         )}

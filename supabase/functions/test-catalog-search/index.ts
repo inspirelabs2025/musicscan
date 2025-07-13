@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   try {
     console.log('🔍 Starting catalog search test...');
     
-    const { catalog_number, artist, title } = await req.json();
+    const { catalog_number, artist, title, include_pricing } = await req.json();
     
     if (!catalog_number) {
       console.error('❌ Catalog number is required');
@@ -26,11 +26,13 @@ Deno.serve(async (req) => {
     const discogsToken = Deno.env.get('DISCOGS_TOKEN');
     const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
     const discogsConsumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET');
+    const scraperApiKey = Deno.env.get('SCRAPERAPI_KEY');
     
     console.log(`📋 Credential Status:
     - Token: ${discogsToken ? `✅ (${discogsToken.substring(0, 8)}...)` : '❌ Missing'}
     - Consumer Key: ${discogsConsumerKey ? `✅ (${discogsConsumerKey.substring(0, 8)}...)` : '❌ Missing'}
-    - Consumer Secret: ${discogsConsumerSecret ? `✅ (${discogsConsumerSecret.substring(0, 8)}...)` : '❌ Missing'}`);
+    - Consumer Secret: ${discogsConsumerSecret ? `✅ (${discogsConsumerSecret.substring(0, 8)}...)` : '❌ Missing'}
+    - ScraperAPI Key: ${scraperApiKey ? `✅ (${scraperApiKey.substring(0, 8)}...)` : '❌ Missing'}`);
     
     if (!discogsToken && (!discogsConsumerKey || !discogsConsumerSecret)) {
       console.error('❌ Missing Discogs credentials. Need either DISCOGS_TOKEN or both DISCOGS_CONSUMER_KEY and DISCOGS_CONSUMER_SECRET');
@@ -52,7 +54,7 @@ Deno.serve(async (req) => {
     
     console.log(`🔑 Using ${discogsToken ? 'Token' : 'Consumer Key/Secret'} authentication`);
 
-    console.log(`🎵 Searching for catalog: "${catalog_number}", artist: "${artist}", title: "${title}"`);
+    console.log(`🎵 Searching for catalog: "${catalog_number}", artist: "${artist}", title: "${title}", include_pricing: ${include_pricing}`);
 
     // Array to track all search strategies used
     const searchStrategies: string[] = [];
@@ -158,6 +160,46 @@ Deno.serve(async (req) => {
       return matrix[str2.length][str1.length];
     };
 
+    // Function to scrape pricing statistics from marketplace URL
+    const scrapePricingStats = async (sellUrl: string) => {
+      if (!scraperApiKey) {
+        console.log('⚠️ ScraperAPI key not available, skipping pricing scrape');
+        return null;
+      }
+
+      try {
+        console.log(`💰 Scraping pricing stats from: ${sellUrl}`);
+        const scraperUrl = `https://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(sellUrl)}`;
+        
+        const response = await fetch(scraperUrl);
+        if (!response.ok) {
+          console.log(`❌ ScraperAPI request failed: ${response.status}`);
+          return null;
+        }
+
+        const html = await response.text();
+        console.log(`✅ Retrieved HTML, length: ${html.length}`);
+        
+        // Extract statistics using regex patterns
+        const stats = {
+          have: parseInt(html.match(/Have:\s?(\d+)/)?.[1] || '0'),
+          want: parseInt(html.match(/Want:\s?(\d+)/)?.[1] || '0'),
+          avg_rating: parseFloat(html.match(/Avg Rating:\s?([\d.]+)\s?\/\s?5/)?.[1] || '0'),
+          rating_count: parseInt(html.match(/Ratings:\s?(\d+)/)?.[1] || '0'),
+          last_sold: html.match(/Last Sold:\s?([0-9]{2} \w{3} \d{2})/)?.[1] || null,
+          lowest_price: html.match(/Lowest:\s?(€[\d.,]+)/)?.[1] || null,
+          median_price: html.match(/Median:\s?(€[\d.,]+)/)?.[1] || null,
+          highest_price: html.match(/Highest:\s?(€[\d.,]+)/)?.[1] || null
+        };
+
+        console.log(`📊 Extracted stats:`, stats);
+        return stats;
+      } catch (error) {
+        console.error(`❌ Pricing scrape failed for ${sellUrl}:`, error);
+        return null;
+      }
+    };
+
     // Search Strategy 1: Exact catalog number
     const exactResults = await searchDiscogs(`catno:"${catalog_number}"`, 'Exact Catalog Number');
     allResults.push(...exactResults);
@@ -206,7 +248,7 @@ Deno.serve(async (req) => {
     uniqueResults.sort((a, b) => b.similarity_score - a.similarity_score);
 
     // Format results
-    const formattedResults = uniqueResults.slice(0, 10).map(result => ({
+    let formattedResults = uniqueResults.slice(0, 10).map(result => ({
       discogs_id: result.id?.toString() || '',
       discogs_url: `https://www.discogs.com/release/${result.id}`,
       sell_url: `https://www.discogs.com/sell/release/${result.id}`,
@@ -216,8 +258,34 @@ Deno.serve(async (req) => {
       year: result.year?.toString() || '',
       similarity_score: result.similarity_score || 0,
       search_strategy: result.search_strategy || 'Unknown',
-      catalog_number: result.catno || ''
+      catalog_number: result.catno || '',
+      pricing_stats: null as any
     }));
+
+    // Add pricing statistics if requested
+    if (include_pricing && scraperApiKey && formattedResults.length > 0) {
+      console.log(`💰 Scraping pricing stats for ${formattedResults.length} results...`);
+      
+      // Scrape pricing stats for all results in parallel (with a reasonable limit)
+      const pricingPromises = formattedResults.slice(0, 5).map(async (result, index) => {
+        // Add a small delay to avoid overwhelming ScraperAPI
+        await new Promise(resolve => setTimeout(resolve, index * 1000));
+        const pricingStats = await scrapePricingStats(result.sell_url);
+        return { index, pricingStats };
+      });
+
+      try {
+        const pricingResults = await Promise.all(pricingPromises);
+        pricingResults.forEach(({ index, pricingStats }) => {
+          if (index < formattedResults.length) {
+            formattedResults[index].pricing_stats = pricingStats;
+          }
+        });
+        console.log(`✅ Pricing scraping completed`);
+      } catch (error) {
+        console.error(`❌ Error during pricing scraping:`, error);
+      }
+    }
 
     console.log(`✅ Search completed: ${formattedResults.length} unique results found`);
 

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,12 +21,23 @@ interface SearchResult {
   similarity_score: number;
   search_strategy: string;
   catalog_number: string;
+  pricing_stats?: {
+    have: number;
+    want: number;
+    avg_rating: number;
+    rating_count: number;
+    last_sold: string | null;
+    lowest_price: string | null;
+    median_price: string | null;
+    highest_price: string | null;
+  } | null;
 }
 
 const CatalogTest = () => {
   const [catalogNumber, setCatalogNumber] = useState("");
   const [artist, setArtist] = useState("");
   const [title, setTitle] = useState("");
+  const [includePricing, setIncludePricing] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searchStrategies, setSearchStrategies] = useState<string[]>([]);
@@ -52,7 +64,8 @@ const CatalogTest = () => {
         body: {
           catalog_number: catalogNumber,
           artist: artist || undefined,
-          title: title || undefined
+          title: title || undefined,
+          include_pricing: includePricing
         }
       });
 
@@ -164,13 +177,25 @@ const CatalogTest = () => {
                   />
                 </div>
               </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="include-pricing" 
+                  checked={includePricing}
+                  onCheckedChange={(checked) => setIncludePricing(checked as boolean)}
+                />
+                <Label htmlFor="include-pricing" className="text-sm">
+                  Include Pricing Statistics (langzamer)
+                </Label>
+              </div>
+              
               <Button 
                 onClick={handleSearch} 
                 disabled={isSearching}
                 className="w-full md:w-auto"
               >
                 <Search className="w-4 h-4 mr-2" />
-                {isSearching ? "Zoeken..." : "Zoek Discogs URLs"}
+                {isSearching ? (includePricing ? "Zoeken & Scrapen..." : "Zoeken...") : "Zoek Discogs URLs"}
               </Button>
             </CardContent>
           </Card>
@@ -235,6 +260,46 @@ const CatalogTest = () => {
                           </Badge>
                         </div>
                       </div>
+
+                      {/* Pricing Statistics */}
+                      {result.pricing_stats && (
+                        <div className="space-y-2 pt-2 border-t">
+                          <div className="text-xs text-muted-foreground font-semibold">Pricing Statistics:</div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Have:</span> {result.pricing_stats.have}
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Want:</span> {result.pricing_stats.want}
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Rating:</span> {result.pricing_stats.avg_rating > 0 ? `${result.pricing_stats.avg_rating}/5 (${result.pricing_stats.rating_count})` : 'N/A'}
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Last Sold:</span> {result.pricing_stats.last_sold || 'N/A'}
+                            </div>
+                          </div>
+                          {(result.pricing_stats.lowest_price || result.pricing_stats.median_price || result.pricing_stats.highest_price) && (
+                            <div className="flex flex-wrap gap-2 text-sm">
+                              {result.pricing_stats.lowest_price && (
+                                <Badge variant="outline" className="text-green-600">
+                                  Low: {result.pricing_stats.lowest_price}
+                                </Badge>
+                              )}
+                              {result.pricing_stats.median_price && (
+                                <Badge variant="outline" className="text-blue-600">
+                                  Med: {result.pricing_stats.median_price}
+                                </Badge>
+                              )}
+                              {result.pricing_stats.highest_price && (
+                                <Badge variant="outline" className="text-red-600">
+                                  High: {result.pricing_stats.highest_price}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                       
                       <div className="space-y-2 pt-2 border-t">
                         <div className="text-xs text-muted-foreground font-semibold">URL Types:</div>

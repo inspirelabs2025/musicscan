@@ -1,14 +1,12 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
@@ -17,14 +15,30 @@ serve(async (req) => {
     const { catalog_number, artist, title } = await req.json();
     
     if (!catalog_number) {
-      throw new Error('Catalog number is required');
+      console.error('❌ Catalog number is required');
+      return new Response(
+        JSON.stringify({ error: 'Catalog number is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
     const discogsConsumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET');
     
+    console.log(`📋 Credential Status:
+    - Consumer Key: ${discogsConsumerKey ? `✅ (${discogsConsumerKey.substring(0, 8)}...)` : '❌ Missing'}
+    - Consumer Secret: ${discogsConsumerSecret ? `✅ (${discogsConsumerSecret.substring(0, 8)}...)` : '❌ Missing'}`);
+    
     if (!discogsConsumerKey || !discogsConsumerSecret) {
-      throw new Error('DISCOGS_CONSUMER_KEY and DISCOGS_CONSUMER_SECRET environment variables are required');
+      console.error('❌ DISCOGS_CONSUMER_KEY and DISCOGS_CONSUMER_SECRET environment variables are required');
+      return new Response(
+        JSON.stringify({ 
+          error: 'DISCOGS_CONSUMER_KEY and DISCOGS_CONSUMER_SECRET environment variables are required',
+          hasConsumerKey: !!discogsConsumerKey,
+          hasConsumerSecret: !!discogsConsumerSecret
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log(`🎵 Searching for catalog: "${catalog_number}", artist: "${artist}", title: "${title}"`);

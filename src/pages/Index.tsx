@@ -84,10 +84,13 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="scan" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="scan">Vinyl Scanner</TabsTrigger>
             <TabsTrigger value="test">Discogs Test</TabsTrigger>
             <TabsTrigger value="token">Token Test</TabsTrigger>
+            <TabsTrigger value="catalog" asChild>
+              <a href="/catalog-test">Catalog Test</a>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="scan" className="space-y-8">

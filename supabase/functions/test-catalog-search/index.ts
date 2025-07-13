@@ -192,9 +192,12 @@ Deno.serve(async (req) => {
                         html.match(/Ratings:\s?(\d+)/)?.[1] || '0'),
           last_sold: html.match(/<span>Last Sold:<\/span>\s*<a[^>]*>([0-9]{2} \w{3} \d{2})<\/a>/)?.[1] || 
                      html.match(/Last Sold:\s?([0-9]{2} \w{3} \d{2})/)?.[1] || null,
-          lowest_price: html.match(/Lowest:\s*(€[\d.,]+)/)?.[1] || null,
-          median_price: html.match(/Median:\s*(€[\d.,]+)/)?.[1] || null,
-          highest_price: html.match(/Highest:\s*(€[\d.,]+)/)?.[1] || null
+          lowest_price: html.match(/<span>Lowest:<\/span>\s*(€[\d.,]+)/)?.[1] || 
+                        html.match(/Lowest:\s*(€[\d.,]+)/)?.[1] || null,
+          median_price: html.match(/<span>Median:<\/span>\s*(€[\d.,]+)/)?.[1] || 
+                        html.match(/Median:\s*(€[\d.,]+)/)?.[1] || null,
+          highest_price: html.match(/<span>Highest:<\/span>\s*(€[\d.,]+)/)?.[1] || 
+                         html.match(/Highest:\s*(€[\d.,]+)/)?.[1] || null
         };
 
         console.log(`📊 Extracted stats:`, stats);

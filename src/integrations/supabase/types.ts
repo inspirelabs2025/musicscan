@@ -14,470 +14,288 @@ export type Database = {
   }
   public: {
     Tables: {
-      discogs_price_listings: {
+      ai_story_cache: {
         Row: {
-          condition: string
-          condition_normalized: string | null
-          currency: string
-          extracted_at: string
-          id: string
-          listing_url: string | null
-          price: number
-          seller_location: string | null
-          session_id: string
-          shipping_cost: number | null
-          source_type: string
-        }
-        Insert: {
-          condition: string
-          condition_normalized?: string | null
-          currency?: string
-          extracted_at?: string
-          id?: string
-          listing_url?: string | null
-          price: number
-          seller_location?: string | null
-          session_id: string
-          shipping_cost?: number | null
-          source_type?: string
-        }
-        Update: {
-          condition?: string
-          condition_normalized?: string | null
-          currency?: string
-          extracted_at?: string
-          id?: string
-          listing_url?: string | null
-          price?: number
-          seller_location?: string | null
-          session_id?: string
-          shipping_cost?: number | null
-          source_type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "discogs_price_listings_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "discogs_pricing_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      discogs_pricing_sessions: {
-        Row: {
-          artist_name: string | null
-          created_at: string
-          discogs_id: number
-          discogs_url: string
-          error_message: string | null
-          execution_time_ms: number | null
-          extraction_method: string
-          highest_price: number | null
-          id: string
-          last_sold_date: string | null
-          lowest_price: number | null
-          median_price: number | null
-          num_for_sale: number | null
-          official_highest_price: number | null
-          official_lowest_price: number | null
-          official_median_price: number | null
-          raw_response: string | null
-          release_title: string | null
-          strategy_used: string | null
-          success: boolean
-          total_prices_found: number | null
-          updated_at: string
-        }
-        Insert: {
-          artist_name?: string | null
-          created_at?: string
-          discogs_id: number
-          discogs_url: string
-          error_message?: string | null
-          execution_time_ms?: number | null
-          extraction_method?: string
-          highest_price?: number | null
-          id?: string
-          last_sold_date?: string | null
-          lowest_price?: number | null
-          median_price?: number | null
-          num_for_sale?: number | null
-          official_highest_price?: number | null
-          official_lowest_price?: number | null
-          official_median_price?: number | null
-          raw_response?: string | null
-          release_title?: string | null
-          strategy_used?: string | null
-          success?: boolean
-          total_prices_found?: number | null
-          updated_at?: string
-        }
-        Update: {
-          artist_name?: string | null
-          created_at?: string
-          discogs_id?: number
-          discogs_url?: string
-          error_message?: string | null
-          execution_time_ms?: number | null
-          extraction_method?: string
-          highest_price?: number | null
-          id?: string
-          last_sold_date?: string | null
-          lowest_price?: number | null
-          median_price?: number | null
-          num_for_sale?: number | null
-          official_highest_price?: number | null
-          official_lowest_price?: number | null
-          official_median_price?: number | null
-          raw_response?: string | null
-          release_title?: string | null
-          strategy_used?: string | null
-          success?: boolean
-          total_prices_found?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      discogs_release_statistics: {
-        Row: {
-          avg_rating: number | null
-          created_at: string
-          currency: string | null
-          discogs_api_used: boolean | null
-          discogs_id: number
-          discogs_url: string
-          error_message: string | null
-          have_count: number | null
-          highest_price: number | null
-          id: string
-          last_sold_date: string | null
-          lowest_price: number | null
-          median_price: number | null
-          ratings_count: number | null
-          raw_response: Json | null
-          scraped_at: string
-          scraper_api_used: boolean | null
-          success: boolean | null
-          updated_at: string
-          want_count: number | null
-        }
-        Insert: {
-          avg_rating?: number | null
-          created_at?: string
-          currency?: string | null
-          discogs_api_used?: boolean | null
-          discogs_id: number
-          discogs_url: string
-          error_message?: string | null
-          have_count?: number | null
-          highest_price?: number | null
-          id?: string
-          last_sold_date?: string | null
-          lowest_price?: number | null
-          median_price?: number | null
-          ratings_count?: number | null
-          raw_response?: Json | null
-          scraped_at?: string
-          scraper_api_used?: boolean | null
-          success?: boolean | null
-          updated_at?: string
-          want_count?: number | null
-        }
-        Update: {
-          avg_rating?: number | null
-          created_at?: string
-          currency?: string | null
-          discogs_api_used?: boolean | null
-          discogs_id?: number
-          discogs_url?: string
-          error_message?: string | null
-          have_count?: number | null
-          highest_price?: number | null
-          id?: string
-          last_sold_date?: string | null
-          lowest_price?: number | null
-          median_price?: number | null
-          ratings_count?: number | null
-          raw_response?: Json | null
-          scraped_at?: string
-          scraper_api_used?: boolean | null
-          success?: boolean | null
-          updated_at?: string
-          want_count?: number | null
-        }
-        Relationships: []
-      }
-      vinyl_records: {
-        Row: {
+          ai_response: string
+          album_title: string | null
           artist: string
-          calculated_price: number | null
-          catalog_image_base64: string | null
-          catalog_number: string | null
-          condition_assessment_date: string | null
-          condition_notes: string | null
-          condition_sleeve: string | null
-          condition_vinyl: string | null
-          country: string | null
-          cover_image: string | null
-          created_at: string | null
-          discogs_id: number | null
-          discogs_search_url: string | null
-          discogs_url: string | null
-          for_sale_count: number | null
-          format: string | null
-          genre: string | null
-          have_count: number | null
-          highest_price: number | null
+          created_at: string
+          generation_time_ms: number | null
           id: string
-          label: string | null
-          label_image_base64: string | null
-          lowest_price: number | null
-          matrix_image_base64: string | null
-          matrix_number: string | null
-          median_price: number | null
-          raw_text: string | null
-          sale_history_url: string | null
-          scanned_date: string | null
+          model_used: string | null
+          prompt_used: string | null
+          release_month: string | null
+          release_year: number | null
+          search_query: string
+          search_type: string
+          song_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_response: string
+          album_title?: string | null
+          artist: string
+          created_at?: string
+          generation_time_ms?: number | null
+          id?: string
+          model_used?: string | null
+          prompt_used?: string | null
+          release_month?: string | null
+          release_year?: number | null
+          search_query: string
+          search_type: string
+          song_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_response?: string
+          album_title?: string | null
+          artist?: string
+          created_at?: string
+          generation_time_ms?: number | null
+          id?: string
+          model_used?: string | null
+          prompt_used?: string | null
+          release_month?: string | null
+          release_year?: number | null
+          search_query?: string
+          search_type?: string
+          song_title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      album_covers: {
+        Row: {
+          album_name: string | null
+          album_title: string
+          cover_artist: string
+          cover_title: string
+          created_at: string
+          genre: string | null
+          id: string
+          info: string | null
+          original_artist: string
+          release_date: string | null
+          search_query: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          album_name?: string | null
+          album_title: string
+          cover_artist: string
+          cover_title: string
+          created_at?: string
+          genre?: string | null
+          id?: string
+          info?: string | null
+          original_artist: string
+          release_date?: string | null
+          search_query: string
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          album_name?: string | null
+          album_title?: string
+          cover_artist?: string
+          cover_title?: string
+          created_at?: string
+          genre?: string | null
+          id?: string
+          info?: string | null
+          original_artist?: string
+          release_date?: string | null
+          search_query?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          author: string | null
+          category: string | null
+          content: string
+          excerpt: string | null
+          featured_image: string | null
+          id: string
+          published_at: string | null
+          read_time: number | null
+          seo_description: string | null
+          seo_keywords: string | null
+          seo_title: string | null
+          slug: string
+          source_story_data: Json | null
+          tags: string[] | null
           title: string
           updated_at: string | null
-          want_count: number | null
-          year: number | null
+        }
+        Insert: {
+          author?: string | null
+          category?: string | null
+          content: string
+          excerpt?: string | null
+          featured_image?: string | null
+          id?: string
+          published_at?: string | null
+          read_time?: number | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug: string
+          source_story_data?: Json | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string | null
+          category?: string | null
+          content?: string
+          excerpt?: string | null
+          featured_image?: string | null
+          id?: string
+          published_at?: string | null
+          read_time?: number | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug?: string
+          source_story_data?: Json | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      fan_stories: {
+        Row: {
+          created_at: string
+          id: string
+          is_approved: boolean
+          related_album: string | null
+          related_artist: string
+          related_song: string | null
+          story_content: string
+          story_title: string
+          story_type: string
+          updated_at: string
+          user_email: string | null
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          related_album?: string | null
+          related_artist: string
+          related_song?: string | null
+          story_content: string
+          story_title: string
+          story_type: string
+          updated_at?: string
+          user_email?: string | null
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          related_album?: string | null
+          related_artist?: string
+          related_song?: string | null
+          story_content?: string
+          story_title?: string
+          story_type?: string
+          updated_at?: string
+          user_email?: string | null
+          user_name?: string
+        }
+        Relationships: []
+      }
+      quiz_questions: {
+        Row: {
+          album_title: string
+          artist: string
+          created_at: string
+          generation_time_ms: number | null
+          id: string
+          model_used: string | null
+          questions_data: Json
+          quiz_type: string
+          search_query: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          album_title: string
+          artist: string
+          created_at?: string
+          generation_time_ms?: number | null
+          id?: string
+          model_used?: string | null
+          questions_data: Json
+          quiz_type?: string
+          search_query: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          album_title?: string
+          artist?: string
+          created_at?: string
+          generation_time_ms?: number | null
+          id?: string
+          model_used?: string | null
+          questions_data?: Json
+          quiz_type?: string
+          search_query?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      song_youtube_videos: {
+        Row: {
+          artist: string
+          created_at: string
+          found_via_api: string | null
+          id: string
+          search_query: string
+          song_title: string
+          updated_at: string
+          youtube_channel: string | null
+          youtube_title: string
+          youtube_url: string
+          youtube_video_id: string
         }
         Insert: {
           artist: string
-          calculated_price?: number | null
-          catalog_image_base64?: string | null
-          catalog_number?: string | null
-          condition_assessment_date?: string | null
-          condition_notes?: string | null
-          condition_sleeve?: string | null
-          condition_vinyl?: string | null
-          country?: string | null
-          cover_image?: string | null
-          created_at?: string | null
-          discogs_id?: number | null
-          discogs_search_url?: string | null
-          discogs_url?: string | null
-          for_sale_count?: number | null
-          format?: string | null
-          genre?: string | null
-          have_count?: number | null
-          highest_price?: number | null
+          created_at?: string
+          found_via_api?: string | null
           id?: string
-          label?: string | null
-          label_image_base64?: string | null
-          lowest_price?: number | null
-          matrix_image_base64?: string | null
-          matrix_number?: string | null
-          median_price?: number | null
-          raw_text?: string | null
-          sale_history_url?: string | null
-          scanned_date?: string | null
-          title: string
-          updated_at?: string | null
-          want_count?: number | null
-          year?: number | null
+          search_query: string
+          song_title: string
+          updated_at?: string
+          youtube_channel?: string | null
+          youtube_title: string
+          youtube_url: string
+          youtube_video_id: string
         }
         Update: {
           artist?: string
-          calculated_price?: number | null
-          catalog_image_base64?: string | null
-          catalog_number?: string | null
-          condition_assessment_date?: string | null
-          condition_notes?: string | null
-          condition_sleeve?: string | null
-          condition_vinyl?: string | null
-          country?: string | null
-          cover_image?: string | null
-          created_at?: string | null
-          discogs_id?: number | null
-          discogs_search_url?: string | null
-          discogs_url?: string | null
-          for_sale_count?: number | null
-          format?: string | null
-          genre?: string | null
-          have_count?: number | null
-          highest_price?: number | null
-          id?: string
-          label?: string | null
-          label_image_base64?: string | null
-          lowest_price?: number | null
-          matrix_image_base64?: string | null
-          matrix_number?: string | null
-          median_price?: number | null
-          raw_text?: string | null
-          sale_history_url?: string | null
-          scanned_date?: string | null
-          title?: string
-          updated_at?: string | null
-          want_count?: number | null
-          year?: number | null
-        }
-        Relationships: []
-      }
-      vinyl_records_backup: {
-        Row: {
-          artist: string | null
-          backup_created_at: string | null
-          catalog_number: string | null
-          country: string | null
-          cover_image: string | null
-          created_at: string | null
-          discogs_id: number | null
-          discogs_search_url: string | null
-          discogs_url: string | null
-          for_sale_count: number | null
-          format: string | null
-          genre: string | null
-          have_count: number | null
-          highest_price: number | null
-          id: string | null
-          label: string | null
-          lowest_price: number | null
-          matrix_number: string | null
-          median_price: number | null
-          raw_text: string | null
-          sale_history_url: string | null
-          scanned_date: string | null
-          title: string | null
-          updated_at: string | null
-          want_count: number | null
-          year: number | null
-        }
-        Insert: {
-          artist?: string | null
-          backup_created_at?: string | null
-          catalog_number?: string | null
-          country?: string | null
-          cover_image?: string | null
-          created_at?: string | null
-          discogs_id?: number | null
-          discogs_search_url?: string | null
-          discogs_url?: string | null
-          for_sale_count?: number | null
-          format?: string | null
-          genre?: string | null
-          have_count?: number | null
-          highest_price?: number | null
-          id?: string | null
-          label?: string | null
-          lowest_price?: number | null
-          matrix_number?: string | null
-          median_price?: number | null
-          raw_text?: string | null
-          sale_history_url?: string | null
-          scanned_date?: string | null
-          title?: string | null
-          updated_at?: string | null
-          want_count?: number | null
-          year?: number | null
-        }
-        Update: {
-          artist?: string | null
-          backup_created_at?: string | null
-          catalog_number?: string | null
-          country?: string | null
-          cover_image?: string | null
-          created_at?: string | null
-          discogs_id?: number | null
-          discogs_search_url?: string | null
-          discogs_url?: string | null
-          for_sale_count?: number | null
-          format?: string | null
-          genre?: string | null
-          have_count?: number | null
-          highest_price?: number | null
-          id?: string | null
-          label?: string | null
-          lowest_price?: number | null
-          matrix_number?: string | null
-          median_price?: number | null
-          raw_text?: string | null
-          sale_history_url?: string | null
-          scanned_date?: string | null
-          title?: string | null
-          updated_at?: string | null
-          want_count?: number | null
-          year?: number | null
-        }
-        Relationships: []
-      }
-      vinyl2_scan: {
-        Row: {
-          additional_image: string | null
-          artist: string | null
-          calculated_advice_price: number | null
-          catalog_image: string | null
-          catalog_number: string | null
-          condition_grade: string | null
-          country: string | null
-          created_at: string
-          currency: string | null
-          discogs_id: number | null
-          discogs_url: string | null
-          format: string | null
-          genre: string | null
-          highest_price: number | null
-          id: string
-          label: string | null
-          lowest_price: number | null
-          matrix_image: string | null
-          matrix_number: string | null
-          median_price: number | null
-          title: string | null
-          updated_at: string
-          year: number | null
-        }
-        Insert: {
-          additional_image?: string | null
-          artist?: string | null
-          calculated_advice_price?: number | null
-          catalog_image?: string | null
-          catalog_number?: string | null
-          condition_grade?: string | null
-          country?: string | null
           created_at?: string
-          currency?: string | null
-          discogs_id?: number | null
-          discogs_url?: string | null
-          format?: string | null
-          genre?: string | null
-          highest_price?: number | null
+          found_via_api?: string | null
           id?: string
-          label?: string | null
-          lowest_price?: number | null
-          matrix_image?: string | null
-          matrix_number?: string | null
-          median_price?: number | null
-          title?: string | null
+          search_query?: string
+          song_title?: string
           updated_at?: string
-          year?: number | null
-        }
-        Update: {
-          additional_image?: string | null
-          artist?: string | null
-          calculated_advice_price?: number | null
-          catalog_image?: string | null
-          catalog_number?: string | null
-          condition_grade?: string | null
-          country?: string | null
-          created_at?: string
-          currency?: string | null
-          discogs_id?: number | null
-          discogs_url?: string | null
-          format?: string | null
-          genre?: string | null
-          highest_price?: number | null
-          id?: string
-          label?: string | null
-          lowest_price?: number | null
-          matrix_image?: string | null
-          matrix_number?: string | null
-          median_price?: number | null
-          title?: string | null
-          updated_at?: string
-          year?: number | null
+          youtube_channel?: string | null
+          youtube_title?: string
+          youtube_url?: string
+          youtube_video_id?: string
         }
         Relationships: []
       }

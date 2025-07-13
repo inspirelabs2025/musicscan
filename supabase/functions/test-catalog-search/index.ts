@@ -22,24 +22,35 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Get credentials - prefer token first, then consumer key/secret
+    const discogsToken = Deno.env.get('DISCOGS_TOKEN');
     const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
     const discogsConsumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET');
     
     console.log(`📋 Credential Status:
+    - Token: ${discogsToken ? `✅ (${discogsToken.substring(0, 8)}...)` : '❌ Missing'}
     - Consumer Key: ${discogsConsumerKey ? `✅ (${discogsConsumerKey.substring(0, 8)}...)` : '❌ Missing'}
     - Consumer Secret: ${discogsConsumerSecret ? `✅ (${discogsConsumerSecret.substring(0, 8)}...)` : '❌ Missing'}`);
     
-    if (!discogsConsumerKey || !discogsConsumerSecret) {
-      console.error('❌ DISCOGS_CONSUMER_KEY and DISCOGS_CONSUMER_SECRET environment variables are required');
+    if (!discogsToken && (!discogsConsumerKey || !discogsConsumerSecret)) {
+      console.error('❌ Missing Discogs credentials. Need either DISCOGS_TOKEN or both DISCOGS_CONSUMER_KEY and DISCOGS_CONSUMER_SECRET');
       return new Response(
         JSON.stringify({ 
-          error: 'DISCOGS_CONSUMER_KEY and DISCOGS_CONSUMER_SECRET environment variables are required',
+          error: 'Missing Discogs credentials. Need either DISCOGS_TOKEN or both DISCOGS_CONSUMER_KEY and DISCOGS_CONSUMER_SECRET',
+          hasToken: !!discogsToken,
           hasConsumerKey: !!discogsConsumerKey,
           hasConsumerSecret: !!discogsConsumerSecret
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Determine authentication method
+    const authHeaders = discogsToken 
+      ? { 'Authorization': `Discogs token=${discogsToken}` }
+      : { 'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}` };
+    
+    console.log(`🔑 Using ${discogsToken ? 'Token' : 'Consumer Key/Secret'} authentication`);
 
     console.log(`🎵 Searching for catalog: "${catalog_number}", artist: "${artist}", title: "${title}"`);
 
@@ -57,7 +68,7 @@ Deno.serve(async (req) => {
       try {
         const response = await fetch(searchUrl, {
           headers: {
-            'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`,
+            ...authHeaders,
             'User-Agent': 'VinylScanner/2.0'
           }
         });

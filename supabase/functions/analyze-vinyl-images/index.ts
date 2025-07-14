@@ -382,17 +382,17 @@ async function getDiscogsPriceAnalysisById(
 
     console.log(`💰 Stats API result: Low: ${result.lowest_price}, Median: ${result.median_price}, High: ${result.highest_price}, For Sale: ${result.num_for_sale}`);
 
-    // If we're missing median or highest price, fall back to listings
-    if (result.num_for_sale > 0 && (!result.median_price || !result.highest_price)) {
-      console.log(`🔄 Stats API incomplete (missing median/highest), falling back to listings`);
+    // If we're missing median price specifically, fall back to listings to get it
+    if (result.num_for_sale > 0 && !result.median_price) {
+      console.log(`🔄 Stats API missing median_price, falling back to listings`);
       const listingsResult = await fallbackToMarketplaceListings(releaseId, condition);
       
       if (listingsResult) {
-        // Merge results, preferring calculated values from listings
+        // Merge results, using listings data for median_price
         return {
           lowest_price: result.lowest_price || listingsResult.lowest_price,
-          median_price: listingsResult.median_price || result.median_price,
-          highest_price: listingsResult.highest_price || result.highest_price,
+          median_price: listingsResult.median_price, // Always use listings median
+          highest_price: result.highest_price || listingsResult.highest_price,
           num_for_sale: result.num_for_sale || listingsResult.num_for_sale,
           currency: result.currency || listingsResult.currency
         };

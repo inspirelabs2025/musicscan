@@ -19,9 +19,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<VinylScanComplete />} />
           <Route path="/catalog-test" element={<CatalogTest />} />
-          <Route path="/vinyl-scan-complete" element={<VinylScanComplete />} />
+          <Route path="/index" element={<Index />} />
           <Route path="/marketplace-overview" element={<MarketplaceOverview />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

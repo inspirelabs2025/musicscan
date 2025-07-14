@@ -302,8 +302,15 @@ const VinylScanComplete = () => {
       const advicePrice = calculateAdvicePrice(condition, lowestPrice);
       if (advicePrice) {
         setCalculatedAdvicePrice(advicePrice);
-        saveFinalScan(condition, advicePrice);
+        // Don't save automatically anymore - wait for explicit save action
       }
+    }
+  };
+
+  // Handle explicit save action
+  const handleSaveToDatabase = async () => {
+    if (selectedCondition && calculatedAdvicePrice) {
+      await saveFinalScan(selectedCondition, calculatedAdvicePrice);
     }
   };
 
@@ -661,27 +668,39 @@ const VinylScanComplete = () => {
                           </Select>
                         </div>
 
-                        {selectedCondition && calculatedAdvicePrice && (
-                          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                            <div className="flex items-center justify-between">
-                             <div>
-                               <p className="text-sm text-green-800 mb-1">
-                                 {completedScanData ? 'Scan Voltooid! Adviesprijs:' : 'Berekende Adviesprijs:'}
-                               </p>
-                               <p className="text-2xl font-bold text-green-900">€{calculatedAdvicePrice.toFixed(2)}</p>
-                               <p className="text-xs text-green-700">
-                                 {completedScanData 
-                                   ? `${mediaType === 'vinyl' ? 'LP' : 'CD'} succesvol opgeslagen in database`
-                                   : `Gebaseerd op laagste prijs €${searchResults[0]?.pricing_stats?.lowest_price} × ${conditionMultipliers[selectedCondition]}`
-                                 }
-                               </p>
+                         {selectedCondition && calculatedAdvicePrice && (
+                           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                             <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm text-green-800 mb-1">
+                                  {completedScanData ? 'Scan Voltooid! Adviesprijs:' : 'Berekende Adviesprijs:'}
+                                </p>
+                                <p className="text-2xl font-bold text-green-900">€{calculatedAdvicePrice.toFixed(2)}</p>
+                                <p className="text-xs text-green-700">
+                                  {completedScanData 
+                                    ? `${mediaType === 'vinyl' ? 'LP' : 'CD'} succesvol opgeslagen in database`
+                                    : `Gebaseerd op laagste prijs €${searchResults[0]?.pricing_stats?.lowest_price} × ${conditionMultipliers[selectedCondition]}`
+                                  }
+                                </p>
+                              </div>
+                               {isSavingCondition && (
+                                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+                               )}
                              </div>
-                              {isSavingCondition && (
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
-                              )}
-                            </div>
-                          </div>
-                        )}
+                             {!completedScanData && !isSavingCondition && (
+                               <div className="mt-4 pt-4 border-t border-green-300">
+                                 <Button 
+                                   onClick={handleSaveToDatabase}
+                                   className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                   disabled={isSavingCondition}
+                                 >
+                                   <CheckCircle className="h-4 w-4 mr-2" />
+                                   Opslaan in Database
+                                 </Button>
+                               </div>
+                             )}
+                           </div>
+                         )}
                       </CardContent>
                     </Card>
                   )}

@@ -23,6 +23,7 @@ const VinylScanComplete = () => {
   const [selectedCondition, setSelectedCondition] = useState<string>('');
   const [calculatedAdvicePrice, setCalculatedAdvicePrice] = useState<number | null>(null);
   const [isSavingCondition, setIsSavingCondition] = useState(false);
+  const [completedScanData, setCompletedScanData] = useState<any>(null);
   
   const { 
     isAnalyzing: isAnalyzingVinyl, 
@@ -141,33 +142,77 @@ const VinylScanComplete = () => {
     return Math.round(price * multiplier * 100) / 100; // Round to 2 decimals
   };
 
-  // Update database with condition and calculated price
-  const updateScanWithCondition = async (condition: string, advicePrice: number) => {
-    if (!analysisResult?.scanId) return;
+  // Save final scan to database with all data including condition and advice price
+  const saveFinalScan = async (condition: string, advicePrice: number) => {
+    if (!analysisResult?.ocrResults || !mediaType) return;
 
     setIsSavingCondition(true);
     try {
       const tableName = mediaType === 'vinyl' ? 'vinyl2_scan' : 'cd_scan';
-      const { error } = await supabase
+      
+      // Prepare insert data based on media type
+      const insertData = mediaType === 'vinyl' ? {
+        catalog_image: uploadedFiles[0],
+        matrix_image: uploadedFiles[1], 
+        additional_image: uploadedFiles[2],
+        catalog_number: analysisResult.ocrResults.catalog_number,
+        matrix_number: analysisResult.ocrResults.matrix_number,
+        artist: analysisResult.ocrResults.artist,
+        title: analysisResult.ocrResults.title,
+        year: analysisResult.ocrResults.year ? parseInt(analysisResult.ocrResults.year) : null,
+        format: 'Vinyl',
+        label: analysisResult.ocrResults.label,
+        genre: analysisResult.ocrResults.genre,
+        country: analysisResult.ocrResults.country,
+        condition_grade: condition,
+        calculated_advice_price: advicePrice,
+        discogs_id: searchResults[0]?.id || null,
+        discogs_url: searchResults[0]?.discogs_url || null,
+        lowest_price: searchResults[0]?.pricing_stats?.lowest_price ? parseFloat(searchResults[0].pricing_stats.lowest_price.replace(',', '.')) : null,
+        median_price: searchResults[0]?.pricing_stats?.median_price ? parseFloat(searchResults[0].pricing_stats.median_price.replace(',', '.')) : null,
+        highest_price: searchResults[0]?.pricing_stats?.highest_price ? parseFloat(searchResults[0].pricing_stats.highest_price.replace(',', '.')) : null
+      } : {
+        front_image: uploadedFiles[0],
+        back_image: uploadedFiles[1],
+        barcode_image: uploadedFiles[2],
+        barcode_number: analysisResult.ocrResults.barcode,
+        artist: analysisResult.ocrResults.artist,
+        title: analysisResult.ocrResults.title,
+        label: analysisResult.ocrResults.label,
+        catalog_number: analysisResult.ocrResults.catalog_number,
+        year: analysisResult.ocrResults.year,
+        format: 'CD',
+        genre: analysisResult.ocrResults.genre,
+        country: analysisResult.ocrResults.country,
+        condition_grade: condition,
+        calculated_advice_price: advicePrice,
+        discogs_id: searchResults[0]?.id || null,
+        discogs_url: searchResults[0]?.discogs_url || null,
+        lowest_price: searchResults[0]?.pricing_stats?.lowest_price ? parseFloat(searchResults[0].pricing_stats.lowest_price.replace(',', '.')) : null,
+        median_price: searchResults[0]?.pricing_stats?.median_price ? parseFloat(searchResults[0].pricing_stats.median_price.replace(',', '.')) : null,
+        highest_price: searchResults[0]?.pricing_stats?.highest_price ? parseFloat(searchResults[0].pricing_stats.highest_price.replace(',', '.')) : null
+      };
+
+      const { data, error } = await supabase
         .from(tableName)
-        .update({
-          condition_grade: condition,
-          calculated_advice_price: advicePrice
-        })
-        .eq('id', analysisResult.scanId);
+        .insert(insertData)
+        .select()
+        .single();
 
       if (error) throw error;
 
+      setCompletedScanData(data);
+      
       toast({
-        title: "Conditie Opgeslagen! ✅",
-        description: `Adviesprijs: €${advicePrice.toFixed(2)}`,
+        title: "Scan Voltooid! ✅",
+        description: `${mediaType === 'vinyl' ? 'LP' : 'CD'} opgeslagen met adviesprijs: €${advicePrice.toFixed(2)}`,
         variant: "default"
       });
     } catch (error) {
-      console.error(`Error updating ${mediaType} scan:`, error);
+      console.error(`Error saving final ${mediaType} scan:`, error);
       toast({
         title: "Fout bij Opslaan",
-        description: "Kon conditie niet opslaan in database",
+        description: "Kon scan niet opslaan in database",
         variant: "destructive"
       });
     } finally {
@@ -184,7 +229,7 @@ const VinylScanComplete = () => {
       const advicePrice = calculateAdvicePrice(condition, lowestPrice);
       if (advicePrice) {
         setCalculatedAdvicePrice(advicePrice);
-        updateScanWithCondition(condition, advicePrice);
+        saveFinalScan(condition, advicePrice);
       }
     }
   };
@@ -206,6 +251,7 @@ const VinylScanComplete = () => {
     setSelectedCondition('');
     setCalculatedAdvicePrice(null);
     setSearchResults([]);
+    setCompletedScanData(null);
     // Reset media type to enforce selection
     setMediaType(null);
   };
@@ -545,13 +591,18 @@ const VinylScanComplete = () => {
                         {selectedCondition && calculatedAdvicePrice && (
                           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                             <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-sm text-green-800 mb-1">Berekende Adviesprijs:</p>
-                                <p className="text-2xl font-bold text-green-900">€{calculatedAdvicePrice.toFixed(2)}</p>
-                                <p className="text-xs text-green-700">
-                                  Gebaseerd op laagste prijs €{searchResults[0]?.pricing_stats?.lowest_price} × {conditionMultipliers[selectedCondition]}
-                                </p>
-                              </div>
+                             <div>
+                               <p className="text-sm text-green-800 mb-1">
+                                 {completedScanData ? 'Scan Voltooid! Adviesprijs:' : 'Berekende Adviesprijs:'}
+                               </p>
+                               <p className="text-2xl font-bold text-green-900">€{calculatedAdvicePrice.toFixed(2)}</p>
+                               <p className="text-xs text-green-700">
+                                 {completedScanData 
+                                   ? `${mediaType === 'vinyl' ? 'LP' : 'CD'} succesvol opgeslagen in database`
+                                   : `Gebaseerd op laagste prijs €${searchResults[0]?.pricing_stats?.lowest_price} × ${conditionMultipliers[selectedCondition]}`
+                                 }
+                               </p>
+                             </div>
                               {isSavingCondition && (
                                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
                               )}

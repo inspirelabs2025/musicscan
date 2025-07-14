@@ -669,32 +669,7 @@ serve(async (req) => {
 
     console.log('🎯 Combined OCR results:', combinedData);
 
-    // Save comprehensive OCR results to database
-    const { data: insertData, error: insertError } = await supabase
-      .from('vinyl2_scan')
-      .insert({
-        catalog_image: imageUrls[0],
-        matrix_image: imageUrls[1], 
-        additional_image: imageUrls[2],
-        catalog_number: combinedData.catalog_number,
-        matrix_number: combinedData.matrix_number,
-        artist: combinedData.artist,
-        title: combinedData.title,
-        year: combinedData.year ? parseInt(combinedData.year) : null,
-        format: 'Vinyl',
-        label: combinedData.label,
-        genre: combinedData.genre,
-        country: combinedData.country
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error('❌ Database insert error:', insertError);
-      throw insertError;
-    }
-
-    console.log('💾 Data saved to database:', insertData);
+    // Note: Database insertion removed - will be handled by frontend after condition selection
 
     // Perform Discogs search and pricing lookup
     let discogsData = null;
@@ -726,34 +701,18 @@ serve(async (req) => {
           'Very Good'
         );
         
-        // Update database record with Discogs data
-        const { error: updateError } = await supabase
-          .from('vinyl2_scan')
-          .update({
-            discogs_id: discogsData.discogs_id,
-            discogs_url: discogsData.discogs_url,
-            lowest_price: pricingData.lowest_price,
-            median_price: pricingData.median_price,
-            highest_price: pricingData.highest_price
-          })
-          .eq('id', insertData.id);
-          
-        if (updateError) {
-          console.error('❌ Failed to update with Discogs data:', updateError);
-        } else {
-          console.log('✅ Updated record with Discogs pricing data');
-        }
+        // Note: Database update removed - will be handled by frontend after condition selection
       }
     }
 
     return new Response(JSON.stringify({ 
       success: true,
-      scanId: insertData.id,
-      ocrResults: combinedData,
-      analysisDetails: analysisResults,
-      discogsData: discogsData,
-      pricingData: pricingData,
-      message: 'OCR analysis and Discogs pricing lookup completed successfully!'
+      ocr_results: combinedData,
+      analysis_details: analysisResults,
+      discogs_data: discogsData,
+      pricing_data: pricingData,
+      image_urls: imageUrls,
+      message: 'OCR analysis and Discogs lookup completed successfully!'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

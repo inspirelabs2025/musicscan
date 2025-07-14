@@ -43,6 +43,7 @@ import {
   Euro
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Navigation } from "@/components/Navigation";
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))', '#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
 
@@ -96,6 +97,7 @@ export default function CollectionOverview() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Terug
           </Button>
+          <Navigation />
           <div>
             <h1 className="text-3xl font-bold">Collectie Overzicht</h1>
             <p className="text-muted-foreground">Diepgaande analyse van je muziekcollectie</p>

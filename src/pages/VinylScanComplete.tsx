@@ -15,6 +15,7 @@ import { useCDAnalysis } from '@/hooks/useCDAnalysis';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Navigation } from "@/components/Navigation";
 
 const VinylScanComplete = () => {
   const navigate = useNavigate();
@@ -349,6 +350,7 @@ const VinylScanComplete = () => {
                 Terug
               </Button>
             </Link>
+            <Navigation />
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Music Scan</h1>
               

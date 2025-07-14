@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { Search, Filter, Edit, Upload, Disc3, Music, Euro, AlertTriangle, CheckCircle, Eye } from 'lucide-react';
+import { Navigation } from "@/components/Navigation";
 
 interface MarketplaceItem {
   id: string;
@@ -197,11 +198,17 @@ export default function MarketplaceOverview() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Discogs Marketplace</h1>
-        <p className="text-muted-foreground">
-          Beheer en upload je gescande albums naar Discogs Marketplace
-        </p>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <Navigation />
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Discogs Marketplace</h1>
+            <p className="text-muted-foreground">
+              Beheer en upload je gescande albums naar Discogs Marketplace
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Filters & Search */}

@@ -218,30 +218,6 @@ const VinylScanComplete = () => {
           </CardContent>
         </Card>
 
-        {/* Progress */}
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Camera className={`h-5 w-5 ${currentStep >= 1 ? 'text-blue-600' : 'text-gray-400'}`} />
-                <span className="text-sm font-medium">Upload</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Disc3 className={`h-5 w-5 ${currentStep >= 2 ? 'text-blue-600' : 'text-gray-400'}`} />
-                <span className="text-sm font-medium">OCR</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Search className={`h-5 w-5 ${currentStep >= 3 ? 'text-blue-600' : 'text-gray-400'}`} />
-                <span className="text-sm font-medium">Discogs</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className={`h-5 w-5 ${currentStep >= 4 ? 'text-green-600' : 'text-gray-400'}`} />
-                <span className="text-sm font-medium">Resultaten</span>
-              </div>
-            </div>
-            <Progress value={getProgress()} className="h-2" />
-          </CardContent>
-        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column - Upload & Controls */}

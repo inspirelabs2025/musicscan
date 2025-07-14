@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -36,7 +37,10 @@ import {
   Package,
   ArrowLeft,
   Download,
-  Disc3
+  Disc3,
+  Music2,
+  Clock,
+  Euro
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -53,6 +57,7 @@ export default function CollectionOverview() {
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-10 w-32" />
         </div>
+        <Skeleton className="h-12 w-full" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(8)].map((_, i) => (
             <Skeleton key={i} className="h-32" />
@@ -102,6 +107,64 @@ export default function CollectionOverview() {
         </Button>
       </div>
 
+      {/* Tabs */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            <span className="hidden sm:inline">Overzicht</span>
+          </TabsTrigger>
+          <TabsTrigger value="type" className="flex items-center gap-2">
+            <Disc className="h-4 w-4" />
+            <span className="hidden sm:inline">Per Type</span>
+          </TabsTrigger>
+          <TabsTrigger value="genre" className="flex items-center gap-2">
+            <Music className="h-4 w-4" />
+            <span className="hidden sm:inline">Per Genre</span>
+          </TabsTrigger>
+          <TabsTrigger value="year" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <span className="hidden sm:inline">Per Jaar</span>
+          </TabsTrigger>
+          <TabsTrigger value="price" className="flex items-center gap-2">
+            <Euro className="h-4 w-4" />
+            <span className="hidden sm:inline">Per Prijsklasse</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <OverviewTab stats={stats} formatCurrency={formatCurrency} />
+        </TabsContent>
+
+        {/* Type Tab */}
+        <TabsContent value="type" className="space-y-6">
+          <TypeTab stats={stats} formatCurrency={formatCurrency} />
+        </TabsContent>
+
+        {/* Genre Tab */}
+        <TabsContent value="genre" className="space-y-6">
+          <GenreTab stats={stats} formatCurrency={formatCurrency} />
+        </TabsContent>
+
+        {/* Year Tab */}
+        <TabsContent value="year" className="space-y-6">
+          <YearTab stats={stats} formatCurrency={formatCurrency} />
+        </TabsContent>
+
+        {/* Price Tab */}
+        <TabsContent value="price" className="space-y-6">
+          <PriceTab stats={stats} formatCurrency={formatCurrency} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+// Overview Tab Component
+function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value: number) => string }) {
+  return (
+    <>
       {/* Collection Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
@@ -215,7 +278,7 @@ export default function CollectionOverview() {
         </Card>
       )}
 
-      {/* Top Artists */}
+      {/* Top Artists and Format & Condition */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -251,7 +314,6 @@ export default function CollectionOverview() {
           </CardContent>
         </Card>
 
-        {/* Format & Condition */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -319,6 +381,397 @@ export default function CollectionOverview() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </>
+  );
+}
+
+// Type Tab Component
+function TypeTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value: number) => string }) {
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* CD Collection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Disc className="h-5 w-5" />
+              CD Collectie
+            </CardTitle>
+            <CardDescription>Analyse van je CD collectie</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">Totaal</p>
+                <p className="text-2xl font-bold">{stats.typeBreakdown.cd.totalItems}</p>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">Waarde</p>
+                <p className="text-2xl font-bold">{formatCurrency(stats.typeBreakdown.cd.totalValue)}</p>
+              </div>
+            </div>
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground">Gemiddelde Waarde</p>
+              <p className="text-xl font-bold">{formatCurrency(stats.typeBreakdown.cd.averageValue)}</p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Top Genres</h4>
+              <div className="space-y-2">
+                {stats.typeBreakdown.cd.topGenres.slice(0, 3).map((genre) => (
+                  <div key={genre.genre} className="flex justify-between">
+                    <span className="text-sm">{genre.genre}</span>
+                    <Badge variant="outline">{genre.count}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Vinyl Collection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Disc3 className="h-5 w-5" />
+              Vinyl Collectie
+            </CardTitle>
+            <CardDescription>Analyse van je LP collectie</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">Totaal</p>
+                <p className="text-2xl font-bold">{stats.typeBreakdown.vinyl.totalItems}</p>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">Waarde</p>
+                <p className="text-2xl font-bold">{formatCurrency(stats.typeBreakdown.vinyl.totalValue)}</p>
+              </div>
+            </div>
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground">Gemiddelde Waarde</p>
+              <p className="text-xl font-bold">{formatCurrency(stats.typeBreakdown.vinyl.averageValue)}</p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Top Genres</h4>
+              <div className="space-y-2">
+                {stats.typeBreakdown.vinyl.topGenres.slice(0, 3).map((genre) => (
+                  <div key={genre.genre} className="flex justify-between">
+                    <span className="text-sm">{genre.genre}</span>
+                    <Badge variant="outline">{genre.count}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Comparison Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Waarde Vergelijking</CardTitle>
+            <CardDescription>CD vs Vinyl waarde verdeling</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={[
+                { name: 'CD', value: stats.typeBreakdown.cd.totalValue, count: stats.typeBreakdown.cd.totalItems },
+                { name: 'Vinyl', value: stats.typeBreakdown.vinyl.totalValue, count: stats.typeBreakdown.vinyl.totalItems }
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip formatter={(value, name) => [formatCurrency(Number(value)), name === 'value' ? 'Totale Waarde' : 'Aantal']} />
+                <Bar dataKey="value" fill="hsl(var(--primary))" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Prijsklasse Vergelijking</CardTitle>
+            <CardDescription>Prijsverdeling per format</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">CD Prijsklassen</h4>
+                <div className="space-y-2">
+                  {stats.typeBreakdown.cd.priceRanges.map((range) => (
+                    <div key={range.range} className="flex justify-between">
+                      <span className="text-sm">{range.range}</span>
+                      <Badge variant="outline">{range.count}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Vinyl Prijsklassen</h4>
+                <div className="space-y-2">
+                  {stats.typeBreakdown.vinyl.priceRanges.map((range) => (
+                    <div key={range.range} className="flex justify-between">
+                      <span className="text-sm">{range.range}</span>
+                      <Badge variant="outline">{range.count}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+// Genre Tab Component  
+function GenreTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value: number) => string }) {
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {stats.genres.slice(0, 6).map((genre) => {
+          const details = stats.genreDetails[genre.genre];
+          return (
+            <Card key={genre.genre}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Music2 className="h-5 w-5" />
+                  {genre.genre}
+                </CardTitle>
+                <CardDescription>{genre.count} albums • {formatCurrency(genre.value)}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center gap-1">
+                    <Disc className="h-3 w-3" />
+                    <span>{details.cdCount} CD's</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Disc3 className="h-3 w-3" />
+                    <span>{details.vinylCount} LP's</span>
+                  </div>
+                </div>
+                <div className="p-2 bg-muted/50 rounded">
+                  <p className="text-xs text-muted-foreground">Gemiddelde waarde</p>
+                  <p className="font-bold">{formatCurrency(details.averageValue)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Top Artiesten</p>
+                  <div className="space-y-1">
+                    {details.topArtists.slice(0, 2).map((artist) => (
+                      <div key={artist.artist} className="flex justify-between text-xs">
+                        <span className="truncate">{artist.artist}</span>
+                        <Badge variant="secondary" className="text-xs">{artist.count}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {details.yearSpread.min > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3 inline mr-1" />
+                    {details.yearSpread.min} - {details.yearSpread.max}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Genre Waarde Verdeling</CardTitle>
+          <CardDescription>Totale waarde per genre</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={stats.genres.slice(0, 10)} layout="horizontal">
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" />
+              <YAxis dataKey="genre" type="category" width={100} />
+              <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Waarde']} />
+              <Bar dataKey="value" fill="hsl(var(--primary))" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+// Year Tab Component
+function YearTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value: number) => string }) {
+  const decades = Object.entries(stats.decadeBreakdown).sort(([a], [b]) => a.localeCompare(b));
+  
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {decades.map(([decade, data]: [string, any]) => (
+          <Card key={decade}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                {decade}
+              </CardTitle>
+              <CardDescription>{data.count} albums • {formatCurrency(data.value)}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center gap-1">
+                  <Disc className="h-3 w-3" />
+                  <span>{data.cdCount} CD's</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Disc3 className="h-3 w-3" />
+                  <span>{data.vinylCount} LP's</span>
+                </div>
+              </div>
+              <div className="p-2 bg-muted/50 rounded">
+                <p className="text-xs text-muted-foreground">Gemiddelde waarde</p>
+                <p className="font-bold">{formatCurrency(data.count > 0 ? data.value / data.count : 0)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Top Genres</p>
+                <div className="space-y-1">
+                  {data.topGenres.slice(0, 3).map((genre) => (
+                    <div key={genre.genre} className="flex justify-between text-xs">
+                      <span className="truncate">{genre.genre}</span>
+                      <Badge variant="secondary" className="text-xs">{genre.count}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Tijdlijn Overzicht</CardTitle>
+          <CardDescription>Album releases door de jaren heen</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={stats.years}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="year" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" fill="hsl(var(--secondary))" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+// Price Tab Component
+function PriceTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value: number) => string }) {
+  const segments = [
+    { key: 'budget', name: 'Budget (€0-10)', data: stats.valueSegments.budget, color: 'hsl(var(--muted))' },
+    { key: 'midRange', name: 'Mid-Range (€10-50)', data: stats.valueSegments.midRange, color: 'hsl(var(--secondary))' },
+    { key: 'premium', name: 'Premium (€50-100)', data: stats.valueSegments.premium, color: 'hsl(var(--primary))' },
+    { key: 'collectors', name: "Collector's (€100+)", data: stats.valueSegments.collectors, color: 'hsl(var(--accent))' }
+  ];
+
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {segments.map((segment) => (
+          <Card key={segment.key}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                {segment.name}
+              </CardTitle>
+              <CardDescription>{segment.data.count} albums</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">Gemiddelde Waarde</p>
+                <p className="text-xl font-bold">{formatCurrency(segment.data.averageValue)}</p>
+              </div>
+              {segment.data.items.length > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Voorbeelden</p>
+                  <div className="space-y-1">
+                    {segment.data.items.slice(0, 3).map((item, index) => (
+                      <div key={index} className="text-xs">
+                        <p className="font-medium truncate">{item.artist || 'Onbekend'}</p>
+                        <p className="text-muted-foreground truncate">{item.title || 'Onbekend'}</p>
+                        <p className="font-bold">{formatCurrency(item.median_price || item.calculated_advice_price || item.marketplace_price || 0)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Waarde Verdeling</CardTitle>
+          <CardDescription>Overzicht van prijsklassen in je collectie</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={segments.map(s => ({ name: s.name, count: s.data.count, value: s.data.count * s.data.averageValue }))}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip formatter={(value, name) => [name === 'count' ? value : formatCurrency(Number(value)), name === 'count' ? 'Aantal Albums' : 'Totale Waarde']} />
+              <Bar dataKey="count" fill="hsl(var(--primary))" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Investment Insights</CardTitle>
+          <CardDescription>Waardevolle items in je collectie</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Artiest</TableHead>
+                <TableHead>Album</TableHead>
+                <TableHead>Format</TableHead>
+                <TableHead>Waarde</TableHead>
+                <TableHead>Categorie</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {stats.valueSegments.collectors.items.slice(0, 5).map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{item.artist || 'Onbekend'}</TableCell>
+                  <TableCell>{item.title || 'Onbekend'}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {item.format === 'CD' ? <Disc className="h-3 w-3 mr-1" /> : <Disc3 className="h-3 w-3 mr-1" />}
+                      {item.format}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-bold">
+                    {formatCurrency(item.median_price || item.calculated_advice_price || item.marketplace_price || 0)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge>Collector's</Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </>
   );
 }

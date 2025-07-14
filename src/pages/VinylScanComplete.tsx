@@ -98,33 +98,33 @@ const VinylScanComplete = () => {
     return 100;
   };
 
-  // Condition multipliers based on median price
+  // Condition multipliers based on lowest price
   const vinylConditionMultipliers: Record<string, number> = {
-    'Mint (M)': 1.5,
-    'Near Mint (NM or M-)': 1.4,
-    'Very Good Plus (VG+)': 1.2,
-    'Very Good (VG)': 0.8,
-    'Good Plus (G+)': 0.6,
-    'Good (G)': 0.4,
-    'Fair (F) / Poor (P)': 0.2
+    'Mint (M)': 2.0,
+    'Near Mint (NM or M-)': 1.8,
+    'Very Good Plus (VG+)': 1.5,
+    'Very Good (VG)': 1.2,
+    'Good Plus (G+)': 1.0,
+    'Good (G)': 0.8,
+    'Fair (F) / Poor (P)': 0.6
   };
 
   const cdConditionMultipliers: Record<string, number> = {
-    'Mint (M)': 1.4,
-    'Near Mint (NM)': 1.3,
-    'Very Good Plus (VG+)': 1.1,
-    'Very Good (VG)': 0.8,
-    'Good Plus (G+)': 0.6,
-    'Good (G)': 0.4,
-    'Fair (F) / Poor (P)': 0.2
+    'Mint (M)': 1.8,
+    'Near Mint (NM)': 1.6,
+    'Very Good Plus (VG+)': 1.3,
+    'Very Good (VG)': 1.0,
+    'Good Plus (G+)': 0.8,
+    'Good (G)': 0.6,
+    'Fair (F) / Poor (P)': 0.4
   };
 
   const conditionMultipliers = mediaType === 'vinyl' ? vinylConditionMultipliers : cdConditionMultipliers;
 
-  // Calculate advice price based on condition and median price
-  const calculateAdvicePrice = (condition: string, medianPrice: string | null) => {
-    if (!condition || !medianPrice) return null;
-    const price = parseFloat(medianPrice.replace(',', '.'));
+  // Calculate advice price based on condition and lowest price
+  const calculateAdvicePrice = (condition: string, lowestPrice: string | null) => {
+    if (!condition || !lowestPrice) return null;
+    const price = parseFloat(lowestPrice.replace(',', '.'));
     const multiplier = conditionMultipliers[condition];
     return Math.round(price * multiplier * 100) / 100; // Round to 2 decimals
   };
@@ -167,9 +167,9 @@ const VinylScanComplete = () => {
   const handleConditionChange = (condition: string) => {
     setSelectedCondition(condition);
     
-    const medianPrice = searchResults[0]?.pricing_stats?.median_price;
-    if (medianPrice) {
-      const advicePrice = calculateAdvicePrice(condition, medianPrice);
+    const lowestPrice = searchResults[0]?.pricing_stats?.lowest_price;
+    if (lowestPrice) {
+      const advicePrice = calculateAdvicePrice(condition, lowestPrice);
       if (advicePrice) {
         setCalculatedAdvicePrice(advicePrice);
         updateScanWithCondition(condition, advicePrice);
@@ -413,7 +413,7 @@ const VinylScanComplete = () => {
                   )}
 
                   {/* Condition Assessment Section */}
-                  {searchResults.length > 0 && searchResults[0]?.pricing_stats?.median_price && (
+                  {searchResults.length > 0 && searchResults[0]?.pricing_stats?.lowest_price && (
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -448,7 +448,7 @@ const VinylScanComplete = () => {
                                 <p className="text-sm text-green-800 mb-1">Berekende Adviesprijs:</p>
                                 <p className="text-2xl font-bold text-green-900">€{calculatedAdvicePrice.toFixed(2)}</p>
                                 <p className="text-xs text-green-700">
-                                  Gebaseerd op mediaan €{searchResults[0]?.pricing_stats?.median_price} × {conditionMultipliers[selectedCondition]}
+                                  Gebaseerd op laagste prijs €{searchResults[0]?.pricing_stats?.lowest_price} × {conditionMultipliers[selectedCondition]}
                                 </p>
                               </div>
                               {isSavingCondition && (

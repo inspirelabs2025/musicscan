@@ -32,6 +32,7 @@ export const useDiscogsSearch = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<DiscogsSearchResult[]>([]);
   const [searchStrategies, setSearchStrategies] = useState<string[]>([]);
+  const [isPricingRetrying, setIsPricingRetrying] = useState(false);
 
   const searchCatalog = async (
     catalogNumber: string,
@@ -74,6 +75,32 @@ export const useDiscogsSearch = () => {
       setSearchResults(data.results || []);
       setSearchStrategies(data.strategies_used || []);
       
+      // Check if pricing failed and retry automatically
+      const hasPricingResults = data.results?.some((result: any) => result.pricing_stats?.lowest_price);
+      if (includePricing && data.results?.length > 0 && !hasPricingResults) {
+        console.log('🔄 No pricing found, attempting automatic retry...');
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+        
+        try {
+          const retryData = await supabase.functions.invoke('test-catalog-search', {
+            body: {
+              catalog_number: catalogNumber.trim(),
+              artist: artist?.trim(),
+              title: title?.trim(),
+              include_pricing: true,
+              retry_pricing: true
+            }
+          });
+          
+          if (retryData.data?.results) {
+            setSearchResults(retryData.data.results);
+            console.log('✅ Pricing retry completed');
+          }
+        } catch (retryError) {
+          console.error('❌ Pricing retry failed:', retryError);
+        }
+      }
+      
       toast({
         title: "Discogs Zoeken Voltooid! 🎵",
         description: `${data.results?.length || 0} resultaten gevonden`,
@@ -94,11 +121,59 @@ export const useDiscogsSearch = () => {
     }
   };
 
+  const retryPricing = async (discogsId: number) => {
+    if (!discogsId) return null;
+    
+    setIsPricingRetrying(true);
+    
+    try {
+      console.log('🔄 Retrying pricing for Discogs ID:', discogsId);
+      
+      const { data, error } = await supabase.functions.invoke('test-catalog-search', {
+        body: {
+          discogs_id: discogsId,
+          retry_pricing_only: true
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.pricing_stats) {
+        // Update the search results with new pricing
+        setSearchResults(prev => prev.map(result => 
+          result.id === discogsId 
+            ? { ...result, pricing_stats: data.pricing_stats }
+            : result
+        ));
+        
+        toast({
+          title: "Prijzen Bijgewerkt! 💰",
+          description: "Nieuwe prijsinformatie opgehaald",
+          variant: "default"
+        });
+      }
+
+      return data;
+    } catch (error) {
+      console.error('❌ Pricing retry failed:', error);
+      toast({
+        title: "Prijzen Ophalen Mislukt",
+        description: "Kon geen nieuwe prijsinformatie ophalen",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsPricingRetrying(false);
+    }
+  };
+
   return {
     isSearching,
     searchResults,
     searchStrategies,
     searchCatalog,
-    setSearchResults
+    setSearchResults,
+    retryPricing,
+    isPricingRetrying
   };
 };

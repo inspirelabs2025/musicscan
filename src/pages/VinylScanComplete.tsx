@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Camera, Disc3, Search, ExternalLink, Copy, CheckCircle, AlertCircle, RefreshCcw } from 'lucide-react';
+import { ArrowLeft, Camera, Disc3, Search, ExternalLink, Copy, CheckCircle, AlertCircle, RefreshCcw, Loader2, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileUpload } from '@/components/FileUpload';
 import { useVinylAnalysis } from '@/hooks/useVinylAnalysis';
 import { useCDAnalysis } from '@/hooks/useCDAnalysis';
@@ -46,7 +47,9 @@ const VinylScanComplete = () => {
     isSearching,
     searchResults,
     searchStrategies,
-    searchCatalog
+    searchCatalog,
+    retryPricing,
+    isPricingRetrying
   } = useDiscogsSearch();
 
   // Auto-trigger analysis when photos are uploaded
@@ -411,25 +414,67 @@ const VinylScanComplete = () => {
                               <div><strong>Land:</strong> {searchResults[0].country}</div>
                             </div>
 
-                            {searchResults[0].pricing_stats && (
-                              <div>
-                                <h4 className="font-medium mb-2">Prijsinformatie:</h4>
-                                <div className="flex gap-2">
-                                  {searchResults[0].pricing_stats.lowest_price && (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-sm">Laagste: €{searchResults[0].pricing_stats.lowest_price}</span>
-                                      {getPriceBadge(searchResults[0].pricing_stats.lowest_price)}
-                                    </div>
-                                  )}
-                                  {searchResults[0].pricing_stats.median_price && (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-sm">Mediaan: €{searchResults[0].pricing_stats.median_price}</span>
-                                      {getPriceBadge(searchResults[0].pricing_stats.median_price)}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )}
+                             {searchResults[0].pricing_stats && (
+                               <div>
+                                 <div className="flex items-center justify-between mb-2">
+                                   <h4 className="font-medium">Prijsinformatie:</h4>
+                                   <Button 
+                                     size="sm" 
+                                     variant="outline"
+                                     onClick={() => retryPricing(searchResults[0].id)}
+                                     disabled={isPricingRetrying}
+                                     className="h-8"
+                                   >
+                                     {isPricingRetrying ? (
+                                       <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                     ) : (
+                                       <RefreshCcw className="h-3 w-3 mr-1" />
+                                     )}
+                                     Update Prijzen
+                                   </Button>
+                                 </div>
+                                 <div className="flex gap-2">
+                                   {searchResults[0].pricing_stats.lowest_price && (
+                                     <div className="flex items-center gap-1">
+                                       <span className="text-sm">Laagste: €{searchResults[0].pricing_stats.lowest_price}</span>
+                                       {getPriceBadge(searchResults[0].pricing_stats.lowest_price)}
+                                     </div>
+                                   )}
+                                   {searchResults[0].pricing_stats.median_price && (
+                                     <div className="flex items-center gap-1">
+                                       <span className="text-sm">Mediaan: €{searchResults[0].pricing_stats.median_price}</span>
+                                       {getPriceBadge(searchResults[0].pricing_stats.median_price)}
+                                     </div>
+                                   )}
+                                 </div>
+                               </div>
+                             )}
+
+                             {/* No pricing warning + retry button */}
+                             {searchResults[0] && !searchResults[0].pricing_stats?.lowest_price && (
+                               <Alert className="border-yellow-200 bg-yellow-50">
+                                 <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                                 <AlertDescription className="text-yellow-800">
+                                   <div className="flex items-center justify-between">
+                                     <span>Geen prijsinformatie beschikbaar</span>
+                                     <Button 
+                                       size="sm" 
+                                       variant="outline"
+                                       onClick={() => retryPricing(searchResults[0].id)}
+                                       disabled={isPricingRetrying}
+                                       className="ml-2 h-8"
+                                     >
+                                       {isPricingRetrying ? (
+                                         <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                       ) : (
+                                         <RefreshCcw className="h-3 w-3 mr-1" />
+                                       )}
+                                       Prijzen Ophalen
+                                     </Button>
+                                   </div>
+                                 </AlertDescription>
+                               </Alert>
+                             )}
 
                             <div className="flex gap-2">
                               <Button 

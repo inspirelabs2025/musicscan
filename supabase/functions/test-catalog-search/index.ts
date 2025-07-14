@@ -12,8 +12,29 @@ Deno.serve(async (req) => {
   try {
     console.log('🔍 Starting catalog search test...');
     
-    const { catalog_number, artist, title, include_pricing } = await req.json();
+    const { catalog_number, artist, title, include_pricing, retry_pricing, discogs_id, retry_pricing_only } = await req.json();
     
+    // Handle retry pricing only requests
+    if (retry_pricing_only && discogs_id) {
+      const scraperApiKey = Deno.env.get('SCRAPERAPI_KEY');
+      if (!scraperApiKey) {
+        return new Response(
+          JSON.stringify({ error: 'ScraperAPI key not available for pricing retry' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const sellUrl = `https://www.discogs.com/sell/release/${discogs_id}`;
+      console.log(`💰 Retrying pricing for Discogs ID: ${discogs_id}`);
+      
+      const pricingStats = await scrapePricingStatsWithRetry(sellUrl, scraperApiKey);
+      
+      return new Response(
+        JSON.stringify({ pricing_stats: pricingStats }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (!catalog_number) {
       console.error('❌ Catalog number is required');
       return new Response(
@@ -160,6 +181,73 @@ Deno.serve(async (req) => {
       return matrix[str2.length][str1.length];
     };
 
+    // Function to scrape pricing statistics with retry logic
+    const scrapePricingStatsWithRetry = async (sellUrl: string, apiKey: string, maxRetries: number = 2) => {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        console.log(`💰 Pricing attempt ${attempt}/${maxRetries} for: ${sellUrl}`);
+        
+        try {
+          const scraperUrl = `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(sellUrl)}`;
+          
+          const response = await fetch(scraperUrl);
+          if (!response.ok) {
+            console.log(`❌ ScraperAPI request failed (attempt ${attempt}): ${response.status}`);
+            if (attempt < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, attempt * 2000)); // Exponential backoff
+              continue;
+            }
+            return null;
+          }
+
+          const html = await response.text();
+          console.log(`✅ Retrieved HTML (attempt ${attempt}), length: ${html.length}`);
+          
+          // Extract statistics using HTML-aware regex patterns
+          const stats = {
+            have_count: parseInt(html.match(/<span>Have:<\/span>\s*<a[^>]*>(\d+)<\/a>/)?.[1] || 
+                  html.match(/Have:\s?(\d+)/)?.[1] || '0'),
+            want_count: parseInt(html.match(/<span>Want:<\/span>\s*<a[^>]*>(\d+)<\/a>/)?.[1] || 
+                  html.match(/Want:\s?(\d+)/)?.[1] || '0'),
+            avg_rating: parseFloat(html.match(/<span class="rating_value">([\d.]+)<\/span>/)?.[1] || 
+                        html.match(/Avg Rating:\s?([\d.]+)\s?\/\s?5/)?.[1] || '0'),
+            ratings_count: parseInt(html.match(/<span class="rating_count">(\d+)<\/span>/)?.[1] || 
+                          html.match(/Ratings:\s?(\d+)/)?.[1] || '0'),
+            last_sold: html.match(/<span>Last Sold:<\/span>\s*<a[^>]*>([0-9]{2} \w{3} \d{2})<\/a>/)?.[1] || 
+                       html.match(/Last Sold:\s?([0-9]{2} \w{3} \d{2})/)?.[1] || null,
+            lowest_price: html.match(/<span>Lowest:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
+                          html.match(/Lowest:[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
+                          html.match(/<span>Lowest:<\/span>[\s\n\r]*([\d.,]+)/)?.[1] || null,
+            median_price: html.match(/<span>Median:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
+                          html.match(/Median:[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
+                          html.match(/<span>Median:<\/span>[\s\n\r]*([\d.,]+)/)?.[1] || null,
+            highest_price: html.match(/<span>Highest:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
+                           html.match(/Highest:[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
+                           html.match(/<span>Highest:<\/span>[\s\n\r]*([\d.,]+)/)?.[1] || null
+          };
+
+          console.log(`📊 Extracted stats (attempt ${attempt}):`, stats);
+          
+          // Check if we got useful pricing data
+          if (stats.lowest_price || stats.median_price || stats.highest_price) {
+            return stats;
+          } else if (attempt < maxRetries) {
+            console.log(`⚠️ No pricing data found, retrying...`);
+            await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+            continue;
+          }
+          
+          return stats;
+        } catch (error) {
+          console.error(`❌ Pricing scrape failed (attempt ${attempt}) for ${sellUrl}:`, error);
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+            continue;
+          }
+          return null;
+        }
+      }
+    };
+
     // Function to scrape pricing statistics from marketplace URL
     const scrapePricingStats = async (sellUrl: string) => {
       if (!scraperApiKey) {
@@ -277,11 +365,13 @@ Deno.serve(async (req) => {
     if (include_pricing && scraperApiKey && formattedResults.length > 0) {
       console.log(`💰 Scraping pricing stats for ${formattedResults.length} results...`);
       
-      // Scrape pricing stats for all results in parallel (with a reasonable limit)
+      // Use retry logic if this is a retry attempt, otherwise use regular scraping
       const pricingPromises = formattedResults.slice(0, 5).map(async (result, index) => {
         // Add a small delay to avoid overwhelming ScraperAPI
         await new Promise(resolve => setTimeout(resolve, index * 1000));
-        const pricingStats = await scrapePricingStats(result.sell_url);
+        const pricingStats = retry_pricing 
+          ? await scrapePricingStatsWithRetry(result.sell_url, scraperApiKey)
+          : await scrapePricingStats(result.sell_url);
         return { index, pricingStats };
       });
 

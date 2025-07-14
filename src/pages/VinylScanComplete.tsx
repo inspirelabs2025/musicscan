@@ -125,7 +125,13 @@ const VinylScanComplete = () => {
   // Calculate advice price based on condition and lowest price
   const calculateAdvicePrice = (condition: string, lowestPrice: string | null) => {
     if (!condition || !lowestPrice) return null;
-    const price = parseFloat(lowestPrice.replace(',', '.'));
+    let price = parseFloat(lowestPrice.replace(',', '.'));
+    
+    // Minimum price rule: if lowest price is under €1.00, use €1.00 as base
+    if (price < 1.00) {
+      price = 1.00;
+    }
+    
     const multiplier = conditionMultipliers[condition];
     return Math.round(price * multiplier * 100) / 100; // Round to 2 decimals
   };

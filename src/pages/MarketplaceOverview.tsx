@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { Search, Filter, Edit, Upload, Disc3, Music, Euro } from 'lucide-react';
+import { Search, Filter, Edit, Upload, Disc3, Music, Euro, AlertTriangle, CheckCircle, Eye } from 'lucide-react';
 
 interface MarketplaceItem {
   id: string;
@@ -37,6 +37,7 @@ export default function MarketplaceOverview() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterFormat, setFilterFormat] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [editingItem, setEditingItem] = useState<MarketplaceItem | null>(null);
 
@@ -48,20 +49,18 @@ export default function MarketplaceOverview() {
     try {
       setLoading(true);
       
-      // Fetch CD scans
+      // Fetch CD scans - show ALL scanned items
       const { data: cdData, error: cdError } = await supabase
         .from('cd_scan')
         .select('*')
-        .not('discogs_id', 'is', null)
         .order('created_at', { ascending: false });
 
       if (cdError) throw cdError;
 
-      // Fetch Vinyl scans
+      // Fetch Vinyl scans - show ALL scanned items
       const { data: vinylData, error: vinylError } = await supabase
         .from('vinyl2_scan')
         .select('*')
-        .not('discogs_id', 'is', null)
         .order('created_at', { ascending: false });
 
       if (vinylError) throw vinylError;
@@ -101,14 +100,26 @@ export default function MarketplaceOverview() {
     }
   };
 
+  const getItemStatus = (item: MarketplaceItem) => {
+    if (item.discogs_id) {
+      return 'ready';
+    }
+    return 'needs_discogs_id';
+  };
+
   const filteredItems = items.filter(item => {
     const matchesSearch = searchTerm === '' || 
       item.artist?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.title?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesFilter = filterFormat === 'all' || item.type === filterFormat;
+    const matchesFormat = filterFormat === 'all' || item.type === filterFormat;
     
-    return matchesSearch && matchesFilter;
+    const status = getItemStatus(item);
+    const matchesStatus = filterStatus === 'all' || 
+      (filterStatus === 'ready' && status === 'ready') ||
+      (filterStatus === 'needs_discogs_id' && status === 'needs_discogs_id');
+    
+    return matchesSearch && matchesFormat && matchesStatus;
   });
 
   const updateMarketplaceItem = async (itemId: string, type: string, updates: Partial<MarketplaceItem>) => {
@@ -217,6 +228,17 @@ export default function MarketplaceOverview() {
                 <SelectItem value="Vinyl">Vinyl</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-48">
+                <Eye className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle statussen</SelectItem>
+                <SelectItem value="ready">Discogs klaar</SelectItem>
+                <SelectItem value="needs_discogs_id">Heeft Discogs ID nodig</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Bulk Actions */}
@@ -244,7 +266,7 @@ export default function MarketplaceOverview() {
           <Card key={item.id} className="relative">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Checkbox
                     checked={selectedItems.has(item.id)}
                     onCheckedChange={() => toggleItemSelection(item.id)}
@@ -257,6 +279,17 @@ export default function MarketplaceOverview() {
                   <Badge variant={item.type === 'CD' ? 'default' : 'secondary'}>
                     {item.type}
                   </Badge>
+                  {getItemStatus(item) === 'ready' ? (
+                    <Badge variant="outline" className="text-green-600 border-green-600">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Discogs klaar
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-orange-600 border-orange-600">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Discogs ID nodig
+                    </Badge>
+                  )}
                 </div>
                 <Dialog>
                   <DialogTrigger asChild>
@@ -322,6 +355,13 @@ export default function MarketplaceOverview() {
                   >
                     Bekijk op Discogs
                   </Button>
+                )}
+                {!item.discogs_id && (
+                  <div className="mt-3 p-2 bg-orange-50 border border-orange-200 rounded">
+                    <p className="text-xs text-orange-700">
+                      Geen Discogs ID gevonden. Dit item moet handmatig gekoppeld worden.
+                    </p>
+                  </div>
                 )}
               </div>
             </CardContent>

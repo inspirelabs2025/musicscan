@@ -382,8 +382,8 @@ async function getDiscogsPriceAnalysisById(
 
     console.log(`💰 Stats API result: Low: ${result.lowest_price}, Median: ${result.median_price}, High: ${result.highest_price}, For Sale: ${result.num_for_sale}`);
 
-    // If we're missing median price specifically, fall back to listings to get it
-    if (result.num_for_sale > 0 && !result.median_price) {
+    // If we're missing median price, fall back to listings to get it
+    if (!result.median_price) {
       console.log(`🔄 Stats API missing median_price, falling back to listings`);
       const listingsResult = await fallbackToMarketplaceListings(releaseId, condition);
       

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Camera, Disc3, Search, ExternalLink, Copy, CheckCircle, AlertCircle, RefreshCcw, Loader2, AlertTriangle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft, Camera, Disc3, Search, ExternalLink, Copy, CheckCircle, AlertCircle, RefreshCcw, Loader2, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const VinylScanComplete = () => {
+  const navigate = useNavigate();
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
@@ -694,6 +695,30 @@ const VinylScanComplete = () => {
             )}
           </div>
         </div>
+
+        {/* Navigation Buttons */}
+        {(analysisResult || searchResults.length > 0) && (
+          <div className="mt-8">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button onClick={resetScan} className="flex-1">
+                    <Camera className="mr-2 h-4 w-4" />
+                    Scan Another Item
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate('/catalog-test')} className="flex-1">
+                    <Search className="mr-2 h-4 w-4" />
+                    Search Catalog
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate('/collection-overview')} className="flex-1">
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    View Collection
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

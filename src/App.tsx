@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import CatalogTest from "./pages/CatalogTest";
 import VinylScanComplete from "./pages/VinylScanComplete";
 import MarketplaceOverview from "./pages/MarketplaceOverview";
+import CollectionOverview from "./pages/CollectionOverview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/catalog-test" element={<CatalogTest />} />
           <Route path="/index" element={<Index />} />
           <Route path="/marketplace-overview" element={<MarketplaceOverview />} />
+          <Route path="/collection-overview" element={<CollectionOverview />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

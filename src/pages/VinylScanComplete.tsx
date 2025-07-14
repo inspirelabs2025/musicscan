@@ -109,21 +109,21 @@ const VinylScanComplete = () => {
     return 100;
   };
 
-  // Condition multipliers based on lowest price
+  // Condition multipliers based on lowest price (unified for vinyl and CD)
   const vinylConditionMultipliers: Record<string, number> = {
     'Mint (M)': 2.0,
     'Near Mint (NM or M-)': 1.8,
     'Very Good Plus (VG+)': 1.5,
-    'Very Good (VG)': 1.2,
-    'Good Plus (G+)': 1.0,
-    'Good (G)': 0.8,
-    'Fair (F) / Poor (P)': 0.6
+    'Very Good (VG)': 1.0,
+    'Good Plus (G+)': 0.8,
+    'Good (G)': 0.6,
+    'Fair (F) / Poor (P)': 0.4
   };
 
   const cdConditionMultipliers: Record<string, number> = {
-    'Mint (M)': 1.8,
-    'Near Mint (NM)': 1.6,
-    'Very Good Plus (VG+)': 1.3,
+    'Mint (M)': 2.0,
+    'Near Mint (NM)': 1.8,
+    'Very Good Plus (VG+)': 1.5,
     'Very Good (VG)': 1.0,
     'Good Plus (G+)': 0.8,
     'Good (G)': 0.6,
@@ -661,7 +661,7 @@ const VinylScanComplete = () => {
                             <SelectContent>
                               {Object.entries(conditionMultipliers).map(([condition, multiplier]) => (
                                 <SelectItem key={condition} value={condition}>
-                                  {condition} ({multiplier > 1 ? '+' : ''}{Math.round((multiplier - 1) * 100)}%)
+                                  {condition} ({Math.round(multiplier * 100)}% van low price)
                                 </SelectItem>
                               ))}
                             </SelectContent>

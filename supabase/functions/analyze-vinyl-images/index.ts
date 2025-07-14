@@ -681,7 +681,7 @@ serve(async (req) => {
         artist: combinedData.artist,
         title: combinedData.title,
         year: combinedData.year ? parseInt(combinedData.year) : null,
-        format: combinedData.format,
+        format: 'Vinyl',
         label: combinedData.label,
         genre: combinedData.genre,
         country: combinedData.country

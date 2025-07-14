@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Archive } from "lucide-react";
+import { Home, ShoppingCart, Archive, Menu, X } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -8,6 +9,8 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 const navigationItems = [
@@ -19,34 +22,80 @@ const navigationItems = [
 export function Navigation() {
   const location = useLocation();
   const currentPath = location.pathname;
+  const [isOpen, setIsOpen] = useState(false);
+
+  const NavLink = ({ item, mobile = false }: { item: typeof navigationItems[0], mobile?: boolean }) => {
+    const isActive = currentPath === item.url;
+    const Icon = item.icon;
+    
+    return (
+      <Link
+        to={item.url}
+        onClick={() => mobile && setIsOpen(false)}
+        className={cn(
+          mobile 
+            ? "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary" 
+            : "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
+          isActive && (mobile 
+            ? "bg-muted text-primary" 
+            : "bg-accent text-accent-foreground")
+        )}
+      >
+        <Icon className={cn("h-4 w-4", mobile ? "" : "mr-2")} />
+        {mobile && <span className="text-base">{item.title}</span>}
+        {!mobile && item.title}
+      </Link>
+    );
+  };
 
   return (
-    <NavigationMenu>
-      <NavigationMenuList className="gap-1">
-        {navigationItems.map((item) => {
-          const isActive = currentPath === item.url;
-          const Icon = item.icon;
-          
-          return (
-            <NavigationMenuItem key={item.title}>
-              <NavigationMenuLink asChild>
-                <Link
-                  to={item.url}
-                  className={cn(
-                    "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
-                    isActive 
-                      ? "bg-accent text-accent-foreground" 
-                      : "hover:bg-accent/50"
-                  )}
+    <>
+      {/* Desktop Navigation */}
+      <div className="hidden md:block">
+        <NavigationMenu>
+          <NavigationMenuList className="gap-1">
+            {navigationItems.map((item) => (
+              <NavigationMenuItem key={item.title}>
+                <NavigationMenuLink asChild>
+                  <NavLink item={item} />
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            ))}
+          </NavigationMenuList>
+        </NavigationMenu>
+      </div>
+
+      {/* Mobile Navigation */}
+      <div className="md:hidden">
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="sm" className="px-2">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64">
+            <div className="flex flex-col space-y-4 mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Menu</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setIsOpen(false)}
+                  className="p-1"
                 >
-                  <Icon className="h-4 w-4 mr-2" />
-                  {item.title}
-                </Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-          );
-        })}
-      </NavigationMenuList>
-    </NavigationMenu>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <nav className="flex flex-col space-y-2">
+                {navigationItems.map((item) => (
+                  <NavLink key={item.title} item={item} mobile />
+                ))}
+              </nav>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
   );
 }

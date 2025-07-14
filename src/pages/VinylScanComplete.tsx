@@ -52,7 +52,7 @@ const VinylScanComplete = () => {
   // Auto-trigger analysis when photos are uploaded
   useEffect(() => {
     if (!mediaType || !analyzeImages) return;
-    const requiredPhotos = mediaType === 'vinyl' ? 3 : 2;
+    const requiredPhotos = mediaType === 'vinyl' ? 3 : 3; // CD's need 3 photos too (front, back, barcode)
     if (uploadedFiles.length >= requiredPhotos && !isAnalyzing && !analysisResult) {
       setCurrentStep(2);
       analyzeImages(uploadedFiles);
@@ -267,12 +267,12 @@ const VinylScanComplete = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Camera className="h-5 w-5" />
-                  Foto Upload ({uploadedFiles.length}/{mediaType === 'vinyl' ? '3' : '2-3'})
+                  Foto Upload ({uploadedFiles.length}/3)
                 </CardTitle>
                 <CardDescription>
                   {mediaType === 'vinyl' 
                     ? 'Upload 3 foto\'s: voorkant, achterkant, en label'
-                    : 'Upload 2-3 foto\'s: voorkant, achterkant, en optioneel barcode'
+                    : 'Upload 3 foto\'s: voorkant, achterkant, en barcode'
                   }
                 </CardDescription>
               </CardHeader>
@@ -284,48 +284,31 @@ const VinylScanComplete = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {[0, 1, 2].map((index) => {
-                      if (mediaType === 'cd' && index === 2) {
-                        return (
-                          <FileUpload 
-                            key={index}
-                            step={index + 1}
-                            stepTitle={`Foto ${index + 1} (Optioneel)`}
-                            stepDescription="Upload barcode voor directe identificatie"
-                            isCompleted={uploadedFiles[index] !== undefined}
-                            onFileUploaded={(url) => {
-                              setUploadedFiles(prev => [...prev.slice(0, index), url, ...prev.slice(index + 1)]);
-                            }}
-                          />
-                        );
-                      }
-                    
-                      return (
-                        <FileUpload 
-                          key={index}
-                          step={index + 1}
-                          stepTitle={`Foto ${index + 1}`}
-                          stepDescription={
-                            mediaType === 'vinyl' ? (
-                              index === 0 ? "Upload voorkant van de LP" :
-                              index === 1 ? "Upload achterkant van de LP" :
-                              "Upload label of matrix/catalog foto"
-                            ) : (
-                              index === 0 ? "Upload voorkant van de CD" :
-                              "Upload achterkant van de CD"
-                            )
-                          }
-                          isCompleted={uploadedFiles[index] !== undefined}
-                          onFileUploaded={(url) => {
-                            setUploadedFiles(prev => [...prev.slice(0, index), url, ...prev.slice(index + 1)]);
-                          }}
-                        />
-                      );
-                    })}
+                    {[0, 1, 2].map((index) => (
+                      <FileUpload 
+                        key={index}
+                        step={index + 1}
+                        stepTitle={`Foto ${index + 1}`}
+                        stepDescription={
+                          mediaType === 'vinyl' ? (
+                            index === 0 ? "Upload voorkant van de LP" :
+                            index === 1 ? "Upload achterkant van de LP" :
+                            "Upload label of matrix/catalog foto"
+                          ) : (
+                            index === 0 ? "Upload voorkant van de CD" :
+                            index === 1 ? "Upload achterkant van de CD" :
+                            "Upload barcode van de CD"
+                          )
+                        }
+                        isCompleted={uploadedFiles[index] !== undefined}
+                        onFileUploaded={(url) => {
+                          setUploadedFiles(prev => [...prev.slice(0, index), url, ...prev.slice(index + 1)]);
+                        }}
+                      />
+                    ))}
                   </div>
                 )}
-                {((mediaType === 'vinyl' && uploadedFiles.length === 3) || 
-                  (mediaType === 'cd' && uploadedFiles.length >= 2)) && (
+                {uploadedFiles.length === 3 && (
                   <div className="mt-4 p-4 bg-green-50 rounded-lg">
                     <div className="flex items-center gap-2 text-green-800">
                       <CheckCircle className="h-4 w-4" />

@@ -9,11 +9,13 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileUpload } from '@/components/FileUpload';
 import { useVinylAnalysis } from '@/hooks/useVinylAnalysis';
+import { useCDAnalysis } from '@/hooks/useCDAnalysis';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const VinylScanComplete = () => {
+  const [mediaType, setMediaType] = useState<'vinyl' | 'cd'>('vinyl');
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [selectedCondition, setSelectedCondition] = useState<string>('');
@@ -21,11 +23,24 @@ const VinylScanComplete = () => {
   const [isSavingCondition, setIsSavingCondition] = useState(false);
   
   const { 
-    isAnalyzing, 
-    analysisResult, 
-    analyzeImages,
-    setAnalysisResult 
+    isAnalyzing: isAnalyzingVinyl, 
+    analysisResult: vinylAnalysisResult, 
+    analyzeImages: analyzeVinylImages,
+    setAnalysisResult: setVinylAnalysisResult 
   } = useVinylAnalysis();
+
+  const { 
+    isAnalyzing: isAnalyzingCD, 
+    analysisResult: cdAnalysisResult, 
+    analyzeImages: analyzeCDImages,
+    setAnalysisResult: setCDAnalysisResult 
+  } = useCDAnalysis();
+
+  // Use the appropriate analysis based on media type
+  const isAnalyzing = mediaType === 'vinyl' ? isAnalyzingVinyl : isAnalyzingCD;
+  const analysisResult = mediaType === 'vinyl' ? vinylAnalysisResult : cdAnalysisResult;
+  const analyzeImages = mediaType === 'vinyl' ? analyzeVinylImages : analyzeCDImages;
+  const setAnalysisResult = mediaType === 'vinyl' ? setVinylAnalysisResult : setCDAnalysisResult;
 
   const {
     isSearching,
@@ -34,13 +49,14 @@ const VinylScanComplete = () => {
     searchCatalog
   } = useDiscogsSearch();
 
-  // Auto-trigger analysis when 3 photos are uploaded
+  // Auto-trigger analysis when photos are uploaded
   useEffect(() => {
-    if (uploadedFiles.length === 3 && !isAnalyzing && !analysisResult) {
+    const requiredPhotos = mediaType === 'vinyl' ? 3 : 2;
+    if (uploadedFiles.length >= requiredPhotos && !isAnalyzing && !analysisResult) {
       setCurrentStep(2);
       analyzeImages(uploadedFiles);
     }
-  }, [uploadedFiles, isAnalyzing, analysisResult, analyzeImages]);
+  }, [uploadedFiles, isAnalyzing, analysisResult, analyzeImages, mediaType]);
 
   // Auto-trigger Discogs search when OCR analysis completes with catalog number
   useEffect(() => {
@@ -83,7 +99,7 @@ const VinylScanComplete = () => {
   };
 
   // Condition multipliers based on median price
-  const conditionMultipliers: Record<string, number> = {
+  const vinylConditionMultipliers: Record<string, number> = {
     'Mint (M)': 1.5,
     'Near Mint (NM or M-)': 1.4,
     'Very Good Plus (VG+)': 1.2,
@@ -92,6 +108,18 @@ const VinylScanComplete = () => {
     'Good (G)': 0.4,
     'Fair (F) / Poor (P)': 0.2
   };
+
+  const cdConditionMultipliers: Record<string, number> = {
+    'Mint (M)': 1.4,
+    'Near Mint (NM)': 1.3,
+    'Very Good Plus (VG+)': 1.1,
+    'Very Good (VG)': 0.8,
+    'Good Plus (G+)': 0.6,
+    'Good (G)': 0.4,
+    'Fair (F) / Poor (P)': 0.2
+  };
+
+  const conditionMultipliers = mediaType === 'vinyl' ? vinylConditionMultipliers : cdConditionMultipliers;
 
   // Calculate advice price based on condition and median price
   const calculateAdvicePrice = (condition: string, medianPrice: string | null) => {
@@ -102,13 +130,14 @@ const VinylScanComplete = () => {
   };
 
   // Update database with condition and calculated price
-  const updateVinylScanWithCondition = async (condition: string, advicePrice: number) => {
+  const updateScanWithCondition = async (condition: string, advicePrice: number) => {
     if (!analysisResult?.scanId) return;
 
     setIsSavingCondition(true);
     try {
+      const tableName = mediaType === 'vinyl' ? 'vinyl2_scan' : 'cd_scan';
       const { error } = await supabase
-        .from('vinyl2_scan')
+        .from(tableName)
         .update({
           condition_grade: condition,
           calculated_advice_price: advicePrice
@@ -123,7 +152,7 @@ const VinylScanComplete = () => {
         variant: "default"
       });
     } catch (error) {
-      console.error('Error updating vinyl scan:', error);
+      console.error(`Error updating ${mediaType} scan:`, error);
       toast({
         title: "Fout bij Opslaan",
         description: "Kon conditie niet opslaan in database",
@@ -143,7 +172,7 @@ const VinylScanComplete = () => {
       const advicePrice = calculateAdvicePrice(condition, medianPrice);
       if (advicePrice) {
         setCalculatedAdvicePrice(advicePrice);
-        updateVinylScanWithCondition(condition, advicePrice);
+        updateScanWithCondition(condition, advicePrice);
       }
     }
   };
@@ -151,7 +180,8 @@ const VinylScanComplete = () => {
   const resetScan = () => {
     setCurrentStep(1);
     setUploadedFiles([]);
-    setAnalysisResult(null);
+    setVinylAnalysisResult(null);
+    setCDAnalysisResult(null);
     setSelectedCondition('');
     setCalculatedAdvicePrice(null);
   };
@@ -168,10 +198,25 @@ const VinylScanComplete = () => {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Complete Vinyl Scan</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Media Scan Complete</h1>
             <p className="text-gray-600">Upload → OCR → Discogs → Resultaten</p>
           </div>
         </div>
+
+        {/* Media Type Selection */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Kies Media Type</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={mediaType} onValueChange={(value) => setMediaType(value as 'vinyl' | 'cd')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="vinyl">🎵 Vinyl / LP</TabsTrigger>
+                <TabsTrigger value="cd">💿 CD</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </CardContent>
+        </Card>
 
         {/* Progress */}
         <Card className="mb-8">
@@ -206,33 +251,59 @@ const VinylScanComplete = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Camera className="h-5 w-5" />
-                  Foto Upload ({uploadedFiles.length}/3)
+                  Foto Upload ({uploadedFiles.length}/{mediaType === 'vinyl' ? '3' : '2-3'})
                 </CardTitle>
                 <CardDescription>
-                  Upload 3 foto's: voorkant, achterkant, en label
+                  {mediaType === 'vinyl' 
+                    ? 'Upload 3 foto\'s: voorkant, achterkant, en label'
+                    : 'Upload 2-3 foto\'s: voorkant, achterkant, en optioneel barcode'
+                  }
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {/* Custom upload area for multiple files */}
                 <div className="space-y-4">
-                  {[0, 1, 2].map((index) => (
-                    <FileUpload 
-                      key={index}
-                      step={index + 1}
-                      stepTitle={`Foto ${index + 1}`}
-                      stepDescription={
-                        index === 0 ? "Upload voorkant van de LP/CD" :
-                        index === 1 ? "Upload achterkant van de LP/CD" :
-                        "Upload label of extra foto"
-                      }
-                      isCompleted={uploadedFiles[index] !== undefined}
-                      onFileUploaded={(url) => {
-                        setUploadedFiles(prev => [...prev.slice(0, index), url, ...prev.slice(index + 1)]);
-                      }}
-                    />
-                  ))}
+                  {[0, 1, 2].map((index) => {
+                    if (mediaType === 'cd' && index === 2) {
+                      return (
+                        <FileUpload 
+                          key={index}
+                          step={index + 1}
+                          stepTitle={`Foto ${index + 1} (Optioneel)`}
+                          stepDescription="Upload barcode voor directe identificatie"
+                          isCompleted={uploadedFiles[index] !== undefined}
+                          onFileUploaded={(url) => {
+                            setUploadedFiles(prev => [...prev.slice(0, index), url, ...prev.slice(index + 1)]);
+                          }}
+                        />
+                      );
+                    }
+                    
+                    return (
+                      <FileUpload 
+                        key={index}
+                        step={index + 1}
+                        stepTitle={`Foto ${index + 1}`}
+                        stepDescription={
+                          mediaType === 'vinyl' ? (
+                            index === 0 ? "Upload voorkant van de LP" :
+                            index === 1 ? "Upload achterkant van de LP" :
+                            "Upload label of matrix/catalog foto"
+                          ) : (
+                            index === 0 ? "Upload voorkant van de CD" :
+                            "Upload achterkant van de CD"
+                          )
+                        }
+                        isCompleted={uploadedFiles[index] !== undefined}
+                        onFileUploaded={(url) => {
+                          setUploadedFiles(prev => [...prev.slice(0, index), url, ...prev.slice(index + 1)]);
+                        }}
+                      />
+                    );
+                  })}
                 </div>
-                {uploadedFiles.length === 3 && (
+                {((mediaType === 'vinyl' && uploadedFiles.length === 3) || 
+                  (mediaType === 'cd' && uploadedFiles.length >= 2)) && (
                   <div className="mt-4 p-4 bg-green-50 rounded-lg">
                     <div className="flex items-center gap-2 text-green-800">
                       <CheckCircle className="h-4 w-4" />
@@ -374,15 +445,15 @@ const VinylScanComplete = () => {
                           Conditie Assessment
                         </CardTitle>
                         <CardDescription>
-                          Selecteer de staat van uw LP om een adviesprijs te berekenen
+                          Selecteer de staat van uw {mediaType === 'vinyl' ? 'LP' : 'CD'} om een adviesprijs te berekenen
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div>
-                          <label className="text-sm font-medium mb-2 block">Conditie van de LP:</label>
+                          <label className="text-sm font-medium mb-2 block">Conditie van de {mediaType === 'vinyl' ? 'LP' : 'CD'}:</label>
                           <Select value={selectedCondition} onValueChange={handleConditionChange}>
                             <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Kies de conditie van uw LP" />
+                              <SelectValue placeholder={`Kies de conditie van uw ${mediaType === 'vinyl' ? 'LP' : 'CD'}`} />
                             </SelectTrigger>
                             <SelectContent>
                               {Object.entries(conditionMultipliers).map(([condition, multiplier]) => (

@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      cd_scan: {
+        Row: {
+          artist: string | null
+          back_image: string | null
+          barcode_image: string | null
+          barcode_number: string | null
+          calculated_advice_price: number | null
+          catalog_number: string | null
+          condition_grade: string | null
+          country: string | null
+          created_at: string
+          currency: string | null
+          discogs_id: number | null
+          discogs_url: string | null
+          format: string | null
+          front_image: string | null
+          genre: string | null
+          highest_price: number | null
+          id: string
+          label: string | null
+          lowest_price: number | null
+          median_price: number | null
+          title: string | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          artist?: string | null
+          back_image?: string | null
+          barcode_image?: string | null
+          barcode_number?: string | null
+          calculated_advice_price?: number | null
+          catalog_number?: string | null
+          condition_grade?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          discogs_id?: number | null
+          discogs_url?: string | null
+          format?: string | null
+          front_image?: string | null
+          genre?: string | null
+          highest_price?: number | null
+          id?: string
+          label?: string | null
+          lowest_price?: number | null
+          median_price?: number | null
+          title?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          artist?: string | null
+          back_image?: string | null
+          barcode_image?: string | null
+          barcode_number?: string | null
+          calculated_advice_price?: number | null
+          catalog_number?: string | null
+          condition_grade?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          discogs_id?: number | null
+          discogs_url?: string | null
+          format?: string | null
+          front_image?: string | null
+          genre?: string | null
+          highest_price?: number | null
+          id?: string
+          label?: string | null
+          lowest_price?: number | null
+          median_price?: number | null
+          title?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       discogs_price_listings: {
         Row: {
           condition: string

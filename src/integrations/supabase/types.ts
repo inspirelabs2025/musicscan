@@ -35,6 +35,15 @@ export type Database = {
           id: string
           label: string | null
           lowest_price: number | null
+          marketplace_allow_offers: boolean | null
+          marketplace_comments: string | null
+          marketplace_external_id: string | null
+          marketplace_format_quantity: number | null
+          marketplace_location: string | null
+          marketplace_price: number | null
+          marketplace_sleeve_condition: string | null
+          marketplace_status: string | null
+          marketplace_weight: number | null
           median_price: number | null
           title: string | null
           updated_at: string
@@ -60,6 +69,15 @@ export type Database = {
           id?: string
           label?: string | null
           lowest_price?: number | null
+          marketplace_allow_offers?: boolean | null
+          marketplace_comments?: string | null
+          marketplace_external_id?: string | null
+          marketplace_format_quantity?: number | null
+          marketplace_location?: string | null
+          marketplace_price?: number | null
+          marketplace_sleeve_condition?: string | null
+          marketplace_status?: string | null
+          marketplace_weight?: number | null
           median_price?: number | null
           title?: string | null
           updated_at?: string
@@ -85,6 +103,15 @@ export type Database = {
           id?: string
           label?: string | null
           lowest_price?: number | null
+          marketplace_allow_offers?: boolean | null
+          marketplace_comments?: string | null
+          marketplace_external_id?: string | null
+          marketplace_format_quantity?: number | null
+          marketplace_location?: string | null
+          marketplace_price?: number | null
+          marketplace_sleeve_condition?: string | null
+          marketplace_status?: string | null
+          marketplace_weight?: number | null
           median_price?: number | null
           title?: string | null
           updated_at?: string
@@ -500,6 +527,15 @@ export type Database = {
           id: string
           label: string | null
           lowest_price: number | null
+          marketplace_allow_offers: boolean | null
+          marketplace_comments: string | null
+          marketplace_external_id: string | null
+          marketplace_format_quantity: number | null
+          marketplace_location: string | null
+          marketplace_price: number | null
+          marketplace_sleeve_condition: string | null
+          marketplace_status: string | null
+          marketplace_weight: number | null
           matrix_image: string | null
           matrix_number: string | null
           median_price: number | null
@@ -525,6 +561,15 @@ export type Database = {
           id?: string
           label?: string | null
           lowest_price?: number | null
+          marketplace_allow_offers?: boolean | null
+          marketplace_comments?: string | null
+          marketplace_external_id?: string | null
+          marketplace_format_quantity?: number | null
+          marketplace_location?: string | null
+          marketplace_price?: number | null
+          marketplace_sleeve_condition?: string | null
+          marketplace_status?: string | null
+          marketplace_weight?: number | null
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
@@ -550,6 +595,15 @@ export type Database = {
           id?: string
           label?: string | null
           lowest_price?: number | null
+          marketplace_allow_offers?: boolean | null
+          marketplace_comments?: string | null
+          marketplace_external_id?: string | null
+          marketplace_format_quantity?: number | null
+          marketplace_location?: string | null
+          marketplace_price?: number | null
+          marketplace_sleeve_condition?: string | null
+          marketplace_status?: string | null
+          marketplace_weight?: number | null
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null

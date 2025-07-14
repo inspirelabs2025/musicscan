@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Camera, Disc3, Search, ExternalLink, Copy, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Camera, Disc3, Search, ExternalLink, Copy, CheckCircle, AlertCircle, RefreshCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const VinylScanComplete = () => {
-  const [mediaType, setMediaType] = useState<'vinyl' | 'cd'>('vinyl');
+  const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [selectedCondition, setSelectedCondition] = useState<string>('');
@@ -37,10 +37,10 @@ const VinylScanComplete = () => {
   } = useCDAnalysis();
 
   // Use the appropriate analysis based on media type
-  const isAnalyzing = mediaType === 'vinyl' ? isAnalyzingVinyl : isAnalyzingCD;
-  const analysisResult = mediaType === 'vinyl' ? vinylAnalysisResult : cdAnalysisResult;
-  const analyzeImages = mediaType === 'vinyl' ? analyzeVinylImages : analyzeCDImages;
-  const setAnalysisResult = mediaType === 'vinyl' ? setVinylAnalysisResult : setCDAnalysisResult;
+  const isAnalyzing = mediaType === 'vinyl' ? isAnalyzingVinyl : (mediaType === 'cd' ? isAnalyzingCD : false);
+  const analysisResult = mediaType === 'vinyl' ? vinylAnalysisResult : (mediaType === 'cd' ? cdAnalysisResult : null);
+  const analyzeImages = mediaType === 'vinyl' ? analyzeVinylImages : (mediaType === 'cd' ? analyzeCDImages : null);
+  const setAnalysisResult = mediaType === 'vinyl' ? setVinylAnalysisResult : (mediaType === 'cd' ? setCDAnalysisResult : null);
 
   const {
     isSearching,
@@ -51,6 +51,7 @@ const VinylScanComplete = () => {
 
   // Auto-trigger analysis when photos are uploaded
   useEffect(() => {
+    if (!mediaType || !analyzeImages) return;
     const requiredPhotos = mediaType === 'vinyl' ? 3 : 2;
     if (uploadedFiles.length >= requiredPhotos && !isAnalyzing && !analysisResult) {
       setCurrentStep(2);
@@ -119,7 +120,7 @@ const VinylScanComplete = () => {
     'Fair (F) / Poor (P)': 0.4
   };
 
-  const conditionMultipliers = mediaType === 'vinyl' ? vinylConditionMultipliers : cdConditionMultipliers;
+  const conditionMultipliers = mediaType === 'vinyl' ? vinylConditionMultipliers : (mediaType === 'cd' ? cdConditionMultipliers : {});
 
   // Calculate advice price based on condition and lowest price
   const calculateAdvicePrice = (condition: string, lowestPrice: string | null) => {
@@ -184,37 +185,76 @@ const VinylScanComplete = () => {
     setCDAnalysisResult(null);
     setSelectedCondition('');
     setCalculatedAdvicePrice(null);
+    // Reset media type to enforce selection
+    setMediaType(null);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link to="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Terug
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Media Scan Complete</h1>
-            <p className="text-gray-600">Upload → OCR → Discogs → Resultaten</p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Link to="/">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Terug
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Media Scan Complete</h1>
+              <p className="text-gray-600">Upload → OCR → Discogs → Resultaten</p>
+            </div>
           </div>
+          {(analysisResult || searchResults.length > 0 || uploadedFiles.length > 0) && (
+            <Button 
+              onClick={resetScan} 
+              variant="outline" 
+              size="sm"
+              className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+            >
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+          )}
         </div>
 
         {/* Media Type Selection */}
-        <Card className="mb-8">
+        <Card className="mb-8 border-2 border-primary/20">
           <CardHeader>
-            <CardTitle>Kies Media Type</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Disc3 className="h-5 w-5" />
+              Kies Media Type (Verplicht)
+            </CardTitle>
+            <CardDescription>
+              Selecteer eerst het type media voordat je kunt uploaden
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={mediaType} onValueChange={(value) => setMediaType(value as 'vinyl' | 'cd')}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="vinyl">🎵 Vinyl / LP</TabsTrigger>
-                <TabsTrigger value="cd">💿 CD</TabsTrigger>
+            <Tabs value={mediaType || ''} onValueChange={(value) => setMediaType(value as 'vinyl' | 'cd')}>
+              <TabsList className="grid w-full grid-cols-2 h-12">
+                <TabsTrigger 
+                  value="vinyl" 
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white hover:bg-purple-50"
+                >
+                  🎵 Vinyl / LP
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="cd"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white hover:bg-blue-50"
+                >
+                  💿 CD
+                </TabsTrigger>
               </TabsList>
             </Tabs>
+            {!mediaType && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-center gap-2 text-amber-800">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-sm font-medium">Selecteer eerst een media type om door te gaan</span>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -237,47 +277,53 @@ const VinylScanComplete = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {/* Custom upload area for multiple files */}
-                <div className="space-y-4">
-                  {[0, 1, 2].map((index) => {
-                    if (mediaType === 'cd' && index === 2) {
+                {!mediaType ? (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-center">
+                    <AlertCircle className="h-8 w-8 text-amber-600 mx-auto mb-2" />
+                    <p className="text-amber-800 font-medium">Selecteer eerst een media type (LP of CD) om te uploaden</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {[0, 1, 2].map((index) => {
+                      if (mediaType === 'cd' && index === 2) {
+                        return (
+                          <FileUpload 
+                            key={index}
+                            step={index + 1}
+                            stepTitle={`Foto ${index + 1} (Optioneel)`}
+                            stepDescription="Upload barcode voor directe identificatie"
+                            isCompleted={uploadedFiles[index] !== undefined}
+                            onFileUploaded={(url) => {
+                              setUploadedFiles(prev => [...prev.slice(0, index), url, ...prev.slice(index + 1)]);
+                            }}
+                          />
+                        );
+                      }
+                    
                       return (
                         <FileUpload 
                           key={index}
                           step={index + 1}
-                          stepTitle={`Foto ${index + 1} (Optioneel)`}
-                          stepDescription="Upload barcode voor directe identificatie"
+                          stepTitle={`Foto ${index + 1}`}
+                          stepDescription={
+                            mediaType === 'vinyl' ? (
+                              index === 0 ? "Upload voorkant van de LP" :
+                              index === 1 ? "Upload achterkant van de LP" :
+                              "Upload label of matrix/catalog foto"
+                            ) : (
+                              index === 0 ? "Upload voorkant van de CD" :
+                              "Upload achterkant van de CD"
+                            )
+                          }
                           isCompleted={uploadedFiles[index] !== undefined}
                           onFileUploaded={(url) => {
                             setUploadedFiles(prev => [...prev.slice(0, index), url, ...prev.slice(index + 1)]);
                           }}
                         />
                       );
-                    }
-                    
-                    return (
-                      <FileUpload 
-                        key={index}
-                        step={index + 1}
-                        stepTitle={`Foto ${index + 1}`}
-                        stepDescription={
-                          mediaType === 'vinyl' ? (
-                            index === 0 ? "Upload voorkant van de LP" :
-                            index === 1 ? "Upload achterkant van de LP" :
-                            "Upload label of matrix/catalog foto"
-                          ) : (
-                            index === 0 ? "Upload voorkant van de CD" :
-                            "Upload achterkant van de CD"
-                          )
-                        }
-                        isCompleted={uploadedFiles[index] !== undefined}
-                        onFileUploaded={(url) => {
-                          setUploadedFiles(prev => [...prev.slice(0, index), url, ...prev.slice(index + 1)]);
-                        }}
-                      />
-                    );
-                  })}
-                </div>
+                    })}
+                  </div>
+                )}
                 {((mediaType === 'vinyl' && uploadedFiles.length === 3) || 
                   (mediaType === 'cd' && uploadedFiles.length >= 2)) && (
                   <div className="mt-4 p-4 bg-green-50 rounded-lg">
@@ -397,11 +443,20 @@ const VinylScanComplete = () => {
                             )}
 
                             <div className="flex gap-2">
-                              <Button size="sm" onClick={() => window.open(searchResults[0].discogs_url, '_blank')}>
+                              <Button 
+                                size="sm" 
+                                onClick={() => window.open(searchResults[0].discogs_url, '_blank')}
+                                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                              >
                                 <ExternalLink className="h-4 w-4 mr-1" />
                                 Discogs
                               </Button>
-                              <Button size="sm" variant="outline" onClick={() => window.open(searchResults[0].marketplace_url, '_blank')}>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => window.open(searchResults[0].marketplace_url, '_blank')}
+                                className="border-green-300 text-green-700 hover:bg-green-50"
+                              >
                                 <ExternalLink className="h-4 w-4 mr-1" />
                                 Marketplace
                               </Button>

@@ -123,7 +123,83 @@ Be precise and only include information you can clearly see. If uncertain, omit 
   }
 }
 
-async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: string[]) {
+async function searchDiscogs(catalogNumber: string, artist?: string, title?: string, barcode?: string) {
+  console.log('🔍 Starting Discogs search for CD');
+  
+  const discogsToken = Deno.env.get('DISCOGS_TOKEN');
+  const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
+  const discogsConsumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET');
+  
+  if (!discogsToken && (!discogsConsumerKey || !discogsConsumerSecret)) {
+    console.log('⚠️ No Discogs credentials available, skipping search');
+    return null;
+  }
+
+  const authHeaders = discogsToken 
+    ? { 'Authorization': `Discogs token=${discogsToken}` }
+    : { 'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}` };
+
+  try {
+    // Try different search strategies
+    const searchQueries = [];
+    
+    // Strategy 1: Barcode search (most accurate for CDs)
+    if (barcode) {
+      searchQueries.push(`barcode:"${barcode}"`);
+    }
+    
+    // Strategy 2: Catalog number
+    if (catalogNumber) {
+      searchQueries.push(`catno:"${catalogNumber}"`);
+      if (artist) {
+        searchQueries.push(`catno:"${catalogNumber}" artist:"${artist}"`);
+      }
+    }
+    
+    // Strategy 3: Artist and title
+    if (artist && title) {
+      searchQueries.push(`artist:"${artist}" title:"${title}"`);
+    }
+
+    for (const query of searchQueries) {
+      console.log(`🔍 Trying query: ${query}`);
+      
+      const searchUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&format=CD&per_page=5`;
+      
+      const response = await fetch(searchUrl, {
+        headers: {
+          ...authHeaders,
+          'User-Agent': 'VinylScanner/2.0'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          const bestMatch = data.results[0];
+          console.log(`✅ Found match: ${bestMatch.title} (ID: ${bestMatch.id})`);
+          return {
+            discogs_id: bestMatch.id,
+            discogs_url: `https://www.discogs.com/release/${bestMatch.id}`,
+            marketplace_url: `https://www.discogs.com/sell/release/${bestMatch.id}`,
+            similarity_score: 0.9 // High confidence for first result
+          };
+        }
+      }
+      
+      // Small delay between requests
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    console.log('❌ No Discogs match found');
+    return null;
+  } catch (error) {
+    console.error('❌ Discogs search failed:', error);
+    return null;
+  }
+}
+
+async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: string[], discogsData?: any) {
   console.log('💾 Saving CD scan to database');
   
   try {
@@ -142,6 +218,8 @@ async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: 
         format: 'CD',
         genre: ocrResults.genre || null,
         country: ocrResults.country || null,
+        discogs_id: discogsData?.discogs_id || null,
+        discogs_url: discogsData?.discogs_url || null,
       })
       .select()
       .single();
@@ -176,13 +254,22 @@ serve(async (req) => {
     // Perform OCR analysis
     const ocrResults = await performOCRAnalysis(imageUrls);
 
-    // Save to database
-    const savedScan = await saveToDatabase(scanId, ocrResults, imageUrls);
+    // Search Discogs for release ID
+    const discogsData = await searchDiscogs(
+      ocrResults.catalog_number || '', 
+      ocrResults.artist, 
+      ocrResults.title, 
+      ocrResults.barcode
+    );
+
+    // Save to database with Discogs data
+    const savedScan = await saveToDatabase(scanId, ocrResults, imageUrls, discogsData);
 
     const response = {
       success: true,
       scanId: savedScan.id,
       ocrResults: ocrResults,
+      discogsData: discogsData,
       combinedResults: {
         artist: ocrResults.artist,
         title: ocrResults.title,
@@ -193,6 +280,8 @@ serve(async (req) => {
         format: 'CD',
         genre: ocrResults.genre,
         country: ocrResults.country,
+        discogs_id: discogsData?.discogs_id || null,
+        discogs_url: discogsData?.discogs_url || null,
       }
     };
 

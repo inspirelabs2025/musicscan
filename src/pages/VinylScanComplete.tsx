@@ -62,7 +62,7 @@ const VinylScanComplete = () => {
   // Auto-trigger analysis when photos are uploaded
   useEffect(() => {
     if (!mediaType || !analyzeImages) return;
-    const requiredPhotos = mediaType === 'vinyl' ? 3 : 3; // CD's need 3 photos too (front, back, barcode)
+    const requiredPhotos = mediaType === 'vinyl' ? 3 : 4; // vinyl: cover, back, matrix/label | CD: front, back, barcode, matrix
     if (uploadedFiles.length >= requiredPhotos && !isAnalyzing && !analysisResult) {
       setCurrentStep(2);
       analyzeImages(uploadedFiles);
@@ -231,6 +231,7 @@ const VinylScanComplete = () => {
         front_image: uploadedFiles[0],
         back_image: uploadedFiles[1],
         barcode_image: uploadedFiles[2],
+        matrix_image: uploadedFiles[3],
         barcode_number: analysisResult.ocrResults.barcode,
         artist: analysisResult.ocrResults.artist,
         title: analysisResult.ocrResults.title,
@@ -414,12 +415,12 @@ const VinylScanComplete = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Camera className="h-5 w-5" />
-                  Foto Upload ({uploadedFiles.length}/3)
+                  Foto Upload ({uploadedFiles.length}/{mediaType === 'vinyl' ? 3 : 4})
                 </CardTitle>
                 <CardDescription>
                   {mediaType === 'vinyl' 
                     ? 'Upload 3 foto\'s: voorkant, achterkant, en label'
-                    : 'Upload 3 foto\'s: voorkant, achterkant, en barcode'
+                    : 'Upload 4 foto\'s: voorkant, achterkant, barcode, en matrix code'
                   }
                 </CardDescription>
               </CardHeader>
@@ -431,7 +432,7 @@ const VinylScanComplete = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {[0, 1, 2].map((index) => (
+                    {(mediaType === 'vinyl' ? [0, 1, 2] : [0, 1, 2, 3]).map((index) => (
                       <FileUpload 
                         key={index}
                         step={index + 1}
@@ -444,7 +445,8 @@ const VinylScanComplete = () => {
                           ) : (
                             index === 0 ? "Upload voorkant van de CD" :
                             index === 1 ? "Upload achterkant van de CD" :
-                            "Upload barcode van de CD"
+                            index === 2 ? "Upload barcode van de CD" :
+                            "Upload matrix code van de CD"
                           )
                         }
                         isCompleted={uploadedFiles[index] !== undefined}
@@ -455,7 +457,7 @@ const VinylScanComplete = () => {
                     ))}
                   </div>
                 )}
-                {uploadedFiles.length === 3 && (
+                {uploadedFiles.length === (mediaType === 'vinyl' ? 3 : 4) && (
                   <div className="mt-4 p-4 bg-green-50 rounded-lg">
                     <div className="flex items-center gap-2 text-green-800">
                       <CheckCircle className="h-4 w-4" />

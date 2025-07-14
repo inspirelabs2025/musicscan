@@ -44,6 +44,7 @@ export type Database = {
           marketplace_sleeve_condition: string | null
           marketplace_status: string | null
           marketplace_weight: number | null
+          matrix_image: string | null
           median_price: number | null
           title: string | null
           updated_at: string
@@ -78,6 +79,7 @@ export type Database = {
           marketplace_sleeve_condition?: string | null
           marketplace_status?: string | null
           marketplace_weight?: number | null
+          matrix_image?: string | null
           median_price?: number | null
           title?: string | null
           updated_at?: string
@@ -112,6 +114,7 @@ export type Database = {
           marketplace_sleeve_condition?: string | null
           marketplace_status?: string | null
           marketplace_weight?: number | null
+          matrix_image?: string | null
           median_price?: number | null
           title?: string | null
           updated_at?: string

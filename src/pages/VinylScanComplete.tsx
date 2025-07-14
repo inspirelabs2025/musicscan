@@ -49,6 +49,7 @@ const VinylScanComplete = () => {
     searchResults,
     searchStrategies,
     searchCatalog,
+    setSearchResults,
     retryPricing,
     isPricingRetrying
   } = useDiscogsSearch();
@@ -195,6 +196,7 @@ const VinylScanComplete = () => {
     setCDAnalysisResult(null);
     setSelectedCondition('');
     setCalculatedAdvicePrice(null);
+    setSearchResults([]);
     // Reset media type to enforce selection
     setMediaType(null);
   };

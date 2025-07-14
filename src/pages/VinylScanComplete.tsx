@@ -350,7 +350,7 @@ const VinylScanComplete = () => {
             </Link>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Music Scan</h1>
-              <p className="text-gray-600">Upload → OCR → Discogs → Resultaten</p>
+              
             </div>
           </div>
           {(analysisResult || searchResults.length > 0 || uploadedFiles.length > 0) && (

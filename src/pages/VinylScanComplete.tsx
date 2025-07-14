@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { FileUpload } from '@/components/FileUpload';
 import { useVinylAnalysis } from '@/hooks/useVinylAnalysis';
 import { useCDAnalysis } from '@/hooks/useCDAnalysis';
@@ -24,6 +25,9 @@ const VinylScanComplete = () => {
   const [calculatedAdvicePrice, setCalculatedAdvicePrice] = useState<number | null>(null);
   const [isSavingCondition, setIsSavingCondition] = useState(false);
   const [completedScanData, setCompletedScanData] = useState<any>(null);
+  const [duplicateRecords, setDuplicateRecords] = useState<any[]>([]);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [pendingSaveData, setPendingSaveData] = useState<{condition: string, advicePrice: number} | null>(null);
   
   const { 
     isAnalyzing: isAnalyzingVinyl, 
@@ -142,8 +146,60 @@ const VinylScanComplete = () => {
     return Math.round(price * multiplier * 100) / 100; // Round to 2 decimals
   };
 
+  // Check for existing duplicates in database
+  const checkForDuplicates = async (artist: string, title: string, catalogNumber: string) => {
+    try {
+      const tableName = mediaType === 'vinyl' ? 'vinyl2_scan' : 'cd_scan';
+      
+      // First check for exact match (artist + title + catalog)
+      let query = supabase
+        .from(tableName)
+        .select('*');
+      
+      if (catalogNumber && catalogNumber.trim()) {
+        query = query
+          .ilike('artist', `%${artist}%`)
+          .ilike('title', `%${title}%`)
+          .eq('catalog_number', catalogNumber);
+      } else {
+        // If no catalog number, check artist + title only
+        query = query
+          .ilike('artist', `%${artist}%`)
+          .ilike('title', `%${title}%`);
+      }
+      
+      const { data: exactMatches, error } = await query;
+      
+      if (error) throw error;
+      
+      return exactMatches || [];
+    } catch (error) {
+      console.error('Error checking for duplicates:', error);
+      return [];
+    }
+  };
+
   // Save final scan to database with all data including condition and advice price
   const saveFinalScan = async (condition: string, advicePrice: number) => {
+    if (!analysisResult?.ocrResults || !mediaType) return;
+
+    // Check for duplicates first
+    const { artist, title, catalog_number } = analysisResult.ocrResults;
+    const duplicates = await checkForDuplicates(artist || '', title || '', catalog_number || '');
+    
+    if (duplicates.length > 0) {
+      setDuplicateRecords(duplicates);
+      setPendingSaveData({ condition, advicePrice });
+      setShowDuplicateDialog(true);
+      return;
+    }
+
+    // No duplicates found, proceed with save
+    await performSave(condition, advicePrice);
+  };
+
+  // Perform the actual database save
+  const performSave = async (condition: string, advicePrice: number) => {
     if (!analysisResult?.ocrResults || !mediaType) return;
 
     setIsSavingCondition(true);
@@ -218,6 +274,23 @@ const VinylScanComplete = () => {
     } finally {
       setIsSavingCondition(false);
     }
+  };
+
+  // Handle duplicate dialog actions
+  const handleSaveAnyway = () => {
+    if (pendingSaveData) {
+      performSave(pendingSaveData.condition, pendingSaveData.advicePrice);
+    }
+    setShowDuplicateDialog(false);
+    setPendingSaveData(null);
+    setDuplicateRecords([]);
+  };
+
+  const handleCancelSave = () => {
+    setShowDuplicateDialog(false);
+    setPendingSaveData(null);
+    setDuplicateRecords([]);
+    setIsSavingCondition(false);
   };
 
   // Handle condition selection
@@ -781,6 +854,77 @@ const VinylScanComplete = () => {
             </Card>
           </div>
         )}
+
+        {/* Duplicate Warning Dialog */}
+        <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+          <AlertDialogContent className="max-w-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                Mogelijk Duplicaat Gevonden
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Er {duplicateRecords.length === 1 ? 'is een album' : `zijn ${duplicateRecords.length} albums`} gevonden die lijken op wat je wilt toevoegen:
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <div className="max-h-96 overflow-y-auto space-y-4">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-2">Nieuw album dat wordt toegevoegd:</h4>
+                <div className="text-sm text-blue-800">
+                  <div><strong>Artiest:</strong> {analysisResult?.ocrResults?.artist || 'Onbekend'}</div>
+                  <div><strong>Titel:</strong> {analysisResult?.ocrResults?.title || 'Onbekend'}</div>
+                  <div><strong>Catalogusnummer:</strong> {analysisResult?.ocrResults?.catalog_number || 'Niet gevonden'}</div>
+                  {pendingSaveData && (
+                    <>
+                      <div><strong>Conditie:</strong> {pendingSaveData.condition}</div>
+                      <div><strong>Adviesprijs:</strong> €{pendingSaveData.advicePrice.toFixed(2)}</div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {duplicateRecords.map((duplicate, index) => (
+                <div key={duplicate.id} className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <h4 className="font-semibold text-amber-900 mb-2">
+                    Bestaand album #{index + 1} in collectie:
+                  </h4>
+                  <div className="text-sm text-amber-800 space-y-1">
+                    <div><strong>Artiest:</strong> {duplicate.artist || 'Onbekend'}</div>
+                    <div><strong>Titel:</strong> {duplicate.title || 'Onbekend'}</div>
+                    <div><strong>Catalogusnummer:</strong> {duplicate.catalog_number || 'Niet gevonden'}</div>
+                    {duplicate.condition_grade && (
+                      <div><strong>Conditie:</strong> {duplicate.condition_grade}</div>
+                    )}
+                    {duplicate.calculated_advice_price && (
+                      <div><strong>Adviesprijs:</strong> €{duplicate.calculated_advice_price}</div>
+                    )}
+                    <div className="text-xs text-amber-600">
+                      Toegevoegd: {new Date(duplicate.created_at).toLocaleDateString('nl-NL')}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <AlertDialogFooter className="flex flex-col sm:flex-row gap-2">
+              <AlertDialogCancel onClick={handleCancelSave} className="order-2 sm:order-1">
+                Annuleren
+              </AlertDialogCancel>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/collection-overview')}
+                className="order-3 sm:order-2"
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Bekijk Collectie
+              </Button>
+              <AlertDialogAction onClick={handleSaveAnyway} className="order-1 sm:order-3">
+                Toch Toevoegen
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

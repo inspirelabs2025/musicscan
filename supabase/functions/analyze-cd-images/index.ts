@@ -123,8 +123,8 @@ Be precise and only include information you can clearly see. If uncertain, omit 
   }
 }
 
-async function searchDiscogs(catalogNumber: string, artist?: string, title?: string, barcode?: string) {
-  console.log('🔍 Starting Discogs search for CD');
+async function searchDiscogs(catalogNumber: string, artist?: string, title?: string, barcode?: string): Promise<any | null> {
+  console.log('🔍 Starting Discogs search for CD', { catalogNumber, artist, title, barcode });
   
   const discogsToken = Deno.env.get('DISCOGS_TOKEN');
   const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
@@ -146,25 +146,33 @@ async function searchDiscogs(catalogNumber: string, artist?: string, title?: str
     // Strategy 1: Barcode search (most accurate for CDs)
     if (barcode) {
       searchQueries.push(`barcode:"${barcode}"`);
+      console.log(`📊 Added barcode search: barcode:"${barcode}"`);
     }
     
     // Strategy 2: Catalog number
     if (catalogNumber) {
       searchQueries.push(`catno:"${catalogNumber}"`);
+      console.log(`📊 Added catalog search: catno:"${catalogNumber}"`);
       if (artist) {
         searchQueries.push(`catno:"${catalogNumber}" artist:"${artist}"`);
+        console.log(`📊 Added catalog+artist search: catno:"${catalogNumber}" artist:"${artist}"`);
       }
     }
     
     // Strategy 3: Artist and title
     if (artist && title) {
       searchQueries.push(`artist:"${artist}" title:"${title}"`);
+      console.log(`📊 Added artist+title search: artist:"${artist}" title:"${title}"`);
     }
 
-    for (const query of searchQueries) {
-      console.log(`🔍 Trying query: ${query}`);
+    console.log(`🔍 Will try ${searchQueries.length} search strategies`);
+
+    for (let i = 0; i < searchQueries.length; i++) {
+      const query = searchQueries[i];
+      console.log(`🔍 [${i + 1}/${searchQueries.length}] Trying query: ${query}`);
       
       const searchUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&format=CD&per_page=5`;
+      console.log(`📡 Request URL: ${searchUrl}`);
       
       const response = await fetch(searchUrl, {
         headers: {
@@ -173,54 +181,79 @@ async function searchDiscogs(catalogNumber: string, artist?: string, title?: str
         }
       });
 
+      console.log(`📡 Response status: ${response.status}`);
+
       if (response.ok) {
         const data = await response.json();
+        console.log(`📦 Response data:`, { 
+          resultsCount: data.results?.length || 0, 
+          pagination: data.pagination 
+        });
+        
         if (data.results && data.results.length > 0) {
           const bestMatch = data.results[0];
           console.log(`✅ Found match: ${bestMatch.title} (ID: ${bestMatch.id})`);
-          return {
+          console.log(`🎯 Full match data:`, bestMatch);
+          
+          const discogsResult = {
             discogs_id: bestMatch.id,
             discogs_url: `https://www.discogs.com/release/${bestMatch.id}`,
             marketplace_url: `https://www.discogs.com/sell/release/${bestMatch.id}`,
-            similarity_score: 0.9 // High confidence for first result
+            similarity_score: 0.9, // High confidence for first result
+            search_query_used: query,
+            search_strategy: i + 1
           };
+          
+          console.log(`🎯 Returning Discogs result:`, discogsResult);
+          return discogsResult;
+        } else {
+          console.log(`❌ No results found for query: ${query}`);
         }
+      } else {
+        const errorText = await response.text();
+        console.error(`❌ Discogs API error for query "${query}":`, response.status, errorText);
       }
       
       // Small delay between requests
       await new Promise(resolve => setTimeout(resolve, 500));
     }
     
-    console.log('❌ No Discogs match found');
+    console.log('❌ No Discogs match found after trying all strategies');
     return null;
   } catch (error) {
-    console.error('❌ Discogs search failed:', error);
+    console.error('❌ Discogs search failed with exception:', error);
     return null;
   }
 }
 
-async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: string[], discogsData?: any) {
+async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: string[], discogsData?: any): Promise<any> {
   console.log('💾 Saving CD scan to database');
+  console.log('💾 OCR Results:', ocrResults);
+  console.log('💾 Discogs Data:', discogsData);
   
   try {
+    const insertData = {
+      front_image: imageUrls[0] || null,
+      back_image: imageUrls[1] || null,
+      barcode_image: imageUrls[2] || null,
+      barcode_number: ocrResults.barcode || null,
+      artist: ocrResults.artist || null,
+      title: ocrResults.title || null,
+      label: ocrResults.label || null,
+      catalog_number: ocrResults.catalog_number || null,
+      year: ocrResults.year || null,
+      format: 'CD',
+      genre: ocrResults.genre || null,
+      country: ocrResults.country || null,
+      discogs_id: discogsData?.discogs_id || null,
+      discogs_url: discogsData?.discogs_url || null,
+    };
+    
+    console.log('💾 Inserting data:', insertData);
+
     const { data, error } = await supabase
       .from('cd_scan')
-      .insert({
-        front_image: imageUrls[0] || null,
-        back_image: imageUrls[1] || null,
-        barcode_image: imageUrls[2] || null,
-        barcode_number: ocrResults.barcode || null,
-        artist: ocrResults.artist || null,
-        title: ocrResults.title || null,
-        label: ocrResults.label || null,
-        catalog_number: ocrResults.catalog_number || null,
-        year: ocrResults.year || null,
-        format: 'CD',
-        genre: ocrResults.genre || null,
-        country: ocrResults.country || null,
-        discogs_id: discogsData?.discogs_id || null,
-        discogs_url: discogsData?.discogs_url || null,
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -229,7 +262,8 @@ async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: 
       throw error;
     }
 
-    console.log('✅ CD scan saved to database:', data.id);
+    console.log('✅ CD scan saved to database with ID:', data.id);
+    console.log('✅ Saved record:', data);
     return data;
   } catch (error) {
     console.error('❌ Failed to save to database:', error);

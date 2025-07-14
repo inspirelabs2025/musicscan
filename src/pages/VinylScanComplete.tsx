@@ -349,7 +349,7 @@ const VinylScanComplete = () => {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Media Scan Complete</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Music Scan</h1>
               <p className="text-gray-600">Upload → OCR → Discogs → Resultaten</p>
             </div>
           </div>

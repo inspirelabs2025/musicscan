@@ -189,6 +189,15 @@ const VinylScanComplete = () => {
     }
   };
 
+  // Retry complete search with pricing
+  const retrySearchWithPricing = async () => {
+    if (!analysisResult?.ocrResults?.catalog_number) return;
+    
+    const { artist, title, catalog_number } = analysisResult.ocrResults;
+    setCurrentStep(3);
+    await searchCatalog(catalog_number, artist, title, true);
+  };
+
   const resetScan = () => {
     setCurrentStep(1);
     setUploadedFiles([]);
@@ -424,17 +433,17 @@ const VinylScanComplete = () => {
                                    <Button 
                                      size="sm" 
                                      variant="outline"
-                                     onClick={() => retryPricing(searchResults[0].id)}
-                                     disabled={isPricingRetrying}
-                                     className="h-8"
-                                   >
-                                     {isPricingRetrying ? (
-                                       <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                                     ) : (
-                                       <RefreshCcw className="h-3 w-3 mr-1" />
-                                     )}
-                                     Update Prijzen
-                                   </Button>
+                                      onClick={retrySearchWithPricing}
+                                      disabled={isSearching || isPricingRetrying}
+                                      className="h-8"
+                                    >
+                                      {(isSearching || isPricingRetrying) ? (
+                                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                      ) : (
+                                        <RefreshCcw className="h-3 w-3 mr-1" />
+                                      )}
+                                      Update Prijzen
+                                    </Button>
                                  </div>
                                  <div className="flex gap-2">
                                    {searchResults[0].pricing_stats.lowest_price && (
@@ -460,20 +469,20 @@ const VinylScanComplete = () => {
                                  <AlertDescription className="text-yellow-800">
                                    <div className="flex items-center justify-between">
                                      <span>Geen prijsinformatie beschikbaar</span>
-                                     <Button 
-                                       size="sm" 
-                                       variant="outline"
-                                       onClick={() => retryPricing(searchResults[0].id)}
-                                       disabled={isPricingRetrying}
-                                       className="ml-2 h-8"
-                                     >
-                                       {isPricingRetrying ? (
-                                         <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                                       ) : (
-                                         <RefreshCcw className="h-3 w-3 mr-1" />
-                                       )}
-                                       Prijzen Ophalen
-                                     </Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={retrySearchWithPricing}
+                                        disabled={isSearching || isPricingRetrying}
+                                        className="ml-2 h-8"
+                                      >
+                                        {(isSearching || isPricingRetrying) ? (
+                                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                        ) : (
+                                          <RefreshCcw className="h-3 w-3 mr-1" />
+                                        )}
+                                        Prijzen Ophalen
+                                      </Button>
                                    </div>
                                  </AlertDescription>
                                </Alert>

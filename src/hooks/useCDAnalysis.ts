@@ -21,12 +21,25 @@ export const useCDAnalysis = () => {
     try {
       console.log('💿 Starting CD analysis with images:', imageUrls);
       
-      const { data, error } = await supabase.functions.invoke('analyze-cd-images', {
+      // Mobile-optimized timeout
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const ANALYSIS_TIMEOUT = isMobile ? 30000 : 50000; // 30s mobile, 50s desktop
+      
+      const analysisPromise = supabase.functions.invoke('analyze-cd-images', {
         body: {
           imageUrls: imageUrls,
-          scanId: Date.now().toString()
+          scanId: Date.now().toString(),
+          isMobile: isMobile
         }
       });
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('CD analysis timeout - process took too long')), ANALYSIS_TIMEOUT);
+      });
+
+      const result = await Promise.race([analysisPromise, timeoutPromise]) as any;
+      const { data, error } = result;
+      
 
       if (error) {
         console.error('❌ CD Analysis error:', error);

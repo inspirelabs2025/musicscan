@@ -483,6 +483,29 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Mobile-optimized timeout
+  const FUNCTION_TIMEOUT = 45000; // 45 seconds (reduced from 60s for mobile)
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Function timeout after 45 seconds')), FUNCTION_TIMEOUT);
+  });
+
+  try {
+    const analysisPromise = performAnalysis(req);
+    const result = await Promise.race([analysisPromise, timeoutPromise]);
+    return result;
+  } catch (error) {
+    console.error('❌ Analysis failed:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Analysis failed',
+      timeout: error.message?.includes('timeout')
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+});
+
+async function performAnalysis(req: Request) {
   try {
     console.log('🎵 Starting vinyl image analysis...');
     
@@ -688,18 +711,41 @@ serve(async (req) => {
         discogsSecretLength: discogsConsumerSecret?.length || 0
       });
       
-      discogsData = await searchDiscogsRelease(
-        combinedData.artist, 
-        combinedData.title, 
-        combinedData.catalog_number
-      );
+      try {
+        const DISCOGS_SEARCH_TIMEOUT = 20000; // 20 seconds
+        const discogsPromise = searchDiscogsRelease(
+          combinedData.artist, 
+          combinedData.title, 
+          combinedData.catalog_number
+        );
+        
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Discogs search timeout')), DISCOGS_SEARCH_TIMEOUT);
+        });
+        
+        discogsData = await Promise.race([discogsPromise, timeoutPromise]);
+      } catch (error) {
+        console.error('❌ Discogs search failed or timed out:', error);
+        // Continue without Discogs data - this is not a fatal error
+      }
       
       console.log('🎯 Discogs search result:', JSON.stringify(discogsData, null, 2));
       if (discogsData?.discogs_id) {
-        pricingData = await getDiscogsPriceAnalysisById(
-          discogsData.discogs_id, 
-          'Very Good'
-        );
+        try {
+          const PRICING_TIMEOUT = 15000; // 15 seconds
+          const pricingPromise = getDiscogsPriceAnalysisById(
+            discogsData.discogs_id, 
+            'Very Good'
+          );
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Pricing analysis timeout')), PRICING_TIMEOUT);
+          });
+          
+          pricingData = await Promise.race([pricingPromise, timeoutPromise]);
+        } catch (error) {
+          console.error('❌ Pricing analysis failed or timed out:', error);
+          // Continue without pricing data - this is not a fatal error
+        }
         
         // Note: Database update removed - will be handled by frontend after condition selection
       }

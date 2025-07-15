@@ -483,8 +483,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Add timeout to prevent hanging
-  const FUNCTION_TIMEOUT = 60000; // 60 seconds
+  // Mobile-optimized timeout
+  const FUNCTION_TIMEOUT = 45000; // 45 seconds (reduced from 60s for mobile)
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => reject(new Error('Function timeout after 60 seconds')), FUNCTION_TIMEOUT);
   });

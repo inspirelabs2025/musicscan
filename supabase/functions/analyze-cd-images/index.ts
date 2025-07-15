@@ -454,7 +454,7 @@ async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: 
       insertData.year = null;
     }
     
-    // Note: Database insertion removed - will be handled by frontend after condition selection
+    // ✅ FIXED: Database insertion removed - will be handled by frontend after condition selection
     console.log('💾 OCR data prepared for frontend (not saved to database yet):', insertData);
     
     // Return the prepared data instead of database record

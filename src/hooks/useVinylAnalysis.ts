@@ -22,8 +22,9 @@ export const useVinylAnalysis = () => {
       console.log('🎵 Starting vinyl analysis with images:', imageUrls);
       console.log('⚡ Performance: Starting analysis at', new Date().toISOString());
       
-      // Add timeout to prevent hanging
-      const ANALYSIS_TIMEOUT = 70000; // 70 seconds
+      // Mobile-optimized timeout
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const ANALYSIS_TIMEOUT = isMobile ? 30000 : 50000; // 30s mobile, 50s desktop
       const analysisPromise = supabase.functions.invoke('analyze-vinyl-images', {
         body: {
           imageUrls: imageUrls,

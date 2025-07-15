@@ -124,10 +124,10 @@ export const useDiscogsSearch = () => {
     includePricing: boolean = true,
     forceRetry: boolean = false
   ) => {
-    if (!catalogNumber?.trim()) {
+    if (!catalogNumber?.trim() && !artist?.trim() && !title?.trim()) {
       toast({
         title: "Error",
-        description: "Catalogusnummer is vereist voor zoeken",
+        description: "Minimaal artist + title of catalogusnummer is vereist voor zoeken",
         variant: "destructive"
       });
       return null;
@@ -168,8 +168,9 @@ export const useDiscogsSearch = () => {
     setSearchResults([]);
     setSearchStrategies([]);
     
-    // Set timeout to prevent hanging
-    const SEARCH_TIMEOUT = 45000; // 45 seconds
+    // Mobile-optimized timeout
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const SEARCH_TIMEOUT = isMobile ? 20000 : 35000; // 20s mobile, 35s desktop
     callTimeoutRef.current = setTimeout(() => {
       console.log('⏰ Search timeout, resetting state');
       resetSearchState();

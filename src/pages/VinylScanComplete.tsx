@@ -110,19 +110,25 @@ const VinylScanComplete = () => {
     }
   }, [state.uploadedFiles, isAnalyzing, analysisResult, analyzeImages, state.mediaType]);
 
-  // Auto-trigger Discogs search when OCR analysis completes
+  // Auto-trigger Discogs search when OCR analysis completes - now barcode optional
   useEffect(() => {
-    if (analysisResult?.ocr_results?.catalog_number && !isSearching && searchResults.length === 0) {
-      dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
+    if (analysisResult?.ocr_results && !isSearching && searchResults.length === 0) {
       const { artist, title, catalog_number } = analysisResult.ocr_results;
       
-      const timeoutId = setTimeout(() => {
-        searchCatalog(catalog_number, artist, title);
-      }, 500);
-      
-      return () => clearTimeout(timeoutId);
+      // Check if we have enough data to search (catalog_number OR artist+title)
+      if (catalog_number?.trim() || (artist?.trim() && title?.trim())) {
+        dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
+        
+        const timeoutId = setTimeout(() => {
+          searchCatalog(catalog_number || '', artist, title);
+        }, 500);
+        
+        return () => clearTimeout(timeoutId);
+      } else {
+        console.log('⚠️ Not enough data for Discogs search - need catalog_number OR artist+title');
+      }
     }
-  }, [analysisResult?.ocr_results?.catalog_number, isSearching, searchResults.length, searchCatalog]);
+  }, [analysisResult?.ocr_results, isSearching, searchResults.length, searchCatalog]);
 
   // Update step when search completes
   useEffect(() => {

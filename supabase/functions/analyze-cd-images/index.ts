@@ -454,11 +454,37 @@ async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: 
       insertData.year = null;
     }
     
-    // ✅ FIXED: Database insertion removed - will be handled by frontend after condition selection
-    console.log('💾 OCR data prepared for frontend (not saved to database yet):', insertData);
-    
-    // Return the prepared data instead of database record
-    return insertData;
+    console.log('💾 Inserting data:', insertData);
+
+    const { data, error } = await supabase
+      .from('cd_scan')
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Database save error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+      
+      // Provide more specific error messages
+      if (error.code === '23505') {
+        throw new Error('Duplicate entry: This CD scan already exists in the database');
+      } else if (error.code === '23502') {
+        throw new Error('Missing required field: Some required information is missing');
+      } else if (error.code === '22001') {
+        throw new Error('Data too long: Some text fields exceed maximum length');
+      } else {
+        throw new Error(`Database error: ${error.message}`);
+      }
+    }
+
+    console.log('✅ CD scan saved to database with ID:', data.id);
+    console.log('✅ Saved record:', data);
+    return data;
   } catch (error) {
     console.error('❌ Failed to save to database:', error);
     

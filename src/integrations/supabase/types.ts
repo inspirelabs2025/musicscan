@@ -681,14 +681,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_duplicate_cd_scans: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_duplicate_vinyl_scans: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
       extract_and_update_discogs_ids: {
         Args: Record<PropertyKey, never>
         Returns: number

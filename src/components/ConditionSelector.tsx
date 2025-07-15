@@ -76,10 +76,7 @@ export const ConditionSelector = React.memo(({
       <CardContent className="space-y-6">
         <div className="space-y-2">
           <label className="text-sm font-medium">Selecteer staat</label>
-          <Select value={selectedCondition} onValueChange={(value) => {
-            console.log('🔄 ConditionSelector value changed to:', value);
-            onConditionChange(value);
-          }}>
+          <Select value={selectedCondition} onValueChange={onConditionChange}>
             <SelectTrigger>
               <SelectValue placeholder="Kies de staat van je vinyl" />
             </SelectTrigger>
@@ -116,10 +113,7 @@ export const ConditionSelector = React.memo(({
             </div>
 
             <Button 
-              onClick={() => {
-                console.log('🔘 ConditionSelector OPSLAAN button clicked');
-                onSave();
-              }}
+              onClick={onSave}
               disabled={isSaving}
               className="w-full"
               size="lg"

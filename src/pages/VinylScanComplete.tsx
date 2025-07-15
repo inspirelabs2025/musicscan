@@ -385,9 +385,15 @@ const VinylScanComplete = () => {
   const retrySearchWithPricing = async () => {
     if (!analysisResult?.ocr_results?.catalog_number) return;
     
+    console.log('🔄 [RETRY SEARCH] Starting forced retry with pricing');
     const { artist, title, catalog_number } = analysisResult.ocr_results;
+    
+    // Clear previous results before retry
+    setSearchResults([]);
     setCurrentStep(3);
-    await searchCatalog(catalog_number, artist, title, true);
+    
+    // Use forceRetry=true to bypass duplicate prevention
+    await searchCatalog(catalog_number, artist, title, true, true);
   };
 
   const resetScan = () => {

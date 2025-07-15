@@ -42,7 +42,8 @@ export const useDiscogsSearch = () => {
     catalogNumber: string,
     artist?: string,
     title?: string,
-    includePricing: boolean = true
+    includePricing: boolean = true,
+    forceRetry: boolean = false
   ) => {
     if (!catalogNumber?.trim()) {
       toast({
@@ -53,11 +54,17 @@ export const useDiscogsSearch = () => {
       return null;
     }
 
-    // Mobile-specific deduplication: prevent duplicate calls
+    // Mobile-specific deduplication: prevent duplicate calls (unless force retry)
     const searchKey = `${catalogNumber}-${artist}-${title}-${includePricing}`;
-    if (isCallInProgressRef.current || lastSearchRef.current === searchKey) {
+    if (!forceRetry && (isCallInProgressRef.current || lastSearchRef.current === searchKey)) {
       console.log('🚫 [MOBILE] Duplicate search call prevented:', searchKey);
       return null;
+    }
+    
+    if (forceRetry) {
+      console.log('🔄 [FORCE RETRY] Bypassing duplicate prevention for retry:', searchKey);
+      // Reset to allow retry
+      lastSearchRef.current = '';
     }
     
     lastSearchRef.current = searchKey;

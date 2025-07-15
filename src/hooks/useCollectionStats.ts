@@ -96,19 +96,19 @@ export const useCollectionStats = () => {
 
       // Calculate pricing stats
       const itemsWithPricing = allItems.filter(item => 
-        item.median_price || item.calculated_advice_price || item.marketplace_price
+        item.calculated_advice_price || item.median_price || item.marketplace_price
       );
       
       const totalValue = itemsWithPricing.reduce((sum, item) => {
-        const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+        const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
         return sum + Number(price);
       }, 0);
 
       const averageValue = itemsWithPricing.length > 0 ? totalValue / itemsWithPricing.length : 0;
       
       const mostValuableItem = itemsWithPricing.length > 0 ? itemsWithPricing.reduce((max, item) => {
-        const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
-        const maxPrice = max.median_price || max.calculated_advice_price || max.marketplace_price || 0;
+        const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
+        const maxPrice = max.calculated_advice_price || max.median_price || max.marketplace_price || 0;
         return Number(price) > Number(maxPrice) ? item : max;
       }, itemsWithPricing[0]) : null;
 
@@ -116,7 +116,7 @@ export const useCollectionStats = () => {
       const genreMap = new Map();
       allItems.forEach(item => {
         if (item.genre) {
-          const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+          const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
           const existing = genreMap.get(item.genre) || { count: 0, value: 0 };
           genreMap.set(item.genre, {
             count: existing.count + 1,
@@ -135,7 +135,7 @@ export const useCollectionStats = () => {
       const artistMap = new Map();
       allItems.forEach(item => {
         if (item.artist) {
-          const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+          const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
           const existing = artistMap.get(item.artist) || { count: 0, value: 0 };
           artistMap.set(item.artist, {
             count: existing.count + 1,
@@ -187,7 +187,7 @@ export const useCollectionStats = () => {
       ];
 
       itemsWithPricing.forEach(item => {
-        const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+        const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
         const numPrice = Number(price);
         if (numPrice <= 10) priceRanges[0].count++;
         else if (numPrice <= 25) priceRanges[1].count++;
@@ -206,7 +206,7 @@ export const useCollectionStats = () => {
           { range: '€100+', count: 0 }
         ];
         items.forEach(item => {
-          const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+          const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
           const numPrice = Number(price);
           if (numPrice <= 10) ranges[0].count++;
           else if (numPrice <= 25) ranges[1].count++;
@@ -222,19 +222,19 @@ export const useCollectionStats = () => {
       const vinylItems = allItems.filter(item => item.format === 'Vinyl');
       
       const cdItemsWithPricing = cdItems.filter(item => 
-        item.median_price || item.calculated_advice_price || item.marketplace_price
+        item.calculated_advice_price || item.median_price || item.marketplace_price
       );
       const vinylItemsWithPricing = vinylItems.filter(item => 
-        item.median_price || item.calculated_advice_price || item.marketplace_price
+        item.calculated_advice_price || item.median_price || item.marketplace_price
       );
 
       const cdValue = cdItemsWithPricing.reduce((sum, item) => {
-        const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+        const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
         return sum + Number(price);
       }, 0);
 
       const vinylValue = vinylItemsWithPricing.reduce((sum, item) => {
-        const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+        const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
         return sum + Number(price);
       }, 0);
 
@@ -243,7 +243,7 @@ export const useCollectionStats = () => {
         const genreMap = new Map();
         items.forEach(item => {
           if (item.genre) {
-            const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+            const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
             const existing = genreMap.get(item.genre) || { count: 0, value: 0 };
             genreMap.set(item.genre, {
               count: existing.count + 1,
@@ -262,7 +262,7 @@ export const useCollectionStats = () => {
         const artistMap = new Map();
         items.forEach(item => {
           if (item.artist) {
-            const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+            const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
             const existing = artistMap.get(item.artist) || { count: 0, value: 0 };
             artistMap.set(item.artist, {
               count: existing.count + 1,
@@ -308,7 +308,7 @@ export const useCollectionStats = () => {
       genres.forEach(genre => {
         const genreItems = allItems.filter(item => item.genre === genre.genre);
         const genreItemsWithPricing = genreItems.filter(item => 
-          item.median_price || item.calculated_advice_price || item.marketplace_price
+          item.calculated_advice_price || item.median_price || item.marketplace_price
         );
         const genreYears = genreItems.filter(item => item.year).map(item => item.year);
         
@@ -339,7 +339,7 @@ export const useCollectionStats = () => {
               vinylCount: 0
             };
           }
-          const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+          const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
           decadeBreakdown[decadeKey].count++;
           decadeBreakdown[decadeKey].value += Number(price);
           
@@ -363,21 +363,21 @@ export const useCollectionStats = () => {
 
       // Value segments
       const budget = itemsWithPricing.filter(item => {
-        const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+        const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
         return Number(price) <= 10;
       });
       const midRange = itemsWithPricing.filter(item => {
-        const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+        const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
         const numPrice = Number(price);
         return numPrice > 10 && numPrice <= 50;
       });
       const premium = itemsWithPricing.filter(item => {
-        const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+        const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
         const numPrice = Number(price);
         return numPrice > 50 && numPrice <= 100;
       });
       const collectors = itemsWithPricing.filter(item => {
-        const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+        const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
         return Number(price) > 100;
       });
 
@@ -386,7 +386,7 @@ export const useCollectionStats = () => {
           count: budget.length,
           items: budget.slice(0, 10), // Top 10 for display
           averageValue: budget.length > 0 ? budget.reduce((sum, item) => {
-            const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+            const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
             return sum + Number(price);
           }, 0) / budget.length : 0
         },
@@ -394,7 +394,7 @@ export const useCollectionStats = () => {
           count: midRange.length,
           items: midRange.slice(0, 10),
           averageValue: midRange.length > 0 ? midRange.reduce((sum, item) => {
-            const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+            const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
             return sum + Number(price);
           }, 0) / midRange.length : 0
         },
@@ -402,7 +402,7 @@ export const useCollectionStats = () => {
           count: premium.length,
           items: premium.slice(0, 10),
           averageValue: premium.length > 0 ? premium.reduce((sum, item) => {
-            const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+            const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
             return sum + Number(price);
           }, 0) / premium.length : 0
         },
@@ -410,7 +410,7 @@ export const useCollectionStats = () => {
           count: collectors.length,
           items: collectors.slice(0, 10),
           averageValue: collectors.length > 0 ? collectors.reduce((sum, item) => {
-            const price = item.median_price || item.calculated_advice_price || item.marketplace_price || 0;
+            const price = item.calculated_advice_price || item.median_price || item.marketplace_price || 0;
             return sum + Number(price);
           }, 0) / collectors.length : 0
         }

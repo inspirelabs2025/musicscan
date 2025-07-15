@@ -196,30 +196,54 @@ const VinylScanComplete = () => {
 
   // Save final scan to database with all data including condition and advice price
   const saveFinalScan = async (condition: string, advicePrice: number) => {
-    if (!analysisResult?.ocr_results || !mediaType) return;
+    console.log('💾 [DATABASE SAVE] Starting database save process', {
+      condition,
+      advicePrice,
+      mediaType,
+      hasOCRResults: !!analysisResult?.ocr_results,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (!analysisResult?.ocr_results || !mediaType) {
+      console.log('❌ [SAVE FAILED] Missing required data');
+      return;
+    }
 
     // Check for duplicates first
     const { artist, title, catalog_number } = analysisResult.ocr_results;
     const duplicates = await checkForDuplicates(artist || '', title || '', catalog_number || '');
     
     if (duplicates.length > 0) {
+      console.log('⚠️ [DUPLICATES FOUND] Showing duplicate dialog', { count: duplicates.length });
       setDuplicateRecords(duplicates);
       setPendingSaveData({ condition, advicePrice });
       setShowDuplicateDialog(true);
       return;
     }
 
+    console.log('✅ [NO DUPLICATES] Proceeding with save');
     // No duplicates found, proceed with save
     await performSave(condition, advicePrice);
   };
 
   // Perform the actual database save
   const performSave = async (condition: string, advicePrice: number) => {
-    if (!analysisResult?.ocr_results || !mediaType) return;
+    console.log('🚀 [PERFORM SAVE] Starting actual database insert', {
+      condition,
+      advicePrice,
+      mediaType,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (!analysisResult?.ocr_results || !mediaType) {
+      console.log('❌ [PERFORM SAVE FAILED] Missing data');
+      return;
+    }
 
     setIsSavingCondition(true);
     try {
       const tableName = mediaType === 'vinyl' ? 'vinyl2_scan' : 'cd_scan';
+      console.log(`📝 [DATABASE INSERT] Inserting into table: ${tableName}`);
       
       // Prepare insert data based on media type
       const insertData = mediaType === 'vinyl' ? {
@@ -323,11 +347,38 @@ const VinylScanComplete = () => {
     }
   };
 
-  // Handle explicit save action
+  // Handle explicit save action with extra logging and debouncing
   const handleSaveToDatabase = async () => {
-    if (selectedCondition && calculatedAdvicePrice) {
-      await saveFinalScan(selectedCondition, calculatedAdvicePrice);
+    console.log('🔒 [SAVE TRIGGER] Save button clicked explicitly', {
+      selectedCondition,
+      calculatedAdvicePrice,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (!selectedCondition || !calculatedAdvicePrice) {
+      console.log('❌ [SAVE BLOCKED] Missing data - condition or price not set');
+      toast({
+        title: "Kan niet opslaan",
+        description: "Selecteer eerst een conditie en zorg dat prijsscan compleet is",
+        variant: "destructive"
+      });
+      return;
     }
+    
+    // Check if all pricing data is complete
+    const hasPricingData = searchResults[0]?.pricing_stats?.lowest_price;
+    if (!hasPricingData) {
+      console.log('❌ [SAVE BLOCKED] Prijsscan niet compleet');
+      toast({
+        title: "Prijsscan Niet Compleet",
+        description: "Wacht tot de prijsscan volledig voltooid is",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    console.log('✅ [SAVE PROCEEDING] All validations passed, saving to database...');
+    await saveFinalScan(selectedCondition, calculatedAdvicePrice);
   };
 
   // Retry complete search with pricing

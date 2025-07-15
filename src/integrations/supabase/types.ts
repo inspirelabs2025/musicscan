@@ -22,8 +22,11 @@ export type Database = {
           id: string
           image_count: number
           media_type: string
+          photo_metadata: Json | null
+          photo_urls: string[] | null
           processing_results: Json | null
           status: string
+          thumbnail_urls: string[] | null
           updated_at: string
           upload_timestamp: string
         }
@@ -34,8 +37,11 @@ export type Database = {
           id?: string
           image_count: number
           media_type: string
+          photo_metadata?: Json | null
+          photo_urls?: string[] | null
           processing_results?: Json | null
           status?: string
+          thumbnail_urls?: string[] | null
           updated_at?: string
           upload_timestamp?: string
         }
@@ -46,8 +52,11 @@ export type Database = {
           id?: string
           image_count?: number
           media_type?: string
+          photo_metadata?: Json | null
+          photo_urls?: string[] | null
           processing_results?: Json | null
           status?: string
+          thumbnail_urls?: string[] | null
           updated_at?: string
           upload_timestamp?: string
         }

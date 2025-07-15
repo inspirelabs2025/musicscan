@@ -48,7 +48,9 @@ const VinylScanComplete = () => {
     searchCatalog,
     setSearchResults,
     retryPricing,
-    isPricingRetrying
+    isPricingRetrying,
+    clearCache,
+    resetSearchState
   } = useDiscogsSearch();
 
   // Memoized derived state
@@ -331,16 +333,33 @@ const VinylScanComplete = () => {
     setVinylAnalysisResult(null);
     setCDAnalysisResult(null);
     setSearchResults([]);
-  }, [setVinylAnalysisResult, setCDAnalysisResult, setSearchResults]);
+    resetSearchState();
+    clearCache();
+  }, [setVinylAnalysisResult, setCDAnalysisResult, setSearchResults, resetSearchState, clearCache]);
 
   const retrySearchWithPricing = useCallback(async () => {
     if (!analysisResult?.ocr_results?.catalog_number) return;
     
     const { artist, title, catalog_number } = analysisResult.ocr_results;
     setSearchResults([]);
+    resetSearchState();
     dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
     await searchCatalog(catalog_number, artist, title, true, true);
-  }, [analysisResult, searchCatalog, setSearchResults]);
+  }, [analysisResult, searchCatalog, setSearchResults, resetSearchState]);
+
+  const retryAnalysis = useCallback(async () => {
+    if (!analyzeImages || state.uploadedFiles.length === 0) return;
+    
+    // Reset analysis result and search state
+    setAnalysisResult?.(null);
+    setSearchResults([]);
+    resetSearchState();
+    clearCache();
+    
+    // Retry analysis
+    dispatch({ type: 'SET_CURRENT_STEP', payload: 2 });
+    await analyzeImages(state.uploadedFiles);
+  }, [analyzeImages, state.uploadedFiles, setAnalysisResult, setSearchResults, resetSearchState, clearCache]);
 
   const getProgress = useMemo(() => {
     if (state.currentStep === 1) return 0;
@@ -417,6 +436,9 @@ const VinylScanComplete = () => {
                 <Loader2 className="h-6 w-6 animate-spin" />
                 <span>OCR analyse bezig...</span>
               </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                Dit kan tot 60 seconden duren. Barcode is optioneel.
+              </div>
             </CardContent>
           </Card>
         )}
@@ -427,6 +449,99 @@ const VinylScanComplete = () => {
               <div className="flex items-center gap-3">
                 <Loader2 className="h-6 w-6 animate-spin" />
                 <span>Discogs zoeken...</span>
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                Zoeken naar matching releases en prijzen...
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Error Recovery Section */}
+        {state.mediaType && state.uploadedFiles.length > 0 && !isAnalyzing && !analysisResult && !isSearching && (
+          <Card className="mb-8 border-amber-200 bg-amber-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-900 mb-2">
+                    Analyse problemen?
+                  </h3>
+                  <p className="text-sm text-amber-800 mb-4">
+                    Als de analyse is vastgelopen of een timeout heeft, probeer dan:
+                  </p>
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={retryAnalysis}
+                      variant="outline"
+                      size="sm"
+                      className="bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300"
+                    >
+                      <RefreshCcw className="h-4 w-4 mr-2" />
+                      Analyse Opnieuw
+                    </Button>
+                    <Button 
+                      onClick={resetScan}
+                      variant="outline"
+                      size="sm"
+                      className="bg-red-100 hover:bg-red-200 text-red-900 border-red-300 ml-2"
+                    >
+                      <RefreshCcw className="h-4 w-4 mr-2" />
+                      Volledige Reset
+                    </Button>
+                  </div>
+                  <div className="text-xs text-amber-700 mt-2">
+                    💡 Tip: Zorg dat foto's helder zijn en probeer opnieuw als het vastloopt
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Search Error Recovery */}
+        {analysisResult && !isSearching && searchResults.length === 0 && (
+          <Card className="mb-8 border-blue-200 bg-blue-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <Search className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 mb-2">
+                    Geen Discogs resultaten
+                  </h3>
+                  <p className="text-sm text-blue-800 mb-4">
+                    Geen matching releases gevonden. Dit kan gebeuren als:
+                  </p>
+                  <ul className="text-sm text-blue-800 mb-4 space-y-1">
+                    <li>• Barcode ontbreekt (niet fataal)</li>
+                    <li>• Catalogusnummer onduidelijk is</li>
+                    <li>• Release niet op Discogs staat</li>
+                    <li>• Zoeken is getimed out</li>
+                  </ul>
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={retrySearchWithPricing}
+                      variant="outline"
+                      size="sm"
+                      className="bg-blue-100 hover:bg-blue-200 text-blue-900 border-blue-300"
+                    >
+                      <Search className="h-4 w-4 mr-2" />
+                      Zoeken Opnieuw
+                    </Button>
+                    <Button 
+                      onClick={retryAnalysis}
+                      variant="outline"
+                      size="sm"
+                      className="bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 ml-2"
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Analyse Opnieuw
+                    </Button>
+                  </div>
+                  <div className="text-xs text-blue-700 mt-2">
+                    💡 Tip: Controleer of artiest/titel correct zijn gedetecteerd
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

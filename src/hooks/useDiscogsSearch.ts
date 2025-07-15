@@ -46,6 +46,7 @@ export const useDiscogsSearch = () => {
   // Mobile-specific tracking to prevent duplicate calls
   const lastSearchRef = useRef<string>('');
   const isCallInProgressRef = useRef(false);
+  const callTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cache management
   const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
@@ -86,6 +87,35 @@ export const useDiscogsSearch = () => {
       console.warn('Cache write error:', error);
     }
   }, [CACHE_PREFIX]);
+
+  // Clear corrupted cache entries
+  const clearCache = useCallback(() => {
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith(CACHE_PREFIX)) {
+          localStorage.removeItem(key);
+        }
+      });
+      console.log('🗑️ Cleared all Discogs search cache');
+    } catch (error) {
+      console.warn('Cache clear error:', error);
+    }
+  }, [CACHE_PREFIX]);
+
+  // Reset all states and clear timeouts
+  const resetSearchState = useCallback(() => {
+    setIsSearching(false);
+    setSearchResults([]);
+    setSearchStrategies([]);
+    setIsPricingRetrying(false);
+    isCallInProgressRef.current = false;
+    lastSearchRef.current = '';
+    
+    if (callTimeoutRef.current) {
+      clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = null;
+    }
+  }, []);
 
   const searchCatalog = useCallback(async (
     catalogNumber: string,
@@ -137,6 +167,18 @@ export const useDiscogsSearch = () => {
     setIsSearching(true);
     setSearchResults([]);
     setSearchStrategies([]);
+    
+    // Set timeout to prevent hanging
+    const SEARCH_TIMEOUT = 45000; // 45 seconds
+    callTimeoutRef.current = setTimeout(() => {
+      console.log('⏰ Search timeout, resetting state');
+      resetSearchState();
+      toast({
+        title: "Zoeken Onderbroken",
+        description: "De zoekopdracht duurde te lang. Probeer opnieuw.",
+        variant: "destructive"
+      });
+    }, SEARCH_TIMEOUT);
     
     try {
       console.log('🔍 [MOBILE] Starting Discogs search:', { catalogNumber, artist, title, includePricing, searchKey });
@@ -202,6 +244,10 @@ export const useDiscogsSearch = () => {
       return data;
     } catch (error) {
       console.error('❌ Discogs search failed:', error);
+      
+      // Clear cache on error to prevent corruption
+      clearCache();
+      
       toast({
         title: "Discogs Zoeken Mislukt",
         description: error.message || "Er is een fout opgetreden tijdens het zoeken",
@@ -209,6 +255,11 @@ export const useDiscogsSearch = () => {
       });
       return null;
     } finally {
+      // Clear timeout and reset state
+      if (callTimeoutRef.current) {
+        clearTimeout(callTimeoutRef.current);
+        callTimeoutRef.current = null;
+      }
       setIsSearching(false);
       isCallInProgressRef.current = false;
     }
@@ -267,6 +318,8 @@ export const useDiscogsSearch = () => {
     searchCatalog,
     setSearchResults,
     retryPricing,
-    isPricingRetrying
+    isPricingRetrying,
+    clearCache,
+    resetSearchState
   };
 };

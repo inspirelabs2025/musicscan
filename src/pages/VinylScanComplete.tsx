@@ -21,6 +21,7 @@ import { MediaTypeSelector } from "@/components/MediaTypeSelector";
 import { UploadSection } from "@/components/UploadSection";
 import { ScanResults } from "@/components/ScanResults";
 import { ConditionSelector } from "@/components/ConditionSelector";
+import { ManualSearch } from "@/components/ManualSearch";
 import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
 
 const VinylScanComplete = () => {
@@ -507,50 +508,59 @@ const VinylScanComplete = () => {
 
         {/* Search Error Recovery */}
         {analysisResult && !isSearching && searchResults.length === 0 && (
-          <Card className="mb-8 border-blue-200 bg-blue-50">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <Search className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-blue-900 mb-2">
-                    Geen Discogs resultaten
-                  </h3>
-                  <p className="text-sm text-blue-800 mb-4">
-                    Geen matching releases gevonden. Dit kan gebeuren als:
-                  </p>
-                  <ul className="text-sm text-blue-800 mb-4 space-y-1">
-                    <li>• Barcode ontbreekt (niet fataal)</li>
-                    <li>• Catalogusnummer onduidelijk is</li>
-                    <li>• Release niet op Discogs staat</li>
-                    <li>• Zoeken is getimed out</li>
-                  </ul>
-                  <div className="space-y-2">
-                    <Button 
-                      onClick={retrySearchWithPricing}
-                      variant="outline"
-                      size="sm"
-                      className="bg-blue-100 hover:bg-blue-200 text-blue-900 border-blue-300"
-                    >
-                      <Search className="h-4 w-4 mr-2" />
-                      Zoeken Opnieuw
-                    </Button>
-                    <Button 
-                      onClick={retryAnalysis}
-                      variant="outline"
-                      size="sm"
-                      className="bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 ml-2"
-                    >
-                      <Camera className="h-4 w-4 mr-2" />
-                      Analyse Opnieuw
-                    </Button>
-                  </div>
-                  <div className="text-xs text-blue-700 mt-2">
-                    💡 Tip: Controleer of artiest/titel correct zijn gedetecteerd
+          <div className="mb-8 space-y-4">
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <Search className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-blue-900 mb-2">
+                      Geen Discogs resultaten
+                    </h3>
+                    <p className="text-sm text-blue-800 mb-4">
+                      Geen matching releases gevonden. Dit kan gebeuren als:
+                    </p>
+                    <ul className="text-sm text-blue-800 mb-4 space-y-1">
+                      <li>• Barcode ontbreekt (niet fataal)</li>
+                      <li>• Catalogusnummer onduidelijk is</li>
+                      <li>• Release niet op Discogs staat</li>
+                      <li>• Zoeken is getimed out</li>
+                    </ul>
+                    <div className="space-y-2">
+                      <Button 
+                        onClick={retrySearchWithPricing}
+                        variant="outline"
+                        size="sm"
+                        className="bg-blue-100 hover:bg-blue-200 text-blue-900 border-blue-300"
+                      >
+                        <Search className="h-4 w-4 mr-2" />
+                        Zoeken Opnieuw
+                      </Button>
+                      <Button 
+                        onClick={retryAnalysis}
+                        variant="outline"
+                        size="sm"
+                        className="bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 ml-2"
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Analyse Opnieuw
+                      </Button>
+                    </div>
+                    <div className="text-xs text-blue-700 mt-2">
+                      💡 Tip: Controleer of artiest/titel correct zijn gedetecteerd
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+            
+            {/* Manual Search Component */}
+            <ManualSearch 
+              analysisResult={analysisResult}
+              onResultsFound={setSearchResults}
+              mediaType={state.mediaType!}
+            />
+          </div>
         )}
 
         {/* Results */}

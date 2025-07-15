@@ -486,7 +486,7 @@ serve(async (req) => {
   // Mobile-optimized timeout
   const FUNCTION_TIMEOUT = 45000; // 45 seconds (reduced from 60s for mobile)
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Function timeout after 60 seconds')), FUNCTION_TIMEOUT);
+    setTimeout(() => reject(new Error('Function timeout after 45 seconds')), FUNCTION_TIMEOUT);
   });
 
   try {

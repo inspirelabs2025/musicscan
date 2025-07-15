@@ -188,13 +188,33 @@ const VinylScanComplete = () => {
   }, [state.mediaType]);
 
   const performSave = useCallback(async (condition: string, advicePrice: number) => {
-    console.log('🗄️ performSave called with condition:', condition, 'advicePrice:', advicePrice);
-    console.log('🗄️ Stack trace:', new Error().stack);
     if (!analysisResult?.ocr_results || !state.mediaType) return;
-
+    
     dispatch({ type: 'SET_IS_SAVING_CONDITION', payload: true });
+
     try {
       const tableName = state.mediaType === 'vinyl' ? 'vinyl2_scan' : 'cd_scan';
+      
+      // Helper function to get best available data (Discogs > OCR)
+      const getBestData = (discogsValue: string | undefined, ocrValue: string | undefined) => {
+        const cleanDiscogs = discogsValue?.trim();
+        const cleanOcr = ocrValue?.trim();
+        
+        // Prioritize Discogs data if it exists and is not empty/Unknown
+        if (cleanDiscogs && cleanDiscogs !== '' && cleanDiscogs.toLowerCase() !== 'unknown') {
+          console.log('🎯 Using Discogs data:', cleanDiscogs);
+          return cleanDiscogs;
+        }
+        
+        // Fallback to OCR data
+        console.log('📝 Using OCR data:', cleanOcr);
+        return cleanOcr;
+      };
+      
+      const bestArtist = getBestData(searchResults[0]?.artist, analysisResult.ocr_results.artist);
+      const bestTitle = getBestData(searchResults[0]?.title, analysisResult.ocr_results.title);
+      
+      console.log('💾 Saving with artist:', bestArtist, 'title:', bestTitle);
       
       const insertData = state.mediaType === 'vinyl' ? {
         catalog_image: state.uploadedFiles[0],
@@ -202,8 +222,8 @@ const VinylScanComplete = () => {
         additional_image: state.uploadedFiles[2],
         catalog_number: analysisResult.ocr_results.catalog_number,
         matrix_number: analysisResult.ocr_results.matrix_number,
-        artist: analysisResult.ocr_results.artist,
-        title: analysisResult.ocr_results.title,
+        artist: bestArtist,
+        title: bestTitle,
         year: analysisResult.ocr_results.year ? parseInt(analysisResult.ocr_results.year) : null,
         format: 'Vinyl',
         label: analysisResult.ocr_results.label,
@@ -222,8 +242,8 @@ const VinylScanComplete = () => {
         barcode_image: state.uploadedFiles[2],
         matrix_image: state.uploadedFiles[3],
         barcode_number: analysisResult.ocr_results.barcode,
-        artist: analysisResult.ocr_results.artist,
-        title: analysisResult.ocr_results.title,
+        artist: bestArtist,
+        title: bestTitle,
         label: analysisResult.ocr_results.label,
         catalog_number: analysisResult.ocr_results.catalog_number,
         year: analysisResult.ocr_results.year,

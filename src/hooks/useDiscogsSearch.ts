@@ -29,6 +29,14 @@ export interface DiscogsSearchResult {
   };
 }
 
+// Cache interface for browser storage
+interface CachedSearchResult {
+  results: DiscogsSearchResult[];
+  strategies: string[];
+  timestamp: number;
+  searchKey: string;
+}
+
 export const useDiscogsSearch = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<DiscogsSearchResult[]>([]);
@@ -38,6 +46,46 @@ export const useDiscogsSearch = () => {
   // Mobile-specific tracking to prevent duplicate calls
   const lastSearchRef = useRef<string>('');
   const isCallInProgressRef = useRef(false);
+
+  // Cache management
+  const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+  const CACHE_PREFIX = 'discogs_search_';
+
+  const getCachedResult = useCallback((searchKey: string): CachedSearchResult | null => {
+    try {
+      const cached = localStorage.getItem(CACHE_PREFIX + searchKey);
+      if (!cached) return null;
+
+      const parsedCache: CachedSearchResult = JSON.parse(cached);
+      const isExpired = Date.now() - parsedCache.timestamp > CACHE_DURATION;
+      
+      if (isExpired) {
+        localStorage.removeItem(CACHE_PREFIX + searchKey);
+        return null;
+      }
+
+      console.log('🎯 Cache HIT for:', searchKey);
+      return parsedCache;
+    } catch (error) {
+      console.warn('Cache read error:', error);
+      return null;
+    }
+  }, [CACHE_DURATION, CACHE_PREFIX]);
+
+  const setCachedResult = useCallback((searchKey: string, results: DiscogsSearchResult[], strategies: string[]) => {
+    try {
+      const cacheData: CachedSearchResult = {
+        results,
+        strategies,
+        timestamp: Date.now(),
+        searchKey
+      };
+      localStorage.setItem(CACHE_PREFIX + searchKey, JSON.stringify(cacheData));
+      console.log('💾 Cached results for:', searchKey);
+    } catch (error) {
+      console.warn('Cache write error:', error);
+    }
+  }, [CACHE_PREFIX]);
 
   const searchCatalog = useCallback(async (
     catalogNumber: string,
@@ -57,6 +105,22 @@ export const useDiscogsSearch = () => {
 
     // Mobile-specific deduplication: prevent duplicate calls (unless force retry)
     const searchKey = `${catalogNumber}-${artist}-${title}-${includePricing}`;
+    
+    // Check cache first (skip if force retry)
+    if (!forceRetry) {
+      const cachedResult = getCachedResult(searchKey);
+      if (cachedResult) {
+        setSearchResults(cachedResult.results);
+        setSearchStrategies(cachedResult.strategies);
+        toast({
+          title: "Resultaten Geladen (Cache) ⚡",
+          description: `${cachedResult.results.length} resultaten uit cache`,
+          variant: "default"
+        });
+        return { results: cachedResult.results, strategies_used: cachedResult.strategies };
+      }
+    }
+    
     if (!forceRetry && (isCallInProgressRef.current || lastSearchRef.current === searchKey)) {
       console.log('🚫 [MOBILE] Duplicate search call prevented:', searchKey);
       return null;
@@ -96,6 +160,11 @@ export const useDiscogsSearch = () => {
       setSearchResults(data.results || []);
       setSearchStrategies(data.strategies_used || []);
       
+      // Cache successful results
+      if (data.results?.length > 0) {
+        setCachedResult(searchKey, data.results, data.strategies_used || []);
+      }
+      
       // Check if pricing failed and retry automatically
       const hasPricingResults = data.results?.some((result: any) => result.pricing_stats?.lowest_price);
       if (includePricing && data.results?.length > 0 && !hasPricingResults) {
@@ -115,6 +184,8 @@ export const useDiscogsSearch = () => {
           
           if (retryData.data?.results) {
             setSearchResults(retryData.data.results);
+            // Update cache with pricing results
+            setCachedResult(searchKey, retryData.data.results, data.strategies_used || []);
             console.log('✅ Pricing retry completed');
           }
         } catch (retryError) {

@@ -65,6 +65,58 @@ export const useFileUpload = () => {
     }
   };
 
+  // Parallel upload function for multiple files
+  const uploadFilesParallel = async (files: { file: File; step: number }[]): Promise<(string | null)[]> => {
+    setUploading(true);
+    
+    try {
+      const uploadPromises = files.map(async ({ file, step }) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-step-${step}.${fileExt}`;
+        const filePath = `uploads/${fileName}`;
+
+        const { data, error } = await supabase.storage
+          .from('vinyl_images')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (error) {
+          console.error('Upload error:', error);
+          return null;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('vinyl_images')
+          .getPublicUrl(data.path);
+
+        return publicUrl;
+      });
+
+      const results = await Promise.all(uploadPromises);
+      
+      const successCount = results.filter(Boolean).length;
+      toast({
+        title: "Upload Voltooid",
+        description: `${successCount} van ${files.length} foto's succesvol geüpload`,
+        variant: successCount === files.length ? "default" : "destructive"
+      });
+
+      return results;
+    } catch (error) {
+      console.error('Parallel upload error:', error);
+      toast({
+        title: "Upload Error", 
+        description: "Er is een fout opgetreden bij het uploaden",
+        variant: "destructive"
+      });
+      return files.map(() => null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const addFile = (file: File) => {
     const preview = URL.createObjectURL(file);
     const newFile: UploadedFile = {
@@ -100,6 +152,7 @@ export const useFileUpload = () => {
     uploading,
     uploadedFiles,
     uploadFile,
+    uploadFilesParallel,
     addFile,
     removeFile,
     clearFiles

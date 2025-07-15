@@ -20,11 +20,14 @@ export const useVinylAnalysis = () => {
     
     try {
       console.log('🎵 Starting vinyl analysis with images:', imageUrls);
+      console.log('⚡ Performance: Starting analysis at', new Date().toISOString());
       
       const { data, error } = await supabase.functions.invoke('analyze-vinyl-images', {
         body: {
           imageUrls: imageUrls,
-          scanId: Date.now().toString()
+          scanId: Date.now().toString(),
+          enableCaching: true, // Enable server-side caching
+          parallelProcessing: true // Enable parallel image processing
         }
       });
 
@@ -34,6 +37,7 @@ export const useVinylAnalysis = () => {
       }
 
       console.log('✅ Analysis completed:', data);
+      console.log('⚡ Performance: Analysis completed at', new Date().toISOString());
 
       setAnalysisResult(data);
       

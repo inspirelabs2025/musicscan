@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      batch_uploads: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          file_paths: string[]
+          id: string
+          image_count: number
+          media_type: string
+          processing_results: Json | null
+          status: string
+          updated_at: string
+          upload_timestamp: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          file_paths?: string[]
+          id?: string
+          image_count: number
+          media_type: string
+          processing_results?: Json | null
+          status?: string
+          updated_at?: string
+          upload_timestamp?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          file_paths?: string[]
+          id?: string
+          image_count?: number
+          media_type?: string
+          processing_results?: Json | null
+          status?: string
+          updated_at?: string
+          upload_timestamp?: string
+        }
+        Relationships: []
+      }
       cd_scan: {
         Row: {
           artist: string | null

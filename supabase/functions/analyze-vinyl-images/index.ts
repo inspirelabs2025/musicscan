@@ -751,7 +751,7 @@ async function performAnalysis(req: Request) {
       }
     }
 
-    console.log('✅ Vinyl analysis completed - NO database save (frontend will handle save after condition selection)');
+    console.log('✅ VINYL ANALYSIS COMPLETED - ABSOLUTELY NO DATABASE SAVE! Frontend handles all saves after condition selection.');
     
     return new Response(JSON.stringify({ 
       success: true,

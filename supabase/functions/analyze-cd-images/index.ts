@@ -44,6 +44,9 @@ interface OCRResult {
   format?: string;
   country?: string;
   genre?: string;
+  matrix_number?: string;
+  side?: string;
+  stamper_codes?: string;
 }
 
 async function validateImageUrls(imageUrls: string[]): Promise<void> {
@@ -81,14 +84,23 @@ PRIORITY ORDER:
 1. BARCODE - If you see any barcode, extract the numbers with highest priority
 2. FRONT COVER - Extract artist, album title, year, label
 3. BACK COVER - Extract catalog number, additional info
+4. MATRIX IMAGE - Extract matrix number from CD disc center
 
 For CDs, focus on:
 - Barcode numbers (highest priority for direct lookup)
 - Artist name and album title from front cover
 - Record label name
 - Catalog number (usually on back or spine)
+- Matrix number from CD disc center/inner ring (crucial for identification)
 - Year of release
 - Genre if visible
+
+MATRIX NUMBER INSTRUCTIONS:
+- Look for text etched or printed on the CD disc itself, near the center hole
+- Matrix numbers may include letters, numbers, and special characters
+- Examples: "DIDP-093347", "7243 8 95713 2 4", "EMI 72438957132 4 01"
+- Extract EXACTLY as it appears, don't interpret or correct
+- If multiple codes exist, prioritize the main matrix/mould number
 
 Return ONLY a JSON object with these exact keys:
 {
@@ -100,7 +112,10 @@ Return ONLY a JSON object with these exact keys:
   "year": 2023,
   "format": "CD",
   "country": "Country",
-  "genre": "Genre"
+  "genre": "Genre",
+  "matrix_number": "MATRIX123",
+  "side": "A",
+  "stamper_codes": "Additional codes"
 }
 
 Be precise and only include information you can clearly see. If uncertain, omit the field.`
@@ -340,6 +355,9 @@ async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: 
       title: ocrResults.title || null,
       label: ocrResults.label || null,
       catalog_number: ocrResults.catalog_number || null,
+      matrix_number: ocrResults.matrix_number || null,
+      side: ocrResults.side || null,
+      stamper_codes: ocrResults.stamper_codes || null,
       year: ocrResults.year || null,
       format: 'CD',
       genre: ocrResults.genre || null,

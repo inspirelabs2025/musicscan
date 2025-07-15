@@ -93,7 +93,10 @@ export type Database = {
           marketplace_status: string | null
           marketplace_weight: number | null
           matrix_image: string | null
+          matrix_number: string | null
           median_price: number | null
+          side: string | null
+          stamper_codes: string | null
           title: string | null
           updated_at: string
           year: number | null
@@ -128,7 +131,10 @@ export type Database = {
           marketplace_status?: string | null
           marketplace_weight?: number | null
           matrix_image?: string | null
+          matrix_number?: string | null
           median_price?: number | null
+          side?: string | null
+          stamper_codes?: string | null
           title?: string | null
           updated_at?: string
           year?: number | null
@@ -163,7 +169,10 @@ export type Database = {
           marketplace_status?: string | null
           marketplace_weight?: number | null
           matrix_image?: string | null
+          matrix_number?: string | null
           median_price?: number | null
+          side?: string | null
+          stamper_codes?: string | null
           title?: string | null
           updated_at?: string
           year?: number | null

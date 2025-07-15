@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       batch_uploads: {
         Row: {
+          condition_grade: string | null
           created_at: string
           error_message: string | null
           file_paths: string[]
@@ -31,6 +32,7 @@ export type Database = {
           upload_timestamp: string
         }
         Insert: {
+          condition_grade?: string | null
           created_at?: string
           error_message?: string | null
           file_paths?: string[]
@@ -46,6 +48,7 @@ export type Database = {
           upload_timestamp?: string
         }
         Update: {
+          condition_grade?: string | null
           created_at?: string
           error_message?: string | null
           file_paths?: string[]

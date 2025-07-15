@@ -67,40 +67,134 @@ async function validateImageUrls(imageUrls: string[]): Promise<void> {
   }
 }
 
+async function performMatrixAnalysis(imageUrls: string[]): Promise<{ matrix_number?: string; side?: string; stamper_codes?: string; confidence: number }> {
+  console.log('🔍 Starting dedicated matrix analysis for', imageUrls.length, 'images');
+  
+  const matrixPrompt = `You are a specialist in CD matrix number identification. Focus ONLY on extracting matrix information from CD disc images.
+
+MATRIX ANALYSIS INSTRUCTIONS:
+- Look specifically for the CD disc image (the shiny reflective disc itself)
+- Focus on the area around the center hole (spindle hole)
+- Matrix numbers are usually etched, molded, or printed on the inner ring area
+- They appear on the non-label side (data side) of the CD
+
+TYPICAL CD MATRIX FORMATS:
+- DIDP format: "DIDP-093347", "DIDP 070042"
+- Sony format: "SRCS-1234 1A1", "SRCL-4567 2B2"
+- EMI format: "7243 8 95713 2 4", "EMI 72438957132 4 01"
+- Universal format: "UICY-1234 A", "UMCK-1234 1B1"
+- Numeric codes: "123456-2", "789012 A1"
+
+WHAT TO EXTRACT:
+- Matrix Number: The main identification code (REQUIRED)
+- Side: Usually "A", "B", "1", "2", or single letter/number
+- Stamper Codes: Additional small codes like "1A1", "2B2", manufacturing marks
+
+CONFIDENCE SCORING:
+- 1.0: Clear, well-lit matrix number, easily readable
+- 0.8: Matrix number visible but requires some interpretation
+- 0.6: Partially visible matrix number, some uncertainty
+- 0.4: Barely visible or heavily worn matrix number
+- 0.2: Very uncertain identification
+- 0.0: No matrix number found or image doesn't show CD disc
+
+Return ONLY a JSON object:
+{
+  "matrix_number": "EXACT_CODE_AS_SEEN",
+  "side": "A",
+  "stamper_codes": "1A1",
+  "confidence": 0.8
+}
+
+If NO matrix number is found, return: {"confidence": 0.0}`;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: matrixPrompt },
+              ...imageUrls.map(url => ({
+                type: 'image_url',
+                image_url: { url, detail: 'high' }
+              }))
+            ]
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.1
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ OpenAI API error for matrix analysis:', response.status, errorText);
+      return { confidence: 0.0 };
+    }
+
+    const data = await response.json();
+    console.log('🔍 Matrix analysis response:', JSON.stringify(data, null, 2));
+
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('❌ Invalid response structure from OpenAI API');
+      return { confidence: 0.0 };
+    }
+
+    const content = data.choices[0].message.content;
+    console.log('🔍 Matrix analysis content:', content);
+
+    try {
+      const cleanedContent = content.replace(/```json\n?|\n?```/g, '').trim();
+      const matrixResult = JSON.parse(cleanedContent);
+      console.log('✅ Parsed matrix result:', matrixResult);
+      
+      return {
+        matrix_number: matrixResult.matrix_number || undefined,
+        side: matrixResult.side || undefined,
+        stamper_codes: matrixResult.stamper_codes || undefined,
+        confidence: matrixResult.confidence || 0.0
+      };
+    } catch (parseError) {
+      console.error('❌ Failed to parse matrix analysis JSON:', parseError);
+      console.error('❌ Raw content:', content);
+      return { confidence: 0.0 };
+    }
+  } catch (error) {
+    console.error('❌ Matrix analysis error:', error);
+    return { confidence: 0.0 };
+  }
+}
+
 async function performOCRAnalysis(imageUrls: string[]): Promise<OCRResult> {
-  console.log('🔍 Starting OCR analysis for CD images');
-  console.log(`📸 Processing ${imageUrls.length} images`);
+  console.log('🔍 Starting multi-step CD analysis for', imageUrls.length, 'images');
   
   // Validate images first
   await validateImageUrls(imageUrls);
   
-  try {
-    const messages = [
-      {
-        role: "system" as const,
-        content: `You are a CD identification expert. Analyze the CD images and extract information.
+  // Step 1: General CD information extraction
+  const generalPrompt = `You are an expert at analyzing CD images. Extract general CD information from these images.
 
 PRIORITY ORDER:
-1. BARCODE - If you see any barcode, extract the numbers with highest priority
+1. BARCODE - Extract barcode numbers (highest priority for direct lookup)
 2. FRONT COVER - Extract artist, album title, year, label
-3. BACK COVER - Extract catalog number, additional info
-4. MATRIX IMAGE - Extract matrix number from CD disc center
+3. BACK COVER - Extract catalog number, additional information
 
-For CDs, focus on:
-- Barcode numbers (highest priority for direct lookup)
+Focus on:
+- Barcode numbers from any visible barcodes
 - Artist name and album title from front cover
 - Record label name
-- Catalog number (usually on back or spine)
-- Matrix number from CD disc center/inner ring (crucial for identification)
+- Catalog number (usually on back cover or spine)
 - Year of release
-- Genre if visible
-
-MATRIX NUMBER INSTRUCTIONS:
-- Look for text etched or printed on the CD disc itself, near the center hole
-- Matrix numbers may include letters, numbers, and special characters
-- Examples: "DIDP-093347", "7243 8 95713 2 4", "EMI 72438957132 4 01"
-- Extract EXACTLY as it appears, don't interpret or correct
-- If multiple codes exist, prioritize the main matrix/mould number
+- Genre if clearly visible
+- Country information
 
 Return ONLY a JSON object with these exact keys:
 {
@@ -112,115 +206,95 @@ Return ONLY a JSON object with these exact keys:
   "year": 2023,
   "format": "CD",
   "country": "Country",
-  "genre": "Genre",
-  "matrix_number": "MATRIX123",
-  "side": "A",
-  "stamper_codes": "Additional codes"
+  "genre": "Genre"
 }
 
-Be precise and only include information you can clearly see. If uncertain, omit the field.`
+Be precise and only include information you can clearly see. If uncertain, omit the field.`;
+
+  try {
+    console.log('🤖 Step 1: General CD information extraction...');
+    const generalResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
       },
-      {
-        role: "user" as const,
-        content: [
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
           {
-            type: "text",
-            text: "Please analyze these CD images and extract the information. Focus especially on any barcode you can see."
-          },
-          ...imageUrls.map(url => ({
-            type: "image_url" as const,
-            image_url: {
-              url: url,
-              detail: "high" as const
-            }
-          }))
-        ]
-      }
-    ];
+            role: 'user',
+            content: [
+              { type: 'text', text: generalPrompt },
+              ...imageUrls.map(url => ({
+                type: 'image_url',
+                image_url: { url, detail: 'high' }
+              }))
+            ]
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.1
+      }),
+    });
 
-    console.log('🤖 Sending request to OpenAI API...');
-    const requestBody = {
-      model: 'gpt-4o',
-      messages: messages,
-      max_tokens: 1000,
-      temperature: 0.1,
-    };
-    
-    let response;
+    if (!generalResponse.ok) {
+      const errorText = await generalResponse.text();
+      console.error('❌ OpenAI API error for general analysis:', generalResponse.status, errorText);
+      throw new Error(`OpenAI API error: ${generalResponse.status} - ${errorText}`);
+    }
+
+    const generalData = await generalResponse.json();
+    const generalContent = generalData.choices[0].message.content;
+    console.log('🤖 General analysis response:', generalContent);
+
+    // Parse general results
+    let generalResult;
     try {
-      response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-    } catch (fetchError) {
-      console.error('❌ Network error calling OpenAI API:', fetchError);
-      throw new Error(`Network error: ${fetchError.message}`);
-    }
-
-    console.log(`📡 OpenAI API response status: ${response.status}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ OpenAI API error response:', errorText);
-      
-      if (response.status === 429) {
-        throw new Error('OpenAI API rate limit exceeded. Please try again later.');
-      } else if (response.status === 401) {
-        throw new Error('OpenAI API authentication failed. Please check your API key.');
-      } else if (response.status >= 500) {
-        throw new Error('OpenAI API server error. Please try again later.');
-      } else {
-        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-      }
-    }
-
-    let data;
-    try {
-      data = await response.json();
-    } catch (jsonError) {
-      console.error('❌ Failed to parse OpenAI response as JSON:', jsonError);
-      throw new Error('Invalid JSON response from OpenAI API');
-    }
-    
-    if (!data.choices || data.choices.length === 0) {
-      console.error('❌ No choices in OpenAI response:', data);
-      throw new Error('No choices returned from OpenAI API');
-    }
-    
-    const content = data.choices[0].message.content;
-    console.log('🤖 OpenAI raw response:', content);
-
-    // More robust JSON parsing
-    let result;
-    try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonMatch = generalContent.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        console.error('❌ No JSON found in OpenAI response');
-        throw new Error('No JSON object found in OpenAI response');
+        throw new Error('No JSON found in general analysis response');
       }
-
-      result = JSON.parse(jsonMatch[0]);
-      console.log('✅ Parsed OCR result:', result);
-      
-      // Validate that we got some useful data
-      if (!result.artist && !result.title && !result.barcode && !result.catalog_number) {
-        console.warn('⚠️ OCR returned empty result, no key data extracted');
-        throw new Error('No meaningful data extracted from images');
-      }
-      
+      generalResult = JSON.parse(jsonMatch[0]);
+      console.log('✅ Parsed general result:', generalResult);
     } catch (parseError) {
-      console.error('❌ Failed to parse JSON from OpenAI response:', parseError);
-      console.error('❌ Raw content:', content);
-      throw new Error('Failed to parse OCR results from OpenAI response');
+      console.error('❌ Failed to parse general analysis JSON:', parseError);
+      throw new Error('Failed to parse general CD information');
+    }
+
+    // Step 2: Dedicated matrix analysis
+    console.log('🤖 Step 2: Dedicated matrix analysis...');
+    const matrixResults = await performMatrixAnalysis(imageUrls);
+    console.log('✅ Matrix analysis completed with confidence:', matrixResults.confidence);
+
+    // Step 3: Combine results
+    const combinedResult: OCRResult = {
+      ...generalResult,
+      matrix_number: matrixResults.matrix_number,
+      side: matrixResults.side,
+      stamper_codes: matrixResults.stamper_codes
+    };
+
+    console.log('✅ Combined analysis result:', combinedResult);
+    
+    // Enhanced validation
+    if (!combinedResult.artist && !combinedResult.title && !combinedResult.barcode && !combinedResult.catalog_number && !combinedResult.matrix_number) {
+      console.warn('⚠️ No meaningful data extracted from any analysis step');
+      throw new Error('No meaningful data extracted from images');
+    }
+
+    // Log matrix extraction success
+    if (matrixResults.confidence > 0.5) {
+      console.log(`🎯 Matrix extraction successful: ${matrixResults.matrix_number} (confidence: ${matrixResults.confidence})`);
+    } else if (matrixResults.confidence > 0) {
+      console.log(`⚠️ Matrix extraction uncertain: ${matrixResults.matrix_number || 'none'} (confidence: ${matrixResults.confidence})`);
+    } else {
+      console.log('❌ No matrix number detected');
     }
     
-    return result;
+    return combinedResult;
   } catch (error) {
-    console.error('❌ OCR analysis failed:', error);
+    console.error('❌ Multi-step OCR analysis failed:', error);
     
     // Enhance error message with context
     if (error.message.includes('OpenAI API')) {

@@ -7,11 +7,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Environment validation with detailed logging
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
-const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+// Validate required environment variables
+if (!supabaseUrl) {
+  console.error('❌ SUPABASE_URL environment variable is missing');
+  throw new Error('SUPABASE_URL is required');
+}
+if (!supabaseServiceKey) {
+  console.error('❌ SUPABASE_SERVICE_ROLE_KEY environment variable is missing');
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
+}
+if (!openaiApiKey) {
+  console.error('❌ OPENAI_API_KEY environment variable is missing');
+  throw new Error('OPENAI_API_KEY is required');
+}
+
+console.log('✅ All required environment variables are present');
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 interface CDAnalysisRequest {
   imageUrls: string[];
@@ -30,8 +46,30 @@ interface OCRResult {
   genre?: string;
 }
 
+async function validateImageUrls(imageUrls: string[]): Promise<void> {
+  console.log('🔍 Validating image URLs:', imageUrls);
+  
+  for (let i = 0; i < imageUrls.length; i++) {
+    const url = imageUrls[i];
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      if (!response.ok) {
+        throw new Error(`Image ${i + 1} not accessible: ${response.status}`);
+      }
+      console.log(`✅ Image ${i + 1} validated: ${url.substring(0, 50)}...`);
+    } catch (error) {
+      console.error(`❌ Image ${i + 1} validation failed: ${error.message}`);
+      throw new Error(`Image ${i + 1} validation failed: ${error.message}`);
+    }
+  }
+}
+
 async function performOCRAnalysis(imageUrls: string[]): Promise<OCRResult> {
   console.log('🔍 Starting OCR analysis for CD images');
+  console.log(`📸 Processing ${imageUrls.length} images`);
+  
+  // Validate images first
+  await validateImageUrls(imageUrls);
   
   try {
     const messages = [
@@ -85,41 +123,100 @@ Be precise and only include information you can clearly see. If uncertain, omit 
       }
     ];
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: messages,
-        max_tokens: 1000,
-        temperature: 0.1,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+    console.log('🤖 Sending request to OpenAI API...');
+    const requestBody = {
+      model: 'gpt-4o',
+      messages: messages,
+      max_tokens: 1000,
+      temperature: 0.1,
+    };
+    
+    let response;
+    try {
+      response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+    } catch (fetchError) {
+      console.error('❌ Network error calling OpenAI API:', fetchError);
+      throw new Error(`Network error: ${fetchError.message}`);
     }
 
-    const data = await response.json();
-    const content = data.choices[0].message.content;
+    console.log(`📡 OpenAI API response status: ${response.status}`);
     
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ OpenAI API error response:', errorText);
+      
+      if (response.status === 429) {
+        throw new Error('OpenAI API rate limit exceeded. Please try again later.');
+      } else if (response.status === 401) {
+        throw new Error('OpenAI API authentication failed. Please check your API key.');
+      } else if (response.status >= 500) {
+        throw new Error('OpenAI API server error. Please try again later.');
+      } else {
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      }
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('❌ Failed to parse OpenAI response as JSON:', jsonError);
+      throw new Error('Invalid JSON response from OpenAI API');
+    }
+    
+    if (!data.choices || data.choices.length === 0) {
+      console.error('❌ No choices in OpenAI response:', data);
+      throw new Error('No choices returned from OpenAI API');
+    }
+    
+    const content = data.choices[0].message.content;
     console.log('🤖 OpenAI raw response:', content);
 
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No JSON found in response');
-    }
+    // More robust JSON parsing
+    let result;
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.error('❌ No JSON found in OpenAI response');
+        throw new Error('No JSON object found in OpenAI response');
+      }
 
-    const result = JSON.parse(jsonMatch[0]);
-    console.log('✅ Parsed OCR result:', result);
+      result = JSON.parse(jsonMatch[0]);
+      console.log('✅ Parsed OCR result:', result);
+      
+      // Validate that we got some useful data
+      if (!result.artist && !result.title && !result.barcode && !result.catalog_number) {
+        console.warn('⚠️ OCR returned empty result, no key data extracted');
+        throw new Error('No meaningful data extracted from images');
+      }
+      
+    } catch (parseError) {
+      console.error('❌ Failed to parse JSON from OpenAI response:', parseError);
+      console.error('❌ Raw content:', content);
+      throw new Error('Failed to parse OCR results from OpenAI response');
+    }
     
     return result;
   } catch (error) {
     console.error('❌ OCR analysis failed:', error);
-    throw error;
+    
+    // Enhance error message with context
+    if (error.message.includes('OpenAI API')) {
+      throw new Error(`OpenAI API Error: ${error.message}`);
+    } else if (error.message.includes('JSON')) {
+      throw new Error(`Data Parsing Error: ${error.message}`);
+    } else if (error.message.includes('Image')) {
+      throw new Error(`Image Processing Error: ${error.message}`);
+    } else {
+      throw new Error(`OCR Analysis Error: ${error.message}`);
+    }
   }
 }
 
@@ -232,10 +329,12 @@ async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: 
   console.log('💾 Discogs Data:', discogsData);
   
   try {
+    // Prepare data with validation
     const insertData = {
       front_image: imageUrls[0] || null,
       back_image: imageUrls[1] || null,
       barcode_image: imageUrls[2] || null,
+      matrix_image: imageUrls[3] || null, // Optional 4th image
       barcode_number: ocrResults.barcode || null,
       artist: ocrResults.artist || null,
       title: ocrResults.title || null,
@@ -249,6 +348,20 @@ async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: 
       discogs_url: discogsData?.discogs_url || null,
     };
     
+    // Validate data types and lengths
+    if (insertData.artist && typeof insertData.artist === 'string' && insertData.artist.length > 255) {
+      insertData.artist = insertData.artist.substring(0, 255);
+      console.warn('⚠️ Artist name truncated to 255 characters');
+    }
+    if (insertData.title && typeof insertData.title === 'string' && insertData.title.length > 255) {
+      insertData.title = insertData.title.substring(0, 255);
+      console.warn('⚠️ Title truncated to 255 characters');
+    }
+    if (insertData.year && (insertData.year < 1900 || insertData.year > 2030)) {
+      console.warn(`⚠️ Invalid year ${insertData.year}, setting to null`);
+      insertData.year = null;
+    }
+    
     console.log('💾 Inserting data:', insertData);
 
     const { data, error } = await supabase
@@ -258,8 +371,23 @@ async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: 
       .single();
 
     if (error) {
-      console.error('❌ Database save error:', error);
-      throw error;
+      console.error('❌ Database save error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+      
+      // Provide more specific error messages
+      if (error.code === '23505') {
+        throw new Error('Duplicate entry: This CD scan already exists in the database');
+      } else if (error.code === '23502') {
+        throw new Error('Missing required field: Some required information is missing');
+      } else if (error.code === '22001') {
+        throw new Error('Data too long: Some text fields exceed maximum length');
+      } else {
+        throw new Error(`Database error: ${error.message}`);
+      }
     }
 
     console.log('✅ CD scan saved to database with ID:', data.id);
@@ -267,20 +395,83 @@ async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: 
     return data;
   } catch (error) {
     console.error('❌ Failed to save to database:', error);
-    throw error;
+    
+    // Enhance error context
+    if (error.message.includes('Database error:')) {
+      throw error; // Already enhanced
+    } else {
+      throw new Error(`Database Save Error: ${error.message}`);
+    }
   }
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const { imageUrls, scanId }: CDAnalysisRequest = await req.json();
+  const startTime = Date.now();
+  console.log(`🚀 CD Analysis request started at ${new Date().toISOString()}`);
 
-    if (!imageUrls || imageUrls.length === 0) {
-      throw new Error('No images provided');
+  try {
+    // Parse and validate request
+    let requestData;
+    try {
+      requestData = await req.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse request JSON:', parseError);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid JSON in request body',
+        success: false,
+        details: parseError.message
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { imageUrls, scanId }: CDAnalysisRequest = requestData;
+
+    // Comprehensive input validation
+    if (!imageUrls) {
+      return new Response(JSON.stringify({ 
+        error: 'Missing imageUrls in request',
+        success: false
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!Array.isArray(imageUrls)) {
+      return new Response(JSON.stringify({ 
+        error: 'imageUrls must be an array',
+        success: false
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (imageUrls.length === 0) {
+      return new Response(JSON.stringify({ 
+        error: 'At least one image is required',
+        success: false
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (imageUrls.length < 2) {
+      return new Response(JSON.stringify({ 
+        error: 'CD scanning requires at least 2 images (front and back)',
+        success: false
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log(`🎵 Starting CD analysis for scan ${scanId} with ${imageUrls.length} images`);
@@ -326,12 +517,38 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    
     console.error('❌ CD analysis failed:', error);
+    console.error(`❌ Total processing time: ${duration}ms`);
+    
+    // Determine appropriate error status and message
+    let statusCode = 500;
+    let userFriendlyMessage = error.message;
+    
+    if (error.message.includes('OpenAI API')) {
+      statusCode = 502; // Bad Gateway
+      userFriendlyMessage = 'AI image analysis service unavailable. Please try again later.';
+    } else if (error.message.includes('Image')) {
+      statusCode = 400; // Bad Request
+      userFriendlyMessage = 'Image processing failed. Please check your images and try again.';
+    } else if (error.message.includes('Database')) {
+      statusCode = 503; // Service Unavailable
+      userFriendlyMessage = 'Database service temporarily unavailable. Please try again.';
+    } else if (error.message.includes('Network error')) {
+      statusCode = 502; // Bad Gateway
+      userFriendlyMessage = 'Network connectivity issue. Please check your connection and try again.';
+    }
+    
     return new Response(JSON.stringify({ 
-      error: error.message,
-      success: false
+      error: userFriendlyMessage,
+      success: false,
+      details: error.message,
+      processingTime: duration,
+      timestamp: new Date().toISOString()
     }), {
-      status: 500,
+      status: statusCode,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

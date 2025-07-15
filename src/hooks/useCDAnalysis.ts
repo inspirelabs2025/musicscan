@@ -47,9 +47,43 @@ export const useCDAnalysis = () => {
       return data;
     } catch (error) {
       console.error('❌ CD Analysis failed:', error);
+      
+      // Parse error response for better user feedback
+      let errorMessage = "Er is een fout opgetreden tijdens de CD analyse";
+      let errorTitle = "Analyse Mislukt";
+      
+      if (error.message?.includes('AI image analysis service unavailable')) {
+        errorTitle = "AI Service Tijdelijk Niet Beschikbaar";
+        errorMessage = "De AI beeldanalyse service is tijdelijk niet beschikbaar. Probeer het later opnieuw.";
+      } else if (error.message?.includes('Image processing failed')) {
+        errorTitle = "Beeldverwerking Mislukt";
+        errorMessage = "De uploaded afbeeldingen konden niet worden verwerkt. Controleer of de afbeeldingen geldig zijn en probeer opnieuw.";
+      } else if (error.message?.includes('Database service temporarily unavailable')) {
+        errorTitle = "Database Tijdelijk Niet Beschikbaar";
+        errorMessage = "De database service is tijdelijk niet beschikbaar. Probeer het later opnieuw.";
+      } else if (error.message?.includes('Network connectivity issue')) {
+        errorTitle = "Netwerkverbinding Probleem";
+        errorMessage = "Er is een probleem met de netwerkverbinding. Controleer je internetverbinding en probeer opnieuw.";
+      } else if (error.message?.includes('CD scanning requires at least 2 images')) {
+        errorTitle = "Onvoldoende Afbeeldingen";
+        errorMessage = "Voor CD analyse zijn minimaal 2 afbeeldingen nodig (voorkant en achterkant).";
+      } else if (error.message?.includes('No meaningful data extracted')) {
+        errorTitle = "Geen Gegevens Gevonden";
+        errorMessage = "Er konden geen bruikbare gegevens uit de afbeeldingen worden gehaald. Probeer duidelijkere afbeeldingen.";
+      } else {
+        // Try to extract the error message from the response
+        const errorData = error.message || error.toString();
+        if (errorData.includes('details:')) {
+          const detailsMatch = errorData.match(/details:\s*(.+)/);
+          if (detailsMatch) {
+            errorMessage = detailsMatch[1];
+          }
+        }
+      }
+      
       toast({
-        title: "Analyse Mislukt",
-        description: error.message || "Er is een fout opgetreden tijdens de CD analyse",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive"
       });
       return null;

@@ -493,7 +493,7 @@ serve(async (req) => {
     const response = {
       success: true,
       scanId: savedScan.id,
-      ocrResults: ocrResults,
+      ocr_results: ocrResults,
       discogsData: discogsData,
       combinedResults: {
         artist: ocrResults.artist,

@@ -179,6 +179,8 @@ const VinylScanComplete = () => {
   }, [state.mediaType]);
 
   const performSave = useCallback(async (condition: string, advicePrice: number) => {
+    console.log('🗄️ performSave called with condition:', condition, 'advicePrice:', advicePrice);
+    console.log('🗄️ Stack trace:', new Error().stack);
     if (!analysisResult?.ocr_results || !state.mediaType) return;
 
     dispatch({ type: 'SET_IS_SAVING_CONDITION', payload: true });
@@ -255,6 +257,7 @@ const VinylScanComplete = () => {
   }, [analysisResult, state.mediaType, state.uploadedFiles, searchResults]);
 
   const saveFinalScan = useCallback(async (condition: string, advicePrice: number) => {
+    console.log('🚀 saveFinalScan called with condition:', condition, 'advicePrice:', advicePrice);
     if (!analysisResult?.ocr_results || !state.mediaType) return;
 
     const { artist, title, catalog_number } = analysisResult.ocr_results;
@@ -280,18 +283,21 @@ const VinylScanComplete = () => {
   }, [state.uploadedFiles]);
 
   const handleConditionChange = useCallback((condition: string) => {
+    console.log('🔄 handleConditionChange called with condition:', condition);
     dispatch({ type: 'SET_SELECTED_CONDITION', payload: condition });
     
     const lowestPrice = searchResults[0]?.pricing_stats?.lowest_price;
     if (lowestPrice) {
       const advicePrice = calculateAdvicePrice(condition, lowestPrice);
       if (advicePrice) {
+        console.log('💰 Setting calculated advice price:', advicePrice);
         dispatch({ type: 'SET_CALCULATED_ADVICE_PRICE', payload: advicePrice });
       }
     }
   }, [searchResults, calculateAdvicePrice]);
 
   const handleSave = useCallback(async () => {
+    console.log('💾 handleSave called with condition:', state.selectedCondition, 'advicePrice:', state.calculatedAdvicePrice);
     if (!state.selectedCondition || !state.calculatedAdvicePrice) {
       toast({
         title: "Kan niet opslaan",

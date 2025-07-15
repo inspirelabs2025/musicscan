@@ -751,6 +751,8 @@ async function performAnalysis(req: Request) {
       }
     }
 
+    console.log('✅ Vinyl analysis completed - NO database save (frontend will handle save after condition selection)');
+    
     return new Response(JSON.stringify({ 
       success: true,
       ocr_results: combinedData,
@@ -758,7 +760,7 @@ async function performAnalysis(req: Request) {
       discogs_data: discogsData,
       pricing_data: pricingData,
       image_urls: imageUrls,
-      message: 'OCR analysis and Discogs lookup completed successfully!'
+      message: 'OCR analysis and Discogs lookup completed successfully! NO AUTO-SAVE - data ready for condition selection.'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

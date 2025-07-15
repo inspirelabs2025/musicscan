@@ -409,6 +409,34 @@ const VinylScanComplete = () => {
     setMediaType(null);
   };
 
+  // Rescan with same images - reuse uploaded files but restart analysis
+  const rescanWithSameImages = async () => {
+    if (!mediaType || !analyzeImages || uploadedFiles.length === 0) return;
+    
+    console.log('🔄 [RESCAN] Starting rescan with same images', {
+      mediaType,
+      imageCount: uploadedFiles.length,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Reset analysis and search results but keep uploaded files
+    setVinylAnalysisResult(null);
+    setCDAnalysisResult(null);
+    setSearchResults([]);
+    setSelectedCondition('');
+    setCalculatedAdvicePrice(null);
+    setCurrentStep(2); // Go back to analysis step
+    
+    toast({
+      title: "Rescan Gestart",
+      description: "Dezelfde foto's worden opnieuw geanalyseerd...",
+      variant: "default"
+    });
+    
+    // Trigger analysis with same uploaded files
+    await analyzeImages(uploadedFiles);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
@@ -783,9 +811,36 @@ const VinylScanComplete = () => {
                   {analysisResult?.ocr_results?.catalog_number && searchResults.length === 0 && !isSearching && (
                     <Card>
                       <CardContent className="pt-6">
-                        <div className="flex items-center gap-2 text-amber-600">
-                          <AlertCircle className="h-4 w-4" />
-                          <span className="text-sm">Geen Discogs resultaten gevonden voor catalogusnummer: {analysisResult.ocr_results.catalog_number}</span>
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2 text-amber-600">
+                            <AlertCircle className="h-4 w-4" />
+                            <span className="text-sm">Geen Discogs resultaten gevonden voor catalogusnummer: {analysisResult.ocr_results.catalog_number}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={rescanWithSameImages}
+                              variant="outline"
+                              size="sm"
+                              disabled={isAnalyzing}
+                              className="flex items-center gap-2"
+                            >
+                              {isAnalyzing ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <RefreshCcw className="h-4 w-4" />
+                              )}
+                              Rescan
+                            </Button>
+                            <Button
+                              onClick={retrySearchWithPricing}
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-2"
+                            >
+                              <Search className="h-4 w-4" />
+                              Opnieuw Zoeken
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

@@ -660,6 +660,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      extract_discogs_id_from_url: {
+        Args: { url_text: string }
+        Returns: number
+      }
       update_cd_discogs_ids: {
         Args: Record<PropertyKey, never>
         Returns: number

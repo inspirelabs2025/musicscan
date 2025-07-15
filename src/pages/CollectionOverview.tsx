@@ -190,8 +190,8 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
         <StatCard
           title="Waardevolste Item"
           value={formatCurrency(
-            stats.mostValuableItem?.median_price || 
             stats.mostValuableItem?.calculated_advice_price || 
+            stats.mostValuableItem?.median_price || 
             stats.mostValuableItem?.marketplace_price || 0
           )}
           subtitle={stats.mostValuableItem ? `${stats.mostValuableItem.artist || 'Onbekend'} - ${stats.mostValuableItem.title || 'Onbekend'}`.substring(0, 40) + "..." : 'Geen data'}

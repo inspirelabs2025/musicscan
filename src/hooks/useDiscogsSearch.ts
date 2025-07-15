@@ -4,6 +4,7 @@ import { toast } from '@/hooks/use-toast';
 
 export interface DiscogsSearchResult {
   id: number;
+  discogs_id?: number; // Added for proper database mapping
   title: string;
   artist: string;
   year: number;

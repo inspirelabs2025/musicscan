@@ -16,6 +16,7 @@ import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Navigation } from "@/components/Navigation";
+import { extractDiscogsIdFromUrl } from "@/lib/utils";
 
 const VinylScanComplete = () => {
   const navigate = useNavigate();
@@ -261,7 +262,7 @@ const VinylScanComplete = () => {
         country: analysisResult.ocr_results.country,
         condition_grade: condition,
         calculated_advice_price: advicePrice,
-        discogs_id: searchResults[0]?.id || null,
+        discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
         discogs_url: searchResults[0]?.discogs_url || null,
         lowest_price: searchResults[0]?.pricing_stats?.lowest_price ? parseFloat(searchResults[0].pricing_stats.lowest_price.replace(',', '.')) : null,
         median_price: searchResults[0]?.pricing_stats?.median_price ? parseFloat(searchResults[0].pricing_stats.median_price.replace(',', '.')) : null,
@@ -282,7 +283,7 @@ const VinylScanComplete = () => {
         country: analysisResult.ocr_results.country,
         condition_grade: condition,
         calculated_advice_price: advicePrice,
-        discogs_id: searchResults[0]?.id || null,
+        discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
         discogs_url: searchResults[0]?.discogs_url || null,
         lowest_price: searchResults[0]?.pricing_stats?.lowest_price ? parseFloat(searchResults[0].pricing_stats.lowest_price.replace(',', '.')) : null,
         median_price: searchResults[0]?.pricing_stats?.median_price ? parseFloat(searchResults[0].pricing_stats.median_price.replace(',', '.')) : null,

@@ -598,8 +598,8 @@ const VinylScanComplete = () => {
           </div>
         )}
 
-        {/* Condition Selector - Only show when Discogs search is complete AND has pricing */}
-        {!isAnalyzing && !isSearching && searchResults.length > 0 && searchResults[0]?.pricing_stats?.lowest_price && (
+        {/* Condition Selector */}
+        {searchResults.length > 0 && searchResults[0]?.pricing_stats?.lowest_price && (
           <div className="mb-8">
             <ConditionSelector
               mediaType={state.mediaType!}
@@ -611,47 +611,6 @@ const VinylScanComplete = () => {
               onSave={handleSave}
             />
           </div>
-        )}
-
-        {/* Loading indicator specifically for condition selector availability */}
-        {analysisResult && searchResults.length > 0 && (isAnalyzing || isSearching) && (
-          <Card className="w-full max-w-4xl mb-8">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-center space-x-3">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                <p className="text-lg font-medium">Voltooien van analyse...</p>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2 text-center">
-                De OPSLAAN knop wordt beschikbaar zodra alle gegevens zijn verwerkt.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Warning if search results exist but no pricing data */}
-        {!isAnalyzing && !isSearching && searchResults.length > 0 && !searchResults[0]?.pricing_stats?.lowest_price && (
-          <Card className="w-full max-w-4xl mb-8 border-amber-200 bg-amber-50">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <AlertTriangle className="h-6 w-6 text-amber-600" />
-                <div>
-                  <p className="font-medium text-amber-800">Geen prijsgegevens beschikbaar</p>
-                  <p className="text-sm text-amber-700 mt-1">
-                    Er zijn zoekresultaten gevonden, maar geen prijsinformatie. Probeer opnieuw te zoeken of controleer de gegevens.
-                  </p>
-                  <Button 
-                    onClick={retrySearchWithPricing}
-                    variant="outline"
-                    size="sm"
-                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 mt-3"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    Opnieuw Zoeken
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         )}
 
         {/* Duplicate Warning Dialog */}

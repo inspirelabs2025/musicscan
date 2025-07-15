@@ -487,12 +487,11 @@ serve(async (req) => {
       ocrResults.barcode
     );
 
-    // Save to database with Discogs data
-    const savedScan = await saveToDatabase(scanId, ocrResults, imageUrls, discogsData);
-
+    // Return analysis results without saving to database
+    // The frontend will handle saving when user clicks "Opslaan in Database"
     const response = {
       success: true,
-      scanId: savedScan.id,
+      scanId: scanId,
       ocr_results: ocrResults,
       discogsData: discogsData,
       combinedResults: {

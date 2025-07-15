@@ -39,7 +39,7 @@ export const useVinylAnalysis = () => {
       
       toast({
         title: "OCR Analyse Voltooid! 🎉",
-        description: `Gevonden: ${data.ocrResults.artist || 'Onbekend'} - ${data.ocrResults.title || 'Onbekend'}`,
+        description: `Gevonden: ${data.ocr_results.artist || 'Onbekend'} - ${data.ocr_results.title || 'Onbekend'}`,
         variant: "default"
       });
 

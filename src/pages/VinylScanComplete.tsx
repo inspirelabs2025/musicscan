@@ -72,9 +72,9 @@ const VinylScanComplete = () => {
 
   // Auto-trigger Discogs search when OCR analysis completes with catalog number
   useEffect(() => {
-    if (analysisResult?.ocrResults?.catalog_number && !isSearching && searchResults.length === 0) {
+    if (analysisResult?.ocr_results?.catalog_number && !isSearching && searchResults.length === 0) {
       setCurrentStep(3);
-      const { artist, title, catalog_number } = analysisResult.ocrResults;
+      const { artist, title, catalog_number } = analysisResult.ocr_results;
       searchCatalog(catalog_number, artist, title);
     }
   }, [analysisResult, isSearching, searchResults.length, searchCatalog]);
@@ -182,10 +182,10 @@ const VinylScanComplete = () => {
 
   // Save final scan to database with all data including condition and advice price
   const saveFinalScan = async (condition: string, advicePrice: number) => {
-    if (!analysisResult?.ocrResults || !mediaType) return;
+    if (!analysisResult?.ocr_results || !mediaType) return;
 
     // Check for duplicates first
-    const { artist, title, catalog_number } = analysisResult.ocrResults;
+    const { artist, title, catalog_number } = analysisResult.ocr_results;
     const duplicates = await checkForDuplicates(artist || '', title || '', catalog_number || '');
     
     if (duplicates.length > 0) {
@@ -201,7 +201,7 @@ const VinylScanComplete = () => {
 
   // Perform the actual database save
   const performSave = async (condition: string, advicePrice: number) => {
-    if (!analysisResult?.ocrResults || !mediaType) return;
+    if (!analysisResult?.ocr_results || !mediaType) return;
 
     setIsSavingCondition(true);
     try {
@@ -212,15 +212,15 @@ const VinylScanComplete = () => {
         catalog_image: uploadedFiles[0],
         matrix_image: uploadedFiles[1], 
         additional_image: uploadedFiles[2],
-        catalog_number: analysisResult.ocrResults.catalog_number,
-        matrix_number: analysisResult.ocrResults.matrix_number,
-        artist: analysisResult.ocrResults.artist,
-        title: analysisResult.ocrResults.title,
-        year: analysisResult.ocrResults.year ? parseInt(analysisResult.ocrResults.year) : null,
+        catalog_number: analysisResult.ocr_results.catalog_number,
+        matrix_number: analysisResult.ocr_results.matrix_number,
+        artist: analysisResult.ocr_results.artist,
+        title: analysisResult.ocr_results.title,
+        year: analysisResult.ocr_results.year ? parseInt(analysisResult.ocr_results.year) : null,
         format: 'Vinyl',
-        label: analysisResult.ocrResults.label,
-        genre: analysisResult.ocrResults.genre,
-        country: analysisResult.ocrResults.country,
+        label: analysisResult.ocr_results.label,
+        genre: analysisResult.ocr_results.genre,
+        country: analysisResult.ocr_results.country,
         condition_grade: condition,
         calculated_advice_price: advicePrice,
         discogs_id: searchResults[0]?.id || null,
@@ -233,15 +233,15 @@ const VinylScanComplete = () => {
         back_image: uploadedFiles[1],
         barcode_image: uploadedFiles[2],
         matrix_image: uploadedFiles[3],
-        barcode_number: analysisResult.ocrResults.barcode,
-        artist: analysisResult.ocrResults.artist,
-        title: analysisResult.ocrResults.title,
-        label: analysisResult.ocrResults.label,
-        catalog_number: analysisResult.ocrResults.catalog_number,
-        year: analysisResult.ocrResults.year,
+        barcode_number: analysisResult.ocr_results.barcode,
+        artist: analysisResult.ocr_results.artist,
+        title: analysisResult.ocr_results.title,
+        label: analysisResult.ocr_results.label,
+        catalog_number: analysisResult.ocr_results.catalog_number,
+        year: analysisResult.ocr_results.year,
         format: 'CD',
-        genre: analysisResult.ocrResults.genre,
-        country: analysisResult.ocrResults.country,
+        genre: analysisResult.ocr_results.genre,
+        country: analysisResult.ocr_results.country,
         condition_grade: condition,
         calculated_advice_price: advicePrice,
         discogs_id: searchResults[0]?.id || null,
@@ -318,9 +318,9 @@ const VinylScanComplete = () => {
 
   // Retry complete search with pricing
   const retrySearchWithPricing = async () => {
-    if (!analysisResult?.ocrResults?.catalog_number) return;
+    if (!analysisResult?.ocr_results?.catalog_number) return;
     
-    const { artist, title, catalog_number } = analysisResult.ocrResults;
+    const { artist, title, catalog_number } = analysisResult.ocr_results;
     setCurrentStep(3);
     await searchCatalog(catalog_number, artist, title, true);
   };
@@ -516,7 +516,7 @@ const VinylScanComplete = () => {
 
                 {/* Combined Results */}
                 <TabsContent value="combined" className="space-y-4">
-                  {analysisResult?.ocrResults && (
+                  {analysisResult?.ocr_results && (
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -525,12 +525,12 @@ const VinylScanComplete = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
-                        <div><strong>Artiest:</strong> {analysisResult.ocrResults.artist || 'Onbekend'}</div>
-                        <div><strong>Titel:</strong> {analysisResult.ocrResults.title || 'Onbekend'}</div>
-                        <div><strong>Catalogusnummer:</strong> {analysisResult.ocrResults.catalog_number || 'Niet gevonden'}</div>
-                        <div><strong>Label:</strong> {analysisResult.ocrResults.label || 'Onbekend'}</div>
-                        {analysisResult.ocrResults.year && (
-                          <div><strong>Jaar:</strong> {analysisResult.ocrResults.year}</div>
+                        <div><strong>Artiest:</strong> {analysisResult.ocr_results.artist || 'Onbekend'}</div>
+                        <div><strong>Titel:</strong> {analysisResult.ocr_results.title || 'Onbekend'}</div>
+                        <div><strong>Catalogusnummer:</strong> {analysisResult.ocr_results.catalog_number || 'Niet gevonden'}</div>
+                        <div><strong>Label:</strong> {analysisResult.ocr_results.label || 'Onbekend'}</div>
+                        {analysisResult.ocr_results.year && (
+                          <div><strong>Jaar:</strong> {analysisResult.ocr_results.year}</div>
                         )}
                       </CardContent>
                     </Card>
@@ -709,12 +709,12 @@ const VinylScanComplete = () => {
                     </Card>
                   )}
 
-                  {analysisResult?.ocrResults?.catalog_number && searchResults.length === 0 && !isSearching && (
+                  {analysisResult?.ocr_results?.catalog_number && searchResults.length === 0 && !isSearching && (
                     <Card>
                       <CardContent className="pt-6">
                         <div className="flex items-center gap-2 text-amber-600">
                           <AlertCircle className="h-4 w-4" />
-                          <span className="text-sm">Geen Discogs resultaten gevonden voor catalogusnummer: {analysisResult.ocrResults.catalog_number}</span>
+                          <span className="text-sm">Geen Discogs resultaten gevonden voor catalogusnummer: {analysisResult.ocr_results.catalog_number}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -723,14 +723,14 @@ const VinylScanComplete = () => {
 
                 {/* OCR Tab */}
                 <TabsContent value="ocr">
-                  {analysisResult?.ocrResults ? (
+                  {analysisResult?.ocr_results ? (
                     <Card>
                       <CardHeader>
                         <CardTitle>OCR Analyse Resultaten</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 gap-3">
-                      {Object.entries(analysisResult.ocrResults).map(([key, value]) => (
+                      {Object.entries(analysisResult.ocr_results).map(([key, value]) => (
                         <div key={key} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                           <span className="font-medium capitalize">{key.replace('_', ' ')}:</span>
                           <span className="text-right">{String(value) || 'Niet gevonden'}</span>
@@ -895,9 +895,9 @@ const VinylScanComplete = () => {
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <h4 className="font-semibold text-blue-900 mb-2">Nieuw album dat wordt toegevoegd:</h4>
                 <div className="text-sm text-blue-800">
-                  <div><strong>Artiest:</strong> {analysisResult?.ocrResults?.artist || 'Onbekend'}</div>
-                  <div><strong>Titel:</strong> {analysisResult?.ocrResults?.title || 'Onbekend'}</div>
-                  <div><strong>Catalogusnummer:</strong> {analysisResult?.ocrResults?.catalog_number || 'Niet gevonden'}</div>
+                  <div><strong>Artiest:</strong> {analysisResult?.ocr_results?.artist || 'Onbekend'}</div>
+                  <div><strong>Titel:</strong> {analysisResult?.ocr_results?.title || 'Onbekend'}</div>
+                  <div><strong>Catalogusnummer:</strong> {analysisResult?.ocr_results?.catalog_number || 'Niet gevonden'}</div>
                   {pendingSaveData && (
                     <>
                       <div><strong>Conditie:</strong> {pendingSaveData.condition}</div>

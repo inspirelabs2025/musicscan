@@ -857,8 +857,23 @@ const VinylScanComplete = () => {
                     </>
                   ) : (
                     <Card>
-                      <CardContent className="pt-6 text-center text-gray-500">
-                        Nog geen Discogs resultaten beschikbaar
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-gray-500 mb-4">
+                          Geen Discogs resultaten gevonden voor catalogusnummer: {analysisResult?.ocr_results?.catalog_number}
+                        </div>
+                        <Button 
+                          onClick={() => retrySearchWithPricing()} 
+                          disabled={isSearching}
+                          variant="outline"
+                          className="gap-2"
+                        >
+                          {isSearching ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <RefreshCcw className="h-4 w-4" />
+                          )}
+                          Opnieuw Zoeken
+                        </Button>
                       </CardContent>
                     </Card>
                   )}

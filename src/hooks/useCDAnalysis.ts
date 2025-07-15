@@ -40,7 +40,7 @@ export const useCDAnalysis = () => {
       const releaseInfo = data.discogsData?.discogs_id ? ` (Release ID: ${data.discogsData.discogs_id})` : '';
       toast({
         title: "CD Analyse Voltooid! 🎉",
-        description: `Gevonden: ${data.ocrResults.artist || 'Onbekend'} - ${data.ocrResults.title || 'Onbekend'}${releaseInfo}`,
+        description: `Gevonden: ${data.ocr_results.artist || 'Onbekend'} - ${data.ocr_results.title || 'Onbekend'}${releaseInfo}`,
         variant: "default"
       });
 

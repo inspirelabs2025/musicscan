@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -33,8 +33,12 @@ export const useDiscogsSearch = () => {
   const [searchResults, setSearchResults] = useState<DiscogsSearchResult[]>([]);
   const [searchStrategies, setSearchStrategies] = useState<string[]>([]);
   const [isPricingRetrying, setIsPricingRetrying] = useState(false);
+  
+  // Mobile-specific tracking to prevent duplicate calls
+  const lastSearchRef = useRef<string>('');
+  const isCallInProgressRef = useRef(false);
 
-  const searchCatalog = async (
+  const searchCatalog = useCallback(async (
     catalogNumber: string,
     artist?: string,
     title?: string,
@@ -49,12 +53,21 @@ export const useDiscogsSearch = () => {
       return null;
     }
 
+    // Mobile-specific deduplication: prevent duplicate calls
+    const searchKey = `${catalogNumber}-${artist}-${title}-${includePricing}`;
+    if (isCallInProgressRef.current || lastSearchRef.current === searchKey) {
+      console.log('🚫 [MOBILE] Duplicate search call prevented:', searchKey);
+      return null;
+    }
+    
+    lastSearchRef.current = searchKey;
+    isCallInProgressRef.current = true;
     setIsSearching(true);
     setSearchResults([]);
     setSearchStrategies([]);
     
     try {
-      console.log('🔍 Starting Discogs search:', { catalogNumber, artist, title, includePricing });
+      console.log('🔍 [MOBILE] Starting Discogs search:', { catalogNumber, artist, title, includePricing, searchKey });
       
       const { data, error } = await supabase.functions.invoke('test-catalog-search', {
         body: {
@@ -118,10 +131,11 @@ export const useDiscogsSearch = () => {
       return null;
     } finally {
       setIsSearching(false);
+      isCallInProgressRef.current = false;
     }
-  };
+  }, []);
 
-  const retryPricing = async (discogsId: number) => {
+  const retryPricing = useCallback(async (discogsId: number) => {
     if (!discogsId) return null;
     
     setIsPricingRetrying(true);
@@ -165,7 +179,7 @@ export const useDiscogsSearch = () => {
     } finally {
       setIsPricingRetrying(false);
     }
-  };
+  }, []);
 
   return {
     isSearching,

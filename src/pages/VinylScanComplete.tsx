@@ -72,12 +72,26 @@ const VinylScanComplete = () => {
 
   // Auto-trigger Discogs search when OCR analysis completes with catalog number
   useEffect(() => {
+    console.log('🔍 [MOBILE] Search trigger useEffect:', {
+      hasCatalog: !!analysisResult?.ocr_results?.catalog_number,
+      isSearching,
+      resultsLength: searchResults.length,
+      mediaType
+    });
+    
     if (analysisResult?.ocr_results?.catalog_number && !isSearching && searchResults.length === 0) {
+      console.log('📱 [MOBILE] Triggering Discogs search...');
       setCurrentStep(3);
       const { artist, title, catalog_number } = analysisResult.ocr_results;
-      searchCatalog(catalog_number, artist, title);
+      
+      // Mobile-specific debounce: add small delay to prevent rapid calls
+      const timeoutId = setTimeout(() => {
+        searchCatalog(catalog_number, artist, title);
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [analysisResult, isSearching, searchResults.length, searchCatalog]);
+  }, [analysisResult?.ocr_results?.catalog_number, isSearching, searchResults.length, searchCatalog]);
 
   // Update step when search completes
   useEffect(() => {

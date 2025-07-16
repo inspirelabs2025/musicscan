@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Hash, ArrowRight, Search } from 'lucide-react';
+import { Hash, ArrowRight, Search, Link } from 'lucide-react';
+import { extractDiscogsIdFromUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,26 +15,47 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
   const [discogsId, setDiscogsId] = useState('');
   const [error, setError] = useState('');
 
-  const validateDiscogsId = (id: string): boolean => {
+  const processInput = (input: string): { id: string | null; error: string | null } => {
+    const trimmedInput = input.trim();
+    
+    if (!trimmedInput) {
+      return { id: null, error: 'Voer een Discogs ID of URL in' };
+    }
+
+    // Try to extract ID from URL first
+    const extractedId = extractDiscogsIdFromUrl(trimmedInput);
+    if (extractedId) {
+      return { id: extractedId.toString(), error: null };
+    }
+
+    // If no ID extracted, check if it's a direct ID
     const idRegex = /^\d+$/;
-    return idRegex.test(id) && parseInt(id) > 0;
+    if (idRegex.test(trimmedInput) && parseInt(trimmedInput) > 0) {
+      return { id: trimmedInput, error: null };
+    }
+
+    // If input looks like a URL but no ID found
+    if (trimmedInput.includes('discogs.com') || trimmedInput.includes('/release/')) {
+      return { id: null, error: 'Geen geldig Discogs ID gevonden in de URL' };
+    }
+
+    return { id: null, error: 'Voer een geldig Discogs ID (bijv. 588618) of URL in' };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!discogsId.trim()) {
-      setError('Voer een Discogs ID in');
+    const { id, error: processError } = processInput(discogsId);
+    
+    if (processError) {
+      setError(processError);
       return;
     }
 
-    if (!validateDiscogsId(discogsId.trim())) {
-      setError('Voer een geldig Discogs ID in (alleen cijfers)');
-      return;
+    if (id) {
+      onSubmit(id);
     }
-
-    onSubmit(discogsId.trim());
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,21 +69,21 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="flex items-center gap-2 justify-center">
-            <Hash className="h-6 w-6" />
-            Discogs ID Invoer
+            <Link className="h-6 w-6" />
+            Discogs ID/URL Invoer
           </CardTitle>
           <CardDescription>
-            Voer direct een Discogs release ID in voor snelle prijscheck
+            Voer een Discogs release ID of URL in voor snelle prijscheck
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="discogs-id">Discogs Release ID</Label>
+              <Label htmlFor="discogs-id">Discogs Release ID of URL</Label>
               <Input
                 id="discogs-id"
                 type="text"
-                placeholder="Bijv. 588618"
+                placeholder="588618 of https://www.discogs.com/release/588618"
                 value={discogsId}
                 onChange={handleInputChange}
                 disabled={isSearching}
@@ -71,7 +93,7 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
                 <p className="text-sm text-destructive">{error}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Je vindt het Discogs ID in de URL: discogs.com/release/<strong>588618</strong>
+                Voer een Discogs ID (bijv. <strong>588618</strong>) of volledige URL in
               </p>
             </div>
             

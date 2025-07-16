@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface ScanResultsProps {
-  analysisResult: any;
+  analysisResult: any | null;
   searchResults: any[];
   searchStrategies: any[];
   mediaType: 'vinyl' | 'cd';
@@ -37,43 +37,84 @@ export const ScanResults = React.memo(({
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* OCR Results */}
-      <Card>
-        <CardHeader>
-          <CardTitle>OCR Scan Resultaten</CardTitle>
-          <CardDescription>Geëxtraheerde informatie uit de foto's</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { label: 'Artist', value: ocr?.artist },
-              { label: 'Titel', value: ocr?.title },
-              { label: 'Label', value: ocr?.label },
-              { label: 'Catalogusnummer', value: ocr?.catalog_number },
-              { label: 'Jaar', value: ocr?.year },
-              { label: 'Genre', value: ocr?.genre },
-              { label: 'Land', value: ocr?.country },
-              ...(mediaType === 'vinyl' ? [{ label: 'Matrix nummer', value: ocr?.matrix_number }] : []),
-              ...(mediaType === 'cd' ? [{ label: 'Barcode', value: ocr?.barcode }] : [])
-            ].filter(item => item.value).map((item, index) => (
-              <div key={index} className="space-y-1">
-                <label className="text-sm font-medium text-muted-foreground">{item.label}</label>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">{item.value}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() => onCopyToClipboard(item.value)}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
+      {/* OCR Results - Only show if we have analysis data */}
+      {analysisResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle>OCR Scan Resultaten</CardTitle>
+            <CardDescription>Geëxtraheerde informatie uit de foto's</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { label: 'Artist', value: ocr?.artist },
+                { label: 'Titel', value: ocr?.title },
+                { label: 'Label', value: ocr?.label },
+                { label: 'Catalogusnummer', value: ocr?.catalog_number },
+                { label: 'Jaar', value: ocr?.year },
+                { label: 'Genre', value: ocr?.genre },
+                { label: 'Land', value: ocr?.country },
+                ...(mediaType === 'vinyl' ? [{ label: 'Matrix nummer', value: ocr?.matrix_number }] : []),
+                ...(mediaType === 'cd' ? [{ label: 'Barcode', value: ocr?.barcode }] : [])
+              ].filter(item => item.value).map((item, index) => (
+                <div key={index} className="space-y-1">
+                  <label className="text-sm font-medium text-muted-foreground">{item.label}</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{item.value}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => onCopyToClipboard(item.value)}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Discogs API Results - Show when no OCR data */}
+      {!analysisResult && firstResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Discogs API Resultaten</CardTitle>
+            <CardDescription>Informatie opgehaald via Discogs release ID</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { label: 'Artist', value: firstResult.artist },
+                { label: 'Titel', value: firstResult.title },
+                { label: 'Label', value: firstResult.label },
+                { label: 'Catalogusnummer', value: firstResult.catalog_number },
+                { label: 'Jaar', value: firstResult.year },
+                { label: 'Genre', value: firstResult.genre },
+                { label: 'Land', value: firstResult.country },
+                { label: 'Format', value: firstResult.format }
+              ].filter(item => item.value).map((item, index) => (
+                <div key={index} className="space-y-1">
+                  <label className="text-sm font-medium text-muted-foreground">{item.label}</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{item.value}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => onCopyToClipboard(item.value)}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Search Results */}
       {firstResult && (

@@ -624,7 +624,7 @@ const VinylScanComplete = () => {
         )}
 
         {/* Results */}
-        {analysisResult && searchResults.length > 0 && (
+        {searchResults.length > 0 && (
           <div className="mb-8">
             <ScanResults 
               analysisResult={analysisResult}

@@ -30,7 +30,78 @@ Deno.serve(async (req) => {
         const html = await response.text();
         console.log(`✅ Retrieved HTML (attempt ${attempt}), length: ${html.length}`);
         
+        // Extract pricing with fallback patterns
+        const extractPricingWithFallback = (html: string) => {
+          // Primary patterns (existing)
+          const primaryPatterns = {
+            lowest_price: [
+              /<span>Lowest:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
+              /Lowest:[\s\n\r]*[€$£]?([\d.,]+)/,
+              /<span>Lowest:<\/span>[\s\n\r]*([\d.,]+)/
+            ],
+            median_price: [
+              /<span>Median:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
+              /Median:[\s\n\r]*[€$£]?([\d.,]+)/,
+              /<span>Median:<\/span>[\s\n\r]*([\d.,]+)/
+            ],
+            highest_price: [
+              /<span>Highest:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
+              /Highest:[\s\n\r]*[€$£]?([\d.,]+)/,
+              /<span>Highest:<\/span>[\s\n\r]*([\d.,]+)/
+            ]
+          };
+          
+          // Fallback patterns (new)
+          const fallbackPatterns = {
+            lowest_price: [
+              /<span>Low:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
+              /Low:[\s\n\r]*[€$£]?([\d.,]+)/,
+              /<span>Low:<\/span>[\s\n\r]*([\d.,]+)/
+            ],
+            median_price: [
+              /<span>Median:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
+              /Median:[\s\n\r]*[€$£]?([\d.,]+)/,
+              /<span>Median:<\/span>[\s\n\r]*([\d.,]+)/
+            ],
+            highest_price: [
+              /<span>High:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
+              /High:[\s\n\r]*[€$£]?([\d.,]+)/,
+              /<span>High:<\/span>[\s\n\r]*([\d.,]+)/
+            ]
+          };
+          
+          const extractPrice = (priceType: keyof typeof primaryPatterns) => {
+            // Try primary patterns first
+            for (const pattern of primaryPatterns[priceType]) {
+              const match = html.match(pattern);
+              if (match?.[1]) {
+                console.log(`💰 Found ${priceType} using primary pattern: ${match[1]}`);
+                return match[1];
+              }
+            }
+            
+            // Try fallback patterns
+            for (const pattern of fallbackPatterns[priceType]) {
+              const match = html.match(pattern);
+              if (match?.[1]) {
+                console.log(`💰 Found ${priceType} using fallback pattern: ${match[1]}`);
+                return match[1];
+              }
+            }
+            
+            console.log(`💰 No ${priceType} found in either pattern set`);
+            return null;
+          };
+          
+          return {
+            lowest_price: extractPrice('lowest_price'),
+            median_price: extractPrice('median_price'),
+            highest_price: extractPrice('highest_price')
+          };
+        };
+        
         // Extract statistics using HTML-aware regex patterns
+        const pricingData = extractPricingWithFallback(html);
         const stats = {
           have_count: parseInt(html.match(/<span>Have:<\/span>\s*<a[^>]*>(\d+)<\/a>/)?.[1] || 
                 html.match(/Have:\s?(\d+)/)?.[1] || '0'),
@@ -42,15 +113,7 @@ Deno.serve(async (req) => {
                         html.match(/Ratings:\s?(\d+)/)?.[1] || '0'),
           last_sold: html.match(/<span>Last Sold:<\/span>\s*<a[^>]*>([0-9]{2} \w{3} \d{2})<\/a>/)?.[1] || 
                      html.match(/Last Sold:\s?([0-9]{2} \w{3} \d{2})/)?.[1] || null,
-          lowest_price: html.match(/<span>Lowest:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
-                        html.match(/Lowest:[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
-                        html.match(/<span>Lowest:<\/span>[\s\n\r]*([\d.,]+)/)?.[1] || null,
-          median_price: html.match(/<span>Median:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
-                        html.match(/Median:[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
-                        html.match(/<span>Median:<\/span>[\s\n\r]*([\d.,]+)/)?.[1] || null,
-          highest_price: html.match(/<span>Highest:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
-                         html.match(/Highest:[\s\n\r]*[€$£]?([\d.,]+)/)?.[1] || 
-                         html.match(/<span>Highest:<\/span>[\s\n\r]*([\d.,]+)/)?.[1] || null
+          ...pricingData
         };
 
         console.log(`📊 Extracted stats (attempt ${attempt}):`, stats);

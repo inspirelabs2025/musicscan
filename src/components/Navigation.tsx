@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Archive, Menu, X } from "lucide-react";
+import { Home, ShoppingCart, Archive, Menu, X, Images } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 const navigationItems = [
   { title: "Home", url: "/", icon: Home },
+  { title: "Bulk Scan", url: "/bulkerimage", icon: Images },
   { title: "Marketplace", url: "/marketplace-overview", icon: ShoppingCart },
   { title: "Collection", url: "/collection-overview", icon: Archive }
 ];

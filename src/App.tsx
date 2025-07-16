@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import CatalogTest from "./pages/CatalogTest";
 import VinylScanComplete from "./pages/VinylScanComplete";
+import BulkerImage from "./pages/BulkerImage";
 import MarketplaceOverview from "./pages/MarketplaceOverview";
 import CollectionOverview from "./pages/CollectionOverview";
 import NotFound from "./pages/NotFound";
@@ -21,6 +22,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<VinylScanComplete />} />
+          <Route path="/bulkerimage" element={<BulkerImage />} />
           <Route path="/catalog-test" element={<CatalogTest />} />
           <Route path="/index" element={<Index />} />
           <Route path="/marketplace-overview" element={<MarketplaceOverview />} />

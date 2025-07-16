@@ -8,6 +8,11 @@ interface MediaTypeSelectorProps {
 }
 
 export const MediaTypeSelector = React.memo(({ onSelectMediaType }: MediaTypeSelectorProps) => {
+  const handleClick = (type: 'vinyl' | 'cd') => {
+    console.log('MediaTypeSelector clicked:', type);
+    onSelectMediaType(type);
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
@@ -25,7 +30,7 @@ export const MediaTypeSelector = React.memo(({ onSelectMediaType }: MediaTypeSel
             <Button
               variant="outline"
               className="h-24 flex flex-col gap-2"
-              onClick={() => onSelectMediaType('vinyl')}
+              onClick={() => handleClick('vinyl')}
             >
               <Disc3 className="h-8 w-8" />
               <span className="font-medium">Vinyl</span>
@@ -34,7 +39,7 @@ export const MediaTypeSelector = React.memo(({ onSelectMediaType }: MediaTypeSel
             <Button
               variant="outline"
               className="h-24 flex flex-col gap-2"
-              onClick={() => onSelectMediaType('cd')}
+              onClick={() => handleClick('cd')}
             >
               <Disc3 className="h-8 w-8" />
               <span className="font-medium">CD</span>

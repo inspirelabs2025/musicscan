@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, ShoppingCart, Archive, Menu, X, Images } from "lucide-react";
 import {
@@ -25,29 +25,32 @@ export function Navigation() {
   const currentPath = location.pathname;
   const [isOpen, setIsOpen] = useState(false);
 
-  const NavLink = ({ item, mobile = false }: { item: typeof navigationItems[0], mobile?: boolean }) => {
-    const isActive = currentPath === item.url;
-    const Icon = item.icon;
-    
-    return (
-      <Link
-        to={item.url}
-        onClick={() => mobile && setIsOpen(false)}
-        className={cn(
-          mobile 
-            ? "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary" 
-            : "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
-          isActive && (mobile 
-            ? "bg-muted text-primary" 
-            : "bg-accent text-accent-foreground")
-        )}
-      >
-        <Icon className={cn("h-4 w-4", mobile ? "" : "mr-2")} />
-        {mobile && <span className="text-base">{item.title}</span>}
-        {!mobile && item.title}
-      </Link>
-    );
-  };
+  const NavLink = React.forwardRef<HTMLAnchorElement, { item: typeof navigationItems[0], mobile?: boolean }>(
+    ({ item, mobile = false }, ref) => {
+      const isActive = currentPath === item.url;
+      const Icon = item.icon;
+      
+      return (
+        <Link
+          ref={ref}
+          to={item.url}
+          onClick={() => mobile && setIsOpen(false)}
+          className={cn(
+            mobile 
+              ? "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary" 
+              : "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
+            isActive && (mobile 
+              ? "bg-muted text-primary" 
+              : "bg-accent text-accent-foreground")
+          )}
+        >
+          <Icon className={cn("h-4 w-4", mobile ? "" : "mr-2")} />
+          {mobile && <span className="text-base">{item.title}</span>}
+          {!mobile && item.title}
+        </Link>
+      );
+    }
+  );
 
   return (
     <>

@@ -52,10 +52,10 @@ export const useVinylAnalysis = () => {
       setAnalysisResult(data);
       
       // Show success with more details about missing data
-      const missingBarcode = !data.ocr_results.barcode;
+      const missingBarcode = !data.analysis?.barcode;
       const successMessage = missingBarcode 
-        ? `Gevonden: ${data.ocr_results.artist || 'Onbekend'} - ${data.ocr_results.title || 'Onbekend'} (geen barcode gevonden)`
-        : `Gevonden: ${data.ocr_results.artist || 'Onbekend'} - ${data.ocr_results.title || 'Onbekend'}`;
+        ? `Gevonden: ${data.analysis?.artist || 'Onbekend'} - ${data.analysis?.title || 'Onbekend'} (geen barcode gevonden)`
+        : `Gevonden: ${data.analysis?.artist || 'Onbekend'} - ${data.analysis?.title || 'Onbekend'}`;
 
       toast({
         title: "OCR Analyse Voltooid! 🎉",

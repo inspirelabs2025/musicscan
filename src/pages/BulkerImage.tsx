@@ -113,8 +113,8 @@ const BulkerImage = () => {
 
   // Auto-trigger Discogs search when OCR analysis completes - now barcode optional
   useEffect(() => {
-    if (analysisResult?.ocr_results && !isSearching && searchResults.length === 0) {
-      const { artist, title, catalog_number } = analysisResult.ocr_results;
+    if (analysisResult?.analysis && !isSearching && searchResults.length === 0) {
+      const { artist, title, catalog_number } = analysisResult.analysis;
       
       // Check if we have enough data to search (catalog_number OR artist+title)
       if (catalog_number?.trim() || (artist?.trim() && title?.trim())) {
@@ -129,7 +129,7 @@ const BulkerImage = () => {
         console.log('⚠️ Not enough data for Discogs search - need catalog_number OR artist+title');
       }
     }
-  }, [analysisResult?.ocr_results, isSearching, searchResults.length, searchCatalog]);
+  }, [analysisResult?.analysis, isSearching, searchResults.length, searchCatalog]);
 
   // Update step when search completes
   useEffect(() => {
@@ -188,7 +188,7 @@ const BulkerImage = () => {
   }, [state.mediaType]);
 
   const performSave = useCallback(async (condition: string, advicePrice: number) => {
-    if (!analysisResult?.ocr_results || !state.mediaType) return;
+    if (!analysisResult?.analysis || !state.mediaType) return;
     
     dispatch({ type: 'SET_IS_SAVING_CONDITION', payload: true });
 
@@ -211,8 +211,8 @@ const BulkerImage = () => {
         return cleanOcr;
       };
       
-      const bestArtist = getBestData(searchResults[0]?.artist, analysisResult.ocr_results.artist);
-      const bestTitle = getBestData(searchResults[0]?.title, analysisResult.ocr_results.title);
+      const bestArtist = getBestData(searchResults[0]?.artist, analysisResult.analysis.artist);
+      const bestTitle = getBestData(searchResults[0]?.title, analysisResult.analysis.title);
       
       console.log('💾 Saving with artist:', bestArtist, 'title:', bestTitle);
       
@@ -220,15 +220,15 @@ const BulkerImage = () => {
         catalog_image: state.uploadedFiles[0],
         matrix_image: state.uploadedFiles[1], 
         additional_image: state.uploadedFiles[2],
-        catalog_number: analysisResult.ocr_results.catalog_number,
-        matrix_number: analysisResult.ocr_results.matrix_number,
+        catalog_number: analysisResult.analysis.catalog_number,
+        matrix_number: analysisResult.analysis.matrix_number,
         artist: bestArtist,
         title: bestTitle,
-        year: analysisResult.ocr_results.year ? parseInt(analysisResult.ocr_results.year) : null,
+        year: analysisResult.analysis.year ? parseInt(analysisResult.analysis.year) : null,
         format: 'Vinyl',
-        label: analysisResult.ocr_results.label,
-        genre: analysisResult.ocr_results.genre,
-        country: analysisResult.ocr_results.country,
+        label: analysisResult.analysis.label,
+        genre: analysisResult.analysis.genre,
+        country: analysisResult.analysis.country,
         condition_grade: condition,
         calculated_advice_price: advicePrice,
         discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
@@ -241,15 +241,15 @@ const BulkerImage = () => {
         back_image: state.uploadedFiles[1],
         barcode_image: state.uploadedFiles[2],
         matrix_image: state.uploadedFiles[3],
-        barcode_number: analysisResult.ocr_results.barcode,
+        barcode_number: analysisResult.analysis.barcode,
         artist: bestArtist,
         title: bestTitle,
-        label: analysisResult.ocr_results.label,
-        catalog_number: analysisResult.ocr_results.catalog_number,
-        year: analysisResult.ocr_results.year,
+        label: analysisResult.analysis.label,
+        catalog_number: analysisResult.analysis.catalog_number,
+        year: analysisResult.analysis.year,
         format: 'CD',
-        genre: analysisResult.ocr_results.genre,
-        country: analysisResult.ocr_results.country,
+        genre: analysisResult.analysis.genre,
+        country: analysisResult.analysis.country,
         condition_grade: condition,
         calculated_advice_price: advicePrice,
         discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
@@ -287,9 +287,9 @@ const BulkerImage = () => {
 
   const saveFinalScan = useCallback(async (condition: string, advicePrice: number) => {
     console.log('🚀 saveFinalScan called with condition:', condition, 'advicePrice:', advicePrice);
-    if (!analysisResult?.ocr_results || !state.mediaType) return;
+    if (!analysisResult?.analysis || !state.mediaType) return;
 
-    const { artist, title, catalog_number } = analysisResult.ocr_results;
+    const { artist, title, catalog_number } = analysisResult.analysis;
     const duplicates = await checkForDuplicates(artist || '', title || '', catalog_number || '');
     
     if (duplicates.length > 0) {
@@ -365,9 +365,9 @@ const BulkerImage = () => {
   }, [setVinylAnalysisResult, setCDAnalysisResult, setSearchResults, resetSearchState, clearCache]);
 
   const retrySearchWithPricing = useCallback(async () => {
-    if (!analysisResult?.ocr_results?.catalog_number) return;
+    if (!analysisResult?.analysis?.catalog_number) return;
     
-    const { artist, title, catalog_number } = analysisResult.ocr_results;
+    const { artist, title, catalog_number } = analysisResult.analysis;
     setSearchResults([]);
     resetSearchState();
     dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });

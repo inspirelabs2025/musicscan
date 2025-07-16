@@ -19,9 +19,9 @@ export const ManualSearch: React.FC<ManualSearchProps> = ({
   mediaType
 }) => {
   const [searchQuery, setSearchQuery] = useState({
-    artist: analysisResult?.ocr_results?.artist || '',
-    title: analysisResult?.ocr_results?.title || '',
-    catalog: analysisResult?.ocr_results?.catalog_number || ''
+    artist: analysisResult?.analysis?.artist || '',
+    title: analysisResult?.analysis?.title || '',
+    catalog: analysisResult?.analysis?.catalog_number || ''
   });
   
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -74,28 +74,28 @@ export const ManualSearch: React.FC<ManualSearchProps> = ({
           <h4 className="font-semibold text-sm">Detected Info:</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
             <div className="flex items-center gap-2">
-              {analysisResult?.ocr_results?.artist ? (
+              {analysisResult?.analysis?.artist ? (
                 <CheckCircle className="h-4 w-4 text-green-500" />
               ) : (
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
               )}
-              <span>Artist: {analysisResult?.ocr_results?.artist || 'Missing'}</span>
+              <span>Artist: {analysisResult?.analysis?.artist || 'Missing'}</span>
             </div>
             <div className="flex items-center gap-2">
-              {analysisResult?.ocr_results?.title ? (
+              {analysisResult?.analysis?.title ? (
                 <CheckCircle className="h-4 w-4 text-green-500" />
               ) : (
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
               )}
-              <span>Title: {analysisResult?.ocr_results?.title || 'Missing'}</span>
+              <span>Title: {analysisResult?.analysis?.title || 'Missing'}</span>
             </div>
             <div className="flex items-center gap-2">
-              {analysisResult?.ocr_results?.catalog_number ? (
+              {analysisResult?.analysis?.catalog_number ? (
                 <CheckCircle className="h-4 w-4 text-green-500" />
               ) : (
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
               )}
-              <span>Catalog: {analysisResult?.ocr_results?.catalog_number || 'Missing'}</span>
+              <span>Catalog: {analysisResult?.analysis?.catalog_number || 'Missing'}</span>
             </div>
           </div>
         </div>
@@ -137,7 +137,7 @@ export const ManualSearch: React.FC<ManualSearchProps> = ({
         </div>
 
         {/* Quick fix suggestions */}
-        {analysisResult?.ocr_results && (
+        {analysisResult?.analysis && (
           <div className="space-y-2">
             <Button
               variant="ghost"

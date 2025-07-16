@@ -32,7 +32,7 @@ export const ScanResults = React.memo(({
     return <Badge variant="secondary" className="bg-destructive/10 text-destructive">Hoog</Badge>;
   }, []);
 
-  const ocr = analysisResult?.ocr_results;
+  const ocr = analysisResult?.analysis;
   const firstResult = searchResults[0];
 
   return (

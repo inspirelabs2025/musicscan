@@ -51,10 +51,10 @@ export const useCDAnalysis = () => {
       setAnalysisResult(data);
       
       const releaseInfo = data.discogsData?.discogs_id ? ` (Release ID: ${data.discogsData.discogs_id})` : '';
-      const matrixInfo = data.ocr_results.matrix_number ? ` | Matrix: ${data.ocr_results.matrix_number}` : '';
+      const matrixInfo = data.analysis?.matrix_number ? ` | Matrix: ${data.analysis.matrix_number}` : '';
       toast({
         title: "CD Analyse Voltooid! 🎉",
-        description: `Gevonden: ${data.ocr_results.artist || 'Onbekend'} - ${data.ocr_results.title || 'Onbekend'}${releaseInfo}${matrixInfo}`,
+        description: `Gevonden: ${data.analysis?.artist || 'Onbekend'} - ${data.analysis?.title || 'Onbekend'}${releaseInfo}${matrixInfo}`,
         variant: "default"
       });
 

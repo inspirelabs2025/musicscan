@@ -105,43 +105,132 @@ Deno.serve(async (req) => {
     // Handle direct Discogs ID requests
     if (direct_discogs_id) {
       const scraperApiKey = Deno.env.get('SCRAPERAPI_KEY');
+      
+      // Get Discogs credentials for API call
+      const discogsToken = Deno.env.get('DISCOGS_TOKEN');
+      const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
+      const discogsConsumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET');
+      
       if (!scraperApiKey) {
         return new Response(
           JSON.stringify({ error: 'ScraperAPI key not available for direct Discogs ID search' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      
+      if (!discogsToken && (!discogsConsumerKey || !discogsConsumerSecret)) {
+        return new Response(
+          JSON.stringify({ error: 'Discogs API credentials not available for release metadata' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
       const discogsUrl = `https://www.discogs.com/release/${direct_discogs_id}`;
       const sellUrl = `https://www.discogs.com/sell/release/${direct_discogs_id}`;
+      const apiUrl = `https://api.discogs.com/releases/${direct_discogs_id}`;
       
       console.log(`🆔 Direct Discogs ID search for: ${direct_discogs_id}`);
       
-      const pricingStats = await scrapePricingStatsWithRetry(sellUrl, scraperApiKey);
+      // Determine authentication method
+      const authHeaders = discogsToken 
+        ? { 'Authorization': `Discogs token=${discogsToken}` }
+        : { 'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}` };
       
-      // Create a basic result with the Discogs ID
-      const result = {
-        discogs_id: direct_discogs_id,
-        discogs_url: discogsUrl,
-        sell_url: sellUrl,
-        api_url: `https://api.discogs.com/releases/${direct_discogs_id}`,
-        title: '',
-        artist: '',
-        year: '',
-        similarity_score: 1.0,
-        search_strategy: 'Direct Discogs ID',
-        catalog_number: '',
-        pricing_stats: pricingStats
-      };
+      try {
+        // Fetch full release metadata from Discogs API
+        console.log(`📡 Fetching release metadata from Discogs API...`);
+        const apiResponse = await fetch(apiUrl, {
+          headers: {
+            ...authHeaders,
+            'User-Agent': 'VinylScanner/2.0'
+          }
+        });
 
-      return new Response(
-        JSON.stringify({
-          results: [result],
-          search_strategies: ['Direct Discogs ID'],
-          total_found: 1
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        if (!apiResponse.ok) {
+          console.error(`❌ Discogs API failed: ${apiResponse.status}`);
+          return new Response(
+            JSON.stringify({ error: `Failed to fetch release metadata: ${apiResponse.status}` }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const releaseData = await apiResponse.json();
+        console.log(`✅ Retrieved release metadata: ${releaseData.title}`);
+        
+        // Determine media type from format
+        const formats = releaseData.formats || [];
+        let mediaType = 'vinyl'; // default
+        
+        for (const format of formats) {
+          const formatName = format.name?.toLowerCase() || '';
+          if (formatName.includes('cd') || formatName.includes('compact disc')) {
+            mediaType = 'cd';
+            break;
+          } else if (formatName.includes('vinyl') || formatName.includes('lp') || formatName.includes('12"') || formatName.includes('7"')) {
+            mediaType = 'vinyl';
+            break;
+          }
+        }
+        
+        console.log(`🎵 Detected media type: ${mediaType}`);
+        
+        // Fetch pricing stats
+        const pricingStats = await scrapePricingStatsWithRetry(sellUrl, scraperApiKey);
+        
+        // Create complete result with full metadata
+        const result = {
+          discogs_id: direct_discogs_id,
+          discogs_url: discogsUrl,
+          sell_url: sellUrl,
+          api_url: apiUrl,
+          title: releaseData.title || '',
+          artist: releaseData.artists?.map((a: any) => a.name).join(', ') || '',
+          year: releaseData.year?.toString() || '',
+          label: releaseData.labels?.map((l: any) => l.name).join(', ') || '',
+          catalog_number: releaseData.labels?.[0]?.catno || '',
+          genre: releaseData.genres?.join(', ') || '',
+          style: releaseData.styles?.join(', ') || '',
+          country: releaseData.country || '',
+          format: formats.map((f: any) => f.name).join(', '),
+          format_details: formats.map((f: any) => 
+            [f.name, ...(f.descriptions || [])].join(' ')
+          ).join(', '),
+          media_type: mediaType,
+          similarity_score: 1.0,
+          search_strategy: 'Direct Discogs ID',
+          pricing_stats: pricingStats,
+          // Include original release data for debugging
+          release_metadata: {
+            master_id: releaseData.master_id,
+            data_quality: releaseData.data_quality,
+            thumb: releaseData.thumb,
+            images: releaseData.images,
+            tracklist: releaseData.tracklist
+          }
+        };
+
+        console.log(`✅ Complete release data prepared for: ${result.artist} - ${result.title}`);
+
+        return new Response(
+          JSON.stringify({
+            results: [result],
+            search_strategies: ['Direct Discogs ID'],
+            total_found: 1,
+            media_type: mediaType
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+        
+      } catch (error) {
+        console.error(`❌ Direct Discogs ID search failed:`, error);
+        return new Response(
+          JSON.stringify({ 
+            error: `Direct Discogs ID search failed: ${error.message}`,
+            discogs_id: direct_discogs_id
+          }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     if (!catalog_number) {

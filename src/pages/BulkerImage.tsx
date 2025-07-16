@@ -484,7 +484,7 @@ const BulkerImage = () => {
         ) : (
           <div className="space-y-6">
             {/* Step 1: Media Type Selection */}
-            {state.currentStep === 1 && (
+            {!state.mediaType && (
               <MediaTypeSelector 
                 onSelectMediaType={handleMediaTypeSelect}
               />

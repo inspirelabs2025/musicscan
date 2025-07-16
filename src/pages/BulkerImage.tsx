@@ -435,228 +435,230 @@ const BulkerImage = () => {
         {/* Progress Bar */}
         <div className="mb-8">
           <Progress value={getProgress} className="h-2" />
-          <div className="flex justify-between mt-2 text-sm text-gray-600">
-            <span className={state.currentStep >= 1 ? "text-blue-600 font-semibold" : ""}>Media Type</span>
-            <span className={state.currentStep >= 2 ? "text-blue-600 font-semibold" : ""}>Upload</span>
-            <span className={state.currentStep >= 3 ? "text-blue-600 font-semibold" : ""}>Analysis</span>
-            <span className={state.currentStep >= 4 ? "text-blue-600 font-semibold" : ""}>Results</span>
+          <div className="flex justify-between text-xs text-muted-foreground mt-2">
+            <span>Media Type</span>
+            <span>Upload</span>
+            <span>Analyse</span>
+            <span>Prijzen</span>
           </div>
         </div>
 
-        {state.completedScanData ? (
-          <Card className="bg-green-50 border-green-200">
-            <CardHeader>
-              <CardTitle className="text-green-800 flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                Scan Succesvol Voltooid! 
-              </CardTitle>
-              <CardDescription className="text-green-700">
-                {state.mediaType === 'vinyl' ? 'LP' : 'CD'} is opgeslagen in je collectie met adviesprijs: €{state.calculatedAdvicePrice?.toFixed(2)}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <p><strong>Artiest:</strong> {state.completedScanData.artist}</p>
-                  <p><strong>Titel:</strong> {state.completedScanData.title}</p>
-                  <p><strong>Label:</strong> {state.completedScanData.label}</p>
-                  <p><strong>Catalogusnummer:</strong> {state.completedScanData.catalog_number}</p>
-                </div>
-                <div>
-                  <p><strong>Jaar:</strong> {state.completedScanData.year}</p>
-                  <p><strong>Genre:</strong> {state.completedScanData.genre}</p>
-                  <p><strong>Land:</strong> {state.completedScanData.country}</p>
-                  <p><strong>Conditie:</strong> {state.completedScanData.condition_grade}</p>
-                </div>
+        {/* Media Type Selection */}
+        {!state.mediaType && (
+          <div className="mb-8">
+            <MediaTypeSelector onSelectMediaType={handleMediaTypeSelect} />
+          </div>
+        )}
+
+        {/* Upload Section */}
+        {state.mediaType && (
+          <div className="mb-8">
+            <UploadSection 
+              mediaType={state.mediaType}
+              uploadedFiles={state.uploadedFiles}
+              onFileUploaded={handleFileUploaded}
+              isAnalyzing={isAnalyzing}
+            />
+          </div>
+        )}
+
+        {/* Loading States */}
+        {isAnalyzing && (
+          <Card className="mb-8">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span>OCR analyse bezig...</span>
               </div>
-              <div className="flex gap-2">
-                <Button onClick={resetScan} variant="outline" className="flex-1">
-                  <RefreshCcw className="h-4 w-4 mr-2" />
-                  Nieuwe Scan
-                </Button>
-                <Button onClick={() => navigate('/collection-overview')} className="flex-1">
-                  <Archive className="h-4 w-4 mr-2" />
-                  Bekijk Collectie
-                </Button>
+              <div className="text-sm text-muted-foreground mt-2">
+                Dit kan tot 60 seconden duren. Barcode is optioneel.
               </div>
             </CardContent>
           </Card>
-        ) : (
-          <div className="space-y-6">
-            {/* Step 1: Media Type Selection */}
-            {!state.mediaType && (
-              <MediaTypeSelector 
-                onSelectMediaType={handleMediaTypeSelect}
-              />
-            )}
+        )}
 
-            {/* Step 2: Upload Section */}
-            {state.currentStep >= 2 && state.mediaType && (
-              <UploadSection 
-                mediaType={state.mediaType}
-                uploadedFiles={state.uploadedFiles}
-                onFileUploaded={handleFileUploaded}
-                isAnalyzing={isAnalyzing}
-              />
-            )}
+        {isSearching && (
+          <Card className="mb-8">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span>Discogs zoeken...</span>
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                Zoeken naar matching releases en prijzen...
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-            {/* Loading State for Analysis */}
-            {isAnalyzing && (
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-center space-x-2">
-                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                    <span className="text-lg font-medium">Bezig met OCR analyse...</span>
-                  </div>
-                  <p className="text-center text-gray-600 mt-2">
-                    De afbeeldingen worden geanalyseerd om tekst te herkennen
+        {/* Error Recovery Section */}
+        {state.mediaType && state.uploadedFiles.length > 0 && !isAnalyzing && !analysisResult && !isSearching && (
+          <Card className="mb-8 border-amber-200 bg-amber-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-900 mb-2">
+                    Analyse problemen?
+                  </h3>
+                  <p className="text-sm text-amber-800 mb-4">
+                    Als de analyse is vastgelopen of een timeout heeft, probeer dan:
                   </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Analysis Error Recovery */}
-            {analysisResult && analysisResult.error && (
-              <Card className="border-red-200 bg-red-50">
-                <CardHeader>
-                  <CardTitle className="text-red-800 flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
-                    OCR Analyse Mislukt
-                  </CardTitle>
-                  <CardDescription className="text-red-700">
-                    Er is een fout opgetreden tijdens de analyse van de afbeeldingen.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-red-100 p-3 rounded-md mb-4">
-                    <p className="text-sm text-red-800">{analysisResult.error}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={retryAnalysis} variant="outline" size="sm">
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={retryAnalysis}
+                      variant="outline"
+                      size="sm"
+                      className="bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300"
+                    >
                       <RefreshCcw className="h-4 w-4 mr-2" />
-                      Opnieuw Proberen
+                      Analyse Opnieuw
                     </Button>
-                    <Button onClick={resetScan} variant="outline" size="sm">
-                      <Camera className="h-4 w-4 mr-2" />
-                      Nieuwe Foto's
+                    <Button 
+                      onClick={resetScan}
+                      variant="outline"
+                      size="sm"
+                      className="bg-red-100 hover:bg-red-200 text-red-900 border-red-300 ml-2"
+                    >
+                      <RefreshCcw className="h-4 w-4 mr-2" />
+                      Volledige Reset
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                  <div className="text-xs text-amber-700 mt-2">
+                    💡 Tip: Zorg dat foto's helder zijn en probeer opnieuw als het vastloopt
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-            {/* Step 3: Search Results */}
-            {analysisResult && !analysisResult.error && (
-              <>
-                {/* Loading State for Search */}
-                {isSearching && (
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-center space-x-2">
-                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                        <span className="text-lg font-medium">Zoeken op Discogs...</span>
-                      </div>
-                      <p className="text-center text-gray-600 mt-2">
-                        Bezig met zoeken naar het album en prijsinformatie
-                      </p>
-                      {searchStrategies && searchStrategies.length > 0 && (
-                        <div className="mt-4 space-y-2">
-                          <p className="text-sm text-gray-600 text-center">Zoekstrategieën gebruikt:</p>
-                          <div className="flex flex-wrap justify-center gap-2">
-                            {searchStrategies.map((strategy, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {strategy}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Retry Search Pricing */}
-                {searchResults.length > 0 && !searchResults[0]?.pricing_stats && !isSearching && (
-                  <Card className="border-yellow-200 bg-yellow-50">
-                    <CardHeader>
-                      <CardTitle className="text-yellow-800 flex items-center gap-2">
-                        <AlertTriangle className="h-5 w-5" />
-                        Prijsinformatie Niet Gevonden
-                      </CardTitle>
-                      <CardDescription className="text-yellow-700">
-                        Het album is gevonden, maar er is geen prijsinformatie beschikbaar.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={retrySearchWithPricing} 
-                          variant="outline" 
-                          size="sm"
-                          disabled={isPricingRetrying}
-                        >
-                          {isPricingRetrying ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <RefreshCcw className="h-4 w-4 mr-2" />
-                          )}
-                          Opnieuw Zoeken met Prijzen
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Search Error Recovery */}
-                {!isSearching && searchResults.length === 0 && analysisResult?.ocr_results && (
-                  <Card className="border-orange-200 bg-orange-50">
-                    <CardHeader>
-                      <CardTitle className="text-orange-800 flex items-center gap-2">
-                        <Search className="h-5 w-5" />
-                        Geen Resultaten Gevonden
-                      </CardTitle>
-                      <CardDescription className="text-orange-700">
-                        Automatische zoekopdracht heeft geen resultaten opgeleverd. Probeer handmatig zoeken.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ManualSearch 
-                        analysisResult={analysisResult}
-                        onResultsFound={setSearchResults}
-                        mediaType={state.mediaType}
-                      />
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Scan Results */}
-                {searchResults.length > 0 && (
-                  <ScanResults 
-                    searchResults={searchResults}
-                    analysisResult={analysisResult}
-                    searchStrategies={searchStrategies}
-                    mediaType={state.mediaType}
-                    onCopyToClipboard={copyToClipboard}
-                    onRetryPricing={handleRetryPricing}
-                    isPricingRetrying={isPricingRetrying}
-                  />
-                )}
-
-                {/* Step 4: Condition Selection */}
-                {searchResults.length > 0 && searchResults[0]?.pricing_stats && (
-                  <ConditionSelector 
-                    mediaType={state.mediaType}
-                    onConditionChange={handleConditionChange}
-                    selectedCondition={state.selectedCondition}
-                    lowestPrice={searchResults[0]?.pricing_stats?.lowest_price}
-                    onSave={handleSave}
-                    isSaving={state.isSavingCondition}
-                    calculatedAdvicePrice={state.calculatedAdvicePrice}
-                  />
-                )}
-              </>
-            )}
+        {/* Search Error Recovery */}
+        {analysisResult && !isSearching && searchResults.length === 0 && (
+          <div className="mb-8 space-y-4">
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <Search className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-blue-900 mb-2">
+                      Geen Discogs resultaten
+                    </h3>
+                    <p className="text-sm text-blue-800 mb-4">
+                      Geen matching releases gevonden. Dit kan gebeuren als:
+                    </p>
+                    <ul className="text-sm text-blue-800 mb-4 space-y-1">
+                      <li>• Barcode ontbreekt (niet fataal)</li>
+                      <li>• Catalogusnummer onduidelijk is</li>
+                      <li>• Release niet op Discogs staat</li>
+                      <li>• Zoeken is getimed out</li>
+                    </ul>
+                    <div className="space-y-2">
+                      <Button 
+                        onClick={retrySearchWithPricing}
+                        variant="outline"
+                        size="sm"
+                        className="bg-blue-100 hover:bg-blue-200 text-blue-900 border-blue-300"
+                      >
+                        <Search className="h-4 w-4 mr-2" />
+                        Zoeken Opnieuw
+                      </Button>
+                      <Button 
+                        onClick={retryAnalysis}
+                        variant="outline"
+                        size="sm"
+                        className="bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 ml-2"
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Analyse Opnieuw
+                      </Button>
+                    </div>
+                    <div className="text-xs text-blue-700 mt-2">
+                      💡 Tip: Controleer of artiest/titel correct zijn gedetecteerd
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Manual Search Component */}
+            <ManualSearch 
+              analysisResult={analysisResult}
+              onResultsFound={setSearchResults}
+              mediaType={state.mediaType!}
+            />
           </div>
+        )}
+
+        {/* Results */}
+        {analysisResult && searchResults.length > 0 && (
+          <div className="mb-8">
+            <ScanResults 
+              analysisResult={analysisResult}
+              searchResults={searchResults}
+              searchStrategies={searchStrategies}
+              mediaType={state.mediaType!}
+              onCopyToClipboard={copyToClipboard}
+              onRetryPricing={retrySearchWithPricing}
+              isPricingRetrying={isPricingRetrying}
+            />
+          </div>
+        )}
+
+        {/* Condition Selector - Only show when Discogs search is complete AND has pricing */}
+        {!isAnalyzing && !isSearching && searchResults.length > 0 && searchResults[0]?.pricing_stats?.lowest_price && (
+          <div className="mb-8">
+            <ConditionSelector
+              mediaType={state.mediaType!}
+              selectedCondition={state.selectedCondition}
+              lowestPrice={searchResults[0]?.pricing_stats?.lowest_price}
+              calculatedAdvicePrice={state.calculatedAdvicePrice}
+              isSaving={state.isSavingCondition}
+              onConditionChange={handleConditionChange}
+              onSave={handleSave}
+            />
+          </div>
+        )}
+
+        {/* Loading indicator specifically for condition selector availability */}
+        {analysisResult && searchResults.length > 0 && (isAnalyzing || isSearching) && (
+          <Card className="w-full max-w-4xl mb-8">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center space-x-3">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <p className="text-lg font-medium">Voltooien van analyse...</p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2 text-center">
+                De OPSLAAN knop wordt beschikbaar zodra alle gegevens zijn verwerkt.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Warning if search results exist but no pricing data */}
+        {!isAnalyzing && !isSearching && searchResults.length > 0 && !searchResults[0]?.pricing_stats?.lowest_price && (
+          <Card className="w-full max-w-4xl mb-8 border-amber-200 bg-amber-50">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <AlertTriangle className="h-6 w-6 text-amber-600" />
+                <div>
+                  <p className="font-medium text-amber-800">Geen prijsgegevens beschikbaar</p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    Er zijn zoekresultaten gevonden, maar geen prijsinformatie. Probeer opnieuw te zoeken of controleer de gegevens.
+                  </p>
+                  <Button 
+                    onClick={retrySearchWithPricing}
+                    variant="outline"
+                    size="sm"
+                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 mt-3"
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    Opnieuw Zoeken
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Duplicate Warning Dialog */}

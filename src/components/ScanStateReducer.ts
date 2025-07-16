@@ -9,6 +9,8 @@ export interface ScanState {
   duplicateRecords: any[];
   showDuplicateDialog: boolean;
   pendingSaveData: { condition: string; advicePrice: number } | null;
+  discogsIdMode: boolean;
+  directDiscogsId: string | null;
 }
 
 export type ScanAction =
@@ -22,6 +24,8 @@ export type ScanAction =
   | { type: 'SET_DUPLICATE_RECORDS'; payload: any[] }
   | { type: 'SET_SHOW_DUPLICATE_DIALOG'; payload: boolean }
   | { type: 'SET_PENDING_SAVE_DATA'; payload: { condition: string; advicePrice: number } | null }
+  | { type: 'SET_DISCOGS_ID_MODE'; payload: boolean }
+  | { type: 'SET_DIRECT_DISCOGS_ID'; payload: string | null }
   | { type: 'RESET_SCAN' };
 
 export const initialScanState: ScanState = {
@@ -35,6 +39,8 @@ export const initialScanState: ScanState = {
   duplicateRecords: [],
   showDuplicateDialog: false,
   pendingSaveData: null,
+  discogsIdMode: false,
+  directDiscogsId: null,
 };
 
 export function scanReducer(state: ScanState, action: ScanAction): ScanState {
@@ -59,6 +65,10 @@ export function scanReducer(state: ScanState, action: ScanAction): ScanState {
       return { ...state, showDuplicateDialog: action.payload };
     case 'SET_PENDING_SAVE_DATA':
       return { ...state, pendingSaveData: action.payload };
+    case 'SET_DISCOGS_ID_MODE':
+      return { ...state, discogsIdMode: action.payload };
+    case 'SET_DIRECT_DISCOGS_ID':
+      return { ...state, directDiscogsId: action.payload };
     case 'RESET_SCAN':
       return initialScanState;
     default:

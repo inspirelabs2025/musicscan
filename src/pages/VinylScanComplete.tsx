@@ -22,6 +22,7 @@ import { UploadSection } from "@/components/UploadSection";
 import { ScanResults } from "@/components/ScanResults";
 import { ConditionSelector } from "@/components/ConditionSelector";
 import { ManualSearch } from "@/components/ManualSearch";
+import { DiscogsIdInput } from "@/components/DiscogsIdInput";
 import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
 
 const VinylScanComplete = () => {
@@ -47,6 +48,7 @@ const VinylScanComplete = () => {
     searchResults,
     searchStrategies,
     searchCatalog,
+    searchByDiscogsId,
     setSearchResults,
     retryPricing,
     isPricingRetrying,
@@ -188,7 +190,7 @@ const VinylScanComplete = () => {
   }, [state.mediaType]);
 
   const performSave = useCallback(async (condition: string, advicePrice: number) => {
-    if (!analysisResult?.analysis || !state.mediaType) return;
+    if ((!analysisResult?.analysis && !state.discogsIdMode) || !state.mediaType) return;
     
     dispatch({ type: 'SET_IS_SAVING_CONDITION', payload: true });
 
@@ -211,24 +213,29 @@ const VinylScanComplete = () => {
         return cleanOcr;
       };
       
-      const bestArtist = getBestData(searchResults[0]?.artist, analysisResult.analysis.artist);
-      const bestTitle = getBestData(searchResults[0]?.title, analysisResult.analysis.title);
+      // For Discogs ID mode, use search results as primary source since there's no OCR
+      const bestArtist = state.discogsIdMode 
+        ? searchResults[0]?.artist || 'Unknown'
+        : getBestData(searchResults[0]?.artist, analysisResult?.analysis?.artist);
+      const bestTitle = state.discogsIdMode 
+        ? searchResults[0]?.title || 'Unknown'
+        : getBestData(searchResults[0]?.title, analysisResult?.analysis?.title);
       
       console.log('💾 Saving with artist:', bestArtist, 'title:', bestTitle);
       
       const insertData = state.mediaType === 'vinyl' ? {
-        catalog_image: state.uploadedFiles[0],
-        matrix_image: state.uploadedFiles[1], 
-        additional_image: state.uploadedFiles[2],
-        catalog_number: analysisResult.analysis.catalog_number,
-        matrix_number: analysisResult.analysis.matrix_number,
+        catalog_image: state.uploadedFiles[0] || null,
+        matrix_image: state.uploadedFiles[1] || null, 
+        additional_image: state.uploadedFiles[2] || null,
+        catalog_number: analysisResult?.analysis?.catalog_number || searchResults[0]?.catalog_number || null,
+        matrix_number: analysisResult?.analysis?.matrix_number || null,
         artist: bestArtist,
         title: bestTitle,
-        year: analysisResult.analysis.year ? parseInt(analysisResult.analysis.year) : null,
+        year: analysisResult?.analysis?.year ? parseInt(analysisResult.analysis.year) : (searchResults[0]?.year || null),
         format: 'Vinyl',
-        label: analysisResult.analysis.label,
-        genre: analysisResult.analysis.genre,
-        country: analysisResult.analysis.country,
+        label: analysisResult?.analysis?.label || searchResults[0]?.label || null,
+        genre: analysisResult?.analysis?.genre || searchResults[0]?.genre || null,
+        country: analysisResult?.analysis?.country || searchResults[0]?.country || null,
         condition_grade: condition,
         calculated_advice_price: advicePrice,
         discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
@@ -237,19 +244,19 @@ const VinylScanComplete = () => {
         median_price: searchResults[0]?.pricing_stats?.median_price ? parseFloat(searchResults[0].pricing_stats.median_price.replace(',', '.')) : null,
         highest_price: searchResults[0]?.pricing_stats?.highest_price ? parseFloat(searchResults[0].pricing_stats.highest_price.replace(',', '.')) : null
       } : {
-        front_image: state.uploadedFiles[0],
-        back_image: state.uploadedFiles[1],
-        barcode_image: state.uploadedFiles[2],
-        matrix_image: state.uploadedFiles[3],
-        barcode_number: analysisResult.analysis.barcode,
+        front_image: state.uploadedFiles[0] || null,
+        back_image: state.uploadedFiles[1] || null,
+        barcode_image: state.uploadedFiles[2] || null,
+        matrix_image: state.uploadedFiles[3] || null,
+        barcode_number: analysisResult?.analysis?.barcode || null,
         artist: bestArtist,
         title: bestTitle,
-        label: analysisResult.analysis.label,
-        catalog_number: analysisResult.analysis.catalog_number,
-        year: analysisResult.analysis.year,
+        label: analysisResult?.analysis?.label || searchResults[0]?.label || null,
+        catalog_number: analysisResult?.analysis?.catalog_number || searchResults[0]?.catalog_number || null,
+        year: analysisResult?.analysis?.year || searchResults[0]?.year || null,
         format: 'CD',
-        genre: analysisResult.analysis.genre,
-        country: analysisResult.analysis.country,
+        genre: analysisResult?.analysis?.genre || searchResults[0]?.genre || null,
+        country: analysisResult?.analysis?.country || searchResults[0]?.country || null,
         condition_grade: condition,
         calculated_advice_price: advicePrice,
         discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
@@ -287,10 +294,20 @@ const VinylScanComplete = () => {
 
   const saveFinalScan = useCallback(async (condition: string, advicePrice: number) => {
     console.log('🚀 saveFinalScan called with condition:', condition, 'advicePrice:', advicePrice);
-    if (!analysisResult?.analysis || !state.mediaType) return;
+    if ((!analysisResult?.analysis && !state.discogsIdMode) || !state.mediaType) return;
 
-    const { artist, title, catalog_number } = analysisResult.analysis;
-    const duplicates = await checkForDuplicates(artist || '', title || '', catalog_number || '');
+    // For Discogs ID mode, use search results data; for normal mode use OCR analysis
+    const artist = state.discogsIdMode 
+      ? searchResults[0]?.artist || 'Unknown'
+      : analysisResult?.analysis?.artist || '';
+    const title = state.discogsIdMode 
+      ? searchResults[0]?.title || 'Unknown'
+      : analysisResult?.analysis?.title || '';
+    const catalog_number = state.discogsIdMode
+      ? searchResults[0]?.catalog_number || ''
+      : analysisResult?.analysis?.catalog_number || '';
+
+    const duplicates = await checkForDuplicates(artist, title, catalog_number);
     
     if (duplicates.length > 0) {
       dispatch({ type: 'SET_DUPLICATE_RECORDS', payload: duplicates });
@@ -300,12 +317,22 @@ const VinylScanComplete = () => {
     }
 
     await performSave(condition, advicePrice);
-  }, [analysisResult, state.mediaType, checkForDuplicates, performSave]);
+  }, [analysisResult, state.mediaType, state.discogsIdMode, searchResults, checkForDuplicates, performSave]);
 
   // Event handlers
   const handleMediaTypeSelect = useCallback((type: 'vinyl' | 'cd') => {
     dispatch({ type: 'SET_MEDIA_TYPE', payload: type });
   }, []);
+
+  const handleDiscogsIdSelect = useCallback(() => {
+    dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
+  }, []);
+
+  const handleDiscogsIdSubmit = useCallback(async (discogsId: string) => {
+    dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: discogsId });
+    console.log('🆔 Starting Discogs ID search for:', discogsId);
+    await searchByDiscogsId(discogsId);
+  }, [searchByDiscogsId]);
 
   const handleFileUploaded = useCallback((url: string) => {
     dispatch({ type: 'SET_UPLOADED_FILES', payload: [...state.uploadedFiles, url] });
@@ -437,14 +464,27 @@ const VinylScanComplete = () => {
         </div>
 
         {/* Media Type Selection */}
-        {!state.mediaType && (
+        {!state.mediaType && !state.discogsIdMode && (
           <div className="mb-8">
-            <MediaTypeSelector onSelectMediaType={handleMediaTypeSelect} />
+            <MediaTypeSelector 
+              onSelectMediaType={handleMediaTypeSelect} 
+              onSelectDiscogsId={handleDiscogsIdSelect}
+            />
+          </div>
+        )}
+
+        {/* Discogs ID Input */}
+        {state.discogsIdMode && !searchResults.length && !isSearching && (
+          <div className="mb-8">
+            <DiscogsIdInput 
+              onSubmit={handleDiscogsIdSubmit}
+              isSearching={isSearching}
+            />
           </div>
         )}
 
         {/* Upload Section */}
-        {state.mediaType && (
+        {state.mediaType && !state.discogsIdMode && (
           <div className="mb-8">
             <UploadSection 
               mediaType={state.mediaType}
@@ -599,7 +639,7 @@ const VinylScanComplete = () => {
         )}
 
         {/* Condition Selector - Only show when Discogs search is complete AND has pricing */}
-        {!isAnalyzing && !isSearching && searchResults.length > 0 && searchResults[0]?.pricing_stats?.lowest_price && (
+        {!isAnalyzing && !isSearching && searchResults.length > 0 && searchResults[0]?.pricing_stats?.lowest_price && (state.discogsIdMode || analysisResult) && (
           <div className="mb-8">
             <ConditionSelector
               mediaType={state.mediaType!}

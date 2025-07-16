@@ -22,6 +22,7 @@ import { UploadSection } from "@/components/UploadSection";
 import { ScanResults } from "@/components/ScanResults";
 import { ConditionSelector } from "@/components/ConditionSelector";
 import { ManualSearch } from "@/components/ManualSearch";
+import { DiscogsIdInput } from "@/components/DiscogsIdInput";
 import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
 
 const BulkerImage = () => {
@@ -47,6 +48,7 @@ const BulkerImage = () => {
     searchResults,
     searchStrategies,
     searchCatalog,
+    searchByDiscogsId,
     setSearchResults,
     retryPricing,
     isPricingRetrying,
@@ -188,7 +190,7 @@ const BulkerImage = () => {
   }, [state.mediaType]);
 
   const performSave = useCallback(async (condition: string, advicePrice: number) => {
-    if (!analysisResult?.analysis || !state.mediaType) return;
+    if ((!analysisResult?.analysis && !state.discogsIdMode) || !state.mediaType) return;
     
     dispatch({ type: 'SET_IS_SAVING_CONDITION', payload: true });
 
@@ -306,6 +308,16 @@ const BulkerImage = () => {
   const handleMediaTypeSelect = useCallback((type: 'vinyl' | 'cd') => {
     dispatch({ type: 'SET_MEDIA_TYPE', payload: type });
   }, []);
+
+  const handleDiscogsIdSelect = useCallback(() => {
+    dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
+  }, []);
+
+  const handleDiscogsIdSubmit = useCallback(async (discogsId: string) => {
+    dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: discogsId });
+    console.log('🆔 Starting Discogs ID search for:', discogsId);
+    await searchByDiscogsId(discogsId);
+  }, [searchByDiscogsId]);
 
   const handleFileUploaded = useCallback((url: string) => {
     dispatch({ type: 'SET_UPLOADED_FILES', payload: [...state.uploadedFiles, url] });
@@ -444,14 +456,27 @@ const BulkerImage = () => {
         </div>
 
         {/* Media Type Selection */}
-        {!state.mediaType && (
+        {!state.mediaType && !state.discogsIdMode && (
           <div className="mb-8">
-            <MediaTypeSelector onSelectMediaType={handleMediaTypeSelect} />
+            <MediaTypeSelector 
+              onSelectMediaType={handleMediaTypeSelect}
+              onSelectDiscogsId={handleDiscogsIdSelect}
+            />
+          </div>
+        )}
+
+        {/* Discogs ID Input */}
+        {state.discogsIdMode && !searchResults.length && !isSearching && (
+          <div className="mb-8">
+            <DiscogsIdInput 
+              onSubmit={handleDiscogsIdSubmit}
+              isSearching={isSearching}
+            />
           </div>
         )}
 
         {/* Upload Section */}
-        {state.mediaType && (
+        {state.mediaType && !state.discogsIdMode && (
           <div className="mb-8">
             <UploadSection 
               mediaType={state.mediaType}
@@ -606,7 +631,7 @@ const BulkerImage = () => {
         )}
 
         {/* Condition Selector - Only show when Discogs search is complete AND has pricing */}
-        {!isAnalyzing && !isSearching && searchResults.length > 0 && searchResults[0]?.pricing_stats?.lowest_price && (
+        {!isAnalyzing && !isSearching && searchResults.length > 0 && searchResults[0]?.pricing_stats?.lowest_price && (state.discogsIdMode || analysisResult) && (
           <div className="mb-8">
             <ConditionSelector
               mediaType={state.mediaType!}

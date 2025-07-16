@@ -1,13 +1,14 @@
 import React from 'react';
-import { Disc3 } from 'lucide-react';
+import { Disc3, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface MediaTypeSelectorProps {
   onSelectMediaType: (type: 'vinyl' | 'cd') => void;
+  onSelectDiscogsId: () => void;
 }
 
-export const MediaTypeSelector = React.memo(({ onSelectMediaType }: MediaTypeSelectorProps) => {
+export const MediaTypeSelector = React.memo(({ onSelectMediaType, onSelectDiscogsId }: MediaTypeSelectorProps) => {
   const handleClick = (type: 'vinyl' | 'cd') => {
     console.log('MediaTypeSelector clicked:', type);
     onSelectMediaType(type);
@@ -26,7 +27,7 @@ export const MediaTypeSelector = React.memo(({ onSelectMediaType }: MediaTypeSel
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Button
               variant="outline"
               className="h-24 flex flex-col gap-2"
@@ -44,6 +45,15 @@ export const MediaTypeSelector = React.memo(({ onSelectMediaType }: MediaTypeSel
               <Disc3 className="h-8 w-8" />
               <span className="font-medium">CD</span>
               <span className="text-sm text-muted-foreground">Album / Single / EP</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-24 flex flex-col gap-2"
+              onClick={onSelectDiscogsId}
+            >
+              <Hash className="h-8 w-8" />
+              <span className="font-medium">Discogs ID</span>
+              <span className="text-sm text-muted-foreground">Direct prijscheck</span>
             </Button>
           </div>
         </CardContent>

@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   try {
     console.log('🔍 Starting catalog search test...');
     
-    const { catalog_number, artist, title, include_pricing, retry_pricing, discogs_id, retry_pricing_only } = await req.json();
+    const { catalog_number, artist, title, include_pricing, retry_pricing, discogs_id, retry_pricing_only, direct_discogs_id } = await req.json();
     
     // Handle retry pricing only requests
     if (retry_pricing_only && discogs_id) {
@@ -31,6 +31,48 @@ Deno.serve(async (req) => {
       
       return new Response(
         JSON.stringify({ pricing_stats: pricingStats }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Handle direct Discogs ID requests
+    if (direct_discogs_id) {
+      const scraperApiKey = Deno.env.get('SCRAPERAPI_KEY');
+      if (!scraperApiKey) {
+        return new Response(
+          JSON.stringify({ error: 'ScraperAPI key not available for direct Discogs ID search' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const discogsUrl = `https://www.discogs.com/release/${direct_discogs_id}`;
+      const sellUrl = `https://www.discogs.com/sell/release/${direct_discogs_id}`;
+      
+      console.log(`🆔 Direct Discogs ID search for: ${direct_discogs_id}`);
+      
+      const pricingStats = await scrapePricingStatsWithRetry(sellUrl, scraperApiKey);
+      
+      // Create a basic result with the Discogs ID
+      const result = {
+        discogs_id: direct_discogs_id,
+        discogs_url: discogsUrl,
+        sell_url: sellUrl,
+        api_url: `https://api.discogs.com/releases/${direct_discogs_id}`,
+        title: '',
+        artist: '',
+        year: '',
+        similarity_score: 1.0,
+        search_strategy: 'Direct Discogs ID',
+        catalog_number: '',
+        pricing_stats: pricingStats
+      };
+
+      return new Response(
+        JSON.stringify({
+          results: [result],
+          search_strategies: ['Direct Discogs ID'],
+          total_found: 1
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

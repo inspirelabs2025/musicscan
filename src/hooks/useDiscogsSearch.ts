@@ -7,16 +7,18 @@ export interface DiscogsSearchResult {
   discogs_id?: number; // Added for proper database mapping
   title: string;
   artist: string;
-  year: number;
-  label: string;
+  year: number | null;
+  label?: string;
   catalog_number: string;
-  format: string;
-  country: string;
-  genre: string;
+  format?: string;
+  country?: string;
+  genre?: string;
   discogs_url: string;
-  marketplace_url: string;
+  marketplace_url?: string;
+  sell_url?: string;
   api_url: string;
   similarity_score: number;
+  search_strategy?: string;
   pricing_stats?: {
     lowest_price: string | null;
     median_price: string | null;
@@ -312,11 +314,69 @@ export const useDiscogsSearch = () => {
     }
   }, []);
 
+  // Search by Discogs ID directly
+  const searchByDiscogsId = useCallback(async (discogsId: string) => {
+    console.log('🆔 Searching by Discogs ID:', discogsId);
+    
+    setIsSearching(true);
+    setSearchResults([]);
+    setSearchStrategies([]);
+    resetSearchState();
+    
+    try {
+      console.log('📡 Calling test-catalog-search with direct Discogs ID');
+      const { data, error } = await supabase.functions.invoke('test-catalog-search', {
+        body: { 
+          direct_discogs_id: discogsId,
+          include_pricing: true,
+          retry_pricing: true
+        }
+      });
+
+      if (error) {
+        console.error('❌ Discogs ID search error:', error);
+        throw error;
+      }
+
+      console.log('✅ Discogs ID search successful:', data);
+      
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0]; // Should only be one result
+        const formattedResult: DiscogsSearchResult = {
+          id: parseInt(result.discogs_id),
+          discogs_id: parseInt(result.discogs_id),
+          discogs_url: result.discogs_url,
+          sell_url: result.sell_url,
+          api_url: result.api_url,
+          title: result.title || '',
+          artist: result.artist || '',
+          year: result.year ? parseInt(result.year) : null,
+          similarity_score: 1.0, // Perfect match since it's direct ID
+          search_strategy: 'Direct Discogs ID',
+          catalog_number: result.catalog_number || '',
+          pricing_stats: result.pricing_stats
+        };
+        
+        setSearchResults([formattedResult]);
+        setSearchStrategies(['Direct Discogs ID']);
+        console.log('✅ Formatted Discogs ID result:', formattedResult);
+      }
+
+    } catch (error: any) {
+      console.error('❌ Discogs ID search failed:', error);
+      setSearchResults([]);
+      setSearchStrategies([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [resetSearchState]);
+
   return {
     isSearching,
     searchResults,
     searchStrategies,
     searchCatalog,
+    searchByDiscogsId,
     setSearchResults,
     retryPricing,
     isPricingRetrying,

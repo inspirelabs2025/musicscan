@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import { Hash, ArrowRight, Search, Link } from 'lucide-react';
+import { Hash, ArrowRight, Search, Link, Disc, Circle } from 'lucide-react';
 import { extractDiscogsIdFromUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface DiscogsIdInputProps {
-  onSubmit: (discogsId: string) => void;
+  onSubmit: (discogsId: string, mediaType: 'vinyl' | 'cd') => void;
   isSearching?: boolean;
 }
 
 export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: DiscogsIdInputProps) => {
   const [discogsId, setDiscogsId] = useState('');
+  const [mediaType, setMediaType] = useState<'vinyl' | 'cd'>('vinyl');
   const [error, setError] = useState('');
 
   const processInput = (input: string): { id: string | null; error: string | null } => {
@@ -54,7 +56,7 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
     }
 
     if (id) {
-      onSubmit(id);
+      onSubmit(id, mediaType);
     }
   };
 
@@ -77,7 +79,7 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="discogs-id">Discogs Release ID of URL</Label>
               <Input
@@ -95,6 +97,30 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
               <p className="text-xs text-muted-foreground">
                 Voer een Discogs ID (bijv. <strong>588618</strong>) of volledige URL in
               </p>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Media Type</Label>
+              <RadioGroup 
+                value={mediaType} 
+                onValueChange={(value: 'vinyl' | 'cd') => setMediaType(value)}
+                className="flex flex-row gap-6"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="vinyl" id="vinyl" />
+                  <Label htmlFor="vinyl" className="flex items-center gap-2 cursor-pointer">
+                    <Disc className="h-4 w-4" />
+                    LP/Vinyl
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="cd" id="cd" />
+                  <Label htmlFor="cd" className="flex items-center gap-2 cursor-pointer">
+                    <Circle className="h-4 w-4" />
+                    CD
+                  </Label>
+                </div>
+              </RadioGroup>
             </div>
             
             <Button 

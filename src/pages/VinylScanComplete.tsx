@@ -328,19 +328,13 @@ const VinylScanComplete = () => {
     dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
   }, []);
 
-  const handleDiscogsIdSubmit = useCallback(async (discogsId: string) => {
+  const handleDiscogsIdSubmit = useCallback(async (discogsId: string, mediaType: 'vinyl' | 'cd') => {
     dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: discogsId });
-    console.log('🆔 Starting Discogs ID search for:', discogsId);
-    console.log('🆔 DiscogsIdMode is:', state.discogsIdMode);
-    
-    // Set a default media type for Discogs ID mode (can be changed later based on results)
-    if (!state.mediaType) {
-      dispatch({ type: 'SET_MEDIA_TYPE', payload: 'vinyl' });
-      console.log('🆔 Set default media type to vinyl for Discogs ID mode');
-    }
+    dispatch({ type: 'SET_MEDIA_TYPE', payload: mediaType });
+    console.log('🆔 Starting Discogs ID search for:', discogsId, 'mediaType:', mediaType);
     
     await searchByDiscogsId(discogsId);
-  }, [searchByDiscogsId, state.discogsIdMode, state.mediaType]);
+  }, [searchByDiscogsId]);
 
   const handleFileUploaded = useCallback((url: string) => {
     dispatch({ type: 'SET_UPLOADED_FILES', payload: [...state.uploadedFiles, url] });

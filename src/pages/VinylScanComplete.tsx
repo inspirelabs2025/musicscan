@@ -331,8 +331,16 @@ const VinylScanComplete = () => {
   const handleDiscogsIdSubmit = useCallback(async (discogsId: string) => {
     dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: discogsId });
     console.log('🆔 Starting Discogs ID search for:', discogsId);
+    console.log('🆔 DiscogsIdMode is:', state.discogsIdMode);
+    
+    // Set a default media type for Discogs ID mode (can be changed later based on results)
+    if (!state.mediaType) {
+      dispatch({ type: 'SET_MEDIA_TYPE', payload: 'vinyl' });
+      console.log('🆔 Set default media type to vinyl for Discogs ID mode');
+    }
+    
     await searchByDiscogsId(discogsId);
-  }, [searchByDiscogsId]);
+  }, [searchByDiscogsId, state.discogsIdMode, state.mediaType]);
 
   const handleFileUploaded = useCallback((url: string) => {
     dispatch({ type: 'SET_UPLOADED_FILES', payload: [...state.uploadedFiles, url] });
@@ -340,17 +348,27 @@ const VinylScanComplete = () => {
 
   const handleConditionChange = useCallback((condition: string) => {
     console.log('🔄 handleConditionChange called with condition:', condition);
+    console.log('🔄 Current state.discogsIdMode:', state.discogsIdMode);
+    console.log('🔄 Available searchResults:', searchResults);
+    console.log('🔄 Current selectedCondition:', state.selectedCondition);
+    console.log('🔄 Current calculatedAdvicePrice:', state.calculatedAdvicePrice);
+    
     dispatch({ type: 'SET_SELECTED_CONDITION', payload: condition });
     
     const lowestPrice = searchResults[0]?.pricing_stats?.lowest_price;
+    console.log('🔄 Lowest price found:', lowestPrice);
+    
     if (lowestPrice) {
       const advicePrice = calculateAdvicePrice(condition, lowestPrice);
+      console.log('🔄 Calculated advice price:', advicePrice);
       if (advicePrice) {
         console.log('💰 Setting calculated advice price:', advicePrice);
         dispatch({ type: 'SET_CALCULATED_ADVICE_PRICE', payload: advicePrice });
       }
+    } else {
+      console.log('❌ No lowest price found, cannot calculate advice price');
     }
-  }, [searchResults, calculateAdvicePrice]);
+  }, [searchResults, calculateAdvicePrice, state.discogsIdMode, state.selectedCondition, state.calculatedAdvicePrice]);
 
   const handleSave = useCallback(async () => {
     console.log('💾 handleSave called with condition:', state.selectedCondition, 'advicePrice:', state.calculatedAdvicePrice);

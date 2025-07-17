@@ -405,11 +405,11 @@ const AIScanOverview = () => {
                         console.log(`Row ${scan.id}: isProcessed=${rowIsProcessed}, discogs_id=${scan.discogs_id}`);
                         
                         return (
-                          <TableRow 
+                           <TableRow 
                             key={scan.id} 
                             className={`transition-all duration-200 ${
                               rowIsProcessed 
-                                ? "bg-success/10 border-l-4 border-l-success relative opacity-80" 
+                                ? "bg-success/25 border-l-6 border-l-success relative opacity-90 shadow-sm" 
                                 : "hover:bg-muted/50"
                             }`}
                           >
@@ -431,7 +431,7 @@ const AIScanOverview = () => {
                             <div className="font-mono text-sm relative">
                               {scan.discogs_id ? (
                                 <div className="flex items-center gap-2">
-                                   <span className={`font-semibold ${rowIsProcessed ? 'text-success' : 'text-primary'}`}>
+                                   <span className={`font-bold ${rowIsProcessed ? 'text-success-foreground' : 'text-primary'}`}>
                                      {scan.discogs_id}
                                    </span>
                                    <div className="flex items-center gap-1">
@@ -441,7 +441,7 @@ const AIScanOverview = () => {
                                        onClick={() => copyDiscogsId(scan)}
                                        className={`h-6 w-6 p-0 transition-all ${
                                          rowIsProcessed 
-                                           ? 'bg-success/20 hover:bg-success/30' 
+                                           ? 'bg-success/30 hover:bg-success/40 text-success-foreground' 
                                            : 'hover:bg-primary/20'
                                        }`}
                                        title={rowIsProcessed ? 'Al gekopieerd en verwerkt' : 'Kopieer Discogs ID'}

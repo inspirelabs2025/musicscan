@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { Camera, Upload, Loader2, CheckCircle, XCircle, Brain } from 'lucide-react';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Upload, Loader2, CheckCircle, XCircle, Brain, Disc, Circle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -7,9 +7,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+
+interface UploadedFile {
+  file: File;
+  preview: string;
+  id: string;
+}
 
 interface AnalysisResult {
   scanId: string;
@@ -28,6 +33,7 @@ interface AnalysisResult {
   success: boolean;
 }
 
+// Memoized condition options to prevent re-renders
 const conditionOptions = [
   { value: 'Mint (M)', label: 'Mint (M)' },
   { value: 'Near Mint (NM)', label: 'Near Mint (NM)' },
@@ -37,15 +43,45 @@ const conditionOptions = [
   { value: 'Good (G)', label: 'Good (G)' },
   { value: 'Fair (F)', label: 'Fair (F)' },
   { value: 'Poor (P)', label: 'Poor (P)' }
-];
+] as const;
 
 export default function AIScan() {
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd'>('vinyl');
   const [condition, setCondition] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  
-  const { uploadedFiles, addFile, removeFile, clearFiles, uploading } = useFileUpload();
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  // Simplified file management without heavy hook
+  const addFile = useCallback((file: File) => {
+    const preview = URL.createObjectURL(file);
+    const newFile: UploadedFile = {
+      file,
+      preview,
+      id: Date.now().toString() + Math.random().toString()
+    };
+    setUploadedFiles(prev => [...prev, newFile]);
+  }, []);
+
+  const removeFile = useCallback((id: string) => {
+    setUploadedFiles(prev => {
+      const fileToRemove = prev.find(f => f.id === id);
+      if (fileToRemove?.preview) {
+        URL.revokeObjectURL(fileToRemove.preview);
+      }
+      return prev.filter(f => f.id !== id);
+    });
+  }, []);
+
+  const clearFiles = useCallback(() => {
+    uploadedFiles.forEach(file => {
+      if (file.preview) {
+        URL.revokeObjectURL(file.preview);
+      }
+    });
+    setUploadedFiles([]);
+  }, [uploadedFiles]);
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -74,7 +110,7 @@ export default function AIScan() {
     event.preventDefault();
   }, []);
 
-  const startAnalysis = async () => {
+  const startAnalysis = useCallback(async () => {
     if (uploadedFiles.length === 0) {
       toast({
         title: "Geen foto's",
@@ -86,7 +122,7 @@ export default function AIScan() {
 
     if (!condition) {
       toast({
-        title: "Conditie niet geselecteerd",
+        title: "Conditie niet geselecteerd", 
         description: "Selecteer eerst de conditie van het item",
         variant: "destructive"
       });
@@ -95,9 +131,10 @@ export default function AIScan() {
 
     setIsAnalyzing(true);
     setAnalysisResult(null);
+    setUploading(true);
 
     try {
-      // First upload all files
+      // Upload files with better error handling
       const uploadPromises = uploadedFiles.map(async (uploadedFile, index) => {
         const fileExt = uploadedFile.file.name.split('.').pop();
         const fileName = `ai-scan-${Date.now()}-${index}.${fileExt}`;
@@ -110,9 +147,7 @@ export default function AIScan() {
             upsert: false
           });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         const { data: { publicUrl } } = supabase.storage
           .from('vinyl_images')
@@ -122,10 +157,11 @@ export default function AIScan() {
       });
 
       const photoUrls = await Promise.all(uploadPromises);
+      setUploading(false);
 
       console.log('🤖 Starting AI analysis with photos:', photoUrls);
 
-      // Call the AI analysis function
+      // Call AI analysis function
       const { data, error } = await supabase.functions.invoke('ai-photo-analysis', {
         body: {
           photoUrls,
@@ -134,9 +170,7 @@ export default function AIScan() {
         }
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       setAnalysisResult(data);
 
@@ -163,30 +197,33 @@ export default function AIScan() {
       });
     } finally {
       setIsAnalyzing(false);
+      setUploading(false);
     }
-  };
+  }, [uploadedFiles, condition, mediaType]);
 
-  const resetAnalysis = () => {
+  const resetAnalysis = useCallback(() => {
     setAnalysisResult(null);
     clearFiles();
     setCondition('');
-  };
+  }, [clearFiles]);
 
-  const getConfidenceColor = (confidence: number) => {
+  // Memoized confidence calculations
+  const getConfidenceColor = useMemo(() => (confidence: number) => {
     if (confidence >= 0.8) return 'bg-green-500';
     if (confidence >= 0.6) return 'bg-yellow-500';
     return 'bg-red-500';
-  };
+  }, []);
 
-  const getConfidenceLabel = (confidence: number) => {
+  const getConfidenceLabel = useMemo(() => (confidence: number) => {
     if (confidence >= 0.8) return 'Hoge zekerheid';
     if (confidence >= 0.6) return 'Gemiddelde zekerheid';
     return 'Lage zekerheid';
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
             <Brain className="h-8 w-8" />
@@ -199,7 +236,7 @@ export default function AIScan() {
 
         {!analysisResult && (
           <>
-            {/* Media Type & Condition Selection */}
+            {/* Configuration Section */}
             <Card>
               <CardHeader>
                 <CardTitle>1. Selecteer Type & Conditie</CardTitle>
@@ -217,11 +254,17 @@ export default function AIScan() {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="vinyl" id="vinyl" />
-                      <Label htmlFor="vinyl" className="cursor-pointer">LP/Vinyl</Label>
+                      <Label htmlFor="vinyl" className="flex items-center gap-2 cursor-pointer">
+                        <Disc className="h-4 w-4" />
+                        LP/Vinyl
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="cd" id="cd" />
-                      <Label htmlFor="cd" className="cursor-pointer">CD</Label>
+                      <Label htmlFor="cd" className="flex items-center gap-2 cursor-pointer">
+                        <Circle className="h-4 w-4" />
+                        CD
+                      </Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -244,7 +287,7 @@ export default function AIScan() {
               </CardContent>
             </Card>
 
-            {/* Photo Upload */}
+            {/* Photo Upload Section */}
             <Card>
               <CardHeader>
                 <CardTitle>2. Upload Foto's</CardTitle>
@@ -309,7 +352,7 @@ export default function AIScan() {
                             variant="destructive"
                             size="sm"
                             className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => removeFile(uploadedFile.id!)}
+                            onClick={() => removeFile(uploadedFile.id)}
                           >
                             ×
                           </Button>
@@ -321,7 +364,7 @@ export default function AIScan() {
               </CardContent>
             </Card>
 
-            {/* Start Analysis */}
+            {/* Start Analysis Button */}
             <div className="text-center">
               <Button
                 onClick={startAnalysis}

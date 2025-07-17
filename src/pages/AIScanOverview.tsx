@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useAIScans, useAIScansStats, AIScanResult } from "@/hooks/useAIScans";
 import { useToast } from "@/hooks/use-toast";
+import { useProcessedRows } from "@/hooks/useProcessedRows";
 
 const AIScanOverview = () => {
   const [page, setPage] = useState(1);
@@ -44,9 +45,9 @@ const AIScanOverview = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedScan, setSelectedScan] = useState<AIScanResult | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [processedRows, setProcessedRows] = useState<Set<string>>(new Set());
 
   const { toast } = useToast();
+  const { processedRows, addProcessedRow, resetProcessedRows: resetProcessed, isProcessed } = useProcessedRows();
 
   const pageSize = 25;
 
@@ -61,32 +62,6 @@ const AIScanOverview = () => {
   });
 
   const { data: statsData, isLoading: statsLoading } = useAIScansStats();
-
-  // Load processed rows from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('ai-scan-processed-rows');
-    console.log('🔍 Loading processed rows from localStorage:', saved);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Ensure parsed data is an array of strings
-        const processedArray = Array.isArray(parsed) ? parsed.filter(item => typeof item === 'string') : [];
-        const processedSet = new Set(processedArray);
-        console.log('✅ Loaded processed rows:', processedSet);
-        setProcessedRows(processedSet);
-      } catch (error) {
-        console.error('❌ Failed to parse processed rows from localStorage:', error);
-        localStorage.removeItem('ai-scan-processed-rows'); // Clear corrupted data
-      }
-    }
-  }, []);
-
-  // Save processed rows to localStorage when it changes
-  useEffect(() => {
-    const dataToSave = Array.from(processedRows);
-    console.log('💾 Saving processed rows to localStorage:', dataToSave);
-    localStorage.setItem('ai-scan-processed-rows', JSON.stringify(dataToSave));
-  }, [processedRows]);
 
   const handleSort = useCallback((field: keyof AIScanResult) => {
     if (sortField === field) {
@@ -169,11 +144,7 @@ const AIScanOverview = () => {
       await navigator.clipboard.writeText(scan.discogs_id.toString());
       
       // Update processed rows with immediate visual feedback
-      setProcessedRows(prev => {
-        const newSet = new Set([...prev, scan.id]);
-        console.log('✅ Updated processed rows:', newSet);
-        return newSet;
-      });
+      addProcessedRow(scan.id);
       
       toast({
         title: "📋 Gekopieerd!",
@@ -187,17 +158,16 @@ const AIScanOverview = () => {
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [toast, addProcessedRow]);
 
   const resetProcessedRows = useCallback(() => {
     console.log('🔄 Resetting processed rows');
-    setProcessedRows(new Set());
-    localStorage.removeItem('ai-scan-processed-rows');
+    resetProcessed();
     toast({
       title: "🔄 Reset voltooid",
       description: "Alle verwerkte rijen zijn gereset.",
     });
-  }, [toast]);
+  }, [toast, resetProcessed]);
 
   if (scansLoading || statsLoading) {
     return (
@@ -429,16 +399,16 @@ const AIScanOverview = () => {
                       <TableHead className="w-20">Acties</TableHead>
                     </TableRow>
                   </TableHeader>
-                   <TableBody>
+                    <TableBody>
                       {scansData?.data.map((scan) => {
-                        const isProcessed = processedRows.has(scan.id);
-                        console.log(`Row ${scan.id}: isProcessed=${isProcessed}, discogs_id=${scan.discogs_id}`);
+                        const rowIsProcessed = isProcessed(scan.id);
+                        console.log(`Row ${scan.id}: isProcessed=${rowIsProcessed}, discogs_id=${scan.discogs_id}`);
                         
                         return (
                           <TableRow 
                             key={scan.id} 
                             className={`transition-all duration-200 ${
-                              isProcessed 
+                              rowIsProcessed 
                                 ? "bg-success/10 border-l-4 border-l-success relative opacity-80" 
                                 : "hover:bg-muted/50"
                             }`}
@@ -461,27 +431,27 @@ const AIScanOverview = () => {
                             <div className="font-mono text-sm relative">
                               {scan.discogs_id ? (
                                 <div className="flex items-center gap-2">
-                                  <span className={`font-semibold ${isProcessed ? 'text-success' : 'text-primary'}`}>
-                                    {scan.discogs_id}
-                                  </span>
-                                  <div className="flex items-center gap-1">
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm"
-                                      onClick={() => copyDiscogsId(scan)}
-                                      className={`h-6 w-6 p-0 transition-all ${
-                                        isProcessed 
-                                          ? 'bg-success/20 hover:bg-success/30' 
-                                          : 'hover:bg-primary/20'
-                                      }`}
-                                      title={isProcessed ? 'Al gekopieerd en verwerkt' : 'Kopieer Discogs ID'}
-                                    >
-                                      {isProcessed ? (
-                                        <Check className="h-3 w-3 text-success animate-pulse" />
-                                      ) : (
-                                        <Copy className="h-3 w-3" />
-                                      )}
-                                    </Button>
+                                   <span className={`font-semibold ${rowIsProcessed ? 'text-success' : 'text-primary'}`}>
+                                     {scan.discogs_id}
+                                   </span>
+                                   <div className="flex items-center gap-1">
+                                     <Button 
+                                       variant="ghost" 
+                                       size="sm"
+                                       onClick={() => copyDiscogsId(scan)}
+                                       className={`h-6 w-6 p-0 transition-all ${
+                                         rowIsProcessed 
+                                           ? 'bg-success/20 hover:bg-success/30' 
+                                           : 'hover:bg-primary/20'
+                                       }`}
+                                       title={rowIsProcessed ? 'Al gekopieerd en verwerkt' : 'Kopieer Discogs ID'}
+                                     >
+                                       {rowIsProcessed ? (
+                                         <Check className="h-3 w-3 text-success animate-pulse" />
+                                       ) : (
+                                         <Copy className="h-3 w-3" />
+                                       )}
+                                     </Button>
                                     {scan.discogs_url && (
                                       <Button variant="ghost" size="sm" asChild className="h-6 w-6 p-0">
                                         <a href={scan.discogs_url} target="_blank" rel="noopener noreferrer">
@@ -490,11 +460,11 @@ const AIScanOverview = () => {
                                       </Button>
                                     )}
                                   </div>
-                                  {isProcessed && (
-                                    <div className="absolute -top-1 -right-1">
-                                      <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-                                    </div>
-                                  )}
+                                   {rowIsProcessed && (
+                                     <div className="absolute -top-1 -right-1">
+                                       <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+                                     </div>
+                                   )}
                                 </div>
                               ) : (
                                 <span className="text-muted-foreground">—</span>

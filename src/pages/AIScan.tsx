@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Navigation } from '@/components/Navigation';
 
 interface UploadedFile {
   file: File;
@@ -221,18 +222,26 @@ export default function AIScan() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
-            <Brain className="h-8 w-8" />
-            AI Foto Analyse
-          </h1>
-          <p className="text-muted-foreground">
-            Upload willekeurige foto's van je LP of CD en laat AI het release identificeren
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      {/* Navigation */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center">
+          <Navigation />
         </div>
+      </header>
+
+      <div className="p-4">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
+              <Brain className="h-8 w-8" />
+              AI Foto Analyse
+            </h1>
+            <p className="text-muted-foreground">
+              Upload willekeurige foto's van je LP of CD en laat AI het release identificeren
+            </p>
+          </div>
 
         {!analysisResult && (
           <>
@@ -484,6 +493,7 @@ export default function AIScan() {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
     </div>
   );

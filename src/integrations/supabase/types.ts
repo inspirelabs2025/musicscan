@@ -25,15 +25,18 @@ export type Database = {
           created_at: string
           discogs_id: number | null
           discogs_url: string | null
+          edit_history: Json | null
           error_message: string | null
           id: string
           label: string | null
+          manual_edits: Json | null
           media_type: string
           photo_urls: string[]
           search_queries: string[] | null
           status: string
           title: string | null
           updated_at: string
+          updated_by: string | null
           year: number | null
         }
         Insert: {
@@ -46,15 +49,18 @@ export type Database = {
           created_at?: string
           discogs_id?: number | null
           discogs_url?: string | null
+          edit_history?: Json | null
           error_message?: string | null
           id?: string
           label?: string | null
+          manual_edits?: Json | null
           media_type: string
           photo_urls: string[]
           search_queries?: string[] | null
           status?: string
           title?: string | null
           updated_at?: string
+          updated_by?: string | null
           year?: number | null
         }
         Update: {
@@ -67,15 +73,18 @@ export type Database = {
           created_at?: string
           discogs_id?: number | null
           discogs_url?: string | null
+          edit_history?: Json | null
           error_message?: string | null
           id?: string
           label?: string | null
+          manual_edits?: Json | null
           media_type?: string
           photo_urls?: string[]
           search_queries?: string[] | null
           status?: string
           title?: string | null
           updated_at?: string
+          updated_by?: string | null
           year?: number | null
         }
         Relationships: []

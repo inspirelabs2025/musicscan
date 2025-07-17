@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { StatCard } from "@/components/StatCard";
 import { AIScanDetailModal } from "@/components/AIScanDetailModal";
+import { EditScanModal } from "@/components/EditScanModal";
+import { DeleteScanDialog } from "@/components/DeleteScanDialog";
 import { 
   Table, 
   TableBody, 
@@ -30,7 +32,9 @@ import {
   TrendingUp,
   Copy,
   Check,
-  RotateCcw
+  RotateCcw,
+  Edit,
+  Trash2
 } from "lucide-react";
 import { useAIScans, useAIScansStats, AIScanResult } from "@/hooks/useAIScans";
 import { useToast } from "@/hooks/use-toast";
@@ -45,6 +49,10 @@ const AIScanOverview = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedScan, setSelectedScan] = useState<AIScanResult | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [scanToEdit, setScanToEdit] = useState<AIScanResult | null>(null);
+  const [scanToDelete, setScanToDelete] = useState<AIScanResult | null>(null);
 
   const { toast } = useToast();
   const { processedRows, addProcessedRow, resetProcessedRows: resetProcessed, isProcessed } = useProcessedRows();
@@ -168,6 +176,26 @@ const AIScanOverview = () => {
       description: "Alle verwerkte rijen zijn gereset.",
     });
   }, [toast, resetProcessed]);
+
+  const handleEditScan = useCallback((scan: AIScanResult) => {
+    setScanToEdit(scan);
+    setShowEditModal(true);
+  }, []);
+
+  const handleDeleteScan = useCallback((scan: AIScanResult) => {
+    setScanToDelete(scan);
+    setShowDeleteDialog(true);
+  }, []);
+
+  const handleEditSuccess = useCallback(() => {
+    // Refresh the data by resetting the page - this will trigger a refetch
+    setPage(1);
+  }, []);
+
+  const handleDeleteSuccess = useCallback(() => {
+    // Refresh the data by resetting the page - this will trigger a refetch
+    setPage(1);
+  }, []);
 
   if (scansLoading || statsLoading) {
     return (
@@ -512,13 +540,33 @@ const AIScanOverview = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleViewDetails(scan)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleViewDetails(scan)}
+                              title="Bekijk details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEditScan(scan)}
+                              title="Bewerk scan"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleDeleteScan(scan)}
+                              title="Verwijder scan"
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                          </TableRow>
                        );
@@ -561,6 +609,28 @@ const AIScanOverview = () => {
         scan={selectedScan}
         open={showDetailModal}
         onOpenChange={setShowDetailModal}
+      />
+
+      {/* Edit Modal */}
+      <EditScanModal
+        scan={scanToEdit}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setScanToEdit(null);
+        }}
+        onSuccess={handleEditSuccess}
+      />
+
+      {/* Delete Dialog */}
+      <DeleteScanDialog
+        scan={scanToDelete}
+        isOpen={showDeleteDialog}
+        onClose={() => {
+          setShowDeleteDialog(false);
+          setScanToDelete(null);
+        }}
+        onSuccess={handleDeleteSuccess}
       />
     </div>
   );

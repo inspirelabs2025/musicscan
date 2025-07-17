@@ -278,13 +278,11 @@ const AIScanOverview = () => {
                         <Button 
                           variant="ghost" 
                           className="h-auto p-0 font-medium"
-                          onClick={() => handleSort("artist")}
+                          onClick={() => handleSort("discogs_id")}
                         >
-                          Artist - Titel {getSortIcon("artist")}
+                          Discogs ID {getSortIcon("discogs_id")}
                         </Button>
                       </TableHead>
-                      <TableHead>Label / Cat#</TableHead>
-                      <TableHead>Type</TableHead>
                       <TableHead>
                         <Button 
                           variant="ghost" 
@@ -294,6 +292,17 @@ const AIScanOverview = () => {
                           Conditie {getSortIcon("condition_grade")}
                         </Button>
                       </TableHead>
+                      <TableHead>
+                        <Button 
+                          variant="ghost" 
+                          className="h-auto p-0 font-medium"
+                          onClick={() => handleSort("artist")}
+                        >
+                          Artist - Titel {getSortIcon("artist")}
+                        </Button>
+                      </TableHead>
+                      <TableHead>Label / Cat#</TableHead>
+                      <TableHead>Type</TableHead>
                       <TableHead>
                         <Button 
                           variant="ghost" 
@@ -312,7 +321,6 @@ const AIScanOverview = () => {
                           Status {getSortIcon("status")}
                         </Button>
                       </TableHead>
-                      <TableHead>Discogs</TableHead>
                       <TableHead className="w-20">Acties</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -334,6 +342,29 @@ const AIScanOverview = () => {
                           {new Date(scan.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
+                          <div className="font-mono text-sm">
+                            {scan.discogs_id ? (
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-primary">{scan.discogs_id}</span>
+                                {scan.discogs_url && (
+                                  <Button variant="ghost" size="sm" asChild>
+                                    <a href={scan.discogs_url} target="_blank" rel="noopener noreferrer">
+                                      <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  </Button>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-medium">
+                            {scan.condition_grade}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
                           <div>
                             <div className="font-medium">{scan.artist || "Unknown Artist"}</div>
                             <div className="text-sm text-muted-foreground">{scan.title || "Unknown Title"}</div>
@@ -349,9 +380,6 @@ const AIScanOverview = () => {
                           <Badge className={getMediaTypeColor(scan.media_type)}>
                             {scan.media_type.toUpperCase()}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{scan.condition_grade}</Badge>
                         </TableCell>
                         <TableCell>
                           {scan.confidence_score !== null ? (
@@ -370,17 +398,6 @@ const AIScanOverview = () => {
                             {scan.status === "completed" ? "Voltooid" :
                              scan.status === "failed" ? "Mislukt" : "Bezig"}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {scan.discogs_url ? (
-                            <Button variant="ghost" size="sm" asChild>
-                              <a href={scan.discogs_url} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="h-4 w-4" />
-                              </a>
-                            </Button>
-                          ) : (
-                            "—"
-                          )}
                         </TableCell>
                         <TableCell>
                           <Button 

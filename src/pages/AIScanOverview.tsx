@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,9 +27,13 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Copy,
+  Check,
+  RotateCcw
 } from "lucide-react";
 import { useAIScans, useAIScansStats, AIScanResult } from "@/hooks/useAIScans";
+import { useToast } from "@/hooks/use-toast";
 
 const AIScanOverview = () => {
   const [page, setPage] = useState(1);
@@ -40,6 +44,9 @@ const AIScanOverview = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedScan, setSelectedScan] = useState<AIScanResult | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [processedRows, setProcessedRows] = useState<Set<string>>(new Set());
+
+  const { toast } = useToast();
 
   const pageSize = 25;
 
@@ -54,6 +61,24 @@ const AIScanOverview = () => {
   });
 
   const { data: statsData, isLoading: statsLoading } = useAIScansStats();
+
+  // Load processed rows from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('ai-scan-processed-rows');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setProcessedRows(new Set(parsed));
+      } catch (error) {
+        console.error('Failed to parse processed rows from localStorage:', error);
+      }
+    }
+  }, []);
+
+  // Save processed rows to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('ai-scan-processed-rows', JSON.stringify(Array.from(processedRows)));
+  }, [processedRows]);
 
   const handleSort = useCallback((field: keyof AIScanResult) => {
     if (sortField === field) {
@@ -123,6 +148,33 @@ const AIScanOverview = () => {
     setSelectedScan(scan);
     setShowDetailModal(true);
   }, []);
+
+  const copyDiscogsId = useCallback(async (scan: AIScanResult) => {
+    if (!scan.discogs_id) return;
+    
+    try {
+      await navigator.clipboard.writeText(scan.discogs_id.toString());
+      setProcessedRows(prev => new Set([...prev, scan.id]));
+      toast({
+        title: "Gekopieerd!",
+        description: `Discogs ID ${scan.discogs_id} gekopieerd naar klembord.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Fout",
+        description: "Kon Discogs ID niet kopiëren.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  const resetProcessedRows = useCallback(() => {
+    setProcessedRows(new Set());
+    toast({
+      title: "Reset voltooid",
+      description: "Alle verwerkte rijen zijn gereset.",
+    });
+  }, [toast]);
 
   if (scansLoading || statsLoading) {
     return (
@@ -242,20 +294,35 @@ const AIScanOverview = () => {
                     <SelectItem value="pending">Bezig</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchTerm("");
-                    setMediaTypeFilter("all");
-                    setStatusFilter("all");
-                    setPage(1);
-                  }}
-                >
-                  Reset
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                 <Button
+                   variant="outline"
+                   onClick={() => {
+                     setSearchTerm("");
+                     setMediaTypeFilter("all");
+                     setStatusFilter("all");
+                     setPage(1);
+                   }}
+                 >
+                   Reset Filters
+                 </Button>
+               </div>
+               {processedRows.size > 0 && (
+                 <div className="flex items-center gap-2 mt-4">
+                   <span className="text-sm text-muted-foreground">
+                     {processedRows.size} rij{processedRows.size !== 1 ? 'en' : ''} verwerkt
+                   </span>
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={resetProcessedRows}
+                   >
+                     <RotateCcw className="h-3 w-3 mr-1" />
+                     Reset Verwerkt
+                   </Button>
+                 </div>
+               )}
+             </CardContent>
+           </Card>
 
           {/* Results Table */}
           <Card>
@@ -324,9 +391,18 @@ const AIScanOverview = () => {
                       <TableHead className="w-20">Acties</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
-                    {scansData?.data.map((scan) => (
-                      <TableRow key={scan.id} className="hover:bg-muted/50">
+                   <TableBody>
+                     {scansData?.data.map((scan) => {
+                       const isProcessed = processedRows.has(scan.id);
+                       return (
+                         <TableRow 
+                           key={scan.id} 
+                           className={`hover:bg-muted/50 transition-colors ${
+                             isProcessed 
+                               ? "bg-muted/70 opacity-75" 
+                               : ""
+                           }`}
+                         >
                         <TableCell>
                           {scan.photo_urls?.[0] && (
                             <div className="w-12 h-12 bg-muted rounded overflow-hidden">
@@ -341,24 +417,38 @@ const AIScanOverview = () => {
                         <TableCell className="text-sm text-muted-foreground">
                           {new Date(scan.created_at).toLocaleDateString()}
                         </TableCell>
-                        <TableCell>
-                          <div className="font-mono text-sm">
-                            {scan.discogs_id ? (
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-primary">{scan.discogs_id}</span>
-                                {scan.discogs_url && (
-                                  <Button variant="ghost" size="sm" asChild>
-                                    <a href={scan.discogs_url} target="_blank" rel="noopener noreferrer">
-                                      <ExternalLink className="h-3 w-3" />
-                                    </a>
-                                  </Button>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </div>
-                        </TableCell>
+                         <TableCell>
+                           <div className="font-mono text-sm">
+                             {scan.discogs_id ? (
+                               <div className="flex items-center gap-2">
+                                 <span className="font-semibold text-primary">{scan.discogs_id}</span>
+                                 <div className="flex items-center gap-1">
+                                   <Button 
+                                     variant="ghost" 
+                                     size="sm"
+                                     onClick={() => copyDiscogsId(scan)}
+                                     className="h-6 w-6 p-0"
+                                   >
+                                     {isProcessed ? (
+                                       <Check className="h-3 w-3 text-success" />
+                                     ) : (
+                                       <Copy className="h-3 w-3" />
+                                     )}
+                                   </Button>
+                                   {scan.discogs_url && (
+                                     <Button variant="ghost" size="sm" asChild className="h-6 w-6 p-0">
+                                       <a href={scan.discogs_url} target="_blank" rel="noopener noreferrer">
+                                         <ExternalLink className="h-3 w-3" />
+                                       </a>
+                                     </Button>
+                                   )}
+                                 </div>
+                               </div>
+                             ) : (
+                               <span className="text-muted-foreground">—</span>
+                             )}
+                           </div>
+                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="font-medium">
                             {scan.condition_grade}
@@ -408,9 +498,10 @@ const AIScanOverview = () => {
                             <Eye className="h-4 w-4" />
                           </Button>
                         </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
+                         </TableRow>
+                       );
+                     })}
+                   </TableBody>
                 </Table>
               </div>
             </CardContent>

@@ -48,13 +48,34 @@ export const useCDAnalysis = () => {
 
       console.log('✅ CD Analysis completed:', data);
 
-      setAnalysisResult(data);
+      // Transform the data structure to match what the frontend expects
+      const transformedData = {
+        analysis: data.ocr_results || data.combinedResults || data.analysis || {
+          artist: data.artist,
+          title: data.title,
+          label: data.label,
+          catalog_number: data.catalog_number,
+          barcode: data.barcode,
+          year: data.year,
+          format: data.format,
+          genre: data.genre,
+          country: data.country,
+          matrix_number: data.matrix_number,
+          side: data.side,
+          stamper_codes: data.stamper_codes
+        },
+        discogsData: data.discogsData,
+        success: data.success
+      };
+
+      setAnalysisResult(transformedData);
       
+      const analysis = transformedData.analysis;
       const releaseInfo = data.discogsData?.discogs_id ? ` (Release ID: ${data.discogsData.discogs_id})` : '';
-      const matrixInfo = data.analysis?.matrix_number ? ` | Matrix: ${data.analysis.matrix_number}` : '';
+      const matrixInfo = analysis?.matrix_number ? ` | Matrix: ${analysis.matrix_number}` : '';
       toast({
         title: "CD Analyse Voltooid! 🎉",
-        description: `Gevonden: ${data.analysis?.artist || 'Onbekend'} - ${data.analysis?.title || 'Onbekend'}${releaseInfo}${matrixInfo}`,
+        description: `Gevonden: ${analysis?.artist || 'Onbekend'} - ${analysis?.title || 'Onbekend'}${releaseInfo}${matrixInfo}`,
         variant: "default"
       });
 

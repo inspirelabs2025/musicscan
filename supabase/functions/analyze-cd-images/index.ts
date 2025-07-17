@@ -558,8 +558,23 @@ serve(async (req) => {
     const response = {
       success: true,
       scanId: scanId,
-      ocr_results: ocrResults,
+      analysis: {
+        artist: ocrResults.artist,
+        title: ocrResults.title,
+        label: ocrResults.label,
+        catalog_number: ocrResults.catalog_number,
+        barcode: ocrResults.barcode,
+        year: ocrResults.year,
+        format: 'CD',
+        genre: ocrResults.genre,
+        country: ocrResults.country,
+        matrix_number: ocrResults.matrix_number,
+        side: ocrResults.side,
+        stamper_codes: ocrResults.stamper_codes
+      },
       discogsData: discogsData,
+      // Legacy fields for backward compatibility
+      ocr_results: ocrResults,
       combinedResults: {
         artist: ocrResults.artist,
         title: ocrResults.title,

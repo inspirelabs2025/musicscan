@@ -12,6 +12,8 @@ import MarketplaceOverview from "./pages/MarketplaceOverview";
 import CollectionOverview from "./pages/CollectionOverview";
 import AIScan from "./pages/AIScan";
 import AIScanOverview from "./pages/AIScanOverview";
+import AIScanV2 from "./pages/AIScanV2";
+import AIScanV2Overview from "./pages/AIScanV2Overview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/" element={<VinylScanComplete />} />
           <Route path="/ai-scan" element={<AIScan />} />
           <Route path="/ai-scan-overview" element={<AIScanOverview />} />
+          <Route path="/ai-scan-v2" element={<AIScanV2 />} />
+          <Route path="/ai-scan-v2-overview" element={<AIScanV2Overview />} />
           <Route path="/bulkerimage" element={<BulkerImage />} />
           <Route path="/catalog-test" element={<CatalogTest />} />
           <Route path="/index" element={<Index />} />

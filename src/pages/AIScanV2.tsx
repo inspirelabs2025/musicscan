@@ -1,0 +1,435 @@
+import React, { useState, useCallback, useEffect } from 'react';
+import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { Navigation } from '@/components/Navigation';
+// Simple V2 components for media type and condition selection
+
+interface UploadedFile {
+  file: File;
+  preview: string;
+  id: string;
+}
+
+interface AnalysisResult {
+  scanId: string;
+  result: {
+    discogs_id: number | null;
+    discogs_url: string | null;
+    artist: string | null;
+    title: string | null;
+    label: string | null;
+    catalog_number: string | null;
+    year: number | null;
+    confidence_score: number;
+    ai_description: string;
+    image_quality?: string;
+    extracted_details?: any;
+  };
+  version: string;
+}
+
+export default function AIScanV2() {
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [mediaType, setMediaType] = useState<'vinyl' | 'cd'>('vinyl');
+  const [conditionGrade, setConditionGrade] = useState('Very Good (VG)');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const newFile: UploadedFile = {
+            file,
+            preview: e.target?.result as string,
+            id: Math.random().toString(36).substr(2, 9)
+          };
+          setUploadedFiles(prev => [...prev, newFile]);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }, []);
+
+  const removeFile = useCallback((id: string) => {
+    setUploadedFiles(prev => prev.filter(file => file.id !== id));
+  }, []);
+
+  const uploadToSupabase = async (file: File): Promise<string> => {
+    const fileName = `ai-scan-v2/${Date.now()}-${file.name}`;
+    
+    const { data, error } = await supabase.storage
+      .from('vinyl_images')
+      .upload(fileName, file);
+
+    if (error) {
+      throw new Error(`Upload failed: ${error.message}`);
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('vinyl_images')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
+  const startAnalysis = async () => {
+    if (uploadedFiles.length === 0) {
+      toast({
+        title: "Geen bestanden",
+        description: "Upload eerst één of meer foto's om te analyseren.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setAnalysisProgress(0);
+    setError(null);
+    setAnalysisResult(null);
+
+    try {
+      // Upload images
+      setAnalysisProgress(20);
+      const photoUrls = await Promise.all(
+        uploadedFiles.map(({ file }) => uploadToSupabase(file))
+      );
+
+      setAnalysisProgress(40);
+
+      // Call the V2 AI analysis function
+      const { data, error: functionError } = await supabase.functions.invoke(
+        'ai-photo-analysis-v2',
+        {
+          body: {
+            photoUrls,
+            mediaType,
+            conditionGrade
+          }
+        }
+      );
+
+      if (functionError) {
+        throw new Error(functionError.message);
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Analysis failed');
+      }
+
+      setAnalysisProgress(100);
+      setAnalysisResult(data);
+
+      toast({
+        title: "Analyse voltooid!",
+        description: `V2 analyse succesvol afgerond met ${Math.round(data.result.confidence_score * 100)}% vertrouwen.`
+      });
+
+    } catch (err) {
+      console.error('Analysis error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
+      
+      toast({
+        title: "Analyse mislukt",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const resetForm = () => {
+    setUploadedFiles([]);
+    setAnalysisResult(null);
+    setError(null);
+    setAnalysisProgress(0);
+  };
+
+  // Simulate progress during analysis
+  useEffect(() => {
+    if (isAnalyzing && analysisProgress < 90) {
+      const timer = setTimeout(() => {
+        setAnalysisProgress(prev => Math.min(prev + 5, 90));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAnalyzing, analysisProgress]);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      {/* Navigation */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center">
+          <Navigation />
+        </div>
+      </header>
+
+      <div className="p-4">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
+              <Brain className="h-8 w-8" />
+              <Sparkles className="h-6 w-6 text-yellow-500" />
+              AI Foto Analyse V2
+              <Badge variant="secondary" className="ml-2">BETA</Badge>
+            </h1>
+            <p className="text-muted-foreground">
+              Verbeterde AI-analyse met GPT-4.1, multi-pass analyse en geavanceerde tekst extractie
+            </p>
+          </div>
+
+        {!analysisResult && (
+          <>
+            {/* Media Type Selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Media Type</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    variant={mediaType === 'vinyl' ? 'default' : 'outline'}
+                    onClick={() => setMediaType('vinyl')}
+                    className="h-16 flex flex-col gap-1"
+                  >
+                    <span className="font-medium">Vinyl</span>
+                    <span className="text-xs">LP / Single / EP</span>
+                  </Button>
+                  <Button
+                    variant={mediaType === 'cd' ? 'default' : 'outline'}
+                    onClick={() => setMediaType('cd')}
+                    className="h-16 flex flex-col gap-1"
+                  >
+                    <span className="font-medium">CD</span>
+                    <span className="text-xs">Album / Single</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Condition Grade Selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Conditie Beoordeling</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Selecteer staat</label>
+                  <select 
+                    value={conditionGrade}
+                    onChange={(e) => setConditionGrade(e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                  >
+                    <option value="Mint (M)">Mint (M) - Perfect, nieuwstaat</option>
+                    <option value="Near Mint (NM)">Near Mint (NM) - Bijna perfect</option>
+                    <option value="Very Good Plus (VG+)">Very Good Plus (VG+) - Goede staat</option>
+                    <option value="Very Good (VG)">Very Good (VG) - Duidelijke gebruikssporen</option>
+                    <option value="Good Plus (G+)">Good Plus (G+) - Zichtbare slijtage</option>
+                    <option value="Good (G)">Good (G) - Duidelijke slijtage</option>
+                    <option value="Fair (F)">Fair (F) - Slechte staat</option>
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* File Upload */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Upload Foto's</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                  <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Sleep bestanden hierheen of klik om te selecteren
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload-v2"
+                  />
+                  <Button asChild variant="outline">
+                    <label htmlFor="file-upload-v2" className="cursor-pointer">
+                      Bestanden selecteren
+                    </label>
+                  </Button>
+                </div>
+
+                {/* Uploaded Files Preview */}
+                {uploadedFiles.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {uploadedFiles.map((file) => (
+                      <div key={file.id} className="relative group">
+                        <img
+                          src={file.preview}
+                          alt={file.file.name}
+                          className="w-full h-32 object-cover rounded-lg border"
+                        />
+                        <button
+                          onClick={() => removeFile(file.id)}
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                        <p className="text-xs text-muted-foreground mt-1 truncate">
+                          {file.file.name}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Analysis Button */}
+            <Card>
+              <CardContent className="pt-6">
+                <Button 
+                  onClick={startAnalysis}
+                  disabled={uploadedFiles.length === 0 || isAnalyzing}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Clock className="mr-2 h-4 w-4 animate-spin" />
+                      V2 Analyse bezig...
+                    </>
+                  ) : (
+                    <>
+                      <Brain className="mr-2 h-4 w-4" />
+                      <Sparkles className="mr-1 h-4 w-4" />
+                      Start V2 AI Analyse
+                    </>
+                  )}
+                </Button>
+
+                {isAnalyzing && (
+                  <div className="mt-4 space-y-2">
+                    <Progress value={analysisProgress} className="w-full" />
+                    <p className="text-sm text-center text-muted-foreground">
+                      {analysisProgress < 40 && "Foto's uploaden..."}
+                      {analysisProgress >= 40 && analysisProgress < 70 && "Multi-pass AI analyse..."}
+                      {analysisProgress >= 70 && analysisProgress < 90 && "Discogs zoekstrategie..."}
+                      {analysisProgress >= 90 && "Resultaten verwerken..."}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Error Display */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+          </>
+        )}
+
+        {/* Analysis Results */}
+        {analysisResult && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  V2 Analyse Resultaat
+                  <Badge variant="outline">{analysisResult.version}</Badge>
+                </CardTitle>
+              </div>
+              <Button onClick={resetForm} variant="outline">
+                Nieuwe Analyse
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Confidence Score */}
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <span className="font-medium">Vertrouwen Score:</span>
+                <Badge 
+                  variant={
+                    analysisResult.result.confidence_score > 0.8 ? "default" :
+                    analysisResult.result.confidence_score > 0.5 ? "secondary" : "destructive"
+                  }
+                >
+                  {Math.round(analysisResult.result.confidence_score * 100)}%
+                </Badge>
+              </div>
+
+              {/* Release Information */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Release Informatie</h3>
+                  <div className="space-y-1 text-sm">
+                    <div><strong>Artiest:</strong> {analysisResult.result.artist || 'Niet gevonden'}</div>
+                    <div><strong>Titel:</strong> {analysisResult.result.title || 'Niet gevonden'}</div>
+                    <div><strong>Label:</strong> {analysisResult.result.label || 'Niet gevonden'}</div>
+                    <div><strong>Catalog Nr:</strong> {analysisResult.result.catalog_number || 'Niet gevonden'}</div>
+                    <div><strong>Jaar:</strong> {analysisResult.result.year || 'Niet gevonden'}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="font-semibold">V2 Details</h3>
+                  <div className="space-y-1 text-sm">
+                    {analysisResult.result.image_quality && (
+                      <div><strong>Beeld kwaliteit:</strong> {analysisResult.result.image_quality}</div>
+                    )}
+                    <div><strong>Scan ID:</strong> {analysisResult.scanId}</div>
+                    {analysisResult.result.discogs_id && (
+                      <div><strong>Discogs ID:</strong> {analysisResult.result.discogs_id}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Discogs Link */}
+              {analysisResult.result.discogs_url && (
+                <div className="pt-4">
+                  <Button asChild className="w-full">
+                    <a 
+                      href={analysisResult.result.discogs_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      Bekijk op Discogs
+                    </a>
+                  </Button>
+                </div>
+              )}
+
+              {/* AI Description */}
+              {analysisResult.result.ai_description && (
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold mb-2">V2 AI Analyse</h3>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {analysisResult.result.ai_description}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+        </div>
+      </div>
+    </div>
+  );
+}

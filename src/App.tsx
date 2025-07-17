@@ -10,6 +10,7 @@ import VinylScanComplete from "./pages/VinylScanComplete";
 import BulkerImage from "./pages/BulkerImage";
 import MarketplaceOverview from "./pages/MarketplaceOverview";
 import CollectionOverview from "./pages/CollectionOverview";
+import AIScan from "./pages/AIScan";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<VinylScanComplete />} />
+          <Route path="/ai-scan" element={<AIScan />} />
           <Route path="/bulkerimage" element={<BulkerImage />} />
           <Route path="/catalog-test" element={<CatalogTest />} />
           <Route path="/index" element={<Index />} />

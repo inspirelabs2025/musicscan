@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_scan_results: {
+        Row: {
+          ai_description: string | null
+          analysis_data: Json | null
+          artist: string | null
+          catalog_number: string | null
+          condition_grade: string
+          confidence_score: number | null
+          created_at: string
+          discogs_id: number | null
+          discogs_url: string | null
+          error_message: string | null
+          id: string
+          label: string | null
+          media_type: string
+          photo_urls: string[]
+          search_queries: string[] | null
+          status: string
+          title: string | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          ai_description?: string | null
+          analysis_data?: Json | null
+          artist?: string | null
+          catalog_number?: string | null
+          condition_grade: string
+          confidence_score?: number | null
+          created_at?: string
+          discogs_id?: number | null
+          discogs_url?: string | null
+          error_message?: string | null
+          id?: string
+          label?: string | null
+          media_type: string
+          photo_urls: string[]
+          search_queries?: string[] | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          ai_description?: string | null
+          analysis_data?: Json | null
+          artist?: string | null
+          catalog_number?: string | null
+          condition_grade?: string
+          confidence_score?: number | null
+          created_at?: string
+          discogs_id?: number | null
+          discogs_url?: string | null
+          error_message?: string | null
+          id?: string
+          label?: string | null
+          media_type?: string
+          photo_urls?: string[]
+          search_queries?: string[] | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       batch_uploads: {
         Row: {
           condition_grade: string | null

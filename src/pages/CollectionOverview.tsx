@@ -40,10 +40,12 @@ import {
   Disc3,
   Music2,
   Clock,
-  Euro
+  Euro,
+  Brain
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
+import { AIAnalysisTab } from "@/components/AIAnalysisTab";
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))', '#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
 
@@ -111,10 +113,14 @@ export default function CollectionOverview() {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
             <span className="hidden sm:inline">Overzicht</span>
+          </TabsTrigger>
+          <TabsTrigger value="ai-analysis" className="flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            <span className="hidden sm:inline">🤖 AI Analyse</span>
           </TabsTrigger>
           <TabsTrigger value="type" className="flex items-center gap-2">
             <Disc className="h-4 w-4" />
@@ -137,6 +143,11 @@ export default function CollectionOverview() {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           <OverviewTab stats={stats} formatCurrency={formatCurrency} />
+        </TabsContent>
+
+        {/* AI Analysis Tab */}
+        <TabsContent value="ai-analysis" className="space-y-6">
+          <AIAnalysisTab />
         </TabsContent>
 
         {/* Type Tab */}

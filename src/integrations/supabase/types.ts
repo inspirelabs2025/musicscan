@@ -19,21 +19,28 @@ export type Database = {
           ai_description: string | null
           analysis_data: Json | null
           artist: string | null
+          barcode: string | null
           catalog_number: string | null
           condition_grade: string
           confidence_score: number | null
+          country: string | null
           created_at: string
           discogs_id: number | null
           discogs_url: string | null
           edit_history: Json | null
           error_message: string | null
+          format: string | null
+          genre: string | null
           id: string
           label: string | null
           manual_edits: Json | null
+          master_id: number | null
+          matrix_number: string | null
           media_type: string
           photo_urls: string[]
           search_queries: string[] | null
           status: string
+          style: string[] | null
           title: string | null
           updated_at: string
           updated_by: string | null
@@ -43,21 +50,28 @@ export type Database = {
           ai_description?: string | null
           analysis_data?: Json | null
           artist?: string | null
+          barcode?: string | null
           catalog_number?: string | null
           condition_grade: string
           confidence_score?: number | null
+          country?: string | null
           created_at?: string
           discogs_id?: number | null
           discogs_url?: string | null
           edit_history?: Json | null
           error_message?: string | null
+          format?: string | null
+          genre?: string | null
           id?: string
           label?: string | null
           manual_edits?: Json | null
+          master_id?: number | null
+          matrix_number?: string | null
           media_type: string
           photo_urls: string[]
           search_queries?: string[] | null
           status?: string
+          style?: string[] | null
           title?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -67,21 +81,28 @@ export type Database = {
           ai_description?: string | null
           analysis_data?: Json | null
           artist?: string | null
+          barcode?: string | null
           catalog_number?: string | null
           condition_grade?: string
           confidence_score?: number | null
+          country?: string | null
           created_at?: string
           discogs_id?: number | null
           discogs_url?: string | null
           edit_history?: Json | null
           error_message?: string | null
+          format?: string | null
+          genre?: string | null
           id?: string
           label?: string | null
           manual_edits?: Json | null
+          master_id?: number | null
+          matrix_number?: string | null
           media_type?: string
           photo_urls?: string[]
           search_queries?: string[] | null
           status?: string
+          style?: string[] | null
           title?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -175,6 +196,7 @@ export type Database = {
           median_price: number | null
           side: string | null
           stamper_codes: string | null
+          style: string[] | null
           title: string | null
           updated_at: string
           year: number | null
@@ -213,6 +235,7 @@ export type Database = {
           median_price?: number | null
           side?: string | null
           stamper_codes?: string | null
+          style?: string[] | null
           title?: string | null
           updated_at?: string
           year?: number | null
@@ -251,6 +274,7 @@ export type Database = {
           median_price?: number | null
           side?: string | null
           stamper_codes?: string | null
+          style?: string[] | null
           title?: string | null
           updated_at?: string
           year?: number | null
@@ -677,6 +701,7 @@ export type Database = {
           matrix_image: string | null
           matrix_number: string | null
           median_price: number | null
+          style: string[] | null
           title: string | null
           updated_at: string
           year: number | null
@@ -711,6 +736,7 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          style?: string[] | null
           title?: string | null
           updated_at?: string
           year?: number | null
@@ -745,6 +771,7 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          style?: string[] | null
           title?: string | null
           updated_at?: string
           year?: number | null

@@ -41,10 +41,21 @@ export interface AIAnalysis {
   collectionStory: string;
 }
 
+export interface ChartData {
+  genreDistribution: { name: string; value: number; percentage: number; }[];
+  formatDistribution: { name: string; value: number; fill: string; }[];
+  topArtists: { name: string; albums: number; }[];
+  yearDistribution: { decade: string; count: number; }[];
+  labelDistribution: { name: string; releases: number; }[];
+  valueDistribution: { range: string; count: number; }[];
+  countryDistribution: { country: string; count: number; }[];
+}
+
 export interface CollectionAIAnalysisResult {
   success: boolean;
   analysis: AIAnalysis;
   stats: any;
+  chartData: ChartData;
   generatedAt: string;
   error?: string;
 }

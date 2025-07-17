@@ -154,11 +154,36 @@ Focus on being insightful, personal, and discovering hidden patterns. Avoid gene
 
     console.log('✅ AI analysis completed successfully');
 
-    // Return analysis with collection stats
+    // Prepare chart data
+    const chartData = {
+      genreDistribution: collectionSummary.topGenres.map(genre => ({
+        name: genre.name,
+        value: genre.count,
+        percentage: Math.round((genre.count / allItems.length) * 100)
+      })),
+      formatDistribution: [
+        { name: 'CD', value: collectionSummary.totalCDs, fill: 'hsl(var(--vinyl-purple))' },
+        { name: 'Vinyl', value: collectionSummary.totalVinyls, fill: 'hsl(var(--vinyl-gold))' }
+      ],
+      topArtists: collectionSummary.topArtists.slice(0, 8).map(artist => ({
+        name: artist.name.length > 15 ? artist.name.substring(0, 15) + '...' : artist.name,
+        albums: artist.count
+      })),
+      yearDistribution: getYearDistribution(allItems),
+      labelDistribution: collectionSummary.topLabels.slice(0, 6).map(label => ({
+        name: label.name.length > 12 ? label.name.substring(0, 12) + '...' : label.name,
+        releases: label.count
+      })),
+      valueDistribution: getValueDistribution(allItems),
+      countryDistribution: getCountryDistribution(allItems).slice(0, 8)
+    };
+
+    // Return analysis with collection stats and chart data
     return new Response(JSON.stringify({
       success: true,
       analysis,
       stats: collectionSummary,
+      chartData,
       generatedAt: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -226,4 +251,55 @@ function getMostValuable(items: any[], limit: number) {
       format: item.format,
       year: item.year
     }));
+}
+
+function getYearDistribution(items: any[]) {
+  const decades = new Map();
+  items.forEach(item => {
+    if (item.year) {
+      const decade = Math.floor(item.year / 10) * 10;
+      const label = `${decade}s`;
+      decades.set(label, (decades.get(label) || 0) + 1);
+    }
+  });
+  return Array.from(decades.entries())
+    .map(([decade, count]) => ({ decade, count }))
+    .sort((a, b) => a.decade.localeCompare(b.decade));
+}
+
+function getValueDistribution(items: any[]) {
+  const ranges = [
+    { range: '€0-10', min: 0, max: 10, count: 0 },
+    { range: '€10-25', min: 10, max: 25, count: 0 },
+    { range: '€25-50', min: 25, max: 50, count: 0 },
+    { range: '€50-100', min: 50, max: 100, count: 0 },
+    { range: '€100+', min: 100, max: Infinity, count: 0 }
+  ];
+  
+  items.forEach(item => {
+    const price = Number(item.calculated_advice_price || item.median_price || item.marketplace_price || 0);
+    if (price > 0) {
+      const range = ranges.find(r => price >= r.min && price < r.max);
+      if (range) range.count++;
+    }
+  });
+  
+  return ranges.filter(r => r.count > 0);
+}
+
+function getCountryDistribution(items: any[]) {
+  const countries = new Map();
+  items.forEach(item => {
+    if (item.country) {
+      const country = item.country === 'Netherlands' ? 'Nederland' : 
+                     item.country === 'Germany' ? 'Duitsland' :
+                     item.country === 'United Kingdom' ? 'Verenigd Koninkrijk' :
+                     item.country === 'United States' ? 'Verenigde Staten' :
+                     item.country === 'France' ? 'Frankrijk' : item.country;
+      countries.set(country, (countries.get(country) || 0) + 1);
+    }
+  });
+  return Array.from(countries.entries())
+    .map(([country, count]) => ({ country, count }))
+    .sort((a, b) => b.count - a.count);
 }

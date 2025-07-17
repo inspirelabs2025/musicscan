@@ -36,8 +36,8 @@ const AIScanOverview = () => {
   const [sortField, setSortField] = useState<keyof AIScanResult>("created_at");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [searchTerm, setSearchTerm] = useState("");
-  const [mediaTypeFilter, setMediaTypeFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [mediaTypeFilter, setMediaTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedScan, setSelectedScan] = useState<AIScanResult | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
@@ -220,7 +220,7 @@ const AIScanOverview = () => {
                     <SelectValue placeholder="Media Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle Types</SelectItem>
+                    <SelectItem value="all">Alle Types</SelectItem>
                     <SelectItem value="vinyl">Vinyl</SelectItem>
                     <SelectItem value="cd">CD</SelectItem>
                   </SelectContent>
@@ -236,7 +236,7 @@ const AIScanOverview = () => {
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle Status</SelectItem>
+                    <SelectItem value="all">Alle Status</SelectItem>
                     <SelectItem value="completed">Voltooid</SelectItem>
                     <SelectItem value="failed">Mislukt</SelectItem>
                     <SelectItem value="pending">Bezig</SelectItem>
@@ -246,8 +246,8 @@ const AIScanOverview = () => {
                   variant="outline"
                   onClick={() => {
                     setSearchTerm("");
-                    setMediaTypeFilter("");
-                    setStatusFilter("");
+                    setMediaTypeFilter("all");
+                    setStatusFilter("all");
                     setPage(1);
                   }}
                 >

@@ -38,12 +38,12 @@ export const useAIScans = (options: UseAIScansOptions = {}) => {
       }
 
       // Apply media type filter
-      if (mediaTypeFilter) {
+      if (mediaTypeFilter && mediaTypeFilter !== "all") {
         query = query.eq("media_type", mediaTypeFilter);
       }
 
       // Apply status filter
-      if (statusFilter) {
+      if (statusFilter && statusFilter !== "all") {
         query = query.eq("status", statusFilter);
       }
 

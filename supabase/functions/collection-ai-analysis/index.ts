@@ -275,9 +275,12 @@ Focus on being insightful, personal, and discovering hidden patterns. Avoid gene
 
     console.log('✅ AI analysis completed successfully');
 
+    // Generate top genres for chart data
+    const topGenres = getTopItems(allItems, 'genre', 10);
+    
     // Prepare enhanced chart data with better coverage
     const chartData = {
-      genreDistribution: detailedAnalysis.topGenres.filter(g => g.name).map(genre => ({
+      genreDistribution: topGenres.filter(g => g.name).map(genre => ({
         name: genre.name,
         value: genre.count,
         percentage: Math.round((genre.count / allItems.length) * 100)
@@ -286,19 +289,19 @@ Focus on being insightful, personal, and discovering hidden patterns. Avoid gene
         { name: 'CD', value: detailedAnalysis.totalCDs, fill: 'hsl(var(--vinyl-purple))' },
         { name: 'Vinyl', value: detailedAnalysis.totalVinyls, fill: 'hsl(var(--vinyl-gold))' }
       ],
-      topArtists: detailedAnalysis.topArtists.slice(0, 10).map(artist => ({
+      topArtists: (detailedAnalysis.topArtists || []).slice(0, 10).map(artist => ({
         name: artist.name && artist.name.length > 15 ? artist.name.substring(0, 15) + '...' : artist.name || 'Unknown Artist',
         albums: artist.count
       })),
       yearDistribution: getYearDistribution(allItems),
-      labelDistribution: detailedAnalysis.topLabels.filter(l => l.name).slice(0, 8).map(label => ({
+      labelDistribution: (detailedAnalysis.topLabels || []).filter(l => l.name).slice(0, 8).map(label => ({
         name: label.name.length > 12 ? label.name.substring(0, 12) + '...' : label.name,
         releases: label.count
       })),
       valueDistribution: getValueDistribution(allItems),
       countryDistribution: getCountryDistribution(allItems).slice(0, 8),
       styleDistribution: getStyleDistribution(allItems).slice(0, 10),
-      decadeFlow: detailedAnalysis.decadeAnalysis
+      decadeFlow: detailedAnalysis.decadeAnalysis || []
     };
 
     // Return comprehensive analysis with detailed stats and enhanced chart data

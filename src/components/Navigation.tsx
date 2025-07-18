@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 const navigationItems = [
   { title: "Home", url: "/", icon: Home },
-  { title: "AI Scan", url: "/ai-scan", icon: Brain },
+  { title: "AI Scan", url: "/ai-scan-v2", icon: Brain },
   { title: "AI Overzicht", url: "/ai-scan-overview", icon: Database },
   { title: "Bulk Scan", url: "/bulkerimage", icon: Images },
   { title: "Marketplace", url: "/marketplace-overview", icon: ShoppingCart },

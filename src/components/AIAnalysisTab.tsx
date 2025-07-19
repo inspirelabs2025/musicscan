@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { EnhancedAIAnalysisTab } from './EnhancedAIAnalysisTab';
+import { MusicDNAExplorer } from './MusicDNAExplorer';
 
 export function AIAnalysisTab() {
-  return <EnhancedAIAnalysisTab />;
+  return <MusicDNAExplorer />;
 }

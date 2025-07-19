@@ -27,13 +27,13 @@ import {
   Clock,
   Star,
   Share2,
-  Download
+  Download,
+  Settings
 } from "lucide-react";
 import { DNAVisualization } from './DNA/DNAVisualization';
 import { StoryChapter } from './DNA/StoryChapter';
 import { MusicalGalaxy } from './DNA/MusicalGalaxy';
 import { PersonalityQuiz } from './DNA/PersonalityQuiz';
-import { AchievementSystem } from './DNA/AchievementSystem';
 import { InteractiveTimeline } from './DNA/InteractiveTimeline';
 import { toast } from '@/hooks/use-toast';
 
@@ -43,7 +43,6 @@ export function MusicDNAExplorer() {
   const [activeChapter, setActiveChapter] = useState(0);
   const [isNarrativeMode, setIsNarrativeMode] = useState(true);
   const [showQuiz, setShowQuiz] = useState(false);
-  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
   const [scrollProgress, setScrollProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -544,20 +543,16 @@ export function MusicDNAExplorer() {
         </footer>
       </div>
 
-      {/* Achievement System */}
-      <AchievementSystem 
-        stats={stats} 
-        analysis={analysis}
-        unlockedAchievements={unlockedAchievements}
-        onAchievementUnlock={(achievement) => {
-          setUnlockedAchievements(prev => [...prev, achievement]);
-          toast({
-            title: "🏆 Achievement Unlocked!",
-            description: achievement,
-            duration: 5000
-          });
-        }}
-      />
+      {/* Configurable Button (replaces Achievement System) */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          onClick={() => toast({ title: "Feature configuratie komt binnenkort!" })}
+          className="bg-white/10 backdrop-blur-lg border border-white/20 hover:bg-white/20 text-white transition-all duration-300 rounded-2xl px-4 py-3"
+        >
+          <Settings className="h-5 w-5 mr-2" />
+          Configure
+        </Button>
+      </div>
 
       {/* Personality Quiz Modal */}
       {showQuiz && (

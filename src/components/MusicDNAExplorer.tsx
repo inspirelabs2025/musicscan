@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -305,7 +304,7 @@ export function MusicDNAExplorer() {
             </div>
 
             {/* Chapter Navigation */}
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-4xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-4xl mx-auto relative z-20">
               <h3 className="text-lg font-semibold text-white mb-4 text-center">Navigate Your DNA Story</h3>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {chapters.map((chapter, index) => {
@@ -317,32 +316,27 @@ export function MusicDNAExplorer() {
                       key={chapter.id}
                       onClick={() => scrollToSection(index)}
                       variant="ghost"
-                      className={`flex flex-col items-center gap-2 p-4 h-auto transition-all duration-300 ${
+                      className={`relative flex flex-col items-center gap-2 p-4 h-auto transition-all duration-300 border ${
                         isActive 
-                          ? 'bg-white/20 text-white shadow-lg border border-white/30' 
-                          : 'text-white/60 hover:text-white hover:bg-white/10'
+                          ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white shadow-lg border-white/30 backdrop-blur-sm' 
+                          : 'text-white/60 hover:text-white hover:bg-white/10 border-transparent hover:border-white/20'
                       }`}
                     >
                       <Icon className="h-5 w-5" />
                       <span className="text-xs font-medium text-center leading-tight">
                         {chapter.title}
                       </span>
-                      
-                      {/* Active indicator */}
-                      {isActive && (
-                        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 -z-10" />
-                      )}
                     </Button>
                   );
                 })}
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 relative z-20">
               <Button 
                 onClick={() => setIsNarrativeMode(!isNarrativeMode)}
                 size="lg"
-                className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white"
+                className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white transition-all duration-300"
               >
                 {isNarrativeMode ? (
                   <>
@@ -360,7 +354,7 @@ export function MusicDNAExplorer() {
               <Button 
                 onClick={() => setShowQuiz(true)}
                 size="lg"
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transition-all duration-300"
               >
                 <Trophy className="h-5 w-5 mr-2" />
                 Take Quiz
@@ -369,7 +363,7 @@ export function MusicDNAExplorer() {
               <Button
                 onClick={() => toast({ title: "Share DNA feature coming soon!" })}
                 size="lg"
-                className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white"
+                className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white transition-all duration-300"
               >
                 <Share2 className="h-5 w-5 mr-2" />
                 Share DNA
@@ -378,7 +372,7 @@ export function MusicDNAExplorer() {
               <Button
                 onClick={() => toast({ title: "Export feature coming soon!" })}
                 size="lg"
-                className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white"
+                className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white transition-all duration-300"
               >
                 <Download className="h-5 w-5 mr-2" />
                 Export

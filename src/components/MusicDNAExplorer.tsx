@@ -22,17 +22,10 @@ import {
   AlertCircle,
   Play,
   Pause,
-  Share2,
-  Download,
   Trophy,
   Target,
   Telescope,
-  Compass,
-  BookOpen,
-  Award,
-  Map,
   Clock,
-  Heart,
   Star
 } from "lucide-react";
 import { DNAVisualization } from './DNA/DNAVisualization';
@@ -41,6 +34,7 @@ import { MusicalGalaxy } from './DNA/MusicalGalaxy';
 import { PersonalityQuiz } from './DNA/PersonalityQuiz';
 import { AchievementSystem } from './DNA/AchievementSystem';
 import { InteractiveTimeline } from './DNA/InteractiveTimeline';
+import { FloatingNavigation } from './DNA/FloatingNavigation';
 import { toast } from '@/hooks/use-toast';
 
 export function MusicDNAExplorer() {
@@ -60,6 +54,21 @@ export function MusicDNAExplorer() {
         const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
         const progress = (scrollTop / (scrollHeight - clientHeight)) * 100;
         setScrollProgress(Math.min(progress, 100));
+        
+        // Auto-detect active chapter based on scroll position
+        const chapters = document.querySelectorAll('[id^="chapter-"]');
+        const viewportCenter = scrollTop + clientHeight / 2;
+        
+        chapters.forEach((chapter, index) => {
+          const element = chapter as HTMLElement;
+          const rect = element.getBoundingClientRect();
+          const elementTop = scrollTop + rect.top;
+          const elementBottom = elementTop + rect.height;
+          
+          if (viewportCenter >= elementTop && viewportCenter <= elementBottom) {
+            setActiveChapter(index);
+          }
+        });
       }
     };
 
@@ -230,7 +239,7 @@ export function MusicDNAExplorer() {
       id: 'future',
       title: 'The Future',
       subtitle: 'Where your journey leads next',
-      icon: Compass,
+      icon: TrendingUp,
       color: 'from-orange-500 to-yellow-600',
       content: analysis.recommendations.nextPurchases.join(', ')
     }
@@ -239,7 +248,7 @@ export function MusicDNAExplorer() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
       {/* Progress Bar */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-slate-800 z-50">
+      <div className="fixed top-0 left-0 w-full h-1 bg-slate-800 z-40">
         <div 
           className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300"
           style={{ width: `${scrollProgress}%` }}
@@ -248,7 +257,7 @@ export function MusicDNAExplorer() {
 
       <div 
         ref={containerRef}
-        className="overflow-y-auto h-screen"
+        className="overflow-y-auto h-screen pb-24"
       >
         {/* Hero Section */}
         <section className="min-h-screen flex items-center justify-center px-6 py-12 relative">
@@ -333,66 +342,22 @@ export function MusicDNAExplorer() {
           </div>
         </section>
 
-        {/* Navigation */}
-        <div className="sticky top-1 z-40 bg-slate-900/80 backdrop-blur-lg border-b border-white/10">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-2 md:gap-4 flex-wrap">
-                {chapters.map((chapter, index) => (
-                  <button
-                    key={chapter.id}
-                    onClick={() => setActiveChapter(index)}
-                    className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg transition-all text-sm md:text-base ${
-                      activeChapter === index 
-                        ? 'bg-white/20 text-white shadow-lg' 
-                        : 'text-white/60 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <chapter.icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{chapter.title}</span>
-                  </button>
-                ))}
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => toast({ title: "Sharing feature coming soon!" })}
-                  className="text-white/60 hover:text-white hover:bg-white/10"
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Share DNA</span>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => toast({ title: "Export feature coming soon!" })}
-                  className="text-white/60 hover:text-white hover:bg-white/10"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Export</span>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-6 py-12">
           {isNarrativeMode ? (
             // Story Mode
             <div className="space-y-24">
               {chapters.map((chapter, index) => (
-                <StoryChapter
-                  key={chapter.id}
-                  chapter={chapter}
-                  analysis={analysis}
-                  chartData={chartData}
-                  stats={stats}
-                  isActive={activeChapter === index}
-                  onActivate={() => setActiveChapter(index)}
-                />
+                <div key={chapter.id} id={`chapter-${chapter.id}`}>
+                  <StoryChapter
+                    chapter={chapter}
+                    analysis={analysis}
+                    chartData={chartData}
+                    stats={stats}
+                    isActive={activeChapter === index}
+                    onActivate={() => setActiveChapter(index)}
+                  />
+                </div>
               ))}
             </div>
           ) : (
@@ -518,6 +483,13 @@ export function MusicDNAExplorer() {
           </div>
         </footer>
       </div>
+
+      {/* Floating Navigation */}
+      <FloatingNavigation 
+        chapters={chapters}
+        activeChapter={activeChapter}
+        onChapterChange={setActiveChapter}
+      />
 
       {/* Achievement System */}
       <AchievementSystem 

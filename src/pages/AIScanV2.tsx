@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
+
 // Simple V2 components for media type and condition selection
 
 interface UploadedFile {
@@ -37,7 +38,7 @@ interface AnalysisResult {
 export default function AIScanV2() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd'>('vinyl');
-  const [conditionGrade, setConditionGrade] = useState('Very Good (VG)');
+  const [conditionGrade, setConditionGrade] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -89,6 +90,16 @@ export default function AIScanV2() {
       toast({
         title: "Geen bestanden",
         description: "Upload eerst één of meer foto's om te analyseren.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Add validation for condition grade
+    if (!conditionGrade) {
+      toast({
+        title: "Geen conditie geselecteerd",
+        description: "Selecteer eerst een conditie voor je item.",
         variant: "destructive"
       });
       return;
@@ -224,16 +235,17 @@ export default function AIScanV2() {
             {/* Condition Grade Selection */}
             <Card>
               <CardHeader>
-                <CardTitle>Conditie Beoordeling</CardTitle>
+                <CardTitle>Conditie Beoordeling <span className="text-red-500">*</span></CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Selecteer staat</label>
+                  <label className="text-sm font-medium">Selecteer staat (verplicht)</label>
                   <select 
                     value={conditionGrade}
                     onChange={(e) => setConditionGrade(e.target.value)}
-                    className="w-full p-2 border rounded-md"
+                    className={`w-full p-2 border rounded-md ${!conditionGrade ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
                   >
+                    <option value="" disabled>Selecteer een conditie</option>
                     <option value="Mint (M)">Mint (M) - Perfect, nieuwstaat</option>
                     <option value="Near Mint (NM)">Near Mint (NM) - Bijna perfect</option>
                     <option value="Very Good Plus (VG+)">Very Good Plus (VG+) - Goede staat</option>
@@ -242,6 +254,9 @@ export default function AIScanV2() {
                     <option value="Good (G)">Good (G) - Duidelijke slijtage</option>
                     <option value="Fair (F)">Fair (F) - Slechte staat</option>
                   </select>
+                  {!conditionGrade && (
+                    <p className="text-sm text-red-600">Een conditie selectie is verplicht</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -303,7 +318,7 @@ export default function AIScanV2() {
               <CardContent className="pt-6">
                 <Button 
                   onClick={startAnalysis}
-                  disabled={uploadedFiles.length === 0 || isAnalyzing}
+                  disabled={uploadedFiles.length === 0 || isAnalyzing || !conditionGrade}
                   className="w-full"
                   size="lg"
                 >
@@ -320,6 +335,12 @@ export default function AIScanV2() {
                     </>
                   )}
                 </Button>
+
+                {!conditionGrade && uploadedFiles.length > 0 && (
+                  <p className="text-sm text-red-600 text-center mt-2">
+                    Selecteer eerst een conditie om de analyse te starten
+                  </p>
+                )}
 
                 {isAnalyzing && (
                   <div className="mt-4 space-y-2">

@@ -72,23 +72,21 @@ export function MusicDNAExplorer() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 flex items-center justify-center">
-        <div className="text-center space-y-6">
-          <div className="relative">
-            <div className="w-32 h-32 mx-auto">
-              <DNAVisualization isLoading={true} />
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
+        <div className="text-center space-y-8 max-w-lg mx-auto">
+          <div className="relative mx-auto w-32 h-32">
+            <DNAVisualization isLoading={true} />
           </div>
-          <div className="space-y-4">
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              🧬 Music DNA wordt geëxtracteerd...
+          <div className="space-y-6">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
+              🧬 Music DNA Extraction
             </h2>
-            <p className="text-xl text-muted-foreground max-w-md mx-auto">
+            <p className="text-xl text-blue-200/80 leading-relaxed">
               Onze AI doorzoekt de diepste lagen van je muzikale ziel
             </p>
-            <div className="space-y-2">
-              <Progress value={75} className="h-3 w-96 mx-auto" />
-              <div className="flex justify-between text-sm text-muted-foreground w-96 mx-auto">
+            <div className="space-y-4">
+              <Progress value={75} className="h-3 w-full mx-auto bg-white/10" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-blue-200/60">
                 <span>Analyzing patterns...</span>
                 <span>Discovering connections...</span>
                 <span>Crafting your story...</span>
@@ -102,89 +100,91 @@ export function MusicDNAExplorer() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-destructive/5 to-orange-500/5 flex items-center justify-center p-6">
-        <Card className="max-w-2xl w-full border-destructive/20 bg-destructive/5">
-          <CardContent className="p-8 text-center space-y-6">
-            <div className="relative">
-              <AlertCircle className="h-24 w-24 mx-auto text-destructive mb-4" />
-              <div className="absolute -top-2 -right-2">
-                <Zap className="h-8 w-8 text-yellow-500 animate-pulse" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
+        <div className="max-w-2xl w-full">
+          <Card className="border-red-500/20 bg-red-500/5 backdrop-blur-sm">
+            <CardContent className="p-8 text-center space-y-8">
+              <div className="relative mx-auto w-24 h-24">
+                <AlertCircle className="h-24 w-24 text-red-400" />
+                <div className="absolute -top-2 -right-2">
+                  <Zap className="h-8 w-8 text-yellow-400 animate-pulse" />
+                </div>
               </div>
-            </div>
-            
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold">🔬 DNA Lab Needs More Samples</h3>
-              <p className="text-lg text-muted-foreground">
-                Je collectie mist cruciale metadata voor een complete DNA analyse. 
-                Laten we je collectie verrijken met Discogs data!
-              </p>
-            </div>
-            
-            <div className="bg-gradient-to-r from-white/50 to-white/30 rounded-lg p-6 space-y-4">
-              <h4 className="font-semibold flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Wat we gaan verrijken:
-              </h4>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <Badge variant="outline">🎵 Genres & Stijlen</Badge>
-                <Badge variant="outline">🏷️ Label Informatie</Badge>
-                <Badge variant="outline">🌍 Landen & Regio's</Badge>
-                <Badge variant="outline">📅 Release Data</Badge>
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              <Button 
-                onClick={enrichMetadata} 
-                disabled={isEnriching}
-                size="lg"
-                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8"
-              >
-                {isEnriching ? (
-                  <>
-                    <Telescope className="h-5 w-5 mr-2 animate-spin" />
-                    DNA Sequencing... {enrichmentProgress}%
-                  </>
-                ) : (
-                  <>
-                    <Telescope className="h-5 w-5 mr-2" />
-                    Start DNA Verrijking
-                  </>
-                )}
-              </Button>
               
-              {!isEnriching && (
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold text-white">🔬 DNA Lab Needs More Samples</h3>
+                <p className="text-lg text-red-200/80 leading-relaxed">
+                  Je collectie mist cruciale metadata voor een complete DNA analyse. 
+                  Laten we je collectie verrijken met Discogs data!
+                </p>
+              </div>
+              
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 space-y-4 border border-white/10">
+                <h4 className="font-semibold text-white flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Wat we gaan verrijken:
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <Badge variant="outline" className="bg-blue-500/10 text-blue-200 border-blue-500/30">🎵 Genres & Stijlen</Badge>
+                  <Badge variant="outline" className="bg-green-500/10 text-green-200 border-green-500/30">🏷️ Label Informatie</Badge>
+                  <Badge variant="outline" className="bg-purple-500/10 text-purple-200 border-purple-500/30">🌍 Landen & Regio's</Badge>
+                  <Badge variant="outline" className="bg-orange-500/10 text-orange-200 border-orange-500/30">📅 Release Data</Badge>
+                </div>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
-                  onClick={() => refetch()} 
-                  disabled={isRefetching}
-                  variant="outline"
-                  className="bg-white/50 backdrop-blur-sm"
+                  onClick={enrichMetadata} 
+                  disabled={isEnriching}
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8"
                 >
-                  {isRefetching ? (
+                  {isEnriching ? (
                     <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Heranalyseren...
+                      <Telescope className="h-5 w-5 mr-2 animate-spin" />
+                      DNA Sequencing... {enrichmentProgress}%
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Probeer Opnieuw
+                      <Telescope className="h-5 w-5 mr-2" />
+                      Start DNA Verrijking
                     </>
                   )}
                 </Button>
-              )}
-            </div>
-            
-            {isEnriching && (
-              <div className="space-y-3">
-                <Progress value={enrichmentProgress} className="h-3" />
-                <p className="text-sm text-muted-foreground">
-                  🧬 DNA strengen worden gelezen... Dit kan even duren maar het resultaat is de moeite waard!
-                </p>
+                
+                {!isEnriching && (
+                  <Button 
+                    onClick={() => refetch()} 
+                    disabled={isRefetching}
+                    variant="outline"
+                    className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+                  >
+                    {isRefetching ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Heranalyseren...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Probeer Opnieuw
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
+              
+              {isEnriching && (
+                <div className="space-y-3">
+                  <Progress value={enrichmentProgress} className="h-3 bg-white/10" />
+                  <p className="text-sm text-blue-200/60">
+                    🧬 DNA strengen worden gelezen... Dit kan even duren maar het resultaat is de moeite waard!
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -237,263 +237,286 @@ export function MusicDNAExplorer() {
   ];
 
   return (
-    <div 
-      ref={containerRef}
-      className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-y-auto"
-    >
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center p-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-purple-500/20"></div>
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-purple-500 to-pink-500 z-10">
-          <div 
-            className="h-full bg-white/30 transition-all duration-300"
-            style={{ width: `${scrollProgress}%` }}
-          />
-        </div>
-        
-        <div className="relative z-10 text-center space-y-8 max-w-4xl">
-          <div className="space-y-4">
-            <div className="flex items-center justify-center mb-6">
-              <div className="relative w-32 h-32">
-                <DNAVisualization analysis={analysis} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+      {/* Progress Bar */}
+      <div className="fixed top-0 left-0 w-full h-1 bg-slate-800 z-50">
+        <div 
+          className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
+
+      <div 
+        ref={containerRef}
+        className="overflow-y-auto h-screen"
+      >
+        {/* Hero Section */}
+        <section className="min-h-screen flex items-center justify-center px-6 py-12 relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10" />
+          
+          <div className="relative z-10 text-center space-y-8 max-w-6xl mx-auto">
+            <div className="space-y-6">
+              <div className="flex items-center justify-center mb-8">
+                <div className="relative w-32 h-32">
+                  <DNAVisualization analysis={analysis} />
+                </div>
               </div>
+              
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent leading-tight">
+                Your Music DNA
+              </h1>
+              
+              <p className="text-xl md:text-2xl lg:text-3xl text-blue-200/80 font-light max-w-4xl mx-auto leading-relaxed">
+                {analysis.musicPersonality.musicDNA}
+              </p>
             </div>
             
-            <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
-              Your Music DNA
-            </h1>
-            
-            <p className="text-2xl md:text-3xl text-blue-200 font-light">
-              {analysis.musicPersonality.musicDNA}
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap gap-4 justify-center">
-            {analysis.musicPersonality.traits.slice(0, 4).map((trait, index) => (
-              <Badge 
-                key={index} 
-                className="px-4 py-2 text-lg bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all"
-              >
-                {trait}
-              </Badge>
-            ))}
-          </div>
-          
-          <div className="flex gap-4 justify-center">
-            <Button 
-              onClick={() => setIsNarrativeMode(!isNarrativeMode)}
-              size="lg"
-              className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20"
-            >
-              {isNarrativeMode ? (
-                <>
-                  <Pause className="h-5 w-5 mr-2" />
-                  Explore Mode
-                </>
-              ) : (
-                <>
-                  <Play className="h-5 w-5 mr-2" />
-                  Story Mode
-                </>
-              )}
-            </Button>
-            
-            <Button 
-              onClick={() => setShowQuiz(true)}
-              size="lg"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-            >
-              <Trophy className="h-5 w-5 mr-2" />
-              Take Quiz
-            </Button>
-          </div>
-        </div>
-        
-        {/* Floating stats */}
-        <div className="absolute bottom-8 left-8 right-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {[
-              { label: "Albums", value: stats.totalItems, icon: Music },
-              { label: "Genres", value: stats.genres?.length || 0, icon: Target },
-              { label: "Artists", value: stats.artists?.length || 0, icon: Users },
-              { label: "Years Span", value: stats.years?.length > 0 ? `${Math.max(...stats.years) - Math.min(...stats.years)}` : '0', icon: Clock }
-            ].map((stat, index) => (
-              <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <div className="flex items-center gap-2 text-white/80 text-sm mb-1">
-                  <stat.icon className="h-4 w-4" />
-                  {stat.label}
-                </div>
-                <div className="text-2xl font-bold">{stat.value}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Navigation */}
-      <div className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-sm border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              {chapters.map((chapter, index) => (
-                <button
-                  key={chapter.id}
-                  onClick={() => setActiveChapter(index)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                    activeChapter === index 
-                      ? 'bg-white/20 text-white' 
-                      : 'text-white/60 hover:text-white hover:bg-white/10'
-                  }`}
+            <div className="flex flex-wrap gap-3 justify-center max-w-4xl mx-auto">
+              {analysis.musicPersonality.traits.slice(0, 4).map((trait, index) => (
+                <Badge 
+                  key={index} 
+                  className="px-4 py-2 text-base md:text-lg bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all text-white"
                 >
-                  <chapter.icon className="h-4 w-4" />
-                  <span className="hidden md:inline">{chapter.title}</span>
-                </button>
+                  {trait}
+                </Badge>
               ))}
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => toast({ title: "Sharing feature coming soon!" })}
-                className="text-white/60 hover:text-white hover:bg-white/10"
+                onClick={() => setIsNarrativeMode(!isNarrativeMode)}
+                size="lg"
+                className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white"
               >
-                <Share2 className="h-4 w-4 mr-2" />
-                Share DNA
+                {isNarrativeMode ? (
+                  <>
+                    <Pause className="h-5 w-5 mr-2" />
+                    Explore Mode
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-5 w-5 mr-2" />
+                    Story Mode
+                  </>
+                )}
               </Button>
+              
               <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => toast({ title: "Export feature coming soon!" })}
-                className="text-white/60 hover:text-white hover:bg-white/10"
+                onClick={() => setShowQuiz(true)}
+                size="lg"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
               >
-                <Download className="h-4 w-4 mr-2" />
-                Export
+                <Trophy className="h-5 w-5 mr-2" />
+                Take Quiz
               </Button>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        {isNarrativeMode ? (
-          // Story Mode
-          <div className="space-y-24">
-            {chapters.map((chapter, index) => (
-              <StoryChapter
-                key={chapter.id}
-                chapter={chapter}
-                analysis={analysis}
-                chartData={chartData}
-                stats={stats}
-                isActive={activeChapter === index}
-                onActivate={() => setActiveChapter(index)}
-              />
-            ))}
+          
+          {/* Floating Stats */}
+          <div className="absolute bottom-8 left-6 right-6 z-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
+              {[
+                { label: "Albums", value: stats.totalItems, icon: Music },
+                { label: "Genres", value: stats.genres?.length || 0, icon: Target },
+                { label: "Artists", value: stats.artists?.length || 0, icon: Users },
+                { label: "Years Span", value: stats.years?.length > 0 ? `${Math.max(...stats.years) - Math.min(...stats.years)}` : '0', icon: Clock }
+              ].map((stat, index) => (
+                <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/15 transition-all">
+                  <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
+                    <stat.icon className="h-4 w-4" />
+                    {stat.label}
+                  </div>
+                  <div className="text-2xl font-bold text-white">{stat.value}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        ) : (
-          // Explore Mode
-          <Tabs defaultValue="galaxy" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-5 bg-white/10 backdrop-blur-sm">
-              <TabsTrigger value="galaxy" className="flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                Galaxy
-              </TabsTrigger>
-              <TabsTrigger value="network" className="flex items-center gap-2">
-                <Network className="h-4 w-4" />
-                Network
-              </TabsTrigger>
-              <TabsTrigger value="timeline" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Timeline
-              </TabsTrigger>
-              <TabsTrigger value="insights" className="flex items-center gap-2">
-                <Lightbulb className="h-4 w-4" />
-                Insights
-              </TabsTrigger>
-              <TabsTrigger value="future" className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Future
-              </TabsTrigger>
-            </TabsList>
+        </section>
 
-            <TabsContent value="galaxy" className="space-y-6">
-              <MusicalGalaxy chartData={chartData} analysis={analysis} />
-            </TabsContent>
+        {/* Navigation */}
+        <div className="sticky top-1 z-40 bg-slate-900/80 backdrop-blur-lg border-b border-white/10">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-2 md:gap-4 flex-wrap">
+                {chapters.map((chapter, index) => (
+                  <button
+                    key={chapter.id}
+                    onClick={() => setActiveChapter(index)}
+                    className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg transition-all text-sm md:text-base ${
+                      activeChapter === index 
+                        ? 'bg-white/20 text-white shadow-lg' 
+                        : 'text-white/60 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <chapter.icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{chapter.title}</span>
+                  </button>
+                ))}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => toast({ title: "Sharing feature coming soon!" })}
+                  className="text-white/60 hover:text-white hover:bg-white/10"
+                >
+                  <Share2 className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Share DNA</span>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => toast({ title: "Export feature coming soon!" })}
+                  className="text-white/60 hover:text-white hover:bg-white/10"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Export</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-            <TabsContent value="network" className="space-y-6">
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <Network className="h-5 w-5" />
-                    Artist Network
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-white/80">Interactive network visualization coming soon...</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          {isNarrativeMode ? (
+            // Story Mode
+            <div className="space-y-24">
+              {chapters.map((chapter, index) => (
+                <StoryChapter
+                  key={chapter.id}
+                  chapter={chapter}
+                  analysis={analysis}
+                  chartData={chartData}
+                  stats={stats}
+                  isActive={activeChapter === index}
+                  onActivate={() => setActiveChapter(index)}
+                />
+              ))}
+            </div>
+          ) : (
+            // Explore Mode
+            <Tabs defaultValue="galaxy" className="space-y-8">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-white/10 backdrop-blur-sm h-auto p-1">
+                <TabsTrigger value="galaxy" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
+                  <Globe className="h-4 w-4" />
+                  Galaxy
+                </TabsTrigger>
+                <TabsTrigger value="network" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
+                  <Network className="h-4 w-4" />
+                  Network
+                </TabsTrigger>
+                <TabsTrigger value="timeline" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
+                  <Clock className="h-4 w-4" />
+                  Timeline
+                </TabsTrigger>
+                <TabsTrigger value="insights" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
+                  <Lightbulb className="h-4 w-4" />
+                  Insights
+                </TabsTrigger>
+                <TabsTrigger value="future" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
+                  <TrendingUp className="h-4 w-4" />
+                  Future
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="timeline" className="space-y-6">
-              <InteractiveTimeline chartData={chartData} analysis={analysis} />
-            </TabsContent>
+              <TabsContent value="galaxy" className="space-y-6 mt-8">
+                <MusicalGalaxy chartData={chartData} analysis={analysis} />
+              </TabsContent>
 
-            <TabsContent value="insights" className="space-y-6">
-              <div className="grid gap-6">
+              <TabsContent value="network" className="space-y-6 mt-8">
                 <Card className="bg-white/5 backdrop-blur-sm border-white/10">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-white">
-                      <Lightbulb className="h-5 w-5" />
-                      Hidden Patterns
+                      <Network className="h-5 w-5" />
+                      Artist Network
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <p className="text-white/80">{analysis.collectionInsights.uniqueness}</p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white/5 rounded-lg p-4">
-                          <h4 className="font-semibold text-white mb-2">Coherence</h4>
-                          <p className="text-white/70 text-sm">{analysis.collectionInsights.coherence}</p>
-                        </div>
-                        <div className="bg-white/5 rounded-lg p-4">
-                          <h4 className="font-semibold text-white mb-2">Evolution</h4>
-                          <p className="text-white/70 text-sm">{analysis.collectionInsights.evolution}</p>
+                    <p className="text-white/80">Interactive network visualization coming soon...</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="timeline" className="space-y-6 mt-8">
+                <InteractiveTimeline chartData={chartData} analysis={analysis} />
+              </TabsContent>
+
+              <TabsContent value="insights" className="space-y-6 mt-8">
+                <div className="grid gap-6">
+                  <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <Lightbulb className="h-5 w-5" />
+                        Hidden Patterns
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        <p className="text-white/80 text-lg leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                            <h4 className="font-semibold text-white mb-3">Coherence</h4>
+                            <p className="text-white/70">{analysis.collectionInsights.coherence}</p>
+                          </div>
+                          <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                            <h4 className="font-semibold text-white mb-3">Evolution</h4>
+                            <p className="text-white/70">{analysis.collectionInsights.evolution}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
 
-            <TabsContent value="future" className="space-y-6">
-              <div className="grid gap-6">
-                <Card className="bg-gradient-to-br from-green-500/10 to-blue-500/10 backdrop-blur-sm border-green-500/20">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <ShoppingCart className="h-5 w-5" />
-                      Next Purchases
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {analysis.recommendations.nextPurchases.slice(0, 5).map((rec, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-                          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                            {index + 1}
+              <TabsContent value="future" className="space-y-6 mt-8">
+                <div className="grid gap-6">
+                  <Card className="bg-gradient-to-br from-green-500/10 to-blue-500/10 backdrop-blur-sm border-green-500/20">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <ShoppingCart className="h-5 w-5" />
+                        Next Purchases
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {analysis.recommendations.nextPurchases.slice(0, 5).map((rec, index) => (
+                          <div key={index} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all">
+                            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                              {index + 1}
+                            </div>
+                            <span className="text-white">{rec}</span>
                           </div>
-                          <span className="text-white">{rec}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
-        )}
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+        </div>
+
+        {/* Fun Facts Footer */}
+        <footer className="bg-slate-800/50 backdrop-blur-sm border-t border-white/10 py-16 mt-16">
+          <div className="max-w-6xl mx-auto px-6">
+            <h3 className="text-3xl font-bold text-center mb-12 text-white">
+              🎭 Fun Facts About Your Collection
+            </h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              {analysis.funFacts.map((fact, index) => (
+                <div key={index} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-all">
+                  <div className="flex items-start gap-4">
+                    <Star className="h-6 w-6 text-yellow-400 mt-1 flex-shrink-0" />
+                    <p className="text-white/80 leading-relaxed">{fact}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </footer>
       </div>
 
       {/* Achievement System */}
@@ -519,25 +542,6 @@ export function MusicDNAExplorer() {
           onClose={() => setShowQuiz(false)}
         />
       )}
-
-      {/* Fun Facts Footer */}
-      <footer className="bg-slate-800/50 backdrop-blur-sm border-t border-white/10 py-12">
-        <div className="max-w-4xl mx-auto px-6">
-          <h3 className="text-2xl font-bold text-center mb-8 text-white">
-            🎭 Fun Facts About Your Collection
-          </h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            {analysis.funFacts.map((fact, index) => (
-              <div key={index} className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
-                <div className="flex items-start gap-3">
-                  <Star className="h-5 w-5 text-yellow-400 mt-1 flex-shrink-0" />
-                  <p className="text-white/80">{fact}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -33,13 +33,13 @@ export function MusicalGalaxy({ chartData, analysis }: MusicalGalaxyProps) {
     // Create "planets" for each genre
     const planets = chartData.genreDistribution?.slice(0, 8).map((genre: any, index: number) => ({
       name: genre.name,
-      size: Math.max(genre.value * 2, 20),
+      size: Math.max(Math.min(genre.value * 3, 40), 15),
       x: (canvas.clientWidth / 2) + Math.cos((index / 8) * Math.PI * 2) * 150,
       y: (canvas.clientHeight / 2) + Math.sin((index / 8) * Math.PI * 2) * 150,
-      color: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#8b5cf6'][index],
+      color: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#f97316'][index],
       angle: (index / 8) * Math.PI * 2,
-      orbitRadius: 150 + (index * 20),
-      orbitSpeed: 0.001 + (index * 0.0005)
+      orbitRadius: 120 + (index * 15),
+      orbitSpeed: 0.0008 + (index * 0.0003)
     })) || [];
 
     let time = 0;
@@ -47,24 +47,28 @@ export function MusicalGalaxy({ chartData, analysis }: MusicalGalaxyProps) {
     const animate = () => {
       const { clientWidth: width, clientHeight: height } = canvas;
       
-      // Clear canvas
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.1)';
+      // Clear canvas with fade trail
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.05)';
       ctx.fillRect(0, 0, width, height);
 
-      // Draw center (you)
+      // Draw center (you) with pulsing effect
+      const centerPulse = 1 + Math.sin(time * 0.01) * 0.1;
       ctx.save();
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(width / 2, height / 2, 30, 0, Math.PI * 2);
-      ctx.fill();
       
-      // Add glow to center
-      const centerGradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, 60);
+      // Center glow
+      const centerGradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, 80 * centerPulse);
       centerGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-      centerGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      centerGradient.addColorStop(0.5, 'rgba(147, 197, 253, 0.4)');
+      centerGradient.addColorStop(1, 'rgba(147, 197, 253, 0)');
       ctx.fillStyle = centerGradient;
       ctx.beginPath();
-      ctx.arc(width / 2, height / 2, 60, 0, Math.PI * 2);
+      ctx.arc(width / 2, height / 2, 80 * centerPulse, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Center core
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(width / 2, height / 2, 25 * centerPulse, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
 
@@ -77,11 +81,26 @@ export function MusicalGalaxy({ chartData, analysis }: MusicalGalaxyProps) {
 
         // Draw orbit path
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(width / 2, height / 2, planet.orbitRadius, 0, Math.PI * 2);
         ctx.stroke();
+        ctx.restore();
+
+        // Planet glow
+        const gradient = ctx.createRadialGradient(
+          planet.x, planet.y, 0,
+          planet.x, planet.y, planet.size * 2.5
+        );
+        gradient.addColorStop(0, planet.color + '80');
+        gradient.addColorStop(0.6, planet.color + '20');
+        gradient.addColorStop(1, planet.color + '00');
+        ctx.save();
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(planet.x, planet.y, planet.size * 2.5, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
 
         // Draw planet
@@ -91,36 +110,37 @@ export function MusicalGalaxy({ chartData, analysis }: MusicalGalaxyProps) {
         ctx.arc(planet.x, planet.y, planet.size, 0, Math.PI * 2);
         ctx.fill();
 
-        // Add planet glow
-        const gradient = ctx.createRadialGradient(
-          planet.x, planet.y, 0,
-          planet.x, planet.y, planet.size * 2
-        );
-        gradient.addColorStop(0, planet.color + '80');
-        gradient.addColorStop(1, planet.color + '00');
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(planet.x, planet.y, planet.size * 2, 0, Math.PI * 2);
-        ctx.fill();
+        // Planet rim
+        ctx.strokeStyle = planet.color + 'CC';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
 
         // Draw connection to center
         ctx.save();
-        ctx.strokeStyle = planet.color + '40';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = planet.color + '30';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
         ctx.beginPath();
         ctx.moveTo(width / 2, height / 2);
         ctx.lineTo(planet.x, planet.y);
         ctx.stroke();
         ctx.restore();
 
-        // Draw label
+        // Draw label with background
         ctx.save();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '12px Inter, sans-serif';
+        ctx.font = 'bold 12px Inter, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(planet.name, planet.x, planet.y + planet.size + 15);
-        ctx.restore();
-
+        const textWidth = ctx.measureText(planet.name).width;
+        const labelY = planet.y + planet.size + 25;
+        
+        // Label background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(planet.x - textWidth/2 - 6, labelY - 8, textWidth + 12, 16);
+        
+        // Label text
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(planet.name, planet.x, labelY);
         ctx.restore();
       });
 
@@ -133,11 +153,12 @@ export function MusicalGalaxy({ chartData, analysis }: MusicalGalaxyProps) {
           const dy = planet1.y - planet2.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
           
-          if (distance < 200) {
+          if (distance < 180) {
             ctx.save();
-            ctx.globalAlpha = (200 - distance) / 200 * 0.3;
+            ctx.globalAlpha = (180 - distance) / 180 * 0.2;
             ctx.strokeStyle = '#8b5cf6';
             ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
             ctx.beginPath();
             ctx.moveTo(planet1.x, planet1.y);
             ctx.lineTo(planet2.x, planet2.y);
@@ -162,26 +183,26 @@ export function MusicalGalaxy({ chartData, analysis }: MusicalGalaxyProps) {
   }, [chartData]);
 
   return (
-    <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+    <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-white flex items-center gap-2 text-xl">
           🌌 Your Musical Galaxy
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative">
+        <div className="relative rounded-xl overflow-hidden">
           <canvas
             ref={canvasRef}
-            className="w-full h-96 rounded-lg"
-            style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1), rgba(15, 23, 42, 0.8))' }}
+            className="w-full h-96 md:h-[500px] rounded-xl"
+            style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1), rgba(15, 23, 42, 0.9))' }}
           />
-          <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm rounded-lg p-3">
-            <p className="text-white text-sm">
-              <span className="inline-block w-3 h-3 bg-white rounded-full mr-2"></span>
+          <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm rounded-xl p-4 max-w-xs">
+            <p className="text-white text-sm mb-2 flex items-center gap-2">
+              <span className="inline-block w-3 h-3 bg-white rounded-full"></span>
               You are at the center
             </p>
-            <p className="text-white/70 text-xs mt-1">
-              Each planet represents a genre in your collection
+            <p className="text-white/70 text-xs leading-relaxed">
+              Each planet represents a genre in your collection. Larger planets indicate more albums in that genre.
             </p>
           </div>
         </div>

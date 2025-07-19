@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -304,37 +303,8 @@ export function MusicDNAExplorer() {
               ))}
             </div>
 
-            {/* Chapter Navigation - Highest Z-index */}
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-4xl mx-auto relative z-50">
-              <h3 className="text-lg font-semibold text-white mb-4 text-center">Navigate Your DNA Story</h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {chapters.map((chapter, index) => {
-                  const Icon = chapter.icon;
-                  const isActive = activeChapter === index;
-                  
-                  return (
-                    <Button
-                      key={chapter.id}
-                      onClick={() => scrollToSection(index)}
-                      variant="ghost"
-                      className={`relative flex flex-col items-center gap-2 p-4 h-auto transition-all duration-300 border ${
-                        isActive 
-                          ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white shadow-lg border-white/30 backdrop-blur-sm' 
-                          : 'text-white/60 hover:text-white hover:bg-white/10 border-transparent hover:border-white/20'
-                      }`}
-                    >
-                      <Icon className="h-5 w-5" />
-                      <span className="text-xs font-medium text-center leading-tight">
-                        {chapter.title}
-                      </span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-            
             {/* Action Buttons - High Z-index */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 relative z-40">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6 relative z-40">
               <Button 
                 onClick={() => setIsNarrativeMode(!isNarrativeMode)}
                 size="lg"
@@ -379,6 +349,35 @@ export function MusicDNAExplorer() {
                 <Download className="h-5 w-5 mr-2" />
                 Export
               </Button>
+            </div>
+
+            {/* Chapter Navigation - Highest Z-index */}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-4xl mx-auto relative z-50">
+              <h3 className="text-lg font-semibold text-white mb-4 text-center">Navigate Your DNA Story</h3>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {chapters.map((chapter, index) => {
+                  const Icon = chapter.icon;
+                  const isActive = activeChapter === index;
+                  
+                  return (
+                    <Button
+                      key={chapter.id}
+                      onClick={() => scrollToSection(index)}
+                      variant="ghost"
+                      className={`relative flex flex-col items-center gap-2 p-4 h-auto transition-all duration-300 border ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white shadow-lg border-white/30 backdrop-blur-sm' 
+                          : 'text-white/60 hover:text-white hover:bg-white/10 border-transparent hover:border-white/20'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span className="text-xs font-medium text-center leading-tight">
+                        {chapter.title}
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
           </div>
           

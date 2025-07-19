@@ -42,7 +42,7 @@ export function FloatingNavigation({
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999]">
       <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-2 shadow-2xl">
         <div className="flex items-center gap-2">
           {/* Chapter Navigation Buttons */}

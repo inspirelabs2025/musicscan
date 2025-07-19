@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -303,8 +304,8 @@ export function MusicDNAExplorer() {
               ))}
             </div>
 
-            {/* Chapter Navigation */}
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-4xl mx-auto relative z-20">
+            {/* Chapter Navigation - Highest Z-index */}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-4xl mx-auto relative z-50">
               <h3 className="text-lg font-semibold text-white mb-4 text-center">Navigate Your DNA Story</h3>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {chapters.map((chapter, index) => {
@@ -332,7 +333,8 @@ export function MusicDNAExplorer() {
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 relative z-20">
+            {/* Action Buttons - High Z-index */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 relative z-40">
               <Button 
                 onClick={() => setIsNarrativeMode(!isNarrativeMode)}
                 size="lg"
@@ -380,7 +382,7 @@ export function MusicDNAExplorer() {
             </div>
           </div>
           
-          {/* Floating Stats */}
+          {/* Floating Stats - Lower Z-index */}
           <div className="absolute bottom-8 left-6 right-6 z-10">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
               {[

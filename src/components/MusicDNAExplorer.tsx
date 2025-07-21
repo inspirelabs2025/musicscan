@@ -467,7 +467,7 @@ export function MusicDNAExplorer() {
 
               <TabsContent value="insights" className="space-y-6 mt-8">
                 <div className="grid gap-6">
-                  <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                  <Card className="bg-black/80 backdrop-blur-sm border-white/10">
                     <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-white">
                         <Lightbulb className="h-5 w-5" />
@@ -478,11 +478,11 @@ export function MusicDNAExplorer() {
                       <div className="space-y-6">
                         <p className="text-white text-lg leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
                         <div className="grid md:grid-cols-2 gap-6">
-                          <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                          <div className="bg-black/60 rounded-xl p-6 border border-white/10">
                             <h4 className="font-semibold text-white mb-3">Samenhang</h4>
                             <p className="text-white">{analysis.collectionInsights.coherence}</p>
                           </div>
-                          <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                          <div className="bg-black/60 rounded-xl p-6 border border-white/10">
                             <h4 className="font-semibold text-white mb-3">Evolutie</h4>
                             <p className="text-white">{analysis.collectionInsights.evolution}</p>
                           </div>

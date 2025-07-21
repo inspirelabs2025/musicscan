@@ -476,15 +476,15 @@ export function MusicDNAExplorer() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-6">
-                        <p className="text-white/80 text-lg leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
+                        <p className="text-white text-lg leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
                         <div className="grid md:grid-cols-2 gap-6">
                           <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                             <h4 className="font-semibold text-white mb-3">Samenhang</h4>
-                            <p className="text-white/70">{analysis.collectionInsights.coherence}</p>
+                            <p className="text-white">{analysis.collectionInsights.coherence}</p>
                           </div>
                           <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                             <h4 className="font-semibold text-white mb-3">Evolutie</h4>
-                            <p className="text-white/70">{analysis.collectionInsights.evolution}</p>
+                            <p className="text-white">{analysis.collectionInsights.evolution}</p>
                           </div>
                         </div>
                       </div>

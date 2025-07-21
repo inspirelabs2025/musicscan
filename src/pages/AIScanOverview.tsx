@@ -34,11 +34,14 @@ import {
   Check,
   RotateCcw,
   Edit,
-  Trash2
+  Trash2,
+  Flag,
+  FlagOff
 } from "lucide-react";
 import { useAIScans, useAIScansStats, AIScanResult } from "@/hooks/useAIScans";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessedRows } from "@/hooks/useProcessedRows";
+import { supabase } from "@/integrations/supabase/client";
 
 const AIScanOverview = () => {
   const [page, setPage] = useState(1);
@@ -196,6 +199,36 @@ const AIScanOverview = () => {
     // Refresh the data by resetting the page - this will trigger a refetch
     setPage(1);
   }, []);
+
+  const toggleFlagIncorrect = useCallback(async (scan: AIScanResult) => {
+    try {
+      const newFlaggedStatus = !scan.is_flagged_incorrect;
+      
+      const { error } = await supabase
+        .from('ai_scan_results')
+        .update({ is_flagged_incorrect: newFlaggedStatus })
+        .eq('id', scan.id);
+
+      if (error) throw error;
+
+      // Refresh the data
+      setPage(page); // This will trigger a refetch
+      
+      toast({
+        title: newFlaggedStatus ? "🏴 Gemarkeerd als Incorrect" : "✅ Markering Weggehaald",
+        description: newFlaggedStatus 
+          ? "Deze scan is gemarkeerd als incorrect." 
+          : "De incorrecte markering is weggehaald.",
+      });
+    } catch (error) {
+      console.error('Error toggling flag:', error);
+      toast({
+        title: "Fout",
+        description: "Kon de markering niet wijzigen.",
+        variant: "destructive",
+      });
+    }
+  }, [page, toast]);
 
   if (scansLoading || statsLoading) {
     return (
@@ -430,13 +463,16 @@ const AIScanOverview = () => {
                     <TableBody>
                       {scansData?.data.map((scan) => {
                         const rowIsProcessed = isProcessed(scan.id);
-                        console.log(`Row ${scan.id}: isProcessed=${rowIsProcessed}, discogs_id=${scan.discogs_id}`);
+                        const isIncorrect = scan.is_flagged_incorrect;
+                        console.log(`Row ${scan.id}: isProcessed=${rowIsProcessed}, isIncorrect=${isIncorrect}, discogs_id=${scan.discogs_id}`);
                         
                         return (
                           <TableRow 
                             key={scan.id} 
                             className={`transition-all duration-200 ${
-                              rowIsProcessed 
+                              isIncorrect 
+                                ? "bg-purple-100 border-2 border-purple-600 border-l-8 shadow-md" 
+                                : rowIsProcessed 
                                 ? "bg-green-100 border-2 border-green-600 border-l-8 shadow-md" 
                                 : "hover:bg-muted/50"
                             }`}
@@ -556,6 +592,15 @@ const AIScanOverview = () => {
                               title="Bewerk scan"
                             >
                               <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => toggleFlagIncorrect(scan)}
+                              title={isIncorrect ? "Verwijder markering als incorrect" : "Markeer als incorrect"}
+                              className={isIncorrect ? "text-purple-600 hover:text-purple-700" : "hover:text-purple-600"}
+                            >
+                              {isIncorrect ? <FlagOff className="h-4 w-4" /> : <Flag className="h-4 w-4" />}
                             </Button>
                             <Button 
                               variant="ghost" 

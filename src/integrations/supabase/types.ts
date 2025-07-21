@@ -32,6 +32,7 @@ export type Database = {
           format: string | null
           genre: string | null
           id: string
+          is_flagged_incorrect: boolean | null
           label: string | null
           manual_edits: Json | null
           master_id: number | null
@@ -63,6 +64,7 @@ export type Database = {
           format?: string | null
           genre?: string | null
           id?: string
+          is_flagged_incorrect?: boolean | null
           label?: string | null
           manual_edits?: Json | null
           master_id?: number | null
@@ -94,6 +96,7 @@ export type Database = {
           format?: string | null
           genre?: string | null
           id?: string
+          is_flagged_incorrect?: boolean | null
           label?: string | null
           manual_edits?: Json | null
           master_id?: number | null

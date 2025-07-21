@@ -279,7 +279,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
         );
 
       default:
-        return <div className="text-white">Chapter content loading...</div>;
+        return <div className="text-white">Hoofdstuk inhoud wordt geladen...</div>;
     }
   };
 

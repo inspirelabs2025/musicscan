@@ -151,7 +151,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                   <p className="text-white leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
                 </CardContent>
               </Card>
-              <Card className="bg-gradient-to-br from-green-500/10 to-blue-500/10 border-green-500/20 hover:from-green-500/15 hover:to-blue-500/15 transition-all">
+              <Card className="bg-purple-900/80 backdrop-blur-sm border-purple-700/30 hover:bg-purple-800/90 transition-all">
                 <CardHeader>
                   <CardTitle className="text-white text-xl">Investering Inzichten</CardTitle>
                 </CardHeader>

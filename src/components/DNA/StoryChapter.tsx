@@ -27,14 +27,14 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
         return (
           <div className="space-y-8">
             <div className="prose prose-invert max-w-none">
-              <p className="text-lg md:text-xl leading-relaxed text-white/80">
+              <p className="text-lg md:text-xl leading-relaxed text-white">
                 {analysis.collectionStory}
               </p>
             </div>
             <div className="grid md:grid-cols-2 gap-6">
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Cultural Context</CardTitle>
+                  <CardTitle className="text-white text-lg">Culturele Context</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -50,10 +50,10 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
               </Card>
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Geographic Spread</CardTitle>
+                  <CardTitle className="text-white text-lg">Geografische Spreiding</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-white/80">{analysis.culturalContext.geography}</p>
+                  <p className="text-white">{analysis.culturalContext.geography}</p>
                 </CardContent>
               </Card>
             </div>
@@ -64,15 +64,15 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
         return (
           <div className="space-y-8">
             <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-8 border border-purple-500/30">
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">Your Musical DNA</h3>
-              <p className="text-xl md:text-2xl text-purple-200 mb-8 leading-relaxed">{analysis.musicPersonality.musicDNA}</p>
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">Jouw Muzikale DNA</h3>
+              <p className="text-xl md:text-2xl text-white mb-8 leading-relaxed">{analysis.musicPersonality.musicDNA}</p>
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h4 className="font-semibold text-white mb-4 text-lg">Personality Profile</h4>
-                  <p className="text-white/80 leading-relaxed">{analysis.musicPersonality.profile}</p>
+                  <h4 className="font-semibold text-white mb-4 text-lg">Persoonlijkheidsprofiel</h4>
+                  <p className="text-white leading-relaxed">{analysis.musicPersonality.profile}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-white mb-4 text-lg">Key Traits</h4>
+                  <h4 className="font-semibold text-white mb-4 text-lg">Hoofdkenmerken</h4>
                   <div className="flex flex-wrap gap-2">
                     {analysis.musicPersonality.traits.map((trait: string, index: number) => (
                       <Badge key={index} className="bg-purple-500/20 text-purple-200 border-purple-500/30 text-sm">
@@ -91,7 +91,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
           <div className="space-y-8">
             <Card className="bg-white/5 backdrop-blur-sm border-white/10">
               <CardHeader>
-                <CardTitle className="text-white text-xl">Artist Network</CardTitle>
+                <CardTitle className="text-white text-xl">Artiest Netwerk</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80 mb-8">
@@ -121,7 +121,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                 </div>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                    <h4 className="font-semibold text-white mb-4">Collaborations</h4>
+                    <h4 className="font-semibold text-white mb-4">Samenwerkingen</h4>
                     <div className="flex flex-wrap gap-2">
                       {analysis.artistConnections.collaborations.slice(0, 5).map((collab: string, index: number) => (
                         <Badge key={index} className="bg-pink-500/20 text-pink-200 border-pink-500/30 text-sm">
@@ -131,8 +131,8 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                     </div>
                   </div>
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                    <h4 className="font-semibold text-white mb-4">Genre Evolution</h4>
-                    <p className="text-white/80 leading-relaxed">{analysis.artistConnections.genreEvolution}</p>
+                    <h4 className="font-semibold text-white mb-4">Genre Evolutie</h4>
+                    <p className="text-white leading-relaxed">{analysis.artistConnections.genreEvolution}</p>
                   </div>
                 </div>
               </CardContent>
@@ -146,20 +146,20 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20 hover:from-orange-500/15 hover:to-red-500/15 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-xl">Collection Uniqueness</CardTitle>
+                  <CardTitle className="text-white text-xl">Collectie Uniciteit</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-white/80 leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
+                  <p className="text-white leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
                 </CardContent>
               </Card>
               <Card className="bg-gradient-to-br from-green-500/10 to-blue-500/10 border-green-500/20 hover:from-green-500/15 hover:to-blue-500/15 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-xl">Investment Insights</CardTitle>
+                  <CardTitle className="text-white text-xl">Investering Inzichten</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-semibold text-white mb-3">Hidden Gems</h4>
+                      <h4 className="font-semibold text-white mb-3">Verborgen Parels</h4>
                       <div className="flex flex-wrap gap-2">
                         {analysis.investmentInsights.hiddenGems.slice(0, 3).map((gem: string, index: number) => (
                           <Badge key={index} className="bg-green-500/20 text-green-200 border-green-500/30 text-sm">
@@ -168,7 +168,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                         ))}
                       </div>
                     </div>
-                    <p className="text-white/70 leading-relaxed">{analysis.investmentInsights.trends}</p>
+                    <p className="text-white leading-relaxed">{analysis.investmentInsights.trends}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -176,7 +176,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
             
             <Card className="bg-white/5 backdrop-blur-sm border-white/10">
               <CardHeader>
-                <CardTitle className="text-white text-xl">Genre Distribution</CardTitle>
+                <CardTitle className="text-white text-xl">Genre Verdeling</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
@@ -214,7 +214,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'][index] }}
                       />
-                      <span className="text-white/80 text-sm">{genre.name}</span>
+                      <span className="text-white text-sm">{genre.name}</span>
                     </div>
                   ))}
                 </div>
@@ -228,7 +228,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
           <div className="space-y-8">
             <Card className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-cyan-500/20">
               <CardHeader>
-                <CardTitle className="text-white text-xl">Recommended Next Purchases</CardTitle>
+                <CardTitle className="text-white text-xl">Aanbevolen Volgende Aankopen</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -247,7 +247,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Genre Exploration</CardTitle>
+                  <CardTitle className="text-white text-lg">Genre Verkenning</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
@@ -262,14 +262,14 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
               
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Collection Gaps</CardTitle>
+                  <CardTitle className="text-white text-lg">Collectie Gaten</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {analysis.recommendations.collectionGaps.slice(0, 3).map((gap: string, index: number) => (
                       <div key={index} className="flex items-start gap-2">
-                        <div className="w-1.5 h-1.5 bg-white/60 rounded-full mt-2 flex-shrink-0" />
-                        <span className="text-white/70 text-sm leading-relaxed">{gap}</span>
+                        <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 flex-shrink-0" />
+                        <span className="text-white text-sm leading-relaxed">{gap}</span>
                       </div>
                     ))}
                   </div>
@@ -299,7 +299,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
             </div>
             <div className="flex-1">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">{chapter.title}</h2>
-              <p className="text-xl text-white/70">{chapter.subtitle}</p>
+              <p className="text-xl text-white">{chapter.subtitle}</p>
             </div>
           </div>
           

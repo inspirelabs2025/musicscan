@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -144,7 +143,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
         return (
           <div className="space-y-8">
             <div className="grid md:grid-cols-2 gap-8">
-              <Card className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20 hover:from-orange-500/15 hover:to-red-500/15 transition-all">
+              <Card className="bg-purple-900/80 backdrop-blur-sm border-purple-700/30 hover:bg-purple-800/90 transition-all">
                 <CardHeader>
                   <CardTitle className="text-white text-xl">Collectie Uniciteit</CardTitle>
                 </CardHeader>

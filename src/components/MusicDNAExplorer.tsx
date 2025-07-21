@@ -467,7 +467,7 @@ export function MusicDNAExplorer() {
 
               <TabsContent value="insights" className="space-y-6 mt-8">
                 <div className="grid gap-6">
-                  <Card className="bg-black/80 backdrop-blur-sm border-white/10">
+                  <Card className="bg-purple-900/80 backdrop-blur-sm border-white/10">
                     <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-white">
                         <Lightbulb className="h-5 w-5" />

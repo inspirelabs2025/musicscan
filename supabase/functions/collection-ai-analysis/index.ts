@@ -144,7 +144,9 @@ serve(async (req) => {
     };
 
     // Create comprehensive AI analysis prompt with rich context
-    const analysisPrompt = `Je bent een expert muziekhistoricus, verzamelaar en muziekindustrie-analist die een persoonlijke muziekcollectie analyseert. Gebruik alle beschikbare metadata om een diepgaande, betekenisvolle analyse te maken.
+    const analysisPrompt = `**BELANGRIJKE INSTRUCTIE: ALLE TEKST MOET IN HET NEDERLANDS WORDEN GESCHREVEN**
+
+Je bent een expert Nederlandse muziekhistoricus, verzamelaar en muziekindustrie-analist die een persoonlijke muziekcollectie analyseert. Gebruik alle beschikbare metadata om een diepgaande, betekenisvolle analyse te maken. ALLE OUTPUT MOET IN PERFECT NEDERLANDS ZIJN.
 
 GEDETAILLEERDE COLLECTIE DATA:
 
@@ -177,7 +179,7 @@ ${detailedAnalysis.priceStats ? `
 
 Representatieve Releases (Context Voorbeelden):
 ${detailedAnalysis.representativeReleases.map(r => 
-  `• ${r.artist} - "${r.title}" (${r.year}) [${r.label || 'Unknown Label'}] ${r.catalog_number ? `Cat: ${r.catalog_number}` : ''} ${r.genre ? `Genre: ${r.genre}` : ''}`
+  `• ${r.artist} - "${r.title}" (${r.year}) [${r.label || 'Onbekend Label'}] ${r.catalog_number ? `Cat: ${r.catalog_number}` : ''} ${r.genre ? `Genre: ${r.genre}` : ''}`
 ).join('\n')}
 
 Technische Details:
@@ -185,8 +187,8 @@ Technische Details:
 - Matrix Codes: ${detailedAnalysis.matrixNumbers.total} items met matrix nummers
 - Conditie Spreiding: ${Object.entries(detailedAnalysis.conditions).map(([k,v]) => `${k}: ${v}`).join(', ')}
 
-SPECIFIEKE ANALYSE OPDRACHT:
-Analyseer deze collectie als een muziekhistoricus en geef concrete, specifieke inzichten. Focus op:
+SPECIFIEKE NEDERLANDSE ANALYSE OPDRACHT:
+Analyseer deze collectie als een Nederlandse muziekhistoricus en geef concrete, specifieke inzichten in het Nederlands. Focus op:
 1. Label geschiedenis en connecties tussen labels
 2. Producer/engineer patronen (waar detecteerbaar uit matrix codes/catalog nummers)
 3. Studio geografie en opname locaties
@@ -198,57 +200,59 @@ Analyseer deze collectie als een muziekhistoricus en geef concrete, specifieke i
 
 Wees SPECIFIEK en CONCREET - geen algemene observaties. Gebruik de exacte data om patronen te ontdekken.
 
+**TAAL VEREISTE: Alle tekst in de JSON response moet in het Nederlands zijn geschreven. Geen Engels!**
+
 Provide a comprehensive analysis in JSON format with these sections:
 
 {
   "musicPersonality": {
-    "profile": "A detailed personality analysis based on music taste (2-3 sentences)",
-    "traits": ["trait1", "trait2", "trait3", "trait4"],
-    "musicDNA": "One sentence describing their core music identity"
+    "profile": "Een gedetailleerde persoonlijkheidsanalyse gebaseerd op muzieksmaak (2-3 zinnen in het Nederlands)",
+    "traits": ["eigenschap1", "eigenschap2", "eigenschap3", "eigenschap4"],
+    "musicDNA": "Één zin die hun kern muziekidentiteit beschrijft in het Nederlands"
   },
   "collectionInsights": {
-    "uniqueness": "Assessment of how unique/rare this collection is",
-    "coherence": "How cohesive the collection is",
-    "curation": "Quality of curation and focus",
-    "evolution": "How the collection shows musical journey evolution"
+    "uniqueness": "Beoordeling van hoe uniek/zeldzaam deze collectie is",
+    "coherence": "Hoe samenhangend de collectie is",
+    "curation": "Kwaliteit van curatie en focus",
+    "evolution": "Hoe de collectie de evolutie van de muziekale reis toont"
   },
   "artistConnections": {
-    "collaborations": ["Notable artist collaborations found in collection"],
-    "labelConnections": ["Interesting label patterns or connections"],
-    "producerInsights": ["Notable producers or studios if detectable"],
-    "genreEvolution": "How genres connect and influence each other in this collection"
+    "collaborations": ["Opmerkelijke artiest collaboraties gevonden in collectie"],
+    "labelConnections": ["Interessante label patronen of connecties"],
+    "producerInsights": ["Opmerkelijke producers of studio's indien detecteerbaar"],
+    "genreEvolution": "Hoe genres verbonden zijn en elkaar beïnvloeden in deze collectie"
   },
   "investmentInsights": {
-    "hiddenGems": ["Potential undervalued items that might appreciate"],
-    "premiumItems": ["Already valuable pieces"],
-    "trends": "Market trends relevant to this collection",
-    "completionOpportunities": ["Missing albums that would complete sets or themes"]
+    "hiddenGems": ["Potentieel ondergewaardeerde items die kunnen appreciëren"],
+    "premiumItems": ["Reeds waardevolle stukken"],
+    "trends": "Markttrends relevant voor deze collectie",
+    "completionOpportunities": ["Ontbrekende albums die sets of thema's zouden completeren"]
   },
   "culturalContext": {
-    "decades": ["Most represented decades and their cultural significance"],
-    "movements": ["Music movements or scenes represented"],
-    "geography": "Geographic distribution and cultural relevance",
-    "timeline": "Story of music history told through this collection"
+    "decades": ["Meest vertegenwoordigde decennia en hun culturele betekenis"],
+    "movements": ["Muziekbewegingen of scenes vertegenwoordigd"],
+    "geography": "Geografische verspreiding en culturele relevantie",
+    "timeline": "Verhaal van muziekgeschiedenis verteld door deze collectie"
   },
   "funFacts": [
-    "Most surprising discovery about the collection",
-    "Rarest or most unique aspect",
-    "Mathematical or statistical insight",
-    "Historical connection or coincidence",
-    "Prediction about collector's next purchase"
+    "Meest verrassende ontdekking over de collectie",
+    "Zeldzaamste of meest unieke aspect",
+    "Wiskundige of statistische inzicht",
+    "Historische connectie of toeval",
+    "Voorspelling over volgende aankoop van verzamelaar"
   ],
   "recommendations": {
-    "nextPurchases": ["5 specific album recommendations with reasons"],
-    "genreExploration": ["New genres to explore based on current taste"],
-    "artistDiscovery": ["New artists similar to collection favorites"],
-    "collectionGaps": ["Notable gaps to fill in current collection themes"]
+    "nextPurchases": ["5 specifieke album aanbevelingen met redenen"],
+    "genreExploration": ["Nieuwe genres om te verkennen gebaseerd op huidige smaak"],
+    "artistDiscovery": ["Nieuwe artiesten vergelijkbaar met collectie favorieten"],
+    "collectionGaps": ["Opmerkelijke lacunes om te vullen in huidige collectie thema's"]
   },
-  "collectionStory": "A 3-4 sentence narrative about what this collection tells about the person's musical journey and taste evolution"
+  "collectionStory": "Een verhaal van 3-4 zinnen over wat deze collectie vertelt over de muziekale reis en smaakevolutie van de persoon"
 }
 
-Focus on being insightful, personal, and discovering hidden patterns. Avoid generic observations.`;
+Focus op het zijn inzichtelijk, persoonlijk, en het ontdekken van verborgen patronen. Vermijd generieke observaties. ALLE TEKST MOET IN HET NEDERLANDS ZIJN.`;
 
-    // Call OpenAI API
+    // Call OpenAI API with Dutch system message
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -258,11 +262,14 @@ Focus on being insightful, personal, and discovering hidden patterns. Avoid gene
       body: JSON.stringify({
         model: 'gpt-4.1-2025-04-14',
         messages: [
-          { role: 'system', content: 'You are an expert music curator and collection analyst. Provide insightful, personal analysis in valid JSON format.' },
+          { 
+            role: 'system', 
+            content: 'Je bent een expert Nederlandse muziekcurator en collectie analist. Geef inzichtelijke, persoonlijke analyse in geldig JSON formaat. ALLE TEKST MOET IN HET NEDERLANDS ZIJN.' 
+          },
           { role: 'user', content: analysisPrompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 0.7
+        temperature: 0.8
       }),
     });
 

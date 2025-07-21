@@ -225,7 +225,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
       case 'future':
         return (
           <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-cyan-500/20">
+            <Card className="bg-purple-900/80 backdrop-blur-sm border-purple-700/30">
               <CardHeader>
                 <CardTitle className="text-white text-xl">Aanbevolen Volgende Aankopen</CardTitle>
               </CardHeader>

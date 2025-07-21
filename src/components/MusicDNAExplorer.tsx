@@ -204,40 +204,40 @@ export function MusicDNAExplorer() {
   const chapters = [
     {
       id: 'genesis',
-      title: 'The Genesis',
-      subtitle: 'How your collection was born',
+      title: 'De Genesis',
+      subtitle: 'Hoe je collectie werd geboren',
       icon: Sparkles,
       color: 'from-blue-500 to-purple-600',
       content: analysis.collectionStory
     },
     {
       id: 'personality',
-      title: 'Your Music DNA',
-      subtitle: 'The essence of your musical being',
+      title: 'Jouw Muziek DNA',
+      subtitle: 'De essentie van je muzikale wezen',
       icon: Brain,
       color: 'from-purple-500 to-pink-600',
       content: analysis.musicPersonality.musicDNA
     },
     {
       id: 'connections',
-      title: 'The Network',
-      subtitle: 'Hidden connections in your universe',
+      title: 'Het Netwerk',
+      subtitle: 'Verborgen connecties in je universum',
       icon: Network,
       color: 'from-pink-500 to-red-600',
       content: analysis.artistConnections.genreEvolution
     },
     {
       id: 'insights',
-      title: 'Deep Insights',
-      subtitle: 'Patterns you never noticed',
+      title: 'Diepe Inzichten',
+      subtitle: 'Patronen die je nooit opmerkte',
       icon: Lightbulb,
       color: 'from-red-500 to-orange-600',
       content: analysis.collectionInsights.uniqueness
     },
     {
       id: 'future',
-      title: 'The Future',
-      subtitle: 'Where your journey leads next',
+      title: 'De Toekomst',
+      subtitle: 'Waar je reis je naartoe leidt',
       icon: TrendingUp,
       color: 'from-orange-500 to-yellow-600',
       content: analysis.recommendations.nextPurchases.join(', ')
@@ -283,7 +283,7 @@ export function MusicDNAExplorer() {
               </div>
               
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent leading-tight">
-                Your Music DNA
+                Jouw Muziek DNA
               </h1>
               
               <p className="text-xl md:text-2xl lg:text-3xl text-blue-200/80 font-light max-w-4xl mx-auto leading-relaxed">
@@ -302,8 +302,8 @@ export function MusicDNAExplorer() {
               ))}
             </div>
 
-            {/* Action Buttons - High Z-index */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6 relative z-40">
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
               <Button 
                 onClick={() => setIsNarrativeMode(!isNarrativeMode)}
                 size="lg"
@@ -312,12 +312,12 @@ export function MusicDNAExplorer() {
                 {isNarrativeMode ? (
                   <>
                     <Pause className="h-5 w-5 mr-2" />
-                    Explore Mode
+                    Verken Modus
                   </>
                 ) : (
                   <>
                     <Play className="h-5 w-5 mr-2" />
-                    Story Mode
+                    Verhaal Modus
                   </>
                 )}
               </Button>
@@ -328,31 +328,31 @@ export function MusicDNAExplorer() {
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transition-all duration-300"
               >
                 <Trophy className="h-5 w-5 mr-2" />
-                Take Quiz
+                Doe Quiz
               </Button>
 
               <Button
-                onClick={() => toast({ title: "Share DNA feature coming soon!" })}
+                onClick={() => toast({ title: "DNA delen functie komt binnenkort!" })}
                 size="lg"
                 className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white transition-all duration-300"
               >
                 <Share2 className="h-5 w-5 mr-2" />
-                Share DNA
+                Deel DNA
               </Button>
               
               <Button
-                onClick={() => toast({ title: "Export feature coming soon!" })}
+                onClick={() => toast({ title: "Export functie komt binnenkort!" })}
                 size="lg"
                 className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white transition-all duration-300"
               >
                 <Download className="h-5 w-5 mr-2" />
-                Export
+                Exporteer
               </Button>
             </div>
 
-            {/* Chapter Navigation - Highest Z-index */}
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-4xl mx-auto relative z-50">
-              <h3 className="text-lg font-semibold text-white mb-4 text-center">Navigate Your DNA Story</h3>
+            {/* Chapter Navigation */}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-4xl mx-auto">
+              <h3 className="text-lg font-semibold text-white mb-4 text-center">Navigeer Je DNA Verhaal</h3>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {chapters.map((chapter, index) => {
                   const Icon = chapter.icon;
@@ -378,16 +378,14 @@ export function MusicDNAExplorer() {
                 })}
               </div>
             </div>
-          </div>
-          
-          {/* Floating Stats - Lower Z-index */}
-          <div className="absolute bottom-8 left-6 right-6 z-10">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
+
+            {/* Stats Section - Part of normal flow */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8">
               {[
                 { label: "Albums", value: stats.totalItems, icon: Music },
                 { label: "Genres", value: stats.genres?.length || 0, icon: Target },
-                { label: "Artists", value: stats.artists?.length || 0, icon: Users },
-                { label: "Years Span", value: stats.years?.length > 0 ? `${Math.max(...stats.years) - Math.min(...stats.years)}` : '0', icon: Clock }
+                { label: "Artiesten", value: stats.artists?.length || 0, icon: Users },
+                { label: "Jaar Bereik", value: stats.years?.length > 0 ? `${Math.max(...stats.years) - Math.min(...stats.years)}` : '0', icon: Clock }
               ].map((stat, index) => (
                 <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/15 transition-all">
                   <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
@@ -425,23 +423,23 @@ export function MusicDNAExplorer() {
               <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-white/10 backdrop-blur-sm h-auto p-1">
                 <TabsTrigger value="galaxy" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
                   <Globe className="h-4 w-4" />
-                  Galaxy
+                  Melkweg
                 </TabsTrigger>
                 <TabsTrigger value="network" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
                   <Network className="h-4 w-4" />
-                  Network
+                  Netwerk
                 </TabsTrigger>
                 <TabsTrigger value="timeline" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
                   <Clock className="h-4 w-4" />
-                  Timeline
+                  Tijdlijn
                 </TabsTrigger>
                 <TabsTrigger value="insights" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
                   <Lightbulb className="h-4 w-4" />
-                  Insights
+                  Inzichten
                 </TabsTrigger>
                 <TabsTrigger value="future" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
                   <TrendingUp className="h-4 w-4" />
-                  Future
+                  Toekomst
                 </TabsTrigger>
               </TabsList>
 
@@ -454,11 +452,11 @@ export function MusicDNAExplorer() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-white">
                       <Network className="h-5 w-5" />
-                      Artist Network
+                      Artiest Netwerk
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-white/80">Interactive network visualization coming soon...</p>
+                    <p className="text-white/80">Interactieve netwerkvisualisatie komt binnenkort...</p>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -471,9 +469,9 @@ export function MusicDNAExplorer() {
                 <div className="grid gap-6">
                   <Card className="bg-white/5 backdrop-blur-sm border-white/10">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
+                    <CardTitle className="flex items-center gap-2 text-white">
                         <Lightbulb className="h-5 w-5" />
-                        Hidden Patterns
+                        Verborgen Patronen
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -481,11 +479,11 @@ export function MusicDNAExplorer() {
                         <p className="text-white/80 text-lg leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
                         <div className="grid md:grid-cols-2 gap-6">
                           <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                            <h4 className="font-semibold text-white mb-3">Coherence</h4>
+                            <h4 className="font-semibold text-white mb-3">Samenhang</h4>
                             <p className="text-white/70">{analysis.collectionInsights.coherence}</p>
                           </div>
                           <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                            <h4 className="font-semibold text-white mb-3">Evolution</h4>
+                            <h4 className="font-semibold text-white mb-3">Evolutie</h4>
                             <p className="text-white/70">{analysis.collectionInsights.evolution}</p>
                           </div>
                         </div>
@@ -499,9 +497,9 @@ export function MusicDNAExplorer() {
                 <div className="grid gap-6">
                   <Card className="bg-gradient-to-br from-green-500/10 to-blue-500/10 backdrop-blur-sm border-green-500/20">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
+                    <CardTitle className="flex items-center gap-2 text-white">
                         <ShoppingCart className="h-5 w-5" />
-                        Next Purchases
+                        Volgende Aankopen
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -527,7 +525,7 @@ export function MusicDNAExplorer() {
         <footer className="bg-slate-800/50 backdrop-blur-sm border-t border-white/10 py-16 mt-16">
           <div className="max-w-6xl mx-auto px-6">
             <h3 className="text-3xl font-bold text-center mb-12 text-white">
-              🎭 Fun Facts About Your Collection
+              🎭 Leuke Weetjes Over Je Collectie
             </h3>
             <div className="grid md:grid-cols-2 gap-8">
               {analysis.funFacts.map((fact, index) => (
@@ -550,7 +548,7 @@ export function MusicDNAExplorer() {
           className="bg-white/10 backdrop-blur-lg border border-white/20 hover:bg-white/20 text-white transition-all duration-300 rounded-2xl px-4 py-3"
         >
           <Settings className="h-5 w-5 mr-2" />
-          Configure
+          Configureer
         </Button>
       </div>
 

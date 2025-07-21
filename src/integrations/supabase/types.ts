@@ -21,6 +21,7 @@ export type Database = {
           artist: string | null
           barcode: string | null
           catalog_number: string | null
+          comments: string | null
           condition_grade: string
           confidence_score: number | null
           country: string | null
@@ -53,6 +54,7 @@ export type Database = {
           artist?: string | null
           barcode?: string | null
           catalog_number?: string | null
+          comments?: string | null
           condition_grade: string
           confidence_score?: number | null
           country?: string | null
@@ -85,6 +87,7 @@ export type Database = {
           artist?: string | null
           barcode?: string | null
           catalog_number?: string | null
+          comments?: string | null
           condition_grade?: string
           confidence_score?: number | null
           country?: string | null

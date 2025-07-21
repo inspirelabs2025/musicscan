@@ -10,6 +10,7 @@ import { StatCard } from "@/components/StatCard";
 import { AIScanDetailModal } from "@/components/AIScanDetailModal";
 import { EditScanModal } from "@/components/EditScanModal";
 import { DeleteScanDialog } from "@/components/DeleteScanDialog";
+import { CommentsModal } from "@/components/CommentsModal";
 import { 
   Table, 
   TableBody, 
@@ -36,7 +37,8 @@ import {
   Edit,
   Trash2,
   Flag,
-  FlagOff
+  FlagOff,
+  MessageSquare
 } from "lucide-react";
 import { useAIScans, useAIScansStats, AIScanResult } from "@/hooks/useAIScans";
 import { useToast } from "@/hooks/use-toast";
@@ -54,8 +56,10 @@ const AIScanOverview = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [scanToEdit, setScanToEdit] = useState<AIScanResult | null>(null);
   const [scanToDelete, setScanToDelete] = useState<AIScanResult | null>(null);
+  const [scanToComment, setScanToComment] = useState<AIScanResult | null>(null);
 
   const { toast } = useToast();
   const { processedRows, addProcessedRow, resetProcessedRows: resetProcessed, isProcessed } = useProcessedRows();
@@ -190,12 +194,22 @@ const AIScanOverview = () => {
     setShowDeleteDialog(true);
   }, []);
 
+  const handleCommentScan = useCallback((scan: AIScanResult) => {
+    setScanToComment(scan);
+    setShowCommentsModal(true);
+  }, []);
+
   const handleEditSuccess = useCallback(() => {
     // Refresh the data by resetting the page - this will trigger a refetch
     setPage(1);
   }, []);
 
   const handleDeleteSuccess = useCallback(() => {
+    // Refresh the data by resetting the page - this will trigger a refetch
+    setPage(1);
+  }, []);
+
+  const handleCommentsSuccess = useCallback(() => {
     // Refresh the data by resetting the page - this will trigger a refetch
     setPage(1);
   }, []);
@@ -575,16 +589,19 @@ const AIScanOverview = () => {
                              scan.status === "failed" ? "Mislukt" : "Bezig"}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleViewDetails(scan)}
-                              title="Bekijk details"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                         <TableCell>
+                           <div className="flex items-center gap-1">
+                             {scan.comments && (
+                               <MessageSquare className="h-3 w-3 text-blue-600 mr-1" />
+                             )}
+                             <Button 
+                               variant="ghost" 
+                               size="sm"
+                               onClick={() => handleViewDetails(scan)}
+                               title="Bekijk details"
+                             >
+                               <Eye className="h-4 w-4" />
+                             </Button>
                             <Button 
                               variant="ghost" 
                               size="sm"
@@ -593,15 +610,24 @@ const AIScanOverview = () => {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => toggleFlagIncorrect(scan)}
-                              title={isIncorrect ? "Verwijder markering als incorrect" : "Markeer als incorrect"}
-                              className={isIncorrect ? "text-purple-600 hover:text-purple-700" : "hover:text-purple-600"}
-                            >
-                              {isIncorrect ? <FlagOff className="h-4 w-4" /> : <Flag className="h-4 w-4" />}
-                            </Button>
+                             <Button 
+                               variant="ghost" 
+                               size="sm"
+                               onClick={() => handleCommentScan(scan)}
+                               title={scan.comments ? "Bewerk opmerking" : "Voeg opmerking toe"}
+                               className={scan.comments ? "text-blue-600 hover:text-blue-700" : "hover:text-blue-600"}
+                             >
+                               <MessageSquare className="h-4 w-4" />
+                             </Button>
+                             <Button 
+                               variant="ghost" 
+                               size="sm"
+                               onClick={() => toggleFlagIncorrect(scan)}
+                               title={isIncorrect ? "Verwijder markering als incorrect" : "Markeer als incorrect"}
+                               className={isIncorrect ? "text-purple-600 hover:text-purple-700" : "hover:text-purple-600"}
+                             >
+                               {isIncorrect ? <FlagOff className="h-4 w-4" /> : <Flag className="h-4 w-4" />}
+                             </Button>
                             <Button 
                               variant="ghost" 
                               size="sm"
@@ -676,6 +702,17 @@ const AIScanOverview = () => {
           setScanToDelete(null);
         }}
         onSuccess={handleDeleteSuccess}
+      />
+
+      {/* Comments Modal */}
+      <CommentsModal
+        scan={scanToComment}
+        isOpen={showCommentsModal}
+        onClose={() => {
+          setShowCommentsModal(false);
+          setScanToComment(null);
+        }}
+        onSuccess={handleCommentsSuccess}
       />
     </div>
   );

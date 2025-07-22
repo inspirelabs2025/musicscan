@@ -267,9 +267,9 @@ export function EnhancedAIAnalysisTab() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: "Totaal Albums", value: stats.totalItems, icon: Music, color: "text-primary" },
-          { label: "Genres", value: stats.genres, icon: Target, color: "text-vinyl-gold" },
-          { label: "Artiesten", value: stats.artists, icon: Users, color: "text-blue-500" },
-          { label: "Geschatte Waarde", value: stats.priceStats ? `€${Math.round(stats.priceStats.total)}` : '€0', icon: DollarSign, color: "text-green-500" }
+          { label: "Genres", value: stats.uniqueGenres, icon: Target, color: "text-vinyl-gold" },
+          { label: "Artiesten", value: stats.uniqueArtists, icon: Users, color: "text-blue-500" },
+          { label: "Geschatte Waarde", value: `€${Math.round(stats.totalValue)}`, icon: DollarSign, color: "text-green-500" }
         ].map((stat, index) => (
           <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
             <CardContent className="p-6 text-center">
@@ -317,121 +317,109 @@ export function EnhancedAIAnalysisTab() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Music Personality - Enhanced */}
-          <Collapsible 
-            open={expandedSections.includes('personality')} 
-            onOpenChange={() => toggleSection('personality')}
-          >
-            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5">
-              <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-primary/5 transition-colors rounded-t-lg">
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      Jouw Muziekpersoonlijkheid
-                    </div>
-                    {expandedSections.includes('personality') ? 
-                      <ChevronDown className="h-5 w-5" /> : 
-                      <ChevronRight className="h-5 w-5" />
-                    }
-                  </CardTitle>
-                  <CardDescription>AI-analyse van je muzieksmaak en persoonlijkheid</CardDescription>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="space-y-6 pt-0">
-                  <div className="p-6 bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-lg border border-primary/20">
-                    <h4 className="font-semibold mb-3 flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-primary" />
-                      Muziek DNA
-                    </h4>
-                    <p className="text-xl font-medium text-primary leading-relaxed">
-                      {analysis.musicPersonality.musicDNA}
-                    </p>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-semibold mb-3">Persoonlijkheidsprofiel</h4>
-                      <p className="text-muted-foreground leading-relaxed">{analysis.musicPersonality.profile}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-semibold mb-3">Karaktereigenschappen</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {analysis.musicPersonality.traits.map((trait, index) => (
-                          <Badge 
-                            key={index} 
-                            variant="secondary" 
-                            className="text-sm px-3 py-1 bg-gradient-to-r from-primary/10 to-purple-500/10 hover:from-primary/20 hover:to-purple-500/20 transition-all cursor-pointer"
-                          >
-                            {trait}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-
-          {/* Collection Story - Enhanced */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5">
+          {/* Music History Timeline */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                Jouw Collectie Verhaal
+                Muziekgeschiedenis Timeline
               </CardTitle>
-              <CardDescription>AI's interpretatie van je muzikale reis</CardDescription>
+              <CardDescription>De historische context van jouw collectie</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="relative p-6 bg-gradient-to-r from-white/50 to-white/30 rounded-lg border border-primary/10">
-                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-purple-600 rounded-full"></div>
-                <blockquote className="text-lg leading-relaxed text-muted-foreground italic pl-4">
-                  "{analysis.collectionStory.origin}"
-                </blockquote>
+            <CardContent className="space-y-6">
+              <div className="p-6 bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-lg border border-primary/20">
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  Overzicht
+                </h4>
+                <p className="text-lg leading-relaxed">
+                  {analysis.musicHistoryTimeline.overview}
+                </p>
               </div>
+              
+              {analysis.musicHistoryTimeline.keyPeriods.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-3">Belangrijke Tijdperioden</h4>
+                  <div className="space-y-2">
+                    {analysis.musicHistoryTimeline.keyPeriods.map((period, index) => (
+                      <div key={index} className="p-3 bg-muted/50 rounded-lg border-l-4 border-primary">
+                        <p className="text-sm">{period}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {analysis.musicHistoryTimeline.culturalMovements.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-3">Culturele Bewegingen</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.musicHistoryTimeline.culturalMovements.map((movement, index) => (
+                      <Badge key={index} variant="secondary" className="px-3 py-1">
+                        {movement}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Artist Stories */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Artiestenverhalen
+              </CardTitle>
+              <CardDescription>Fascinerende verhalen over de artiesten in je collectie</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {analysis.artistStories.legendaryFigures.slice(0, 3).map((story, index) => (
+                <div key={index} className="p-4 bg-gradient-to-r from-white/50 to-white/30 rounded-lg border border-primary/10">
+                  <p className="text-sm leading-relaxed italic">"{story}"</p>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="value" className="space-y-6">
-          {/* Price Analysis Section */}
+          {/* Technical Mastery Section */}
           <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-green-500" />
-                Waarde & Investment Analyse
+                Technische Meesterschap
               </CardTitle>
-              <CardDescription>Marktwaarde, investment potentieel en collectie strategie</CardDescription>
+              <CardDescription>Geluidskwaliteit, formats en collectorswaarde</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="font-semibold mb-3">Marktwaarde Overzicht</h4>
-                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.marketTales}</p>
+                  <h4 className="font-semibold mb-3">Geluidskwaliteit</h4>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.technicalMastery.soundQuality}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-3">Investment Potentieel</h4>
-                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.investmentStory}</p>
+                  <h4 className="font-semibold mb-3">Format Betekenis</h4>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.technicalMastery.formatSignificance}</p>
                 </div>
               </div>
               
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="font-semibold mb-3">Collectie Strategie</h4>
-                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.collectorWisdom}</p>
+                  <h4 className="font-semibold mb-3">Artwork & Verpakking</h4>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.technicalMastery.artwork}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-3">Risico Beoordeling</h4>
-                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.valueSecrets}</p>
+                  <h4 className="font-semibold mb-3">Persing Kwaliteit</h4>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.technicalMastery.pressingQuality}</p>
                 </div>
               </div>
               
               <div>
-                <h4 className="font-semibold mb-3">Portfolio Breakdown</h4>
-                <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.portfolioStory}</p>
+                <h4 className="font-semibold mb-3">Verpakking Details</h4>
+                <p className="text-muted-foreground leading-relaxed">{analysis.technicalMastery.packaging}</p>
               </div>
             </CardContent>
           </Card>
@@ -448,7 +436,7 @@ export function EnhancedAIAnalysisTab() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={chartData.priceByDecade || []}>
+                  <BarChart data={chartData.decadeDistribution || []}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis 
                       dataKey="decade" 
@@ -456,10 +444,9 @@ export function EnhancedAIAnalysisTab() {
                     />
                     <YAxis 
                       tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                      tickFormatter={(value) => `€${value}`}
                     />
                     <Tooltip 
-                      formatter={(value) => [`€${value}`, 'Gem. Waarde']}
+                      formatter={(value) => [`${value} albums`, 'Aantal']}
                       labelStyle={{ color: 'hsl(var(--foreground))' }}
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--background))', 
@@ -469,7 +456,7 @@ export function EnhancedAIAnalysisTab() {
                       }}
                     />
                     <Bar 
-                      dataKey="avgPrice" 
+                      dataKey="count" 
                       fill="hsl(142 81% 45%)" 
                       radius={[4, 4, 0, 0]}
                       className="hover:opacity-80 transition-opacity cursor-pointer"
@@ -484,15 +471,15 @@ export function EnhancedAIAnalysisTab() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="h-5 w-5 text-purple-500" />
-                  Waarde per Genre (Top 6)
+                  Top Labels (Top 6)
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={(chartData.valueByGenre || []).slice(0, 6)}>
+                  <BarChart data={chartData.labelAnalysis.slice(0, 6)}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis 
-                      dataKey="genre" 
+                      dataKey="label" 
                       tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
                       angle={-45}
                       textAnchor="end"
@@ -500,10 +487,9 @@ export function EnhancedAIAnalysisTab() {
                     />
                     <YAxis 
                       tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                      tickFormatter={(value) => `€${value}`}
                     />
                     <Tooltip 
-                      formatter={(value) => [`€${value}`, 'Gem. Waarde']}
+                      formatter={(value) => [`${value} releases`, 'Aantal']}
                       labelStyle={{ color: 'hsl(var(--foreground))' }}
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--background))', 
@@ -513,7 +499,7 @@ export function EnhancedAIAnalysisTab() {
                       }}
                     />
                     <Bar 
-                      dataKey="avgPrice" 
+                      dataKey="releases" 
                       fill="hsl(280 81% 56%)" 
                       radius={[4, 4, 0, 0]}
                       className="hover:opacity-80 transition-opacity cursor-pointer"
@@ -613,17 +599,12 @@ export function EnhancedAIAnalysisTab() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <p className="text-lg leading-relaxed">{analysis.collectionInsights.uniqueMagic}</p>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="bg-purple-500/5 rounded-xl p-6 border border-purple-500/10">
-                      <h4 className="font-semibold mb-3">Samenhang</h4>
-                      <p className="text-muted-foreground">{analysis.collectionInsights.redThread}</p>
+                  {analysis.hiddenGems.underratedMasterpieces.slice(0, 3).map((gem, index) => (
+                    <div key={index} className="bg-purple-500/5 rounded-xl p-6 border border-purple-500/10">
+                      <h4 className="font-semibold mb-3">Verborgen Parel #{index + 1}</h4>
+                      <p className="text-muted-foreground">{gem}</p>
                     </div>
-                    <div className="bg-purple-500/5 rounded-xl p-6 border border-purple-500/10">
-                      <h4 className="font-semibold mb-3">Evolutie</h4>
-                      <p className="text-muted-foreground">{analysis.collectionInsights.musicalJourney}</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -641,7 +622,7 @@ export function EnhancedAIAnalysisTab() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysis.recommendations.nextAdventures.slice(0, 5).map((rec, index) => (
+                  {analysis.discoveryPaths.nextExplorations.slice(0, 5).map((rec, index) => (
                     <div key={index} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-green-500/10 hover:bg-white/10 transition-all">
                       <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
                         {index + 1}
@@ -660,10 +641,10 @@ export function EnhancedAIAnalysisTab() {
             {/* Collection Achievements */}
             {[
               { title: "Eerste Collectie", description: "Je eerste 10 albums", achieved: stats.totalItems >= 10, icon: Music },
-              { title: "Genre Explorer", description: "5+ verschillende genres", achieved: stats.genres >= 5, icon: Globe },
+              { title: "Genre Explorer", description: "5+ verschillende genres", achieved: stats.uniqueGenres >= 5, icon: Globe },
               { title: "Vintage Verzamelaar", description: "Album van voor 1980", achieved: true, icon: Trophy },
               { title: "Label Loyalist", description: "10+ releases van zelfde label", achieved: false, icon: Target },
-              { title: "Waarde Opbouwer", description: "Collectie van €500+", achieved: stats.priceStats ? stats.priceStats.total >= 500 : false, icon: DollarSign },
+              { title: "Waarde Opbouwer", description: "Collectie van €500+", achieved: stats.totalValue >= 500, icon: DollarSign },
               { title: "Investment Expert", description: "Hidden gems gevonden", achieved: false, icon: TrendingUp },
             ].map((achievement, index) => (
               <Card key={index} className={`${achievement.achieved ? 'border-green-500/50 bg-green-500/5' : 'border-muted bg-muted/20'} transition-all hover:scale-105`}>

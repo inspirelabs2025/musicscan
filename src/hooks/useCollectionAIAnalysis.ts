@@ -2,79 +2,89 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface CollectionProfile {
+  summary: string;
+  keyHighlights: string[];
+  musicianship: string;
+  culturalImpact: string;
+}
+
+export interface HistoricalContext {
+  timeline: string;
+  movements: string[];
+  innovations: string[];
+}
+
+export interface ArtisticConnections {
+  collaborations: string[];
+  influences: string[];
+  producerStories: string[];
+  labelLegacy: string;
+}
+
+export interface MusicalAnalysis {
+  genres: string[];
+  soundscapes: string[];
+  techniques: string[];
+  instruments: string[];
+}
+
+export interface CollectionInsights {
+  rarities: string[];
+  hiddenGems: string[];
+  completionSuggestions: string[];
+  nextDiscoveries: string[];
+}
+
+export interface MarketAnalysis {
+  valuableFinds: string[];
+  investmentPotential: string;
+  marketTrends: string[];
+  preservationTips: string[];
+}
+
+export interface TechnicalDetails {
+  formats: string;
+  pressings: string;
+  soundQuality: string;
+  packaging: string;
+}
+
 export interface AIAnalysis {
-  musicPersonality: {
-    profile: string;
-    traits: string[];
-    musicDNA: string;
-  };
-  priceAnalysis: {
-    treasureHunt: string;
-    investmentStory: string;
-    marketTales: string;
-    collectorWisdom: string;
-    portfolioStory: string;
-    valueSecrets: string;
-  };
-  collectionInsights: {
-    uniqueMagic: string;
-    redThread: string;
-    curationStyle: string;
-    musicalJourney: string;
-  };
-  artistConnections: {
-    collaborationWeb: string[];
-    labelStories: string[];
-    producerTales: string[];
-    genreEvolution: string;
-  };
-  investmentInsights: {
-    hiddenTreasures: string[];
-    crownJewels: string[];
-    marketProphecy: string;
-    completionQuests: string[];
-  };
-  culturalContext: {
-    timeTravel: string[];
-    movements: string[];
-    worldMap: string;
-    lifeTimeline: string;
-  };
+  collectionProfile: CollectionProfile;
+  historicalContext: HistoricalContext;
+  artisticConnections: ArtisticConnections;
+  musicalAnalysis: MusicalAnalysis;
+  collectionInsights: CollectionInsights;
+  marketAnalysis: MarketAnalysis;
   funFacts: string[];
-  recommendations: {
-    nextAdventures: string[];
-    genreExploration: string[];
-    artistDiscovery: string[];
-    collectionGaps: string[];
-  };
-  collectionStory: string;
+  technicalDetails: TechnicalDetails;
 }
 
 export interface ChartData {
-  genreDistribution: { name: string; value: number; percentage: number; }[];
-  formatDistribution: { name: string; value: number; fill: string; }[];
-  topArtists: { name: string; albums: number; }[];
-  yearDistribution: { decade: string; count: number; }[];
-  labelDistribution: { name: string; releases: number; }[];
-  valueDistribution: { range: string; count: number; totalValue?: number; }[];
-  countryDistribution: { country: string; count: number; }[];
-  styleDistribution: { name: string; value: number; }[];
-  decadeFlow: { decade: number; count: number; genres: number; artists: number; label: string; }[];
-  priceByDecade: { decade: string; avgPrice: number; count: number; totalValue: number; }[];
-  valueByGenre: { genre: string; avgPrice: number; count: number; totalValue: number; }[];
-  investmentHeatmap: { artist: string; title: string; year: number; currentValue: number; growthPotential: number; }[];
-  portfolioComposition: {
-    byFormat: { format: string; count: number; }[];
-    byDecade: { decade: string; avgPrice: number; count: number; totalValue: number; }[];
-    byGenre: { genre: string; avgPrice: number; count: number; totalValue: number; }[];
-    byValue: { range: string; count: number; totalValue: number; }[];
-  };
+  genreDistribution: { name: string; value: number; percentage: number }[];
+  formatDistribution: { name: string; value: number; fill: string }[];
+  topArtists: { name: string; albums: number }[];
+  decadeDistribution: { decade: string; count: number; genres: number; artists: number }[];
+  valueByGenre: { genre: string; count: number; totalValue: number; avgPrice: number }[];
+}
+
+export interface CollectionStats {
+  totalItems: number;
+  uniqueArtists: number;
+  uniqueLabels: number;
+  oldestItem: number;
+  newestItem: number;
+  totalValue: number;
+  avgValue: number;
+  itemsWithPricing: number;
+  mostValuableItems: any[];
 }
 
 export interface CollectionAIAnalysisResult {
   success: boolean;
   analysis: AIAnalysis;
-  stats: any;
+  stats: CollectionStats;
   chartData: ChartData;
   generatedAt: string;
   error?: string;
@@ -87,10 +97,12 @@ export const useCollectionAIAnalysis = () => {
       const { data, error } = await supabase.functions.invoke('collection-ai-analysis');
       
       if (error) {
+        console.error('AI Analysis failed:', error);
         throw new Error(`AI Analysis failed: ${error.message}`);
       }
       
       if (!data.success) {
+        console.error('AI Analysis unsuccessful:', data.error);
         throw new Error(data.error || 'AI Analysis failed');
       }
       
@@ -100,3 +112,4 @@ export const useCollectionAIAnalysis = () => {
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
 };
+

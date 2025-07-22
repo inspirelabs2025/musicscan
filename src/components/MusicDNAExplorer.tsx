@@ -3,59 +3,54 @@ import React, { useState } from 'react';
 import { useCollectionAIAnalysis } from "@/hooks/useCollectionAIAnalysis";
 import { useMetadataEnrichment } from "@/hooks/useMetadataEnrichment";
 import { StoryChapter } from "@/components/DNA/StoryChapter";
+import { CollectionHighlights } from "@/components/DNA/CollectionHighlights";
 import { FloatingNavigation } from "@/components/DNA/FloatingNavigation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, Brain, Sparkles, Network, Lightbulb, Zap, DollarSign, Rocket, Database, AlertCircle } from "lucide-react";
+import { RefreshCw, Brain, Sparkles, Network, Lightbulb, DollarSign, Rocket, Database, AlertCircle } from "lucide-react";
 
 const STORY_CHAPTERS = [
   {
-    id: 'genesis',
-    title: 'Genesis',
-    subtitle: 'Het begin van jouw muzikale reis',
-    icon: Brain,
-    color: 'from-blue-500 to-cyan-500',
-    content: 'Where it all began...'
+    id: 'highlights',
+    title: 'Hoogtepunten',
+    subtitle: 'De essentie van jouw collectie',
+    icon: Sparkles,
+    color: 'from-blue-500 to-cyan-500'
   },
   {
-    id: 'personality',
-    title: 'DNA',
-    subtitle: 'Jouw unieke muzikale identiteit',
-    icon: Sparkles,
-    color: 'from-purple-500 to-pink-500',
-    content: 'Your musical essence...'
+    id: 'history',
+    title: 'Tijdreis',
+    subtitle: 'De muziekgeschiedenis in jouw collectie',
+    icon: Brain,
+    color: 'from-purple-500 to-pink-500'
   },
   {
     id: 'connections',
     title: 'Connecties',
-    subtitle: 'Het netwerk van jouw muzieksmaak',
+    subtitle: 'Ontdek de verbanden tussen je muziek',
     icon: Network,
-    color: 'from-green-500 to-teal-500',
-    content: 'The web of influences...'
+    color: 'from-green-500 to-teal-500'
   },
   {
-    id: 'insights',
-    title: 'Inzichten',
-    subtitle: 'Verborgen patronen in jouw collectie',
+    id: 'analysis',
+    title: 'Analyse',
+    subtitle: 'De muzikale details uitgediept',
     icon: Lightbulb,
-    color: 'from-yellow-500 to-orange-500',
-    content: 'Hidden patterns...'
+    color: 'from-yellow-500 to-orange-500'
   },
   {
-    id: 'waarde',
-    title: 'Waarde',
-    subtitle: 'Investment & marktwaarde analyse',
+    id: 'market',
+    title: 'Markt',
+    subtitle: 'De waarde van je verzameling',
     icon: DollarSign,
-    color: 'from-green-600 to-emerald-600',
-    content: 'Financial insights...'
+    color: 'from-green-600 to-emerald-600'
   },
   {
-    id: 'future',
-    title: 'Toekomst',
-    subtitle: 'Jouw volgende muzikale ontdekkingen',
+    id: 'discover',
+    title: 'Ontdek',
+    subtitle: 'Je volgende muzikale avonturen',
     icon: Rocket,
-    color: 'from-indigo-500 to-purple-500',
-    content: 'What\'s next...'
+    color: 'from-indigo-500 to-purple-500'
   }
 ];
 
@@ -64,26 +59,16 @@ export function MusicDNAExplorer() {
   const { enrichMetadata, isEnriching, enrichmentProgress } = useMetadataEnrichment();
   const [activeChapter, setActiveChapter] = useState(0);
 
-  // Add debugging for the entire component
+  // Add debugging
   React.useEffect(() => {
     console.log('🔍 DEBUG MusicDNAExplorer:', {
       hasData: !!data,
       isLoading,
       hasError: !!error,
-      hasAnalysis: !!data?.analysis,
-      hasPriceAnalysis: !!data?.analysis?.priceAnalysis,
       analysisKeys: data?.analysis ? Object.keys(data.analysis) : 'none',
-      priceAnalysisData: data?.analysis?.priceAnalysis,
-      hasChartData: !!data?.chartData,
       chartDataKeys: data?.chartData ? Object.keys(data.chartData) : 'none'
     });
   }, [data, isLoading, error]);
-
-  // Force refresh function
-  const handleForceRefresh = () => {
-    console.log('🔄 Force refreshing AI analysis...');
-    refetch();
-  };
 
   if (isLoading) {
     return (
@@ -95,7 +80,7 @@ export function MusicDNAExplorer() {
               AI analyseert je muziek...
             </h1>
             <p className="text-xl text-white/80 mb-8">
-              Dit kan even duren terwijl we je collectie doorlichten
+              Even geduld terwijl we je collectie doorlichten
             </p>
             <div className="flex justify-center space-x-2">
               {[...Array(6)].map((_, i) => (
@@ -115,7 +100,7 @@ export function MusicDNAExplorer() {
           <div className="text-center py-16 space-y-8">
             <AlertCircle className="h-20 w-20 mx-auto text-red-400" />
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              Analyse heeft meer data nodig
+              We missen nog wat info
             </h1>
             <p className="text-xl text-white/80 mb-8">
               Je collectie mist belangrijke metadata. Laten we dit verrijken!
@@ -142,7 +127,7 @@ export function MusicDNAExplorer() {
               </Button>
               
               <Button 
-                onClick={handleForceRefresh} 
+                onClick={() => refetch()} 
                 disabled={isRefetching}
                 variant="outline"
                 size="lg"
@@ -172,7 +157,7 @@ export function MusicDNAExplorer() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
         <div className="max-w-4xl mx-auto text-center py-16">
           <h1 className="text-4xl font-bold text-white mb-4">Geen analyse beschikbaar</h1>
-          <Button onClick={handleForceRefresh} className="mt-4">
+          <Button onClick={() => refetch()} className="mt-4">
             <RefreshCw className="h-4 w-4 mr-2" />
             Opnieuw proberen
           </Button>
@@ -190,37 +175,13 @@ export function MusicDNAExplorer() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-4000"></div>
       </div>
 
-      {/* Header */}
+      {/* Header with Collection Highlights */}
       <div className="relative z-10 text-center py-16 px-4">
-        <div className="flex items-center justify-center mb-6">
-          <Zap className="h-12 w-12 md:h-16 md:w-16 text-purple-400 mr-4" />
-          <h1 className="text-4xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-            Muziek DNA
-          </h1>
-        </div>
-        <p className="text-xl md:text-2xl text-white/80 mb-8 max-w-3xl mx-auto leading-relaxed">
-          Ontdek de verborgen verhalen, patronen en waarde in jouw unieke muziekcollectie
-        </p>
-        
-        <div className="flex flex-wrap gap-4 justify-center">
-          <Button 
-            onClick={handleForceRefresh} 
-            disabled={isRefetching}
-            variant="outline"
-            className="border-white/20 text-white hover:bg-white/10"
-          >
-            {isRefetching ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Vernieuwen...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Vernieuw analyse
-              </>
-            )}
-          </Button>
+        <div className="max-w-6xl mx-auto">
+          <CollectionHighlights 
+            stats={data.stats}
+            profile={data.analysis.collectionProfile}
+          />
         </div>
       </div>
 
@@ -251,10 +212,17 @@ export function MusicDNAExplorer() {
         <p className="text-sm">
           Analyse gegenereerd op {new Date(data.generatedAt).toLocaleString('nl-NL')}
         </p>
-        <p className="text-xs mt-2">
-          🤖 Powered by AI • 🎵 Voor muziekliefhebbers • 💰 Met waardeanalyse
-        </p>
+        <Button 
+          onClick={() => refetch()} 
+          variant="ghost" 
+          size="sm"
+          className="text-white/60 hover:text-white mt-2"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Vernieuw analyse
+        </Button>
       </div>
     </div>
   );
 }
+

@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🎵 Starting enhanced AI collection analysis...');
+    console.log('🎵 Starting music-focused collection analysis...');
     
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -45,11 +45,10 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: true,
         analysis: {
-          collectionProfile: {
-            summary: "Je hebt nog geen items in je collectie. Tijd om muzikale schatten te verzamelen! 🎵",
-            uniqueArtists: 0,
-            totalItems: 0,
-            formats: { cd: 0, vinyl: 0 }
+          musicHistoryTimeline: {
+            overview: "Je hebt nog geen items in je collectie. Tijd om muzikale geschiedenis te verzamelen! 🎵",
+            keyPeriods: [],
+            culturalMovements: []
           }
         },
         stats: { totalItems: 0 },
@@ -60,9 +59,10 @@ serve(async (req) => {
       });
     }
 
-    // Prepare collection statistics
+    // Prepare detailed collection statistics
     const uniqueArtists = new Set(allItems.map(item => item.artist)).size;
     const uniqueLabels = new Set(allItems.map(item => item.label)).size;
+    const uniqueGenres = new Set(allItems.map(item => item.genre)).size;
     const decades = [...new Set(allItems.map(item => Math.floor((item.year || 0) / 10) * 10))].sort();
     const oldestItem = Math.min(...allItems.map(item => item.year || 9999));
     const newestItem = Math.max(...allItems.map(item => item.year || 0));
@@ -71,82 +71,125 @@ serve(async (req) => {
     const itemsWithPrices = allItems.filter(item => item.calculated_advice_price);
     const totalValue = itemsWithPrices.reduce((sum, item) => sum + (item.calculated_advice_price || 0), 0);
     const avgValue = itemsWithPrices.length > 0 ? totalValue / itemsWithPrices.length : 0;
-    const mostValuableItems = [...itemsWithPrices]
-      .sort((a, b) => (b.calculated_advice_price || 0) - (a.calculated_advice_price || 0))
-      .slice(0, 5);
 
-    // Enhanced creative storytelling AI prompt
-    const prompt = `Je bent een muziek-expert die op een leuke, interessante manier vertelt over deze collectie van ${allItems.length} items!
+    // Create detailed artist and genre information
+    const artistInfo = Array.from(
+      allItems.reduce((acc, item) => {
+        if (item.artist) {
+          const current = acc.get(item.artist) || { count: 0, genres: new Set(), years: [], labels: new Set() };
+          current.count++;
+          if (item.genre) current.genres.add(item.genre);
+          if (item.year) current.years.push(item.year);
+          if (item.label) current.labels.add(item.label);
+          acc.set(item.artist, current);
+        }
+        return acc;
+      }, new Map())
+    ).map(([artist, data]) => ({
+      artist,
+      albums: data.count,
+      genres: Array.from(data.genres),
+      yearSpan: data.years.length > 0 ? `${Math.min(...data.years)}-${Math.max(...data.years)}` : '',
+      labels: Array.from(data.labels)
+    }));
 
-COLLECTIE STATISTIEKEN OM TE GEBRUIKEN:
-- ${uniqueArtists} unieke artiesten
+    // Enhanced music historian AI prompt
+    const prompt = `Je bent een muziekhistoricus die diepgaand en fascinerend vertelt over deze collectie van ${allItems.length} albums!
+
+COLLECTIE OVERZICHT:
+- ${uniqueArtists} unieke artiesten uit ${uniqueGenres} verschillende genres
+- Tijdspanne: ${oldestItem} tot ${newestItem} (${newestItem - oldestItem} jaar muziekgeschiedenis)
 - ${uniqueLabels} verschillende platenlabels
-- Tijdspanne: ${oldestItem} tot ${newestItem}
-- Totale waarde: €${totalValue.toFixed(2)}
-- Gemiddelde waarde per item: €${avgValue.toFixed(2)}
 - Formats: ${cdItems?.length || 0} CDs en ${vinylItems?.length || 0} vinyl platen
-- Populairste genres: ${[...new Set(allItems.map(item => item.genre))].slice(0, 5).join(', ')}
-- Belangrijkste labels: ${[...new Set(allItems.map(item => item.label))].slice(0, 5).join(', ')}
+- Totale geschatte waarde: €${totalValue.toFixed(2)}
 
-Hier is een selectie van items uit de collectie:
-${allItems.slice(0, 20).map(item => `- ${item.artist} - ${item.title} (${item.year || '?'}, ${item.label || '?'})`).join('\n')}
+TOP ARTIESTEN IN DE COLLECTIE:
+${artistInfo.slice(0, 15).map(a => `- ${a.artist}: ${a.albums} album(s), genres: ${a.genres.join(', ')}, periode: ${a.yearSpan}`).join('\n')}
 
-INSTRUCTIES:
-1. Analyseer deze collectie op een interessante, feiten-gebaseerde manier.
-2. Gebruik concrete voorbeelden uit de collectie.
-3. Vermijd aannames over de persoon.
-4. Focus op muziekgeschiedenis, culturele impact en interessante verbanden.
-5. Wees enthousiast maar professioneel.
-6. Gebruik emoji's spaarzaam en alleen waar het echt past.
+BELANGRIJKSTE GENRES: ${[...new Set(allItems.map(item => item.genre))].slice(0, 8).join(', ')}
 
-Return ALLEEN een geldig JSON object met deze structuur:
+BELANGRIJKSTE LABELS: ${[...new Set(allItems.map(item => item.label))].slice(0, 8).join(', ')}
+
+SAMPLE VAN ALBUMS:
+${allItems.slice(0, 25).map(item => `- ${item.artist} - "${item.title}" (${item.year || '?'}, ${item.label || 'Unknown'}, ${item.genre || 'Unknown genre'})`).join('\n')}
+
+INSTRUCTIES VOOR MUZIEKHISTORISCHE ANALYSE:
+1. Analyseer deze collectie als een muziekhistoricus - focus op culturele context, muzikale innovaties en historische betekenis
+2. Vertel verhalen over de artiesten, hun invloed op elkaar, en hoe ze de muziekgeschiedenis hebben gevormd
+3. Leg verbanden tussen artiesten, genres, en tijdperioden
+4. Beschrijf de culturele en maatschappelijke context waarin deze muziek ontstond
+5. Highlight technische en artistieke innovaties in de collectie
+6. Vertel over legendarische producers, studio's, en platenlabels
+7. Wees informatief maar boeiend - vertel échte verhalen over de muziek
+
+Return ALLEEN een geldig JSON object met deze exacte structuur:
 
 {
-  "collectionProfile": {
-    "summary": "Een kort, krachtig overzicht van wat deze collectie bijzonder maakt",
-    "keyHighlights": ["3-5 echte hoogtepunten uit de collectie"],
-    "musicianship": "Analyse van de muzikaliteit in de collectie (instrumenten, stijlen, technieken)",
-    "culturalImpact": "Hoe deze albums de muziekgeschiedenis hebben beïnvloed"
+  "musicHistoryTimeline": {
+    "overview": "Een fascinerende reis door de muziekgeschiedenis via deze collectie",
+    "keyPeriods": ["Beschrijvingen van belangrijke tijdperioden vertegenwoordigd in de collectie"],
+    "culturalMovements": ["Belangrijke culturele bewegingen en hun impact"],
+    "musicalEvolution": "Hoe de muziek evolueerde door de jaren heen in deze collectie"
   },
-  "historicalContext": {
-    "timeline": "Tijdlijn van belangrijke albums/gebeurtenissen in de collectie",
-    "movements": ["Belangrijke muzikale bewegingen vertegenwoordigd in de collectie"],
-    "innovations": ["Technische of artistieke innovaties in deze albums"]
+  "artistStories": {
+    "legendaryFigures": ["Verhalen over de meest invloedrijke artiesten in de collectie"],
+    "hiddenConnections": ["Fascinerende verbanden tussen artiesten"],
+    "collaborationTales": ["Verhalen over samenwerkingen en wederzijdse invloeden"],
+    "artisticJourneys": ["Evolutie van belangrijke artiesten door hun carrières"],
+    "crossGenreInfluences": ["Hoe artiesten genres hebben overstegen en beïnvloed"]
   },
-  "artisticConnections": {
-    "collaborations": ["Interessante samenwerkingen tussen artiesten"],
-    "influences": ["Hoe artiesten elkaar hebben beïnvloed"],
-    "producerStories": ["Verhalen over producers/studios"],
-    "labelLegacy": "Geschiedenis van de belangrijkste labels"
+  "studioLegends": {
+    "legendaryStudios": ["Verhalen over beroemde studio's waar albums zijn opgenomen"],
+    "iconicProducers": ["Verhalen over producers en hun unieke sound"],
+    "recordingInnovations": ["Technische doorbraken in de opnametechniek"],
+    "labelHistories": ["Geschiedenis en betekenis van belangrijke platenlabels"],
+    "soundEngineering": ["Bijzondere aspecten van geluidstechniek en productie"]
   },
-  "musicalAnalysis": {
-    "genres": ["Diepgaande genre analyse"],
-    "soundscapes": ["Beschrijving van klankkleuren en productie"],
-    "techniques": ["Innovatieve technieken gebruikt"],
-    "instruments": ["Opvallende instrumentatie"]
+  "culturalImpact": {
+    "societalInfluence": ["Hoe deze albums de maatschappij hebben beïnvloed"],
+    "generationalMovements": ["Muzikale bewegingen die generaties hebben gedefinieerd"],
+    "politicalMessages": ["Politieke en sociale boodschappen in de muziek"],
+    "fashionAndStyle": ["Invloed op mode, lifestyle en cultuur"],
+    "globalReach": ["Internationale impact en cultuuruitwisseling"]
   },
-  "collectionInsights": {
-    "rarities": ["Zeldzame of speciale uitgaven"],
-    "hiddenGems": ["Ondergewaardeerde klassiekers"],
-    "completionSuggestions": ["Suggesties voor uitbreiding"],
-    "nextDiscoveries": ["Aanbevelingen gebaseerd op de collectie"]
+  "musicalInnovations": {
+    "technicalBreakthroughs": ["Technische vernieuwingen in instrumentatie en opname"],
+    "genreCreation": ["Hoe nieuwe genres ontstonden of evolueerden"],
+    "instrumentalPioneering": ["Innovatief gebruik van instrumenten"],
+    "vocalTechniques": ["Vernieuwende zangtechnieken en stijlen"],
+    "productionMethods": ["Baanbrekende productietechnieken"]
   },
-  "marketAnalysis": {
-    "valuableFinds": ["Top 5 waardevolste items met context"],
-    "investmentPotential": "Analyse van waardegroei potentieel",
-    "marketTrends": ["Relevante trends voor deze collectie"],
-    "preservationTips": ["Tips voor waardebehoud"]
+  "hiddenGems": {
+    "underratedMasterpieces": ["Ondergewaardeerde meesterwerken in de collectie"],
+    "rareFfinds": ["Zeldzame uitgaven en hun verhalen"],
+    "collectorSecrets": ["Insider-kennis over waardevolle items"],
+    "sleepersHits": ["Albums die later erkend werden als klassiekers"],
+    "deepCuts": ["Verborgen pareltjes die ontdekt moeten worden"]
   },
-  "funFacts": ["5-10 écht interessante feitjes specifiek over deze collectie"],
-  "technicalDetails": {
-    "formats": "Analyse van de verschillende formats",
-    "pressings": "Interessante persingen of edities",
-    "soundQuality": "Opmerkingen over geluidskwaliteit",
-    "packaging": "Bijzondere verpakkingen of artwork"
+  "musicalConnections": {
+    "genreEvolution": ["Hoe genres hebben geëvolueerd en elkaar beïnvloed"],
+    "artistInfluences": ["Wie heeft wie beïnvloed in de muziekgeschiedenis"],
+    "labelConnections": ["Verbanden tussen platenlabels en hun artists"],
+    "sceneConnections": ["Lokale muziekscenes en hun wereldwijde invloed"],
+    "crossPollination": ["Cultuuruitwisseling tussen verschillende muziekstromingen"]
+  },
+  "technicalMastery": {
+    "soundQuality": "Analyse van de geluidskwaliteit en mastering in de collectie",
+    "formatSignificance": "Betekenis van de verschillende formats (CD vs vinyl)",
+    "pressingQuality": "Bijzonderheden over persingen en hun kwaliteit",
+    "artwork": "Iconische hoezen en hun artistieke betekenis",
+    "packaging": "Bijzondere verpakkingen en hun collectorswaarde"
+  },
+  "discoveryPaths": {
+    "nextExplorations": ["Suggesties voor verdere muzikale ontdekkingen"],
+    "relatedArtists": ["Aanverwante artiesten om te ontdekken"],
+    "genreExpansions": ["Genres om verder te verkennen"],
+    "eraExplorations": ["Tijdperioden om dieper in te duiken"],
+    "labelDiveDeeps": ["Platenlabels om verder te onderzoeken"]
   }
 }`;
 
-    console.log('🤖 Calling OpenAI with enhanced storytelling prompt...');
+    console.log('🤖 Calling OpenAI with music historian prompt...');
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -159,15 +202,15 @@ Return ALLEEN een geldig JSON object met deze structuur:
         messages: [
           {
             role: 'system',
-            content: 'Je bent een muziek-expert die diepgaande, feitelijke analyses maakt van muziekcollecties.'
+            content: 'Je bent een gepassioneerde muziekhistoricus die fascinerende verhalen vertelt over muziek, artiesten en hun culturele impact. Je bent informatief maar nooit droog, en altijd gericht op de verhalen achter de muziek.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.7,
-        max_tokens: 2500
+        temperature: 0.8,
+        max_tokens: 3000
       }),
     });
 
@@ -180,7 +223,7 @@ Return ALLEEN een geldig JSON object met deze structuur:
     const openAIData = await openAIResponse.json();
     const aiAnalysis = JSON.parse(openAIData.choices[0].message.content);
     
-    // Prepare chart data
+    // Prepare enhanced chart data
     const genreDistribution = Array.from(
       allItems.reduce((acc, item) => {
         if (item.genre) {
@@ -195,53 +238,48 @@ Return ALLEEN een geldig JSON object met deze structuur:
     }));
 
     const formatDistribution = [
-      { name: "CD", value: cdItems?.length || 0, fill: "#6B7280" },
-      { name: "Vinyl", value: vinylItems?.length || 0, fill: "#9CA3AF" }
+      { name: "CD", value: cdItems?.length || 0, fill: "#8B5CF6" },
+      { name: "Vinyl", value: vinylItems?.length || 0, fill: "#A78BFA" }
     ].filter(item => item.value > 0);
 
-    const topArtists = Array.from(
-      allItems.reduce((acc, item) => {
-        if (item.artist) {
-          acc.set(item.artist, (acc.get(item.artist) || 0) + 1);
-        }
-        return acc;
-      }, new Map())
-    )
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
-      .map(([name, albums]) => ({ name, albums }));
+    const topArtists = artistInfo
+      .sort((a, b) => b.albums - a.albums)
+      .slice(0, 15)
+      .map(({ artist, albums, genres }) => ({ name: artist, albums, genres: genres.slice(0, 3) }));
 
-    // Calculate decade distribution
+    // Calculate decade distribution with cultural context
     const decadeDistribution = decades.map(decade => {
       const items = allItems.filter(item => Math.floor((item.year || 0) / 10) * 10 === decade);
       return {
         decade: `${decade}s`,
         count: items.length,
         genres: new Set(items.map(item => item.genre)).size,
-        artists: new Set(items.map(item => item.artist)).size
+        artists: new Set(items.map(item => item.artist)).size,
+        percentage: Math.round((items.length / allItems.length) * 100)
       };
     });
 
-    // Calculate value distribution by genre
-    const valueByGenre = Array.from(
+    // Label influence analysis
+    const labelAnalysis = Array.from(
       allItems.reduce((acc, item) => {
-        if (item.genre && item.calculated_advice_price) {
-          const current = acc.get(item.genre) || { count: 0, total: 0 };
-          acc.set(item.genre, {
-            count: current.count + 1,
-            total: current.total + item.calculated_advice_price
-          });
+        if (item.label) {
+          const current = acc.get(item.label) || { count: 0, artists: new Set(), genres: new Set() };
+          current.count++;
+          if (item.artist) current.artists.add(item.artist);
+          if (item.genre) current.genres.add(item.genre);
+          acc.set(item.label, current);
         }
         return acc;
       }, new Map())
-    ).map(([genre, data]) => ({
-      genre,
-      count: data.count,
-      totalValue: data.total,
-      avgPrice: data.total / data.count
-    }));
+    ).map(([label, data]) => ({
+      label,
+      releases: data.count,
+      artists: data.artists.size,
+      genres: data.genres.size,
+      diversity: Math.round((data.genres.size / data.count) * 100)
+    })).sort((a, b) => b.releases - a.releases).slice(0, 10);
 
-    console.log('✅ AI analysis completed successfully with enhanced storytelling');
+    console.log('✅ Music history analysis completed successfully');
 
     return new Response(JSON.stringify({
       success: true,
@@ -250,19 +288,23 @@ Return ALLEEN een geldig JSON object met deze structuur:
         totalItems: allItems.length,
         uniqueArtists,
         uniqueLabels,
+        uniqueGenres,
         oldestItem,
         newestItem,
         totalValue,
         avgValue,
         itemsWithPricing: itemsWithPrices.length,
-        mostValuableItems
+        timeSpan: newestItem - oldestItem,
+        cdCount: cdItems?.length || 0,
+        vinylCount: vinylItems?.length || 0
       },
       chartData: {
         genreDistribution,
         formatDistribution,
         topArtists,
         decadeDistribution,
-        valueByGenre
+        labelAnalysis,
+        artistConnections: artistInfo.slice(0, 20)
       },
       generatedAt: new Date().toISOString()
     }), {
@@ -270,7 +312,7 @@ Return ALLEEN een geldig JSON object met deze structuur:
     });
 
   } catch (error) {
-    console.error('❌ Collection AI analysis error:', error);
+    console.error('❌ Music history analysis error:', error);
     return new Response(JSON.stringify({
       success: false,
       error: error.message
@@ -280,4 +322,3 @@ Return ALLEEN een geldig JSON object met deze structuur:
     });
   }
 });
-

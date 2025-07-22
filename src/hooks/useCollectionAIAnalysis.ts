@@ -2,134 +2,111 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export interface CollectionProfile {
-  summary: string;
-  keyHighlights: string[];
-  musicianship: string;
-  culturalImpact: string;
+export interface MusicHistoryTimeline {
+  overview: string;
+  keyPeriods: string[];
+  culturalMovements: string[];
+  musicalEvolution: string;
 }
 
-export interface HistoricalContext {
-  timeline: string;
-  movements: string[];
-  innovations: string[];
+export interface ArtistStories {
+  legendaryFigures: string[];
+  hiddenConnections: string[];
+  collaborationTales: string[];
+  artisticJourneys: string[];
+  crossGenreInfluences: string[];
 }
 
-export interface ArtisticConnections {
-  collaborations: string[];
-  influences: string[];
-  producerStories: string[];
-  labelLegacy: string;
+export interface StudioLegends {
+  legendaryStudios: string[];
+  iconicProducers: string[];
+  recordingInnovations: string[];
+  labelHistories: string[];
+  soundEngineering: string[];
 }
 
-export interface MusicalAnalysis {
-  genres: string[];
-  soundscapes: string[];
-  techniques: string[];
-  instruments: string[];
+export interface CulturalImpact {
+  societalInfluence: string[];
+  generationalMovements: string[];
+  politicalMessages: string[];
+  fashionAndStyle: string[];
+  globalReach: string[];
 }
 
-export interface CollectionInsights {
-  rarities: string[];
-  hiddenGems: string[];
-  completionSuggestions: string[];
-  nextDiscoveries: string[];
-  uniqueMagic: string[];
-  redThread: string[];
-  musicalJourney: string[];
+export interface MusicalInnovations {
+  technicalBreakthroughs: string[];
+  genreCreation: string[];
+  instrumentalPioneering: string[];
+  vocalTechniques: string[];
+  productionMethods: string[];
 }
 
-export interface MarketAnalysis {
-  valuableFinds: string[];
-  investmentPotential: string;
-  marketTrends: string[];
-  preservationTips: string[];
+export interface HiddenGems {
+  underratedMasterpieces: string[];
+  rareFfinds: string[];
+  collectorSecrets: string[];
+  sleepersHits: string[];
+  deepCuts: string[];
 }
 
-export interface TechnicalDetails {
-  formats: string;
-  pressings: string;
+export interface MusicalConnections {
+  genreEvolution: string[];
+  artistInfluences: string[];
+  labelConnections: string[];
+  sceneConnections: string[];
+  crossPollination: string[];
+}
+
+export interface TechnicalMastery {
   soundQuality: string;
+  formatSignificance: string;
+  pressingQuality: string;
+  artwork: string;
   packaging: string;
 }
 
-export interface MusicPersonality {
-  type: string;
-  description: string;
-  traits: string[];
-  listeningStyle: string;
-  musicDNA: string;
-  profile: string;
-}
-
-export interface CollectionStory {
-  origin: string;
-  evolution: string;
-  currentPhase: string;
-  futureDirection: string;
-}
-
-export interface PriceAnalysis {
-  overview: string;
-  mostValuable: string[];
-  hiddenGems: string[];
-  marketTrends: string[];
-  investmentTips: string[];
-  marketTales: string[];
-  investmentStory: string;
-  collectorWisdom: string[];
-  valueSecrets: string[];
-  portfolioStory: string;
-}
-
-export interface Recommendations {
-  nextPurchases: string[];
-  genreExpansion: string[];
-  artistDeepDives: string[];
-  rareFfinds: string[];
-  nextAdventures: string[];
+export interface DiscoveryPaths {
+  nextExplorations: string[];
+  relatedArtists: string[];
+  genreExpansions: string[];
+  eraExplorations: string[];
+  labelDiveDeeps: string[];
 }
 
 export interface AIAnalysis {
-  collectionProfile: CollectionProfile;
-  historicalContext: HistoricalContext;
-  artisticConnections: ArtisticConnections;
-  musicalAnalysis: MusicalAnalysis;
-  collectionInsights: CollectionInsights;
-  marketAnalysis: MarketAnalysis;
-  funFacts: string[];
-  technicalDetails: TechnicalDetails;
-  musicPersonality: MusicPersonality;
-  collectionStory: CollectionStory;
-  priceAnalysis: PriceAnalysis;
-  recommendations: Recommendations;
+  musicHistoryTimeline: MusicHistoryTimeline;
+  artistStories: ArtistStories;
+  studioLegends: StudioLegends;
+  culturalImpact: CulturalImpact;
+  musicalInnovations: MusicalInnovations;
+  hiddenGems: HiddenGems;
+  musicalConnections: MusicalConnections;
+  technicalMastery: TechnicalMastery;
+  discoveryPaths: DiscoveryPaths;
 }
 
 export interface ChartData {
   genreDistribution: { name: string; value: number; percentage: number }[];
   formatDistribution: { name: string; value: number; fill: string }[];
-  topArtists: { name: string; albums: number }[];
-  decadeDistribution: { decade: string; count: number; genres: number; artists: number }[];
-  valueByGenre: { genre: string; count: number; totalValue: number; avgPrice: number }[];
-  priceByDecade: { decade: string; avgPrice: number; totalValue: number }[];
+  topArtists: { name: string; albums: number; genres: string[] }[];
+  decadeDistribution: { decade: string; count: number; genres: number; artists: number; percentage: number }[];
+  labelAnalysis: { label: string; releases: number; artists: number; genres: number; diversity: number }[];
+  artistConnections: { artist: string; albums: number; genres: string[]; yearSpan: string; labels: string[] }[];
 }
 
 export interface CollectionStats {
   totalItems: number;
   uniqueArtists: number;
   uniqueLabels: number;
+  uniqueGenres: number;
   oldestItem: number;
   newestItem: number;
   totalValue: number;
   avgValue: number;
   itemsWithPricing: number;
-  mostValuableItems: any[];
-  genres: number;
-  artists: number;
-  priceStats: {
-    total: number;
-    average: number;
-  };
+  timeSpan: number;
+  cdCount: number;
+  vinylCount: number;
 }
 
 export interface CollectionAIAnalysisResult {
@@ -163,4 +140,3 @@ export const useCollectionAIAnalysis = () => {
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
 };
-

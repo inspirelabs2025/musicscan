@@ -3,60 +3,60 @@ import React, { useState } from 'react';
 import { useCollectionAIAnalysis } from "@/hooks/useCollectionAIAnalysis";
 import { useMetadataEnrichment } from "@/hooks/useMetadataEnrichment";
 import { StoryChapter } from "@/components/DNA/StoryChapter";
-import { CollectionHighlights } from "@/components/DNA/CollectionHighlights";
+import { MusicHistoryHeader } from "@/components/DNA/MusicHistoryHeader";
 import { FloatingNavigation } from "@/components/DNA/FloatingNavigation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, Brain, Sparkles, Network, Lightbulb, DollarSign, Rocket, Database, AlertCircle } from "lucide-react";
+import { RefreshCw, Clock, Users, Building2, Sparkles, Lightbulb, Compass, Database, AlertCircle } from "lucide-react";
 
-const STORY_CHAPTERS = [
+const MUSIC_CHAPTERS = [
   {
-    id: 'highlights',
-    title: 'Hoogtepunten',
-    subtitle: 'De essentie van jouw collectie',
-    icon: Sparkles,
+    id: 'timeline',
+    title: 'Muziekgeschiedenis',
+    subtitle: 'Een reis door de tijd via jouw collectie',
+    icon: Clock,
     color: 'from-blue-500 to-cyan-500',
-    content: 'highlights'
+    content: 'timeline'
   },
   {
-    id: 'history',
-    title: 'Tijdreis',
-    subtitle: 'De muziekgeschiedenis in jouw collectie',
-    icon: Brain,
+    id: 'artists',
+    title: 'Artiest Verhalen',
+    subtitle: 'De legends en hun onderlinge connecties',
+    icon: Users,
     color: 'from-purple-500 to-pink-500',
-    content: 'history'
+    content: 'artists'
   },
   {
-    id: 'connections',
-    title: 'Connecties',
-    subtitle: 'Ontdek de verbanden tussen je muziek',
-    icon: Network,
+    id: 'studios',
+    title: 'Studio Legends',
+    subtitle: 'Producers, labels en opnamestudio\'s',
+    icon: Building2,
     color: 'from-green-500 to-teal-500',
-    content: 'connections'
+    content: 'studios'
   },
   {
-    id: 'analysis',
-    title: 'Analyse',
-    subtitle: 'De muzikale details uitgediept',
+    id: 'impact',
+    title: 'Culturele Impact',
+    subtitle: 'Hoe deze muziek de wereld veranderde',
+    icon: Sparkles,
+    color: 'from-orange-500 to-red-500',
+    content: 'impact'
+  },
+  {
+    id: 'innovations',
+    title: 'Muzikale Innovaties',
+    subtitle: 'Technische en artistieke doorbraken',
     icon: Lightbulb,
     color: 'from-yellow-500 to-orange-500',
-    content: 'analysis'
+    content: 'innovations'
   },
   {
-    id: 'market',
-    title: 'Markt',
-    subtitle: 'De waarde van je verzameling',
-    icon: DollarSign,
-    color: 'from-green-600 to-emerald-600',
-    content: 'market'
-  },
-  {
-    id: 'discover',
-    title: 'Ontdek',
-    subtitle: 'Je volgende muzikale avonturen',
-    icon: Rocket,
+    id: 'discovery',
+    title: 'Ontdekkingsreis',
+    subtitle: 'Verborgen parels en nieuwe paden',
+    icon: Compass,
     color: 'from-indigo-500 to-purple-500',
-    content: 'discover'
+    content: 'discovery'
   }
 ];
 
@@ -65,28 +65,17 @@ export function MusicDNAExplorer() {
   const { enrichMetadata, isEnriching, enrichmentProgress } = useMetadataEnrichment();
   const [activeChapter, setActiveChapter] = useState(0);
 
-  // Add debugging
-  React.useEffect(() => {
-    console.log('🔍 DEBUG MusicDNAExplorer:', {
-      hasData: !!data,
-      isLoading,
-      hasError: !!error,
-      analysisKeys: data?.analysis ? Object.keys(data.analysis) : 'none',
-      chartDataKeys: data?.chartData ? Object.keys(data.chartData) : 'none'
-    });
-  }, [data, isLoading, error]);
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center py-16">
-            <Brain className="h-20 w-20 mx-auto mb-8 text-purple-400 animate-pulse" />
+            <Clock className="h-20 w-20 mx-auto mb-8 text-purple-400 animate-pulse" />
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              AI analyseert je muziek...
+              Muziekgeschiedenis wordt geanalyseerd...
             </h1>
             <p className="text-xl text-white/80 mb-8">
-              Even geduld terwijl we je collectie doorlichten
+              Even geduld terwijl we de verhalen achter je muziek ontdekken
             </p>
             <div className="flex justify-center space-x-2">
               {[...Array(6)].map((_, i) => (
@@ -106,10 +95,10 @@ export function MusicDNAExplorer() {
           <div className="text-center py-16 space-y-8">
             <AlertCircle className="h-20 w-20 mx-auto text-red-400" />
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              We missen nog wat info
+              Muziekdata ontbreekt
             </h1>
             <p className="text-xl text-white/80 mb-8">
-              Je collectie mist belangrijke metadata. Laten we dit verrijken!
+              Je collectie mist belangrijke metadata voor historische analyse. Laten we dit verrijken!
             </p>
             
             <div className="space-y-4">
@@ -181,19 +170,20 @@ export function MusicDNAExplorer() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-4000"></div>
       </div>
 
-      {/* Header with Collection Highlights */}
+      {/* Header with Music History Overview */}
       <div className="relative z-10 text-center py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <CollectionHighlights 
+          <MusicHistoryHeader 
             stats={data.stats}
-            profile={data.analysis.collectionProfile}
+            timeline={data.analysis.musicHistoryTimeline}
+            chartData={data.chartData}
           />
         </div>
       </div>
 
-      {/* Story Chapters */}
+      {/* Music History Chapters */}
       <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 pb-16">
-        {STORY_CHAPTERS.map((chapter, index) => (
+        {MUSIC_CHAPTERS.map((chapter, index) => (
           <StoryChapter
             key={chapter.id}
             chapter={chapter}
@@ -208,7 +198,7 @@ export function MusicDNAExplorer() {
 
       {/* Floating Navigation */}
       <FloatingNavigation 
-        chapters={STORY_CHAPTERS}
+        chapters={MUSIC_CHAPTERS}
         activeChapter={activeChapter}
         onChapterChange={setActiveChapter}
       />
@@ -216,7 +206,7 @@ export function MusicDNAExplorer() {
       {/* Generation info */}
       <div className="relative z-10 text-center text-white/60 pb-8">
         <p className="text-sm">
-          Analyse gegenereerd op {new Date(data.generatedAt).toLocaleString('nl-NL')}
+          Muziekhistorische analyse gegenereerd op {new Date(data.generatedAt).toLocaleString('nl-NL')}
         </p>
         <Button 
           onClick={() => refetch()} 
@@ -231,4 +221,3 @@ export function MusicDNAExplorer() {
     </div>
   );
 }
-

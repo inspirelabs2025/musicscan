@@ -365,8 +365,9 @@ const VinylScanComplete = () => {
   }, [searchResults, calculateAdvicePrice, state.discogsIdMode, state.selectedCondition, state.calculatedAdvicePrice]);
 
   const handleSave = useCallback(async () => {
-    console.log('💾 handleSave called with condition:', state.selectedCondition, 'advicePrice:', state.calculatedAdvicePrice);
-    if (!state.selectedCondition || !state.calculatedAdvicePrice) {
+    const finalAdvicePrice = state.useManualAdvicePrice ? state.manualAdvicePrice : state.calculatedAdvicePrice;
+    console.log('💾 handleSave called with condition:', state.selectedCondition, 'advicePrice:', finalAdvicePrice);
+    if (!state.selectedCondition || !finalAdvicePrice) {
       toast({
         title: "Kan niet opslaan",
         description: "Selecteer eerst een conditie en zorg dat prijsscan compleet is",
@@ -375,8 +376,8 @@ const VinylScanComplete = () => {
       return;
     }
     
-    await saveFinalScan(state.selectedCondition, state.calculatedAdvicePrice);
-  }, [state.selectedCondition, state.calculatedAdvicePrice, saveFinalScan]);
+    await saveFinalScan(state.selectedCondition, finalAdvicePrice);
+  }, [state.selectedCondition, state.calculatedAdvicePrice, state.manualAdvicePrice, state.useManualAdvicePrice, saveFinalScan]);
 
   const handleSaveAnyway = useCallback(() => {
     if (state.pendingSaveData) {
@@ -657,9 +658,15 @@ const VinylScanComplete = () => {
               mediaType={state.mediaType!}
               selectedCondition={state.selectedCondition}
               lowestPrice={searchResults[0]?.pricing_stats?.lowest_price}
+              medianPrice={searchResults[0]?.pricing_stats?.median_price}
+              highestPrice={searchResults[0]?.pricing_stats?.highest_price}
               calculatedAdvicePrice={state.calculatedAdvicePrice}
+              manualAdvicePrice={state.manualAdvicePrice}
+              useManualAdvicePrice={state.useManualAdvicePrice}
               isSaving={state.isSavingCondition}
               onConditionChange={handleConditionChange}
+              onManualAdvicePriceChange={(price) => dispatch({ type: 'SET_MANUAL_ADVICE_PRICE', payload: price })}
+              onToggleManualAdvicePrice={(useManual) => dispatch({ type: 'SET_USE_MANUAL_ADVICE_PRICE', payload: useManual })}
               onSave={handleSave}
             />
           </div>

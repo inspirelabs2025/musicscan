@@ -1,10 +1,13 @@
 
 import React, { useMemo } from 'react';
-import { CheckCircle, Loader2, TrendingUp, Info } from 'lucide-react';
+import { CheckCircle, Loader2, TrendingUp, Info, Edit3 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ConditionSelectorProps {
   mediaType: 'vinyl' | 'cd';
@@ -13,8 +16,12 @@ interface ConditionSelectorProps {
   medianPrice?: string | null;
   highestPrice?: string | null;
   calculatedAdvicePrice: number | null;
+  manualAdvicePrice: number | null;
+  useManualAdvicePrice: boolean;
   isSaving: boolean;
   onConditionChange: (condition: string) => void;
+  onManualAdvicePriceChange: (price: number | null) => void;
+  onToggleManualAdvicePrice: (useManual: boolean) => void;
   onSave: () => void;
 }
 
@@ -25,8 +32,12 @@ export const ConditionSelector = React.memo(({
   medianPrice,
   highestPrice,
   calculatedAdvicePrice,
+  manualAdvicePrice,
+  useManualAdvicePrice,
   isSaving,
   onConditionChange,
+  onManualAdvicePriceChange,
+  onToggleManualAdvicePrice,
   onSave
 }: ConditionSelectorProps) => {
   
@@ -73,6 +84,28 @@ export const ConditionSelector = React.memo(({
     if (numPrice < 20) return 'outline';
     if (numPrice < 50) return 'secondary';
     return 'destructive';
+  };
+
+  const handleManualPriceInput = (value: string) => {
+    if (value === '' || value === undefined) {
+      onManualAdvicePriceChange(null);
+    } else {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue) && numValue >= 0) {
+        onManualAdvicePriceChange(numValue);
+      }
+    }
+  };
+
+  const getActivePrice = () => {
+    return useManualAdvicePrice ? manualAdvicePrice : calculatedAdvicePrice;
+  };
+
+  const getPriceDifference = () => {
+    if (!manualAdvicePrice || !calculatedAdvicePrice) return null;
+    const diff = manualAdvicePrice - calculatedAdvicePrice;
+    const percentage = Math.abs(diff / calculatedAdvicePrice * 100);
+    return { diff, percentage };
   };
 
   return (
@@ -178,13 +211,96 @@ export const ConditionSelector = React.memo(({
                   <span className="text-lg font-semibold">Adviesprijs</span>
                 </div>
                 <Badge variant="secondary" className="bg-primary/10 text-primary">
-                  Gebaseerd op {selectedCondition}
+                  {useManualAdvicePrice ? 'Handmatig' : `Gebaseerd op ${selectedCondition}`}
                 </Badge>
               </div>
-              <div className="text-3xl font-bold text-primary mb-2">
-                €{calculatedAdvicePrice.toFixed(2)}
+              
+              {/* Active Price Display */}
+              <div className="text-3xl font-bold text-primary mb-4">
+                €{(getActivePrice() || 0).toFixed(2)}
               </div>
-              {lowestPrice && (
+              
+              {/* Manual/Automatic Toggle */}
+              <div className="space-y-4 mb-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Handmatige prijsinstelling</label>
+                  <Switch
+                    checked={useManualAdvicePrice}
+                    onCheckedChange={onToggleManualAdvicePrice}
+                  />
+                </div>
+                
+                {/* Price Input Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Automatic Price */}
+                  <div className="space-y-2">
+                    <label className="text-xs text-muted-foreground">Automatische Prijs</label>
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        value={`€${calculatedAdvicePrice.toFixed(2)}`}
+                        readOnly
+                        disabled
+                        className="bg-muted/50"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Manual Price */}
+                  <div className="space-y-2">
+                    <label className="text-xs text-muted-foreground">Handmatige Prijs</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={manualAdvicePrice || ''}
+                        onChange={(e) => handleManualPriceInput(e.target.value)}
+                        placeholder="0.00"
+                        className="pl-7"
+                        disabled={!useManualAdvicePrice}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Quick Actions */}
+                {useManualAdvicePrice && (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onManualAdvicePriceChange(calculatedAdvicePrice)}
+                    >
+                      <Edit3 className="h-3 w-3 mr-1" />
+                      Kopieer Automatische
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onManualAdvicePriceChange(null)}
+                    >
+                      Wis
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Price Difference Warning */}
+                {useManualAdvicePrice && manualAdvicePrice && getPriceDifference() && getPriceDifference()!.percentage > 20 && (
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      De handmatige prijs wijkt {getPriceDifference()!.percentage.toFixed(0)}% af van de automatische prijs 
+                      ({getPriceDifference()!.diff > 0 ? '+' : ''}€{getPriceDifference()!.diff.toFixed(2)})
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+              
+              {lowestPrice && !useManualAdvicePrice && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Info className="h-4 w-4" />
                   <span>Berekend vanaf laagste prijs: €{lowestPrice}</span>

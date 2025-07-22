@@ -4,6 +4,8 @@ export interface ScanState {
   uploadedFiles: string[];
   selectedCondition: string;
   calculatedAdvicePrice: number | null;
+  manualAdvicePrice: number | null;
+  useManualAdvicePrice: boolean;
   isSavingCondition: boolean;
   completedScanData: any;
   duplicateRecords: any[];
@@ -19,6 +21,8 @@ export type ScanAction =
   | { type: 'SET_UPLOADED_FILES'; payload: string[] }
   | { type: 'SET_SELECTED_CONDITION'; payload: string }
   | { type: 'SET_CALCULATED_ADVICE_PRICE'; payload: number | null }
+  | { type: 'SET_MANUAL_ADVICE_PRICE'; payload: number | null }
+  | { type: 'SET_USE_MANUAL_ADVICE_PRICE'; payload: boolean }
   | { type: 'SET_IS_SAVING_CONDITION'; payload: boolean }
   | { type: 'SET_COMPLETED_SCAN_DATA'; payload: any }
   | { type: 'SET_DUPLICATE_RECORDS'; payload: any[] }
@@ -34,6 +38,8 @@ export const initialScanState: ScanState = {
   uploadedFiles: [],
   selectedCondition: '',
   calculatedAdvicePrice: null,
+  manualAdvicePrice: null,
+  useManualAdvicePrice: false,
   isSavingCondition: false,
   completedScanData: null,
   duplicateRecords: [],
@@ -55,6 +61,10 @@ export function scanReducer(state: ScanState, action: ScanAction): ScanState {
       return { ...state, selectedCondition: action.payload };
     case 'SET_CALCULATED_ADVICE_PRICE':
       return { ...state, calculatedAdvicePrice: action.payload };
+    case 'SET_MANUAL_ADVICE_PRICE':
+      return { ...state, manualAdvicePrice: action.payload };
+    case 'SET_USE_MANUAL_ADVICE_PRICE':
+      return { ...state, useManualAdvicePrice: action.payload };
     case 'SET_IS_SAVING_CONDITION':
       return { ...state, isSavingCondition: action.payload };
     case 'SET_COMPLETED_SCAN_DATA':

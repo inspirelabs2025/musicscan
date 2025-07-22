@@ -13,7 +13,7 @@ export function InteractiveTimeline({ chartData, analysis }: InteractiveTimeline
   const decades = chartData.yearDistribution || [];
 
   return (
-    <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+    <Card variant="dark" className="hover:bg-white/10 transition-all">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2 text-xl">
           <Clock className="h-6 w-6" />
@@ -22,7 +22,7 @@ export function InteractiveTimeline({ chartData, analysis }: InteractiveTimeline
       </CardHeader>
       <CardContent>
         <div className="space-y-8">
-          {analysis.culturalContext.timeline && (
+          {analysis.culturalContext?.timeline && (
             <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-6 border border-blue-500/20">
               <p className="text-white/80 text-lg leading-relaxed">{analysis.culturalContext.timeline}</p>
             </div>
@@ -58,7 +58,7 @@ export function InteractiveTimeline({ chartData, analysis }: InteractiveTimeline
                       </div>
                       
                       {/* Cultural context for this decade */}
-                      {analysis.culturalContext.movements?.find((movement: string) => 
+                      {analysis.culturalContext?.movements?.find((movement: string) => 
                         movement.toLowerCase().includes(decade.decade.toLowerCase())
                       ) && (
                         <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">

@@ -2,14 +2,19 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Music, Users, Building2, Sparkles, Lightbulb, Compass, Star, Award } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronRight, ChevronDown } from "lucide-react";
+import { InteractiveTimeline } from './InteractiveTimeline';
+import { MusicalGalaxy } from './MusicalGalaxy';
+import { CollectionHighlights } from './CollectionHighlights';
+import { AchievementSystem } from './AchievementSystem';
 
 interface StoryChapterProps {
   chapter: {
     id: string;
     title: string;
     subtitle: string;
-    icon: React.ComponentType<any>;
+    icon: any;
     color: string;
     content: string;
   };
@@ -21,150 +26,80 @@ interface StoryChapterProps {
 }
 
 export function StoryChapter({ chapter, analysis, chartData, stats, isActive, onActivate }: StoryChapterProps) {
+  const Icon = chapter.icon;
+
   const renderChapterContent = () => {
-    switch (chapter.id) {
+    switch (chapter.content) {
       case 'timeline':
         return (
-          <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-sm border-blue-500/20">
+          <div className="space-y-6">
+            <Card variant="purple">
               <CardHeader>
-                <CardTitle className="text-white text-xl flex items-center gap-2">
-                  🕰️ Muzikale Evolutie
-                </CardTitle>
+                <CardTitle className="text-white text-xl">Jouw Muziekgeschiedenis Timeline</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white leading-relaxed mb-6">{analysis.musicHistoryTimeline.musicalEvolution}</p>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-white">Belangrijke Tijdperken</h4>
-                    <div className="space-y-3">
-                      {analysis.musicHistoryTimeline.keyPeriods.map((period, index) => (
-                        <div key={index} className="flex items-start gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                            {index + 1}
-                          </div>
-                          <span className="text-white text-sm leading-relaxed">{period}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-white">Culturele Bewegingen</h4>
-                    <div className="space-y-3">
-                      {analysis.musicHistoryTimeline.culturalMovements.map((movement, index) => (
-                        <div key={index} className="flex items-start gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-                          <Sparkles className="h-5 w-5 text-cyan-400 flex-shrink-0 mt-0.5" />
-                          <span className="text-white text-sm leading-relaxed">{movement}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Decade Distribution Visualization */}
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-              <CardHeader>
-                <CardTitle className="text-white text-lg">Tijdlijn Distributie</CardTitle>
-              </CardHeader>
-              <CardContent>
+                <p className="text-white/90 leading-relaxed mb-6">
+                  {analysis.musicHistoryTimeline?.overview || "Je collectie vertelt een verhaal door de tijd..."}
+                </p>
                 <div className="space-y-4">
-                  {chartData.decadeDistribution.map((decade, index) => (
-                    <div key={decade.decade} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-white font-medium">{decade.decade}</span>
-                        <Badge className="bg-blue-500/20 text-blue-200">
-                          {decade.count} albums ({decade.percentage}%)
-                        </Badge>
-                      </div>
-                      <div className="w-full bg-white/10 rounded-full h-3">
-                        <div 
-                          className="bg-gradient-to-r from-blue-500 to-cyan-600 h-3 rounded-full transition-all duration-1000"
-                          style={{ width: `${decade.percentage}%` }}
-                        />
-                      </div>
-                      <div className="text-xs text-white/60">
-                        {decade.artists} artiesten, {decade.genres} genres
-                      </div>
+                  {analysis.musicHistoryTimeline?.keyPeriods?.slice(0, 3).map((period: string, index: number) => (
+                    <div key={index} className="p-4 bg-white/10 rounded-lg border border-white/20">
+                      <p className="text-white/80 text-sm">{period}</p>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
+            
+            {chartData.decadeDistribution && (
+              <InteractiveTimeline chartData={chartData} analysis={analysis} />
+            )}
           </div>
         );
 
       case 'artists':
         return (
-          <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-sm border-purple-500/20">
+          <div className="space-y-6">
+            <Card variant="purple">
               <CardHeader>
-                <CardTitle className="text-white text-xl flex items-center gap-2">
-                  🎭 Legendarische Figuren
-                </CardTitle>
+                <CardTitle className="text-white text-xl">Artiest Legends & Connecties</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {analysis.artistStories.legendaryFigures.map((story, index) => (
-                    <div key={index} className="p-4 bg-white/5 rounded-xl border border-white/10">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Star className="h-5 w-5 text-purple-400" />
-                        <Badge className="bg-purple-500/20 text-purple-200">Legend #{index + 1}</Badge>
-                      </div>
-                      <p className="text-white leading-relaxed">{story}</p>
+                  <div>
+                    <h4 className="font-semibold text-white mb-4">Legendes in je collectie</h4>
+                    <div className="space-y-3">
+                      {analysis.artistStories?.legendaryFigures?.slice(0, 4).map((figure: string, index: number) => (
+                        <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
+                          <p className="text-white/80 text-sm">{figure}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold text-white mb-4">Verborgen Connecties</h4>
+                    <div className="space-y-3">
+                      {analysis.artistStories?.hiddenConnections?.slice(0, 4).map((connection: string, index: number) => (
+                        <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
+                          <p className="text-white/80 text-sm">{connection}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg">Verborgen Connecties</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {analysis.artistStories.hiddenConnections.map((connection, index) => (
-                      <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/10">
-                        <p className="text-white text-sm leading-relaxed">{connection}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg">Artistieke Reizen</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {analysis.artistStories.artisticJourneys.map((journey, index) => (
-                      <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/10">
-                        <p className="text-white text-sm leading-relaxed">{journey}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 backdrop-blur-sm border-pink-500/20">
+            <Card variant="dark">
               <CardHeader>
-                <CardTitle className="text-white text-xl">Samenwerkingsverhalen</CardTitle>
+                <CardTitle className="text-white text-xl">Artistieke Reizen</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysis.artistStories.collaborationTales.map((tale, index) => (
-                    <div key={index} className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
-                      <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                        {index + 1}
-                      </div>
-                      <p className="text-white leading-relaxed">{tale}</p>
+                  {analysis.artistStories?.artisticJourneys?.slice(0, 3).map((journey: string, index: number) => (
+                    <div key={index} className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <p className="text-white/80 leading-relaxed">{journey}</p>
                     </div>
                   ))}
                 </div>
@@ -175,266 +110,256 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
 
       case 'studios':
         return (
-          <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-green-500/10 to-teal-500/10 backdrop-blur-sm border-green-500/20">
+          <div className="space-y-6">
+            <Card variant="purple">
               <CardHeader>
-                <CardTitle className="text-white text-xl flex items-center gap-2">
-                  🏛️ Legendarische Studio's
-                </CardTitle>
+                <CardTitle className="text-white text-xl">Studio Legends & Producers</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold text-white mb-4">Iconische Studios</h4>
+                    <div className="space-y-3">
+                      {analysis.studioLegends?.legendaryStudios?.slice(0, 4).map((studio: string, index: number) => (
+                        <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
+                          <p className="text-white/80 text-sm">{studio}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold text-white mb-4">Legendary Producers</h4>
+                    <div className="space-y-3">
+                      {analysis.studioLegends?.iconicProducers?.slice(0, 4).map((producer: string, index: number) => (
+                        <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
+                          <p className="text-white/80 text-sm">{producer}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card variant="dark">
+              <CardHeader>
+                <CardTitle className="text-white text-xl">Opname Innovaties</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysis.studioLegends.legendaryStudios.map((studio, index) => (
-                    <div key={index} className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
-                      <Building2 className="h-6 w-6 text-green-400 flex-shrink-0 mt-1" />
-                      <p className="text-white leading-relaxed">{studio}</p>
+                  {analysis.studioLegends?.recordingInnovations?.slice(0, 3).map((innovation: string, index: number) => (
+                    <div key={index} className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <p className="text-white/80 leading-relaxed">{innovation}</p>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg">Iconische Producers</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {analysis.studioLegends.iconicProducers.map((producer, index) => (
-                      <div key={index} className="p-3 bg-white/5 rounded-lg">
-                        <p className="text-white text-sm leading-relaxed">{producer}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg">Label Geschiedenis</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {analysis.studioLegends.labelHistories.map((history, index) => (
-                      <div key={index} className="p-3 bg-white/5 rounded-lg">
-                        <p className="text-white text-sm leading-relaxed">{history}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         );
 
       case 'impact':
         return (
-          <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-orange-500/10 to-red-500/10 backdrop-blur-sm border-orange-500/20">
+          <div className="space-y-6">
+            <Card variant="purple">
               <CardHeader>
-                <CardTitle className="text-white text-xl flex items-center gap-2">
-                  🌍 Maatschappelijke Invloed
-                </CardTitle>
+                <CardTitle className="text-white text-xl">Culturele Impact & Invloed</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold text-white mb-4">Maatschappelijke Invloed</h4>
+                    <div className="space-y-3">
+                      {analysis.culturalImpact?.societalInfluence?.slice(0, 4).map((influence: string, index: number) => (
+                        <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
+                          <p className="text-white/80 text-sm">{influence}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold text-white mb-4">Generatie Bewegingen</h4>
+                    <div className="space-y-3">
+                      {analysis.culturalImpact?.generationalMovements?.slice(0, 4).map((movement: string, index: number) => (
+                        <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
+                          <p className="text-white/80 text-sm">{movement}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card variant="dark">
+              <CardHeader>
+                <CardTitle className="text-white text-xl">Wereldwijde Invloed</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysis.culturalImpact.societalInfluence.map((influence, index) => (
-                    <div key={index} className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
-                      <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                        {index + 1}
-                      </div>
-                      <p className="text-white leading-relaxed">{influence}</p>
+                  {analysis.culturalImpact?.globalReach?.slice(0, 3).map((reach: string, index: number) => (
+                    <div key={index} className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <p className="text-white/80 leading-relaxed">{reach}</p>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg">Generatie Bewegingen</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {analysis.culturalImpact.generationalMovements.map((movement, index) => (
-                      <div key={index} className="p-3 bg-white/5 rounded-lg">
-                        <p className="text-white text-sm">{movement}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg">Mode & Lifestyle</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {analysis.culturalImpact.fashionAndStyle.map((style, index) => (
-                      <div key={index} className="p-3 bg-white/5 rounded-lg">
-                        <p className="text-white text-sm">{style}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         );
 
       case 'innovations':
         return (
-          <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 backdrop-blur-sm border-yellow-500/20">
+          <div className="space-y-6">
+            <Card variant="purple">
               <CardHeader>
-                <CardTitle className="text-white text-xl flex items-center gap-2">
-                  💡 Technische Doorbraken
-                </CardTitle>
+                <CardTitle className="text-white text-xl">Muzikale & Technische Innovaties</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {analysis.musicalInnovations.technicalBreakthroughs.map((breakthrough, index) => (
-                    <div key={index} className="p-4 bg-white/5 rounded-xl border border-white/10">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Lightbulb className="h-4 w-4 text-yellow-400" />
-                        <Badge className="bg-yellow-500/20 text-yellow-200">Innovatie</Badge>
-                      </div>
-                      <p className="text-white text-sm leading-relaxed">{breakthrough}</p>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold text-white mb-4">Technische Doorbraken</h4>
+                    <div className="space-y-3">
+                      {analysis.musicalInnovations?.technicalBreakthroughs?.slice(0, 4).map((breakthrough: string, index: number) => (
+                        <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
+                          <p className="text-white/80 text-sm">{breakthrough}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold text-white mb-4">Genre Creaties</h4>
+                    <div className="space-y-3">
+                      {analysis.musicalInnovations?.genreCreation?.slice(0, 4).map((genre: string, index: number) => (
+                        <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
+                          <p className="text-white/80 text-sm">{genre}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card variant="dark">
+              <CardHeader>
+                <CardTitle className="text-white text-xl">Productie Methoden</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {analysis.musicalInnovations?.productionMethods?.slice(0, 3).map((method: string, index: number) => (
+                    <div key={index} className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <p className="text-white/80 leading-relaxed">{method}</p>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg">Genre Creatie</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {analysis.musicalInnovations.genreCreation.map((genre, index) => (
-                      <div key={index} className="p-3 bg-white/5 rounded-lg">
-                        <p className="text-white text-sm">{genre}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg">Vocale Technieken</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {analysis.musicalInnovations.vocalTechniques.map((technique, index) => (
-                      <div key={index} className="p-3 bg-white/5 rounded-lg">
-                        <p className="text-white text-sm">{technique}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         );
 
       case 'discovery':
         return (
-          <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 backdrop-blur-sm border-indigo-500/20">
+          <div className="space-y-6">
+            <MusicalGalaxy chartData={chartData} analysis={analysis} />
+            
+            <Card variant="purple">
               <CardHeader>
-                <CardTitle className="text-white text-xl flex items-center gap-2">
-                  💎 Ondergewaardeerde Meesterwerken
-                </CardTitle>
+                <CardTitle className="text-white text-xl">Ontdekkingsreis & Verborgen Parels</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold text-white mb-4">Ondergewaardeerde Meesterwerken</h4>
+                    <div className="space-y-3">
+                      {analysis.hiddenGems?.underratedMasterpieces?.slice(0, 4).map((gem: string, index: number) => (
+                        <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
+                          <p className="text-white/80 text-sm">{gem}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold text-white mb-4">Nieuwe Ontdekkingen</h4>
+                    <div className="space-y-3">
+                      {analysis.discoveryPaths?.nextExplorations?.slice(0, 4).map((exploration: string, index: number) => (
+                        <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
+                          <p className="text-white/80 text-sm">{exploration}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card variant="dark">
+              <CardHeader>
+                <CardTitle className="text-white text-xl">Volgende Stappen</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysis.hiddenGems.underratedMasterpieces.map((gem, index) => (
-                    <div key={index} className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
-                      <div className="w-8 h-8 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                        {index + 1}
-                      </div>
-                      <p className="text-white leading-relaxed">{gem}</p>
+                  {analysis.discoveryPaths?.genreExpansions?.slice(0, 3).map((expansion: string, index: number) => (
+                    <div key={index} className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <p className="text-white/80 leading-relaxed">{expansion}</p>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg">Zeldzame Vondsten</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {analysis.hiddenGems.rareFfinds.map((find, index) => (
-                      <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/10">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Award className="h-4 w-4 text-indigo-400" />
-                          <Badge className="bg-indigo-500/20 text-indigo-200">Zeldzaam</Badge>
-                        </div>
-                        <p className="text-white text-sm leading-relaxed">{find}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg">Volgende Ontdekkingen</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {analysis.discoveryPaths.nextExplorations.map((exploration, index) => (
-                      <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/10">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Compass className="h-4 w-4 text-purple-400" />
-                          <Badge className="bg-purple-500/20 text-purple-200">Ontdek</Badge>
-                        </div>
-                        <p className="text-white text-sm leading-relaxed">{exploration}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         );
 
       default:
-        return <div className="text-white">Hoofdstuk inhoud wordt geladen...</div>;
+        return <CollectionHighlights stats={stats} profile={{ summary: "Je collectie profiel...", keyHighlights: [] }} />;
     }
   };
 
   return (
-    <div 
-      className={`transition-all duration-700 cursor-pointer ${
-        isActive ? 'opacity-100 scale-100' : 'opacity-70 scale-95 hover:opacity-90 hover:scale-98'
-      }`}
-      onClick={onActivate}
-    >
-      <div className={`bg-gradient-to-br ${chapter.color} p-1 rounded-3xl mb-12 shadow-2xl hover:shadow-3xl transition-all duration-500`}>
-        <div className="bg-slate-900/95 backdrop-blur-sm rounded-2xl p-8 md:p-12">
-          <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
-            <div className={`w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br ${chapter.color} rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg`}>
-              <chapter.icon className="h-8 w-8 md:h-10 md:w-10 text-white" />
+    <div className="mb-16">
+      {/* Chapter Header */}
+      <Card 
+        variant="dark"
+        className={`cursor-pointer transition-all duration-500 transform hover:scale-[1.02] mb-8 ${
+          isActive ? 'ring-2 ring-white/30' : ''
+        }`}
+        onClick={onActivate}
+      >
+        <CardContent className="p-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className={`p-4 rounded-2xl bg-gradient-to-br ${chapter.color} shadow-2xl`}>
+                <Icon className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-2">{chapter.title}</h2>
+                <p className="text-white/80 text-lg">{chapter.subtitle}</p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">{chapter.title}</h2>
-              <p className="text-xl text-white/80">{chapter.subtitle}</p>
+            <div className="flex items-center gap-4">
+              <Badge className="bg-white/10 text-white border-white/20">
+                Hoofdstuk {chapter.id}
+              </Badge>
+              {isActive ? (
+                <ChevronDown className="h-6 w-6 text-white" />
+              ) : (
+                <ChevronRight className="h-6 w-6 text-white" />
+              )}
             </div>
           </div>
-          
+        </CardContent>
+      </Card>
+
+      {/* Chapter Content */}
+      {isActive && (
+        <div className="space-y-8 pl-4 border-l-4 border-gradient-to-b from-purple-500 to-blue-500 ml-8">
           {renderChapterContent()}
         </div>
-      </div>
+      )}
     </div>
   );
 }

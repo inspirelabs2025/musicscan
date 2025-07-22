@@ -35,7 +35,7 @@ export function MusicHistoryHeader({ stats, timeline, chartData }: MusicHistoryH
 
       {/* Key Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-        <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border-blue-500/30 hover:from-blue-500/30 hover:to-cyan-500/30 transition-all duration-300">
+        <Card variant="dark" className="hover:bg-white/10 transition-all duration-300">
           <CardContent className="p-4 md:p-6 text-center">
             <Music className="h-8 w-8 md:h-10 md:w-10 mx-auto mb-2 text-blue-400" />
             <div className="text-2xl md:text-3xl font-bold text-white">{stats.totalItems}</div>
@@ -46,7 +46,7 @@ export function MusicHistoryHeader({ stats, timeline, chartData }: MusicHistoryH
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border-purple-500/30 hover:from-purple-500/30 hover:to-pink-500/30 transition-all duration-300">
+        <Card variant="dark" className="hover:bg-white/10 transition-all duration-300">
           <CardContent className="p-4 md:p-6 text-center">
             <Users className="h-8 w-8 md:h-10 md:w-10 mx-auto mb-2 text-purple-400" />
             <div className="text-2xl md:text-3xl font-bold text-white">{stats.uniqueArtists}</div>
@@ -55,7 +55,7 @@ export function MusicHistoryHeader({ stats, timeline, chartData }: MusicHistoryH
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500/20 to-teal-500/20 backdrop-blur-sm border-green-500/30 hover:from-green-500/30 hover:to-teal-500/30 transition-all duration-300">
+        <Card variant="dark" className="hover:bg-white/10 transition-all duration-300">
           <CardContent className="p-4 md:p-6 text-center">
             <Calendar className="h-8 w-8 md:h-10 md:w-10 mx-auto mb-2 text-green-400" />
             <div className="text-2xl md:text-3xl font-bold text-white">{stats.timeSpan}</div>
@@ -66,7 +66,7 @@ export function MusicHistoryHeader({ stats, timeline, chartData }: MusicHistoryH
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-sm border-orange-500/30 hover:from-orange-500/30 hover:to-red-500/30 transition-all duration-300">
+        <Card variant="dark" className="hover:bg-white/10 transition-all duration-300">
           <CardContent className="p-4 md:p-6 text-center">
             <TrendingUp className="h-8 w-8 md:h-10 md:w-10 mx-auto mb-2 text-orange-400" />
             <div className="text-2xl md:text-3xl font-bold text-white">{formatValue(stats.totalValue)}</div>
@@ -79,7 +79,7 @@ export function MusicHistoryHeader({ stats, timeline, chartData }: MusicHistoryH
       </div>
 
       {/* Musical Evolution Summary */}
-      <Card className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 backdrop-blur-sm border-indigo-500/20">
+      <Card variant="purple">
         <CardHeader>
           <CardTitle className="text-white text-2xl flex items-center gap-3">
             <Clock className="h-6 w-6 text-indigo-400" />
@@ -100,7 +100,7 @@ export function MusicHistoryHeader({ stats, timeline, chartData }: MusicHistoryH
               </h4>
               <div className="space-y-2">
                 {timeline.keyPeriods.slice(0, 3).map((period, index) => (
-                  <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/10">
+                  <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
                     <p className="text-white/80 text-sm leading-relaxed">{period}</p>
                   </div>
                 ))}
@@ -115,7 +115,7 @@ export function MusicHistoryHeader({ stats, timeline, chartData }: MusicHistoryH
               </h4>
               <div className="space-y-2">
                 {timeline.culturalMovements.slice(0, 3).map((movement, index) => (
-                  <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/10">
+                  <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
                     <p className="text-white/80 text-sm leading-relaxed">{movement}</p>
                   </div>
                 ))}

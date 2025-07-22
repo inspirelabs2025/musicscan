@@ -92,7 +92,7 @@ export function AchievementSystem({
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      <Card className={`bg-white/10 backdrop-blur-lg border-white/20 transition-all duration-300 ${
+      <Card variant="dark" className={`transition-all duration-300 ${
         isExpanded ? 'w-96' : 'w-auto'
       }`}>
         <CardHeader className="pb-3">

@@ -23,7 +23,7 @@ export function CollectionHighlights({ stats, profile }: CollectionHighlightsPro
     <div className="space-y-6">
       {/* Hero Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+        <Card variant="dark" className="hover:bg-white/10 transition-all">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-white flex items-center gap-2">
               <Album className="h-5 w-5 text-blue-400" />
@@ -33,7 +33,7 @@ export function CollectionHighlights({ stats, profile }: CollectionHighlightsPro
           </CardHeader>
         </Card>
 
-        <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+        <Card variant="dark" className="hover:bg-white/10 transition-all">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-white flex items-center gap-2">
               <Music className="h-5 w-5 text-purple-400" />
@@ -43,7 +43,7 @@ export function CollectionHighlights({ stats, profile }: CollectionHighlightsPro
           </CardHeader>
         </Card>
 
-        <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+        <Card variant="dark" className="hover:bg-white/10 transition-all">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-white flex items-center gap-2">
               <Disc className="h-5 w-5 text-pink-400" />
@@ -53,7 +53,7 @@ export function CollectionHighlights({ stats, profile }: CollectionHighlightsPro
           </CardHeader>
         </Card>
 
-        <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+        <Card variant="dark" className="hover:bg-white/10 transition-all">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-white flex items-center gap-2">
               <Star className="h-5 w-5 text-yellow-400" />
@@ -65,7 +65,7 @@ export function CollectionHighlights({ stats, profile }: CollectionHighlightsPro
       </div>
 
       {/* Collection Summary */}
-      <Card className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm border-white/10">
+      <Card variant="purple">
         <CardHeader>
           <CardTitle className="text-xl text-white flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
@@ -95,4 +95,3 @@ export function CollectionHighlights({ stats, profile }: CollectionHighlightsPro
     </div>
   );
 }
-

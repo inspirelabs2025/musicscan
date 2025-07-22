@@ -88,7 +88,7 @@ export function EnhancedAIAnalysisTab() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(9)].map((_, i) => (
-            <Card key={i} className="overflow-hidden">
+            <Card key={i} variant="dark" className="overflow-hidden">\
               <CardHeader className="pb-2">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
@@ -110,7 +110,7 @@ export function EnhancedAIAnalysisTab() {
   if (error) {
     return (
       <div className="space-y-6">
-        <Card className="border-destructive bg-destructive/5">
+        <Card variant="dark" className="border-destructive bg-destructive/5">\
           <CardContent className="p-8 text-center">
             <AlertCircle className="h-16 w-16 mx-auto mb-4 text-destructive" />
             <h3 className="text-xl font-semibold mb-3">AI Analyse Heeft Meer Data Nodig</h3>
@@ -271,7 +271,7 @@ export function EnhancedAIAnalysisTab() {
           { label: "Artiesten", value: stats.uniqueArtists, icon: Users, color: "text-blue-500" },
           { label: "Geschatte Waarde", value: `€${Math.round(stats.totalValue)}`, icon: DollarSign, color: "text-green-500" }
         ].map((stat, index) => (
-          <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+          <Card key={index} variant="dark" className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">\
             <CardContent className="p-6 text-center">
               <stat.icon className={`h-8 w-8 mx-auto mb-3 ${stat.color} group-hover:scale-110 transition-transform`} />
               <div className="text-3xl font-bold mb-1 bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">
@@ -318,7 +318,7 @@ export function EnhancedAIAnalysisTab() {
 
         <TabsContent value="overview" className="space-y-6">
           {/* Music History Timeline */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5">
+          <Card variant="purple" className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5">\
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
@@ -366,7 +366,7 @@ export function EnhancedAIAnalysisTab() {
           </Card>
 
           {/* Artist Stories */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5">
+          <Card variant="dark" className="border-primary/20 bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5">\
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
@@ -386,7 +386,7 @@ export function EnhancedAIAnalysisTab() {
 
         <TabsContent value="value" className="space-y-6">
           {/* Technical Mastery Section */}
-          <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
+          <Card variant="purple" className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-emerald-500/5">\
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-green-500" />
@@ -427,7 +427,7 @@ export function EnhancedAIAnalysisTab() {
           {/* Value Charts */}
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Price by Decade */}
-            <Card className="group hover:shadow-lg transition-all duration-300">
+            <Card variant="dark" className="group hover:shadow-lg transition-all duration-300">\
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-blue-500" />
@@ -467,7 +467,7 @@ export function EnhancedAIAnalysisTab() {
             </Card>
 
             {/* Value by Genre */}
-            <Card className="group hover:shadow-lg transition-all duration-300">
+            <Card variant="purple" className="group hover:shadow-lg transition-all duration-300">\
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="h-5 w-5 text-purple-500" />
@@ -515,7 +515,7 @@ export function EnhancedAIAnalysisTab() {
           {/* Enhanced Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Format Distribution with enhanced styling */}
-            <Card className="group hover:shadow-lg transition-all duration-300">
+            <Card variant="dark" className="group hover:shadow-lg transition-all duration-300">\
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="h-5 w-5 text-vinyl-purple" />
@@ -546,7 +546,7 @@ export function EnhancedAIAnalysisTab() {
             </Card>
 
             {/* Genre Distribution with enhanced interactivity */}
-            <Card className="group hover:shadow-lg transition-all duration-300">
+            <Card variant="purple" className="group hover:shadow-lg transition-all duration-300">\
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-blue-500" />
@@ -590,7 +590,7 @@ export function EnhancedAIAnalysisTab() {
 
         <TabsContent value="insights" className="space-y-6">
           <div className="grid gap-6">
-            <Card className="bg-purple-900/10 backdrop-blur-sm border-purple-500/20">
+            <Card variant="dark" className="bg-purple-900/10 backdrop-blur-sm border-purple-500/20">\
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Lightbulb className="h-5 w-5 text-purple-500" />
@@ -613,7 +613,7 @@ export function EnhancedAIAnalysisTab() {
 
         <TabsContent value="recommendations" className="space-y-6">
           <div className="grid gap-6">
-            <Card className="bg-gradient-to-br from-green-500/10 to-blue-500/10 backdrop-blur-sm border-green-500/20">
+            <Card variant="purple" className="bg-gradient-to-br from-green-500/10 to-blue-500/10 backdrop-blur-sm border-green-500/20">\
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <ShoppingCart className="h-5 w-5" />
@@ -647,7 +647,7 @@ export function EnhancedAIAnalysisTab() {
               { title: "Waarde Opbouwer", description: "Collectie van €500+", achieved: stats.totalValue >= 500, icon: DollarSign },
               { title: "Investment Expert", description: "Hidden gems gevonden", achieved: false, icon: TrendingUp },
             ].map((achievement, index) => (
-              <Card key={index} className={`${achievement.achieved ? 'border-green-500/50 bg-green-500/5' : 'border-muted bg-muted/20'} transition-all hover:scale-105`}>
+              <Card key={index} variant="dark" className={`${achievement.achieved ? 'border-green-500/50 bg-green-500/5' : 'border-muted bg-muted/20'} transition-all hover:scale-105`}>\
                 <CardContent className="p-6 text-center">
                   <achievement.icon className={`h-12 w-12 mx-auto mb-4 ${achievement.achieved ? 'text-green-500' : 'text-muted-foreground'}`} />
                   <h3 className="font-semibold mb-2">{achievement.title}</h3>
@@ -662,7 +662,7 @@ export function EnhancedAIAnalysisTab() {
         </TabsContent>
 
         <TabsContent value="quiz" className="space-y-6">
-          <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10">
+          <Card variant="purple" className="bg-gradient-to-br from-purple-500/10 to-pink-500/10">\
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center gap-2 text-2xl">
                 <Gamepad2 className="h-6 w-6" />

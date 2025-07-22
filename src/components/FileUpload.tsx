@@ -101,7 +101,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card variant="dark" className="max-w-2xl mx-auto">\
       <CardContent className="p-6">
         <div className="mb-4">
           <h3 className="text-lg font-semibold flex items-center space-x-2">

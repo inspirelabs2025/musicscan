@@ -48,7 +48,7 @@ export function SearchingLoadingCard() {
   const CurrentIcon = icons[currentIcon];
 
   return (
-    <Card className="mb-8 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <Card variant="purple" className="mb-8 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">\
       <CardContent className="pt-6">
         <div className="space-y-6">
           {/* Main loading indicator */}

@@ -46,7 +46,7 @@ export const ManualPriceInput = ({
   const currentPrice = useManualPrice ? manualPrice : automaticPrice;
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card variant="dark" className="max-w-2xl mx-auto">\
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calculator className="h-5 w-5" />

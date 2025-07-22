@@ -34,7 +34,7 @@ export function DiscogsTest() {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card variant="dark" className="w-full max-w-4xl mx-auto">\
       <CardHeader>
         <CardTitle>Discogs API Test</CardTitle>
         <p className="text-muted-foreground">

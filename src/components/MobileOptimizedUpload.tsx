@@ -102,7 +102,7 @@ export const MobileOptimizedUpload: React.FC<MobileOptimizedUploadProps> = ({
   }, [isMobile, compressImage, onFileUploaded, isUploading]);
 
   return (
-    <Card className="mb-6">
+    <Card variant="dark" className="mb-6">\
       <CardContent className="pt-6">
         <div className="space-y-4">
           {/* Mobile optimization notice */}

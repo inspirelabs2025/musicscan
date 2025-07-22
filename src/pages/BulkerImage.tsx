@@ -313,10 +313,29 @@ const BulkerImage = () => {
     dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
   }, []);
 
-  const handleDiscogsIdSubmit = useCallback(async (discogsId: string) => {
+  const handleDiscogsIdSubmit = useCallback(async (discogsId: string, mediaType: 'vinyl' | 'cd') => {
+    console.log('🆔 Starting Discogs ID search for:', discogsId, 'mediaType:', mediaType);
+    
+    // Set the media type first
+    dispatch({ type: 'SET_MEDIA_TYPE', payload: mediaType });
     dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: discogsId });
-    console.log('🆔 Starting Discogs ID search for:', discogsId);
-    await searchByDiscogsId(discogsId);
+    
+    try {
+      await searchByDiscogsId(discogsId);
+      
+      toast({
+        title: "Discogs ID Zoeken Gestart",
+        description: `Zoeken naar ${mediaType === 'vinyl' ? 'LP' : 'CD'} met ID: ${discogsId}`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('❌ Discogs ID search failed:', error);
+      toast({
+        title: "Zoeken Mislukt",
+        description: "Er is een fout opgetreden bij het zoeken",
+        variant: "destructive"
+      });
+    }
   }, [searchByDiscogsId]);
 
   const handleFileUploaded = useCallback((url: string) => {

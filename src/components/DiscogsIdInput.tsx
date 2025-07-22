@@ -128,11 +128,11 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
               className="w-full" 
               disabled={isSearching || !discogsId.trim()}
             >
-              {isSearching ? (
-                <>
-                  <Search className="h-4 w-4 mr-2 animate-spin" />
+            {isSearching ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
                   Prijzen ophalen...
-                </>
+                </div>
               ) : (
                 <>
                   <ArrowRight className="h-4 w-4 mr-2" />

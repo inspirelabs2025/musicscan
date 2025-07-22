@@ -8,6 +8,96 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Function to clean OpenAI response from markdown backticks
+function cleanOpenAIResponse(content: string): string {
+  if (!content) return content;
+  
+  // Remove markdown code block backticks and language identifier
+  return content
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/, '')
+    .replace(/\s*```$/i, '')
+    .trim();
+}
+
+// Function to safely parse JSON with fallback
+function safeJsonParse(content: string): any {
+  try {
+    const cleanedContent = cleanOpenAIResponse(content);
+    console.log('🧹 Cleaned content preview:', cleanedContent.substring(0, 200) + '...');
+    return JSON.parse(cleanedContent);
+  } catch (error) {
+    console.error('❌ JSON parsing failed:', error.message);
+    console.error('📝 Raw content:', content.substring(0, 500));
+    
+    // Return fallback structure
+    return {
+      musicHistoryTimeline: {
+        overview: "Er is een fout opgetreden bij het analyseren van je collectie, maar hier is een basale analyse beschikbaar.",
+        keyPeriods: ["Je collectie toont een interessante mix van muziekperioden"],
+        culturalMovements: ["Verschillende culturele invloeden zijn zichtbaar"],
+        musicalEvolution: "Je collectie toont een evolutie door verschillende muziekstijlen heen"
+      },
+      artistStories: {
+        legendaryFigures: ["Je collectie bevat enkele legendarische artiesten"],
+        hiddenConnections: ["Er zijn interessante verbanden tussen de artiesten"],
+        collaborationTales: ["Samenwerkingen tussen artiesten zijn zichtbaar"],
+        artisticJourneys: ["De artistieke ontwikkeling is merkbaar"],
+        crossGenreInfluences: ["Genre-overschrijdende invloeden zijn aanwezig"]
+      },
+      studioLegends: {
+        legendaryStudios: ["Opnames uit bekende studio's"],
+        iconicProducers: ["Werk van invloedrijke producers"],
+        recordingInnovations: ["Technische vernieuwingen in opnames"],
+        labelHistories: ["Geschiedenis van verschillende platenlabels"],
+        soundEngineering: ["Bijzondere geluidstechnieken"]
+      },
+      culturalImpact: {
+        societalInfluence: ["Maatschappelijke invloed van de muziek"],
+        generationalMovements: ["Generatie-definiërende bewegingen"],
+        politicalMessages: ["Politieke en sociale boodschappen"],
+        fashionAndStyle: ["Invloed op mode en lifestyle"],
+        globalReach: ["Internationale impact"]
+      },
+      musicalInnovations: {
+        technicalBreakthroughs: ["Technische doorbraken"],
+        genreCreation: ["Nieuwe genres en evoluties"],
+        instrumentalPioneering: ["Innovatief instrumentgebruik"],
+        vocalTechniques: ["Vernieuwende zangtechnieken"],
+        productionMethods: ["Baanbrekende productietechnieken"]
+      },
+      hiddenGems: {
+        underratedMasterpieces: ["Ondergewaardeerde meesterwerken"],
+        rareFfinds: ["Zeldzame vondsten"],
+        collectorSecrets: ["Collector's items"],
+        sleepersHits: ["Latere klassiekers"],
+        deepCuts: ["Verborgen pareltjes"]
+      },
+      musicalConnections: {
+        genreEvolution: ["Genre-evoluties"],
+        artistInfluences: ["Artistieke invloeden"],
+        labelConnections: ["Label-verbindingen"],
+        sceneConnections: ["Scene-connecties"],
+        crossPollination: ["Kruisbestuiving tussen stijlen"]
+      },
+      technicalMastery: {
+        soundQuality: "Variërende geluidskwaliteit door de collectie",
+        formatSignificance: "Betekenis van verschillende formats",
+        pressingQuality: "Verschillende persingskwaliteiten",
+        artwork: "Iconische hoezen en artwork",
+        packaging: "Bijzondere verpakkingen"
+      },
+      discoveryPaths: {
+        nextExplorations: ["Suggesties voor verdere ontdekkingen"],
+        relatedArtists: ["Aanverwante artiesten"],
+        genreExpansions: ["Genre-uitbreidingen"],
+        eraExplorations: ["Tijdperk-verkenningen"],
+        labelDiveDeeps: ["Label-diepduiken"]
+      }
+    };
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -48,8 +138,17 @@ serve(async (req) => {
           musicHistoryTimeline: {
             overview: "Je hebt nog geen items in je collectie. Tijd om muzikale geschiedenis te verzamelen! 🎵",
             keyPeriods: [],
-            culturalMovements: []
-          }
+            culturalMovements: [],
+            musicalEvolution: ""
+          },
+          artistStories: { legendaryFigures: [], hiddenConnections: [], collaborationTales: [], artisticJourneys: [], crossGenreInfluences: [] },
+          studioLegends: { legendaryStudios: [], iconicProducers: [], recordingInnovations: [], labelHistories: [], soundEngineering: [] },
+          culturalImpact: { societalInfluence: [], generationalMovements: [], politicalMessages: [], fashionAndStyle: [], globalReach: [] },
+          musicalInnovations: { technicalBreakthroughs: [], genreCreation: [], instrumentalPioneering: [], vocalTechniques: [], productionMethods: [] },
+          hiddenGems: { underratedMasterpieces: [], rareFfinds: [], collectorSecrets: [], sleepersHits: [], deepCuts: [] },
+          musicalConnections: { genreEvolution: [], artistInfluences: [], labelConnections: [], sceneConnections: [], crossPollination: [] },
+          technicalMastery: { soundQuality: "", formatSignificance: "", pressingQuality: "", artwork: "", packaging: "" },
+          discoveryPaths: { nextExplorations: [], relatedArtists: [], genreExpansions: [], eraExplorations: [], labelDiveDeeps: [] }
         },
         stats: { totalItems: 0 },
         chartData: { genreDistribution: [], formatDistribution: [], topArtists: [] },
@@ -122,7 +221,7 @@ INSTRUCTIES VOOR MUZIEKHISTORISCHE ANALYSE:
 6. Vertel over legendarische producers, studio's, en platenlabels
 7. Wees informatief maar boeiend - vertel échte verhalen over de muziek
 
-Return ALLEEN een geldig JSON object met deze exacte structuur:
+Return ALLEEN een geldig JSON object met deze exacte structuur (GEEN markdown backticks!):
 
 {
   "musicHistoryTimeline": {
@@ -202,7 +301,7 @@ Return ALLEEN een geldig JSON object met deze exacte structuur:
         messages: [
           {
             role: 'system',
-            content: 'Je bent een gepassioneerde muziekhistoricus die fascinerende verhalen vertelt over muziek, artiesten en hun culturele impact. Je bent informatief maar nooit droog, en altijd gericht op de verhalen achter de muziek.'
+            content: 'Je bent een gepassioneerde muziekhistoricus die fascinerende verhalen vertelt over muziek, artiesten en hun culturele impact. Je bent informatief maar nooit droog, en altijd gericht op de verhalen achter de muziek. Return ALTIJD pure JSON zonder markdown backticks.'
           },
           {
             role: 'user',
@@ -221,7 +320,10 @@ Return ALLEEN een geldig JSON object met deze exacte structuur:
     }
 
     const openAIData = await openAIResponse.json();
-    const aiAnalysis = JSON.parse(openAIData.choices[0].message.content);
+    console.log('🤖 Raw OpenAI response received, length:', openAIData.choices[0].message.content.length);
+    
+    // Use safe JSON parsing with fallback
+    const aiAnalysis = safeJsonParse(openAIData.choices[0].message.content);
     
     // Prepare enhanced chart data
     const genreDistribution = Array.from(

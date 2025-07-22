@@ -222,6 +222,84 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
           </div>
         );
 
+      case 'waarde':
+        return (
+          <div className="space-y-8">
+            <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl p-8 border border-green-500/30">
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">💰 Marktwaarde Analyse</h3>
+              <p className="text-xl text-white mb-8 leading-relaxed">{analysis.priceAnalysis.marketValue}</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+                <CardHeader>
+                  <CardTitle className="text-white text-lg">Investeringspotentieel</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-white leading-relaxed">{analysis.priceAnalysis.investmentPotential}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+                <CardHeader>
+                  <CardTitle className="text-white text-lg">Waardegroei Trends</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-white leading-relaxed">{analysis.priceAnalysis.valueGrowthTrends}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white text-xl">Collectie Strategie</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-white leading-relaxed mb-6">{analysis.priceAnalysis.collectingStrategy}</p>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                    <h4 className="font-semibold text-white mb-4">Portfolio Verdeling</h4>
+                    <p className="text-white leading-relaxed">{analysis.priceAnalysis.portfolioBreakdown}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                    <h4 className="font-semibold text-white mb-4">Risico Analyse</h4>
+                    <p className="text-white leading-relaxed">{analysis.priceAnalysis.riskAssessment}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {chartData.priceByDecade && (
+              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-white text-xl">Waarde per Decennium</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData.priceByDecade} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                        <XAxis dataKey="decade" tick={{ fill: '#fff', fontSize: 12 }} />
+                        <YAxis tick={{ fill: '#fff', fontSize: 12 }} />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)', 
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '12px',
+                            color: '#fff',
+                            backdropFilter: 'blur(10px)'
+                          }}
+                        />
+                        <Bar dataKey="avgPrice" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        );
+
       case 'future':
         return (
           <div className="space-y-8">

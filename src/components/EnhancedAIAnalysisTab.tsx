@@ -410,28 +410,28 @@ export function EnhancedAIAnalysisTab() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <h4 className="font-semibold mb-3">Marktwaarde Overzicht</h4>
-                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.marketValue}</p>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.marketTales}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-3">Investment Potentieel</h4>
-                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.investmentPotential}</p>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.investmentStory}</p>
                 </div>
               </div>
               
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <h4 className="font-semibold mb-3">Collectie Strategie</h4>
-                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.collectingStrategy}</p>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.collectorWisdom}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-3">Risico Beoordeling</h4>
-                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.riskAssessment}</p>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.valueSecrets}</p>
                 </div>
               </div>
               
               <div>
                 <h4 className="font-semibold mb-3">Portfolio Breakdown</h4>
-                <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.portfolioBreakdown}</p>
+                <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.portfolioStory}</p>
               </div>
             </CardContent>
           </Card>
@@ -613,15 +613,15 @@ export function EnhancedAIAnalysisTab() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <p className="text-lg leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
+                  <p className="text-lg leading-relaxed">{analysis.collectionInsights.uniqueMagic}</p>
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="bg-purple-500/5 rounded-xl p-6 border border-purple-500/10">
                       <h4 className="font-semibold mb-3">Samenhang</h4>
-                      <p className="text-muted-foreground">{analysis.collectionInsights.coherence}</p>
+                      <p className="text-muted-foreground">{analysis.collectionInsights.redThread}</p>
                     </div>
                     <div className="bg-purple-500/5 rounded-xl p-6 border border-purple-500/10">
                       <h4 className="font-semibold mb-3">Evolutie</h4>
-                      <p className="text-muted-foreground">{analysis.collectionInsights.evolution}</p>
+                      <p className="text-muted-foreground">{analysis.collectionInsights.musicalJourney}</p>
                     </div>
                   </div>
                 </div>
@@ -641,7 +641,7 @@ export function EnhancedAIAnalysisTab() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysis.recommendations.nextPurchases.slice(0, 5).map((rec, index) => (
+                  {analysis.recommendations.nextAdventures.slice(0, 5).map((rec, index) => (
                     <div key={index} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-green-500/10 hover:bg-white/10 transition-all">
                       <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
                         {index + 1}

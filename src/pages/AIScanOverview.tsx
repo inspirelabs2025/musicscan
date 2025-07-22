@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,13 +40,13 @@ import {
   FlagOff,
   MessageSquare
 } from "lucide-react";
-import { useAIScans, useAIScansStats, AIScanResult } from "@/hooks/useAIScans";
+import { useAIScansStats, AIScanResult } from "@/hooks/useAIScans";
+import { useInfiniteAIScans } from "@/hooks/useInfiniteAIScans";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessedRows } from "@/hooks/useProcessedRows";
 import { supabase } from "@/integrations/supabase/client";
 
 const AIScanOverview = () => {
-  const [page, setPage] = useState(1);
   const [sortField, setSortField] = useState<keyof AIScanResult>("created_at");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,11 +63,17 @@ const AIScanOverview = () => {
 
   const { toast } = useToast();
   const { processedRows, addProcessedRow, resetProcessedRows: resetProcessed, isProcessed } = useProcessedRows();
+  const loadingRef = useRef<HTMLDivElement>(null);
 
   const pageSize = 25;
 
-  const { data: scansData, isLoading: scansLoading } = useAIScans({
-    page,
+  const {
+    data: scansData,
+    isLoading: scansLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteAIScans({
     pageSize,
     sortField,
     sortDirection,
@@ -78,6 +84,38 @@ const AIScanOverview = () => {
 
   const { data: statsData, isLoading: statsLoading } = useAIScansStats();
 
+  // Flatten all pages data
+  const allScans = useMemo(() => {
+    return scansData?.pages.flatMap(page => page.data) || [];
+  }, [scansData]);
+
+  const totalCount = scansData?.pages[0]?.totalCount || 0;
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      {
+        rootMargin: '100px', // Start loading when 100px before reaching the element
+      }
+    );
+
+    if (loadingRef.current) {
+      observer.observe(loadingRef.current);
+    }
+
+    return () => {
+      if (loadingRef.current) {
+        observer.unobserve(loadingRef.current);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   const handleSort = useCallback((field: keyof AIScanResult) => {
     if (sortField === field) {
       setSortDirection(prev => prev === "asc" ? "desc" : "asc");
@@ -85,7 +123,6 @@ const AIScanOverview = () => {
       setSortField(field);
       setSortDirection("desc");
     }
-    setPage(1);
   }, [sortField]);
 
   const getSortIcon = useCallback((field: keyof AIScanResult) => {
@@ -109,7 +146,7 @@ const AIScanOverview = () => {
   }, []);
 
   const exportToCSV = useCallback(() => {
-    if (!scansData?.data) return;
+    if (!allScans.length) return;
 
     const headers = [
       "Date", "Artist", "Title", "Label", "Catalog Number", "Media Type", 
@@ -118,7 +155,7 @@ const AIScanOverview = () => {
 
     const csvContent = [
       headers.join(","),
-      ...scansData.data.map(scan => [
+      ...allScans.map(scan => [
         new Date(scan.created_at).toLocaleDateString(),
         `"${scan.artist || ""}"`,
         `"${scan.title || ""}"`,
@@ -140,7 +177,7 @@ const AIScanOverview = () => {
     a.download = `ai-scans-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
-  }, [scansData?.data]);
+  }, [allScans]);
 
   const handleViewDetails = useCallback((scan: AIScanResult) => {
     setSelectedScan(scan);
@@ -200,18 +237,18 @@ const AIScanOverview = () => {
   }, []);
 
   const handleEditSuccess = useCallback(() => {
-    // Refresh the data by resetting the page - this will trigger a refetch
-    setPage(1);
+    // Refresh the data by invalidating the query
+    window.location.reload();
   }, []);
 
   const handleDeleteSuccess = useCallback(() => {
-    // Refresh the data by resetting the page - this will trigger a refetch
-    setPage(1);
+    // Refresh the data by invalidating the query
+    window.location.reload();
   }, []);
 
   const handleCommentsSuccess = useCallback(() => {
-    // Refresh the data by resetting the page - this will trigger a refetch
-    setPage(1);
+    // Refresh the data by invalidating the query
+    window.location.reload();
   }, []);
 
   const toggleFlagIncorrect = useCallback(async (scan: AIScanResult) => {
@@ -226,7 +263,7 @@ const AIScanOverview = () => {
       if (error) throw error;
 
       // Refresh the data
-      setPage(page); // This will trigger a refetch
+      window.location.reload();
       
       toast({
         title: newFlaggedStatus ? "🏴 Gemarkeerd als Incorrect" : "✅ Markering Weggehaald",
@@ -242,7 +279,7 @@ const AIScanOverview = () => {
         variant: "destructive",
       });
     }
-  }, [page, toast]);
+  }, [toast]);
 
   if (scansLoading || statsLoading) {
     return (
@@ -274,7 +311,7 @@ const AIScanOverview = () => {
                 Beheer en analyseer alle AI-gestuurde foto scans
               </p>
             </div>
-            <Button onClick={exportToCSV} disabled={!scansData?.data?.length}>
+            <Button onClick={exportToCSV} disabled={!allScans.length}>
               <Download className="h-4 w-4 mr-2" />
               Export CSV
             </Button>
@@ -324,7 +361,6 @@ const AIScanOverview = () => {
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
-                      setPage(1);
                     }}
                     className="pl-10"
                   />
@@ -333,7 +369,6 @@ const AIScanOverview = () => {
                   value={mediaTypeFilter}
                   onValueChange={(value) => {
                     setMediaTypeFilter(value);
-                    setPage(1);
                   }}
                 >
                   <SelectTrigger>
@@ -349,7 +384,6 @@ const AIScanOverview = () => {
                   value={statusFilter}
                   onValueChange={(value) => {
                     setStatusFilter(value);
-                    setPage(1);
                   }}
                 >
                   <SelectTrigger>
@@ -368,7 +402,6 @@ const AIScanOverview = () => {
                      setSearchTerm("");
                      setMediaTypeFilter("all");
                      setStatusFilter("all");
-                     setPage(1);
                    }}
                  >
                    Reset Filters
@@ -475,7 +508,7 @@ const AIScanOverview = () => {
                     </TableRow>
                   </TableHeader>
                     <TableBody>
-                      {scansData?.data.map((scan) => {
+                      {allScans.map((scan) => {
                         const rowIsProcessed = isProcessed(scan.id);
                         const isIncorrect = scan.is_flagged_incorrect;
                         console.log(`Row ${scan.id}: isProcessed=${rowIsProcessed}, isIncorrect=${isIncorrect}, discogs_id=${scan.discogs_id}`);
@@ -648,30 +681,34 @@ const AIScanOverview = () => {
             </CardContent>
           </Card>
 
-          {/* Pagination */}
-          {scansData && scansData.totalPages > 1 && (
-            <div className="flex items-center justify-between">
+          {/* Load More / Loading indicator */}
+          <div className="flex flex-col items-center gap-4">
+            {hasNextPage && (
+              <Button 
+                onClick={() => fetchNextPage()} 
+                disabled={isFetchingNextPage}
+                variant="outline"
+                className="w-full max-w-sm"
+              >
+                {isFetchingNextPage ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                    Laden...
+                  </>
+                ) : (
+                  'Laad meer'
+                )}
+              </Button>
+            )}
+            
+            {!hasNextPage && allScans.length > 0 && (
               <div className="text-sm text-muted-foreground">
-                Pagina {page} van {scansData.totalPages} ({scansData.count} totaal)
+                Alle {totalCount} resultaten geladen
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                  disabled={page === 1}
-                >
-                  Vorige
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(prev => Math.min(scansData.totalPages, prev + 1))}
-                  disabled={page === scansData.totalPages}
-                >
-                  Volgende
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
+            
+            <div ref={loadingRef} className="h-4" />
+          </div>
         </div>
       </div>
 

@@ -1,7 +1,6 @@
-
-import React, { useState } from 'react';
-import { Hash, ArrowRight, Search, Link, Disc, Circle } from 'lucide-react';
-import { extractDiscogsIdFromUrl } from '@/lib/utils';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Link, Disc, Circle } from 'lucide-react';
+import { extractDiscogsIdFromUrl, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +16,13 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
   const [discogsId, setDiscogsId] = useState('');
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | null>(null);
   const [error, setError] = useState('');
+  const [hasInteracted, setHasInteracted] = useState(false);
+  
+  // Reset state when component mounts to ensure no pre-selected value
+  useEffect(() => {
+    // Force reset mediaType on mount
+    setMediaType(null);
+  }, []);
 
   const processInput = (input: string): { id: string | null; error: string | null } => {
     const trimmedInput = input.trim();
@@ -47,6 +53,7 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setHasInteracted(true);
     setError('');
 
     // Check if media type is selected
@@ -73,8 +80,15 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
     if (error) setError('');
   };
 
-  const handleMediaTypeChange = (value: 'vinyl' | 'cd') => {
-    setMediaType(value);
+  // Use string type to handle empty string case better
+  const handleMediaTypeChange = (value: string) => {
+    console.log('Media type changed to:', value);
+    if (value === '') {
+      setMediaType(null);
+    } else {
+      setMediaType(value as 'vinyl' | 'cd');
+    }
+    setHasInteracted(true);
     if (error) setError('');
   };
 
@@ -93,11 +107,20 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-3">
-              <Label className="text-base font-medium">Media Type *</Label>
+              <Label className="text-base font-medium flex items-center">
+                Media Type <span className="text-destructive ml-1 font-bold">*</span>
+              </Label>
               <RadioGroup 
-                value={mediaType || ''} 
+                key="media-type-selector"
+                defaultValue=""
+                value={mediaType || ''}
                 onValueChange={handleMediaTypeChange}
-                className="flex flex-row gap-6"
+                className={cn(
+                  "flex flex-row gap-6 border p-3 rounded-lg transition-all",
+                  ((hasInteracted && !mediaType) || (error && error.includes("Selecteer eerst"))) 
+                    ? "border-destructive ring-2 ring-destructive/30" 
+                    : mediaType ? "border-primary/30" : "border-input"
+                )}
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="vinyl" id="vinyl" />
@@ -114,6 +137,11 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
                   </Label>
                 </div>
               </RadioGroup>
+              {((hasInteracted && !mediaType) || (error && error.includes("Selecteer eerst"))) && (
+                <p className="text-xs text-destructive font-medium">
+                  Je moet eerst een media type selecteren
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 Selecteer het type media dat je wilt scannen
               </p>
@@ -128,9 +156,9 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
                 value={discogsId}
                 onChange={handleInputChange}
                 disabled={isSearching}
-                className={error ? 'border-destructive' : ''}
+                className={error && !error.includes("Selecteer eerst") ? 'border-destructive' : ''}
               />
-              {error && (
+              {error && !error.includes("Selecteer eerst") && (
                 <p className="text-sm text-destructive">{error}</p>
               )}
               <p className="text-xs text-muted-foreground">

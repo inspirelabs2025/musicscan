@@ -287,6 +287,48 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          ai_model: string | null
+          collection_context: Json | null
+          created_at: string
+          format_type: string | null
+          id: string
+          message: string
+          response_time_ms: number | null
+          sender_type: string
+          session_id: string | null
+          tokens_used: number | null
+          updated_at: string
+        }
+        Insert: {
+          ai_model?: string | null
+          collection_context?: Json | null
+          created_at?: string
+          format_type?: string | null
+          id?: string
+          message: string
+          response_time_ms?: number | null
+          sender_type: string
+          session_id?: string | null
+          tokens_used?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ai_model?: string | null
+          collection_context?: Json | null
+          created_at?: string
+          format_type?: string | null
+          id?: string
+          message?: string
+          response_time_ms?: number | null
+          sender_type?: string
+          session_id?: string | null
+          tokens_used?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       discogs_price_listings: {
         Row: {
           condition: string

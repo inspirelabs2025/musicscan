@@ -10,6 +10,7 @@ import VinylScanComplete from "./pages/VinylScanComplete";
 import BulkerImage from "./pages/BulkerImage";
 import MarketplaceOverview from "./pages/MarketplaceOverview";
 import CollectionOverview from "./pages/CollectionOverview";
+import CollectionChat from "./pages/CollectionChat";
 import AIScan from "./pages/AIScan";
 import AIScanOverview from "./pages/AIScanOverview";
 import AIScanV2 from "./pages/AIScanV2";
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/index" element={<Index />} />
           <Route path="/marketplace-overview" element={<MarketplaceOverview />} />
           <Route path="/collection-overview" element={<CollectionOverview />} />
+          <Route path="/collection-chat" element={<CollectionChat />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

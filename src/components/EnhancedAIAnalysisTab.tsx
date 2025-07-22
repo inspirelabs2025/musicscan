@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +32,9 @@ import {
   Database,
   Target,
   Trophy,
-  Gamepad2
+  Gamepad2,
+  DollarSign,
+  TrendingDown
 } from "lucide-react";
 import {
   PieChart as RechartsPieChart,
@@ -266,7 +269,7 @@ export function EnhancedAIAnalysisTab() {
           { label: "Totaal Albums", value: stats.totalItems, icon: Music, color: "text-primary" },
           { label: "Genres", value: stats.genres.length, icon: Target, color: "text-vinyl-gold" },
           { label: "Artiesten", value: stats.artists.length, icon: Users, color: "text-blue-500" },
-          { label: "Jaar Spreiding", value: stats.years.length > 0 ? `${stats.years[stats.years.length - 1] - stats.years[0]}` : '0', icon: Activity, color: "text-green-500" }
+          { label: "Geschatte Waarde", value: stats.priceStats ? `€${Math.round(stats.priceStats.total)}` : '€0', icon: DollarSign, color: "text-green-500" }
         ].map((stat, index) => (
           <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
             <CardContent className="p-6 text-center">
@@ -282,10 +285,14 @@ export function EnhancedAIAnalysisTab() {
 
       {/* Tabbed Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Brain className="h-4 w-4" />
             <span className="hidden sm:inline">Overzicht</span>
+          </TabsTrigger>
+          <TabsTrigger value="value" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            <span className="hidden sm:inline">Waarde</span>
           </TabsTrigger>
           <TabsTrigger value="charts" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -389,6 +396,135 @@ export function EnhancedAIAnalysisTab() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="value" className="space-y-6">
+          {/* Price Analysis Section */}
+          <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-green-500" />
+                Waarde & Investment Analyse
+              </CardTitle>
+              <CardDescription>Marktwaarde, investment potentieel en collectie strategie</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-3">Marktwaarde Overzicht</h4>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.marketValue}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-3">Investment Potentieel</h4>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.investmentPotential}</p>
+                </div>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-3">Collectie Strategie</h4>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.collectingStrategy}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-3">Risico Beoordeling</h4>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.riskAssessment}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-3">Portfolio Breakdown</h4>
+                <p className="text-muted-foreground leading-relaxed">{analysis.priceAnalysis.portfolioBreakdown}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Value Charts */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Price by Decade */}
+            <Card className="group hover:shadow-lg transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-500" />
+                  Waarde per Decennium
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={chartData.priceByDecade || []}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="decade" 
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                      tickFormatter={(value) => `€${value}`}
+                    />
+                    <Tooltip 
+                      formatter={(value) => [`€${value}`, 'Gem. Waarde']}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="avgPrice" 
+                      fill="hsl(142 81% 45%)" 
+                      radius={[4, 4, 0, 0]}
+                      className="hover:opacity-80 transition-opacity cursor-pointer"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Value by Genre */}
+            <Card className="group hover:shadow-lg transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5 text-purple-500" />
+                  Waarde per Genre (Top 6)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={(chartData.valueByGenre || []).slice(0, 6)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="genre" 
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                      tickFormatter={(value) => `€${value}`}
+                    />
+                    <Tooltip 
+                      formatter={(value) => [`€${value}`, 'Gem. Waarde']}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="avgPrice" 
+                      fill="hsl(280 81% 56%)" 
+                      radius={[4, 4, 0, 0]}
+                      className="hover:opacity-80 transition-opacity cursor-pointer"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         <TabsContent value="charts" className="space-y-6">
           {/* Enhanced Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -464,9 +600,59 @@ export function EnhancedAIAnalysisTab() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
 
-          {/* Additional charts continue here... */}
-          {/* Keep existing chart code but enhance with better styling and interactions */}
+        <TabsContent value="insights" className="space-y-6">
+          <div className="grid gap-6">
+            <Card className="bg-purple-900/10 backdrop-blur-sm border-purple-500/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5 text-purple-500" />
+                  Verborgen Patronen
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <p className="text-lg leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="bg-purple-500/5 rounded-xl p-6 border border-purple-500/10">
+                      <h4 className="font-semibold mb-3">Samenhang</h4>
+                      <p className="text-muted-foreground">{analysis.collectionInsights.coherence}</p>
+                    </div>
+                    <div className="bg-purple-500/5 rounded-xl p-6 border border-purple-500/10">
+                      <h4 className="font-semibold mb-3">Evolutie</h4>
+                      <p className="text-muted-foreground">{analysis.collectionInsights.evolution}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="recommendations" className="space-y-6">
+          <div className="grid gap-6">
+            <Card className="bg-gradient-to-br from-green-500/10 to-blue-500/10 backdrop-blur-sm border-green-500/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5" />
+                  Volgende Aankopen
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {analysis.recommendations.nextPurchases.slice(0, 5).map((rec, index) => (
+                    <div key={index} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-green-500/10 hover:bg-white/10 transition-all">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                        {index + 1}
+                      </div>
+                      <span>{rec}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="achievements" className="space-y-6">
@@ -477,6 +663,8 @@ export function EnhancedAIAnalysisTab() {
               { title: "Genre Explorer", description: "5+ verschillende genres", achieved: stats.genres.length >= 5, icon: Globe },
               { title: "Vintage Verzamelaar", description: "Album van voor 1980", achieved: true, icon: Trophy },
               { title: "Label Loyalist", description: "10+ releases van zelfde label", achieved: false, icon: Target },
+              { title: "Waarde Opbouwer", description: "Collectie van €500+", achieved: stats.priceStats ? stats.priceStats.total >= 500 : false, icon: DollarSign },
+              { title: "Investment Expert", description: "Hidden gems gevonden", achieved: false, icon: TrendingUp },
             ].map((achievement, index) => (
               <Card key={index} className={`${achievement.achieved ? 'border-green-500/50 bg-green-500/5' : 'border-muted bg-muted/20'} transition-all hover:scale-105`}>
                 <CardContent className="p-6 text-center">
@@ -518,14 +706,12 @@ export function EnhancedAIAnalysisTab() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* Keep existing content for other tabs but enhance styling */}
       </Tabs>
 
       {/* Generation Info */}
       <div className="text-center text-sm text-muted-foreground border-t pt-6">
         <p>Analyse gegenereerd op {new Date(data.generatedAt).toLocaleString('nl-NL')}</p>
-        <p className="mt-1">🤖 Powered by AI • 🎵 Voor muziekliefhebbers</p>
+        <p className="mt-1">🤖 Powered by AI • 🎵 Voor muziekliefhebbers • 💰 Met waardeanalyse</p>
       </div>
     </div>
   );

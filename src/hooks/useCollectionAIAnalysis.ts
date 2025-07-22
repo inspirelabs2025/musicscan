@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -6,6 +7,14 @@ export interface AIAnalysis {
     profile: string;
     traits: string[];
     musicDNA: string;
+  };
+  priceAnalysis: {
+    marketValue: string;
+    investmentPotential: string;
+    valueGrowthTrends: string;
+    collectingStrategy: string;
+    portfolioBreakdown: string;
+    riskAssessment: string;
   };
   collectionInsights: {
     uniqueness: string;
@@ -47,8 +56,20 @@ export interface ChartData {
   topArtists: { name: string; albums: number; }[];
   yearDistribution: { decade: string; count: number; }[];
   labelDistribution: { name: string; releases: number; }[];
-  valueDistribution: { range: string; count: number; }[];
+  valueDistribution: { range: string; count: number; totalValue?: number; }[];
   countryDistribution: { country: string; count: number; }[];
+  styleDistribution: { name: string; value: number; }[];
+  decadeFlow: { decade: number; count: number; genres: number; artists: number; label: string; }[];
+  // New price/value focused charts
+  priceByDecade: { decade: string; avgPrice: number; count: number; totalValue: number; }[];
+  valueByGenre: { genre: string; avgPrice: number; count: number; totalValue: number; }[];
+  investmentHeatmap: { artist: string; title: string; year: number; currentValue: number; growthPotential: number; }[];
+  portfolioComposition: {
+    byFormat: { format: string; count: number; }[];
+    byDecade: { decade: string; avgPrice: number; count: number; totalValue: number; }[];
+    byGenre: { genre: string; avgPrice: number; count: number; totalValue: number; }[];
+    byValue: { range: string; count: number; totalValue: number; }[];
+  };
 }
 
 export interface CollectionAIAnalysisResult {

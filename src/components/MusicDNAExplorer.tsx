@@ -28,7 +28,10 @@ import {
   Star,
   Share2,
   Download,
-  Settings
+  Settings,
+  DollarSign,
+  PieChart,
+  BarChart3
 } from "lucide-react";
 import { DNAVisualization } from './DNA/DNAVisualization';
 import { StoryChapter } from './DNA/StoryChapter';
@@ -36,6 +39,22 @@ import { MusicalGalaxy } from './DNA/MusicalGalaxy';
 import { PersonalityQuiz } from './DNA/PersonalityQuiz';
 import { InteractiveTimeline } from './DNA/InteractiveTimeline';
 import { toast } from '@/hooks/use-toast';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  LineChart,
+  Line,
+  Area,
+  AreaChart,
+  PieChart as RechartsPieChart,
+  Cell,
+  Treemap
+} from "recharts";
 
 export function MusicDNAExplorer() {
   const { data, isLoading, error, refetch, isRefetching } = useCollectionAIAnalysis();
@@ -46,7 +65,6 @@ export function MusicDNAExplorer() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Handle scroll for parallax effects and progress
   useEffect(() => {
     const handleScroll = () => {
       if (containerRef.current) {
@@ -54,7 +72,6 @@ export function MusicDNAExplorer() {
         const progress = (scrollTop / (scrollHeight - clientHeight)) * 100;
         setScrollProgress(Math.min(progress, 100));
         
-        // Auto-detect active chapter based on scroll position
         const chapters = document.querySelectorAll('[id^="chapter-"]');
         const viewportCenter = scrollTop + clientHeight / 2;
         
@@ -219,6 +236,14 @@ export function MusicDNAExplorer() {
       content: analysis.musicPersonality.musicDNA
     },
     {
+      id: 'value',
+      title: 'Waarde & Investment',
+      subtitle: 'Marktwaarde en investeringspotentieel',
+      icon: DollarSign,
+      color: 'from-green-500 to-emerald-600',
+      content: analysis.priceAnalysis.marketValue
+    },
+    {
       id: 'connections',
       title: 'Het Netwerk',
       subtitle: 'Verborgen connecties in je universum',
@@ -255,6 +280,17 @@ export function MusicDNAExplorer() {
     }
     setActiveChapter(index);
   };
+
+  const chartColors = [
+    'hsl(var(--vinyl-purple))',
+    'hsl(var(--vinyl-gold))', 
+    'hsl(213 81% 56%)',
+    'hsl(142 81% 45%)',
+    'hsl(12 81% 56%)',
+    'hsl(280 81% 56%)',
+    'hsl(45 100% 51%)',
+    'hsl(190 81% 45%)'
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
@@ -353,7 +389,7 @@ export function MusicDNAExplorer() {
             {/* Chapter Navigation */}
             <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-4xl mx-auto">
               <h3 className="text-lg font-semibold text-white mb-4 text-center">Navigeer Je DNA Verhaal</h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                 {chapters.map((chapter, index) => {
                   const Icon = chapter.icon;
                   const isActive = activeChapter === index;
@@ -379,13 +415,13 @@ export function MusicDNAExplorer() {
               </div>
             </div>
 
-            {/* Stats Section - Part of normal flow */}
+            {/* Stats Section */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8">
               {[
                 { label: "Albums", value: stats.totalItems, icon: Music },
                 { label: "Genres", value: stats.genres?.length || 0, icon: Target },
                 { label: "Artiesten", value: stats.artists?.length || 0, icon: Users },
-                { label: "Jaar Bereik", value: stats.years?.length > 0 ? `${Math.max(...stats.years) - Math.min(...stats.years)}` : '0', icon: Clock }
+                { label: "Waarde", value: stats.priceStats ? `€${Math.round(stats.priceStats.total)}` : '€0', icon: DollarSign }
               ].map((stat, index) => (
                 <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/15 transition-all">
                   <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
@@ -420,10 +456,14 @@ export function MusicDNAExplorer() {
           ) : (
             // Explore Mode
             <Tabs defaultValue="galaxy" className="space-y-8">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-white/10 backdrop-blur-sm h-auto p-1">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 bg-white/10 backdrop-blur-sm h-auto p-1">
                 <TabsTrigger value="galaxy" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
                   <Globe className="h-4 w-4" />
                   Melkweg
+                </TabsTrigger>
+                <TabsTrigger value="value" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
+                  <DollarSign className="h-4 w-4" />
+                  Waarde
                 </TabsTrigger>
                 <TabsTrigger value="network" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
                   <Network className="h-4 w-4" />
@@ -445,6 +485,161 @@ export function MusicDNAExplorer() {
 
               <TabsContent value="galaxy" className="space-y-6 mt-8">
                 <MusicalGalaxy chartData={chartData} analysis={analysis} />
+              </TabsContent>
+
+              <TabsContent value="value" className="space-y-6 mt-8">
+                <div className="grid gap-6">
+                  {/* Price Analysis Overview */}
+                  <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 backdrop-blur-sm border-green-500/20">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-white text-2xl">
+                        <DollarSign className="h-6 w-6" />
+                        Waarde & Investment Analyse
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="font-semibold text-white mb-3">Marktwaarde Overzicht</h4>
+                          <p className="text-white/80 leading-relaxed">{analysis.priceAnalysis.marketValue}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-white mb-3">Investment Potentieel</h4>
+                          <p className="text-white/80 leading-relaxed">{analysis.priceAnalysis.investmentPotential}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="font-semibold text-white mb-3">Collectie Strategie</h4>
+                          <p className="text-white/80 leading-relaxed">{analysis.priceAnalysis.collectingStrategy}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-white mb-3">Risico Beoordeling</h4>
+                          <p className="text-white/80 leading-relaxed">{analysis.priceAnalysis.riskAssessment}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Value Charts */}
+                  <div className="grid lg:grid-cols-2 gap-6">
+                    {/* Price by Decade */}
+                    <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-white">
+                          <BarChart3 className="h-5 w-5" />
+                          Waarde per Decennium
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={chartData.priceByDecade || []}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                            <XAxis 
+                              dataKey="decade" 
+                              tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.7)' }}
+                            />
+                            <YAxis 
+                              tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.7)' }}
+                              tickFormatter={(value) => `€${value}`}
+                            />
+                            <Tooltip 
+                              formatter={(value) => [`€${value}`, 'Gem. Waarde']}
+                              labelStyle={{ color: 'white' }}
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0,0,0,0.8)', 
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '8px'
+                              }}
+                            />
+                            <Bar 
+                              dataKey="avgPrice" 
+                              fill="hsl(142 81% 45%)" 
+                              radius={[4, 4, 0, 0]}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    {/* Value by Genre */}
+                    <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-white">
+                          <PieChart className="h-5 w-5" />
+                          Waarde per Genre (Top 8)
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={(chartData.valueByGenre || []).slice(0, 8)}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                            <XAxis 
+                              dataKey="genre" 
+                              tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.7)' }}
+                              angle={-45}
+                              textAnchor="end"
+                              height={80}
+                            />
+                            <YAxis 
+                              tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.7)' }}
+                              tickFormatter={(value) => `€${value}`}
+                            />
+                            <Tooltip 
+                              formatter={(value) => [`€${value}`, 'Gem. Waarde']}
+                              labelStyle={{ color: 'white' }}
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0,0,0,0.8)', 
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '8px'
+                              }}
+                            />
+                            <Bar 
+                              dataKey="avgPrice" 
+                              fill="hsl(280 81% 56%)" 
+                              radius={[4, 4, 0, 0]}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Investment Insights */}
+                  <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 backdrop-blur-sm border-yellow-500/20">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <TrendingUp className="h-5 w-5" />
+                        Investment Inzichten
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="font-semibold text-white mb-3">Hidden Gems</h4>
+                          <div className="space-y-2">
+                            {analysis.investmentInsights.hiddenGems.slice(0, 5).map((gem, index) => (
+                              <Badge key={index} variant="outline" className="bg-yellow-500/10 text-yellow-200 border-yellow-500/30">
+                                {gem}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-white mb-3">Premium Items</h4>
+                          <div className="space-y-2">
+                            {analysis.investmentInsights.premiumItems.slice(0, 5).map((item, index) => (
+                              <Badge key={index} variant="outline" className="bg-green-500/10 text-green-200 border-green-500/30">
+                                {item}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
 
               <TabsContent value="network" className="space-y-6 mt-8">
@@ -469,7 +664,7 @@ export function MusicDNAExplorer() {
                 <div className="grid gap-6">
                   <Card className="bg-purple-900/80 backdrop-blur-sm border-white/10">
                     <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
+                      <CardTitle className="flex items-center gap-2 text-white">
                         <Lightbulb className="h-5 w-5" />
                         Verborgen Patronen
                       </CardTitle>
@@ -497,7 +692,7 @@ export function MusicDNAExplorer() {
                 <div className="grid gap-6">
                   <Card className="bg-gradient-to-br from-green-500/10 to-blue-500/10 backdrop-blur-sm border-green-500/20">
                     <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
+                      <CardTitle className="flex items-center gap-2 text-white">
                         <ShoppingCart className="h-5 w-5" />
                         Volgende Aankopen
                       </CardTitle>
@@ -541,7 +736,7 @@ export function MusicDNAExplorer() {
         </footer>
       </div>
 
-      {/* Configurable Button (replaces Achievement System) */}
+      {/* Configurable Button */}
       <div className="fixed bottom-6 right-6 z-50">
         <Button
           onClick={() => toast({ title: "Feature configuratie komt binnenkort!" })}

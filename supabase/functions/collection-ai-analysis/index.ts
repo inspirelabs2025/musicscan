@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -53,9 +52,9 @@ serve(async (req) => {
         success: true,
         analysis: {
           musicPersonality: {
-            profile: "Je collectie is nog aan het groeien! Tijd om je muzikale reis te beginnen.",
-            traits: ["Beginnend verzamelaar", "Open voor ontdekking", "Potentieel groot"],
-            musicDNA: "Een onbeschreven blad vol mogelijkheden."
+            profile: "🎧 Je muzikale avontuur staat op het punt te beginnen! Als een nieuwsgierige ontdekkingsreiziger sta je voor een lege wereldkaart vol muzikale schatten die nog ontdekt moeten worden.",
+            traits: ["Beginnende Ontdekkingsreiziger", "Oneindige Mogelijkheden", "Muzikale Dromer"],
+            musicDNA: "Een onbeschreven muzikaal verhaal wacht op de eerste noten. Jouw DNA bevat alle ingrediënten voor een epische collectie - het enige wat ontbreekt zijn de albums die jouw verhaal gaan vertellen! 🌟"
           },
           priceAnalysis: {
             marketValue: "Je collectie heeft nog geen waarde data beschikbaar.",
@@ -114,66 +113,81 @@ serve(async (req) => {
       });
     }
 
-    // Enhanced creative AI prompt as requested by user
-    const prompt = `Je bent een creatieve, geestige en deskundige muziekanalist. Je specialiseert je in het maken van unieke persoonlijkheidsprofielen op basis van iemands LP- of CD-collectie. Je analyseert genres, tijdperken, stemmingen, populariteit, geografie en onderliggende thema's van de albums. Je vertaalt dit naar een inspirerend en herkenbaar profiel van iemands muzikale identiteit. Voeg waar mogelijk ook bekende artiesten toe waar de gebruiker op lijkt ('muzikale tweeling'), en geef 1 of 2 verrassende luistertips. Je tone of voice is vriendelijk, slim, en een tikje speels. Denk aan de stijl van een muziekfreak die een kop koffie met je drinkt.
+    // Enhanced creative storytelling AI prompt
+    const prompt = `Je bent een charismatische muziekverteller die collecties omtovert tot boeiende levensverhalen! 🎵✨
 
-Analyseer deze muziekcollectie van ${allItems.length} items en geef een uitgebreide analyse. 
+Je specialiteit? Het ontdekken van de mens achter de muziek. Je ziet in elke LP een hoofdstuk, in elke CD een herinnering, en in elke genre een deel van iemands ziel. Je vertelt verhalen alsof je de beste vriend bent die na jaren eindelijk je platenkast mag doorsnuffelen.
 
-Collectie data: ${JSON.stringify(allItems.slice(0, 50))}
+Je tone of voice is:
+- Warm, persoonlijk en herkenbaar Nederlands 🇳🇱
+- Vol humor en speelse vergelijkingen 
+- Emotioneel verbonden en oprecht geïnteresseerd
+- Alsof je samen op de bank zit met een kop koffie ☕
+- Een mix van kennis en enthousiasme zonder technical jargon
 
-BELANGRIJK: Je MOET een geldig JSON object teruggeven met EXACT deze structuur. Geen tekst voor of na de JSON:
+Analyseer deze muziekcollectie van ${allItems.length} pareltjes en vertel het verhaal achter deze muziekliefhebber:
+
+${JSON.stringify(allItems.slice(0, 50))}
+
+Creëer een verhaal dat laat zien wie deze persoon is aan de hand van hun muzieksmaak. Geen droge statistieken, maar échte verhalen!
+
+BELANGRIJK: Return ALLEEN een geldig JSON object met deze structuur:
 
 {
   "musicPersonality": {
-    "profile": "Uitgebreide persoonlijkheid beschrijving in het Nederlands - wie is deze muziekliefhebber?",
-    "traits": ["eigenschap1", "eigenschap2", "eigenschap3"],
-    "musicDNA": "Unieke muzikale DNA beschrijving - wat maakt deze collectie bijzonder?"
+    "profile": "Een warm, persoonlijk verhaal over wie deze muziekliefhebber is. Vertel over hun karakter, passies en wat hun muziek zegt over hun levensreis. Gebruik Nederlandse uitdrukkingen en maak het herkenbaar! 🎭",
+    "traits": ["Creatieve eigenschap", "Levensstijl kenmerk", "Muzikale superpower"],
+    "musicDNA": "Een poëtische beschrijving van hun unieke muzikale essentie. Wat maakt hun smaak zo bijzonder? Gebruik mooie metaforen! 🧬🎶"
   },
   "priceAnalysis": {
-    "marketValue": "Uitgebreide marktwaarde analyse in Nederlands met concrete prijsinzichten",
-    "investmentPotential": "Gedetailleerde investeringspotentieel beoordeling",
-    "valueGrowthTrends": "Analyse van waardeontwikkeling trends en marktdynamiek",
-    "collectingStrategy": "Strategisch advies voor verzamelen en portfolio management",
-    "portfolioBreakdown": "Gedetailleerde breakdown van portfolio samenstelling",
-    "riskAssessment": "Uitgebreide risico analyse en mitigatie strategieën"
+    "treasureHunt": "🏴‍☠️ Vertel het verhaal van hun waardevolste schatten. Welke albums zijn echte pareltjes en waarom? Maak het spannend als een schattenjacht!",
+    "investmentStory": "📈 Hun collectie als investering, maar dan als verhaal. Welke albums zijn slimme zetten geweest? Wat zou een muziekbeurs-expert zeggen?",
+    "marketTales": "🎪 Verhalen over hoe de muziekmarkt werkt. Waarom stijgen bepaalde albums? Wat zijn de trends? Vertel het als een avonturenverhaal!",
+    "collectorWisdom": "🧙‍♂️ Verzamelaarsstrategie als wijze raad. Wat zou een oude platenbaas adviseren? Geef tips alsof je een mentor bent.",
+    "portfolioStory": "🎨 Hun collectie als kunstwerk beschreven. Hoe is deze mix ontstaan? Wat zegt de balans tussen formats en genres?",
+    "valueSecrets": "💎 De geheimen van waardebepaling. Waarom zijn sommige albums goud waard en andere niet? Vertel het als insider-kennis!"
   },
   "collectionInsights": {
-    "uniqueness": "Wat maakt deze collectie uniek",
-    "coherence": "Hoe coherent is de collectie",
-    "curation": "Kwaliteit van de curatie",
-    "evolution": "Hoe de collectie is geëvolueerd"
+    "uniqueMagic": "✨ Wat maakt deze collectie magisch uniek? Welke verrassende combinaties zie je?",
+    "redThread": "🧵 De rode draad door hun muzikale verhaal. Hoe hangt alles samen?",
+    "curationStyle": "🎯 Hun manier van verzamelen als kunstform beschreven.",
+    "musicalJourney": "🗺️ Hun muzikale reis door de jaren heen als avonturenverhaal."
   },
   "artistConnections": {
-    "collaborations": ["samenwerking1", "samenwerking2"],
-    "labelConnections": ["label1", "label2"],
-    "producerInsights": ["producer1", "producer2"],
-    "genreEvolution": "Genre evolutie beschrijving"
+    "collaborationWeb": ["Verhaal over samenwerking1", "Connectie verhaal2"],
+    "labelStories": ["Label verhaal1", "Studio verhaal2"],
+    "producerTales": ["Producer connectie1", "Geluidsverhaal2"],
+    "genreEvolution": "🦋 Het verhaal van hoe hun smaak is geëvolueerd. Van waar naar waar en waarom?"
   },
   "investmentInsights": {
-    "hiddenGems": ["verborgen parel1", "verborgen parel2"],
-    "premiumItems": ["premium item1", "premium item2"],
-    "trends": "Markt trends analyse",
-    "completionOpportunities": ["kans1", "kans2"]
+    "hiddenTreasures": ["💰 Verborgen parel verhaal1", "🔮 Toekomstige klassieker verhaal2"],
+    "crownJewels": ["👑 Premium item verhaal1", "🏆 Topstuk verhaal2"],
+    "marketProphecy": "🔮 Voorspellingen over waar de markt naartoe gaat, verteld als een verhaal.",
+    "completionQuests": ["🗡️ Missie: ontbrekende klassieker1", "🎯 Zoektocht: serie completeren2"]
   },
   "culturalContext": {
-    "decades": ["1970s", "1980s"],
-    "movements": ["beweging1", "beweging2"],
-    "geography": "Geografische analyse",
-    "timeline": "Tijdlijn beschrijving"
+    "timeTravel": ["1970s verhaal", "1980s verhaal"],
+    "movements": ["Beweging verhaal1", "Culturele golf2"],
+    "worldMap": "🌍 Een verhaal over de geografische spreiding van hun smaak.",
+    "lifeTimeline": "📅 Hun leven verteld door hun muziekkeuzes."
   },
-  "funFacts": ["feit1", "feit2", "feit3"],
+  "funFacts": [
+    "🎈 Leuk feitje als verhaal1",
+    "🎪 Grappige observatie2", 
+    "🎭 Verrassende connectie3"
+  ],
   "recommendations": {
-    "nextPurchases": ["aanbeveling1", "aanbeveling2"],
-    "genreExploration": ["genre1", "genre2"],
-    "artistDiscovery": ["artiest1", "artiest2"],
-    "collectionGaps": ["lacune1", "lacune2"]
+    "nextAdventures": ["🚀 Volgende ontdekkingsreis1", "🎨 Artistieke uitbreiding2"],
+    "genreExploration": ["🌟 Genre om te verkennen1", "🎵 Nieuwe richting2"],
+    "artistDiscovery": ["👤 Artiest om te ontdekken1", "🎭 Muzikale soulmate2"],
+    "collectionGaps": ["🕳️ Ontbrekende puzzle stuk1", "🔍 Missende link2"]
   },
-  "collectionStory": "Een inspirerend verhaal over de collectie in het Nederlands"
+  "collectionStory": "🎬 Het grote verhaal: een inspirerend, persoonlijk verhaal over deze collectie als geheel. Wie is deze muziekliefhebber? Wat is hun verhaal? Maak het als een mooie documentaire over hun muzikale leven! Gebruik emotie, herkenning en warmte. Dit moet het hoogtepunt zijn van je analyse! 🌟📖"
 }
 
-Zorg ervoor dat de priceAnalysis sectie uitgebreid en gedetailleerd is met concrete financiële inzichten en bruikbaar investeringsadvies. Alle tekst moet in het Nederlands en boeiend zijn. Wees creatief, geestig en deskundig!`;
+Vergeet niet: dit moet voelen als een gesprek met je beste muziekvriend die eindelijk je hele collectie mag zien! Maak het persoonlijk, warm en vol verhalen! 🎵❤️`;
 
-    console.log('🤖 Calling OpenAI with enhanced creative prompt...');
+    console.log('🤖 Calling OpenAI with enhanced storytelling prompt...');
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -186,14 +200,14 @@ Zorg ervoor dat de priceAnalysis sectie uitgebreid en gedetailleerd is met concr
         messages: [
           {
             role: 'system',
-            content: 'Je bent een creatieve, geestige en deskundige muziekanalist. Je specialiseert je in het maken van unieke persoonlijkheidsprofielen op basis van iemands LP- of CD-collectie. Voeg waar mogelijk ook bekende artiesten toe waar de gebruiker op lijkt (\'muzikale tweeling\'), en geef 1 of 2 verrassende luistertips. Je tone of voice is vriendelijk, slim, en een tikje speels. Denk aan de stijl van een muziekfreak die een kop koffie met je drinkt. Antwoord altijd in geldig JSON format zonder extra tekst.'
+            content: 'Je bent een charismatische muziekverteller die collecties omtovert tot boeiende levensverhalen! Je ziet in elke LP een hoofdstuk, in elke CD een herinnering. Je tone of voice is warm, persoonlijk Nederlands vol humor en speelse vergelijkingen. Alsof je samen op de bank zit met een kop koffie. Geen technische jargon, maar échte verhalen over de mens achter de muziek! Antwoord altijd in geldig JSON format zonder extra tekst.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.8,
+        temperature: 0.9,
         max_tokens: 4000
       }),
     });
@@ -228,7 +242,7 @@ Zorg ervoor dat de priceAnalysis sectie uitgebreid en gedetailleerd is met concr
     } catch (parseError) {
       console.error('❌ Failed to parse AI response:', parseError);
       
-      // Enhanced fallback analysis with price calculations
+      // Enhanced fallback analysis with storytelling approach
       const prices = allItems
         .map(item => item.calculated_advice_price || item.median_price || 0)
         .filter(price => price > 0);
@@ -237,62 +251,60 @@ Zorg ervoor dat de priceAnalysis sectie uitgebreid en gedetailleerd is met concr
       
       analysis = {
         musicPersonality: {
-          profile: `Een fascinerende muziekliefhebber met een collectie van ${allItems.length} items die een brede smaak en liefde voor kwaliteit toont.`,
-          traits: ["Eclectisch", "Kwaliteitsbewust", "Gepassioneerd verzamelaar"],
-          musicDNA: "Een verzamelaar die waarde hecht aan zowel muzikale diversiteit als collector's items."
+          profile: `🎵 Wat een indrukwekkende verzameling! Je hebt ${allItems.length} muzikale pareltjes bij elkaar gespaard, en dat zegt iets moois over jou. Je bent iemand die waarde hecht aan echte muziek, aan het fysieke bezit van je favoriete klanken. Deze collectie vertelt het verhaal van iemand die muziek niet zomaar consumeert, maar koestert. ✨`,
+          traits: ["Gepassioneerde Verzamelaar", "Kwaliteitszoeker", "Muzikale Smaakmaker"],
+          musicDNA: "Jouw muzikale DNA is een prachtige mix van passie en geduld. Je bouwt niet zomaar een collectie op - je creëert een soundtrack van je leven, album voor album, moment voor moment. 🧬🎶"
         },
         priceAnalysis: {
-          marketValue: `Deze indrukwekkende collectie van ${allItems.length} items heeft een geschatte totale waarde van €${totalValue.toFixed(2)}. Met een gemiddelde waarde van €${avgValue.toFixed(2)} per item toont de collectie een gezonde mix van betaalbare classics en waardevolle releases.`,
-          investmentPotential: "Er zijn diverse kansen voor waardegroei in deze collectie, vooral bij zeldzame releases en limited editions. Vintage vinyl en eerste persingen hebben bijzonder goed investeringspotentieel.",
-          valueGrowthTrends: "De markt voor fysieke muziek toont een gestage groei. Bepaalde genres en tijdperken presteren beter, met toenemende vraag naar kwalitatieve releases.",
-          collectingStrategy: "Focus op kwaliteit boven kwantiteit. Diversifieer over verschillende genres en tijdperken om risico te spreiden. Let op conditie en zeldzaamheid.",
-          portfolioBreakdown: `De collectie bestaat uit ${cdItems?.length || 0} CDs en ${vinylItems?.length || 0} vinyl releases. Dit biedt een evenwichtige mix van toegankelijkheid (CD) en collector's value (vinyl).`,
-          riskAssessment: "Matig risico dankzij de diversiteit van de collectie. Fysieke muziek blijft stabiel in waarde met goede liquiditeit voor populaire releases."
+          treasureHunt: `🏴‍☠️ Je collectie van ${allItems.length} schatten heeft een geschatte waarde van €${totalValue.toFixed(2)}! Dat is gemiddeld €${avgValue.toFixed(2)} per juweeltje. Je hebt een goed oog voor waardevolle muziek - sommige van je albums zijn echte pareltjes die alleen maar in waarde zullen stijgen!`,
+          investmentStory: "📈 Als investeerder ben je slim bezig geweest! Vinyl en CD's maken een comeback, en jouw collectie surft perfect mee op deze golf. De fysieke muziekmarkt groeit weer, gedreven door nostalgie en de liefde voor tastbare muziek.",
+          marketTales: "🎪 De muziekwereld is vol verrassingen! Bepaalde albums worden plotseling hot omdat ze in een populaire serie voorkomen, of omdat een artiest weer trending is. Jouw collectie bevat waarschijnlijk meer verborgen schatten dan je denkt!",
+          collectorWisdom: "🧙‍♂️ Een wijze verzamelaar zei ooit: 'Koop wat je hart sneller doet kloppen, niet wat de markt dicteert.' Jouw collectie ademt deze filosofie - het is een perfecte balans tussen emotionele waarde en slimme keuzes.",
+          portfolioStory: `🎨 Jouw collectie is als een mooi schilderij: ${cdItems?.length || 0} CDs vormen de stevige basis, terwijl ${vinylItems?.length || 0} vinyl platen de artistieke finishing touch geven. Deze mix toont je veelzijdigheid perfect!`,
+          valueSecrets: "💎 Het geheim van waardevolle muziek? Het zit hem in zeldzaamheid, conditie, en emotionele connectie. Jouw albums hebben alle drie - dat maakt ze bijzonder!"
         },
         collectionInsights: {
-          uniqueness: "Deze collectie onderscheidt zich door de breedte van genres en de kwaliteit van de selectie.",
-          coherence: "Er is een duidelijke rode draad die kwaliteit en diversiteit combineert.",
-          curation: "De collectie toont zorgvuldige curatie met oog voor zowel populaire als obscure releases.",
-          evolution: "Een organisch gegroeide collectie met verschillende fases van muzikale ontdekking."
+          uniqueMagic: "✨ Jouw collectie heeft die speciale magie die alleen echte muziekliefhebbers kunnen creëren - het is persoonlijk, doordacht, en vol verhalen.",
+          redThread: "🧵 De rode draad? Kwaliteit en authenticiteit. Elk album is bewust gekozen, elk stuk heeft een reden om in jouw collectie te staan.",
+          curationStyle: "🎯 Je curatieerstijl is die van een geboren verzamelaar: zorgvuldig, geduldelijk, en altijd op zoek naar die ene perfecte toevoeging.",
+          musicalJourney: "🗺️ Jouw muzikale reis is nog lang niet voorbij - elke nieuwe aanwinst schrijft een nieuw hoofdstuk in je verhaal."
         },
         artistConnections: {
-          collaborations: ["Cross-genre samenwerkingen", "Producer connecties"],
-          labelConnections: ["Independent labels", "Major label releases"],
-          producerInsights: ["Bekende producers", "Underground talent"],
-          genreEvolution: "Een interessante evolutie door verschillende muzikale bewegingen en tijdperken."
+          collaborationWeb: ["Cross-genre magie tussen artiesten", "Onverwachte muzikale vriendschappen"],
+          labelStories: ["Independent labels met karakter", "Major labels met historie"],
+          producerTales: ["Legendarische producers achter de schermen", "Studio verhalen die je doen rillen"],
+          genreEvolution: "🦋 Je smaak heeft zich ontwikkeld als een mooie vlinder - van cocon tot kleurenpracht, altijd groeiend en verrassend."
         },
         investmentInsights: {
-          hiddenGems: ["Ondergewaardeerde releases", "Toekomstige classics"],
-          premiumItems: ["Limited editions", "First pressings"],
-          trends: "Toenemende waardering voor fysieke muziek en authentieke releases.",
-          completionOpportunities: ["Missing classics", "Series completion"]
+          hiddenTreasures: ["Albums die nog ontdekt moeten worden", "Toekomstige classics in wording"],
+          crownJewels: ["De pareltjes die je met trots toont", "Albums waar anderen jaloers op zijn"],
+          marketProphecy: "🔮 De toekomst ziet er rooskleurig uit voor fysieke muziek - jouw vooruitziende blik wordt beloond!",
+          completionQuests: ["Ontbrekende classics die je lijst compleet maken", "Series die om voltooiing smeken"]
         },
         culturalContext: {
-          decades: ["1970s", "1980s", "1990s", "2000s"],
-          movements: ["Rock evolution", "Electronic development"],
-          geography: "Een internationale mix met focus op westerse muziekmarkten.",
-          timeline: "Een chronologische reis door verschillende muzikale tijdperken."
+          timeTravel: ["Elk decennium vertegenwoordigd", "Tijdcapsules in vinyl en CD vorm"],
+          movements: ["Muzikale revoluties vastgelegd", "Culturele golven gevangen in groeven"],
+          worldMap: "🌍 Je smaak reist de wereld rond - van lokale helden tot internationale sterren, een echte wereldburger!",
+          lifeTimeline: "📅 Jouw leven verteld in albums - elk stuk een herinnering, elk jaar een nieuw hoofdstuk."
         },
         funFacts: [
-          `De collectie bevat ${allItems.length} unieke releases`,
-          "Er zijn verschillende zeldzame items in de collectie",
-          "De diversiteit toont een brede muzikale interesse"
+          `🎈 Je ${allItems.length} albums vormen samen een indrukwekkende muziekbibliotheek!`,
+          "🎪 De variatie in je collectie toont je brede interesse - een echte muziekliefhebber!",
+          "🎭 Elke aanwinst heeft waarschijnlijk een verhaal - dat maakt je collectie zo persoonlijk!"
         ],
         recommendations: {
-          nextPurchases: ["Aanvulling klassieke albums", "Nieuwe genre verkenning"],
-          genreExploration: ["Jazz fusion", "Progressive rock"],
-          artistDiscovery: ["Gerelateerde artiesten", "Label mates"],
-          collectionGaps: ["Missing classics", "Genre lacunes"]
+          nextAdventures: ["Ontdek nieuwe genres die aansluiten bij je smaak", "Verken artistieke zijwegen van je favoriete muzikanten"],
+          genreExploration: ["Jazz fusion voor meer experimentele klanken", "Wereldmuziek voor nieuwe horizonten"],
+          artistDiscovery: ["Ontdek de invloeden van je favoriete artiesten", "Zoek naar hedendaagse talenten in dezelfde stijl"],
+          collectionGaps: ["Ontbrekende klassiekers die je lijst compleet maken", "Albums die de brug slaan tussen je genres"]
         },
-        collectionStory: `Deze collectie van ${allItems.length} items vertelt het verhaal van een gepassioneerde muziekliefhebber. Van CDs tot vinyl, elke release is zorgvuldig geselecteerd en draagt bij aan een coherent geheel dat zowel persoonlijke smaak als collector's waarde reflecteert.`
+        collectionStory: `🎬 Jouw collectie vertelt het verhaal van een echte muziekliefhebber. Het is niet zomaar een stapel albums - het is jouw persoonlijke soundtrack, zorgvuldig samengesteld door iemand die begrijpt dat muziek meer is dan geluid. Het is emotie, herinnering, en passie in fysieke vorm. Elke CD, elke plaat is een bewuste keuze geweest, een investering in je geluksgevoel. En dat, dat is precies wat muziek zou moeten zijn! 🌟📖🎵`
       };
     }
 
-    // Generate enhanced stats with price analysis
     const genres = [...new Set(allItems.map(item => item.genre).filter(Boolean))];
     const artists = [...new Set(allItems.map(item => item.artist).filter(Boolean))];
     
-    // Calculate comprehensive price stats
     const prices = allItems
       .map(item => item.calculated_advice_price || item.median_price || 0)
       .filter(price => price > 0);
@@ -312,7 +324,6 @@ Zorg ervoor dat de priceAnalysis sectie uitgebreid en gedetailleerd is met concr
       }
     };
 
-    // Generate enhanced chart data
     const genreDistribution = genres.map(genre => ({
       name: genre,
       value: allItems.filter(item => item.genre === genre).length,
@@ -356,7 +367,7 @@ Zorg ervoor dat de priceAnalysis sectie uitgebreid en gedetailleerd is met concr
       })
     };
 
-    console.log('✅ AI analysis completed successfully with enhanced data');
+    console.log('✅ AI analysis completed successfully with enhanced storytelling');
 
     return new Response(JSON.stringify({
       success: true,

@@ -21,54 +21,47 @@ interface StoryChapterProps {
 }
 
 export function StoryChapter({ chapter, analysis, chartData, stats, isActive, onActivate }: StoryChapterProps) {
-  // Add debugging for waarde section
-  React.useEffect(() => {
-    if (chapter.id === 'waarde') {
-      console.log('🔍 DEBUG StoryChapter waarde:', {
-        chapterId: chapter.id,
-        hasAnalysis: !!analysis,
-        hasPriceAnalysis: !!analysis?.priceAnalysis,
-        priceAnalysisKeys: analysis?.priceAnalysis ? Object.keys(analysis.priceAnalysis) : 'none',
-        priceAnalysisData: analysis?.priceAnalysis,
-        hasChartData: !!chartData,
-        chartDataKeys: chartData ? Object.keys(chartData) : 'none'
-      });
-    }
-  }, [chapter.id, analysis, chartData]);
-
   const renderChapterContent = () => {
     switch (chapter.id) {
       case 'genesis':
         return (
           <div className="space-y-8">
-            <div className="prose prose-invert max-w-none">
-              <p className="text-lg md:text-xl leading-relaxed text-white">
+            <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-2xl p-8 border border-blue-500/30">
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 flex items-center gap-3">
+                🎬 Het Grote Verhaal
+              </h3>
+              <p className="text-xl md:text-2xl text-white leading-relaxed font-medium">
                 {analysis.collectionStory}
               </p>
             </div>
+            
             <div className="grid md:grid-cols-2 gap-6">
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Culturele Context</CardTitle>
+                  <CardTitle className="text-white text-lg flex items-center gap-2">
+                    📅 Tijdreis door de Muziek
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                      {analysis.culturalContext.decades.map((decade: string, index: number) => (
-                        <Badge key={index} className="bg-blue-500/20 text-blue-200 border-blue-500/30">
-                          {decade}
-                        </Badge>
-                      ))}
-                    </div>
+                  <p className="text-white leading-relaxed mb-4">{analysis.culturalContext?.lifeTimeline}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.culturalContext?.timeTravel?.map((era: string, index: number) => (
+                      <Badge key={index} className="bg-blue-500/20 text-blue-200 border-blue-500/30">
+                        {era}
+                      </Badge>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
+              
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Geografische Spreiding</CardTitle>
+                  <CardTitle className="text-white text-lg flex items-center gap-2">
+                    🌍 Wereldkaart van Smaak
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-white">{analysis.culturalContext.geography}</p>
+                  <p className="text-white leading-relaxed">{analysis.culturalContext?.worldMap}</p>
                 </CardContent>
               </Card>
             </div>
@@ -79,18 +72,28 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
         return (
           <div className="space-y-8">
             <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-8 border border-purple-500/30">
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">Jouw Muzikale DNA</h3>
-              <p className="text-xl md:text-2xl text-white mb-8 leading-relaxed">{analysis.musicPersonality.musicDNA}</p>
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 flex items-center gap-3">
+                🧬 Jouw Muzikale DNA
+              </h3>
+              <p className="text-xl md:text-2xl text-white mb-8 leading-relaxed font-medium">
+                {analysis.musicPersonality.musicDNA}
+              </p>
+              
               <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="font-semibold text-white mb-4 text-lg">Persoonlijkheidsprofiel</h4>
+                <div className="bg-white/10 rounded-xl p-6 border border-white/20">
+                  <h4 className="font-semibold text-white mb-4 text-lg flex items-center gap-2">
+                    🎭 Wie Ben Je?
+                  </h4>
                   <p className="text-white leading-relaxed">{analysis.musicPersonality.profile}</p>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-white mb-4 text-lg">Hoofdkenmerken</h4>
+                
+                <div className="bg-white/10 rounded-xl p-6 border border-white/20">
+                  <h4 className="font-semibold text-white mb-4 text-lg flex items-center gap-2">
+                    ⭐ Jouw Superkrachten
+                  </h4>
                   <div className="flex flex-wrap gap-2">
                     {analysis.musicPersonality.traits.map((trait: string, index: number) => (
-                      <Badge key={index} className="bg-purple-500/20 text-purple-200 border-purple-500/30 text-sm">
+                      <Badge key={index} className="bg-purple-500/20 text-purple-200 border-purple-500/30 text-sm px-3 py-1">
                         {trait}
                       </Badge>
                     ))}
@@ -106,7 +109,9 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
           <div className="space-y-8">
             <Card className="bg-white/5 backdrop-blur-sm border-white/10">
               <CardHeader>
-                <CardTitle className="text-white text-xl">Artiest Netwerk</CardTitle>
+                <CardTitle className="text-white text-xl flex items-center gap-2">
+                  🌟 Jouw Muzikale Netwerk
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80 mb-8">
@@ -134,20 +139,20 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
+                
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                    <h4 className="font-semibold text-white mb-4">Samenwerkingen</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {analysis.artistConnections.collaborations.slice(0, 5).map((collab: string, index: number) => (
-                        <Badge key={index} className="bg-pink-500/20 text-pink-200 border-pink-500/30 text-sm">
-                          {collab}
-                        </Badge>
+                    <h4 className="font-semibold text-white mb-4 flex items-center gap-2">🤝 Muzikale Vriendschappen</h4>
+                    <div className="space-y-2">
+                      {analysis.artistConnections?.collaborationWeb?.slice(0, 3).map((story: string, index: number) => (
+                        <p key={index} className="text-white text-sm leading-relaxed">• {story}</p>
                       ))}
                     </div>
                   </div>
+                  
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                    <h4 className="font-semibold text-white mb-4">Genre Evolutie</h4>
-                    <p className="text-white leading-relaxed">{analysis.artistConnections.genreEvolution}</p>
+                    <h4 className="font-semibold text-white mb-4 flex items-center gap-2">🦋 Evolutie van Smaak</h4>
+                    <p className="text-white leading-relaxed">{analysis.artistConnections?.genreEvolution}</p>
                   </div>
                 </div>
               </CardContent>
@@ -161,39 +166,36 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="bg-purple-900/80 backdrop-blur-sm border-purple-700/30 hover:bg-purple-800/90 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-xl">Collectie Uniciteit</CardTitle>
+                  <CardTitle className="text-white text-xl flex items-center gap-2">
+                    ✨ Jouw Unieke Magie
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-white leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
+                  <p className="text-white leading-relaxed">{analysis.collectionInsights?.uniqueMagic}</p>
                 </CardContent>
               </Card>
+              
               <Card className="bg-purple-900/80 backdrop-blur-sm border-purple-700/30 hover:bg-purple-800/90 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-xl">Investering Inzichten</CardTitle>
+                  <CardTitle className="text-white text-xl flex items-center gap-2">
+                    🧵 De Rode Draad
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold text-white mb-3">Verborgen Parels</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {analysis.investmentInsights.hiddenGems.slice(0, 3).map((gem: string, index: number) => (
-                          <Badge key={index} className="bg-green-500/20 text-green-200 border-green-500/30 text-sm">
-                            {gem}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-white leading-relaxed">{analysis.investmentInsights.trends}</p>
-                  </div>
+                  <p className="text-white leading-relaxed">{analysis.collectionInsights?.redThread}</p>
                 </CardContent>
               </Card>
             </div>
             
             <Card className="bg-white/5 backdrop-blur-sm border-white/10">
               <CardHeader>
-                <CardTitle className="text-white text-xl">Genre Verdeling</CardTitle>
+                <CardTitle className="text-white text-xl flex items-center gap-2">
+                  🎯 Jouw Curation Stijl
+                </CardTitle>
               </CardHeader>
               <CardContent>
+                <p className="text-white leading-relaxed mb-6">{analysis.collectionInsights?.curationStyle}</p>
+                
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -222,6 +224,7 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
+                
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-6">
                   {chartData.genreDistribution?.slice(0, 6).map((genre: any, index: number) => (
                     <div key={index} className="flex items-center gap-2">
@@ -239,38 +242,40 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
         );
 
       case 'waarde':
-        // Fallback values if priceAnalysis is missing
-        const priceAnalysis = analysis?.priceAnalysis || {};
-        const fallbackText = "Deze analyse wordt nog gegenereerd. Probeer de pagina te verversen voor de nieuwste gegevens.";
-        
         return (
           <div className="space-y-8">
             <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl p-8 border border-green-500/30">
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">💰 Marktwaarde Analyse</h3>
-              <p className="text-xl text-white mb-8 leading-relaxed">
-                {priceAnalysis.marketValue || fallbackText}
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 flex items-center gap-3">
+                🏴‍☠️ Schattenjacht in je Collectie
+              </h3>
+              <p className="text-xl text-white mb-8 leading-relaxed font-medium">
+                {analysis.priceAnalysis?.treasureHunt || "De schatten in je collectie worden nog geanalyseerd... ✨"}
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Investeringspotentieel</CardTitle>
+                  <CardTitle className="text-white text-lg flex items-center gap-2">
+                    📈 Jouw Investeringsverhaal
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-white leading-relaxed">
-                    {priceAnalysis.investmentPotential || fallbackText}
+                    {analysis.priceAnalysis?.investmentStory || "Je investeringsstrategie wordt nog doorgelicht door onze experts! 🔍"}
                   </p>
                 </CardContent>
               </Card>
 
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Waardegroei Trends</CardTitle>
+                  <CardTitle className="text-white text-lg flex items-center gap-2">
+                    🎪 Marktverhalen
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-white leading-relaxed">
-                    {priceAnalysis.valueGrowthTrends || fallbackText}
+                    {analysis.priceAnalysis?.marketTales || "De markttrends voor jouw collectie worden nog uitgezocht! 📊"}
                   </p>
                 </CardContent>
               </Card>
@@ -278,86 +283,77 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
 
             <Card className="bg-white/5 backdrop-blur-sm border-white/10">
               <CardHeader>
-                <CardTitle className="text-white text-xl">Collectie Strategie</CardTitle>
+                <CardTitle className="text-white text-xl flex items-center gap-2">
+                  🧙‍♂️ Verzamelaarswijsheid
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-white leading-relaxed mb-6">
-                  {priceAnalysis.collectingStrategy || fallbackText}
+                  {analysis.priceAnalysis?.collectorWisdom || "De wijze raad van oude platenbazen wordt voor je verzameld! 🎯"}
                 </p>
                 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                    <h4 className="font-semibold text-white mb-4">Portfolio Verdeling</h4>
+                    <h4 className="font-semibold text-white mb-4 flex items-center gap-2">🎨 Portfolio als Kunstwerk</h4>
                     <p className="text-white leading-relaxed">
-                      {priceAnalysis.portfolioBreakdown || fallbackText}
+                      {analysis.priceAnalysis?.portfolioStory || "De artistieke samenstelling van je collectie wordt geanalyseerd! 🖼️"}
                     </p>
                   </div>
+                  
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                    <h4 className="font-semibold text-white mb-4">Risico Analyse</h4>
+                    <h4 className="font-semibold text-white mb-4 flex items-center gap-2">💎 Waardegeheimen</h4>
                     <p className="text-white leading-relaxed">
-                      {priceAnalysis.riskAssessment || fallbackText}
+                      {analysis.priceAnalysis?.valueSecrets || "De geheimen van waardebepaling worden voor je ontrafeld! 🔮"}
                     </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {chartData?.priceByDecade && chartData.priceByDecade.length > 0 ? (
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-xl">Waarde per Decennium</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData.priceByDecade} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                        <XAxis dataKey="decade" tick={{ fill: '#fff', fontSize: 12 }} />
-                        <YAxis tick={{ fill: '#fff', fontSize: 12 }} />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: 'rgba(0, 0, 0, 0.9)', 
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            borderRadius: '12px',
-                            color: '#fff',
-                            backdropFilter: 'blur(10px)'
-                          }}
-                        />
-                        <Bar dataKey="avgPrice" fill="#10b981" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-6 border border-yellow-500/20">
+              <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
+                💰 Verborgen Schatten
+              </h4>
+              <div className="grid md:grid-cols-2 gap-4">
+                {analysis.investmentInsights?.hiddenTreasures?.slice(0, 4).map((treasure: string, index: number) => (
+                  <div key={index} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                    <div className="text-2xl">💎</div>
+                    <span className="text-white text-sm leading-relaxed">{treasure}</span>
                   </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-white text-xl">Waarde per Decennium</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-white text-center py-8">
-                    Prijsdata wordt nog verzameld. Ververs de pagina voor de nieuwste gegevens.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+                ))}
+              </div>
+            </div>
           </div>
         );
 
       case 'future':
         return (
           <div className="space-y-8">
+            <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl p-8 border border-indigo-500/30">
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 flex items-center gap-3">
+                🚀 Jouw Volgende Muzikale Avonturen
+              </h3>
+              <p className="text-xl text-white mb-8 leading-relaxed">
+                De toekomst van je collectie ligt vol met spannende mogelijkheden! Hier zijn de verhalen die nog geschreven moeten worden... ✨
+              </p>
+            </div>
+
             <Card className="bg-purple-900/80 backdrop-blur-sm border-purple-700/30">
               <CardHeader>
-                <CardTitle className="text-white text-xl">Aanbevolen Volgende Aankopen</CardTitle>
+                <CardTitle className="text-white text-xl flex items-center gap-2">
+                  🗺️ Ontdekkingsreizen die je Wachten
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysis.recommendations.nextPurchases.slice(0, 5).map((rec: string, index: number) => (
-                    <div key={index} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-all border border-white/10">
+                  {analysis.recommendations?.nextAdventures?.slice(0, 5).map((adventure: string, index: number) => (
+                    <div key={index} className="flex items-start gap-4 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-all border border-white/10">
                       <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                         {index + 1}
                       </div>
-                      <span className="text-white">{rec}</span>
+                      <div>
+                        <span className="text-white leading-relaxed">{adventure}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -367,14 +363,17 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Genre Verkenning</CardTitle>
+                  <CardTitle className="text-white text-lg flex items-center gap-2">
+                    🌟 Nieuwe Werelden om te Verkennen
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {analysis.recommendations.genreExploration.slice(0, 4).map((genre: string, index: number) => (
-                      <Badge key={index} className="bg-blue-500/20 text-blue-200 border-blue-500/30">
-                        {genre}
-                      </Badge>
+                  <div className="space-y-3">
+                    {analysis.recommendations?.genreExploration?.slice(0, 4).map((genre: string, index: number) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all">
+                        <span className="text-2xl">🎵</span>
+                        <span className="text-white text-sm">{genre}</span>
+                      </div>
                     ))}
                   </div>
                 </CardContent>
@@ -382,11 +381,13 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
               
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Collectie Gaten</CardTitle>
+                  <CardTitle className="text-white text-lg flex items-center gap-2">
+                    🕳️ Ontbrekende Puzzelstukjes
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {analysis.recommendations.collectionGaps.slice(0, 3).map((gap: string, index: number) => (
+                    {analysis.recommendations?.collectionGaps?.slice(0, 4).map((gap: string, index: number) => (
                       <div key={index} className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 flex-shrink-0" />
                         <span className="text-white text-sm leading-relaxed">{gap}</span>
@@ -395,6 +396,22 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            <div className="bg-gradient-to-r from-pink-500/10 to-rose-500/10 rounded-xl p-6 border border-pink-500/20">
+              <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
+                🎭 Leuke Weetjes over Jouw Smaak
+              </h4>
+              <div className="grid md:grid-cols-2 gap-4">
+                {analysis.funFacts?.map((fact: string, index: number) => (
+                  <div key={index} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                    <div className="text-xl">
+                      {['🎈', '🎪', '🎭', '🎨', '🎯'][index % 5]}
+                    </div>
+                    <span className="text-white text-sm leading-relaxed">{fact}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         );

@@ -9,40 +9,40 @@ export interface AIAnalysis {
     musicDNA: string;
   };
   priceAnalysis: {
-    marketValue: string;
-    investmentPotential: string;
-    valueGrowthTrends: string;
-    collectingStrategy: string;
-    portfolioBreakdown: string;
-    riskAssessment: string;
+    treasureHunt: string;
+    investmentStory: string;
+    marketTales: string;
+    collectorWisdom: string;
+    portfolioStory: string;
+    valueSecrets: string;
   };
   collectionInsights: {
-    uniqueness: string;
-    coherence: string;
-    curation: string;
-    evolution: string;
+    uniqueMagic: string;
+    redThread: string;
+    curationStyle: string;
+    musicalJourney: string;
   };
   artistConnections: {
-    collaborations: string[];
-    labelConnections: string[];
-    producerInsights: string[];
+    collaborationWeb: string[];
+    labelStories: string[];
+    producerTales: string[];
     genreEvolution: string;
   };
   investmentInsights: {
-    hiddenGems: string[];
-    premiumItems: string[];
-    trends: string;
-    completionOpportunities: string[];
+    hiddenTreasures: string[];
+    crownJewels: string[];
+    marketProphecy: string;
+    completionQuests: string[];
   };
   culturalContext: {
-    decades: string[];
+    timeTravel: string[];
     movements: string[];
-    geography: string;
-    timeline: string;
+    worldMap: string;
+    lifeTimeline: string;
   };
   funFacts: string[];
   recommendations: {
-    nextPurchases: string[];
+    nextAdventures: string[];
     genreExploration: string[];
     artistDiscovery: string[];
     collectionGaps: string[];
@@ -60,7 +60,6 @@ export interface ChartData {
   countryDistribution: { country: string; count: number; }[];
   styleDistribution: { name: string; value: number; }[];
   decadeFlow: { decade: number; count: number; genres: number; artists: number; label: string; }[];
-  // New price/value focused charts
   priceByDecade: { decade: string; avgPrice: number; count: number; totalValue: number; }[];
   valueByGenre: { genre: string; avgPrice: number; count: number; totalValue: number; }[];
   investmentHeatmap: { artist: string; title: string; year: number; currentValue: number; growthPotential: number; }[];

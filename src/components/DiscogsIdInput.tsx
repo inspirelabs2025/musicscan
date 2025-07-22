@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Hash, ArrowRight, Search, Link, Disc, Circle } from 'lucide-react';
 import { extractDiscogsIdFromUrl } from '@/lib/utils';
@@ -14,7 +15,7 @@ interface DiscogsIdInputProps {
 
 export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: DiscogsIdInputProps) => {
   const [discogsId, setDiscogsId] = useState('');
-  const [mediaType, setMediaType] = useState<'vinyl' | 'cd'>('vinyl');
+  const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | null>(null);
   const [error, setError] = useState('');
 
   const processInput = (input: string): { id: string | null; error: string | null } => {
@@ -48,6 +49,12 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
     e.preventDefault();
     setError('');
 
+    // Check if media type is selected
+    if (!mediaType) {
+      setError('Selecteer eerst LP/Vinyl of CD');
+      return;
+    }
+
     const { id, error: processError } = processInput(discogsId);
     
     if (processError) {
@@ -66,6 +73,11 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
     if (error) setError('');
   };
 
+  const handleMediaTypeChange = (value: 'vinyl' | 'cd') => {
+    setMediaType(value);
+    if (error) setError('');
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
@@ -80,6 +92,33 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-3">
+              <Label className="text-base font-medium">Media Type *</Label>
+              <RadioGroup 
+                value={mediaType || ''} 
+                onValueChange={handleMediaTypeChange}
+                className="flex flex-row gap-6"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="vinyl" id="vinyl" />
+                  <Label htmlFor="vinyl" className="flex items-center gap-2 cursor-pointer">
+                    <Disc className="h-4 w-4" />
+                    LP/Vinyl
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="cd" id="cd" />
+                  <Label htmlFor="cd" className="flex items-center gap-2 cursor-pointer">
+                    <Circle className="h-4 w-4" />
+                    CD
+                  </Label>
+                </div>
+              </RadioGroup>
+              <p className="text-xs text-muted-foreground">
+                Selecteer het type media dat je wilt scannen
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="discogs-id">Discogs Release ID of URL</Label>
               <Input
@@ -98,35 +137,11 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
                 Voer een Discogs ID (bijv. <strong>588618</strong>) of volledige URL in
               </p>
             </div>
-
-            <div className="space-y-3">
-              <Label>Media Type</Label>
-              <RadioGroup 
-                value={mediaType} 
-                onValueChange={(value: 'vinyl' | 'cd') => setMediaType(value)}
-                className="flex flex-row gap-6"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="vinyl" id="vinyl" />
-                  <Label htmlFor="vinyl" className="flex items-center gap-2 cursor-pointer">
-                    <Disc className="h-4 w-4" />
-                    LP/Vinyl
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cd" id="cd" />
-                  <Label htmlFor="cd" className="flex items-center gap-2 cursor-pointer">
-                    <Circle className="h-4 w-4" />
-                    CD
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
             
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isSearching || !discogsId.trim()}
+              disabled={isSearching || !discogsId.trim() || !mediaType}
             >
             {isSearching ? (
                 <div className="flex items-center justify-center">
@@ -145,6 +160,7 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: Dis
           <div className="mt-6 p-4 bg-muted/50 rounded-lg">
             <h4 className="font-medium mb-2">💡 Hoe werkt dit?</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• Kies eerst LP/Vinyl of CD</li>
               <li>• Zoek je release op Discogs</li>
               <li>• Kopieer het ID uit de URL</li>
               <li>• Krijg direct actuele prijsinformatie</li>

@@ -40,7 +40,9 @@ import {
   Trash2,
   Flag,
   FlagOff,
-  MessageSquare
+  MessageSquare,
+  X,
+  Loader2
 } from "lucide-react";
 import { useAIScansStats, AIScanResult } from "@/hooks/useAIScans";
 import { useInfiniteAIScans } from "@/hooks/useInfiniteAIScans";
@@ -53,6 +55,7 @@ const AIScanOverview = () => {
   const [sortField, setSortField] = useState<keyof AIScanResult>("created_at");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [mediaTypeFilter, setMediaTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedScan, setSelectedScan] = useState<AIScanResult | null>(null);
@@ -76,6 +79,15 @@ const AIScanOverview = () => {
 
   const pageSize = 25;
 
+  // Debounce search term to avoid triggering queries on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const {
     data: scansData,
     isLoading: scansLoading,
@@ -86,7 +98,7 @@ const AIScanOverview = () => {
     pageSize,
     sortField,
     sortDirection,
-    searchTerm,
+    searchTerm: debouncedSearchTerm,
     mediaTypeFilter,
     statusFilter
   });
@@ -397,8 +409,24 @@ const AIScanOverview = () => {
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
                     }}
-                    className="pl-10"
+                    className="pl-10 pr-20"
                   />
+                  <div className="absolute right-2 top-2 flex items-center gap-1">
+                    {searchTerm !== debouncedSearchTerm && searchTerm && (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                    {searchTerm && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSearchTerm("")}
+                        className="h-7 w-7 p-0 hover:bg-muted"
+                        title="Wis zoekopdracht"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <Select
                   value={mediaTypeFilter}

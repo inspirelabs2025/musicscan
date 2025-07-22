@@ -23,6 +23,7 @@ import { ScanResults } from "@/components/ScanResults";
 import { ConditionSelector } from "@/components/ConditionSelector";
 import { ManualSearch } from "@/components/ManualSearch";
 import { DiscogsIdInput } from "@/components/DiscogsIdInput";
+import { SearchingLoadingCard } from "@/components/SearchingLoadingCard";
 import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
 
 const VinylScanComplete = () => {
@@ -523,19 +524,7 @@ const VinylScanComplete = () => {
           </Card>
         )}
 
-        {isSearching && (
-          <Card className="mb-8">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Discogs zoeken...</span>
-              </div>
-              <div className="text-sm text-muted-foreground mt-2">
-                Zoeken naar matching releases en prijzen...
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {isSearching && <SearchingLoadingCard />}
 
         {/* Error Recovery Section */}
         {state.mediaType && state.uploadedFiles.length > 0 && !isAnalyzing && !analysisResult && !isSearching && (

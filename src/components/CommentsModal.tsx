@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -56,14 +57,14 @@ export function CommentsModal({ isOpen, onClose, scan, onSuccess }: CommentsModa
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-card-dark text-card-dark-foreground border-card-dark">
         <DialogHeader>
-          <DialogTitle>Opmerking bewerken</DialogTitle>
+          <DialogTitle className="text-card-dark-foreground">Opmerking bewerken</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
           <div>
-            <p className="text-sm text-muted-foreground mb-2">
+            <p className="text-sm text-card-dark-foreground/70 mb-2">
               {scan?.artist} - {scan?.title}
             </p>
           </div>
@@ -73,11 +74,11 @@ export function CommentsModal({ isOpen, onClose, scan, onSuccess }: CommentsModa
             value={comments}
             onChange={(e) => setComments(e.target.value)}
             rows={4}
-            className="resize-none"
+            className="resize-none bg-muted/20 border-muted/30 text-card-dark-foreground placeholder:text-card-dark-foreground/50"
           />
           
           <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={handleClose} disabled={loading}>
+            <Button variant="outline" onClick={handleClose} disabled={loading} className="border-card-dark-foreground/20 text-card-dark-foreground hover:bg-card-dark-foreground/10">
               Annuleren
             </Button>
             <Button onClick={handleSave} disabled={loading}>

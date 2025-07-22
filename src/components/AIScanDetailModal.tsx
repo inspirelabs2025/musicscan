@@ -1,7 +1,9 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExternalLink, Calendar, Tag, Hash, Music } from "lucide-react";
 import { AIScanResult } from "@/hooks/useAIScans";
 
@@ -31,9 +33,9 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card-dark text-card-dark-foreground">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-card-dark-foreground">
             AI Scan Details
             <Badge className={getStatusColor(scan.status)}>
               {scan.status}
@@ -44,126 +46,148 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
         <div className="space-y-6">
           {/* Photo Gallery */}
           {scan.photo_urls && scan.photo_urls.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Photos</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {scan.photo_urls.map((url, index) => (
-                  <div key={index} className="aspect-square bg-muted rounded-lg overflow-hidden">
-                    <img 
-                      src={url} 
-                      alt={`Scan ${index + 1}`}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
-                      onClick={() => window.open(url, '_blank')}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Card variant="dark">
+              <CardHeader>
+                <CardTitle className="text-lg">Photos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {scan.photo_urls.map((url, index) => (
+                    <div key={index} className="aspect-square bg-muted/20 rounded-lg overflow-hidden border border-muted">
+                      <img 
+                        src={url} 
+                        alt={`Scan ${index + 1}`}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                        onClick={() => window.open(url, '_blank')}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Release Information</h3>
+            <Card variant="dark">
+              <CardHeader>
+                <CardTitle className="text-lg">Release Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Music className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{scan.artist || "Unknown Artist"}</span>
+                    <Music className="h-4 w-4 text-card-dark-foreground/70" />
+                    <span className="font-medium text-card-dark-foreground">{scan.artist || "Unknown Artist"}</span>
                   </div>
-                  <div className="text-lg font-semibold">{scan.title || "Unknown Title"}</div>
+                  <div className="text-lg font-semibold text-card-dark-foreground">{scan.title || "Unknown Title"}</div>
                   <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4 text-muted-foreground" />
-                    <span>{scan.label || "Unknown Label"}</span>
+                    <Tag className="h-4 w-4 text-card-dark-foreground/70" />
+                    <span className="text-card-dark-foreground">{scan.label || "Unknown Label"}</span>
                   </div>
                   {scan.catalog_number && (
                     <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-muted-foreground" />
-                      <span>{scan.catalog_number}</span>
+                      <Hash className="h-4 w-4 text-card-dark-foreground/70" />
+                      <span className="text-card-dark-foreground">{scan.catalog_number}</span>
                     </div>
                   )}
                   {scan.year && (
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{scan.year}</span>
+                      <Calendar className="h-4 w-4 text-card-dark-foreground/70" />
+                      <span className="text-card-dark-foreground">{scan.year}</span>
                     </div>
                   )}
                 </div>
-              </div>
 
-              <div className="flex gap-2">
-                <Badge className={getMediaTypeColor(scan.media_type)}>
-                  {scan.media_type.toUpperCase()}
-                </Badge>
-                <Badge variant="outline">{scan.condition_grade}</Badge>
-              </div>
-            </div>
+                <div className="flex gap-2">
+                  <Badge className={getMediaTypeColor(scan.media_type)}>
+                    {scan.media_type.toUpperCase()}
+                  </Badge>
+                  <Badge variant="outline" className="border-card-dark-foreground/20 text-card-dark-foreground">
+                    {scan.condition_grade}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Analysis Results</h3>
+            <Card variant="purple">
+              <CardHeader>
+                <CardTitle className="text-lg">Analysis Results</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 {scan.confidence_score !== null && (
                   <div className="space-y-2">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-card-purple-foreground">
                       <span>Confidence Score</span>
                       <span>{Math.round((scan.confidence_score || 0) * 100)}%</span>
                     </div>
                     <Progress value={(scan.confidence_score || 0) * 100} />
                   </div>
                 )}
-              </div>
 
-              {scan.discogs_url && (
-                <div>
-                  <h4 className="font-medium mb-2">Discogs Match</h4>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={scan.discogs_url} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View on Discogs
-                    </a>
-                  </Button>
+                {scan.discogs_url && (
+                  <div>
+                    <h4 className="font-medium mb-2 text-card-purple-foreground">Discogs Match</h4>
+                    <Button variant="outline" size="sm" asChild className="border-card-purple-foreground/20 text-card-purple-foreground hover:bg-card-purple-foreground/10">
+                      <a href={scan.discogs_url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View on Discogs
+                      </a>
+                    </Button>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 text-sm text-card-purple-foreground/70">
+                  <Calendar className="h-4 w-4" />
+                  <span>Scanned: {new Date(scan.created_at).toLocaleDateString()}</span>
                 </div>
-              )}
-
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span>Scanned: {new Date(scan.created_at).toLocaleDateString()}</span>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* AI Description */}
           {scan.ai_description && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3">AI Analysis</h3>
-              <div className="bg-muted p-4 rounded-lg">
-                <p className="text-sm leading-relaxed">{scan.ai_description}</p>
-              </div>
-            </div>
+            <Card variant="dark">
+              <CardHeader>
+                <CardTitle className="text-lg">AI Analysis</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-muted/20 p-4 rounded-lg border border-muted/30">
+                  <p className="text-sm leading-relaxed text-card-dark-foreground">{scan.ai_description}</p>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Search Queries */}
           {scan.search_queries && scan.search_queries.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Search Queries Used</h3>
-              <div className="flex flex-wrap gap-2">
-                {scan.search_queries.map((query, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {query}
-                  </Badge>
-                ))}
-              </div>
-            </div>
+            <Card variant="purple">
+              <CardHeader>
+                <CardTitle className="text-lg">Search Queries Used</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {scan.search_queries.map((query, index) => (
+                    <Badge key={index} variant="outline" className="text-xs border-card-purple-foreground/20 text-card-purple-foreground">
+                      {query}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Error Message */}
           {scan.error_message && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Error Details</h3>
-              <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
-                <p className="text-sm text-destructive">{scan.error_message}</p>
-              </div>
-            </div>
+            <Card variant="dark">
+              <CardHeader>
+                <CardTitle className="text-lg text-destructive">Error Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+                  <p className="text-sm text-destructive">{scan.error_message}</p>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </DialogContent>

@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { Camera, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,14 +31,14 @@ export const UploadSection = React.memo(({
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
-      <Card>
+      <Card variant="dark">
         <CardHeader className="text-center">
-          <CardTitle className="flex items-center gap-2 justify-center">
+          <CardTitle className="flex items-center gap-2 justify-center text-card-dark-foreground">
             <Camera className="h-6 w-6" />
             Upload {mediaType.toUpperCase()} foto's
             {isComplete && <CheckCircle className="h-5 w-5 text-success ml-2" />}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-card-dark-foreground/70">
             Upload {requiredPhotos} foto's voor analyse: {getPhotoLabels().join(', ')}
           </CardDescription>
         </CardHeader>
@@ -55,10 +56,10 @@ export const UploadSection = React.memo(({
             ))}
           </div>
           <div className="mt-6">
-            <div className="text-sm text-muted-foreground mb-2">
+            <div className="text-sm text-card-dark-foreground/70 mb-2">
               Voortgang: {uploadedFiles.length}/{requiredPhotos} foto's geüpload
             </div>
-            <div className="w-full bg-secondary/20 rounded-full h-2">
+            <div className="w-full bg-muted/20 rounded-full h-2 border border-muted/30">
               <div 
                 className="bg-primary h-2 rounded-full transition-all duration-300" 
                 style={{ width: `${(uploadedFiles.length / requiredPhotos) * 100}%` }}

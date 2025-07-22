@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -53,24 +54,26 @@ export function DeleteScanDialog({ scan, isOpen, onClose, onSuccess }: DeleteSca
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
+      <AlertDialogContent className="bg-card-dark text-card-dark-foreground border-card-dark">
         <AlertDialogHeader>
-          <AlertDialogTitle>Scan verwijderen</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogTitle className="text-card-dark-foreground">Scan verwijderen</AlertDialogTitle>
+          <AlertDialogDescription className="text-card-dark-foreground/70">
             Weet je zeker dat je deze scan wilt verwijderen? Deze actie kan niet ongedaan gemaakt worden.
           </AlertDialogDescription>
         </AlertDialogHeader>
         
-        <div className="my-4 p-4 bg-muted rounded-lg">
-          <p className="font-medium">{scan.artist || "Onbekende artiest"} - {scan.title || "Onbekende titel"}</p>
-          <p className="text-sm text-muted-foreground">
+        <div className="my-4 p-4 bg-muted/20 rounded-lg border border-muted/30">
+          <p className="font-medium text-card-dark-foreground">{scan.artist || "Onbekende artiest"} - {scan.title || "Onbekende titel"}</p>
+          <p className="text-sm text-card-dark-foreground/70">
             {scan.media_type} • {scan.condition_grade}
             {scan.discogs_id && ` • Discogs ID: ${scan.discogs_id}`}
           </p>
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading}>Annuleren</AlertDialogCancel>
+          <AlertDialogCancel disabled={isLoading} className="border-card-dark-foreground/20 text-card-dark-foreground hover:bg-card-dark-foreground/10">
+            Annuleren
+          </AlertDialogCancel>
           <AlertDialogAction 
             onClick={handleDelete} 
             disabled={isLoading}

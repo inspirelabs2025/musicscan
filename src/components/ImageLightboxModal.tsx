@@ -69,7 +69,7 @@ export const ImageLightboxModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogOverlay className="bg-black/80" />
+      <DialogOverlay className="bg-black/90" />
       <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-transparent shadow-none">
         <div className="relative flex items-center justify-center w-full h-full">
           {/* Close Button */}
@@ -77,7 +77,7 @@ export const ImageLightboxModal = ({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-black/70 text-white border-0 rounded-full w-10 h-10 p-0"
+            className="absolute top-4 right-4 z-50 bg-black/70 hover:bg-black/80 text-white border-0 rounded-full w-10 h-10 p-0"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -89,7 +89,7 @@ export const ImageLightboxModal = ({
                 variant="ghost"
                 size="sm"
                 onClick={goToPrevious}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-black/50 hover:bg-black/70 text-white border-0 rounded-full w-10 h-10 p-0"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-black/70 hover:bg-black/80 text-white border-0 rounded-full w-10 h-10 p-0"
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
@@ -98,7 +98,7 @@ export const ImageLightboxModal = ({
                 variant="ghost"
                 size="sm"
                 onClick={goToNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-black/50 hover:bg-black/70 text-white border-0 rounded-full w-10 h-10 p-0"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-black/70 hover:bg-black/80 text-white border-0 rounded-full w-10 h-10 p-0"
               >
                 <ChevronRight className="h-5 w-5" />
               </Button>
@@ -130,7 +130,7 @@ export const ImageLightboxModal = ({
 
           {/* Image Counter */}
           {images.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
               {currentIndex + 1} / {images.length}
             </div>
           )}

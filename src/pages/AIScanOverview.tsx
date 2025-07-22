@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +46,7 @@ import { useInfiniteAIScans } from "@/hooks/useInfiniteAIScans";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessedRows } from "@/hooks/useProcessedRows";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AIScanOverview = () => {
   const [sortField, setSortField] = useState<keyof AIScanResult>("created_at");
@@ -62,6 +64,7 @@ const AIScanOverview = () => {
   const [scanToComment, setScanToComment] = useState<AIScanResult | null>(null);
 
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { processedRows, addProcessedRow, resetProcessedRows: resetProcessed, isProcessed } = useProcessedRows();
   const loadingRef = useRef<HTMLDivElement>(null);
 
@@ -236,20 +239,38 @@ const AIScanOverview = () => {
     setShowCommentsModal(true);
   }, []);
 
+  const invalidateQueries = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: ["ai-scans-infinite"]
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["ai-scans-stats"]
+    });
+  }, [queryClient]);
+
   const handleEditSuccess = useCallback(() => {
-    // Refresh the data by invalidating the query
-    window.location.reload();
-  }, []);
+    invalidateQueries();
+    toast({
+      title: "✅ Bijgewerkt",
+      description: "Scan succesvol bijgewerkt.",
+    });
+  }, [invalidateQueries, toast]);
 
   const handleDeleteSuccess = useCallback(() => {
-    // Refresh the data by invalidating the query
-    window.location.reload();
-  }, []);
+    invalidateQueries();
+    toast({
+      title: "🗑️ Verwijderd",
+      description: "Scan succesvol verwijderd.",
+    });
+  }, [invalidateQueries, toast]);
 
   const handleCommentsSuccess = useCallback(() => {
-    // Refresh the data by invalidating the query
-    window.location.reload();
-  }, []);
+    invalidateQueries();
+    toast({
+      title: "💬 Opmerking bijgewerkt",
+      description: "Opmerking succesvol opgeslagen.",
+    });
+  }, [invalidateQueries, toast]);
 
   const toggleFlagIncorrect = useCallback(async (scan: AIScanResult) => {
     try {
@@ -262,8 +283,8 @@ const AIScanOverview = () => {
 
       if (error) throw error;
 
-      // Refresh the data
-      window.location.reload();
+      // Invalidate queries to refresh data without losing scroll position
+      invalidateQueries();
       
       toast({
         title: newFlaggedStatus ? "🏴 Gemarkeerd als Incorrect" : "✅ Markering Weggehaald",
@@ -279,7 +300,7 @@ const AIScanOverview = () => {
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [toast, invalidateQueries]);
 
   if (scansLoading || statsLoading) {
     return (

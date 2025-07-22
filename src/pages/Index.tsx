@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Camera, Disc3, ScanLine, TrendingUp, Loader2, CheckCircle, Eye, Store } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -7,12 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/FileUpload";
 import { DiscogsTest } from "@/components/DiscogsTest";
 import { DiscogsTokenTest } from "@/components/DiscogsTokenTest";
+import { ManualPriceInput } from "@/components/ManualPriceInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVinylAnalysis } from "@/hooks/useVinylAnalysis";
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [uploadedFiles, setUploadedFiles] = useState<{[key: number]: string}>({});
+  const [manualPrice, setManualPrice] = useState<number | null>(null);
+  const [useManualPrice, setUseManualPrice] = useState(false);
   const { isAnalyzing, analysisResult, analyzeImages } = useVinylAnalysis();
 
   // Check if all 3 photos are uploaded to trigger analysis
@@ -25,6 +29,14 @@ const Index = () => {
       analyzeImages(imageUrls);
     }
   }, [uploadedFiles, isAnalyzing, analysisResult, analyzeImages]);
+
+  // Get the automatic price from analysis results
+  const automaticPrice = analysisResult?.pricingData?.median_price 
+    ? parseFloat(analysisResult.pricingData.median_price) 
+    : null;
+
+  // Determine which price to display
+  const activePrice = useManualPrice ? manualPrice : automaticPrice;
 
   const steps = [
     {
@@ -234,7 +246,7 @@ const Index = () => {
                         </div>
                       )}
 
-                      {/* Pricing Information */}
+                      {/* Original Pricing Information */}
                       {analysisResult.pricingData && (
                         analysisResult.pricingData.lowest_price || 
                         analysisResult.pricingData.median_price || 
@@ -243,7 +255,7 @@ const Index = () => {
                         <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                           <h4 className="font-semibold mb-3 text-blue-700 dark:text-blue-400 flex items-center">
                             <TrendingUp className="w-4 h-4 mr-2" />
-                            💰 Prijsinformatie
+                            💰 Automatische Prijsinformatie
                           </h4>
                           <div className="grid grid-cols-3 gap-4 text-center">
                             <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
@@ -278,6 +290,42 @@ const Index = () => {
                       )}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Manual Price Input - NEW SECTION */}
+            {analysisResult && automaticPrice && (
+              <div className="mb-8">
+                <ManualPriceInput
+                  automaticPrice={automaticPrice}
+                  manualPrice={manualPrice}
+                  useManualPrice={useManualPrice}
+                  onManualPriceChange={setManualPrice}
+                  onToggleManualPrice={setUseManualPrice}
+                />
+              </div>
+            )}
+
+            {/* Final Price Summary - NEW SECTION */}
+            {activePrice && (
+              <Card className="max-w-2xl mx-auto mb-8 border-2 border-primary/20">
+                <CardContent className="p-6">
+                  <div className="text-center space-y-4">
+                    <div className="flex items-center justify-center space-x-2">
+                      <TrendingUp className="w-6 h-6 text-primary" />
+                      <h3 className="text-lg font-semibold">Definitieve Prijs</h3>
+                    </div>
+                    <div className="text-4xl font-bold text-primary">
+                      €{activePrice.toFixed(2)}
+                    </div>
+                    <Badge variant={useManualPrice ? "default" : "secondary"}>
+                      {useManualPrice ? "Handmatig Aangepast" : "Automatisch Berekend"}
+                    </Badge>
+                    <p className="text-sm text-muted-foreground">
+                      Deze prijs kan worden gebruikt voor verkoop of verzekering
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             )}

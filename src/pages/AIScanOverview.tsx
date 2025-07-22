@@ -12,6 +12,7 @@ import { AIScanDetailModal } from "@/components/AIScanDetailModal";
 import { EditScanModal } from "@/components/EditScanModal";
 import { DeleteScanDialog } from "@/components/DeleteScanDialog";
 import { CommentsModal } from "@/components/CommentsModal";
+import { ImageLightboxModal } from "@/components/ImageLightboxModal";
 import { 
   Table, 
   TableBody, 
@@ -62,6 +63,11 @@ const AIScanOverview = () => {
   const [scanToEdit, setScanToEdit] = useState<AIScanResult | null>(null);
   const [scanToDelete, setScanToDelete] = useState<AIScanResult | null>(null);
   const [scanToComment, setScanToComment] = useState<AIScanResult | null>(null);
+  
+  // Lightbox state
+  const [showLightbox, setShowLightbox] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxInitialIndex, setLightboxInitialIndex] = useState(0);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -185,6 +191,14 @@ const AIScanOverview = () => {
   const handleViewDetails = useCallback((scan: AIScanResult) => {
     setSelectedScan(scan);
     setShowDetailModal(true);
+  }, []);
+
+  const handleImageClick = useCallback((photoUrls: string[], imageIndex: number = 0) => {
+    if (!photoUrls || photoUrls.length === 0) return;
+    
+    setLightboxImages(photoUrls);
+    setLightboxInitialIndex(imageIndex);
+    setShowLightbox(true);
   }, []);
 
   const copyDiscogsId = useCallback(async (scan: AIScanResult) => {
@@ -547,11 +561,15 @@ const AIScanOverview = () => {
                           >
                         <TableCell>
                           {scan.photo_urls?.[0] && (
-                            <div className="w-12 h-12 bg-muted rounded overflow-hidden">
+                            <div 
+                              className="w-12 h-12 bg-muted rounded overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                              onClick={() => handleImageClick(scan.photo_urls, 0)}
+                              title="Klik om foto te vergroten"
+                            >
                               <img 
                                 src={scan.photo_urls[0]} 
                                 alt="Thumbnail"
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover hover:scale-105 transition-transform"
                               />
                             </div>
                           )}
@@ -771,6 +789,14 @@ const AIScanOverview = () => {
           setScanToComment(null);
         }}
         onSuccess={handleCommentsSuccess}
+      />
+
+      {/* Image Lightbox Modal */}
+      <ImageLightboxModal
+        images={lightboxImages}
+        initialIndex={lightboxInitialIndex}
+        isOpen={showLightbox}
+        onClose={() => setShowLightbox(false)}
       />
     </div>
   );

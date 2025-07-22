@@ -1,5 +1,6 @@
+
 import React, { useMemo } from 'react';
-import { ExternalLink, Copy, BarChart3 } from 'lucide-react';
+import { ExternalLink, Copy, BarChart3, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,12 +25,12 @@ export const ScanResults = React.memo(({
   onRetryPricing,
   isPricingRetrying
 }: ScanResultsProps) => {
-  const getPriceBadge = useMemo(() => (price: string | null) => {
-    if (!price) return null;
+  const getPriceBadgeColor = useMemo(() => (price: string | null) => {
+    if (!price) return 'secondary';
     const numPrice = parseFloat(price.replace(',', '.'));
-    if (numPrice < 20) return <Badge variant="secondary" className="bg-success/10 text-success">Laag</Badge>;
-    if (numPrice < 50) return <Badge variant="secondary" className="bg-warning/10 text-warning">Gemiddeld</Badge>;
-    return <Badge variant="secondary" className="bg-destructive/10 text-destructive">Hoog</Badge>;
+    if (numPrice < 20) return 'outline';
+    if (numPrice < 50) return 'secondary';
+    return 'destructive';
   }, []);
 
   const ocr = analysisResult?.analysis;
@@ -174,27 +175,51 @@ export const ScanResults = React.memo(({
 
               <TabsContent value="pricing" className="space-y-4">
                 {firstResult.pricing_stats ? (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Laagste prijs</label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold">€{firstResult.pricing_stats.lowest_price}</span>
-                        {getPriceBadge(firstResult.pricing_stats.lowest_price)}
-                      </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-medium mb-4">
+                      <TrendingUp className="h-4 w-4" />
+                      Discogs Prijsinformatie
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Gemiddelde prijs</label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold">€{firstResult.pricing_stats.median_price}</span>
-                        {getPriceBadge(firstResult.pricing_stats.median_price)}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Hoogste prijs</label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold">€{firstResult.pricing_stats.highest_price}</span>
-                        {getPriceBadge(firstResult.pricing_stats.highest_price)}
-                      </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Lowest Price Card */}
+                      <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
+                        <CardContent className="p-4 text-center">
+                          <div className="text-sm text-green-700 dark:text-green-400 mb-1">Laagste prijs</div>
+                          <div className="text-2xl font-bold text-green-800 dark:text-green-300">
+                            €{firstResult.pricing_stats.lowest_price}
+                          </div>
+                          <Badge variant={getPriceBadgeColor(firstResult.pricing_stats.lowest_price)} className="mt-2">
+                            Minimum
+                          </Badge>
+                        </CardContent>
+                      </Card>
+
+                      {/* Median Price Card */}
+                      <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                        <CardContent className="p-4 text-center">
+                          <div className="text-sm text-blue-700 dark:text-blue-400 mb-1">Gemiddelde prijs</div>
+                          <div className="text-2xl font-bold text-blue-800 dark:text-blue-300">
+                            €{firstResult.pricing_stats.median_price}
+                          </div>
+                          <Badge variant={getPriceBadgeColor(firstResult.pricing_stats.median_price)} className="mt-2">
+                            Gemiddeld
+                          </Badge>
+                        </CardContent>
+                      </Card>
+
+                      {/* Highest Price Card */}
+                      <Card className="bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
+                        <CardContent className="p-4 text-center">
+                          <div className="text-sm text-red-700 dark:text-red-400 mb-1">Hoogste prijs</div>
+                          <div className="text-2xl font-bold text-red-800 dark:text-red-300">
+                            €{firstResult.pricing_stats.highest_price}
+                          </div>
+                          <Badge variant={getPriceBadgeColor(firstResult.pricing_stats.highest_price)} className="mt-2">
+                            Maximum
+                          </Badge>
+                        </CardContent>
+                      </Card>
                     </div>
                   </div>
                 ) : (

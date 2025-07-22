@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Camera, Disc3, ScanLine, TrendingUp, Loader2, CheckCircle, Eye, Store } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -30,10 +29,14 @@ const Index = () => {
     }
   }, [uploadedFiles, isAnalyzing, analysisResult, analyzeImages]);
 
-  // Get the automatic price from analysis results
+  // Get pricing data from analysis results
   const automaticPrice = analysisResult?.pricingData?.median_price 
     ? parseFloat(analysisResult.pricingData.median_price) 
     : null;
+
+  const lowestPrice = analysisResult?.pricingData?.lowest_price || null;
+  const medianPrice = analysisResult?.pricingData?.median_price || null;
+  const highestPrice = analysisResult?.pricingData?.highest_price || null;
 
   // Determine which price to display
   const activePrice = useManualPrice ? manualPrice : automaticPrice;
@@ -46,7 +49,7 @@ const Index = () => {
       color: "bg-vinyl-purple"
     },
     {
-      title: "Matrixnummer",
+      title: "Matrixnummer", 
       description: "Fotografeer het matrixnummer van de LP",
       icon: Disc3,
       color: "bg-vinyl-gold"
@@ -246,36 +249,43 @@ const Index = () => {
                         </div>
                       )}
 
-                      {/* Original Pricing Information */}
-                      {analysisResult.pricingData && (
-                        analysisResult.pricingData.lowest_price || 
-                        analysisResult.pricingData.median_price || 
-                        analysisResult.pricingData.highest_price
-                      ) ? (
+                      {/* Enhanced Pricing Information */}
+                      {(lowestPrice || medianPrice || highestPrice) ? (
                         <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                           <h4 className="font-semibold mb-3 text-blue-700 dark:text-blue-400 flex items-center">
                             <TrendingUp className="w-4 h-4 mr-2" />
-                            💰 Automatische Prijsinformatie
+                            💰 Discogs Prijsinformatie
                           </h4>
-                          <div className="grid grid-cols-3 gap-4 text-center">
-                            <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                              <p className="text-sm text-muted-foreground">Laagste Prijs</p>
-                              <p className="text-lg font-bold text-green-600">
-                                €{analysisResult.pricingData.lowest_price || 'N/A'}
-                              </p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                              <p className="text-sm text-muted-foreground">Gemiddelde</p>
-                              <p className="text-lg font-bold text-blue-600">
-                                €{analysisResult.pricingData.median_price || 'N/A'}
-                              </p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                              <p className="text-sm text-muted-foreground">Hoogste Prijs</p>
-                              <p className="text-lg font-bold text-red-600">
-                                €{analysisResult.pricingData.highest_price || 'N/A'}
-                              </p>
-                            </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Lowest Price */}
+                            {lowestPrice && (
+                              <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-3 border border-green-200 dark:border-green-800 text-center">
+                                <p className="text-sm text-green-700 dark:text-green-400">Laagste Prijs</p>
+                                <p className="text-xl font-bold text-green-800 dark:text-green-300">
+                                  €{lowestPrice}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {/* Median Price */}
+                            {medianPrice && (
+                              <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800 text-center">
+                                <p className="text-sm text-blue-700 dark:text-blue-400">Gemiddelde</p>
+                                <p className="text-xl font-bold text-blue-800 dark:text-blue-300">
+                                  €{medianPrice}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {/* Highest Price */}
+                            {highestPrice && (
+                              <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-3 border border-red-200 dark:border-red-800 text-center">
+                                <p className="text-sm text-red-700 dark:text-red-400">Hoogste Prijs</p>
+                                <p className="text-xl font-bold text-red-800 dark:text-red-300">
+                                  €{highestPrice}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ) : (

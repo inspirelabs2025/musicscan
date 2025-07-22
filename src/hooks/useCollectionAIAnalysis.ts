@@ -34,6 +34,9 @@ export interface CollectionInsights {
   hiddenGems: string[];
   completionSuggestions: string[];
   nextDiscoveries: string[];
+  uniqueMagic: string[];
+  redThread: string[];
+  musicalJourney: string[];
 }
 
 export interface MarketAnalysis {
@@ -50,6 +53,43 @@ export interface TechnicalDetails {
   packaging: string;
 }
 
+export interface MusicPersonality {
+  type: string;
+  description: string;
+  traits: string[];
+  listeningStyle: string;
+  musicDNA: string;
+  profile: string;
+}
+
+export interface CollectionStory {
+  origin: string;
+  evolution: string;
+  currentPhase: string;
+  futureDirection: string;
+}
+
+export interface PriceAnalysis {
+  overview: string;
+  mostValuable: string[];
+  hiddenGems: string[];
+  marketTrends: string[];
+  investmentTips: string[];
+  marketTales: string[];
+  investmentStory: string;
+  collectorWisdom: string[];
+  valueSecrets: string[];
+  portfolioStory: string;
+}
+
+export interface Recommendations {
+  nextPurchases: string[];
+  genreExpansion: string[];
+  artistDeepDives: string[];
+  rareFfinds: string[];
+  nextAdventures: string[];
+}
+
 export interface AIAnalysis {
   collectionProfile: CollectionProfile;
   historicalContext: HistoricalContext;
@@ -59,6 +99,10 @@ export interface AIAnalysis {
   marketAnalysis: MarketAnalysis;
   funFacts: string[];
   technicalDetails: TechnicalDetails;
+  musicPersonality: MusicPersonality;
+  collectionStory: CollectionStory;
+  priceAnalysis: PriceAnalysis;
+  recommendations: Recommendations;
 }
 
 export interface ChartData {
@@ -67,6 +111,7 @@ export interface ChartData {
   topArtists: { name: string; albums: number }[];
   decadeDistribution: { decade: string; count: number; genres: number; artists: number }[];
   valueByGenre: { genre: string; count: number; totalValue: number; avgPrice: number }[];
+  priceByDecade: { decade: string; avgPrice: number; totalValue: number }[];
 }
 
 export interface CollectionStats {
@@ -79,6 +124,12 @@ export interface CollectionStats {
   avgValue: number;
   itemsWithPricing: number;
   mostValuableItems: any[];
+  genres: number;
+  artists: number;
+  priceStats: {
+    total: number;
+    average: number;
+  };
 }
 
 export interface CollectionAIAnalysisResult {

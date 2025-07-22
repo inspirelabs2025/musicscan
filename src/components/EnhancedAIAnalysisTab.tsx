@@ -267,8 +267,8 @@ export function EnhancedAIAnalysisTab() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: "Totaal Albums", value: stats.totalItems, icon: Music, color: "text-primary" },
-          { label: "Genres", value: stats.genres.length, icon: Target, color: "text-vinyl-gold" },
-          { label: "Artiesten", value: stats.artists.length, icon: Users, color: "text-blue-500" },
+          { label: "Genres", value: stats.genres, icon: Target, color: "text-vinyl-gold" },
+          { label: "Artiesten", value: stats.artists, icon: Users, color: "text-blue-500" },
           { label: "Geschatte Waarde", value: stats.priceStats ? `€${Math.round(stats.priceStats.total)}` : '€0', icon: DollarSign, color: "text-green-500" }
         ].map((stat, index) => (
           <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
@@ -389,7 +389,7 @@ export function EnhancedAIAnalysisTab() {
               <div className="relative p-6 bg-gradient-to-r from-white/50 to-white/30 rounded-lg border border-primary/10">
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-purple-600 rounded-full"></div>
                 <blockquote className="text-lg leading-relaxed text-muted-foreground italic pl-4">
-                  "{analysis.collectionStory}"
+                  "{analysis.collectionStory.origin}"
                 </blockquote>
               </div>
             </CardContent>
@@ -660,7 +660,7 @@ export function EnhancedAIAnalysisTab() {
             {/* Collection Achievements */}
             {[
               { title: "Eerste Collectie", description: "Je eerste 10 albums", achieved: stats.totalItems >= 10, icon: Music },
-              { title: "Genre Explorer", description: "5+ verschillende genres", achieved: stats.genres.length >= 5, icon: Globe },
+              { title: "Genre Explorer", description: "5+ verschillende genres", achieved: stats.genres >= 5, icon: Globe },
               { title: "Vintage Verzamelaar", description: "Album van voor 1980", achieved: true, icon: Trophy },
               { title: "Label Loyalist", description: "10+ releases van zelfde label", achieved: false, icon: Target },
               { title: "Waarde Opbouwer", description: "Collectie van €500+", achieved: stats.priceStats ? stats.priceStats.total >= 500 : false, icon: DollarSign },

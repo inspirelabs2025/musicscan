@@ -15,42 +15,48 @@ const STORY_CHAPTERS = [
     title: 'Hoogtepunten',
     subtitle: 'De essentie van jouw collectie',
     icon: Sparkles,
-    color: 'from-blue-500 to-cyan-500'
+    color: 'from-blue-500 to-cyan-500',
+    content: 'highlights'
   },
   {
     id: 'history',
     title: 'Tijdreis',
     subtitle: 'De muziekgeschiedenis in jouw collectie',
     icon: Brain,
-    color: 'from-purple-500 to-pink-500'
+    color: 'from-purple-500 to-pink-500',
+    content: 'history'
   },
   {
     id: 'connections',
     title: 'Connecties',
     subtitle: 'Ontdek de verbanden tussen je muziek',
     icon: Network,
-    color: 'from-green-500 to-teal-500'
+    color: 'from-green-500 to-teal-500',
+    content: 'connections'
   },
   {
     id: 'analysis',
     title: 'Analyse',
     subtitle: 'De muzikale details uitgediept',
     icon: Lightbulb,
-    color: 'from-yellow-500 to-orange-500'
+    color: 'from-yellow-500 to-orange-500',
+    content: 'analysis'
   },
   {
     id: 'market',
     title: 'Markt',
     subtitle: 'De waarde van je verzameling',
     icon: DollarSign,
-    color: 'from-green-600 to-emerald-600'
+    color: 'from-green-600 to-emerald-600',
+    content: 'market'
   },
   {
     id: 'discover',
     title: 'Ontdek',
     subtitle: 'Je volgende muzikale avonturen',
     icon: Rocket,
-    color: 'from-indigo-500 to-purple-500'
+    color: 'from-indigo-500 to-purple-500',
+    content: 'discover'
   }
 ];
 

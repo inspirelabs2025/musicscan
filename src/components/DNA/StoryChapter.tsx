@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,21 @@ interface StoryChapterProps {
 }
 
 export function StoryChapter({ chapter, analysis, chartData, stats, isActive, onActivate }: StoryChapterProps) {
+  // Add debugging for waarde section
+  React.useEffect(() => {
+    if (chapter.id === 'waarde') {
+      console.log('🔍 DEBUG StoryChapter waarde:', {
+        chapterId: chapter.id,
+        hasAnalysis: !!analysis,
+        hasPriceAnalysis: !!analysis?.priceAnalysis,
+        priceAnalysisKeys: analysis?.priceAnalysis ? Object.keys(analysis.priceAnalysis) : 'none',
+        priceAnalysisData: analysis?.priceAnalysis,
+        hasChartData: !!chartData,
+        chartDataKeys: chartData ? Object.keys(chartData) : 'none'
+      });
+    }
+  }, [chapter.id, analysis, chartData]);
+
   const renderChapterContent = () => {
     switch (chapter.id) {
       case 'genesis':
@@ -223,11 +239,17 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
         );
 
       case 'waarde':
+        // Fallback values if priceAnalysis is missing
+        const priceAnalysis = analysis?.priceAnalysis || {};
+        const fallbackText = "Deze analyse wordt nog gegenereerd. Probeer de pagina te verversen voor de nieuwste gegevens.";
+        
         return (
           <div className="space-y-8">
             <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl p-8 border border-green-500/30">
               <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">💰 Marktwaarde Analyse</h3>
-              <p className="text-xl text-white mb-8 leading-relaxed">{analysis.priceAnalysis.marketValue}</p>
+              <p className="text-xl text-white mb-8 leading-relaxed">
+                {priceAnalysis.marketValue || fallbackText}
+              </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -236,7 +258,9 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                   <CardTitle className="text-white text-lg">Investeringspotentieel</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-white leading-relaxed">{analysis.priceAnalysis.investmentPotential}</p>
+                  <p className="text-white leading-relaxed">
+                    {priceAnalysis.investmentPotential || fallbackText}
+                  </p>
                 </CardContent>
               </Card>
 
@@ -245,7 +269,9 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                   <CardTitle className="text-white text-lg">Waardegroei Trends</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-white leading-relaxed">{analysis.priceAnalysis.valueGrowthTrends}</p>
+                  <p className="text-white leading-relaxed">
+                    {priceAnalysis.valueGrowthTrends || fallbackText}
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -255,22 +281,28 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                 <CardTitle className="text-white text-xl">Collectie Strategie</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white leading-relaxed mb-6">{analysis.priceAnalysis.collectingStrategy}</p>
+                <p className="text-white leading-relaxed mb-6">
+                  {priceAnalysis.collectingStrategy || fallbackText}
+                </p>
                 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                     <h4 className="font-semibold text-white mb-4">Portfolio Verdeling</h4>
-                    <p className="text-white leading-relaxed">{analysis.priceAnalysis.portfolioBreakdown}</p>
+                    <p className="text-white leading-relaxed">
+                      {priceAnalysis.portfolioBreakdown || fallbackText}
+                    </p>
                   </div>
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                     <h4 className="font-semibold text-white mb-4">Risico Analyse</h4>
-                    <p className="text-white leading-relaxed">{analysis.priceAnalysis.riskAssessment}</p>
+                    <p className="text-white leading-relaxed">
+                      {priceAnalysis.riskAssessment || fallbackText}
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {chartData.priceByDecade && (
+            {chartData?.priceByDecade && chartData.priceByDecade.length > 0 ? (
               <Card className="bg-white/5 backdrop-blur-sm border-white/10">
                 <CardHeader>
                   <CardTitle className="text-white text-xl">Waarde per Decennium</CardTitle>
@@ -294,6 +326,17 @@ export function StoryChapter({ chapter, analysis, chartData, stats, isActive, on
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-white text-xl">Waarde per Decennium</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-white text-center py-8">
+                    Prijsdata wordt nog verzameld. Ververs de pagina voor de nieuwste gegevens.
+                  </p>
                 </CardContent>
               </Card>
             )}

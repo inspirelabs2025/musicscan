@@ -1,121 +1,106 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import React, { useState } from 'react';
 import { useCollectionAIAnalysis } from "@/hooks/useCollectionAIAnalysis";
 import { useMetadataEnrichment } from "@/hooks/useMetadataEnrichment";
-import {
-  Brain,
-  Sparkles,
-  TrendingUp,
-  Users,
-  Globe,
-  Lightbulb,
-  ShoppingCart,
-  Music,
-  Network,
-  Zap,
-  RefreshCw,
-  AlertCircle,
-  Play,
-  Pause,
-  Trophy,
-  Target,
-  Telescope,
-  Clock,
-  Star,
-  Share2,
-  Download,
-  Settings,
-  DollarSign,
-  PieChart,
-  BarChart3
-} from "lucide-react";
-import { DNAVisualization } from './DNA/DNAVisualization';
-import { StoryChapter } from './DNA/StoryChapter';
-import { MusicalGalaxy } from './DNA/MusicalGalaxy';
-import { PersonalityQuiz } from './DNA/PersonalityQuiz';
-import { InteractiveTimeline } from './DNA/InteractiveTimeline';
-import { toast } from '@/hooks/use-toast';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  LineChart,
-  Line,
-  Area,
-  AreaChart,
-  PieChart as RechartsPieChart,
-  Cell,
-  Treemap
-} from "recharts";
+import { StoryChapter } from "@/components/DNA/StoryChapter";
+import { FloatingNavigation } from "@/components/DNA/FloatingNavigation";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RefreshCw, Brain, Sparkles, Network, Lightbulb, Zap, DollarSign, Rocket, Database, AlertCircle } from "lucide-react";
+
+const STORY_CHAPTERS = [
+  {
+    id: 'genesis',
+    title: 'Genesis',
+    subtitle: 'Het begin van jouw muzikale reis',
+    icon: Brain,
+    color: 'from-blue-500 to-cyan-500',
+    content: 'Where it all began...'
+  },
+  {
+    id: 'personality',
+    title: 'DNA',
+    subtitle: 'Jouw unieke muzikale identiteit',
+    icon: Sparkles,
+    color: 'from-purple-500 to-pink-500',
+    content: 'Your musical essence...'
+  },
+  {
+    id: 'connections',
+    title: 'Connecties',
+    subtitle: 'Het netwerk van jouw muzieksmaak',
+    icon: Network,
+    color: 'from-green-500 to-teal-500',
+    content: 'The web of influences...'
+  },
+  {
+    id: 'insights',
+    title: 'Inzichten',
+    subtitle: 'Verborgen patronen in jouw collectie',
+    icon: Lightbulb,
+    color: 'from-yellow-500 to-orange-500',
+    content: 'Hidden patterns...'
+  },
+  {
+    id: 'waarde',
+    title: 'Waarde',
+    subtitle: 'Investment & marktwaarde analyse',
+    icon: DollarSign,
+    color: 'from-green-600 to-emerald-600',
+    content: 'Financial insights...'
+  },
+  {
+    id: 'future',
+    title: 'Toekomst',
+    subtitle: 'Jouw volgende muzikale ontdekkingen',
+    icon: Rocket,
+    color: 'from-indigo-500 to-purple-500',
+    content: 'What\'s next...'
+  }
+];
 
 export function MusicDNAExplorer() {
   const { data, isLoading, error, refetch, isRefetching } = useCollectionAIAnalysis();
   const { enrichMetadata, isEnriching, enrichmentProgress } = useMetadataEnrichment();
   const [activeChapter, setActiveChapter] = useState(0);
-  const [isNarrativeMode, setIsNarrativeMode] = useState(true);
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (containerRef.current) {
-        const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-        const progress = (scrollTop / (scrollHeight - clientHeight)) * 100;
-        setScrollProgress(Math.min(progress, 100));
-        
-        const chapters = document.querySelectorAll('[id^="chapter-"]');
-        const viewportCenter = scrollTop + clientHeight / 2;
-        
-        chapters.forEach((chapter, index) => {
-          const element = chapter as HTMLElement;
-          const rect = element.getBoundingClientRect();
-          const elementTop = scrollTop + rect.top;
-          const elementBottom = elementTop + rect.height;
-          
-          if (viewportCenter >= elementTop && viewportCenter <= elementBottom) {
-            setActiveChapter(index);
-          }
-        });
-      }
-    };
+  // Add debugging for the entire component
+  React.useEffect(() => {
+    console.log('🔍 DEBUG MusicDNAExplorer:', {
+      hasData: !!data,
+      isLoading,
+      hasError: !!error,
+      hasAnalysis: !!data?.analysis,
+      hasPriceAnalysis: !!data?.analysis?.priceAnalysis,
+      analysisKeys: data?.analysis ? Object.keys(data.analysis) : 'none',
+      priceAnalysisData: data?.analysis?.priceAnalysis,
+      hasChartData: !!data?.chartData,
+      chartDataKeys: data?.chartData ? Object.keys(data.chartData) : 'none'
+    });
+  }, [data, isLoading, error]);
 
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
+  // Force refresh function
+  const handleForceRefresh = () => {
+    console.log('🔄 Force refreshing AI analysis...');
+    refetch();
+  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
-        <div className="text-center space-y-8 max-w-lg mx-auto">
-          <div className="relative mx-auto w-32 h-32">
-            <DNAVisualization isLoading={true} />
-          </div>
-          <div className="space-y-6">
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
-              🧬 Music DNA Extraction
-            </h2>
-            <p className="text-xl text-blue-200/80 leading-relaxed">
-              Onze AI doorzoekt de diepste lagen van je muzikale ziel
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <div className="text-center py-16">
+            <Brain className="h-20 w-20 mx-auto mb-8 text-purple-400 animate-pulse" />
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+              AI analyseert je muziek...
+            </h1>
+            <p className="text-xl text-white/80 mb-8">
+              Dit kan even duren terwijl we je collectie doorlichten
             </p>
-            <div className="space-y-4">
-              <Progress value={75} className="h-3 w-full mx-auto bg-white/10" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-blue-200/60">
-                <span>Analyzing patterns...</span>
-                <span>Discovering connections...</span>
-                <span>Crafting your story...</span>
-              </div>
+            <div className="flex justify-center space-x-2">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-4 w-4 rounded-full bg-purple-400/20" />
+              ))}
             </div>
           </div>
         </div>
@@ -125,636 +110,151 @@ export function MusicDNAExplorer() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
-        <div className="max-w-2xl w-full">
-          <Card className="border-red-500/20 bg-red-500/5 backdrop-blur-sm">
-            <CardContent className="p-8 text-center space-y-8">
-              <div className="relative mx-auto w-24 h-24">
-                <AlertCircle className="h-24 w-24 text-red-400" />
-                <div className="absolute -top-2 -right-2">
-                  <Zap className="h-8 w-8 text-yellow-400 animate-pulse" />
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-white">🔬 DNA Lab Needs More Samples</h3>
-                <p className="text-lg text-red-200/80 leading-relaxed">
-                  Je collectie mist cruciale metadata voor een complete DNA analyse. 
-                  Laten we je collectie verrijken met Discogs data!
-                </p>
-              </div>
-              
-              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 space-y-4 border border-white/10">
-                <h4 className="font-semibold text-white flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Wat we gaan verrijken:
-                </h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <Badge variant="outline" className="bg-blue-500/10 text-blue-200 border-blue-500/30">🎵 Genres & Stijlen</Badge>
-                  <Badge variant="outline" className="bg-green-500/10 text-green-200 border-green-500/30">🏷️ Label Informatie</Badge>
-                  <Badge variant="outline" className="bg-purple-500/10 text-purple-200 border-purple-500/30">🌍 Landen & Regio's</Badge>
-                  <Badge variant="outline" className="bg-orange-500/10 text-orange-200 border-orange-500/30">📅 Release Data</Badge>
-                </div>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
-                  onClick={enrichMetadata} 
-                  disabled={isEnriching}
-                  size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8"
-                >
-                  {isEnriching ? (
-                    <>
-                      <Telescope className="h-5 w-5 mr-2 animate-spin" />
-                      DNA Sequencing... {enrichmentProgress}%
-                    </>
-                  ) : (
-                    <>
-                      <Telescope className="h-5 w-5 mr-2" />
-                      Start DNA Verrijking
-                    </>
-                  )}
-                </Button>
-                
-                {!isEnriching && (
-                  <Button 
-                    onClick={() => refetch()} 
-                    disabled={isRefetching}
-                    variant="outline"
-                    className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
-                  >
-                    {isRefetching ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Heranalyseren...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Probeer Opnieuw
-                      </>
-                    )}
-                  </Button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center py-16 space-y-8">
+            <AlertCircle className="h-20 w-20 mx-auto text-red-400" />
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+              Analyse heeft meer data nodig
+            </h1>
+            <p className="text-xl text-white/80 mb-8">
+              Je collectie mist belangrijke metadata. Laten we dit verrijken!
+            </p>
+            
+            <div className="space-y-4">
+              <Button 
+                onClick={enrichMetadata} 
+                disabled={isEnriching}
+                size="lg"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg"
+              >
+                {isEnriching ? (
+                  <>
+                    <Database className="h-5 w-5 mr-2 animate-spin" />
+                    Metadata verrijken... {enrichmentProgress}%
+                  </>
+                ) : (
+                  <>
+                    <Database className="h-5 w-5 mr-2" />
+                    Verrijk collectie metadata
+                  </>
                 )}
-              </div>
+              </Button>
               
-              {isEnriching && (
-                <div className="space-y-3">
-                  <Progress value={enrichmentProgress} className="h-3 bg-white/10" />
-                  <p className="text-sm text-blue-200/60">
-                    🧬 DNA strengen worden gelezen... Dit kan even duren maar het resultaat is de moeite waard!
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              <Button 
+                onClick={handleForceRefresh} 
+                disabled={isRefetching}
+                variant="outline"
+                size="lg"
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                {isRefetching ? (
+                  <>
+                    <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                    Opnieuw analyseren...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-5 w-5 mr-2" />
+                    Probeer opnieuw
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!data?.analysis) return null;
-
-  const { analysis, chartData, stats } = data;
-
-  const chapters = [
-    {
-      id: 'genesis',
-      title: 'De Genesis',
-      subtitle: 'Hoe je collectie werd geboren',
-      icon: Sparkles,
-      color: 'from-blue-500 to-purple-600',
-      content: analysis.collectionStory
-    },
-    {
-      id: 'personality',
-      title: 'Jouw Muziek DNA',
-      subtitle: 'De essentie van je muzikale wezen',
-      icon: Brain,
-      color: 'from-purple-500 to-pink-600',
-      content: analysis.musicPersonality.musicDNA
-    },
-    {
-      id: 'value',
-      title: 'Waarde & Investment',
-      subtitle: 'Marktwaarde en investeringspotentieel',
-      icon: DollarSign,
-      color: 'from-green-500 to-emerald-600',
-      content: analysis.priceAnalysis.marketValue
-    },
-    {
-      id: 'connections',
-      title: 'Het Netwerk',
-      subtitle: 'Verborgen connecties in je universum',
-      icon: Network,
-      color: 'from-pink-500 to-red-600',
-      content: analysis.artistConnections.genreEvolution
-    },
-    {
-      id: 'insights',
-      title: 'Diepe Inzichten',
-      subtitle: 'Patronen die je nooit opmerkte',
-      icon: Lightbulb,
-      color: 'from-red-500 to-orange-600',
-      content: analysis.collectionInsights.uniqueness
-    },
-    {
-      id: 'future',
-      title: 'De Toekomst',
-      subtitle: 'Waar je reis je naartoe leidt',
-      icon: TrendingUp,
-      color: 'from-orange-500 to-yellow-600',
-      content: analysis.recommendations.nextPurchases.join(', ')
-    }
-  ];
-
-  const scrollToSection = (index: number) => {
-    const sectionId = `chapter-${chapters[index].id}`;
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center' 
-      });
-    }
-    setActiveChapter(index);
-  };
-
-  const chartColors = [
-    'hsl(var(--vinyl-purple))',
-    'hsl(var(--vinyl-gold))', 
-    'hsl(213 81% 56%)',
-    'hsl(142 81% 45%)',
-    'hsl(12 81% 56%)',
-    'hsl(280 81% 56%)',
-    'hsl(45 100% 51%)',
-    'hsl(190 81% 45%)'
-  ];
+  if (!data?.analysis) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto text-center py-16">
+          <h1 className="text-4xl font-bold text-white mb-4">Geen analyse beschikbaar</h1>
+          <Button onClick={handleForceRefresh} className="mt-4">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Opnieuw proberen
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      {/* Progress Bar */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-slate-800 z-40">
-        <div 
-          className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300"
-          style={{ width: `${scrollProgress}%` }}
-        />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-4000"></div>
       </div>
 
-      <div 
-        ref={containerRef}
-        className="overflow-y-auto h-screen pb-24"
-      >
-        {/* Hero Section */}
-        <section className="min-h-screen flex items-center justify-center px-6 py-12 relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10" />
-          
-          <div className="relative z-10 text-center space-y-8 max-w-6xl mx-auto">
-            <div className="space-y-6">
-              <div className="flex items-center justify-center mb-8">
-                <div className="relative w-32 h-32">
-                  <DNAVisualization analysis={analysis} />
-                </div>
-              </div>
-              
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent leading-tight">
-                Jouw Muziek DNA
-              </h1>
-              
-              <p className="text-xl md:text-2xl lg:text-3xl text-blue-200/80 font-light max-w-4xl mx-auto leading-relaxed">
-                {analysis.musicPersonality.musicDNA}
-              </p>
-            </div>
-            
-            <div className="flex flex-wrap gap-3 justify-center max-w-4xl mx-auto">
-              {analysis.musicPersonality.traits.slice(0, 4).map((trait, index) => (
-                <Badge 
-                  key={index} 
-                  className="px-4 py-2 text-base md:text-lg bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all text-white"
-                >
-                  {trait}
-                </Badge>
-              ))}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-              <Button 
-                onClick={() => setIsNarrativeMode(!isNarrativeMode)}
-                size="lg"
-                className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white transition-all duration-300"
-              >
-                {isNarrativeMode ? (
-                  <>
-                    <Pause className="h-5 w-5 mr-2" />
-                    Verken Modus
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-5 w-5 mr-2" />
-                    Verhaal Modus
-                  </>
-                )}
-              </Button>
-              
-              <Button 
-                onClick={() => setShowQuiz(true)}
-                size="lg"
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transition-all duration-300"
-              >
-                <Trophy className="h-5 w-5 mr-2" />
-                Doe Quiz
-              </Button>
-
-              <Button
-                onClick={() => toast({ title: "DNA delen functie komt binnenkort!" })}
-                size="lg"
-                className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white transition-all duration-300"
-              >
-                <Share2 className="h-5 w-5 mr-2" />
-                Deel DNA
-              </Button>
-              
-              <Button
-                onClick={() => toast({ title: "Export functie komt binnenkort!" })}
-                size="lg"
-                className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white transition-all duration-300"
-              >
-                <Download className="h-5 w-5 mr-2" />
-                Exporteer
-              </Button>
-            </div>
-
-            {/* Chapter Navigation */}
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-4xl mx-auto">
-              <h3 className="text-lg font-semibold text-white mb-4 text-center">Navigeer Je DNA Verhaal</h3>
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-                {chapters.map((chapter, index) => {
-                  const Icon = chapter.icon;
-                  const isActive = activeChapter === index;
-                  
-                  return (
-                    <Button
-                      key={chapter.id}
-                      onClick={() => scrollToSection(index)}
-                      variant="ghost"
-                      className={`relative flex flex-col items-center gap-2 p-4 h-auto transition-all duration-300 border ${
-                        isActive 
-                          ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white shadow-lg border-white/30 backdrop-blur-sm' 
-                          : 'text-white/60 hover:text-white hover:bg-white/10 border-transparent hover:border-white/20'
-                      }`}
-                    >
-                      <Icon className="h-5 w-5" />
-                      <span className="text-xs font-medium text-center leading-tight">
-                        {chapter.title}
-                      </span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Stats Section */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8">
-              {[
-                { label: "Albums", value: stats.totalItems, icon: Music },
-                { label: "Genres", value: stats.genres?.length || 0, icon: Target },
-                { label: "Artiesten", value: stats.artists?.length || 0, icon: Users },
-                { label: "Waarde", value: stats.priceStats ? `€${Math.round(stats.priceStats.total)}` : '€0', icon: DollarSign }
-              ].map((stat, index) => (
-                <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/15 transition-all">
-                  <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
-                    <stat.icon className="h-4 w-4" />
-                    {stat.label}
-                  </div>
-                  <div className="text-2xl font-bold text-white">{stat.value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          {isNarrativeMode ? (
-            // Story Mode
-            <div className="space-y-24">
-              {chapters.map((chapter, index) => (
-                <div key={chapter.id} id={`chapter-${chapter.id}`}>
-                  <StoryChapter
-                    chapter={chapter}
-                    analysis={analysis}
-                    chartData={chartData}
-                    stats={stats}
-                    isActive={activeChapter === index}
-                    onActivate={() => setActiveChapter(index)}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            // Explore Mode
-            <Tabs defaultValue="galaxy" className="space-y-8">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 bg-white/10 backdrop-blur-sm h-auto p-1">
-                <TabsTrigger value="galaxy" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
-                  <Globe className="h-4 w-4" />
-                  Melkweg
-                </TabsTrigger>
-                <TabsTrigger value="value" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
-                  <DollarSign className="h-4 w-4" />
-                  Waarde
-                </TabsTrigger>
-                <TabsTrigger value="network" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
-                  <Network className="h-4 w-4" />
-                  Netwerk
-                </TabsTrigger>
-                <TabsTrigger value="timeline" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
-                  <Clock className="h-4 w-4" />
-                  Tijdlijn
-                </TabsTrigger>
-                <TabsTrigger value="insights" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
-                  <Lightbulb className="h-4 w-4" />
-                  Inzichten
-                </TabsTrigger>
-                <TabsTrigger value="future" className="flex items-center gap-2 text-xs md:text-sm py-3 data-[state=active]:bg-white/20">
-                  <TrendingUp className="h-4 w-4" />
-                  Toekomst
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="galaxy" className="space-y-6 mt-8">
-                <MusicalGalaxy chartData={chartData} analysis={analysis} />
-              </TabsContent>
-
-              <TabsContent value="value" className="space-y-6 mt-8">
-                <div className="grid gap-6">
-                  {/* Price Analysis Overview */}
-                  <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 backdrop-blur-sm border-green-500/20">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white text-2xl">
-                        <DollarSign className="h-6 w-6" />
-                        Waarde & Investment Analyse
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <h4 className="font-semibold text-white mb-3">Marktwaarde Overzicht</h4>
-                          <p className="text-white/80 leading-relaxed">{analysis.priceAnalysis.marketValue}</p>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white mb-3">Investment Potentieel</h4>
-                          <p className="text-white/80 leading-relaxed">{analysis.priceAnalysis.investmentPotential}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <h4 className="font-semibold text-white mb-3">Collectie Strategie</h4>
-                          <p className="text-white/80 leading-relaxed">{analysis.priceAnalysis.collectingStrategy}</p>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white mb-3">Risico Beoordeling</h4>
-                          <p className="text-white/80 leading-relaxed">{analysis.priceAnalysis.riskAssessment}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Value Charts */}
-                  <div className="grid lg:grid-cols-2 gap-6">
-                    {/* Price by Decade */}
-                    <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-white">
-                          <BarChart3 className="h-5 w-5" />
-                          Waarde per Decennium
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={chartData.priceByDecade || []}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                            <XAxis 
-                              dataKey="decade" 
-                              tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.7)' }}
-                            />
-                            <YAxis 
-                              tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.7)' }}
-                              tickFormatter={(value) => `€${value}`}
-                            />
-                            <Tooltip 
-                              formatter={(value) => [`€${value}`, 'Gem. Waarde']}
-                              labelStyle={{ color: 'white' }}
-                              contentStyle={{ 
-                                backgroundColor: 'rgba(0,0,0,0.8)', 
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                borderRadius: '8px'
-                              }}
-                            />
-                            <Bar 
-                              dataKey="avgPrice" 
-                              fill="hsl(142 81% 45%)" 
-                              radius={[4, 4, 0, 0]}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </CardContent>
-                    </Card>
-
-                    {/* Value by Genre */}
-                    <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-white">
-                          <PieChart className="h-5 w-5" />
-                          Waarde per Genre (Top 8)
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={(chartData.valueByGenre || []).slice(0, 8)}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                            <XAxis 
-                              dataKey="genre" 
-                              tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.7)' }}
-                              angle={-45}
-                              textAnchor="end"
-                              height={80}
-                            />
-                            <YAxis 
-                              tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.7)' }}
-                              tickFormatter={(value) => `€${value}`}
-                            />
-                            <Tooltip 
-                              formatter={(value) => [`€${value}`, 'Gem. Waarde']}
-                              labelStyle={{ color: 'white' }}
-                              contentStyle={{ 
-                                backgroundColor: 'rgba(0,0,0,0.8)', 
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                borderRadius: '8px'
-                              }}
-                            />
-                            <Bar 
-                              dataKey="avgPrice" 
-                              fill="hsl(280 81% 56%)" 
-                              radius={[4, 4, 0, 0]}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Investment Insights */}
-                  <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 backdrop-blur-sm border-yellow-500/20">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        <TrendingUp className="h-5 w-5" />
-                        Investment Inzichten
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <h4 className="font-semibold text-white mb-3">Hidden Gems</h4>
-                          <div className="space-y-2">
-                            {analysis.investmentInsights.hiddenGems.slice(0, 5).map((gem, index) => (
-                              <Badge key={index} variant="outline" className="bg-yellow-500/10 text-yellow-200 border-yellow-500/30">
-                                {gem}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white mb-3">Premium Items</h4>
-                          <div className="space-y-2">
-                            {analysis.investmentInsights.premiumItems.slice(0, 5).map((item, index) => (
-                              <Badge key={index} variant="outline" className="bg-green-500/10 text-green-200 border-green-500/30">
-                                {item}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="network" className="space-y-6 mt-8">
-                <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <Network className="h-5 w-5" />
-                      Artiest Netwerk
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-white/80">Interactieve netwerkvisualisatie komt binnenkort...</p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="timeline" className="space-y-6 mt-8">
-                <InteractiveTimeline chartData={chartData} analysis={analysis} />
-              </TabsContent>
-
-              <TabsContent value="insights" className="space-y-6 mt-8">
-                <div className="grid gap-6">
-                  <Card className="bg-purple-900/80 backdrop-blur-sm border-white/10">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        <Lightbulb className="h-5 w-5" />
-                        Verborgen Patronen
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        <p className="text-white text-lg leading-relaxed">{analysis.collectionInsights.uniqueness}</p>
-                        <div className="grid md:grid-cols-2 gap-6">
-                          <div className="bg-black/60 rounded-xl p-6 border border-white/10">
-                            <h4 className="font-semibold text-white mb-3">Samenhang</h4>
-                            <p className="text-white">{analysis.collectionInsights.coherence}</p>
-                          </div>
-                          <div className="bg-black/60 rounded-xl p-6 border border-white/10">
-                            <h4 className="font-semibold text-white mb-3">Evolutie</h4>
-                            <p className="text-white">{analysis.collectionInsights.evolution}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="future" className="space-y-6 mt-8">
-                <div className="grid gap-6">
-                  <Card className="bg-gradient-to-br from-green-500/10 to-blue-500/10 backdrop-blur-sm border-green-500/20">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        <ShoppingCart className="h-5 w-5" />
-                        Volgende Aankopen
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {analysis.recommendations.nextPurchases.slice(0, 5).map((rec, index) => (
-                          <div key={index} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all">
-                            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                              {index + 1}
-                            </div>
-                            <span className="text-white">{rec}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-            </Tabs>
-          )}
+      {/* Header */}
+      <div className="relative z-10 text-center py-16 px-4">
+        <div className="flex items-center justify-center mb-6">
+          <Zap className="h-12 w-12 md:h-16 md:w-16 text-purple-400 mr-4" />
+          <h1 className="text-4xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+            Muziek DNA
+          </h1>
         </div>
-
-        {/* Fun Facts Footer */}
-        <footer className="bg-slate-800/50 backdrop-blur-sm border-t border-white/10 py-16 mt-16">
-          <div className="max-w-6xl mx-auto px-6">
-            <h3 className="text-3xl font-bold text-center mb-12 text-white">
-              🎭 Leuke Weetjes Over Je Collectie
-            </h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              {analysis.funFacts.map((fact, index) => (
-                <div key={index} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-all">
-                  <div className="flex items-start gap-4">
-                    <Star className="h-6 w-6 text-yellow-400 mt-1 flex-shrink-0" />
-                    <p className="text-white/80 leading-relaxed">{fact}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </footer>
+        <p className="text-xl md:text-2xl text-white/80 mb-8 max-w-3xl mx-auto leading-relaxed">
+          Ontdek de verborgen verhalen, patronen en waarde in jouw unieke muziekcollectie
+        </p>
+        
+        <div className="flex flex-wrap gap-4 justify-center">
+          <Button 
+            onClick={handleForceRefresh} 
+            disabled={isRefetching}
+            variant="outline"
+            className="border-white/20 text-white hover:bg-white/10"
+          >
+            {isRefetching ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Vernieuwen...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Vernieuw analyse
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
-      {/* Configurable Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Button
-          onClick={() => toast({ title: "Feature configuratie komt binnenkort!" })}
-          className="bg-white/10 backdrop-blur-lg border border-white/20 hover:bg-white/20 text-white transition-all duration-300 rounded-2xl px-4 py-3"
-        >
-          <Settings className="h-5 w-5 mr-2" />
-          Configureer
-        </Button>
+      {/* Story Chapters */}
+      <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 pb-16">
+        {STORY_CHAPTERS.map((chapter, index) => (
+          <StoryChapter
+            key={chapter.id}
+            chapter={chapter}
+            analysis={data.analysis}
+            chartData={data.chartData}
+            stats={data.stats}
+            isActive={activeChapter === index}
+            onActivate={() => setActiveChapter(index)}
+          />
+        ))}
       </div>
 
-      {/* Personality Quiz Modal */}
-      {showQuiz && (
-        <PersonalityQuiz 
-          analysis={analysis}
-          chartData={chartData}
-          onClose={() => setShowQuiz(false)}
-        />
-      )}
+      {/* Floating Navigation */}
+      <FloatingNavigation 
+        chapters={STORY_CHAPTERS}
+        activeChapter={activeChapter}
+        onChapterChange={setActiveChapter}
+      />
+
+      {/* Generation info */}
+      <div className="relative z-10 text-center text-white/60 pb-8">
+        <p className="text-sm">
+          Analyse gegenereerd op {new Date(data.generatedAt).toLocaleString('nl-NL')}
+        </p>
+        <p className="text-xs mt-2">
+          🤖 Powered by AI • 🎵 Voor muziekliefhebbers • 💰 Met waardeanalyse
+        </p>
+      </div>
     </div>
   );
 }

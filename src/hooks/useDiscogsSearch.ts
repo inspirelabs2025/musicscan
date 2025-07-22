@@ -318,10 +318,10 @@ export const useDiscogsSearch = () => {
   const searchByDiscogsId = useCallback(async (discogsId: string) => {
     console.log('🆔 Searching by Discogs ID:', discogsId);
     
+    resetSearchState();
     setIsSearching(true);
     setSearchResults([]);
     setSearchStrategies([]);
-    resetSearchState();
     
     try {
       console.log('📡 Calling test-catalog-search with direct Discogs ID');

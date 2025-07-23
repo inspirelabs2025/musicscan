@@ -20,79 +20,246 @@ function cleanOpenAIResponse(content: string): string {
     .trim();
 }
 
-// Function to safely parse JSON with fallback
-function safeJsonParse(content: string): any {
+// Function to safely parse JSON with intelligent fallback
+function safeJsonParse(content: string, collectionData: any = {}): any {
   try {
     const cleanedContent = cleanOpenAIResponse(content);
     console.log('🧹 Cleaned content preview:', cleanedContent.substring(0, 200) + '...');
-    return JSON.parse(cleanedContent);
+    
+    // Try to parse the full JSON
+    const parsed = JSON.parse(cleanedContent);
+    console.log('✅ Successfully parsed complete JSON response');
+    return parsed;
   } catch (error) {
     console.error('❌ JSON parsing failed:', error.message);
-    console.error('📝 Raw content:', content.substring(0, 500));
+    console.error('📝 Raw content preview:', content.substring(0, 800));
     
-    // Return fallback structure
+    // Try to extract partial JSON if content exists
+    if (content && content.length > 100) {
+      try {
+        // Look for JSON-like structure and try to complete it
+        const jsonStart = content.indexOf('{');
+        const jsonEnd = content.lastIndexOf('}');
+        
+        if (jsonStart !== -1 && jsonEnd > jsonStart) {
+          let partialJson = content.substring(jsonStart, jsonEnd + 1);
+          
+          // Try to fix common JSON issues
+          partialJson = partialJson
+            .replace(/,\s*}/g, '}')  // Remove trailing commas
+            .replace(/,\s*]/g, ']')  // Remove trailing commas in arrays
+            .replace(/}\s*{/g, '},{'); // Fix missing commas between objects
+          
+          const partialParsed = JSON.parse(partialJson);
+          console.log('⚠️ Using partial JSON parsing - some data may be incomplete');
+          return partialParsed;
+        }
+      } catch (partialError) {
+        console.error('❌ Partial JSON parsing also failed:', partialError.message);
+      }
+    }
+    
+    // Generate intelligent fallback based on actual collection data
+    const { uniqueArtists = 0, uniqueGenres = 0, totalItems = 0, topArtists = [], topGenres = [] } = collectionData;
+    
     return {
       musicHistoryTimeline: {
-        overview: "Er is een fout opgetreden bij het analyseren van je collectie, maar hier is een basale analyse beschikbaar.",
-        keyPeriods: ["Je collectie toont een interessante mix van muziekperioden"],
-        culturalMovements: ["Verschillende culturele invloeden zijn zichtbaar"],
-        musicalEvolution: "Je collectie toont een evolutie door verschillende muziekstijlen heen"
+        overview: `Je collectie van ${totalItems} albums vertegenwoordigt ${uniqueArtists} artiesten en ${uniqueGenres} genres - een rijke muzikale reis door de tijd.`,
+        keyPeriods: [
+          "Je collectie omvat meerdere belangrijke perioden in de muziekgeschiedenis",
+          "Van klassieke opnamen tot moderne releases - elk tijdperk heeft zijn eigen verhaal",
+          "De evolutie van geluidstechnologie is hoorbaar door je collectie heen"
+        ],
+        culturalMovements: [
+          "Verschillende culturele bewegingen hebben hun sporen achtergelaten in je collectie",
+          "Van underground scenes tot mainstream doorbraken - alle verhalen zijn vertegenwoordigd",
+          "Internationale invloeden tonen de mondiale kracht van muziek"
+        ],
+        musicalEvolution: "Je collectie toont een fascinerende evolutie van muziekstijlen, productietechnieken en artistieke uitdrukkingen door de decennia heen."
       },
       artistStories: {
-        legendaryFigures: ["Je collectie bevat enkele legendarische artiesten"],
-        hiddenConnections: ["Er zijn interessante verbanden tussen de artiesten"],
-        collaborationTales: ["Samenwerkingen tussen artiesten zijn zichtbaar"],
-        artisticJourneys: ["De artistieke ontwikkeling is merkbaar"],
-        crossGenreInfluences: ["Genre-overschrijdende invloeden zijn aanwezig"]
+        legendaryFigures: topArtists.slice(0, 5).map(artist => `${artist.name || artist} - een invloedrijke kracht in de muziekgeschiedenis`),
+        hiddenConnections: [
+          "Artiesten in je collectie hebben elkaar beïnvloed in onverwachte manieren",
+          "Producers en muzikanten hebben samengewerkt over genregrenzen heen",
+          "Verborgen samenwerkingen en mutual influences vormen een web van creativiteit"
+        ],
+        collaborationTales: [
+          "Je collectie bevat verhalen van baanbrekende samenwerkingen",
+          "Studio-sessies waar legendes elkaar ontmoetten",
+          "Gastoptredens die muziekgeschiedenis hebben geschreven"
+        ],
+        artisticJourneys: [
+          "De evolutie van artiesten is hoorbaar door hun verschillende albumreleases",
+          "Van experimentele beginnen tot gepolijste meesterwerken",
+          "Persoonlijke groei vertaald naar muzikale innovatie"
+        ],
+        crossGenreInfluences: [
+          "Genre-overschrijdende experimenten hebben nieuwe sounds gecreëerd",
+          "Traditionele grenzen werden doorbroken voor artistieke vrijheid",
+          "Fusion van stijlen heeft geleid tot onverwachte muzikale pareltjes"
+        ]
       },
       studioLegends: {
-        legendaryStudios: ["Opnames uit bekende studio's"],
-        iconicProducers: ["Werk van invloedrijke producers"],
-        recordingInnovations: ["Technische vernieuwingen in opnames"],
-        labelHistories: ["Geschiedenis van verschillende platenlabels"],
-        soundEngineering: ["Bijzondere geluidstechnieken"]
+        legendaryStudios: [
+          "Albums in je collectie zijn opgenomen in iconische studio's wereldwijd",
+          "Legendarische locaties waar muziekgeschiedenis werd gemaakt",
+          "Studio-atmosfeer heeft bijgedragen aan de unieke sound van albums"
+        ],
+        iconicProducers: [
+          "Invloedrijke producers hebben hun stempel gedrukt op je collectie",
+          "Visionaire geluidsarchitecten achter tijdloze opnames",
+          "Productietechnieken die de sound van tijdperken hebben gedefinieerd"
+        ],
+        recordingInnovations: [
+          "Technische doorbraken in opname- en mixingtechnieken",
+          "Experimentele geluidstechnieken die nieuwe standaarden zetten",
+          "Van analoge warmte tot digitale precisie - alle evoluties zijn vertegenwoordigd"
+        ],
+        labelHistories: [
+          "Platenlabels in je collectie hebben elk hun eigen verhaal en filosofie",
+          "Independent labels versus major companies - verschillende benaderingen van muziek",
+          "Label-identiteit die de artistieke richting van releases heeft beïnvloed"
+        ],
+        soundEngineering: [
+          "Masterful engineering heeft de geluidskwaliteit van je albums bepaald",
+          "Balans tussen artistieke visie en technische perfectie",
+          "Sound design dat de emotionele impact van muziek versterkt"
+        ]
       },
       culturalImpact: {
-        societalInfluence: ["Maatschappelijke invloed van de muziek"],
-        generationalMovements: ["Generatie-definiërende bewegingen"],
-        politicalMessages: ["Politieke en sociale boodschappen"],
-        fashionAndStyle: ["Invloed op mode en lifestyle"],
-        globalReach: ["Internationale impact"]
+        societalInfluence: [
+          "Albums in je collectie hebben maatschappelijke discussies aangezwengeld",
+          "Muziek als spiegel van tijdsgeest en sociale bewegingen",
+          "Artistieke uitdrukkingen die generaties hebben geïnspireerd"
+        ],
+        generationalMovements: [
+          "Je collectie vertegenwoordigt muziek die generaties heeft gedefinieerd",
+          "Soundtrack van jeugd, rebellie en culturele verandering",
+          "Tijdloze albums die blijven resoneren met nieuwe luisteraars"
+        ],
+        politicalMessages: [
+          "Protest songs en politieke statements weven zich door je collectie",
+          "Muziek als medium voor sociale kritiek en verandering",
+          "Artistieke vrijheid in tijden van censuur en controle"
+        ],
+        fashionAndStyle: [
+          "Mode en lifestyle trends beïnvloed door artiesten in je collectie",
+          "Iconische looks die de visuele cultuur hebben gevormd",
+          "Stijl als uitbreiding van muzikale identiteit"
+        ],
+        globalReach: [
+          "Internationale muzikale uitwisseling vertegenwoordigd in je collectie",
+          "Lokale sounds die wereldwijde erkenning hebben gevonden",
+          "Cultuuruitwisseling door muzikale collaboraties"
+        ]
       },
       musicalInnovations: {
-        technicalBreakthroughs: ["Technische doorbraken"],
-        genreCreation: ["Nieuwe genres en evoluties"],
-        instrumentalPioneering: ["Innovatief instrumentgebruik"],
-        vocalTechniques: ["Vernieuwende zangtechnieken"],
-        productionMethods: ["Baanbrekende productietechnieken"]
+        technicalBreakthroughs: [
+          "Baanbrekende gebruik van instrumenten en technologie",
+          "Synthesizers, sampling en digitale revoluties",
+          "Experimentele sound design en audio processing"
+        ],
+        genreCreation: [
+          "Nieuwe genres geboren uit creativiteit en experimentatie",
+          "Fusion van verschillende muzikale tradities",
+          "Evolutie van bestaande stijlen naar nieuwe uitdrukkingsvormen"
+        ],
+        instrumentalPioneering: [
+          "Innovatief gebruik van traditionele en elektronische instrumenten",
+          "Extended techniques en onconventionele speelstijlen",
+          "Instrumentale virtuositeit gecombineerd met creatieve visie"
+        ],
+        vocalTechniques: [
+          "Revolutionaire zangtechnieken en vocale stijlen",
+          "Van operatische training tot experimentele vocalizations",
+          "Stem als instrument voor emotionele en artistieke expressie"
+        ],
+        productionMethods: [
+          "Innovatieve productiebenaderingen die nieuwe sounds hebben gecreëerd",
+          "Gebruik van onconventionele recording technieken",
+          "Balans tussen perfectie en spontane creativiteit"
+        ]
       },
       hiddenGems: {
-        underratedMasterpieces: ["Ondergewaardeerde meesterwerken"],
-        rareFfinds: ["Zeldzame vondsten"],
-        collectorSecrets: ["Collector's items"],
-        sleepersHits: ["Latere klassiekers"],
-        deepCuts: ["Verborgen pareltjes"]
+        underratedMasterpieces: [
+          "Ondergewaardeerde albums die herontdekking verdienen",
+          "Perfecte albums die door mainstream aandacht zijn gemist",
+          "Tijdloze kwaliteit die wacht op erkenning"
+        ],
+        rareFfinds: [
+          "Zeldzame pressings en limited editions in je collectie",
+          "Moeilijk vindbare releases met bijzondere verhalen",
+          "Collector's items met historische of artistieke waarde"
+        ],
+        collectorSecrets: [
+          "Insider kennis over waardevolle en betekenisvolle releases",
+          "Verhalen achter de productie en distributie van albums",
+          "Details die alleen echte muziekliefhebbers waarderen"
+        ],
+        sleepersHits: [
+          "Albums die aanvankelijk werden genegeerd maar later werden erkend",
+          "Slow-burning classics die hun publiek geleidelijk vonden",
+          "Invloedrijke releases die pas jaren later werden gewaardeerd"
+        ],
+        deepCuts: [
+          "Verborgen tracks en B-sides die ontdekking waard zijn",
+          "Minder bekende songs die de artistieke diepte tonen",
+          "Muzikale pareltjes die wachten op herontdekking"
+        ]
       },
       musicalConnections: {
-        genreEvolution: ["Genre-evoluties"],
-        artistInfluences: ["Artistieke invloeden"],
-        labelConnections: ["Label-verbindingen"],
-        sceneConnections: ["Scene-connecties"],
-        crossPollination: ["Kruisbestuiving tussen stijlen"]
+        genreEvolution: [
+          "Ontwikkeling van muziekstijlen door je collectie heen",
+          "Invloeden tussen verschillende genres en tijdperken",
+          "Evolutionaire stappen in muzikale expressie"
+        ],
+        artistInfluences: [
+          "Netwerk van wederzijdse beïnvloeding tussen artiesten",
+          "Mentorships en collaboraties die carrières hebben gevormd",
+          "Generatie-overschrijdende artistieke uitwisseling"
+        ],
+        labelConnections: [
+          "Verbindingen tussen platenlabels en hun artistieke filosofieën",
+          "A&R relaties die bijzondere releases mogelijk maakten",
+          "Label-identiteit die de sound van releases heeft beïnvloed"
+        ],
+        sceneConnections: [
+          "Lokale muziekscenes vertegenwoordigd in je collectie",
+          "Geografische en culturele invloeden op sound",
+          "Scene-politics en underground movements"
+        ],
+        crossPollination: [
+          "Cultuuruitwisseling tussen verschillende muziekstromingen",
+          "Internationale samenwerkingen en invloeden",
+          "Fusion van tradities uit verschillende delen van de wereld"
+        ]
       },
       technicalMastery: {
-        soundQuality: "Variërende geluidskwaliteit door de collectie",
-        formatSignificance: "Betekenis van verschillende formats",
-        pressingQuality: "Verschillende persingskwaliteiten",
-        artwork: "Iconische hoezen en artwork",
-        packaging: "Bijzondere verpakkingen"
+        soundQuality: "Je collectie toont de evolutie van opname- en masteringtechnieken, van vintage warmte tot moderne precisie.",
+        formatSignificance: "Verschillende formats (vinyl vs CD) bieden unieke luisterervaringen en hebben hun eigen charme en karakter.",
+        pressingQuality: "Variërende persinkwaliteiten vertellen het verhaal van verschillende tijdperken en productiestandaarden.",
+        artwork: "Album hoezen in je collectie vertegenwoordigen iconische visuele kunstwerken die de muziek perfect aanvullen.",
+        packaging: "Van standaard hoezen tot elaborate packaging - elk album vertelt ook visueel zijn verhaal."
       },
       discoveryPaths: {
-        nextExplorations: ["Suggesties voor verdere ontdekkingen"],
-        relatedArtists: ["Aanverwante artiesten"],
-        genreExpansions: ["Genre-uitbreidingen"],
-        eraExplorations: ["Tijdperk-verkenningen"],
-        labelDiveDeeps: ["Label-diepduiken"]
+        nextExplorations: [
+          "Verken meer werk van je favoriete artiesten uit de collectie",
+          "Duik dieper in specifieke genres die je interesseren",
+          "Ontdek contemporaries van artiesten die je al hebt"
+        ],
+        relatedArtists: topArtists.slice(0, 3).map(artist => `Verken meer van ${artist.name || artist} en vergelijkbare artiesten`),
+        genreExpansions: topGenres.slice(0, 3).map(genre => `Verdiep je kennis van ${genre} en verwante stijlen`),
+        eraExplorations: [
+          "Ontdek meer albums uit je favoriete muzikale tijdperken",
+          "Verken de context van je historische releases",
+          "Duik in de verhalen achter klassieke albums"
+        ],
+        labelDiveDeeps: [
+          "Onderzoek de complete catalogi van je favoriete labels",
+          "Ontdek de filosofie en artistieke visie achter platenlabels",
+          "Verken label-compilaties en rarities"
+        ]
       }
     };
   }
@@ -297,19 +464,20 @@ Return ALLEEN een geldig JSON object met deze exacte structuur (GEEN markdown ba
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
-            content: 'Je bent een gepassioneerde muziekhistoricus die fascinerende verhalen vertelt over muziek, artiesten en hun culturele impact. Je bent informatief maar nooit droog, en altijd gericht op de verhalen achter de muziek. Return ALTIJD pure JSON zonder markdown backticks.'
+            content: 'Je bent een gepassioneerde muziekhistoricus die fascinerende verhalen vertelt over muziek, artiesten en hun culturele impact. Je bent informatief maar nooit droog, en altijd gericht op de verhalen achter de muziek. Return ALTIJD pure JSON zonder markdown backticks. Zorg ervoor dat je response altijd een compleet, geldig JSON object is.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.8,
-        max_tokens: 3000
+        temperature: 0.7,
+        max_tokens: 4000,
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -322,8 +490,17 @@ Return ALLEEN een geldig JSON object met deze exacte structuur (GEEN markdown ba
     const openAIData = await openAIResponse.json();
     console.log('🤖 Raw OpenAI response received, length:', openAIData.choices[0].message.content.length);
     
-    // Use safe JSON parsing with fallback
-    const aiAnalysis = safeJsonParse(openAIData.choices[0].message.content);
+    // Prepare intelligent fallback data
+    const fallbackData = {
+      uniqueArtists,
+      uniqueGenres,
+      totalItems: allItems.length,
+      topArtists: artistInfo.slice(0, 10),
+      topGenres: Array.from(new Set(allItems.map(item => item.genre))).slice(0, 8)
+    };
+    
+    // Use safe JSON parsing with intelligent fallback
+    const aiAnalysis = safeJsonParse(openAIData.choices[0].message.content, fallbackData);
     
     // Prepare enhanced chart data
     const genreDistribution = Array.from(

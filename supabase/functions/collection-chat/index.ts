@@ -61,6 +61,21 @@ Deno.serve(async (req) => {
     console.log('Processing chat message:', message, 'for user:', userId, 'session:', session_id);
     const startTime = Date.now();
 
+    // Fetch chat history for session context to avoid repetition
+    const { data: sessionMessages } = await supabase
+      .from('chat_messages')
+      .select('message, sender_type, created_at')
+      .eq('user_id', userId)
+      .eq('session_id', session_id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    const recentAiMessages = (sessionMessages || [])
+      .filter(m => m.sender_type === 'ai')
+      .slice(0, 3)
+      .map(m => m.message)
+      .join(' ');
+
     // Get collection data for context with detailed album information - user specific
     const { data: cdData, error: cdError } = await supabase
       .from('cd_scan')
@@ -86,7 +101,23 @@ Deno.serve(async (req) => {
     // Combine and analyze collection
     const allRecords = [...(cdData || []), ...(vinylData || [])];
     
-    // Create detailed collection context
+    // Smart album selection based on conversation context
+    const getRandomAlbumSet = (records: any[], count: number) => {
+      const shuffled = [...records].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, count);
+    };
+
+    // Rotate focus based on session ID to ensure variety
+    const sessionHash = session_id.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    const focusIndex = Math.abs(sessionHash) % 4;
+    const focusTypes = ['value', 'genre', 'year', 'random'];
+    const currentFocus = focusTypes[focusIndex];
+    
+    // Create detailed collection context with dynamic sampling
     const collectionStats = {
       totalItems: allRecords.length,
       totalValue: allRecords.reduce((sum, record) => sum + (Number(record.calculated_advice_price) || 0), 0),
@@ -125,6 +156,15 @@ Deno.serve(async (req) => {
         oldest: Math.min(...allRecords.map(r => r.year).filter(Boolean)),
         newest: Math.max(...allRecords.map(r => r.year).filter(Boolean))
       },
+      // Dynamic album sampling based on current focus
+      featuredAlbums: currentFocus === 'value' 
+        ? allRecords.sort((a, b) => (Number(b.calculated_advice_price) || 0) - (Number(a.calculated_advice_price) || 0)).slice(0, 15)
+        : currentFocus === 'genre'
+        ? getRandomAlbumSet(allRecords.filter(r => r.genre), 15)
+        : currentFocus === 'year'
+        ? getRandomAlbumSet(allRecords.filter(r => r.year && r.year < 1990), 15)
+        : getRandomAlbumSet(allRecords, 15),
+      sessionFocus: currentFocus,
       albums: allRecords.map(r => ({
         artist: r.artist,
         title: r.title,
@@ -148,42 +188,43 @@ Deno.serve(async (req) => {
         collection_context: collectionStats
       });
 
-    // Create enhanced AI prompt with detailed collection context
-    const systemPrompt = `Je bent een enthousiaste Nederlandse muziekcollectie AI-expert en curator. Je hebt toegang tot een gedetailleerde analyse van de gebruiker's collectie. Gebruik deze informatie om persoonlijke, accurate antwoorden te geven.
+    // Create enhanced AI prompt with anti-repetition and dynamic focus
+    const systemPrompt = `Je bent een avontuurlijke Nederlandse muziekcollectie AI-expert en ontdekkingsreiziger! 🎵✨ Je missie is om ALTIJD nieuwe, verrassende inzichten te geven over de collectie.
 
 ## COLLECTIE OVERZICHT
 📀 **Totaal:** ${collectionStats.totalItems} items
 💰 **Totale waarde:** €${collectionStats.totalValue.toFixed(2)}
 🎵 **Periode:** ${collectionStats.yearRange.oldest || 'Onbekend'} - ${collectionStats.yearRange.newest || 'Onbekend'}
+🎯 **Huidige focus:** ${collectionStats.sessionFocus === 'value' ? 'Waardevolle parels' : collectionStats.sessionFocus === 'genre' ? 'Genre-ontdekking' : collectionStats.sessionFocus === 'year' ? 'Vintage schatten' : 'Verborgen prachtstukken'}
 
-## TOP ARTIESTEN
-${collectionStats.topArtists.slice(0, 10).map(([artist, count]) => `• ${artist}: ${count} album${count > 1 ? 's' : ''}`).join('\n')}
+## ONTDEK STEEDS NIEUWE ALBUMS! 
+**Spotlight vandaag:** ${collectionStats.featuredAlbums.slice(0, 8).map(a => `"${a.title}" (${a.artist})`).join(', ')}
 
-## GENRE VERDELING
+## COLLECTIE DIVERSITEIT
 ${collectionStats.genreDistribution.slice(0, 6).map(g => `• ${g.genre}: ${g.count} albums (€${g.totalValue.toFixed(2)})`).join('\n')}
 
-## DUURSTE ALBUMS
-${collectionStats.topValueAlbums.slice(0, 5).map(a => `• "${a.title}" van ${a.artist} (${a.year || 'Onbekend'}) - €${a.value.toFixed(2)} [${a.format}]`).join('\n')}
+## ANTI-HERHALING CONTEXT
+${recentAiMessages ? `Recent besproken: ${recentAiMessages.substring(0, 200)}...` : 'Eerste gesprek - volledig terrein te verkennen!'}
 
-## FORMATS
-${Object.entries(collectionStats.formats).map(([format, count]) => `• ${format}: ${count}`).join('\n')}
+## CREATIEVE OPDRACHTEN
+- 🚀 **VERPLICHT:** Gebruik ALTIJD andere albums dan in eerdere antwoorden
+- 🎭 **Varieer je stijl:** Historisch, technisch, emotioneel, anekdotisch, of vergelijkend
+- 🔍 **Zoek parels:** Belicht minder bekende, ondergewaardeerde albums
+- 🌟 **Verras:** Maak verrassende verbanden tussen verschillende albums
+- 💡 **Experimenteer:** Probeer nieuwe invalshoeken en perspectieven
 
-## INSTRUCTIES
-- Antwoord ALTIJD in het Nederlands 🇳🇱
-- Gebruik emoji's en **markdown** formatting voor een levendige presentatie
-- Geef SPECIFIEKE antwoorden gebaseerd op de werkelijke collectie data
-- Bij vragen over aantallen: gebruik de exacte cijfers uit de data
-- Bij vragen over artiesten: verwijs naar de daadwerkelijke albums in de collectie
-- Bij vragen over waarde: gebruik de prijsinformatie uit de collectie
-- Bij aanbevelingen: baseer deze op genres/artiesten die al in de collectie zitten
-- Wees enthousiast maar wel accuraat!
+## INSPIRATIE TECHNIEKEN
+- **Thematische clusters:** Groepeer albums op onverwachte manieren
+- **Tijdreizen:** Vergelijk albums uit verschillende decennia  
+- **Genre-fusion:** Ontdek verrassende kruisbestuivingen
+- **Verhalen vertellen:** Creëer narratieven rond de albums
+- **Deep-dives:** Duik diep in studio-technieken, productieverhalen
+- **Culturele impact:** Bespreek maatschappelijke invloed van albums
 
-## VOORBEELDEN VAN GOEDE ANTWOORDEN
-- "Je hebt **2 albums van BZN** in je collectie!"
-- "Je duurste album is **'${collectionStats.topValueAlbums[0]?.title || 'Album Title'}' van ${collectionStats.topValueAlbums[0]?.artist || 'Artist'}** ter waarde van €${collectionStats.topValueAlbums[0]?.value?.toFixed(2) || '0.00'}! 💎"
-- "Op basis van je liefde voor **${collectionStats.genreDistribution[0]?.genre || 'rock'}** (${collectionStats.genreDistribution[0]?.count || 0} albums), zou ik aanraden..."
+## DYNAMISCHE RESPONSEFORMATEN
+Wissel af tussen: lijsten, verhalen, vergelijkingen, tijdlijnen, top-rankings, quiz-achtige vragen, hypothetische scenario's, muzikale reisroutes.
 
-Let op: De collectie bevat ook specifieke album details die je kunt gebruiken voor gedetailleerde vragen.`;
+BELANGRIJK: Wees creatief, verrassend en ontdekkend! Gebruik NOOIT dezelfde albums als voorheen. Verken de volle breedte van de collectie!`;
 
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -198,9 +239,9 @@ Let op: De collectie bevat ook specifieke album details die je kunt gebruiken vo
           { role: 'user', content: message }
         ],
         max_tokens: 1500,
-        temperature: 0.7,
-        presence_penalty: 0.1,
-        frequency_penalty: 0.1,
+        temperature: 0.9,           // Verhoogd voor meer creativiteit
+        presence_penalty: 0.3,      // Verhoogd om herhaling te voorkomen
+        frequency_penalty: 0.2,     // Verhoogd voor meer woordvariatie
       }),
     });
 

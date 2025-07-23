@@ -95,8 +95,8 @@ export function Navigation() {
       <div className="md:hidden">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-              <Menu className="h-4 w-4" />
+            <Button variant="outline" size="sm" className="h-10 w-10 p-2 border-2">
+              <Menu className="h-6 w-6" />
               <span className="sr-only">Open menu</span>
             </Button>
           </SheetTrigger>

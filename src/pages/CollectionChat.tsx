@@ -269,20 +269,19 @@ const CollectionChat = () => {
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header with animated background */}
-          <div className="text-center mb-8 relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 rounded-3xl blur-3xl opacity-30 animate-pulse"></div>
-            <div className="relative">
-              <div className="flex justify-center items-center gap-3 mb-4">
-                <div className="p-3 bg-gradient-to-br from-primary to-secondary rounded-2xl shadow-lg animate-fade-in">
-                  <Brain className="w-8 h-8 text-white" />
-                </div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-fade-in">
-                  AI Collection Chat
-                </h1>
+          {/* Header with clean spacing */}
+          <div className="text-center mb-12 space-y-6">
+            <div className="flex justify-center mb-6">
+              <div className="p-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl border border-primary/20 shadow-lg backdrop-blur-sm">
+                <Brain className="w-12 h-12 text-primary" />
               </div>
-              <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed animate-fade-in">
-                🎵 Chat met een AI-expert over je muziekcollectie. Krijg persoonlijke inzichten, waarde-analyses, en aanbevelingen gebaseerd op je eigen vinyl en CD collectie.
+            </div>
+            <div className="space-y-3">
+              <h1 className="text-3xl font-bold text-primary">
+                Begin een gesprek 💬
+              </h1>
+              <p className="text-muted-foreground text-base max-w-md mx-auto">
+                🎯 Stel een vraag over je collectie of klik op een suggestie hieronder
               </p>
             </div>
           </div>
@@ -333,25 +332,14 @@ const CollectionChat = () => {
             <CardContent className="flex-1 flex flex-col p-0">
               <ScrollArea className="flex-1 p-4">
                 {messages.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-2xl opacity-50 animate-pulse"></div>
-                      <div className="relative p-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl border border-primary/20 mx-auto w-fit">
-                        <Brain className="w-12 h-12 mx-auto text-primary animate-pulse" />
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-semibold mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Begin een gesprek 💬</h3>
-                    <p className="text-muted-foreground mb-8 text-lg">
-                      🎯 Stel een vraag over je collectie of klik op een suggestie hieronder
-                    </p>
-                    
-                    <div className="space-y-3 max-w-md mx-auto">
+                  <div className="text-center py-8 space-y-6">
+                    <div className="space-y-4 max-w-lg mx-auto">
                       {suggestedQuestions.map((question, index) => (
                         <Button
                           key={index}
                           variant="ghost"
                           size="sm"
-                          className="w-full text-left justify-start h-auto p-4 text-wrap bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 border border-primary/20 rounded-xl hover-scale transition-all duration-300"
+                          className="w-full text-left justify-start h-auto p-4 text-wrap bg-muted/30 hover:bg-muted/50 border border-border/50 rounded-2xl transition-all duration-200 shadow-sm hover:shadow-md"
                           onClick={async () => {
                             setInput(question);
                             

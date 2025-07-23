@@ -107,11 +107,20 @@ export default function CollectionOverview() {
                 <p className="text-sm sm:text-base text-muted-foreground">Diepgaande analyse van je muziekcollectie</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="w-fit sm:w-auto">
-              <Download className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Export Data</span>
-              <span className="sm:hidden">Export</span>
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                onClick={() => navigate('/collection-chat')}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <Brain className="h-5 w-5 mr-2" />
+                Start je muziek analyse
+              </Button>
+              <Button variant="outline" size="sm" className="w-fit sm:w-auto">
+                <Download className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Export Data</span>
+                <span className="sm:hidden">Export</span>
+              </Button>
+            </div>
           </div>
         </div>
 

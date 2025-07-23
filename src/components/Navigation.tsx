@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { TransparentLogo } from "./TransparentLogo";
 
 const navigationItems = [
   { title: "Scanner", url: "/scanner", icon: Home },
@@ -61,11 +60,7 @@ export function Navigation() {
     <>
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-6">
-        <TransparentLogo 
-          originalUrl="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" 
-          alt="MusicScan" 
-          className="h-8" 
-        />
+        <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-8" />
         <NavigationMenu>
           <NavigationMenuList className="gap-1">
             {navigationItems.map((item) => (
@@ -143,11 +138,7 @@ export function Navigation() {
             </div>
           </SheetContent>
         </Sheet>
-        <TransparentLogo 
-          originalUrl="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" 
-          alt="MusicScan" 
-          className="h-8" 
-        />
+        <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-8" />
       </div>
     </>
   );

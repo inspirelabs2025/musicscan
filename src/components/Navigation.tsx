@@ -103,9 +103,9 @@ export function Navigation() {
               <span className="sr-only">Open menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-48">
-            <div className="flex flex-col space-y-4 mt-6">
-              <div className="flex items-center justify-between mb-4">
+          <SheetContent side="left" className="w-64 p-0">
+            <div className="flex flex-col h-full">
+              <div className="flex items-center justify-between p-4 border-b">
                 <h2 className="text-lg font-semibold">Menu</h2>
                 <Button 
                   variant="ghost" 
@@ -116,24 +116,24 @@ export function Navigation() {
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              <nav className="flex flex-col space-y-2">
+              <nav className="flex flex-col flex-1 p-4 space-y-1 overflow-y-auto">
                 {navigationItems.map((item) => (
                   <NavLink key={item.title} item={item} mobile />
                 ))}
                 
                 {/* Mobile User Section */}
-                <div className="border-t pt-4 mt-4">
-                  <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    {user?.email}
+                <div className="border-t mt-auto pt-4">
+                  <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground mb-2">
+                    <User className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">{user?.email}</span>
                   </div>
                   <Button 
                     variant="ghost" 
                     onClick={signOut}
                     className="w-full justify-start text-muted-foreground hover:text-primary"
                   >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Uitloggen
+                    <LogOut className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span>Uitloggen</span>
                   </Button>
                 </div>
               </nav>

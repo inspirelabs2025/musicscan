@@ -19,7 +19,15 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { message, session_id, user_id } = await req.json() as ChatMessage & { session_id: string; user_id?: string };
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authorization header required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { message, session_id } = await req.json() as ChatMessage & { session_id: string };
     
     if (!message) {
       return new Response(
@@ -38,14 +46,26 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Processing chat message:', message, 'for session:', session_id);
+    // Extract user ID from JWT token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = user.id;
+    console.log('Processing chat message:', message, 'for user:', userId, 'session:', session_id);
     const startTime = Date.now();
 
-    // Get collection data for context with detailed album information
-    // Note: For now using anonymous access, but should be filtered by user_id in production
+    // Get collection data for context with detailed album information - user specific
     const { data: cdData, error: cdError } = await supabase
       .from('cd_scan')
       .select('artist, title, genre, year, calculated_advice_price, format, label, country')
+      .eq('user_id', userId)
       .not('calculated_advice_price', 'is', null)
       .order('calculated_advice_price', { ascending: false })
       .limit(75);
@@ -53,6 +73,7 @@ Deno.serve(async (req) => {
     const { data: vinylData, error: vinylError } = await supabase
       .from('vinyl2_scan')
       .select('artist, title, genre, year, calculated_advice_price, format, label, country')
+      .eq('user_id', userId)
       .not('calculated_advice_price', 'is', null)
       .order('calculated_advice_price', { ascending: false })
       .limit(25);
@@ -125,6 +146,7 @@ Deno.serve(async (req) => {
         message,
         sender_type: 'user',
         session_id,
+        user_id: userId,
         collection_context: collectionStats
       });
 
@@ -200,6 +222,7 @@ Let op: De collectie bevat ook specifieke album details die je kunt gebruiken vo
         message: aiMessage,
         sender_type: 'ai',
         session_id,
+        user_id: userId,
         ai_model: 'gpt-4.1-2025-04-14',
         tokens_used: tokensUsed,
         response_time_ms: responseTime,

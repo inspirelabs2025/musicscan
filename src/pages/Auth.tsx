@@ -27,7 +27,7 @@ const Auth = () => {
   // Check if user is already authenticated
   useEffect(() => {
     if (user && !loading) {
-      navigate('/');
+      navigate('/scanner');
     }
   }, [user, loading, navigate]);
 

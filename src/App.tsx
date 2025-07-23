@@ -6,7 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
+import Home from "./pages/Home";
+import Scanner from "./pages/Scanner";
 import Auth from "./pages/Auth";
 
 
@@ -31,9 +32,10 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={
+            <Route path="/" element={<Home />} />
+            <Route path="/scanner" element={
               <ProtectedRoute>
-                <Index />
+                <Scanner />
               </ProtectedRoute>
             } />
             <Route path="/ai-scan" element={

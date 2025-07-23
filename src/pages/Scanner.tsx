@@ -25,10 +25,10 @@ import { DiscogsIdInput } from "@/components/DiscogsIdInput";
 import { SearchingLoadingCard } from "@/components/SearchingLoadingCard";
 import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
 import { useAuth } from "@/contexts/AuthContext";
-import { HeroSection } from "@/components/HeroSection";
+
 import { Navigation } from "@/components/Navigation";
 
-const Index = () => {
+const Scanner = () => {
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(scanReducer, initialScanState);
   const { user } = useAuth();
@@ -416,9 +416,6 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-scan">
       <Navigation />
 
-      {!state.mediaType && !state.discogsIdMode && (
-        <HeroSection />
-      )}
 
       <main className="container mx-auto px-4 py-8">
         {(state.mediaType || state.discogsIdMode) && (
@@ -592,4 +589,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Scanner;

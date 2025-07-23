@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navigationItems = [
-  { title: "Home", url: "/", icon: Home },
+  { title: "Scanner", url: "/scanner", icon: Home },
   { title: "Release ID Scan", url: "/ai-scan-v2", icon: Brain },
   { title: "Release ID Overzicht", url: "/ai-scan-overview", icon: Database },
   { title: "Marketplace", url: "/marketplace-overview", icon: ShoppingCart },

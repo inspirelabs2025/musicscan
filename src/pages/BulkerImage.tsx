@@ -25,10 +25,12 @@ import { ManualSearch } from "@/components/ManualSearch";
 import { DiscogsIdInput } from "@/components/DiscogsIdInput";
 import { SearchingLoadingCard } from "@/components/SearchingLoadingCard";
 import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
+import { useAuth } from "@/contexts/AuthContext";
 
 const BulkerImage = () => {
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(scanReducer, initialScanState);
+  const { user } = useAuth();
 
   const { 
     isAnalyzing: isAnalyzingVinyl, 
@@ -238,7 +240,8 @@ const BulkerImage = () => {
         discogs_url: searchResults[0]?.discogs_url || null,
         lowest_price: searchResults[0]?.pricing_stats?.lowest_price ? parseFloat(searchResults[0].pricing_stats.lowest_price.replace(',', '.')) : null,
         median_price: searchResults[0]?.pricing_stats?.median_price ? parseFloat(searchResults[0].pricing_stats.median_price.replace(',', '.')) : null,
-        highest_price: searchResults[0]?.pricing_stats?.highest_price ? parseFloat(searchResults[0].pricing_stats.highest_price.replace(',', '.')) : null
+        highest_price: searchResults[0]?.pricing_stats?.highest_price ? parseFloat(searchResults[0].pricing_stats.highest_price.replace(',', '.')) : null,
+        user_id: user?.id
       } : {
         front_image: state.uploadedFiles[0],
         back_image: state.uploadedFiles[1],
@@ -259,7 +262,8 @@ const BulkerImage = () => {
         discogs_url: searchResults[0]?.discogs_url || null,
         lowest_price: searchResults[0]?.pricing_stats?.lowest_price ? parseFloat(searchResults[0].pricing_stats.lowest_price.replace(',', '.')) : null,
         median_price: searchResults[0]?.pricing_stats?.median_price ? parseFloat(searchResults[0].pricing_stats.median_price.replace(',', '.')) : null,
-        highest_price: searchResults[0]?.pricing_stats?.highest_price ? parseFloat(searchResults[0].pricing_stats.highest_price.replace(',', '.')) : null
+        highest_price: searchResults[0]?.pricing_stats?.highest_price ? parseFloat(searchResults[0].pricing_stats.highest_price.replace(',', '.')) : null,
+        user_id: user?.id
       };
 
       const { data, error } = await supabase

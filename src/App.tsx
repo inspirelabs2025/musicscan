@@ -4,7 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import CatalogTest from "./pages/CatalogTest";
 import VinylScanComplete from "./pages/VinylScanComplete";
 import BulkerImage from "./pages/BulkerImage";
@@ -21,27 +24,74 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<VinylScanComplete />} />
-          <Route path="/ai-scan" element={<AIScan />} />
-          <Route path="/ai-scan-overview" element={<AIScanOverview />} />
-          <Route path="/ai-scan-v2" element={<AIScanV2 />} />
-          <Route path="/ai-scan-v2-overview" element={<AIScanV2Overview />} />
-          <Route path="/bulkerimage" element={<BulkerImage />} />
-          <Route path="/catalog-test" element={<CatalogTest />} />
-          <Route path="/index" element={<Index />} />
-          <Route path="/marketplace-overview" element={<MarketplaceOverview />} />
-          <Route path="/collection-overview" element={<CollectionOverview />} />
-          <Route path="/collection-chat" element={<CollectionChat />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Index />
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-scan" element={
+              <ProtectedRoute>
+                <AIScan />
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-scan-overview" element={
+              <ProtectedRoute>
+                <AIScanOverview />
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-scan-v2" element={
+              <ProtectedRoute>
+                <AIScanV2 />
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-scan-v2-overview" element={
+              <ProtectedRoute>
+                <AIScanV2Overview />
+              </ProtectedRoute>
+            } />
+            <Route path="/bulkerimage" element={
+              <ProtectedRoute>
+                <BulkerImage />
+              </ProtectedRoute>
+            } />
+            <Route path="/catalog-test" element={
+              <ProtectedRoute>
+                <CatalogTest />
+              </ProtectedRoute>
+            } />
+            <Route path="/vinyl-scan-complete" element={
+              <ProtectedRoute>
+                <VinylScanComplete />
+              </ProtectedRoute>
+            } />
+            <Route path="/marketplace-overview" element={
+              <ProtectedRoute>
+                <MarketplaceOverview />
+              </ProtectedRoute>
+            } />
+            <Route path="/collection-overview" element={
+              <ProtectedRoute>
+                <CollectionOverview />
+              </ProtectedRoute>
+            } />
+            <Route path="/collection-chat" element={
+              <ProtectedRoute>
+                <CollectionChat />
+              </ProtectedRoute>
+            } />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

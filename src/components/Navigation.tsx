@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database } from "lucide-react";
+import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database, LogOut, User } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navigationItems = [
   { title: "Home", url: "/", icon: Home },
@@ -26,6 +27,7 @@ export function Navigation() {
   const location = useLocation();
   const currentPath = location.pathname;
   const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   const NavLink = React.forwardRef<HTMLAnchorElement, { item: typeof navigationItems[0], mobile?: boolean }>(
     ({ item, mobile = false }, ref) => {
@@ -67,6 +69,24 @@ export function Navigation() {
                 </NavigationMenuLink>
               </NavigationMenuItem>
             ))}
+            {/* User Menu */}
+            <NavigationMenuItem>
+              <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  {user?.email}
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={signOut}
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Uitloggen
+                </Button>
+              </div>
+            </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
       </div>
@@ -97,6 +117,22 @@ export function Navigation() {
                 {navigationItems.map((item) => (
                   <NavLink key={item.title} item={item} mobile />
                 ))}
+                
+                {/* Mobile User Section */}
+                <div className="border-t pt-4 mt-4">
+                  <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                    <User className="h-4 w-4" />
+                    {user?.email}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    onClick={signOut}
+                    className="w-full justify-start text-muted-foreground hover:text-primary"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Uitloggen
+                  </Button>
+                </div>
               </nav>
             </div>
           </SheetContent>

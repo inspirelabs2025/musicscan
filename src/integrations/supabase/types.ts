@@ -46,6 +46,7 @@ export type Database = {
           title: string | null
           updated_at: string
           updated_by: string | null
+          user_id: string
           year: number | null
         }
         Insert: {
@@ -79,6 +80,7 @@ export type Database = {
           title?: string | null
           updated_at?: string
           updated_by?: string | null
+          user_id: string
           year?: number | null
         }
         Update: {
@@ -112,6 +114,7 @@ export type Database = {
           title?: string | null
           updated_at?: string
           updated_by?: string | null
+          user_id?: string
           year?: number | null
         }
         Relationships: []
@@ -132,6 +135,7 @@ export type Database = {
           thumbnail_urls: string[] | null
           updated_at: string
           upload_timestamp: string
+          user_id: string
         }
         Insert: {
           condition_grade?: string | null
@@ -148,6 +152,7 @@ export type Database = {
           thumbnail_urls?: string[] | null
           updated_at?: string
           upload_timestamp?: string
+          user_id: string
         }
         Update: {
           condition_grade?: string | null
@@ -164,6 +169,7 @@ export type Database = {
           thumbnail_urls?: string[] | null
           updated_at?: string
           upload_timestamp?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -205,6 +211,7 @@ export type Database = {
           style: string[] | null
           title: string | null
           updated_at: string
+          user_id: string
           year: number | null
         }
         Insert: {
@@ -244,6 +251,7 @@ export type Database = {
           style?: string[] | null
           title?: string | null
           updated_at?: string
+          user_id: string
           year?: number | null
         }
         Update: {
@@ -283,6 +291,7 @@ export type Database = {
           style?: string[] | null
           title?: string | null
           updated_at?: string
+          user_id?: string
           year?: number | null
         }
         Relationships: []
@@ -300,6 +309,7 @@ export type Database = {
           session_id: string | null
           tokens_used: number | null
           updated_at: string
+          user_id: string
         }
         Insert: {
           ai_model?: string | null
@@ -313,6 +323,7 @@ export type Database = {
           session_id?: string | null
           tokens_used?: number | null
           updated_at?: string
+          user_id: string
         }
         Update: {
           ai_model?: string | null
@@ -326,6 +337,7 @@ export type Database = {
           session_id?: string | null
           tokens_used?: number | null
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -403,6 +415,7 @@ export type Database = {
           success: boolean
           total_prices_found: number | null
           updated_at: string
+          user_id: string
         }
         Insert: {
           artist_name?: string | null
@@ -427,6 +440,7 @@ export type Database = {
           success?: boolean
           total_prices_found?: number | null
           updated_at?: string
+          user_id: string
         }
         Update: {
           artist_name?: string | null
@@ -451,6 +465,7 @@ export type Database = {
           success?: boolean
           total_prices_found?: number | null
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -556,6 +571,7 @@ export type Database = {
           scanned_date: string | null
           title: string
           updated_at: string | null
+          user_id: string
           want_count: number | null
           year: number | null
         }
@@ -591,6 +607,7 @@ export type Database = {
           scanned_date?: string | null
           title: string
           updated_at?: string | null
+          user_id: string
           want_count?: number | null
           year?: number | null
         }
@@ -626,6 +643,7 @@ export type Database = {
           scanned_date?: string | null
           title?: string
           updated_at?: string | null
+          user_id?: string
           want_count?: number | null
           year?: number | null
         }
@@ -752,6 +770,7 @@ export type Database = {
           style: string[] | null
           title: string | null
           updated_at: string
+          user_id: string
           year: number | null
         }
         Insert: {
@@ -787,6 +806,7 @@ export type Database = {
           style?: string[] | null
           title?: string | null
           updated_at?: string
+          user_id: string
           year?: number | null
         }
         Update: {
@@ -822,6 +842,7 @@ export type Database = {
           style?: string[] | null
           title?: string | null
           updated_at?: string
+          user_id?: string
           year?: number | null
         }
         Relationships: []

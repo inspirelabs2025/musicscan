@@ -79,6 +79,9 @@ const CollectionChat = () => {
 
       // Reload messages to get the AI response
       await loadMessages();
+      
+      // Generate new suggested questions after AI response
+      setSuggestedQuestions(getRandomSuggestedQuestions());
     } catch (error) {
       console.error('Error sending message:', error);
       // Add error message
@@ -123,6 +126,9 @@ const CollectionChat = () => {
       });
 
       await loadMessages();
+      
+      // Generate new suggested questions after analysis
+      setSuggestedQuestions(getRandomSuggestedQuestions());
     } catch (error) {
       console.error('Error starting analysis:', error);
     } finally {
@@ -163,13 +169,36 @@ const CollectionChat = () => {
     );
   };
 
-  const suggestedQuestions = [
-    "Wat zijn mijn meest waardevolle albums?",
-    "Welke genres domineren mijn collectie?",
-    "Geef me investeeringsadvies voor mijn collectie",
-    "Welke artiesten ontbreken in mijn collectie?",
-    "Analyseer mijn smaak in muziek"
-  ];
+  const getRandomSuggestedQuestions = () => {
+    const allQuestions = [
+      "Wat zijn mijn meest waardevolle albums?",
+      "Welke genres domineren mijn collectie?",
+      "Geef me investeeringsadvies voor mijn collectie",
+      "Welke artiesten ontbreken in mijn collectie?",
+      "Analyseer mijn smaak in muziek",
+      "Wat zijn de hidden gems in mijn collectie?",
+      "Welke albums zijn het meest gestegen in waarde?",
+      "Vergelijk mijn collectie met andere verzamelaars",
+      "Wat zijn mijn zeldzaamste releases?",
+      "Welke jaren zijn het best vertegenwoordigd?",
+      "Suggereer albums om mijn collectie aan te vullen",
+      "Wat is de gemiddelde waarde van mijn albums?",
+      "Welke labels zijn dominant in mijn collectie?",
+      "Analyseer de conditie van mijn collectie",
+      "Welke albums moet ik absoluut houden?",
+      "Wat zijn trends in mijn verzamelgedrag?",
+      "Geef me tips voor het onderhouden van vinyl",
+      "Welke albums hebben het meeste potentieel?",
+      "Analyseer mijn internationale releases",
+      "Wat zijn mijn meest unieke pressings?"
+    ];
+    
+    // Shuffle en return 5 random questions
+    const shuffled = allQuestions.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 5);
+  };
+
+  const [suggestedQuestions, setSuggestedQuestions] = useState(() => getRandomSuggestedQuestions());
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -256,6 +285,28 @@ const CollectionChat = () => {
                       <div className="flex justify-start mb-4">
                         <div className="bg-muted p-3 rounded-lg">
                           <Loader2 className="w-4 h-4 animate-spin" />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Show suggested questions after messages */}
+                    {messages.length > 0 && !isLoading && (
+                      <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                        <h4 className="text-sm font-medium mb-3 text-muted-foreground">
+                          Nieuwe vragen die je kunt stellen:
+                        </h4>
+                        <div className="space-y-2">
+                          {suggestedQuestions.map((question, index) => (
+                            <Button
+                              key={index}
+                              variant="ghost"
+                              size="sm"
+                              className="w-full text-left justify-start h-auto p-2 text-wrap text-xs"
+                              onClick={() => setInput(question)}
+                            >
+                              {question}
+                            </Button>
+                          ))}
                         </div>
                       </div>
                     )}

@@ -452,7 +452,11 @@ const Scanner = () => {
             />
           )}
 
-          {state.mediaType && !state.discogsIdMode && state.uploadedFiles.length === 0 && (
+          {state.mediaType && !state.discogsIdMode && (
+            (state.uploadedFiles.length === 0 || 
+             (state.mediaType === 'cd' && state.uploadedFiles.length < 4) ||
+             (state.mediaType === 'vinyl' && state.uploadedFiles.length < 3)
+            ) && !isAnalyzing) && (
             <UploadSection
               mediaType={state.mediaType}
               uploadedFiles={state.uploadedFiles}

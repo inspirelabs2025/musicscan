@@ -18,7 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const navigationItems = [
   { title: "Home", url: "/", icon: Home },
   { title: "Release ID Scan", url: "/ai-scan-v2", icon: Brain },
-  { title: "AI Overzicht", url: "/ai-scan-overview", icon: Database },
+  { title: "Release ID Overzicht", url: "/ai-scan-overview", icon: Database },
   { title: "Bulk Scan", url: "/bulkerimage", icon: Images },
   { title: "Marketplace", url: "/marketplace-overview", icon: ShoppingCart },
   { title: "Collection", url: "/collection-overview", icon: Archive }

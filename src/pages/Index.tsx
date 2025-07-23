@@ -25,6 +25,7 @@ import { DiscogsIdInput } from "@/components/DiscogsIdInput";
 import { SearchingLoadingCard } from "@/components/SearchingLoadingCard";
 import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
 import { useAuth } from "@/contexts/AuthContext";
+import { HeroSection } from "@/components/HeroSection";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -435,9 +436,9 @@ const Index = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-vinyl bg-clip-text text-transparent">
-                  🎵 Wat ga je scannen?
+                  Vinyl & CD Scanner
                 </h1>
-                <p className="text-sm text-muted-foreground">Kies het type media dat je wilt scannen en waarderen</p>
+                <p className="text-sm text-muted-foreground">AI-powered collectie waardering</p>
               </div>
             </div>
             
@@ -456,25 +457,32 @@ const Index = () => {
         </div>
       </header>
 
+      {/* Hero Section - Only show when no media type is selected */}
+      {!state.mediaType && !state.discogsIdMode && (
+        <HeroSection />
+      )}
+
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Progress Indicator */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Scan Progress</h2>
-            <span className="text-sm text-muted-foreground">
-              Stap {state.currentStep + 1} van {steps.length}
-            </span>
-          </div>
-          <Progress value={(state.currentStep / (steps.length - 1)) * 100} className="w-full" />
-          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-            {steps.map((step) => (
-              <span key={step.id} className={step.active ? "text-primary font-medium" : ""}>
-                {step.title}
+        {/* Progress Indicator - Only show when scan is in progress */}
+        {(state.mediaType || state.discogsIdMode) && (
+          <div className="max-w-4xl mx-auto mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Scan Progress</h2>
+              <span className="text-sm text-muted-foreground">
+                Stap {state.currentStep + 1} van {steps.length}
               </span>
-            ))}
+            </div>
+            <Progress value={(state.currentStep / (steps.length - 1)) * 100} className="w-full" />
+            <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+              {steps.map((step) => (
+                <span key={step.id} className={step.active ? "text-primary font-medium" : ""}>
+                  {step.title}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Step 0: Media Type Selection or Discogs ID Input */}

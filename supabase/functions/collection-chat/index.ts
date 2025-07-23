@@ -67,16 +67,14 @@ Deno.serve(async (req) => {
       .select('artist, title, genre, year, calculated_advice_price, format, label, country')
       .eq('user_id', userId)
       .not('calculated_advice_price', 'is', null)
-      .order('calculated_advice_price', { ascending: false })
-      .limit(250);
+      .order('calculated_advice_price', { ascending: false });
 
     const { data: vinylData, error: vinylError } = await supabase
       .from('vinyl2_scan')
       .select('artist, title, genre, year, calculated_advice_price, format, label, country')
       .eq('user_id', userId)
       .not('calculated_advice_price', 'is', null)
-      .order('calculated_advice_price', { ascending: false })
-      .limit(50);
+      .order('calculated_advice_price', { ascending: false });
 
     if (cdError) {
       console.error('Error fetching CD data:', cdError);
@@ -127,7 +125,7 @@ Deno.serve(async (req) => {
         oldest: Math.min(...allRecords.map(r => r.year).filter(Boolean)),
         newest: Math.max(...allRecords.map(r => r.year).filter(Boolean))
       },
-      albums: allRecords.slice(0, 100).map(r => ({
+      albums: allRecords.map(r => ({
         artist: r.artist,
         title: r.title,
         genre: r.genre,

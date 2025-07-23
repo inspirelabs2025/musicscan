@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { message, session_id } = await req.json() as ChatMessage & { session_id: string };
+    const { message, session_id, user_id } = await req.json() as ChatMessage & { session_id: string; user_id?: string };
     
     if (!message) {
       return new Response(
@@ -29,27 +29,44 @@ Deno.serve(async (req) => {
     }
 
     // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase configuration');
+    }
 
-    console.log('Processing chat message:', message);
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    console.log('Processing chat message:', message, 'for session:', session_id);
     const startTime = Date.now();
 
-    // Get collection data for context
-    const { data: cdData } = await supabase
+    // Get collection data for context with detailed album information
+    const { data: cdData, error: cdError } = await supabase
       .from('cd_scan')
-      .select('*')
-      .not('calculated_advice_price', 'is', null);
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country')
+      .not('calculated_advice_price', 'is', null)
+      .order('calculated_advice_price', { ascending: false })
+      .limit(75);
 
-    const { data: vinylData } = await supabase
+    const { data: vinylData, error: vinylError } = await supabase
       .from('vinyl2_scan')
-      .select('*')
-      .not('calculated_advice_price', 'is', null);
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country')
+      .not('calculated_advice_price', 'is', null)
+      .order('calculated_advice_price', { ascending: false })
+      .limit(25);
+
+    if (cdError) {
+      console.error('Error fetching CD data:', cdError);
+    }
+    if (vinylError) {
+      console.error('Error fetching vinyl data:', vinylError);
+    }
 
     // Combine and analyze collection
     const allRecords = [...(cdData || []), ...(vinylData || [])];
+    
+    // Create detailed collection context
     const collectionStats = {
       totalItems: allRecords.length,
       totalValue: allRecords.reduce((sum, record) => sum + (Number(record.calculated_advice_price) || 0), 0),
@@ -59,12 +76,45 @@ Deno.serve(async (req) => {
           if (r.artist) acc[r.artist] = (acc[r.artist] || 0) + 1;
           return acc;
         }, {})
-      ).slice(0, 10),
+      ).slice(0, 15),
       formats: allRecords.reduce((acc: any, r) => {
         const format = r.format || 'Unknown';
         acc[format] = (acc[format] || 0) + 1;
         return acc;
-      }, {})
+      }, {}),
+      topValueAlbums: allRecords
+        .sort((a, b) => (Number(b.calculated_advice_price) || 0) - (Number(a.calculated_advice_price) || 0))
+        .slice(0, 10)
+        .map(r => ({
+          artist: r.artist,
+          title: r.title,
+          value: Number(r.calculated_advice_price) || 0,
+          format: r.format,
+          year: r.year
+        })),
+      genreDistribution: [...new Set(allRecords.map(r => r.genre).filter(Boolean))]
+        .map(genre => ({
+          genre,
+          count: allRecords.filter(r => r.genre === genre).length,
+          totalValue: allRecords.filter(r => r.genre === genre)
+            .reduce((sum, r) => sum + (Number(r.calculated_advice_price) || 0), 0)
+        }))
+        .sort((a, b) => b.totalValue - a.totalValue)
+        .slice(0, 8),
+      yearRange: {
+        oldest: Math.min(...allRecords.map(r => r.year).filter(Boolean)),
+        newest: Math.max(...allRecords.map(r => r.year).filter(Boolean))
+      },
+      albums: allRecords.slice(0, 50).map(r => ({
+        artist: r.artist,
+        title: r.title,
+        genre: r.genre,
+        year: r.year,
+        value: Number(r.calculated_advice_price) || 0,
+        format: r.format,
+        label: r.label,
+        country: r.country
+      }))
     };
 
     // Store user message
@@ -77,17 +127,42 @@ Deno.serve(async (req) => {
         collection_context: collectionStats
       });
 
-    // Create AI prompt with collection context
-    const systemPrompt = `Je bent een enthousiaste Nederlandse muziekcollectie AI-expert die spreekt over vinyl en CD's. Je hebt toegang tot de gebruiker's collectie data:
+    // Create enhanced AI prompt with detailed collection context
+    const systemPrompt = `Je bent een enthousiaste Nederlandse muziekcollectie AI-expert en curator. Je hebt toegang tot een gedetailleerde analyse van de gebruiker's collectie. Gebruik deze informatie om persoonlijke, accurate antwoorden te geven.
 
-Collectie Statistieken:
-- Totaal items: ${collectionStats.totalItems}
-- Totale waarde: €${collectionStats.totalValue.toFixed(2)}
-- Top genres: ${collectionStats.genres.slice(0, 5).join(', ')}
-- Top artiesten: ${collectionStats.topArtists.slice(0, 3).map(([artist, count]) => `${artist} (${count})`).join(', ')}
-- Formaten: ${Object.entries(collectionStats.formats).map(([format, count]) => `${format}: ${count}`).join(', ')}
+## COLLECTIE OVERZICHT
+📀 **Totaal:** ${collectionStats.totalItems} items
+💰 **Totale waarde:** €${collectionStats.totalValue.toFixed(2)}
+🎵 **Periode:** ${collectionStats.yearRange.oldest || 'Onbekend'} - ${collectionStats.yearRange.newest || 'Onbekend'}
 
-Antwoord altijd in het Nederlands en gebruik emoji's en markdown formatting voor een levendige presentatie. Geef persoonlijke inzichten gebaseerd op hun specifieke collectie.`;
+## TOP ARTIESTEN
+${collectionStats.topArtists.slice(0, 10).map(([artist, count]) => `• ${artist}: ${count} album${count > 1 ? 's' : ''}`).join('\n')}
+
+## GENRE VERDELING
+${collectionStats.genreDistribution.slice(0, 6).map(g => `• ${g.genre}: ${g.count} albums (€${g.totalValue.toFixed(2)})`).join('\n')}
+
+## DUURSTE ALBUMS
+${collectionStats.topValueAlbums.slice(0, 5).map(a => `• "${a.title}" van ${a.artist} (${a.year || 'Onbekend'}) - €${a.value.toFixed(2)} [${a.format}]`).join('\n')}
+
+## FORMATS
+${Object.entries(collectionStats.formats).map(([format, count]) => `• ${format}: ${count}`).join('\n')}
+
+## INSTRUCTIES
+- Antwoord ALTIJD in het Nederlands 🇳🇱
+- Gebruik emoji's en **markdown** formatting voor een levendige presentatie
+- Geef SPECIFIEKE antwoorden gebaseerd op de werkelijke collectie data
+- Bij vragen over aantallen: gebruik de exacte cijfers uit de data
+- Bij vragen over artiesten: verwijs naar de daadwerkelijke albums in de collectie
+- Bij vragen over waarde: gebruik de prijsinformatie uit de collectie
+- Bij aanbevelingen: baseer deze op genres/artiesten die al in de collectie zitten
+- Wees enthousiast maar wel accuraat!
+
+## VOORBEELDEN VAN GOEDE ANTWOORDEN
+- "Je hebt **2 albums van BZN** in je collectie!"
+- "Je duurste album is **'${collectionStats.topValueAlbums[0]?.title || 'Album Title'}' van ${collectionStats.topValueAlbums[0]?.artist || 'Artist'}** ter waarde van €${collectionStats.topValueAlbums[0]?.value?.toFixed(2) || '0.00'}! 💎"
+- "Op basis van je liefde voor **${collectionStats.genreDistribution[0]?.genre || 'rock'}** (${collectionStats.genreDistribution[0]?.count || 0} albums), zou ik aanraden..."
+
+Let op: De collectie bevat ook specifieke album details die je kunt gebruiken voor gedetailleerde vragen.`;
 
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

@@ -1,7 +1,1 @@
 project_id = "ssxbpyqnjfiyubsuonar"
-
-[functions.ai-photo-analysis]
-verify_jwt = false
-
-[functions.collection-chat]
-verify_jwt = false

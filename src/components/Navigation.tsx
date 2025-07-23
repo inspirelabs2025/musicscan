@@ -95,12 +95,12 @@ export function Navigation() {
       <div className="md:hidden">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" className="px-2">
+            <Button variant="ghost" size="sm" className="px-3 py-2 h-10 w-10 flex items-center justify-center">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Open menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64">
+          <SheetContent side="left" className="w-56">
             <div className="flex flex-col space-y-4 mt-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">Menu</h2>

@@ -236,10 +236,10 @@ export default function AIScan() {
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
               <Brain className="h-8 w-8" />
-              AI Foto Analyse
+              Ontdek supersnel de juiste release ID
             </h1>
             <p className="text-muted-foreground">
-              Ontdek supersnel de juiste release ID met onze AI foto analyse
+              Upload foto's van je LP of CD en laat AI het release identificeren
             </p>
           </div>
 

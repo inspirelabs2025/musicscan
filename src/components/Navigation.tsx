@@ -93,7 +93,7 @@ export function Navigation() {
       </div>
 
       {/* Mobile Navigation */}
-      <div className="md:hidden flex items-center gap-3">
+      <div className="md:hidden flex items-center justify-between w-full">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="sm" className="h-10 w-10 p-2 border-2">

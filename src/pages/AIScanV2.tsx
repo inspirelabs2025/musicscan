@@ -40,7 +40,7 @@ interface AnalysisResult {
 export default function AIScanV2() {
   const { user, loading } = useAuth();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [mediaType, setMediaType] = useState<'vinyl' | 'cd'>('vinyl');
+  const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | ''>('');
   const [conditionGrade, setConditionGrade] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
@@ -109,6 +109,16 @@ export default function AIScanV2() {
       toast({
         title: "Geen bestanden",
         description: "Upload eerst één of meer foto's om te analyseren.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Add validation for media type
+    if (!mediaType) {
+      toast({
+        title: "Geen media type geselecteerd",
+        description: "Selecteer eerst een media type (Vinyl of CD).",
         variant: "destructive"
       });
       return;
@@ -267,26 +277,32 @@ export default function AIScanV2() {
             {/* Media Type Selection */}
             <Card>
               <CardHeader>
-                <CardTitle>Media Type</CardTitle>
+                <CardTitle>Media Type <span className="text-red-500">*</span></CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    variant={mediaType === 'vinyl' ? 'default' : 'outline'}
-                    onClick={() => setMediaType('vinyl')}
-                    className="h-16 flex flex-col gap-1"
-                  >
-                    <span className="font-medium">Vinyl</span>
-                    <span className="text-xs">LP / Single / EP</span>
-                  </Button>
-                  <Button
-                    variant={mediaType === 'cd' ? 'default' : 'outline'}
-                    onClick={() => setMediaType('cd')}
-                    className="h-16 flex flex-col gap-1"
-                  >
-                    <span className="font-medium">CD</span>
-                    <span className="text-xs">Album / Single</span>
-                  </Button>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Selecteer media type (verplicht)</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button
+                      variant={mediaType === 'vinyl' ? 'default' : 'outline'}
+                      onClick={() => setMediaType('vinyl')}
+                      className={`h-16 flex flex-col gap-1 ${!mediaType ? 'border-red-300' : ''}`}
+                    >
+                      <span className="font-medium">Vinyl</span>
+                      <span className="text-xs">LP / Single / EP</span>
+                    </Button>
+                    <Button
+                      variant={mediaType === 'cd' ? 'default' : 'outline'}
+                      onClick={() => setMediaType('cd')}
+                      className={`h-16 flex flex-col gap-1 ${!mediaType ? 'border-red-300' : ''}`}
+                    >
+                      <span className="font-medium">CD</span>
+                      <span className="text-xs">Album / Single</span>
+                    </Button>
+                  </div>
+                  {!mediaType && (
+                    <p className="text-sm text-red-600">Een media type selectie is verplicht</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -377,7 +393,7 @@ export default function AIScanV2() {
               <CardContent className="pt-6">
                 <Button 
                   onClick={startAnalysis}
-                  disabled={uploadedFiles.length === 0 || isAnalyzing || !conditionGrade || !user}
+                  disabled={uploadedFiles.length === 0 || isAnalyzing || !conditionGrade || !mediaType || !user}
                   className="w-full"
                   size="lg"
                 >
@@ -401,9 +417,11 @@ export default function AIScanV2() {
                   </p>
                 )}
 
-                {!conditionGrade && uploadedFiles.length > 0 && user && (
+                {(!conditionGrade || !mediaType) && uploadedFiles.length > 0 && user && (
                   <p className="text-sm text-red-600 text-center mt-2">
-                    Selecteer eerst een conditie om de analyse te starten
+                    {!mediaType && "Selecteer eerst een media type en "}
+                    {!conditionGrade && "selecteer een conditie "}
+                    om de analyse te starten
                   </p>
                 )}
 

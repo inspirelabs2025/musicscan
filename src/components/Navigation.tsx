@@ -62,7 +62,7 @@ export function Navigation() {
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-6">
         <TransparentLogo 
-          originalUrl="/lovable-uploads/87bd2c62-723d-46cd-8c50-386c02fd7ae5.png" 
+          originalUrl="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" 
           alt="MusicScan" 
           className="h-8" 
         />
@@ -144,7 +144,7 @@ export function Navigation() {
           </SheetContent>
         </Sheet>
         <TransparentLogo 
-          originalUrl="/lovable-uploads/87bd2c62-723d-46cd-8c50-386c02fd7ae5.png" 
+          originalUrl="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" 
           alt="MusicScan" 
           className="h-8" 
         />

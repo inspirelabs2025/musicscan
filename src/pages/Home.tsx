@@ -14,7 +14,7 @@ const Home = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TransparentLogo 
-              originalUrl="/lovable-uploads/87bd2c62-723d-46cd-8c50-386c02fd7ae5.png" 
+              originalUrl="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" 
               alt="MusicScan" 
               className="h-8" 
             />

@@ -35,7 +35,7 @@ export const HeroSection = () => {
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-            Upload foto's van je vinyl en CD's, laat onze AI de details herkennen en krijg directe prijsschattingen van Discogs marketplace
+            Upload foto's van je vinyl en CD's, laat onze AI de details herkennen, sla je collectie op, krijg inzicht en ontdek de waarde
           </p>
           
           <div className="flex flex-wrap justify-center gap-4 mb-8">

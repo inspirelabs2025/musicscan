@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
     const startTime = Date.now();
 
     // Get collection data for context with detailed album information
+    // Note: For now using anonymous access, but should be filtered by user_id in production
     const { data: cdData, error: cdError } = await supabase
       .from('cd_scan')
       .select('artist, title, genre, year, calculated_advice_price, format, label, country')
@@ -171,13 +172,15 @@ Let op: De collectie bevat ook specifieke album details die je kunt gebruiken vo
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
-        max_tokens: 1000,
-        temperature: 0.8,
+        max_tokens: 1500,
+        temperature: 0.7,
+        presence_penalty: 0.1,
+        frequency_penalty: 0.1,
       }),
     });
 
@@ -197,7 +200,7 @@ Let op: De collectie bevat ook specifieke album details die je kunt gebruiken vo
         message: aiMessage,
         sender_type: 'ai',
         session_id,
-        ai_model: 'gpt-4o-mini',
+        ai_model: 'gpt-4.1-2025-04-14',
         tokens_used: tokensUsed,
         response_time_ms: responseTime,
         format_type: 'markdown',

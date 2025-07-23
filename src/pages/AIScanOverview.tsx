@@ -42,12 +42,14 @@ import {
   FlagOff,
   MessageSquare,
   X,
-  Loader2
+  Loader2,
+  Users
 } from "lucide-react";
 import { useAIScansStats, AIScanResult } from "@/hooks/useAIScans";
 import { useInfiniteAIScans } from "@/hooks/useInfiniteAIScans";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessedRows } from "@/hooks/useProcessedRows";
+import { useDuplicateDetection } from "@/hooks/useDuplicateDetection";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -58,6 +60,7 @@ const AIScanOverview = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [mediaTypeFilter, setMediaTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
   const [selectedScan, setSelectedScan] = useState<AIScanResult | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -111,6 +114,15 @@ const AIScanOverview = () => {
   }, [scansData]);
 
   const totalCount = scansData?.pages[0]?.totalCount || 0;
+
+  // Initialize duplicate detection
+  const { getDuplicateInfo, duplicateStats } = useDuplicateDetection(allScans);
+
+  // Filter scans based on duplicates if showDuplicatesOnly is enabled
+  const filteredScans = useMemo(() => {
+    if (!showDuplicatesOnly) return allScans;
+    return allScans.filter(scan => getDuplicateInfo(scan.id).isDuplicate);
+  }, [allScans, showDuplicatesOnly, getDuplicateInfo]);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -386,10 +398,10 @@ const AIScanOverview = () => {
                 subtitle="AI confidence score"
               />
               <StatCard
-                title="Mislukt"
-                value={statsData.failedScans}
-                icon={XCircle}
-                subtitle={`${statsData.pendingScans} nog bezig`}
+                title="Duplicaten"
+                value={duplicateStats.totalDuplicates}
+                icon={Users}
+                subtitle={`${duplicateStats.uniqueDuplicateGroups} groepen`}
               />
             </div>
           )}
@@ -459,16 +471,26 @@ const AIScanOverview = () => {
                     <SelectItem value="pending">Bezig</SelectItem>
                   </SelectContent>
                 </Select>
-                 <Button
-                   variant="outline"
-                   onClick={() => {
-                     setSearchTerm("");
-                     setMediaTypeFilter("all");
-                     setStatusFilter("all");
-                   }}
-                 >
-                   Reset Filters
-                 </Button>
+                 <div className="flex gap-2">
+                   <Button
+                     variant={showDuplicatesOnly ? "default" : "outline"}
+                     onClick={() => setShowDuplicatesOnly(!showDuplicatesOnly)}
+                   >
+                     <Users className="h-4 w-4 mr-2" />
+                     {showDuplicatesOnly ? "Toon Alles" : "Alleen Duplicaten"}
+                   </Button>
+                   <Button
+                     variant="outline"
+                     onClick={() => {
+                       setSearchTerm("");
+                       setMediaTypeFilter("all");
+                       setStatusFilter("all");
+                       setShowDuplicatesOnly(false);
+                     }}
+                   >
+                     Reset Filters
+                   </Button>
+                 </div>
                </div>
                 <div className="flex items-center justify-between mt-4">
                   <div className="flex items-center gap-4">
@@ -571,10 +593,11 @@ const AIScanOverview = () => {
                     </TableRow>
                   </TableHeader>
                     <TableBody>
-                      {allScans.map((scan) => {
+                      {filteredScans.map((scan) => {
                         const rowIsProcessed = isProcessed(scan.id);
                         const isIncorrect = scan.is_flagged_incorrect;
-                        console.log(`Row ${scan.id}: isProcessed=${rowIsProcessed}, isIncorrect=${isIncorrect}, discogs_id=${scan.discogs_id}`);
+                        const duplicateInfo = getDuplicateInfo(scan.id);
+                        console.log(`Row ${scan.id}: isProcessed=${rowIsProcessed}, isIncorrect=${isIncorrect}, isDuplicate=${duplicateInfo.isDuplicate}, discogs_id=${scan.discogs_id}`);
                         
                         return (
                           <TableRow 
@@ -584,6 +607,8 @@ const AIScanOverview = () => {
                                 ? "bg-purple-100 border-2 border-purple-600 border-l-8 shadow-md" 
                                 : rowIsProcessed 
                                 ? "bg-green-100 border-2 border-green-600 border-l-8 shadow-md" 
+                                : duplicateInfo.isDuplicate
+                                ? "bg-orange-100 border-2 border-orange-500 border-l-8 shadow-md"
                                 : "hover:bg-muted/50"
                             }`}
                           >
@@ -655,9 +680,20 @@ const AIScanOverview = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div>
-                            <div className="font-medium">{scan.artist || "Unknown Artist"}</div>
-                            <div className="text-sm text-muted-foreground">{scan.title || "Unknown Title"}</div>
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <div className="font-medium">{scan.artist || "Unknown Artist"}</div>
+                              <div className="text-sm text-muted-foreground">{scan.title || "Unknown Title"}</div>
+                            </div>
+                            {duplicateInfo.isDuplicate && (
+                              <Badge 
+                                variant="secondary" 
+                                className="bg-orange-200 text-orange-800 border-orange-300"
+                                title={`Dit item komt ${duplicateInfo.duplicateCount}x voor in de lijst`}
+                              >
+                                {duplicateInfo.duplicateCount}x
+                              </Badge>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -768,9 +804,11 @@ const AIScanOverview = () => {
               </Button>
             )}
             
-            {!hasNextPage && allScans.length > 0 && (
+            {!hasNextPage && filteredScans.length > 0 && (
               <div className="text-sm text-muted-foreground">
-                Alle {totalCount} resultaten geladen
+                {showDuplicatesOnly 
+                  ? `${filteredScans.length} duplicaten geladen` 
+                  : `Alle ${totalCount} resultaten geladen`}
               </div>
             )}
             

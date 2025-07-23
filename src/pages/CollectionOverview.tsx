@@ -236,10 +236,11 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => percent > 0.05 ? `${name}` : ''}
+                  label={({ genre, percent }) => percent > 0.05 ? `${genre}` : ''}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="count"
+                  nameKey="genre"
                 >
                   {stats.genres.slice(0, 8).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

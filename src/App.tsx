@@ -8,7 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import CatalogTest from "./pages/CatalogTest";
+
 import VinylScanComplete from "./pages/VinylScanComplete";
 import BulkerImage from "./pages/BulkerImage";
 import MarketplaceOverview from "./pages/MarketplaceOverview";
@@ -59,11 +59,6 @@ const App = () => (
             <Route path="/bulkerimage" element={
               <ProtectedRoute>
                 <BulkerImage />
-              </ProtectedRoute>
-            } />
-            <Route path="/catalog-test" element={
-              <ProtectedRoute>
-                <CatalogTest />
               </ProtectedRoute>
             } />
             <Route path="/vinyl-scan-complete" element={

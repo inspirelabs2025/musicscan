@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/FileUpload";
-import { DiscogsTest } from "@/components/DiscogsTest";
-import { DiscogsTokenTest } from "@/components/DiscogsTokenTest";
 import { ManualPriceInput } from "@/components/ManualPriceInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVinylAnalysis } from "@/hooks/useVinylAnalysis";
@@ -114,13 +112,8 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="scan" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-1 mb-8">
             <TabsTrigger value="scan">Vinyl Scanner</TabsTrigger>
-            <TabsTrigger value="test">Discogs Test</TabsTrigger>
-            <TabsTrigger value="token">Token Test</TabsTrigger>
-            <TabsTrigger value="catalog" asChild>
-              <a href="/catalog-test">Catalog Test</a>
-            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="scan" className="space-y-8">
@@ -378,13 +371,6 @@ const Index = () => {
             </div>
           </TabsContent>
           
-          <TabsContent value="test" className="mt-8">
-            <DiscogsTest />
-          </TabsContent>
-          
-          <TabsContent value="token" className="mt-8">
-            <DiscogsTokenTest />
-          </TabsContent>
         </Tabs>
       </main>
     </div>

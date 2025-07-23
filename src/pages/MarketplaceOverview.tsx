@@ -6,11 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { Search, Filter, Edit, Upload, Disc3, Music, Euro, AlertTriangle, CheckCircle, Eye } from 'lucide-react';
+import { Search, Filter, Edit, Upload, Disc3, Music, Euro, AlertTriangle, CheckCircle, Eye, Trash2 } from 'lucide-react';
 import { Navigation } from "@/components/Navigation";
 
 interface MarketplaceItem {
@@ -146,6 +147,34 @@ export default function MarketplaceOverview() {
       toast({
         title: "Fout",
         description: "Kon marketplace gegevens niet opslaan",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteMarketplaceItem = async (itemId: string, type: string) => {
+    try {
+      const table = type === 'CD' ? 'cd_scan' : 'vinyl2_scan';
+      
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', itemId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Verwijderd",
+        description: "Item is succesvol verwijderd",
+        variant: "default"
+      });
+
+      fetchMarketplaceItems();
+    } catch (error) {
+      console.error('Error deleting marketplace item:', error);
+      toast({
+        title: "Fout",
+        description: "Kon item niet verwijderen",
         variant: "destructive"
       });
     }
@@ -295,16 +324,17 @@ export default function MarketplaceOverview() {
                     </Badge>
                   )}
                 </div>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingItem(item)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
+                <div className="flex gap-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingItem(item)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Marketplace Details bewerken</DialogTitle>
@@ -321,6 +351,33 @@ export default function MarketplaceOverview() {
                     )}
                   </DialogContent>
                 </Dialog>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Item verwijderen</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Weet je zeker dat je "{item.artist} - {item.title}" wilt verwijderen? 
+                        Deze actie kan niet ongedaan gemaakt worden.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuleren</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteMarketplaceItem(item.id, item.type)}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Verwijderen
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                </div>
               </div>
               <CardTitle className="text-lg">
                 {item.artist} - {item.title}

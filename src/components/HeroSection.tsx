@@ -55,23 +55,23 @@ export const HeroSection = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-16">
+        <div className="grid grid-cols-3 gap-3 md:gap-6 max-w-3xl mx-auto mb-16">
           <Card className="text-center border-accent/20">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-vinyl-purple mb-2">10,000+</div>
-              <div className="text-sm text-muted-foreground">Items gescand</div>
+            <CardContent className="pt-3 pb-3 md:pt-6 md:pb-6">
+              <div className="text-xl md:text-3xl font-bold text-vinyl-purple mb-1 md:mb-2">10,000+</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Items gescand</div>
             </CardContent>
           </Card>
           <Card className="text-center border-accent/20">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-vinyl-gold mb-2">95%</div>
-              <div className="text-sm text-muted-foreground">Nauwkeurigheid</div>
+            <CardContent className="pt-3 pb-3 md:pt-6 md:pb-6">
+              <div className="text-xl md:text-3xl font-bold text-vinyl-gold mb-1 md:mb-2">95%</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Nauwkeurigheid</div>
             </CardContent>
           </Card>
           <Card className="text-center border-accent/20">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-green-600 mb-2">€2.5M</div>
-              <div className="text-sm text-muted-foreground">Gewaardeerde collecties</div>
+            <CardContent className="pt-3 pb-3 md:pt-6 md:pb-6">
+              <div className="text-xl md:text-3xl font-bold text-green-600 mb-1 md:mb-2">€2.5M</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Gewaardeerde collecties</div>
             </CardContent>
           </Card>
         </div>

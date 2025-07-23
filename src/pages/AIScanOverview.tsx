@@ -50,6 +50,7 @@ import { useInfiniteAIScans } from "@/hooks/useInfiniteAIScans";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessedRows } from "@/hooks/useProcessedRows";
 import { useDuplicateDetection } from "@/hooks/useDuplicateDetection";
+import { useMarketplaceStatus } from "@/hooks/useMarketplaceStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -117,6 +118,9 @@ const AIScanOverview = () => {
 
   // Initialize duplicate detection
   const { getDuplicateInfo, duplicateStats } = useDuplicateDetection(allScans);
+  
+  // Initialize marketplace status checking
+  const { data: marketplaceStatusMap } = useMarketplaceStatus(allScans);
 
   // Filter scans based on duplicates if showDuplicatesOnly is enabled
   const filteredScans = useMemo(() => {
@@ -597,7 +601,8 @@ const AIScanOverview = () => {
                         const rowIsProcessed = isProcessed(scan.id);
                         const isIncorrect = scan.is_flagged_incorrect;
                         const duplicateInfo = getDuplicateInfo(scan.id);
-                        console.log(`Row ${scan.id}: isProcessed=${rowIsProcessed}, isIncorrect=${isIncorrect}, isDuplicate=${duplicateInfo.isDuplicate}, discogs_id=${scan.discogs_id}`);
+                        const inMarketplace = marketplaceStatusMap?.get(scan.id) || false;
+                        console.log(`Row ${scan.id}: isProcessed=${rowIsProcessed}, isIncorrect=${isIncorrect}, isDuplicate=${duplicateInfo.isDuplicate}, inMarketplace=${inMarketplace}, discogs_id=${scan.discogs_id}`);
                         
                         return (
                           <TableRow 
@@ -605,7 +610,7 @@ const AIScanOverview = () => {
                             className={`transition-all duration-200 ${
                               isIncorrect 
                                 ? "bg-purple-100 border-2 border-purple-600 border-l-8 shadow-md" 
-                                : rowIsProcessed 
+                                : (inMarketplace || rowIsProcessed)
                                 ? "bg-green-100 border-2 border-green-600 border-l-8 shadow-md" 
                                 : duplicateInfo.isDuplicate
                                 ? "bg-orange-100 border-2 border-orange-500 border-l-8 shadow-md"

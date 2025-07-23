@@ -271,7 +271,10 @@ const CollectionChat = () => {
                           variant="ghost"
                           size="sm"
                           className="w-full text-left justify-start h-auto p-3 text-wrap"
-                          onClick={() => setInput(question)}
+                          onClick={() => {
+                            setInput(question);
+                            setTimeout(() => sendMessage(), 0);
+                          }}
                         >
                           {question}
                         </Button>
@@ -302,7 +305,10 @@ const CollectionChat = () => {
                               variant="ghost"
                               size="sm"
                               className="w-full text-left justify-start h-auto p-2 text-wrap text-xs"
-                              onClick={() => setInput(question)}
+                              onClick={() => {
+                                setInput(question);
+                                setTimeout(() => sendMessage(), 0);
+                              }}
                             >
                               {question}
                             </Button>

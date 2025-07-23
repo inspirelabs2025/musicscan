@@ -60,7 +60,9 @@ export function Navigation() {
     <>
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-6">
-        <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px]" />
+        <Link to="/">
+          <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer" />
+        </Link>
         <NavigationMenu>
           <NavigationMenuList className="gap-1">
             {navigationItems.map((item) => (
@@ -138,7 +140,9 @@ export function Navigation() {
             </div>
           </SheetContent>
         </Sheet>
-        <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px]" />
+        <Link to="/">
+          <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer" />
+        </Link>
       </div>
     </>
   );

@@ -140,11 +140,11 @@ const CollectionChat = () => {
     const isUser = msg.sender_type === 'user';
     
     return (
-      <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-        <div className={`max-w-[80%] p-3 rounded-lg ${
+      <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6 animate-fade-in`}>
+        <div className={`max-w-[80%] p-4 rounded-2xl shadow-lg ${
           isUser 
-            ? 'bg-primary text-primary-foreground' 
-            : 'bg-muted'
+            ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border border-primary/20' 
+            : 'bg-gradient-to-br from-card to-muted/50 border border-primary/10'
         }`}>
           {isUser ? (
             <p className="whitespace-pre-wrap">{msg.message}</p>
@@ -264,53 +264,66 @@ const CollectionChat = () => {
   const [suggestedQuestions, setSuggestedQuestions] = useState(() => getRandomSuggestedQuestions());
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
       <Navigation />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex justify-center items-center gap-2 mb-4">
-              <Brain className="w-8 h-8 text-primary" />
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                AI Collection Chat
-              </h1>
+          {/* Header with animated background */}
+          <div className="text-center mb-8 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 rounded-3xl blur-3xl opacity-30 animate-pulse"></div>
+            <div className="relative">
+              <div className="flex justify-center items-center gap-3 mb-4">
+                <div className="p-3 bg-gradient-to-br from-primary to-secondary rounded-2xl shadow-lg animate-fade-in">
+                  <Brain className="w-8 h-8 text-white" />
+                </div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-fade-in">
+                  AI Collection Chat
+                </h1>
+              </div>
+              <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed animate-fade-in">
+                🎵 Chat met een AI-expert over je muziekcollectie. Krijg persoonlijke inzichten, waarde-analyses, en aanbevelingen gebaseerd op je eigen vinyl en CD collectie.
+              </p>
             </div>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Chat met een AI-expert over je muziekcollectie. Krijg persoonlijke inzichten, waarde-analyses, en aanbevelingen gebaseerd op je eigen vinyl en CD collectie.
-            </p>
           </div>
 
-          {/* Quick Stats */}
+          {/* Quick Stats with enhanced styling */}
           {analysisData && analysisData.success && (
-            <Card className="mb-6">
-              <CardContent className="p-4">
+            <Card className="mb-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border-primary/20 shadow-lg animate-scale-in">
+              <CardContent className="p-6">
                 <div className="flex flex-wrap gap-4 justify-center">
-                  <Badge variant="outline" className="px-3 py-1">
-                    <Music className="w-4 h-4 mr-1" />
-                    Collection Chat Klaar
+                  <Badge variant="outline" className="px-4 py-2 bg-primary/10 border-primary/30 text-primary font-medium hover-scale">
+                    <Music className="w-4 h-4 mr-2" />
+                    Collection Chat Klaar ✨
                   </Badge>
-                  <Badge variant="outline" className="px-3 py-1">
-                    <TrendingUp className="w-4 h-4 mr-1" />
-                    AI Analyse Beschikbaar
+                  <Badge variant="outline" className="px-4 py-2 bg-secondary/10 border-secondary/30 text-secondary font-medium hover-scale">
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    AI Analyse Beschikbaar 🧠
                   </Badge>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Chat Interface */}
-          <Card className="h-[600px] flex flex-col">
-            <CardHeader className="pb-3">
+          {/* Chat Interface with enhanced styling */}
+          <Card className="h-[600px] flex flex-col bg-gradient-to-b from-card to-card/50 shadow-2xl border border-primary/20 animate-fade-in">
+            <CardHeader className="pb-3 bg-gradient-to-r from-primary/5 to-secondary/5">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5" />
-                  Chat
+                <CardTitle className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg">
+                    <MessageCircle className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Chat</span>
                 </CardTitle>
-                <Button onClick={startAnalysis} disabled={isLoading} variant="outline" size="sm">
-                  <Brain className="w-4 h-4 mr-1" />
-                  Start AI Analyse
+                <Button 
+                  onClick={startAnalysis} 
+                  disabled={isLoading} 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-gradient-to-r from-primary/10 to-secondary/10 hover:from-primary/20 hover:to-secondary/20 border-primary/30 hover-scale"
+                >
+                  <Brain className="w-4 h-4 mr-2" />
+                  Start AI Analyse 🚀
                 </Button>
               </div>
             </CardHeader>
@@ -321,19 +334,24 @@ const CollectionChat = () => {
               <ScrollArea className="flex-1 p-4">
                 {messages.length === 0 ? (
                   <div className="text-center py-12">
-                    <Brain className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Begin een gesprek</h3>
-                    <p className="text-muted-foreground mb-6">
-                      Stel een vraag over je collectie of klik op een suggestie hieronder
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-2xl opacity-50 animate-pulse"></div>
+                      <div className="relative p-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl border border-primary/20 mx-auto w-fit">
+                        <Brain className="w-12 h-12 mx-auto text-primary animate-pulse" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Begin een gesprek 💬</h3>
+                    <p className="text-muted-foreground mb-8 text-lg">
+                      🎯 Stel een vraag over je collectie of klik op een suggestie hieronder
                     </p>
                     
-                    <div className="space-y-2 max-w-md mx-auto">
+                    <div className="space-y-3 max-w-md mx-auto">
                       {suggestedQuestions.map((question, index) => (
                         <Button
                           key={index}
                           variant="ghost"
                           size="sm"
-                          className="w-full text-left justify-start h-auto p-3 text-wrap"
+                          className="w-full text-left justify-start h-auto p-4 text-wrap bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 border border-primary/20 rounded-xl hover-scale transition-all duration-300"
                           onClick={async () => {
                             setInput(question);
                             
@@ -372,7 +390,7 @@ const CollectionChat = () => {
                             }
                           }}
                         >
-                          {question}
+                          <span className="text-sm font-medium">💡 {question}</span>
                         </Button>
                       ))}
                     </div>
@@ -381,26 +399,29 @@ const CollectionChat = () => {
                   <div>
                     {messages.map(renderMessage)}
                     {isLoading && (
-                      <div className="flex justify-start mb-4">
-                        <div className="bg-muted p-3 rounded-lg">
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                      <div className="flex justify-start mb-4 animate-fade-in">
+                        <div className="bg-gradient-to-br from-primary/10 to-secondary/10 p-4 rounded-2xl border border-primary/20 shadow-lg">
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            <span className="text-sm text-muted-foreground">AI denkt na... 🤔</span>
+                          </div>
                         </div>
                       </div>
                     )}
                     
-                    {/* Show suggested questions after messages */}
+                    {/* Show suggested questions after messages with enhanced styling */}
                     {messages.length > 0 && !isLoading && (
-                      <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-                        <h4 className="text-sm font-medium mb-3 text-muted-foreground">
-                          Nieuwe vragen die je kunt stellen:
+                      <div className="mt-6 p-6 bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 rounded-2xl border border-primary/20 shadow-lg animate-fade-in">
+                        <h4 className="text-base font-semibold mb-4 text-primary flex items-center gap-2">
+                          💡 Nieuwe vragen die je kunt stellen:
                         </h4>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {suggestedQuestions.map((question, index) => (
                             <Button
                               key={index}
                               variant="ghost"
                               size="sm"
-                              className="w-full text-left justify-start h-auto p-2 text-wrap text-xs"
+                              className="w-full text-left justify-start h-auto p-3 text-wrap bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 border border-primary/10 rounded-xl hover-scale transition-all duration-300"
                               onClick={async () => {
                                 setInput(question);
                                 
@@ -439,7 +460,7 @@ const CollectionChat = () => {
                                 }
                               }}
                             >
-                              {question}
+                              <span className="text-sm">🔍 {question}</span>
                             </Button>
                           ))}
                         </div>

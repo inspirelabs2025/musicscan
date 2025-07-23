@@ -91,25 +91,26 @@ export default function CollectionOverview() {
   const formatCurrency = (value: number) => `€${value.toFixed(2)}`;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Terug
-          </Button>
-          <Navigation />
-          <div>
-            <h1 className="text-3xl font-bold">Collectie Overzicht</h1>
-            <p className="text-muted-foreground">Diepgaande analyse van je muziekcollectie</p>
+    <>
+      <Navigation />
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Terug
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Collectie Overzicht</h1>
+              <p className="text-muted-foreground">Diepgaande analyse van je muziekcollectie</p>
+            </div>
           </div>
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export Data
+          </Button>
         </div>
-        <Button variant="outline" size="sm">
-          <Download className="h-4 w-4 mr-2" />
-          Export Data
-        </Button>
-      </div>
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="w-full">
@@ -170,7 +171,8 @@ export default function CollectionOverview() {
           <PriceTab stats={stats} formatCurrency={formatCurrency} />
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </>
   );
 }
 

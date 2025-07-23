@@ -197,19 +197,16 @@ export default function MarketplaceOverview() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Navigation />
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Discogs Marketplace</h1>
-            <p className="text-muted-foreground">
-              Beheer en upload je gescande albums naar Discogs Marketplace
-            </p>
-          </div>
+    <>
+      <Navigation />
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Discogs Marketplace</h1>
+          <p className="text-muted-foreground">
+            Beheer en upload je gescande albums naar Discogs Marketplace
+          </p>
         </div>
-      </div>
 
       {/* Filters & Search */}
       <Card className="mb-6">
@@ -390,7 +387,8 @@ export default function MarketplaceOverview() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

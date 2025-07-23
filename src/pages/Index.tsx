@@ -1,63 +1,426 @@
-import { useState, useEffect } from "react";
-import { Camera, Disc3, ScanLine, TrendingUp, Loader2, CheckCircle, Eye, Store } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { FileUpload } from "@/components/FileUpload";
-import { ManualPriceInput } from "@/components/ManualPriceInput";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useVinylAnalysis } from "@/hooks/useVinylAnalysis";
+import React, { useReducer, useEffect, useCallback, useMemo } from 'react';
+import { Loader2, AlertTriangle, RefreshCcw, BarChart3, Camera, Search, ExternalLink, Copy, CheckCircle, AlertCircle, Disc3, Store } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { FileUpload } from '@/components/FileUpload';
+import { useVinylAnalysis } from '@/hooks/useVinylAnalysis';
+import { useCDAnalysis } from '@/hooks/useCDAnalysis';
+import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { extractDiscogsIdFromUrl } from "@/lib/utils";
+import { MediaTypeSelector } from "@/components/MediaTypeSelector";
+import { UploadSection } from "@/components/UploadSection";
+import { ScanResults } from "@/components/ScanResults";
+import { ConditionSelector } from "@/components/ConditionSelector";
+import { ManualSearch } from "@/components/ManualSearch";
+import { DiscogsIdInput } from "@/components/DiscogsIdInput";
+import { SearchingLoadingCard } from "@/components/SearchingLoadingCard";
+import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [uploadedFiles, setUploadedFiles] = useState<{[key: number]: string}>({});
-  const [manualPrice, setManualPrice] = useState<number | null>(null);
-  const [useManualPrice, setUseManualPrice] = useState(false);
-  const { isAnalyzing, analysisResult, analyzeImages } = useVinylAnalysis();
+  const navigate = useNavigate();
+  const [state, dispatch] = useReducer(scanReducer, initialScanState);
+  const { user } = useAuth();
 
-  // Check if all 3 photos are uploaded to trigger analysis
-  useEffect(() => {
-    const allPhotosUploaded = Object.keys(uploadedFiles).length === 3;
-    
-    if (allPhotosUploaded && !isAnalyzing && !analysisResult) {
-      console.log('🚀 All 3 photos uploaded, starting OCR analysis...');
-      const imageUrls = [uploadedFiles[0], uploadedFiles[1], uploadedFiles[2]];
-      analyzeImages(imageUrls);
+  const { 
+    isAnalyzing: isAnalyzingVinyl, 
+    analysisResult: vinylAnalysisResult, 
+    analyzeImages: analyzeVinylImages,
+    setAnalysisResult: setVinylAnalysisResult 
+  } = useVinylAnalysis();
+
+  const { 
+    isAnalyzing: isAnalyzingCD, 
+    analysisResult: cdAnalysisResult, 
+    analyzeImages: analyzeCDImages,
+    setAnalysisResult: setCDAnalysisResult 
+  } = useCDAnalysis();
+
+  const {
+    isSearching,
+    searchResults,
+    searchStrategies,
+    searchCatalog,
+    searchByDiscogsId,
+    setSearchResults,
+    retryPricing,
+    isPricingRetrying,
+    clearCache,
+    resetSearchState
+  } = useDiscogsSearch();
+
+  // Memoized derived state
+  const isAnalyzing = useMemo(() => 
+    state.mediaType === 'vinyl' ? isAnalyzingVinyl : (state.mediaType === 'cd' ? isAnalyzingCD : false),
+    [state.mediaType, isAnalyzingVinyl, isAnalyzingCD]
+  );
+
+  const analysisResult = useMemo(() => 
+    state.mediaType === 'vinyl' ? vinylAnalysisResult : (state.mediaType === 'cd' ? cdAnalysisResult : null),
+    [state.mediaType, vinylAnalysisResult, cdAnalysisResult]
+  );
+
+  const analyzeImages = useMemo(() => 
+    state.mediaType === 'vinyl' ? analyzeVinylImages : (state.mediaType === 'cd' ? analyzeCDImages : null),
+    [state.mediaType, analyzeVinylImages, analyzeCDImages]
+  );
+
+  const setAnalysisResult = useMemo(() => 
+    state.mediaType === 'vinyl' ? setVinylAnalysisResult : (state.mediaType === 'cd' ? setCDAnalysisResult : null),
+    [state.mediaType, setVinylAnalysisResult, setCDAnalysisResult]
+  );
+
+  // Memoized condition multipliers
+  const conditionMultipliers = useMemo(() => {
+    if (state.mediaType === 'vinyl') {
+      return {
+        'Mint (M)': 2.0,
+        'Near Mint (NM or M-)': 1.8,
+        'Very Good Plus (VG+)': 1.5,
+        'Very Good (VG)': 1.0,
+        'Good Plus (G+)': 0.8,
+        'Good (G)': 0.6,
+        'Fair (F) / Poor (P)': 0.4
+      };
+    } else if (state.mediaType === 'cd') {
+      return {
+        'Mint (M)': 2.0,
+        'Near Mint (NM)': 1.8,
+        'Very Good Plus (VG+)': 1.5,
+        'Very Good (VG)': 1.0,
+        'Good Plus (G+)': 0.8,
+        'Good (G)': 0.6,
+        'Fair (F) / Poor (P)': 0.4
+      };
     }
-  }, [uploadedFiles, isAnalyzing, analysisResult, analyzeImages]);
+    return {};
+  }, [state.mediaType]);
 
-  // Get pricing data from analysis results
-  const automaticPrice = analysisResult?.pricingData?.median_price 
-    ? parseFloat(analysisResult.pricingData.median_price) 
-    : null;
+  // Auto-trigger analysis when photos are uploaded
+  useEffect(() => {
+    if (!state.mediaType || !analyzeImages) return;
+    const requiredPhotos = state.mediaType === 'vinyl' ? 3 : 4;
+    if (state.uploadedFiles.length >= requiredPhotos && !isAnalyzing && !analysisResult) {
+      dispatch({ type: 'SET_CURRENT_STEP', payload: 2 });
+      analyzeImages(state.uploadedFiles);
+    }
+  }, [state.uploadedFiles, isAnalyzing, analysisResult, analyzeImages, state.mediaType]);
 
-  const lowestPrice = analysisResult?.pricingData?.lowest_price || null;
-  const medianPrice = analysisResult?.pricingData?.median_price || null;
-  const highestPrice = analysisResult?.pricingData?.highest_price || null;
+  // Auto-trigger Discogs search when OCR analysis completes - now barcode optional
+  useEffect(() => {
+    if (analysisResult?.analysis && !isSearching && searchResults.length === 0) {
+      const { artist, title, catalog_number } = analysisResult.analysis;
+      
+      // Check if we have enough data to search (catalog_number OR artist+title)
+      if (catalog_number?.trim() || (artist?.trim() && title?.trim())) {
+        dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
+        
+        const timeoutId = setTimeout(() => {
+          searchCatalog(catalog_number || '', artist, title);
+        }, 500);
+        
+        return () => clearTimeout(timeoutId);
+      } else {
+        console.log('⚠️ Not enough data for Discogs search - need catalog_number OR artist+title');
+      }
+    }
+  }, [analysisResult?.analysis, isSearching, searchResults.length, searchCatalog]);
 
-  // Determine which price to display
-  const activePrice = useManualPrice ? manualPrice : automaticPrice;
+  // Update step when search completes
+  useEffect(() => {
+    if (searchResults.length > 0) {
+      dispatch({ type: 'SET_CURRENT_STEP', payload: 4 });
+    }
+  }, [searchResults]);
+
+  // Memoized functions
+  const copyToClipboard = useCallback((text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Gekopieerd!",
+      description: "Tekst is gekopieerd naar klembord",
+      variant: "default"
+    });
+  }, []);
+
+  const calculateAdvicePrice = useCallback((condition: string, lowestPrice: string | null) => {
+    if (!condition || !lowestPrice) return null;
+    let price = parseFloat(lowestPrice.replace(',', '.'));
+    
+    if (price < 1.00) {
+      price = 1.00;
+    }
+    
+    const multiplier = conditionMultipliers[condition];
+    return Math.round(price * multiplier * 100) / 100;
+  }, [conditionMultipliers]);
+
+  const checkForDuplicates = useCallback(async (artist: string, title: string, catalogNumber: string) => {
+    try {
+      const tableName = state.mediaType === 'vinyl' ? 'vinyl2_scan' : 'cd_scan';
+      
+      let query = supabase.from(tableName).select('*');
+      
+      if (catalogNumber && catalogNumber.trim()) {
+        query = query
+          .ilike('artist', `%${artist}%`)
+          .ilike('title', `%${title}%`)
+          .eq('catalog_number', catalogNumber);
+      } else {
+        query = query
+          .ilike('artist', `%${artist}%`)
+          .ilike('title', `%${title}%`);
+      }
+      
+      const { data: exactMatches, error } = await query;
+      
+      if (error) throw error;
+      
+      return exactMatches || [];
+    } catch (error) {
+      return [];
+    }
+  }, [state.mediaType]);
+
+  const performSave = useCallback(async (condition: string, advicePrice: number) => {
+    if ((!analysisResult?.analysis && !state.discogsIdMode) || !state.mediaType) return;
+    
+    dispatch({ type: 'SET_IS_SAVING_CONDITION', payload: true });
+
+    try {
+      const tableName = state.mediaType === 'vinyl' ? 'vinyl2_scan' : 'cd_scan';
+      
+      // Helper function to get best available data (Discogs > OCR)
+      const getBestData = (discogsValue: string | undefined, ocrValue: string | undefined) => {
+        const cleanDiscogs = discogsValue?.trim();
+        const cleanOcr = ocrValue?.trim();
+        
+        // Prioritize Discogs data if it exists and is not empty/Unknown
+        if (cleanDiscogs && cleanDiscogs !== '' && cleanDiscogs.toLowerCase() !== 'unknown') {
+          console.log('🎯 Using Discogs data:', cleanDiscogs);
+          return cleanDiscogs;
+        }
+        
+        // Fallback to OCR data
+        console.log('📝 Using OCR data:', cleanOcr);
+        return cleanOcr;
+      };
+      
+      // For Discogs ID mode, use search results as primary source since there's no OCR
+      const bestArtist = state.discogsIdMode 
+        ? searchResults[0]?.artist || 'Unknown'
+        : getBestData(searchResults[0]?.artist, analysisResult?.analysis?.artist);
+      const bestTitle = state.discogsIdMode 
+        ? searchResults[0]?.title || 'Unknown'
+        : getBestData(searchResults[0]?.title, analysisResult?.analysis?.title);
+      
+      console.log('💾 Saving with artist:', bestArtist, 'title:', bestTitle);
+      
+      const insertData = state.mediaType === 'vinyl' ? {
+        catalog_image: state.uploadedFiles[0] || null,
+        matrix_image: state.uploadedFiles[1] || null, 
+        additional_image: state.uploadedFiles[2] || null,
+        catalog_number: analysisResult?.analysis?.catalog_number || searchResults[0]?.catalog_number || null,
+        matrix_number: analysisResult?.analysis?.matrix_number || null,
+        artist: bestArtist,
+        title: bestTitle,
+        year: analysisResult?.analysis?.year ? parseInt(analysisResult.analysis.year) : (searchResults[0]?.year || null),
+        format: 'Vinyl',
+        label: analysisResult?.analysis?.label || searchResults[0]?.label || null,
+        genre: analysisResult?.analysis?.genre || searchResults[0]?.genre || null,
+        country: analysisResult?.analysis?.country || searchResults[0]?.country || null,
+        condition_grade: condition,
+        calculated_advice_price: advicePrice,
+        discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
+        discogs_url: searchResults[0]?.discogs_url || null,
+        lowest_price: searchResults[0]?.pricing_stats?.lowest_price ? parseFloat(searchResults[0].pricing_stats.lowest_price.replace(',', '.')) : null,
+        median_price: searchResults[0]?.pricing_stats?.median_price ? parseFloat(searchResults[0].pricing_stats.median_price.replace(',', '.')) : null,
+        highest_price: searchResults[0]?.pricing_stats?.highest_price ? parseFloat(searchResults[0].pricing_stats.highest_price.replace(',', '.')) : null,
+        user_id: user?.id
+      } : {
+        front_image: state.uploadedFiles[0] || null,
+        back_image: state.uploadedFiles[1] || null,
+        barcode_image: state.uploadedFiles[2] || null,
+        matrix_image: state.uploadedFiles[3] || null,
+        barcode_number: analysisResult?.analysis?.barcode || null,
+        artist: bestArtist,
+        title: bestTitle,
+        label: analysisResult?.analysis?.label || searchResults[0]?.label || null,
+        catalog_number: analysisResult?.analysis?.catalog_number || searchResults[0]?.catalog_number || null,
+        year: analysisResult?.analysis?.year || searchResults[0]?.year || null,
+        format: 'CD',
+        genre: analysisResult?.analysis?.genre || searchResults[0]?.genre || null,
+        country: analysisResult?.analysis?.country || searchResults[0]?.country || null,
+        condition_grade: condition,
+        calculated_advice_price: advicePrice,
+        discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
+        discogs_url: searchResults[0]?.discogs_url || null,
+        lowest_price: searchResults[0]?.pricing_stats?.lowest_price ? parseFloat(searchResults[0].pricing_stats.lowest_price.replace(',', '.')) : null,
+        median_price: searchResults[0]?.pricing_stats?.median_price ? parseFloat(searchResults[0].pricing_stats.median_price.replace(',', '.')) : null,
+        highest_price: searchResults[0]?.pricing_stats?.highest_price ? parseFloat(searchResults[0].pricing_stats.highest_price.replace(',', '.')) : null,
+        user_id: user?.id
+      };
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      dispatch({ type: 'SET_COMPLETED_SCAN_DATA', payload: data });
+      
+      toast({
+        title: "Scan Voltooid! ✅",
+        description: `${state.mediaType === 'vinyl' ? 'LP' : 'CD'} opgeslagen met adviesprijs: €${advicePrice.toFixed(2)}`,
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Fout bij Opslaan",
+        description: "Kon scan niet opslaan in database",
+        variant: "destructive"
+      });
+    } finally {
+      dispatch({ type: 'SET_IS_SAVING_CONDITION', payload: false });
+    }
+  }, [analysisResult, state.mediaType, state.uploadedFiles, searchResults]);
+
+  const saveFinalScan = useCallback(async (condition: string, advicePrice: number) => {
+    console.log('🚀 saveFinalScan called with condition:', condition, 'advicePrice:', advicePrice);
+    if ((!analysisResult?.analysis && !state.discogsIdMode) || !state.mediaType) return;
+
+    // For Discogs ID mode, use search results data; for normal mode use OCR analysis
+    const artist = state.discogsIdMode 
+      ? searchResults[0]?.artist || 'Unknown'
+      : analysisResult?.analysis?.artist || '';
+    const title = state.discogsIdMode 
+      ? searchResults[0]?.title || 'Unknown'
+      : analysisResult?.analysis?.title || '';
+    const catalog_number = state.discogsIdMode
+      ? searchResults[0]?.catalog_number || ''
+      : analysisResult?.analysis?.catalog_number || '';
+
+    const duplicates = await checkForDuplicates(artist, title, catalog_number);
+    
+    if (duplicates.length > 0) {
+      dispatch({ type: 'SET_DUPLICATE_RECORDS', payload: duplicates });
+      dispatch({ type: 'SET_PENDING_SAVE_DATA', payload: { condition, advicePrice } });
+      dispatch({ type: 'SET_SHOW_DUPLICATE_DIALOG', payload: true });
+      return;
+    }
+
+    await performSave(condition, advicePrice);
+  }, [analysisResult, state.mediaType, state.discogsIdMode, searchResults, checkForDuplicates, performSave]);
+
+  // Event handlers
+  const handleMediaTypeSelect = useCallback((type: 'vinyl' | 'cd') => {
+    dispatch({ type: 'SET_MEDIA_TYPE', payload: type });
+  }, []);
+
+  const handleDiscogsIdSelect = useCallback(() => {
+    dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
+  }, []);
+
+  const handleDiscogsIdSubmit = useCallback(async (discogsId: string, mediaType: 'vinyl' | 'cd') => {
+    dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: discogsId });
+    dispatch({ type: 'SET_MEDIA_TYPE', payload: mediaType });
+    console.log('🆔 Starting Discogs ID search for:', discogsId, 'mediaType:', mediaType);
+    
+    await searchByDiscogsId(discogsId);
+  }, [searchByDiscogsId]);
+
+  const handleFileUploaded = useCallback((url: string) => {
+    dispatch({ type: 'SET_UPLOADED_FILES', payload: [...state.uploadedFiles, url] });
+  }, [state.uploadedFiles]);
+
+  const handleConditionChange = useCallback((condition: string) => {
+    console.log('🔄 handleConditionChange called with condition:', condition);
+    console.log('🔄 Current state.discogsIdMode:', state.discogsIdMode);
+    console.log('🔄 Available searchResults:', searchResults);
+    console.log('🔄 Current selectedCondition:', state.selectedCondition);
+    console.log('🔄 Current calculatedAdvicePrice:', state.calculatedAdvicePrice);
+    
+    dispatch({ type: 'SET_SELECTED_CONDITION', payload: condition });
+    
+    const lowestPrice = searchResults[0]?.pricing_stats?.lowest_price;
+    console.log('🔄 Lowest price found:', lowestPrice);
+    
+    if (lowestPrice) {
+      const advicePrice = calculateAdvicePrice(condition, lowestPrice);
+      console.log('🔄 Calculated advice price:', advicePrice);
+      if (advicePrice) {
+        console.log('💰 Setting calculated advice price:', advicePrice);
+        dispatch({ type: 'SET_CALCULATED_ADVICE_PRICE', payload: advicePrice });
+      }
+    } else {
+      console.log('❌ No lowest price found, cannot calculate advice price');
+    }
+  }, [searchResults, calculateAdvicePrice, state.discogsIdMode, state.selectedCondition, state.calculatedAdvicePrice]);
+
+  const handleSave = useCallback(async () => {
+    const finalAdvicePrice = state.useManualAdvicePrice ? state.manualAdvicePrice : state.calculatedAdvicePrice;
+    console.log('💾 handleSave called with condition:', state.selectedCondition, 'advicePrice:', finalAdvicePrice);
+    if (!state.selectedCondition || !finalAdvicePrice) {
+      toast({
+        title: "Kan niet opslaan",
+        description: "Selecteer eerst een conditie en zorg dat prijsscan compleet is",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    await saveFinalScan(state.selectedCondition, finalAdvicePrice);
+  }, [state.selectedCondition, state.calculatedAdvicePrice, state.manualAdvicePrice, state.useManualAdvicePrice, saveFinalScan]);
+
+  const handleSaveAnyway = useCallback(() => {
+    if (state.pendingSaveData) {
+      performSave(state.pendingSaveData.condition, state.pendingSaveData.advicePrice);
+    }
+    dispatch({ type: 'SET_SHOW_DUPLICATE_DIALOG', payload: false });
+    dispatch({ type: 'SET_PENDING_SAVE_DATA', payload: null });
+    dispatch({ type: 'SET_DUPLICATE_RECORDS', payload: [] });
+  }, [state.pendingSaveData, performSave]);
+
+  const handleCancelSave = useCallback(() => {
+    dispatch({ type: 'SET_SHOW_DUPLICATE_DIALOG', payload: false });
+    dispatch({ type: 'SET_PENDING_SAVE_DATA', payload: null });
+    dispatch({ type: 'SET_DUPLICATE_RECORDS', payload: [] });
+    dispatch({ type: 'SET_IS_SAVING_CONDITION', payload: false });
+  }, []);
+
+  const resetScan = useCallback(() => {
+    dispatch({ type: 'RESET_SCAN' });
+    setVinylAnalysisResult(null);
+    setCDAnalysisResult(null);
+    resetSearchState();
+  }, [resetSearchState, setVinylAnalysisResult, setCDAnalysisResult]);
+
+  const handleManualAdvicePriceChange = useCallback((price: number) => {
+    dispatch({ type: 'SET_MANUAL_ADVICE_PRICE', payload: price });
+  }, []);
+
+  const handleToggleManualAdvicePrice = useCallback((useManual: boolean) => {
+    dispatch({ type: 'SET_USE_MANUAL_ADVICE_PRICE', payload: useManual });
+  }, []);
 
   const steps = [
-    {
-      title: "Catalogusnummer",
-      description: "Scan het catalogusnummer voor Discogs herkenning",
-      icon: ScanLine,
-      color: "bg-vinyl-purple"
-    },
-    {
-      title: "Matrixnummer", 
-      description: "Fotografeer het matrixnummer van de LP",
-      icon: Disc3,
-      color: "bg-vinyl-gold"
-    },
-    {
-      title: "Overige informatie",
-      description: "Aanvullende foto's en details",
-      icon: Camera,
-      color: "bg-vinyl-silver"
-    }
+    { id: 0, title: "Media Type", description: "Wat ga je scannen?", active: !state.mediaType && !state.discogsIdMode },
+    { id: 1, title: "Foto's", description: "Upload je foto's", active: state.mediaType && !state.discogsIdMode && state.uploadedFiles.length === 0 },
+    { id: 2, title: "Analyseren", description: "AI analyseert", active: isAnalyzing },
+    { id: 3, title: "Zoeken", description: "Discogs zoeken", active: isSearching },
+    { id: 4, title: "Prijzen", description: "Prijzen berekenen", active: searchResults.length > 0 && !state.selectedCondition },
+    { id: 5, title: "Voltooid", description: "Scan opslaan", active: state.selectedCondition && state.calculatedAdvicePrice }
   ];
 
   return (
@@ -72,306 +435,204 @@ const Index = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-vinyl bg-clip-text text-transparent">
-                  Vinyl Scanner
+                  🎵 Wat ga je scannen?
                 </h1>
-                <p className="text-sm text-muted-foreground">LP & CD Waardering App</p>
+                <p className="text-sm text-muted-foreground">Kies het type media dat je wilt scannen en waarderen</p>
               </div>
             </div>
-            <Badge variant="secondary" className="text-xs">
-              v2.0
-            </Badge>
+            
+            <div className="flex items-center space-x-4">
+              <Link to="/marketplace-overview">
+                <Button size="sm" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+                  <Store className="h-4 w-4 mr-2" />
+                  🛒 Marketplace
+                </Button>
+              </Link>
+              <Badge variant="secondary" className="text-xs">
+                v2.0
+              </Badge>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-4xl font-bold mb-4">
-            Scan, Identificeer & Waardeer
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Upload 3 foto's van je LP of CD en krijg direct de Discogs informatie 
-            met accurate prijsinschattingen gebaseerd op de actuele marktwaarde.
-          </p>
+        {/* Progress Indicator */}
+        <div className="max-w-4xl mx-auto mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Scan Progress</h2>
+            <span className="text-sm text-muted-foreground">
+              Stap {state.currentStep + 1} van {steps.length}
+            </span>
+          </div>
+          <Progress value={(state.currentStep / (steps.length - 1)) * 100} className="w-full" />
+          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+            {steps.map((step) => (
+              <span key={step.id} className={step.active ? "text-primary font-medium" : ""}>
+                {step.title}
+              </span>
+            ))}
+          </div>
         </div>
 
-        <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link to="/vinyl-scan-complete">
-            <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white">
-              🎵 Complete Vinyl Scan (Nieuw!)
-            </Button>
-          </Link>
-          <Link to="/marketplace-overview">
-            <Button size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
-              <Store className="h-4 w-4 mr-2" />
-              🛒 Marketplace Overview
-            </Button>
-          </Link>
-        </div>
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Step 0: Media Type Selection or Discogs ID Input */}
+          {!state.mediaType && !state.discogsIdMode && (
+            <MediaTypeSelector
+              onSelectMediaType={handleMediaTypeSelect}
+              onSelectDiscogsId={handleDiscogsIdSelect}
+            />
+          )}
 
-        <Tabs defaultValue="scan" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 mb-8">
-            <TabsTrigger value="scan">Vinyl Scanner</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="scan" className="space-y-8">
-            <div className="flex items-center justify-center space-x-8 mb-8">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 mx-auto">
-                  <Camera className="w-8 h-8 text-primary" />
+          {/* Step 0.5: Discogs ID Input */}
+          {state.discogsIdMode && !state.directDiscogsId && (
+            <DiscogsIdInput
+              onSubmit={handleDiscogsIdSubmit}
+              isSearching={isSearching}
+            />
+          )}
+
+          {/* Step 1: Photo Upload */}
+          {state.mediaType && !state.discogsIdMode && state.uploadedFiles.length === 0 && (
+            <UploadSection
+              mediaType={state.mediaType}
+              uploadedFiles={state.uploadedFiles}
+              onFileUploaded={handleFileUploaded}
+              isAnalyzing={isAnalyzing}
+            />
+          )}
+
+          {/* Step 2: Analysis Loading */}
+          {isAnalyzing && (
+            <SearchingLoadingCard />
+          )}
+
+          {/* Step 3: Discogs Search Loading */}
+          {isSearching && (
+            <SearchingLoadingCard />
+          )}
+
+          {/* Step 4-5: Results and Condition Selection */}
+          {searchResults.length > 0 && (
+            <ScanResults
+              searchResults={searchResults}
+              searchStrategies={searchStrategies}
+              analysisResult={analysisResult}
+              mediaType={state.mediaType}
+              onCopyToClipboard={copyToClipboard}
+              onRetryPricing={() => retryPricing(searchResults[0]?.discogs_id)}
+              isPricingRetrying={isPricingRetrying}
+            />
+          )}
+
+          {/* No Results State - Manual Search Option */}
+          {state.currentStep >= 2 && !isSearching && !isAnalyzing && searchResults.length === 0 && analysisResult && (
+            <ManualSearch
+              mediaType={state.mediaType}
+              analysisResult={analysisResult}
+              onResultsFound={setSearchResults}
+            />
+          )}
+
+          {/* Error States */}
+          {state.currentStep >= 2 && !isAnalyzing && !isSearching && !analysisResult && searchResults.length === 0 && (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Er ging iets mis tijdens de analyse. Probeer het opnieuw of reset de scan.
+                <div className="mt-2">
+                  <Button variant="outline" onClick={resetScan} size="sm">
+                    <RefreshCcw className="w-4 h-4 mr-2" />
+                    Reset Scan
+                  </Button>
                 </div>
-                <p className="text-sm font-medium">Foto Scan</p>
-              </div>
-              <div className="w-8 h-px bg-border"></div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 mx-auto">
-                  <ScanLine className="w-8 h-8 text-primary" />
-                </div>
-                <p className="text-sm font-medium">Discogs ID</p>
-              </div>
-              <div className="w-8 h-px bg-border"></div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 mx-auto">
-                  <TrendingUp className="w-8 h-8 text-primary" />
-                </div>
-                <p className="text-sm font-medium">Waardering</p>
-              </div>
-            </div>
+              </AlertDescription>
+            </Alert>
+          )}
 
-            {/* Steps Cards */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              {steps.map((step, index) => {
-                const Icon = step.icon;
-                const isActive = currentStep === index;
-                const isCompleted = uploadedFiles[index] !== undefined;
-                
-                return (
-                  <Card 
-                    key={index} 
-                    className={`transition-all duration-300 cursor-pointer hover:shadow-lg ${
-                      isActive ? 'ring-2 ring-primary shadow-lg scale-105' : ''
-                    } ${isCompleted ? 'bg-muted/50' : ''}`}
-                    onClick={() => setCurrentStep(index)}
-                  >
-                    <CardHeader className="text-center">
-                      <div className={`w-16 h-16 rounded-full ${step.color} flex items-center justify-center mx-auto mb-4 ${
-                        isActive ? 'animate-scan-pulse' : ''
-                      }`}>
-                        <Icon className="w-8 h-8 text-white" />
-                      </div>
-                      <CardTitle className="text-lg">
-                        Stap {index + 1}: {step.title}
-                      </CardTitle>
-                      <CardDescription>{step.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button 
-                        className={`w-full ${isCompleted ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                        variant={isActive ? "default" : "outline"}
-                      >
-                        {isCompleted ? '✓ Voltooid' : isActive ? 'Upload Foto' : 'Start Stap'}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* Analysis Status */}
-            {(isAnalyzing || analysisResult) && (
-              <Card className="max-w-2xl mx-auto mb-8">
-                <CardContent className="p-6">
-                  {isAnalyzing ? (
-                    <div className="text-center space-y-4">
-                      <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
-                      <div>
-                        <h3 className="text-lg font-semibold">OCR Analyse Bezig...</h3>
-                        <p className="text-sm text-muted-foreground">
-                          AI analyseert je foto's voor catalogusnummer, matrixnummer en albuminfo
-                        </p>
-                      </div>
-                    </div>
-                  ) : analysisResult && (
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-center space-x-2 text-green-600">
-                        <CheckCircle className="w-6 h-6" />
-                        <h3 className="text-lg font-semibold">Analyse Voltooid!</h3>
-                      </div>
-                      
-                      {/* OCR Results */}
-                      <div className="bg-muted/50 rounded-lg p-4">
-                        <h4 className="font-semibold mb-3 text-primary">📀 Album Informatie</h4>
-                        <div className="grid md:grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <p><strong>Artiest:</strong> {analysisResult.ocrResults?.artist || 'Niet gevonden'}</p>
-                            <p><strong>Titel:</strong> {analysisResult.ocrResults?.title || 'Niet gevonden'}</p>
-                            <p><strong>Jaar:</strong> {analysisResult.ocrResults?.year || 'Niet gevonden'}</p>
-                            <p><strong>Genre:</strong> {analysisResult.ocrResults?.genre || 'Niet gevonden'}</p>
-                          </div>
-                          <div>
-                            <p><strong>Catalogusnummer:</strong> {analysisResult.ocrResults?.catalog_number || 'Niet gevonden'}</p>
-                            <p><strong>Matrixnummer:</strong> {analysisResult.ocrResults?.matrix_number || 'Niet gevonden'}</p>
-                            <p><strong>Label:</strong> {analysisResult.ocrResults?.label || 'Niet gevonden'}</p>
-                            <p><strong>Land:</strong> {analysisResult.ocrResults?.country || 'Niet gevonden'}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Discogs & Pricing Results */}
-                      {analysisResult.discogsData?.discogs_id && (
-                        <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
-                          <h4 className="font-semibold mb-3 text-green-700 dark:text-green-400">
-                            🎵 Discogs Match Gevonden!
-                          </h4>
-                          <div className="space-y-2 text-sm">
-                            <p><strong>Discogs ID:</strong> {analysisResult.discogsData.discogs_id}</p>
-                            <p>
-                              <strong>Discogs URL:</strong> 
-                              <a 
-                                href={analysisResult.discogsData.discogs_url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline ml-2"
-                              >
-                                Bekijk op Discogs →
-                              </a>
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Enhanced Pricing Information */}
-                      {(lowestPrice || medianPrice || highestPrice) ? (
-                        <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                          <h4 className="font-semibold mb-3 text-blue-700 dark:text-blue-400 flex items-center">
-                            <TrendingUp className="w-4 h-4 mr-2" />
-                            💰 Discogs Prijsinformatie
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {/* Lowest Price */}
-                            {lowestPrice && (
-                              <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-3 border border-green-200 dark:border-green-800 text-center">
-                                <p className="text-sm text-green-700 dark:text-green-400">Laagste Prijs</p>
-                                <p className="text-xl font-bold text-green-800 dark:text-green-300">
-                                  €{lowestPrice}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {/* Median Price */}
-                            {medianPrice && (
-                              <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800 text-center">
-                                <p className="text-sm text-blue-700 dark:text-blue-400">Gemiddelde</p>
-                                <p className="text-xl font-bold text-blue-800 dark:text-blue-300">
-                                  €{medianPrice}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {/* Highest Price */}
-                            {highestPrice && (
-                              <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-3 border border-red-200 dark:border-red-800 text-center">
-                                <p className="text-sm text-red-700 dark:text-red-400">Hoogste Prijs</p>
-                                <p className="text-xl font-bold text-red-800 dark:text-red-300">
-                                  €{highestPrice}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="bg-yellow-50 dark:bg-yellow-950/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
-                          <h4 className="font-semibold mb-2 text-yellow-700 dark:text-yellow-400">
-                            ⚠️ Geen Prijsdata Beschikbaar
-                          </h4>
-                          <p className="text-sm text-yellow-600 dark:text-yellow-300">
-                            Er kon geen prijsinformatie worden gevonden voor dit album op Discogs.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Manual Price Input - NEW SECTION */}
-            {analysisResult && automaticPrice && (
-              <div className="mb-8">
-                <ManualPriceInput
-                  automaticPrice={automaticPrice}
-                  manualPrice={manualPrice}
-                  useManualPrice={useManualPrice}
-                  onManualPriceChange={setManualPrice}
-                  onToggleManualPrice={setUseManualPrice}
-                />
-              </div>
-            )}
-
-            {/* Final Price Summary - NEW SECTION */}
-            {activePrice && (
-              <Card className="max-w-2xl mx-auto mb-8 border-2 border-primary/20">
-                <CardContent className="p-6">
-                  <div className="text-center space-y-4">
-                    <div className="flex items-center justify-center space-x-2">
-                      <TrendingUp className="w-6 h-6 text-primary" />
-                      <h3 className="text-lg font-semibold">Definitieve Prijs</h3>
-                    </div>
-                    <div className="text-4xl font-bold text-primary">
-                      €{activePrice.toFixed(2)}
-                    </div>
-                    <Badge variant={useManualPrice ? "default" : "secondary"}>
-                      {useManualPrice ? "Handmatig Aangepast" : "Automatisch Berekend"}
-                    </Badge>
-                    <p className="text-sm text-muted-foreground">
-                      Deze prijs kan worden gebruikt voor verkoop of verzekering
-                    </p>
+          {/* Completed Scan State */}
+          {state.completedScanData && (
+            <Card className="border-green-200 bg-green-50 dark:bg-green-950/20">
+              <CardHeader>
+                <CardTitle className="text-green-700 dark:text-green-400 flex items-center">
+                  <CheckCircle className="w-6 h-6 mr-2" />
+                  Scan Succesvol Voltooid!
+                </CardTitle>
+                <CardDescription>
+                  Je {state.mediaType === 'vinyl' ? 'LP' : 'CD'} is opgeslagen in je collectie
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p><strong>Artiest:</strong> {state.completedScanData.artist}</p>
+                    <p><strong>Titel:</strong> {state.completedScanData.title}</p>
+                    <p><strong>Conditie:</strong> {state.completedScanData.condition_grade}</p>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                  <div>
+                    <p><strong>Adviesprijs:</strong> €{state.completedScanData.calculated_advice_price?.toFixed(2) || 'N/A'}</p>
+                    <p><strong>Format:</strong> {state.completedScanData.format}</p>
+                    <p><strong>Jaar:</strong> {state.completedScanData.year || 'Onbekend'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 pt-4">
+                  <Button onClick={resetScan} className="flex-1">
+                    Nieuwe Scan Starten
+                  </Button>
+                  <Link to="/marketplace-overview" className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Bekijk Collectie
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
-            {/* Upload Area - only show if analysis not started */}
-            {!isAnalyzing && !analysisResult && (
-              <FileUpload
-                step={currentStep + 1}
-                stepTitle={steps[currentStep].title}
-                stepDescription={steps[currentStep].description}
-                isCompleted={uploadedFiles[currentStep] !== undefined}
-                onFileUploaded={(url) => {
-                  setUploadedFiles(prev => ({
-                    ...prev,
-                    [currentStep]: url
-                  }));
-                  
-                  // Auto-advance to next step if not the last step
-                  if (currentStep < steps.length - 1) {
-                    setTimeout(() => {
-                      setCurrentStep(currentStep + 1);
-                    }, 1500);
-                  }
-                }}
-              />
-            )}
-
-            {/* Progress Indicator */}
-            <div className="max-w-2xl mx-auto mt-8">
-              <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-                <span>Voortgang</span>
-                <span>{Object.keys(uploadedFiles).length} / {steps.length} voltooid</span>
-              </div>
-              <div className="w-full bg-secondary rounded-full h-2">
-                <div 
-                  className="bg-gradient-vinyl h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${(Object.keys(uploadedFiles).length / steps.length) * 100}%` }}
-                />
-              </div>
+        {/* Duplicate Records Dialog */}
+        <AlertDialog open={state.showDuplicateDialog} onOpenChange={() => dispatch({ type: 'SET_SHOW_DUPLICATE_DIALOG', payload: false })}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center">
+                <AlertCircle className="w-5 h-5 text-yellow-500 mr-2" />
+                Mogelijke Duplicaten Gevonden
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                We hebben {state.duplicateRecords.length} vergelijkbare record(s) gevonden in je collectie. 
+                Wil je toch doorgaan met opslaan?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <div className="max-h-60 overflow-y-auto my-4">
+              {state.duplicateRecords.map((record: any, index: number) => (
+                <div key={index} className="border rounded-lg p-3 mb-2 bg-muted/50">
+                  <div className="text-sm">
+                    <p><strong>{record.artist}</strong> - {record.title}</p>
+                    <p className="text-muted-foreground">
+                      {record.format} • {record.year || 'Onbekend jaar'} • {record.condition_grade}
+                    </p>
+                    {record.catalog_number && (
+                      <p className="text-xs text-muted-foreground">Cat: {record.catalog_number}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-          </TabsContent>
-          
-        </Tabs>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleCancelSave}>
+                Annuleren
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleSaveAnyway}>
+                Toch Opslaan
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );

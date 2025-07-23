@@ -9,7 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 
-import VinylScanComplete from "./pages/VinylScanComplete";
+
 import BulkerImage from "./pages/BulkerImage";
 import MarketplaceOverview from "./pages/MarketplaceOverview";
 import CollectionOverview from "./pages/CollectionOverview";
@@ -59,11 +59,6 @@ const App = () => (
             <Route path="/bulkerimage" element={
               <ProtectedRoute>
                 <BulkerImage />
-              </ProtectedRoute>
-            } />
-            <Route path="/vinyl-scan-complete" element={
-              <ProtectedRoute>
-                <VinylScanComplete />
               </ProtectedRoute>
             } />
             <Route path="/marketplace-overview" element={

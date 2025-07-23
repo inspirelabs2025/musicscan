@@ -93,53 +93,58 @@ export default function CollectionOverview() {
   return (
     <>
       <Navigation />
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Terug
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Collectie Overzicht</h1>
-              <p className="text-muted-foreground">Diepgaande analyse van je muziekcollectie</p>
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="w-fit">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Terug
+              </Button>
+              <div className="text-center sm:text-left">
+                <h1 className="text-2xl sm:text-3xl font-bold">Collectie Overzicht</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">Diepgaande analyse van je muziekcollectie</p>
+              </div>
             </div>
+            <Button variant="outline" size="sm" className="w-fit sm:w-auto">
+              <Download className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Export Data</span>
+              <span className="sm:hidden">Export</span>
+            </Button>
           </div>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export Data
-          </Button>
         </div>
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Package className="h-4 w-4" />
-            <span className="hidden sm:inline">Overzicht</span>
-          </TabsTrigger>
-          <TabsTrigger value="ai-analysis" className="flex items-center gap-2">
-            <Brain className="h-4 w-4" />
-            <span className="hidden sm:inline">🤖 AI Analyse</span>
-          </TabsTrigger>
-          <TabsTrigger value="type" className="flex items-center gap-2">
-            <Disc className="h-4 w-4" />
-            <span className="hidden sm:inline">Per Type</span>
-          </TabsTrigger>
-          <TabsTrigger value="genre" className="flex items-center gap-2">
-            <Music className="h-4 w-4" />
-            <span className="hidden sm:inline">Per Genre</span>
-          </TabsTrigger>
-          <TabsTrigger value="year" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Per Jaar</span>
-          </TabsTrigger>
-          <TabsTrigger value="price" className="flex items-center gap-2">
-            <Euro className="h-4 w-4" />
-            <span className="hidden sm:inline">Per Prijsklasse</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-2">
+          <TabsList className="grid w-full grid-cols-6 min-w-max sm:min-w-0">
+            <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
+              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm hidden sm:inline">Overzicht</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai-analysis" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
+              <Brain className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm hidden sm:inline">🤖 AI</span>
+            </TabsTrigger>
+            <TabsTrigger value="type" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
+              <Disc className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm hidden sm:inline">Type</span>
+            </TabsTrigger>
+            <TabsTrigger value="genre" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
+              <Music className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm hidden sm:inline">Genre</span>
+            </TabsTrigger>
+            <TabsTrigger value="year" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm hidden sm:inline">Jaar</span>
+            </TabsTrigger>
+            <TabsTrigger value="price" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
+              <Euro className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm hidden sm:inline">Prijs</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
@@ -181,7 +186,7 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
   return (
     <>
       {/* Collection Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard
           title="Totaal Items"
           value={stats.totalItems}
@@ -213,7 +218,7 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Genre Distribution */}
         <Card variant="dark">
           <CardHeader>
@@ -294,7 +299,7 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
       )}
 
       {/* Top Artists and Format & Condition */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <Card variant="purple">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
@@ -375,7 +380,7 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
           <CardTitle className="text-card-purple-foreground">🎵 Fun Facts over je Collectie</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div className="p-4 bg-card-dark rounded-lg border border-card-dark">
               <h4 className="font-medium text-card-dark-foreground">Meest Populaire Genre</h4>
               <p className="text-2xl font-bold text-primary">{stats.genres[0]?.genre || 'Onbekend'}</p>
@@ -404,7 +409,7 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
 function TypeTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value: number) => string }) {
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {/* CD Collection */}
         <Card variant="dark">
           <CardHeader>

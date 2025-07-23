@@ -334,9 +334,42 @@ const CollectionChat = () => {
                           variant="ghost"
                           size="sm"
                           className="w-full text-left justify-start h-auto p-3 text-wrap"
-                          onClick={() => {
+                          onClick={async () => {
                             setInput(question);
-                            setTimeout(() => sendMessage(), 0);
+                            
+                            const userMessage: ChatMessage = {
+                              id: crypto.randomUUID(),
+                              message: question,
+                              sender_type: 'user',
+                              created_at: new Date().toISOString()
+                            };
+
+                            setMessages(prev => [...prev, userMessage]);
+                            setInput('');
+                            setIsLoading(true);
+
+                            try {
+                              await supabase.functions.invoke('collection-chat', {
+                                body: {
+                                  message: question,
+                                  session_id: sessionId
+                                }
+                              });
+
+                              await loadMessages();
+                              setSuggestedQuestions(getRandomSuggestedQuestions());
+                            } catch (error) {
+                              console.error('Error sending message:', error);
+                              const errorMessage: ChatMessage = {
+                                id: crypto.randomUUID(),
+                                message: 'Sorry, er ging iets mis bij het verwerken van je bericht.',
+                                sender_type: 'ai',
+                                created_at: new Date().toISOString()
+                              };
+                              setMessages(prev => [...prev, errorMessage]);
+                            } finally {
+                              setIsLoading(false);
+                            }
                           }}
                         >
                           {question}
@@ -368,9 +401,42 @@ const CollectionChat = () => {
                               variant="ghost"
                               size="sm"
                               className="w-full text-left justify-start h-auto p-2 text-wrap text-xs"
-                              onClick={() => {
+                              onClick={async () => {
                                 setInput(question);
-                                setTimeout(() => sendMessage(), 0);
+                                
+                                const userMessage: ChatMessage = {
+                                  id: crypto.randomUUID(),
+                                  message: question,
+                                  sender_type: 'user',
+                                  created_at: new Date().toISOString()
+                                };
+
+                                setMessages(prev => [...prev, userMessage]);
+                                setInput('');
+                                setIsLoading(true);
+
+                                try {
+                                  await supabase.functions.invoke('collection-chat', {
+                                    body: {
+                                      message: question,
+                                      session_id: sessionId
+                                    }
+                                  });
+
+                                  await loadMessages();
+                                  setSuggestedQuestions(getRandomSuggestedQuestions());
+                                } catch (error) {
+                                  console.error('Error sending message:', error);
+                                  const errorMessage: ChatMessage = {
+                                    id: crypto.randomUUID(),
+                                    message: 'Sorry, er ging iets mis bij het verwerken van je bericht.',
+                                    sender_type: 'ai',
+                                    created_at: new Date().toISOString()
+                                  };
+                                  setMessages(prev => [...prev, errorMessage]);
+                                } finally {
+                                  setIsLoading(false);
+                                }
                               }}
                             >
                               {question}

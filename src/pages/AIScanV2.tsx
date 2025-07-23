@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Simple V2 components for media type and condition selection
 
@@ -36,6 +38,7 @@ interface AnalysisResult {
 }
 
 export default function AIScanV2() {
+  const { user, loading } = useAuth();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd'>('vinyl');
   const [conditionGrade, setConditionGrade] = useState('');
@@ -43,6 +46,13 @@ export default function AIScanV2() {
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      window.location.href = '/auth';
+    }
+  }, [user, loading]);
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -86,6 +96,15 @@ export default function AIScanV2() {
   };
 
   const startAnalysis = async () => {
+    if (!user) {
+      toast({
+        title: "Niet ingelogd",
+        description: "Je moet ingelogd zijn om de AI analyse te gebruiken.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (uploadedFiles.length === 0) {
       toast({
         title: "Geen bestanden",
@@ -113,13 +132,27 @@ export default function AIScanV2() {
     try {
       // Upload images
       setAnalysisProgress(20);
+      console.log('📤 Uploading images to Supabase storage...');
       const photoUrls = await Promise.all(
         uploadedFiles.map(({ file }) => uploadToSupabase(file))
       );
 
+      console.log('✅ Images uploaded successfully:', photoUrls);
       setAnalysisProgress(40);
 
+      // Get current session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session found');
+      }
+
+      console.log('🔐 Using session for authentication:', {
+        userId: session.user.id,
+        email: session.user.email
+      });
+
       // Call the V2 AI analysis function
+      console.log('🤖 Calling AI analysis V2 function...');
       const { data, error: functionError } = await supabase.functions.invoke(
         'ai-photo-analysis-v2',
         {
@@ -131,30 +164,39 @@ export default function AIScanV2() {
         }
       );
 
+      console.log('📊 Function response:', { data, error: functionError });
+
       if (functionError) {
-        throw new Error(functionError.message);
+        console.error('❌ Function error:', functionError);
+        throw new Error(functionError.message || 'Function call failed');
+      }
+
+      if (!data) {
+        throw new Error('No data received from function');
       }
 
       if (!data.success) {
+        console.error('❌ Analysis failed:', data.error);
         throw new Error(data.error || 'Analysis failed');
       }
 
       setAnalysisProgress(100);
       setAnalysisResult(data);
 
+      console.log('✅ Analysis completed successfully');
       toast({
         title: "Analyse voltooid!",
         description: `V2 analyse succesvol afgerond met ${Math.round(data.result.confidence_score * 100)}% vertrouwen.`
       });
 
     } catch (err) {
-      console.error('Analysis error:', err);
+      console.error('❌ Analysis error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
       
       toast({
         title: "Analyse mislukt",
-        description: errorMessage,
+        description: `Fout: ${errorMessage}`,
         variant: "destructive"
       });
     } finally {
@@ -179,6 +221,18 @@ export default function AIScanV2() {
     }
   }, [isAnalyzing, analysisProgress]);
 
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
+        <div className="text-center">
+          <Clock className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Laden...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       {/* Navigation */}
@@ -201,6 +255,11 @@ export default function AIScanV2() {
             <p className="text-muted-foreground">
               Ontdek supersnel de juiste release ID - verbeterde AI-analyse met GPT-4.1 en multi-pass technologie
             </p>
+            {user && (
+              <p className="text-sm text-muted-foreground">
+                Ingelogd als: {user.email}
+              </p>
+            )}
           </div>
 
         {!analysisResult && (
@@ -318,7 +377,7 @@ export default function AIScanV2() {
               <CardContent className="pt-6">
                 <Button 
                   onClick={startAnalysis}
-                  disabled={uploadedFiles.length === 0 || isAnalyzing || !conditionGrade}
+                  disabled={uploadedFiles.length === 0 || isAnalyzing || !conditionGrade || !user}
                   className="w-full"
                   size="lg"
                 >
@@ -336,7 +395,13 @@ export default function AIScanV2() {
                   )}
                 </Button>
 
-                {!conditionGrade && uploadedFiles.length > 0 && (
+                {!user && (
+                  <p className="text-sm text-red-600 text-center mt-2">
+                    Je moet ingelogd zijn om de analyse te gebruiken
+                  </p>
+                )}
+
+                {!conditionGrade && uploadedFiles.length > 0 && user && (
                   <p className="text-sm text-red-600 text-center mt-2">
                     Selecteer eerst een conditie om de analyse te starten
                   </p>
@@ -360,7 +425,16 @@ export default function AIScanV2() {
             {error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <p className="font-semibold">Fout bij V2 analyse:</p>
+                    <p>{error}</p>
+                    <p className="text-sm">
+                      Probeer het opnieuw of controleer je internetverbinding. 
+                      Als het probleem aanhoudt, controleer de logs in de browser console.
+                    </p>
+                  </div>
+                </AlertDescription>
               </Alert>
             )}
           </>

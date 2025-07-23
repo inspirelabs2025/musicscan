@@ -44,15 +44,50 @@ serve(async (req) => {
     // Get the authorization header to extract user info
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('❌ No authorization header provided')
       throw new Error('No authorization header provided')
     }
 
     // Extract JWT token and get user info
     const jwt = authHeader.replace('Bearer ', '')
+    console.log('🔐 Attempting to get user from JWT token...')
+    
     const { data: { user }, error: userError } = await supabase.auth.getUser(jwt)
     
-    if (userError || !user) {
-      throw new Error('Invalid authentication token')
+    if (userError) {
+      console.error('❌ User authentication error:', userError)
+      throw new Error(`Invalid authentication token: ${userError.message}`)
+    }
+    
+    if (!user) {
+      console.error('❌ No user found in token')
+      throw new Error('Invalid authentication token: No user found')
+    }
+
+    console.log('✅ User authenticated successfully:', {
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    })
+
+    // Validate user exists in auth.users table
+    try {
+      const { data: authUser, error: authCheckError } = await supabase
+        .from('auth.users')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (authCheckError) {
+        console.error('❌ Error checking user in auth table:', authCheckError)
+        // Continue anyway, as direct queries to auth.users might not be allowed
+      } else if (!authUser) {
+        console.warn('⚠️  User not found in auth.users table, but token is valid')
+      } else {
+        console.log('✅ User exists in auth.users table')
+      }
+    } catch (authCheckError) {
+      console.warn('⚠️  Could not verify user in auth table (this might be normal):', authCheckError)
     }
 
     const { photoUrls, mediaType, conditionGrade }: AnalysisRequest = await req.json()
@@ -61,10 +96,12 @@ serve(async (req) => {
       photoCount: photoUrls.length, 
       mediaType, 
       conditionGrade,
-      userId: user.id
+      userId: user.id,
+      userEmail: user.email
     })
 
     // Create initial record with version marker and user_id
+    console.log('📝 Creating scan record in database...')
     const { data: scanRecord, error: insertError } = await supabase
       .from('ai_scan_results')
       .insert({
@@ -79,9 +116,18 @@ serve(async (req) => {
       .single()
 
     if (insertError) {
+      console.error('❌ Database insert error:', {
+        error: insertError,
+        code: insertError.code,
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+        userId: user.id
+      })
       throw new Error(`Failed to create scan record: ${insertError.message}`)
     }
 
+    console.log('✅ Scan record created successfully:', scanRecord.id)
     const scanId = scanRecord.id
 
     try {
@@ -212,7 +258,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Request error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'Authentication or request processing failed'
+      }),
       { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

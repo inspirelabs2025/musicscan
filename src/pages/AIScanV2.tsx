@@ -199,7 +199,7 @@ export default function AIScanV2() {
               <Badge variant="secondary" className="ml-2">BETA</Badge>
             </h1>
             <p className="text-muted-foreground">
-              Verbeterde AI-analyse met GPT-4.1, multi-pass analyse en geavanceerde tekst extractie
+              Ontdek supersnel de juiste release ID - verbeterde AI-analyse met GPT-4.1 en multi-pass technologie
             </p>
           </div>
 

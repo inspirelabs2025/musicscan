@@ -239,7 +239,7 @@ export default function AIScan() {
               AI Foto Analyse
             </h1>
             <p className="text-muted-foreground">
-              Upload willekeurige foto's van je LP of CD en laat AI het release identificeren
+              Ontdek supersnel de juiste release ID met onze AI foto analyse
             </p>
           </div>
 

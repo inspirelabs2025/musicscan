@@ -28,10 +28,10 @@ export const HeroSection = () => {
           
           <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
             <span className="bg-gradient-vinyl bg-clip-text text-transparent">
-              Scan je collectie
+              AI Foto Analyse
             </span>
             <br />
-            <span className="text-foreground">met AI precisie</span>
+            <span className="text-foreground">ontdek supersnel de juiste release ID</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">

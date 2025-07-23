@@ -24,18 +24,34 @@ serve(async (req) => {
   }
 
   try {
+    // Get the authorization header to extract user info
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header provided')
+    }
+
+    // Extract JWT token and get user info
+    const jwt = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt)
+    
+    if (userError || !user) {
+      throw new Error('Invalid authentication token')
+    }
+
     const { photoUrls, mediaType, conditionGrade }: AnalysisRequest = await req.json()
 
     console.log('🤖 Starting AI photo analysis for:', { 
       photoCount: photoUrls.length, 
       mediaType, 
-      conditionGrade 
+      conditionGrade,
+      userId: user.id
     })
 
-    // Create initial record
+    // Create initial record with user_id
     const { data: scanRecord, error: insertError } = await supabase
       .from('ai_scan_results')
       .insert({
+        user_id: user.id,
         photo_urls: photoUrls,
         media_type: mediaType,
         condition_grade: conditionGrade,

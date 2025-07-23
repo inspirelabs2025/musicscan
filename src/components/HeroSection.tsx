@@ -31,8 +31,6 @@ export const HeroSection = () => {
               Scan je collectie
             </span>
             <br />
-            <span className="text-foreground">met AI precisie</span>
-            <br />
             <span className="text-vinyl-gold text-2xl md:text-3xl">Ontdek jouw muziek collectie</span>
           </h1>
           

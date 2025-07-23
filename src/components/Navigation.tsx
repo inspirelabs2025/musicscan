@@ -59,7 +59,8 @@ export function Navigation() {
   return (
     <>
       {/* Desktop Navigation */}
-      <div className="hidden md:block">
+      <div className="hidden md:flex items-center gap-6">
+        <h1 className="text-lg font-semibold">Music Scan</h1>
         <NavigationMenu>
           <NavigationMenuList className="gap-1">
             {navigationItems.map((item) => (
@@ -92,7 +93,7 @@ export function Navigation() {
       </div>
 
       {/* Mobile Navigation */}
-      <div className="md:hidden">
+      <div className="md:hidden flex items-center gap-3">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="sm" className="h-10 w-10 p-2 border-2">
@@ -137,6 +138,7 @@ export function Navigation() {
             </div>
           </SheetContent>
         </Sheet>
+        <h1 className="text-lg font-semibold">Music Scan</h1>
       </div>
     </>
   );

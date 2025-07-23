@@ -15,6 +15,7 @@ import BulkerImage from "./pages/BulkerImage";
 import MarketplaceOverview from "./pages/MarketplaceOverview";
 import CollectionOverview from "./pages/CollectionOverview";
 import CollectionChat from "./pages/CollectionChat";
+import AIAnalysis from "./pages/AIAnalysis";
 import AIScan from "./pages/AIScan";
 import AIScanOverview from "./pages/AIScanOverview";
 import AIScanV2 from "./pages/AIScanV2";
@@ -76,6 +77,11 @@ const App = () => (
             <Route path="/collection-chat" element={
               <ProtectedRoute>
                 <CollectionChat />
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-analysis" element={
+              <ProtectedRoute>
+                <AIAnalysis />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

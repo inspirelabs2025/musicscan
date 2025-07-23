@@ -42,11 +42,11 @@ export function FloatingNavigation({
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999]">
-      <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-2 shadow-2xl">
-        <div className="flex items-center gap-2">
+    <div className="fixed bottom-4 md:bottom-6 left-1/2 transform -translate-x-1/2 z-[9999] px-4 w-full max-w-screen-lg">
+      <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl md:rounded-2xl p-1 md:p-2 shadow-2xl overflow-x-auto">
+        <div className="flex items-center gap-1 md:gap-2 min-w-fit">
           {/* Chapter Navigation Buttons */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 overflow-x-auto">
             {chapters.map((chapter, index) => {
               const Icon = chapter.icon;
               const isActive = activeChapter === index;
@@ -57,13 +57,13 @@ export function FloatingNavigation({
                   onClick={() => scrollToSection(index)}
                   variant="ghost"
                   size="sm"
-                  className={`relative flex flex-col items-center gap-1 p-3 h-auto min-w-[60px] transition-all duration-300 ${
+                  className={`relative flex flex-col items-center gap-1 p-2 md:p-3 h-auto min-w-[50px] md:min-w-[60px] transition-all duration-300 ${
                     isActive 
                       ? 'bg-white/20 text-white shadow-lg' 
                       : 'text-white/60 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-3 w-3 md:h-4 md:w-4" />
                   <span className="text-xs font-medium hidden sm:block">
                     {chapter.title.split(' ')[0]}
                   </span>
@@ -77,29 +77,29 @@ export function FloatingNavigation({
             })}
           </div>
           
-          {/* Separator */}
-          <div className="w-px h-8 bg-white/20 mx-2" />
+          {/* Separator - Hidden on mobile */}
+          <div className="w-px h-6 md:h-8 bg-white/20 mx-1 md:mx-2 hidden sm:block" />
           
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1">
+          {/* Action Buttons - Hidden on mobile */}
+          <div className="hidden sm:flex items-center gap-1">
             <Button
               onClick={() => toast({ title: "Share DNA feature coming soon!" })}
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center gap-1 p-3 h-auto min-w-[60px] text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              className="flex flex-col items-center gap-1 p-2 md:p-3 h-auto min-w-[50px] md:min-w-[60px] text-white/60 hover:text-white hover:bg-white/10 transition-all"
             >
-              <Share2 className="h-4 w-4" />
-              <span className="text-xs font-medium hidden sm:block">Share</span>
+              <Share2 className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-xs font-medium hidden md:block">Share</span>
             </Button>
             
             <Button
               onClick={() => toast({ title: "Export feature coming soon!" })}
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center gap-1 p-3 h-auto min-w-[60px] text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              className="flex flex-col items-center gap-1 p-2 md:p-3 h-auto min-w-[50px] md:min-w-[60px] text-white/60 hover:text-white hover:bg-white/10 transition-all"
             >
-              <Download className="h-4 w-4" />
-              <span className="text-xs font-medium hidden sm:block">Export</span>
+              <Download className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-xs font-medium hidden md:block">Export</span>
             </Button>
           </div>
         </div>

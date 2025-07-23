@@ -67,19 +67,19 @@ export function MusicDNAExplorer() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="text-center py-16">
-            <Clock className="h-20 w-20 mx-auto mb-8 text-purple-400 animate-pulse" />
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-2 md:p-4 lg:p-8">
+        <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
+          <div className="text-center py-8 md:py-16 px-4">
+            <Clock className="h-12 w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 mx-auto mb-4 md:mb-8 text-purple-400 animate-pulse" />
+            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-6xl font-bold text-white mb-2 md:mb-4">
               Muziekgeschiedenis wordt geanalyseerd...
             </h1>
-            <p className="text-xl text-white/80 mb-8">
+            <p className="text-base md:text-lg lg:text-xl text-white/80 mb-4 md:mb-8">
               Even geduld terwijl we de verhalen achter je muziek ontdekken
             </p>
             <div className="flex justify-center space-x-2">
               {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="h-4 w-4 rounded-full bg-purple-400/20" />
+                <Skeleton key={i} className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-purple-400/20" />
               ))}
             </div>
           </div>
@@ -90,32 +90,32 @@ export function MusicDNAExplorer() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-2 md:p-4 lg:p-8">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center py-16 space-y-8">
-            <AlertCircle className="h-20 w-20 mx-auto text-red-400" />
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+          <div className="text-center py-8 md:py-16 space-y-4 md:space-y-8 px-4">
+            <AlertCircle className="h-12 w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 mx-auto text-red-400" />
+            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-6xl font-bold text-white mb-2 md:mb-4">
               Muziekdata ontbreekt
             </h1>
-            <p className="text-xl text-white/80 mb-8">
+            <p className="text-base md:text-lg lg:text-xl text-white/80 mb-4 md:mb-8">
               Je collectie mist belangrijke metadata voor historische analyse. Laten we dit verrijken!
             </p>
             
-            <div className="space-y-4">
+            <div className="space-y-4 flex flex-col items-center">
               <Button 
                 onClick={enrichMetadata} 
                 disabled={isEnriching}
                 size="lg"
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 md:px-8 py-3 md:py-4 text-sm md:text-lg w-full max-w-sm"
               >
                 {isEnriching ? (
                   <>
-                    <Database className="h-5 w-5 mr-2 animate-spin" />
+                    <Database className="h-4 w-4 md:h-5 md:w-5 mr-2 animate-spin" />
                     Metadata verrijken... {enrichmentProgress}%
                   </>
                 ) : (
                   <>
-                    <Database className="h-5 w-5 mr-2" />
+                    <Database className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                     Verrijk collectie metadata
                   </>
                 )}
@@ -126,16 +126,16 @@ export function MusicDNAExplorer() {
                 disabled={isRefetching}
                 variant="outline"
                 size="lg"
-                className="border-white/20 text-white hover:bg-white/10"
+                className="border-white/20 text-white hover:bg-white/10 w-full max-w-sm"
               >
                 {isRefetching ? (
                   <>
-                    <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                    <RefreshCw className="h-4 w-4 md:h-5 md:w-5 mr-2 animate-spin" />
                     Opnieuw analyseren...
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="h-5 w-5 mr-2" />
+                    <RefreshCw className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                     Probeer opnieuw
                   </>
                 )}
@@ -149,9 +149,9 @@ export function MusicDNAExplorer() {
 
   if (!data?.analysis) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto text-center py-16">
-          <h1 className="text-4xl font-bold text-white mb-4">Geen analyse beschikbaar</h1>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-2 md:p-4 lg:p-8">
+        <div className="max-w-4xl mx-auto text-center py-8 md:py-16 px-4">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4">Geen analyse beschikbaar</h1>
           <Button onClick={() => refetch()} className="mt-4">
             <RefreshCw className="h-4 w-4 mr-2" />
             Opnieuw proberen
@@ -165,13 +165,13 @@ export function MusicDNAExplorer() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-4000"></div>
+        <div className="absolute top-1/4 left-1/4 w-48 h-48 md:w-96 md:h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 md:w-96 md:h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-96 md:h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-4000"></div>
       </div>
 
       {/* Header with Music History Overview */}
-      <div className="relative z-10 text-center py-16 px-4">
+      <div className="relative z-10 text-center py-8 md:py-16 px-2 md:px-4">
         <div className="max-w-6xl mx-auto">
           <MusicHistoryHeader 
             stats={data.stats}
@@ -182,7 +182,7 @@ export function MusicDNAExplorer() {
       </div>
 
       {/* Music History Chapters */}
-      <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 pb-16">
+      <div className="relative z-10 max-w-6xl mx-auto px-2 md:px-4 lg:px-8 pb-16 md:pb-24">
         {MUSIC_CHAPTERS.map((chapter, index) => (
           <StoryChapter
             key={chapter.id}
@@ -204,17 +204,17 @@ export function MusicDNAExplorer() {
       />
 
       {/* Generation info */}
-      <div className="relative z-10 text-center text-white/60 pb-8">
-        <p className="text-sm">
+      <div className="relative z-10 text-center text-white/60 pb-8 px-4">
+        <p className="text-xs md:text-sm">
           Muziekhistorische analyse gegenereerd op {new Date(data.generatedAt).toLocaleString('nl-NL')}
         </p>
         <Button 
           onClick={() => refetch()} 
           variant="ghost" 
           size="sm"
-          className="text-white/60 hover:text-white mt-2"
+          className="text-white/60 hover:text-white mt-2 text-xs md:text-sm"
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-2" />
           Vernieuw analyse
         </Button>
       </div>

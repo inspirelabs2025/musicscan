@@ -26,6 +26,7 @@ import { SearchingLoadingCard } from "@/components/SearchingLoadingCard";
 import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
 import { useAuth } from "@/contexts/AuthContext";
 import { HeroSection } from "@/components/HeroSection";
+import { Navigation } from "@/components/Navigation";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -59,7 +60,6 @@ const Index = () => {
     resetSearchState
   } = useDiscogsSearch();
 
-  // Memoized derived state
   const isAnalyzing = useMemo(() => 
     state.mediaType === 'vinyl' ? isAnalyzingVinyl : (state.mediaType === 'cd' ? isAnalyzingCD : false),
     [state.mediaType, isAnalyzingVinyl, isAnalyzingCD]
@@ -80,7 +80,6 @@ const Index = () => {
     [state.mediaType, setVinylAnalysisResult, setCDAnalysisResult]
   );
 
-  // Memoized condition multipliers
   const conditionMultipliers = useMemo(() => {
     if (state.mediaType === 'vinyl') {
       return {
@@ -106,7 +105,6 @@ const Index = () => {
     return {};
   }, [state.mediaType]);
 
-  // Auto-trigger analysis when photos are uploaded
   useEffect(() => {
     if (!state.mediaType || !analyzeImages) return;
     const requiredPhotos = state.mediaType === 'vinyl' ? 3 : 4;
@@ -116,12 +114,10 @@ const Index = () => {
     }
   }, [state.uploadedFiles, isAnalyzing, analysisResult, analyzeImages, state.mediaType]);
 
-  // Auto-trigger Discogs search when OCR analysis completes - now barcode optional
   useEffect(() => {
     if (analysisResult?.analysis && !isSearching && searchResults.length === 0) {
       const { artist, title, catalog_number } = analysisResult.analysis;
       
-      // Check if we have enough data to search (catalog_number OR artist+title)
       if (catalog_number?.trim() || (artist?.trim() && title?.trim())) {
         dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
         
@@ -136,14 +132,12 @@ const Index = () => {
     }
   }, [analysisResult?.analysis, isSearching, searchResults.length, searchCatalog]);
 
-  // Update step when search completes
   useEffect(() => {
     if (searchResults.length > 0) {
       dispatch({ type: 'SET_CURRENT_STEP', payload: 4 });
     }
   }, [searchResults]);
 
-  // Memoized functions
   const copyToClipboard = useCallback((text: string) => {
     navigator.clipboard.writeText(text);
     toast({
@@ -200,23 +194,19 @@ const Index = () => {
     try {
       const tableName = state.mediaType === 'vinyl' ? 'vinyl2_scan' : 'cd_scan';
       
-      // Helper function to get best available data (Discogs > OCR)
       const getBestData = (discogsValue: string | undefined, ocrValue: string | undefined) => {
         const cleanDiscogs = discogsValue?.trim();
         const cleanOcr = ocrValue?.trim();
         
-        // Prioritize Discogs data if it exists and is not empty/Unknown
         if (cleanDiscogs && cleanDiscogs !== '' && cleanDiscogs.toLowerCase() !== 'unknown') {
           console.log('🎯 Using Discogs data:', cleanDiscogs);
           return cleanDiscogs;
         }
         
-        // Fallback to OCR data
         console.log('📝 Using OCR data:', cleanOcr);
         return cleanOcr;
       };
       
-      // For Discogs ID mode, use search results as primary source since there's no OCR
       const bestArtist = state.discogsIdMode 
         ? searchResults[0]?.artist || 'Unknown'
         : getBestData(searchResults[0]?.artist, analysisResult?.analysis?.artist);
@@ -301,7 +291,6 @@ const Index = () => {
     console.log('🚀 saveFinalScan called with condition:', condition, 'advicePrice:', advicePrice);
     if ((!analysisResult?.analysis && !state.discogsIdMode) || !state.mediaType) return;
 
-    // For Discogs ID mode, use search results data; for normal mode use OCR analysis
     const artist = state.discogsIdMode 
       ? searchResults[0]?.artist || 'Unknown'
       : analysisResult?.analysis?.artist || '';
@@ -324,7 +313,6 @@ const Index = () => {
     await performSave(condition, advicePrice);
   }, [analysisResult, state.mediaType, state.discogsIdMode, searchResults, checkForDuplicates, performSave]);
 
-  // Event handlers
   const handleMediaTypeSelect = useCallback((type: 'vinyl' | 'cd') => {
     dispatch({ type: 'SET_MEDIA_TYPE', payload: type });
   }, []);
@@ -426,45 +414,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-scan">
-      {/* Header */}
-      <header className="bg-card/80 backdrop-blur-sm border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-vinyl flex items-center justify-center">
-                <Disc3 className="w-6 h-6 text-white animate-vinyl-spin" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-vinyl bg-clip-text text-transparent">
-                  Vinyl & CD Scanner
-                </h1>
-                <p className="text-sm text-muted-foreground">AI-powered collectie waardering</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Link to="/marketplace-overview">
-                <Button size="sm" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
-                  <Store className="h-4 w-4 mr-2" />
-                  🛒 Marketplace
-                </Button>
-              </Link>
-              <Badge variant="secondary" className="text-xs">
-                v2.0
-              </Badge>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navigation />
 
-      {/* Hero Section - Only show when no media type is selected */}
       {!state.mediaType && !state.discogsIdMode && (
         <HeroSection />
       )}
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Progress Indicator - Only show when scan is in progress */}
         {(state.mediaType || state.discogsIdMode) && (
           <div className="max-w-4xl mx-auto mb-8">
             <div className="flex items-center justify-between mb-4">
@@ -485,7 +441,6 @@ const Index = () => {
         )}
 
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Step 0: Media Type Selection or Discogs ID Input */}
           {!state.mediaType && !state.discogsIdMode && (
             <MediaTypeSelector
               onSelectMediaType={handleMediaTypeSelect}
@@ -493,7 +448,6 @@ const Index = () => {
             />
           )}
 
-          {/* Step 0.5: Discogs ID Input */}
           {state.discogsIdMode && !state.directDiscogsId && (
             <DiscogsIdInput
               onSubmit={handleDiscogsIdSubmit}
@@ -501,7 +455,6 @@ const Index = () => {
             />
           )}
 
-          {/* Step 1: Photo Upload */}
           {state.mediaType && !state.discogsIdMode && state.uploadedFiles.length === 0 && (
             <UploadSection
               mediaType={state.mediaType}
@@ -511,17 +464,14 @@ const Index = () => {
             />
           )}
 
-          {/* Step 2: Analysis Loading */}
           {isAnalyzing && (
             <SearchingLoadingCard />
           )}
 
-          {/* Step 3: Discogs Search Loading */}
           {isSearching && (
             <SearchingLoadingCard />
           )}
 
-          {/* Step 4-5: Results and Condition Selection */}
           {searchResults.length > 0 && (
             <ScanResults
               searchResults={searchResults}
@@ -534,7 +484,6 @@ const Index = () => {
             />
           )}
 
-          {/* No Results State - Manual Search Option */}
           {state.currentStep >= 2 && !isSearching && !isAnalyzing && searchResults.length === 0 && analysisResult && (
             <ManualSearch
               mediaType={state.mediaType}
@@ -543,7 +492,6 @@ const Index = () => {
             />
           )}
 
-          {/* Error States */}
           {state.currentStep >= 2 && !isAnalyzing && !isSearching && !analysisResult && searchResults.length === 0 && (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
@@ -559,7 +507,6 @@ const Index = () => {
             </Alert>
           )}
 
-          {/* Completed Scan State */}
           {state.completedScanData && (
             <Card className="border-green-200 bg-green-50 dark:bg-green-950/20">
               <CardHeader>
@@ -601,7 +548,6 @@ const Index = () => {
           )}
         </div>
 
-        {/* Duplicate Records Dialog */}
         <AlertDialog open={state.showDuplicateDialog} onOpenChange={() => dispatch({ type: 'SET_SHOW_DUPLICATE_DIALOG', payload: false })}>
           <AlertDialogContent>
             <AlertDialogHeader>

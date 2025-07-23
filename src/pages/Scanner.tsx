@@ -485,6 +485,24 @@ const Scanner = () => {
             />
           )}
 
+          {searchResults.length > 0 && searchResults[0]?.pricing_stats && state.mediaType && (
+            <ConditionSelector
+              mediaType={state.mediaType}
+              selectedCondition={state.selectedCondition}
+              lowestPrice={searchResults[0]?.pricing_stats?.lowest_price}
+              medianPrice={searchResults[0]?.pricing_stats?.median_price}
+              highestPrice={searchResults[0]?.pricing_stats?.highest_price}
+              calculatedAdvicePrice={state.calculatedAdvicePrice}
+              manualAdvicePrice={state.manualAdvicePrice}
+              useManualAdvicePrice={state.useManualAdvicePrice}
+              isSaving={state.isSavingCondition}
+              onConditionChange={handleConditionChange}
+              onManualAdvicePriceChange={handleManualAdvicePriceChange}
+              onToggleManualAdvicePrice={handleToggleManualAdvicePrice}
+              onSave={handleSave}
+            />
+          )}
+
           {state.currentStep >= 2 && !isSearching && !isAnalyzing && searchResults.length === 0 && analysisResult && (
             <ManualSearch
               mediaType={state.mediaType}

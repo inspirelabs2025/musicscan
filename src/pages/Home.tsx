@@ -12,7 +12,7 @@ const Home = () => {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold">Music Scan</h1>
+            <img src="/lovable-uploads/87bd2c62-723d-46cd-8c50-386c02fd7ae5.png" alt="MusicScan" className="h-8" />
           </div>
           
           <div className="flex items-center gap-4">

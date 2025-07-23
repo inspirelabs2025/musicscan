@@ -60,7 +60,7 @@ export function Navigation() {
     <>
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-6">
-        <h1 className="text-lg font-semibold">Music Scan</h1>
+        <img src="/lovable-uploads/87bd2c62-723d-46cd-8c50-386c02fd7ae5.png" alt="MusicScan" className="h-8" />
         <NavigationMenu>
           <NavigationMenuList className="gap-1">
             {navigationItems.map((item) => (
@@ -138,7 +138,7 @@ export function Navigation() {
             </div>
           </SheetContent>
         </Sheet>
-        <h1 className="text-lg font-semibold">Music Scan</h1>
+        <img src="/lovable-uploads/87bd2c62-723d-46cd-8c50-386c02fd7ae5.png" alt="MusicScan" className="h-8" />
       </div>
     </>
   );

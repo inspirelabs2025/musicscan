@@ -237,13 +237,13 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Genre Distribution */}
-        <Card variant="dark">
+        <Card variant="purple">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-card-dark-foreground">
+            <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
               <Music className="h-5 w-5" />
               Genre Verdeling
             </CardTitle>
-            <CardDescription className="text-card-dark-foreground/70">Verdeling van genres in je collectie</CardDescription>
+            <CardDescription className="text-card-purple-foreground/70">Verdeling van genres in je collectie</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -302,13 +302,13 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
 
       {/* Year Timeline */}
       {stats.years.length > 0 && (
-        <Card variant="dark">
+        <Card variant="purple">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-card-dark-foreground">
+            <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
               <Calendar className="h-5 w-5" />
               Tijdlijn Collectie
             </CardTitle>
-            <CardDescription className="text-card-dark-foreground/70">Verdeling van release jaren</CardDescription>
+            <CardDescription className="text-card-purple-foreground/70">Verdeling van release jaren</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -360,36 +360,36 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
           </CardContent>
         </Card>
 
-        <Card variant="dark">
+        <Card variant="purple">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-card-dark-foreground">
+            <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
               <Disc className="h-5 w-5" />
               Format & Conditie
             </CardTitle>
-            <CardDescription className="text-card-dark-foreground/70">Overzicht van formats en condities</CardDescription>
+            <CardDescription className="text-card-purple-foreground/70">Overzicht van formats en condities</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <h4 className="font-medium mb-3 text-card-dark-foreground">Format Verdeling</h4>
+              <h4 className="font-medium mb-3 text-card-purple-foreground">Format Verdeling</h4>
               <div className="flex gap-4">
                 <div className="flex items-center gap-2">
-                  <Disc className="h-4 w-4 text-card-dark-foreground" />
-                  <span className="text-sm text-card-dark-foreground">CD's: {stats.totalCDs}</span>
+                  <Disc className="h-4 w-4 text-card-purple-foreground" />
+                  <span className="text-sm text-card-purple-foreground">CD's: {stats.totalCDs}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Disc3 className="h-4 w-4 text-card-dark-foreground" />
-                  <span className="text-sm text-card-dark-foreground">LP's: {stats.totalVinyls}</span>
+                  <Disc3 className="h-4 w-4 text-card-purple-foreground" />
+                  <span className="text-sm text-card-purple-foreground">LP's: {stats.totalVinyls}</span>
                 </div>
               </div>
             </div>
             
             {stats.conditions.length > 0 && (
               <div>
-                <h4 className="font-medium mb-3 text-card-dark-foreground">Conditie Verdeling</h4>
+                <h4 className="font-medium mb-3 text-card-purple-foreground">Conditie Verdeling</h4>
                 <div className="space-y-2">
                   {stats.conditions.map((condition) => (
                     <div key={condition.condition} className="flex justify-between">
-                      <span className="text-sm text-card-dark-foreground">{condition.condition}</span>
+                      <span className="text-sm text-card-purple-foreground">{condition.condition}</span>
                       <Badge variant="outline">{condition.count}</Badge>
                     </div>
                   ))}
@@ -437,13 +437,13 @@ function TypeTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {/* CD Collection */}
-        <Card variant="dark">
+        <Card variant="purple">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-card-dark-foreground">
+            <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
               <Disc className="h-5 w-5" />
               CD Collectie
             </CardTitle>
-            <CardDescription className="text-card-dark-foreground/70">Analyse van je CD collectie</CardDescription>
+            <CardDescription className="text-card-purple-foreground/70">Analyse van je CD collectie</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -515,10 +515,10 @@ function TypeTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value
 
       {/* Comparison Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card variant="dark">
+        <Card variant="purple">
           <CardHeader>
-            <CardTitle className="text-card-dark-foreground">Waarde Vergelijking</CardTitle>
-            <CardDescription className="text-card-dark-foreground/70">CD vs Vinyl waarde verdeling</CardDescription>
+            <CardTitle className="text-card-purple-foreground">Waarde Vergelijking</CardTitle>
+            <CardDescription className="text-card-purple-foreground/70">CD vs Vinyl waarde verdeling</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -581,13 +581,13 @@ function GenreTab({ stats, formatCurrency }: { stats: any; formatCurrency: (valu
         {stats.genres.slice(0, 6).map((genre, index) => {
           const details = stats.genreDetails[genre.genre];
           return (
-            <Card key={genre.genre} variant={index % 2 === 0 ? 'dark' : 'purple'}>
+            <Card key={genre.genre} variant="purple">
               <CardHeader>
-                <CardTitle className={`flex items-center gap-2 ${index % 2 === 0 ? 'text-card-dark-foreground' : 'text-card-purple-foreground'}`}>
+                <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
                   <Music2 className="h-5 w-5" />
                   {genre.genre}
                 </CardTitle>
-                <CardDescription className={index % 2 === 0 ? 'text-card-dark-foreground/70' : 'text-card-purple-foreground/70'}>
+                <CardDescription className="text-card-purple-foreground/70">
                   {genre.count} albums • {formatCurrency(genre.value)}
                 </CardDescription>
               </CardHeader>
@@ -629,10 +629,10 @@ function GenreTab({ stats, formatCurrency }: { stats: any; formatCurrency: (valu
         })}
       </div>
 
-      <Card variant="dark">
+      <Card variant="purple">
         <CardHeader>
-          <CardTitle className="text-card-dark-foreground">Genre Waarde Verdeling</CardTitle>
-          <CardDescription className="text-card-dark-foreground/70">Totale waarde per genre</CardDescription>
+          <CardTitle className="text-card-purple-foreground">Genre Waarde Verdeling</CardTitle>
+          <CardDescription className="text-card-purple-foreground/70">Totale waarde per genre</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
@@ -658,13 +658,13 @@ function YearTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {decades.map(([decade, data]: [string, any], index) => (
-          <Card key={decade} variant={index % 2 === 0 ? 'purple' : 'dark'}>
+          <Card key={decade} variant="purple">
             <CardHeader>
-              <CardTitle className={`flex items-center gap-2 ${index % 2 === 0 ? 'text-card-purple-foreground' : 'text-card-dark-foreground'}`}>
+              <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
                 <Calendar className="h-5 w-5" />
                 {decade}
               </CardTitle>
-              <CardDescription className={index % 2 === 0 ? 'text-card-purple-foreground/70' : 'text-card-dark-foreground/70'}>
+              <CardDescription className="text-card-purple-foreground/70">
                 {data.count} albums • {formatCurrency(data.value)}
               </CardDescription>
             </CardHeader>
@@ -733,13 +733,13 @@ function PriceTab({ stats, formatCurrency }: { stats: any; formatCurrency: (valu
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {segments.map((segment, index) => (
-          <Card key={segment.key} variant={index % 2 === 0 ? 'dark' : 'purple'}>
+          <Card key={segment.key} variant="purple">
             <CardHeader>
-              <CardTitle className={`flex items-center gap-2 ${index % 2 === 0 ? 'text-card-dark-foreground' : 'text-card-purple-foreground'}`}>
+              <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
                 <DollarSign className="h-5 w-5" />
                 {segment.name}
               </CardTitle>
-              <CardDescription className={index % 2 === 0 ? 'text-card-dark-foreground/70' : 'text-card-purple-foreground/70'}>
+              <CardDescription className="text-card-purple-foreground/70">
                 {segment.data.count} albums
               </CardDescription>
             </CardHeader>
@@ -767,10 +767,10 @@ function PriceTab({ stats, formatCurrency }: { stats: any; formatCurrency: (valu
         ))}
       </div>
 
-      <Card variant="dark">
+      <Card variant="purple">
         <CardHeader>
-          <CardTitle className="text-card-dark-foreground">Waarde Verdeling</CardTitle>
-          <CardDescription className="text-card-dark-foreground/70">Overzicht van prijsklassen in je collectie</CardDescription>
+          <CardTitle className="text-card-purple-foreground">Waarde Verdeling</CardTitle>
+          <CardDescription className="text-card-purple-foreground/70">Overzicht van prijsklassen in je collectie</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>

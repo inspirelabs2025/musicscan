@@ -1,5 +1,5 @@
 import React, { useReducer, useEffect, useCallback, useMemo } from 'react';
-import { Loader2, AlertTriangle, RefreshCcw, BarChart3, Camera, Search, ExternalLink, Copy, CheckCircle, AlertCircle, Disc3, Store } from 'lucide-react';
+import { Loader2, AlertTriangle, RefreshCcw, BarChart3, Camera, Search, ExternalLink, Copy, CheckCircle, AlertCircle, Disc3, Store, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +31,7 @@ import { Navigation } from "@/components/Navigation";
 const Scanner = () => {
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(scanReducer, initialScanState);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   const { 
     isAnalyzing: isAnalyzingVinyl, 
@@ -415,7 +415,17 @@ const Scanner = () => {
   return (
     <div className="min-h-screen bg-gradient-scan">
       <Navigation />
-
+      
+      {/* Scanner Header with Logout */}
+      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <h1 className="text-xl font-semibold">Scanner</h1>
+          <Button variant="ghost" onClick={signOut} className="flex items-center gap-2">
+            <LogOut className="w-4 h-4" />
+            Uitloggen
+          </Button>
+        </div>
+      </div>
 
       <main className="container mx-auto px-4 py-8">
         {(state.mediaType || state.discogsIdMode) && (

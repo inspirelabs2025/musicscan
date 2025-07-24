@@ -30,25 +30,12 @@ const Home = () => {
             {loading ? (
               <div className="w-20 h-10 bg-muted animate-pulse rounded-md" />
             ) : user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Account
-                    <ChevronDown className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link to="/scanner" className="w-full cursor-pointer">
-                      Scanner
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={signOut} className="cursor-pointer">
-                    Uitloggen
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button asChild variant="ghost">
+                <Link to="/scanner" className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Account
+                </Link>
+              </Button>
             ) : (
               <>
                 <Button asChild variant="ghost">

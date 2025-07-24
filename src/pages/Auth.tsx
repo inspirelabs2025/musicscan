@@ -54,7 +54,7 @@ const Auth = () => {
         }
       } else {
         toast.success('Succesvol ingelogd!');
-        navigate('/');
+        navigate('/scanner');
       }
     } catch (err) {
       setError('Er ging iets mis. Probeer het opnieuw.');

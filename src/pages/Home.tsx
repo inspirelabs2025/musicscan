@@ -1,14 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { LogIn, UserPlus, Camera, Disc, Music } from 'lucide-react';
+import { LogIn, UserPlus, Camera, Disc, Music, User, ChevronDown } from 'lucide-react';
 import { HeroSection } from '@/components/HeroSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Home = () => {
+  const { user, loading, signOut } = useAuth();
+
   return (
     <div className="min-h-screen">
-      {/* Header with login/signup buttons */}
+      {/* Header with conditional auth buttons */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -18,18 +27,44 @@ const Home = () => {
           </div>
           
           <div className="flex items-center gap-4">
-            <Button asChild variant="ghost">
-              <Link to="/auth">
-                <LogIn className="w-4 h-4 mr-2" />
-                Inloggen
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link to="/auth">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Registreren
-              </Link>
-            </Button>
+            {loading ? (
+              <div className="w-20 h-10 bg-muted animate-pulse rounded-md" />
+            ) : user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Account
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/scanner" className="w-full cursor-pointer">
+                      Scanner
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                    Uitloggen
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button asChild variant="ghost">
+                  <Link to="/auth">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Inloggen
+                  </Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/auth">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Registreren
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -58,7 +93,7 @@ const Home = () => {
                   Onze AI herkent automatisch alle details.
                 </p>
                 <Button asChild size="lg" className="w-full">
-                  <Link to="/auth">
+                  <Link to={user ? "/scanner" : "/auth"}>
                     <Camera className="w-5 h-5 mr-2" />
                     Start Vinyl Scan
                   </Link>
@@ -78,7 +113,7 @@ const Home = () => {
                   Krijg direct prijsinformatie van Discogs.
                 </p>
                 <Button asChild size="lg" className="w-full">
-                  <Link to="/auth">
+                  <Link to={user ? "/scanner" : "/auth"}>
                     <Camera className="w-5 h-5 mr-2" />
                     Start CD Scan
                   </Link>
@@ -88,9 +123,11 @@ const Home = () => {
           </div>
           
           <div className="text-center mt-8">
-            <p className="text-sm text-muted-foreground">
-              Al een account? <Link to="/auth" className="text-primary hover:underline">Log direct in</Link>
-            </p>
+            {!user && (
+              <p className="text-sm text-muted-foreground">
+                Al een account? <Link to="/auth" className="text-primary hover:underline">Log direct in</Link>
+              </p>
+            )}
           </div>
         </div>
       </section>

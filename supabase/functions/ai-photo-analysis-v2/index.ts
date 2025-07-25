@@ -102,16 +102,23 @@ serve(async (req) => {
 
     // Create initial record with version marker and user_id
     console.log('📝 Creating scan record in database...')
+    console.log('🔍 User ID being inserted:', user.id)
+    console.log('🔍 User ID type:', typeof user.id)
+    
+    const insertData = {
+      user_id: user.id,
+      photo_urls: photoUrls,
+      media_type: mediaType,
+      condition_grade: conditionGrade,
+      status: 'pending',
+      analysis_data: { version: 'v2', phase: 'initialization' }
+    }
+    
+    console.log('📦 Insert data being sent:', insertData)
+    
     const { data: scanRecord, error: insertError } = await supabase
       .from('ai_scan_results')
-      .insert({
-        user_id: user.id,
-        photo_urls: photoUrls,
-        media_type: mediaType,
-        condition_grade: conditionGrade,
-        status: 'pending',
-        analysis_data: { version: 'v2', phase: 'initialization' }
-      })
+      .insert(insertData)
       .select()
       .single()
 

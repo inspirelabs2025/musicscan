@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
@@ -341,6 +341,75 @@ export type Database = {
         }
         Relationships: []
       }
+      demand_analytics: {
+        Row: {
+          analysis_period: string
+          avg_selling_price: number | null
+          brand: string | null
+          category: string | null
+          competition_level: string | null
+          confidence_level: string | null
+          created_at: string
+          data_sources: string[] | null
+          demand_score: number | null
+          id: string
+          oem_number: string
+          part_name: string
+          period_end: string
+          period_start: string
+          price_change_percentage: number | null
+          price_trend: string | null
+          search_volume: number | null
+          seasonality_factor: number | null
+          supply_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          analysis_period: string
+          avg_selling_price?: number | null
+          brand?: string | null
+          category?: string | null
+          competition_level?: string | null
+          confidence_level?: string | null
+          created_at?: string
+          data_sources?: string[] | null
+          demand_score?: number | null
+          id?: string
+          oem_number: string
+          part_name: string
+          period_end: string
+          period_start: string
+          price_change_percentage?: number | null
+          price_trend?: string | null
+          search_volume?: number | null
+          seasonality_factor?: number | null
+          supply_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          analysis_period?: string
+          avg_selling_price?: number | null
+          brand?: string | null
+          category?: string | null
+          competition_level?: string | null
+          confidence_level?: string | null
+          created_at?: string
+          data_sources?: string[] | null
+          demand_score?: number | null
+          id?: string
+          oem_number?: string
+          part_name?: string
+          period_end?: string
+          period_start?: string
+          price_change_percentage?: number | null
+          price_trend?: string | null
+          search_volume?: number | null
+          seasonality_factor?: number | null
+          supply_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       discogs_price_listings: {
         Row: {
           condition: string
@@ -535,6 +604,762 @@ export type Database = {
           success?: boolean | null
           updated_at?: string
           want_count?: number | null
+        }
+        Relationships: []
+      }
+      market_prices: {
+        Row: {
+          condition_grade: string
+          created_at: string
+          currency: string
+          id: string
+          is_sold: boolean | null
+          listing_date: string
+          listing_url: string | null
+          oem_number: string
+          part_name: string
+          platform: string
+          price: number
+          return_policy: string | null
+          scraped_at: string
+          seller_location: string | null
+          seller_rating: number | null
+          shipping_cost: number | null
+          sold_date: string | null
+          updated_at: string
+          views_count: number | null
+          warranty_period: string | null
+        }
+        Insert: {
+          condition_grade: string
+          created_at?: string
+          currency?: string
+          id?: string
+          is_sold?: boolean | null
+          listing_date: string
+          listing_url?: string | null
+          oem_number: string
+          part_name: string
+          platform: string
+          price: number
+          return_policy?: string | null
+          scraped_at?: string
+          seller_location?: string | null
+          seller_rating?: number | null
+          shipping_cost?: number | null
+          sold_date?: string | null
+          updated_at?: string
+          views_count?: number | null
+          warranty_period?: string | null
+        }
+        Update: {
+          condition_grade?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          is_sold?: boolean | null
+          listing_date?: string
+          listing_url?: string | null
+          oem_number?: string
+          part_name?: string
+          platform?: string
+          price?: number
+          return_policy?: string | null
+          scraped_at?: string
+          seller_location?: string | null
+          seller_rating?: number | null
+          shipping_cost?: number | null
+          sold_date?: string | null
+          updated_at?: string
+          views_count?: number | null
+          warranty_period?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_listings: {
+        Row: {
+          auto_relist: boolean | null
+          created_at: string
+          currency: string
+          description: string | null
+          ends_at: string | null
+          fees: number | null
+          id: string
+          last_sync: string | null
+          listed_at: string | null
+          listing_duration: number | null
+          listing_id: string | null
+          listing_url: string | null
+          platform: string
+          price: number
+          questions_count: number | null
+          shipping_cost: number | null
+          sold_at: string | null
+          sold_price: number | null
+          status: string
+          sync_error: string | null
+          sync_status: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          vehicle_part_id: string
+          views_count: number | null
+          watchers_count: number | null
+        }
+        Insert: {
+          auto_relist?: boolean | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          ends_at?: string | null
+          fees?: number | null
+          id?: string
+          last_sync?: string | null
+          listed_at?: string | null
+          listing_duration?: number | null
+          listing_id?: string | null
+          listing_url?: string | null
+          platform: string
+          price: number
+          questions_count?: number | null
+          shipping_cost?: number | null
+          sold_at?: string | null
+          sold_price?: number | null
+          status?: string
+          sync_error?: string | null
+          sync_status?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          vehicle_part_id: string
+          views_count?: number | null
+          watchers_count?: number | null
+        }
+        Update: {
+          auto_relist?: boolean | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          ends_at?: string | null
+          fees?: number | null
+          id?: string
+          last_sync?: string | null
+          listed_at?: string | null
+          listing_duration?: number | null
+          listing_id?: string | null
+          listing_url?: string | null
+          platform?: string
+          price?: number
+          questions_count?: number | null
+          shipping_cost?: number | null
+          sold_at?: string | null
+          sold_price?: number | null
+          status?: string
+          sync_error?: string | null
+          sync_status?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          vehicle_part_id?: string
+          views_count?: number | null
+          watchers_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_vehicle_part_id_fkey"
+            columns: ["vehicle_part_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_sync: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          error_message: string | null
+          external_id: string | null
+          id: string
+          max_retries: number | null
+          platform: string
+          request_data: Json | null
+          response_data: Json | null
+          retry_count: number | null
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          sync_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          max_retries?: number | null
+          platform: string
+          request_data?: Json | null
+          response_data?: Json | null
+          retry_count?: number | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          sync_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          max_retries?: number | null
+          platform?: string
+          request_data?: Json | null
+          response_data?: Json | null
+          retry_count?: number | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          sync_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      oem_numbers: {
+        Row: {
+          alternative_numbers: string[] | null
+          brand: string | null
+          category: string | null
+          compatible_vehicles: Json | null
+          created_at: string
+          dimensions_range: Json | null
+          id: string
+          is_verified: boolean | null
+          oem_number: string
+          part_name: string
+          tecdoc_id: string | null
+          typical_condition_price: Json | null
+          updated_at: string
+          verification_source: string | null
+          weight_range: Json | null
+        }
+        Insert: {
+          alternative_numbers?: string[] | null
+          brand?: string | null
+          category?: string | null
+          compatible_vehicles?: Json | null
+          created_at?: string
+          dimensions_range?: Json | null
+          id?: string
+          is_verified?: boolean | null
+          oem_number: string
+          part_name: string
+          tecdoc_id?: string | null
+          typical_condition_price?: Json | null
+          updated_at?: string
+          verification_source?: string | null
+          weight_range?: Json | null
+        }
+        Update: {
+          alternative_numbers?: string[] | null
+          brand?: string | null
+          category?: string | null
+          compatible_vehicles?: Json | null
+          created_at?: string
+          dimensions_range?: Json | null
+          id?: string
+          is_verified?: boolean | null
+          oem_number?: string
+          part_name?: string
+          tecdoc_id?: string | null
+          typical_condition_price?: Json | null
+          updated_at?: string
+          verification_source?: string | null
+          weight_range?: Json | null
+        }
+        Relationships: []
+      }
+      part_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          parent_category_id: string | null
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          parent_category_id?: string | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          parent_category_id?: string | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_categories_parent_category_id_fkey"
+            columns: ["parent_category_id"]
+            isOneToOne: false
+            referencedRelation: "part_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      part_scans: {
+        Row: {
+          ai_description: string | null
+          analysis_data: Json | null
+          condition_assessment: string | null
+          confidence_score: number | null
+          created_at: string
+          detected_brand: string | null
+          detected_category: string | null
+          detected_oem_numbers: string[] | null
+          detected_part_name: string | null
+          error_message: string | null
+          id: string
+          photo_urls: string[]
+          processed_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          vehicle_id: string | null
+          vehicle_part_id: string | null
+        }
+        Insert: {
+          ai_description?: string | null
+          analysis_data?: Json | null
+          condition_assessment?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          detected_brand?: string | null
+          detected_category?: string | null
+          detected_oem_numbers?: string[] | null
+          detected_part_name?: string | null
+          error_message?: string | null
+          id?: string
+          photo_urls: string[]
+          processed_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          vehicle_id?: string | null
+          vehicle_part_id?: string | null
+        }
+        Update: {
+          ai_description?: string | null
+          analysis_data?: Json | null
+          condition_assessment?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          detected_brand?: string | null
+          detected_category?: string | null
+          detected_oem_numbers?: string[] | null
+          detected_part_name?: string | null
+          error_message?: string | null
+          id?: string
+          photo_urls?: string[]
+          processed_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vehicle_id?: string | null
+          vehicle_part_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_scans_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "part_scans_vehicle_part_id_fkey"
+            columns: ["vehicle_part_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      part_valuations: {
+        Row: {
+          confidence_level: string | null
+          created_at: string
+          currency: string
+          estimated_value: number
+          factors_considered: Json | null
+          id: string
+          market_value_max: number | null
+          market_value_min: number | null
+          notes: string | null
+          updated_at: string
+          user_id: string
+          valid_until: string | null
+          valuated_by: string | null
+          valuation_date: string
+          valuation_method: string
+          vehicle_part_id: string
+        }
+        Insert: {
+          confidence_level?: string | null
+          created_at?: string
+          currency?: string
+          estimated_value: number
+          factors_considered?: Json | null
+          id?: string
+          market_value_max?: number | null
+          market_value_min?: number | null
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          valid_until?: string | null
+          valuated_by?: string | null
+          valuation_date?: string
+          valuation_method: string
+          vehicle_part_id: string
+        }
+        Update: {
+          confidence_level?: string | null
+          created_at?: string
+          currency?: string
+          estimated_value?: number
+          factors_considered?: Json | null
+          id?: string
+          market_value_max?: number | null
+          market_value_min?: number | null
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          valid_until?: string | null
+          valuated_by?: string | null
+          valuation_date?: string
+          valuation_method?: string
+          vehicle_part_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_valuations_vehicle_part_id_fkey"
+            columns: ["vehicle_part_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rdw_lookups: {
+        Row: {
+          body_type: string | null
+          brand: string
+          color: string | null
+          created_at: string
+          doors: number | null
+          engine_capacity: number | null
+          engine_code: string | null
+          environmental_class: string | null
+          first_registration: string | null
+          fuel_type: string | null
+          id: string
+          is_valid: boolean | null
+          last_checked: string
+          license_plate: string
+          model: string
+          raw_data: Json | null
+          seats: number | null
+          technical_approval_date: string | null
+          transmission: string | null
+          updated_at: string
+          variant: string | null
+          vin: string | null
+          year: number
+        }
+        Insert: {
+          body_type?: string | null
+          brand: string
+          color?: string | null
+          created_at?: string
+          doors?: number | null
+          engine_capacity?: number | null
+          engine_code?: string | null
+          environmental_class?: string | null
+          first_registration?: string | null
+          fuel_type?: string | null
+          id?: string
+          is_valid?: boolean | null
+          last_checked?: string
+          license_plate: string
+          model: string
+          raw_data?: Json | null
+          seats?: number | null
+          technical_approval_date?: string | null
+          transmission?: string | null
+          updated_at?: string
+          variant?: string | null
+          vin?: string | null
+          year: number
+        }
+        Update: {
+          body_type?: string | null
+          brand?: string
+          color?: string | null
+          created_at?: string
+          doors?: number | null
+          engine_capacity?: number | null
+          engine_code?: string | null
+          environmental_class?: string | null
+          first_registration?: string | null
+          fuel_type?: string | null
+          id?: string
+          is_valid?: boolean | null
+          last_checked?: string
+          license_plate?: string
+          model?: string
+          raw_data?: Json | null
+          seats?: number | null
+          technical_approval_date?: string | null
+          transmission?: string | null
+          updated_at?: string
+          variant?: string | null
+          vin?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
+      tecdoc_matches: {
+        Row: {
+          alternative_numbers: string[] | null
+          brand: string | null
+          category: string | null
+          compatible_vehicles: Json
+          created_at: string
+          id: string
+          images: Json | null
+          is_active: boolean | null
+          last_updated: string
+          oem_number: string
+          part_name: string
+          raw_response: Json | null
+          tecdoc_id: string
+          technical_specs: Json | null
+          updated_at: string
+        }
+        Insert: {
+          alternative_numbers?: string[] | null
+          brand?: string | null
+          category?: string | null
+          compatible_vehicles: Json
+          created_at?: string
+          id?: string
+          images?: Json | null
+          is_active?: boolean | null
+          last_updated?: string
+          oem_number: string
+          part_name: string
+          raw_response?: Json | null
+          tecdoc_id: string
+          technical_specs?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          alternative_numbers?: string[] | null
+          brand?: string | null
+          category?: string | null
+          compatible_vehicles?: Json
+          created_at?: string
+          id?: string
+          images?: Json | null
+          is_active?: boolean | null
+          last_updated?: string
+          oem_number?: string
+          part_name?: string
+          raw_response?: Json | null
+          tecdoc_id?: string
+          technical_specs?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      vehicle_parts: {
+        Row: {
+          alternative_numbers: string[] | null
+          category_id: string | null
+          condition_grade: string
+          condition_notes: string | null
+          created_at: string
+          description: string | null
+          dimensions: Json | null
+          dismantled_by: string | null
+          dismantled_date: string | null
+          id: string
+          name: string
+          oem_number: string | null
+          photos: string[] | null
+          status: string
+          storage_location: string | null
+          updated_at: string
+          user_id: string
+          vehicle_id: string
+          weight: number | null
+        }
+        Insert: {
+          alternative_numbers?: string[] | null
+          category_id?: string | null
+          condition_grade: string
+          condition_notes?: string | null
+          created_at?: string
+          description?: string | null
+          dimensions?: Json | null
+          dismantled_by?: string | null
+          dismantled_date?: string | null
+          id?: string
+          name: string
+          oem_number?: string | null
+          photos?: string[] | null
+          status?: string
+          storage_location?: string | null
+          updated_at?: string
+          user_id: string
+          vehicle_id: string
+          weight?: number | null
+        }
+        Update: {
+          alternative_numbers?: string[] | null
+          category_id?: string | null
+          condition_grade?: string
+          condition_notes?: string | null
+          created_at?: string
+          description?: string | null
+          dimensions?: Json | null
+          dismantled_by?: string | null
+          dismantled_date?: string | null
+          id?: string
+          name?: string
+          oem_number?: string | null
+          photos?: string[] | null
+          status?: string
+          storage_location?: string | null
+          updated_at?: string
+          user_id?: string
+          vehicle_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_parts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "part_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_parts_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles: {
+        Row: {
+          body_type: string | null
+          brand: string
+          color: string | null
+          created_at: string
+          engine_capacity: number | null
+          engine_code: string | null
+          entry_date: string
+          first_registration: string | null
+          fuel_type: string | null
+          id: string
+          license_plate: string
+          mileage: number | null
+          model: string
+          notes: string | null
+          status: string
+          transmission_code: string | null
+          updated_at: string
+          user_id: string
+          variant: string | null
+          vin: string | null
+          yard_location: string | null
+          year: number
+        }
+        Insert: {
+          body_type?: string | null
+          brand: string
+          color?: string | null
+          created_at?: string
+          engine_capacity?: number | null
+          engine_code?: string | null
+          entry_date?: string
+          first_registration?: string | null
+          fuel_type?: string | null
+          id?: string
+          license_plate: string
+          mileage?: number | null
+          model: string
+          notes?: string | null
+          status?: string
+          transmission_code?: string | null
+          updated_at?: string
+          user_id: string
+          variant?: string | null
+          vin?: string | null
+          yard_location?: string | null
+          year: number
+        }
+        Update: {
+          body_type?: string | null
+          brand?: string
+          color?: string | null
+          created_at?: string
+          engine_capacity?: number | null
+          engine_code?: string | null
+          entry_date?: string
+          first_registration?: string | null
+          fuel_type?: string | null
+          id?: string
+          license_plate?: string
+          mileage?: number | null
+          model?: string
+          notes?: string | null
+          status?: string
+          transmission_code?: string | null
+          updated_at?: string
+          user_id?: string
+          variant?: string | null
+          vin?: string | null
+          yard_location?: string | null
+          year?: number
         }
         Relationships: []
       }

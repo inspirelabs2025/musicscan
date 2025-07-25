@@ -202,7 +202,7 @@ export const ConditionSelector = React.memo(({
         )}
 
         {/* Advice Price Section */}
-        {selectedCondition && calculatedAdvicePrice !== null && (
+        {selectedCondition && (
           <div className="space-y-4">
             <div className="p-6 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border-2 border-primary/20">
               <div className="flex items-center justify-between mb-3">
@@ -211,44 +211,63 @@ export const ConditionSelector = React.memo(({
                   <span className="text-lg font-semibold">Adviesprijs</span>
                 </div>
                 <Badge variant="secondary" className="bg-primary/10 text-primary">
-                  {useManualAdvicePrice ? 'Handmatig' : `Gebaseerd op ${selectedCondition}`}
+                  {useManualAdvicePrice ? 'Handmatig' : calculatedAdvicePrice ? `Gebaseerd op ${selectedCondition}` : 'Handmatige invoer vereist'}
                 </Badge>
               </div>
               
               {/* Active Price Display */}
               <div className="text-3xl font-bold text-primary mb-4">
-                €{(getActivePrice() || 0).toFixed(2)}
+                {getActivePrice() !== null ? `€${getActivePrice()!.toFixed(2)}` : '€0.00'}
               </div>
+              
+              {/* No Discogs Price Warning */}
+              {!calculatedAdvicePrice && (
+                <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                    <Info className="h-4 w-4" />
+                    <span className="text-sm font-medium">Geen Discogs prijsdata beschikbaar</span>
+                  </div>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                    Voer handmatig een prijs in om door te gaan
+                  </p>
+                </div>
+              )}
               
               {/* Manual/Automatic Toggle */}
               <div className="space-y-4 mb-4">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Handmatige prijsinstelling</label>
-                  <Switch
-                    checked={useManualAdvicePrice}
-                    onCheckedChange={onToggleManualAdvicePrice}
-                  />
-                </div>
+                {calculatedAdvicePrice && (
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Handmatige prijsinstelling</label>
+                    <Switch
+                      checked={useManualAdvicePrice}
+                      onCheckedChange={onToggleManualAdvicePrice}
+                    />
+                  </div>
+                )}
                 
                 {/* Price Input Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Automatic Price */}
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground">Automatische Prijs</label>
-                    <div className="relative">
-                      <Input
-                        type="text"
-                        value={`€${calculatedAdvicePrice.toFixed(2)}`}
-                        readOnly
-                        disabled
-                        className="bg-muted/50"
-                      />
+                  {calculatedAdvicePrice && (
+                    <div className="space-y-2">
+                      <label className="text-xs text-muted-foreground">Automatische Prijs</label>
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          value={`€${calculatedAdvicePrice.toFixed(2)}`}
+                          readOnly
+                          disabled
+                          className="bg-muted/50"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
                   {/* Manual Price */}
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground">Handmatige Prijs</label>
+                  <div className={`space-y-2 ${!calculatedAdvicePrice ? 'md:col-span-2' : ''}`}>
+                    <label className="text-xs text-muted-foreground">
+                      {calculatedAdvicePrice ? 'Handmatige Prijs' : 'Prijs *'}
+                    </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground">€</span>
                       <Input
@@ -259,14 +278,15 @@ export const ConditionSelector = React.memo(({
                         onChange={(e) => handleManualPriceInput(e.target.value)}
                         placeholder="0.00"
                         className="pl-7"
-                        disabled={!useManualAdvicePrice}
+                        disabled={calculatedAdvicePrice && !useManualAdvicePrice}
+                        required={!calculatedAdvicePrice}
                       />
                     </div>
                   </div>
                 </div>
                 
                 {/* Quick Actions */}
-                {useManualAdvicePrice && (
+                {useManualAdvicePrice && calculatedAdvicePrice && (
                   <div className="flex gap-2">
                     <Button
                       type="button"
@@ -313,7 +333,7 @@ export const ConditionSelector = React.memo(({
                 console.log('🔘 ConditionSelector OPSLAAN button clicked');
                 onSave();
               }}
-              disabled={isSaving}
+              disabled={isSaving || (!calculatedAdvicePrice && !manualAdvicePrice)}
               className="w-full"
               size="lg"
             >

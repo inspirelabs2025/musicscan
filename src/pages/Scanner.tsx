@@ -360,10 +360,20 @@ const Scanner = () => {
   const handleSave = useCallback(async () => {
     const finalAdvicePrice = state.useManualAdvicePrice ? state.manualAdvicePrice : state.calculatedAdvicePrice;
     console.log('💾 handleSave called with condition:', state.selectedCondition, 'advicePrice:', finalAdvicePrice);
-    if (!state.selectedCondition || !finalAdvicePrice) {
+    
+    if (!state.selectedCondition) {
       toast({
         title: "Kan niet opslaan",
-        description: "Selecteer eerst een conditie en zorg dat prijsscan compleet is",
+        description: "Selecteer eerst een conditie",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!finalAdvicePrice) {
+      toast({
+        title: "Kan niet opslaan", 
+        description: "Voer een prijs in om door te gaan",
         variant: "destructive"
       });
       return;
@@ -395,13 +405,17 @@ const Scanner = () => {
     resetSearchState();
   }, [resetSearchState, setVinylAnalysisResult, setCDAnalysisResult]);
 
-  const handleManualAdvicePriceChange = useCallback((price: number) => {
+  const handleManualAdvicePriceChange = useCallback((price: number | null) => {
     dispatch({ type: 'SET_MANUAL_ADVICE_PRICE', payload: price });
   }, []);
 
   const handleToggleManualAdvicePrice = useCallback((useManual: boolean) => {
     dispatch({ type: 'SET_USE_MANUAL_ADVICE_PRICE', payload: useManual });
-  }, []);
+    // If switching to manual mode when no calculated price exists, ensure manual mode is active
+    if (useManual && !state.calculatedAdvicePrice) {
+      dispatch({ type: 'SET_USE_MANUAL_ADVICE_PRICE', payload: true });
+    }
+  }, [state.calculatedAdvicePrice]);
 
   const steps = [
     { id: 0, title: "Media Type", description: "Wat ga je scannen?", active: !state.mediaType && !state.discogsIdMode },
@@ -409,7 +423,7 @@ const Scanner = () => {
     { id: 2, title: "Analyseren", description: "AI analyseert", active: isAnalyzing },
     { id: 3, title: "Zoeken", description: "Discogs zoeken", active: isSearching },
     { id: 4, title: "Prijzen", description: "Prijzen berekenen", active: searchResults.length > 0 && !state.selectedCondition },
-    { id: 5, title: "Voltooid", description: "Scan opslaan", active: state.selectedCondition && state.calculatedAdvicePrice }
+    { id: 5, title: "Voltooid", description: "Scan opslaan", active: state.selectedCondition && (state.calculatedAdvicePrice || state.manualAdvicePrice) }
   ];
 
   return (
@@ -495,13 +509,13 @@ const Scanner = () => {
             />
           )}
 
-          {searchResults.length > 0 && searchResults[0]?.pricing_stats && state.mediaType && (
+          {searchResults.length > 0 && state.mediaType && (
             <ConditionSelector
               mediaType={state.mediaType}
               selectedCondition={state.selectedCondition}
-              lowestPrice={searchResults[0]?.pricing_stats?.lowest_price}
-              medianPrice={searchResults[0]?.pricing_stats?.median_price}
-              highestPrice={searchResults[0]?.pricing_stats?.highest_price}
+              lowestPrice={searchResults[0]?.pricing_stats?.lowest_price || null}
+              medianPrice={searchResults[0]?.pricing_stats?.median_price || null}
+              highestPrice={searchResults[0]?.pricing_stats?.highest_price || null}
               calculatedAdvicePrice={state.calculatedAdvicePrice}
               manualAdvicePrice={state.manualAdvicePrice}
               useManualAdvicePrice={state.useManualAdvicePrice}

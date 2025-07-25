@@ -337,7 +337,7 @@ Discogs export mogelijk</p>
                       <Badge variant={item.type === 'CD' ? 'default' : 'secondary'} className={item.type === 'CD' ? 'bg-vinyl-purple text-white' : 'bg-vinyl-gold text-white'}>
                         {item.type}
                       </Badge>
-                      {getItemStatus(item) === 'ready' ? <Badge variant="outline" className="text-vinyl-gold border-vinyl-gold bg-vinyl-gold/10">
+                      {getItemStatus(item) === 'ready' ? <Badge variant="outline" className="text-vinyl-gold border-vinyl-gold bg-zinc-500">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           ✅ Discogs klaar
                         </Badge> : <Badge variant="outline" className="text-orange-600 border-orange-600 bg-orange-50">

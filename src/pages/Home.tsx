@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { LogIn, UserPlus, Camera, Disc, Music, User, ChevronDown } from 'lucide-react';
+import { LogIn, UserPlus, Camera, Disc, Music, User, ChevronDown, Brain, MessageSquare, BarChart3 } from 'lucide-react';
 import { HeroSection } from '@/components/HeroSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -115,6 +115,58 @@ const Home = () => {
                 Al een account? <Link to="/auth" className="text-primary hover:underline">Log direct in</Link>
               </p>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* AI Features Section */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Ontdek de kracht van AI</h2>
+            <p className="text-muted-foreground text-lg">Krijg diepgaande inzichten in je muziekcollectie met geavanceerde AI-analyse</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* AI Analysis Feature */}
+            <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/50">
+              <CardContent className="p-8 text-center">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Brain className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4">AI Collectie Analyse</h3>
+                <p className="text-muted-foreground mb-6">
+                  Laat onze AI je complete collectie analyseren. Ontdek verborgen patronen, 
+                  krijg gepersonaliseerde aanbevelingen en inzichten in je muzieksmaak.
+                </p>
+                <Button asChild size="lg" className="w-full">
+                  <Link to={user ? "/ai-analysis" : "/auth"}>
+                    <BarChart3 className="w-5 h-5 mr-2" />
+                    Start AI Analyse
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Collection Chat Feature */}
+            <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-secondary/50">
+              <CardContent className="p-8 text-center">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-secondary to-secondary/80 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <MessageSquare className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4">Chat met je Collectie</h3>
+                <p className="text-muted-foreground mb-6">
+                  Praat natuurlijk met je muziekcollectie. Stel vragen, zoek specifieke albums 
+                  en krijg intelligente antwoorden over je muziek.
+                </p>
+                <Button asChild size="lg" className="w-full">
+                  <Link to={user ? "/collection-chat" : "/auth"}>
+                    <MessageSquare className="w-5 h-5 mr-2" />
+                    Start Chat
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

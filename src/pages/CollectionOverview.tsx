@@ -55,20 +55,29 @@ export default function CollectionOverview() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-10 w-32" />
+      <div className="min-h-screen bg-gradient-to-br from-background via-card to-accent/5 relative overflow-hidden">
+        {/* Loading Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-4 -left-4 text-6xl opacity-10 animate-pulse">🎵</div>
+          <div className="absolute top-20 right-10 text-4xl opacity-10 animate-bounce delay-300">🎶</div>
+          <div className="absolute bottom-10 left-10 text-4xl opacity-10 animate-pulse delay-500">🎧</div>
         </div>
-        <Skeleton className="h-12 w-full" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(8)].map((_, i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-96" />
-          <Skeleton className="h-96" />
+        
+        <div className="container mx-auto p-6 space-y-6 relative z-10">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+          <Skeleton className="h-12 w-full" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <Skeleton key={i} className="h-32 animate-pulse" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Skeleton className="h-96 animate-pulse" />
+            <Skeleton className="h-96 animate-pulse" />
+          </div>
         </div>
       </div>
     );
@@ -76,12 +85,14 @@ export default function CollectionOverview() {
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-destructive">Error loading collection data: {error.message}</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-background via-card to-accent/5 relative overflow-hidden">
+        <div className="container mx-auto p-6 relative z-10">
+          <Card className="border-destructive/50 bg-destructive/5 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <p className="text-destructive">❌ Error loading collection data: {error.message}</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -93,106 +104,145 @@ export default function CollectionOverview() {
   return (
     <>
       <Navigation />
-      <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
-        {/* Header */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="w-fit">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Terug
-              </Button>
-              <div className="text-center sm:text-left">
-                <h1 className="text-2xl sm:text-3xl font-bold">Collectie Overzicht</h1>
-                <p className="text-sm sm:text-base text-muted-foreground">Diepgaande analyse van je muziekcollectie</p>
+      <div className="min-h-screen bg-gradient-to-br from-background via-card to-accent/5 relative overflow-hidden">
+        {/* Animated Musical Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-4 -left-4 text-6xl opacity-10 animate-pulse">🎵</div>
+          <div className="absolute top-20 right-10 text-4xl opacity-10 animate-bounce delay-300">🎶</div>
+          <div className="absolute top-1/3 left-1/4 text-5xl opacity-10 animate-pulse delay-700">🎼</div>
+          <div className="absolute bottom-1/4 right-1/3 text-3xl opacity-10 animate-bounce delay-1000">🎤</div>
+          <div className="absolute bottom-10 left-10 text-4xl opacity-10 animate-pulse delay-500">🎧</div>
+          <div className="absolute top-1/2 right-1/4 text-2xl opacity-10 animate-bounce delay-1200">🎹</div>
+        </div>
+
+        <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6 relative z-10">
+          {/* Enhanced Header */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate(-1)} 
+                  className="w-fit bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Terug
+                </Button>
+                <div className="text-center sm:text-left">
+                  <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-vinyl-purple to-vinyl-gold bg-clip-text text-transparent animate-fade-in">
+                    🎵 Collectie Overzicht 📊
+                  </h1>
+                  <p className="text-sm sm:text-base text-muted-foreground animate-fade-in animation-delay-200">
+                    ✨ Diepgaande analyse van je muziekcollectie
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button 
+                  onClick={() => navigate('/ai-analysis')}
+                  className="group relative bg-gradient-to-r from-vinyl-purple to-primary hover:from-vinyl-purple/90 hover:to-primary/90 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-white/20 overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <Brain className="h-5 w-5 mr-2 relative z-10" />
+                  <span className="relative z-10">🧠 Start je muziek analyse</span>
+                </Button>
+                <Button 
+                  onClick={() => navigate('/collection-chat')}
+                  className="group relative bg-gradient-to-r from-vinyl-gold to-yellow-500 hover:from-vinyl-gold/90 hover:to-yellow-500/90 text-black font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-yellow-300/30 overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <Music2 className="h-5 w-5 mr-2 relative z-10" />
+                  <span className="relative z-10">💬 Chat met je muziek</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="group w-fit sm:w-auto bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale"
+                >
+                  <Download className="h-4 w-4 mr-2 group-hover:animate-bounce" />
+                  <span className="hidden sm:inline">📊 Export Data</span>
+                  <span className="sm:hidden">📊 Export</span>
+                </Button>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button 
-                onClick={() => navigate('/ai-analysis')}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <Brain className="h-5 w-5 mr-2" />
-                Start je muziek analyse
-              </Button>
-              <Button 
-                onClick={() => navigate('/collection-chat')}
-                variant="outline"
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <Music2 className="h-5 w-5 mr-2" />
-                Chat met je muziek
-              </Button>
-              <Button variant="outline" size="sm" className="w-fit sm:w-auto">
-                <Download className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Export Data</span>
-                <span className="sm:hidden">Export</span>
-              </Button>
-            </div>
           </div>
+
+          {/* Enhanced Tabs */}
+          <Tabs defaultValue="overview" className="w-full">
+            <div className="overflow-x-auto pb-2">
+              <TabsList className="grid w-full grid-cols-6 min-w-max sm:min-w-0 bg-white/10 backdrop-blur-md border border-white/20 p-1 rounded-xl">
+                <TabsTrigger 
+                  value="overview" 
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                >
+                  <Package className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm hidden sm:inline">📦 Overzicht</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="ai-analysis" 
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                >
+                  <Brain className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm hidden sm:inline">🤖 AI</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="type" 
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                >
+                  <Disc className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm hidden sm:inline">💿 Type</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="genre" 
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                >
+                  <Music className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm hidden sm:inline">🎵 Genre</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="year" 
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                >
+                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm hidden sm:inline">📅 Jaar</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="price" 
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                >
+                  <Euro className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm hidden sm:inline">💰 Prijs</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            {/* Tab Contents with Enhanced Styling */}
+            <TabsContent value="overview" className="space-y-6 animate-fade-in">
+              <OverviewTab stats={stats} formatCurrency={formatCurrency} />
+            </TabsContent>
+
+            <TabsContent value="ai-analysis" className="space-y-6 animate-fade-in">
+              <AIAnalysisTab />
+            </TabsContent>
+
+            <TabsContent value="type" className="space-y-6 animate-fade-in">
+              <TypeTab stats={stats} formatCurrency={formatCurrency} />
+            </TabsContent>
+
+            <TabsContent value="genre" className="space-y-6 animate-fade-in">
+              <GenreTab stats={stats} formatCurrency={formatCurrency} />
+            </TabsContent>
+
+            <TabsContent value="year" className="space-y-6 animate-fade-in">
+              <YearTab stats={stats} formatCurrency={formatCurrency} />
+            </TabsContent>
+
+            <TabsContent value="price" className="space-y-6 animate-fade-in">
+              <PriceTab stats={stats} formatCurrency={formatCurrency} />
+            </TabsContent>
+          </Tabs>
         </div>
-
-      {/* Tabs */}
-      <Tabs defaultValue="overview" className="w-full">
-        <div className="overflow-x-auto pb-2">
-          <TabsList className="grid w-full grid-cols-6 min-w-max sm:min-w-0">
-            <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
-              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm hidden sm:inline">Overzicht</span>
-            </TabsTrigger>
-            <TabsTrigger value="ai-analysis" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
-              <Brain className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm hidden sm:inline">🤖 AI</span>
-            </TabsTrigger>
-            <TabsTrigger value="type" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
-              <Disc className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm hidden sm:inline">Type</span>
-            </TabsTrigger>
-            <TabsTrigger value="genre" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
-              <Music className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm hidden sm:inline">Genre</span>
-            </TabsTrigger>
-            <TabsTrigger value="year" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
-              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm hidden sm:inline">Jaar</span>
-            </TabsTrigger>
-            <TabsTrigger value="price" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4">
-              <Euro className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm hidden sm:inline">Prijs</span>
-            </TabsTrigger>
-          </TabsList>
-        </div>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <OverviewTab stats={stats} formatCurrency={formatCurrency} />
-        </TabsContent>
-
-        {/* AI Analysis Tab */}
-        <TabsContent value="ai-analysis" className="space-y-6">
-          <AIAnalysisTab />
-        </TabsContent>
-
-        {/* Type Tab */}
-        <TabsContent value="type" className="space-y-6">
-          <TypeTab stats={stats} formatCurrency={formatCurrency} />
-        </TabsContent>
-
-        {/* Genre Tab */}
-        <TabsContent value="genre" className="space-y-6">
-          <GenreTab stats={stats} formatCurrency={formatCurrency} />
-        </TabsContent>
-
-        {/* Year Tab */}
-        <TabsContent value="year" className="space-y-6">
-          <YearTab stats={stats} formatCurrency={formatCurrency} />
-        </TabsContent>
-
-        {/* Price Tab */}
-        <TabsContent value="price" className="space-y-6">
-          <PriceTab stats={stats} formatCurrency={formatCurrency} />
-        </TabsContent>
-      </Tabs>
       </div>
     </>
   );
@@ -202,48 +252,57 @@ export default function CollectionOverview() {
 function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value: number) => string }) {
   return (
     <>
-      {/* Collection Statistics Cards */}
+      {/* Enhanced Collection Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard
-          title="Totaal Items"
-          value={stats.totalItems}
-          subtitle={`${stats.totalCDs} CD's • ${stats.totalVinyls} LP's`}
-          icon={Package}
-        />
-        <StatCard
-          title="Totale Waarde"
-          value={formatCurrency(stats.totalValue)}
-          subtitle={`${stats.itemsWithPricing} items met prijzen`}
-          icon={DollarSign}
-        />
-        <StatCard
-          title="Gemiddelde Waarde"
-          value={formatCurrency(stats.averageValue)}
-          subtitle="Per item met prijsinformatie"
-          icon={TrendingUp}
-        />
-        <StatCard
-          title="Waardevolste Item"
-          value={formatCurrency(
-            stats.mostValuableItem?.calculated_advice_price || 
-            stats.mostValuableItem?.median_price || 
-            stats.mostValuableItem?.marketplace_price || 0
-          )}
-          subtitle={stats.mostValuableItem ? `${stats.mostValuableItem.artist || 'Onbekend'} - ${stats.mostValuableItem.title || 'Onbekend'}`.substring(0, 40) + "..." : 'Geen data'}
-          icon={Star}
-        />
+        <div className="group hover-scale">
+          <StatCard
+            title="📦 Totaal Items"
+            value={stats.totalItems}
+            subtitle={`${stats.totalCDs} CD's • ${stats.totalVinyls} LP's`}
+            icon={Package}
+          />
+        </div>
+        <div className="group hover-scale">
+          <StatCard
+            title="💰 Totale Waarde"
+            value={formatCurrency(stats.totalValue)}
+            subtitle={`${stats.itemsWithPricing} items met prijzen`}
+            icon={DollarSign}
+          />
+        </div>
+        <div className="group hover-scale">
+          <StatCard
+            title="📈 Gemiddelde Waarde"
+            value={formatCurrency(stats.averageValue)}
+            subtitle="Per item met prijsinformatie"
+            icon={TrendingUp}
+          />
+        </div>
+        <div className="group hover-scale">
+          <StatCard
+            title="⭐ Waardevolste Item"
+            value={formatCurrency(
+              stats.mostValuableItem?.calculated_advice_price || 
+              stats.mostValuableItem?.median_price || 
+              stats.mostValuableItem?.marketplace_price || 0
+            )}
+            subtitle={stats.mostValuableItem ? `${stats.mostValuableItem.artist || 'Onbekend'} - ${stats.mostValuableItem.title || 'Onbekend'}`.substring(0, 40) + "..." : 'Geen data'}
+            icon={Star}
+          />
+        </div>
       </div>
 
-      {/* Charts Section */}
+      {/* Enhanced Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Genre Distribution */}
-        <Card variant="purple">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
-              <Music className="h-5 w-5" />
-              Genre Verdeling
+        <Card className="group bg-gradient-to-br from-vinyl-purple/20 to-card/80 backdrop-blur-sm border border-vinyl-purple/30 shadow-lg hover:shadow-xl transition-all duration-300 hover-scale">
+          <CardHeader className="relative">
+            <div className="absolute top-2 right-2 text-2xl opacity-20 group-hover:animate-spin">🎵</div>
+            <CardTitle className="flex items-center gap-2 text-foreground bg-gradient-to-r from-vinyl-purple to-primary bg-clip-text text-transparent">
+              <Music className="h-5 w-5 text-vinyl-purple" />
+              🎼 Genre Verdeling
             </CardTitle>
-            <CardDescription className="text-card-purple-foreground/70">Verdeling van genres in je collectie</CardDescription>
+            <CardDescription className="text-muted-foreground">Verdeling van genres in je collectie</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -278,13 +337,14 @@ function OverviewTab({ stats, formatCurrency }: { stats: any; formatCurrency: (v
         </Card>
 
         {/* Price Range Distribution */}
-        <Card variant="purple">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
-              <DollarSign className="h-5 w-5" />
-              Prijs Verdeling
+        <Card className="group bg-gradient-to-br from-vinyl-gold/20 to-card/80 backdrop-blur-sm border border-vinyl-gold/30 shadow-lg hover:shadow-xl transition-all duration-300 hover-scale">
+          <CardHeader className="relative">
+            <div className="absolute top-2 right-2 text-2xl opacity-20 group-hover:animate-bounce">💰</div>
+            <CardTitle className="flex items-center gap-2 text-foreground bg-gradient-to-r from-vinyl-gold to-yellow-600 bg-clip-text text-transparent">
+              <DollarSign className="h-5 w-5 text-vinyl-gold" />
+              💸 Prijs Verdeling
             </CardTitle>
-            <CardDescription className="text-card-purple-foreground/70">Verdeling van prijsklassen</CardDescription>
+            <CardDescription className="text-muted-foreground">Verdeling van prijsklassen</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>

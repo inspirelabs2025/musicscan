@@ -216,234 +216,320 @@ export default function MarketplaceOverview() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Laden van marketplace items...</p>
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-vinyl-purple/5 relative">
+          {/* Musical Background Elements */}
+          <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-20 left-10 text-6xl animate-bounce opacity-10">🎵</div>
+            <div className="absolute top-40 right-20 text-4xl animate-pulse opacity-10">🎶</div>
+            <div className="absolute bottom-40 left-1/4 text-5xl animate-bounce opacity-10" style={{ animationDelay: '1s' }}>♪</div>
+            <div className="absolute bottom-20 right-1/3 text-3xl animate-pulse opacity-10" style={{ animationDelay: '2s' }}>♫</div>
+            <div className="absolute top-1/3 left-1/2 text-4xl animate-bounce opacity-10" style={{ animationDelay: '0.5s' }}>🎼</div>
+          </div>
+          <div className="container mx-auto px-4 py-8 relative">
+            <div className="text-center">
+              <div className="bg-gradient-to-br from-vinyl-purple/10 to-vinyl-gold/10 backdrop-blur-sm border border-vinyl-purple/20 rounded-3xl p-12 mx-auto max-w-md">
+                <div className="text-6xl mb-4 animate-bounce">🎵</div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-vinyl-purple mx-auto mb-4"></div>
+                <h2 className="text-xl font-bold bg-gradient-to-r from-vinyl-purple to-vinyl-gold bg-clip-text text-transparent mb-2">
+                  Laden van marketplace items...
+                </h2>
+                <p className="text-muted-foreground">✨ Bereid je collectie voor</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
     <>
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Discogs Marketplace</h1>
-          <p className="text-muted-foreground">
-            Beheer en upload je gescande albums naar Discogs Marketplace
-          </p>
-        </div>
-
-      {/* Filters & Search */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Zoek op artiest of titel..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={filterFormat} onValueChange={setFilterFormat}>
-              <SelectTrigger className="w-full sm:w-48">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter format" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Alle formaten</SelectItem>
-                <SelectItem value="CD">CD</SelectItem>
-                <SelectItem value="Vinyl">Vinyl</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-48">
-                <Eye className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Alle statussen</SelectItem>
-                <SelectItem value="ready">Discogs klaar</SelectItem>
-                <SelectItem value="needs_discogs_id">Heeft Discogs ID nodig</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Bulk Actions */}
-          <div className="flex items-center gap-4">
-            <Checkbox
-              checked={selectedItems.size === filteredItems.length && filteredItems.length > 0}
-              onCheckedChange={selectAllItems}
-            />
-            <span className="text-sm text-muted-foreground">
-              {selectedItems.size} van {filteredItems.length} geselecteerd
-            </span>
-            {selectedItems.size > 0 && (
-              <Button size="sm" className="ml-auto">
-                <Upload className="h-4 w-4 mr-2" />
-                Upload naar Discogs ({selectedItems.size})
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Items Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredItems.map((item) => (
-          <Card key={item.id} className="relative">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Checkbox
-                    checked={selectedItems.has(item.id)}
-                    onCheckedChange={() => toggleItemSelection(item.id)}
-                  />
-                  {item.type === 'CD' ? (
-                    <Disc3 className="h-5 w-5 text-blue-600" />
-                  ) : (
-                    <Music className="h-5 w-5 text-purple-600" />
-                  )}
-                  <Badge variant={item.type === 'CD' ? 'default' : 'secondary'}>
-                    {item.type}
-                  </Badge>
-                  {getItemStatus(item) === 'ready' ? (
-                    <Badge variant="outline" className="text-green-600 border-green-600">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Discogs klaar
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-orange-600 border-orange-600">
-                      <AlertTriangle className="h-3 w-3 mr-1" />
-                      Discogs ID nodig
-                    </Badge>
-                  )}
+      {/* Musical Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 text-6xl animate-bounce opacity-10">🎵</div>
+        <div className="absolute top-40 right-20 text-4xl animate-pulse opacity-10">🎶</div>
+        <div className="absolute bottom-40 left-1/4 text-5xl animate-bounce opacity-10" style={{ animationDelay: '1s' }}>♪</div>
+        <div className="absolute bottom-20 right-1/3 text-3xl animate-pulse opacity-10" style={{ animationDelay: '2s' }}>♫</div>
+        <div className="absolute top-1/3 left-1/2 text-4xl animate-bounce opacity-10" style={{ animationDelay: '0.5s' }}>🎼</div>
+      </div>
+      
+      {/* Main Container with Gradient Background */}
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-vinyl-purple/5 relative">
+        <div className="container mx-auto px-4 py-8 relative">
+          {/* Enhanced Header with Gradients */}
+          <div className="text-center mb-12 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-vinyl-purple/20 via-transparent to-vinyl-gold/20 rounded-3xl blur-3xl"></div>
+            <div className="relative bg-gradient-to-br from-vinyl-purple/10 to-vinyl-gold/10 backdrop-blur-sm border border-vinyl-purple/20 rounded-3xl p-8 mx-auto max-w-4xl">
+              <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-vinyl-purple to-vinyl-gold bg-clip-text text-transparent animate-fade-in">
+                🛒 Discogs Marketplace
+              </h1>
+              <p className="text-xl text-muted-foreground/80 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                Beheer en upload je gescande albums naar Discogs Marketplace ✨
+              </p>
+              <div className="flex justify-center gap-8 mt-6 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-vinyl-purple">📦</div>
+                  <div className="text-sm text-muted-foreground">Inventory</div>
                 </div>
-                <div className="flex gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingItem(item)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Marketplace Details bewerken</DialogTitle>
-                    </DialogHeader>
-                    {editingItem && (
-                      <EditMarketplaceForm
-                        item={editingItem}
-                        onSave={(updates) => {
-                          updateMarketplaceItem(editingItem.id, editingItem.type, updates);
-                          setEditingItem(null);
-                        }}
-                        onCancel={() => setEditingItem(null)}
-                      />
-                    )}
-                  </DialogContent>
-                </Dialog>
-                
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Item verwijderen</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Weet je zeker dat je "{item.artist} - {item.title}" wilt verwijderen? 
-                        Deze actie kan niet ongedaan gemaakt worden.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Annuleren</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deleteMarketplaceItem(item.id, item.type)}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        Verwijderen
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-vinyl-gold">💰</div>
+                  <div className="text-sm text-muted-foreground">Pricing</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-vinyl-purple">🚀</div>
+                  <div className="text-sm text-muted-foreground">Upload</div>
                 </div>
               </div>
-              <CardTitle className="text-lg">
-                {item.artist} - {item.title}
-              </CardTitle>
-              {item.year && (
-                <p className="text-sm text-muted-foreground">{item.year}</p>
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Conditie:</span>
-                  <Badge variant="outline">{item.condition_grade || 'Onbekend'}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Prijs:</span>
-                  <div className="flex items-center gap-1">
-                    <Euro className="h-4 w-4" />
-                    <span className="font-medium">
-                      {item.marketplace_price?.toFixed(2) || '0.00'}
-                    </span>
+            </div>
+          </div>
+
+          {/* Enhanced Filters & Search with Gradient */}
+          <Card className="mb-8 bg-gradient-to-br from-vinyl-purple/5 to-vinyl-gold/5 border-vinyl-purple/20 hover:shadow-xl transition-all duration-300 group">
+            <CardContent className="pt-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-vinyl-purple/10 via-transparent to-vinyl-gold/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative">
+                <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-vinyl-purple animate-pulse" />
+                    <Input
+                      placeholder="🔍 Zoek op artiest of titel..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 bg-background/80 backdrop-blur-sm border-vinyl-purple/30 focus:border-vinyl-gold/50 hover:border-vinyl-purple/50 transition-all duration-300"
+                    />
                   </div>
+                  <Select value={filterFormat} onValueChange={setFilterFormat}>
+                    <SelectTrigger className="w-full sm:w-48 bg-background/80 border-vinyl-purple/30 hover:border-vinyl-gold/50 transition-all duration-300">
+                      <Filter className="h-4 w-4 mr-2 text-vinyl-purple" />
+                      <SelectValue placeholder="Filter format" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">🎵 Alle formaten</SelectItem>
+                      <SelectItem value="CD">💿 CD</SelectItem>
+                      <SelectItem value="Vinyl">🎶 Vinyl</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-full sm:w-48 bg-background/80 border-vinyl-purple/30 hover:border-vinyl-gold/50 transition-all duration-300">
+                      <Eye className="h-4 w-4 mr-2 text-vinyl-purple" />
+                      <SelectValue placeholder="Filter status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">📊 Alle statussen</SelectItem>
+                      <SelectItem value="ready">✅ Discogs klaar</SelectItem>
+                      <SelectItem value="needs_discogs_id">🔗 Heeft Discogs ID nodig</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Status:</span>
-                  <Badge className="bg-green-100 text-green-800">
-                    {item.marketplace_status}
-                  </Badge>
+
+                {/* Enhanced Bulk Actions */}
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-vinyl-purple/10 to-vinyl-gold/10 rounded-xl border border-vinyl-purple/20">
+                  <Checkbox
+                    checked={selectedItems.size === filteredItems.length && filteredItems.length > 0}
+                    onCheckedChange={selectAllItems}
+                    className="data-[state=checked]:bg-vinyl-purple data-[state=checked]:border-vinyl-purple"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    📦 {selectedItems.size} van {filteredItems.length} geselecteerd
+                  </span>
+                  {selectedItems.size > 0 && (
+                    <Button 
+                      size="sm" 
+                      className="ml-auto bg-gradient-to-r from-vinyl-purple to-vinyl-gold hover:scale-105 transition-transform duration-200 shadow-lg"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      🚀 Upload naar Discogs ({selectedItems.size})
+                    </Button>
+                  )}
                 </div>
-                {item.discogs_url && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-3"
-                    onClick={() => window.open(item.discogs_url!, '_blank')}
-                  >
-                    Bekijk op Discogs
-                  </Button>
-                )}
-                {!item.discogs_id && (
-                  <div className="mt-3 p-2 bg-orange-50 border border-orange-200 rounded">
-                    <p className="text-xs text-orange-700">
-                      Geen Discogs ID gevonden. Dit item moet handmatig gekoppeld worden.
-                    </p>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      {filteredItems.length === 0 && (
-        <Card>
-          <CardContent className="pt-6 text-center py-12">
-            <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Geen items gevonden</h3>
-            <p className="text-muted-foreground">
-              {searchTerm || filterFormat !== 'all' 
-                ? 'Probeer je zoekcriteria aan te passen'
-                : 'Scan eerst enkele albums om ze hier te zien verschijnen'
-              }
-            </p>
-          </CardContent>
-        </Card>
-      )}
+          {/* Enhanced Items Grid with Animations */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+            {filteredItems.map((item, index) => (
+              <Card 
+                key={item.id} 
+                className="group relative bg-gradient-to-br from-vinyl-purple/5 to-vinyl-gold/5 border-vinyl-purple/20 hover:shadow-2xl hover:shadow-vinyl-purple/20 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 backdrop-blur-sm"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {/* Gradient Overlay on Hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/10 via-transparent to-vinyl-gold/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <CardHeader className="pb-3 relative">
+                  <div className="flex items-start justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Checkbox
+                        checked={selectedItems.has(item.id)}
+                        onCheckedChange={() => toggleItemSelection(item.id)}
+                        className="data-[state=checked]:bg-vinyl-purple data-[state=checked]:border-vinyl-purple"
+                      />
+                      {item.type === 'CD' ? (
+                        <div className="flex items-center gap-1">
+                          <Disc3 className="h-5 w-5 text-vinyl-purple group-hover:animate-pulse" />
+                          <span className="text-sm">💿</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <Music className="h-5 w-5 text-vinyl-gold group-hover:animate-pulse" />
+                          <span className="text-sm">🎶</span>
+                        </div>
+                      )}
+                      <Badge 
+                        variant={item.type === 'CD' ? 'default' : 'secondary'}
+                        className={item.type === 'CD' ? 'bg-vinyl-purple text-white' : 'bg-vinyl-gold text-white'}
+                      >
+                        {item.type}
+                      </Badge>
+                      {getItemStatus(item) === 'ready' ? (
+                        <Badge variant="outline" className="text-vinyl-gold border-vinyl-gold bg-vinyl-gold/10">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          ✅ Discogs klaar
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-orange-600 border-orange-600 bg-orange-50">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          🔗 Discogs ID nodig
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingItem(item)}
+                            className="border-vinyl-purple/30 hover:border-vinyl-gold/50 hover:bg-vinyl-purple/10 transition-all duration-200"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-vinyl-purple/5 to-vinyl-gold/5 border-vinyl-purple/20">
+                          <DialogHeader>
+                            <DialogTitle className="bg-gradient-to-r from-vinyl-purple to-vinyl-gold bg-clip-text text-transparent">
+                              ✏️ Marketplace Details bewerken
+                            </DialogTitle>
+                          </DialogHeader>
+                          {editingItem && (
+                            <EditMarketplaceForm
+                              item={editingItem}
+                              onSave={(updates) => {
+                                updateMarketplaceItem(editingItem.id, editingItem.type, updates);
+                                setEditingItem(null);
+                              }}
+                              onCancel={() => setEditingItem(null)}
+                            />
+                          )}
+                        </DialogContent>
+                      </Dialog>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-500 hover:bg-red-50 transition-all duration-200"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-red-800">🗑️ Item verwijderen</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Weet je zeker dat je "{item.artist} - {item.title}" wilt verwijderen? 
+                              Deze actie kan niet ongedaan gemaakt worden.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteMarketplaceItem(item.id, item.type)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Verwijderen
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                  <CardTitle className="text-lg bg-gradient-to-r from-vinyl-purple to-vinyl-gold bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200">
+                    🎵 {item.artist} - {item.title}
+                  </CardTitle>
+                  {item.year && (
+                    <p className="text-sm text-muted-foreground">📅 {item.year}</p>
+                  )}
+                </CardHeader>
+                
+                <CardContent className="relative">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-gradient-to-r from-vinyl-purple/10 to-vinyl-gold/10 rounded-lg">
+                      <span className="text-sm font-medium text-vinyl-purple">📋 Conditie:</span>
+                      <Badge variant="outline" className="border-vinyl-purple/30 bg-vinyl-purple/5">
+                        {item.condition_grade || 'Onbekend'}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-gradient-to-r from-vinyl-gold/10 to-vinyl-purple/10 rounded-lg">
+                      <span className="text-sm font-medium text-vinyl-gold">💰 Prijs:</span>
+                      <div className="flex items-center gap-1 text-vinyl-gold font-bold">
+                        <Euro className="h-4 w-4" />
+                        <span>
+                          {item.marketplace_price?.toFixed(2) || '0.00'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-gradient-to-r from-vinyl-purple/10 to-vinyl-gold/10 rounded-lg">
+                      <span className="text-sm font-medium text-vinyl-purple">📊 Status:</span>
+                      <Badge className="bg-gradient-to-r from-vinyl-gold to-vinyl-purple text-white">
+                        {item.marketplace_status}
+                      </Badge>
+                    </div>
+                    {item.discogs_url && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-3 bg-gradient-to-r from-vinyl-purple/10 to-vinyl-gold/10 border-vinyl-purple/30 hover:border-vinyl-gold/50 hover:scale-105 transition-all duration-200"
+                        onClick={() => window.open(item.discogs_url!, '_blank')}
+                      >
+                        🔗 Bekijk op Discogs
+                      </Button>
+                    )}
+                    {!item.discogs_id && (
+                      <div className="mt-3 p-3 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg">
+                        <p className="text-xs text-orange-700">
+                          🔗 Geen Discogs ID gevonden. Dit item moet handmatig gekoppeld worden.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {filteredItems.length === 0 && (
+            <Card className="bg-gradient-to-br from-vinyl-purple/5 to-vinyl-gold/5 border-vinyl-purple/20 hover:shadow-xl transition-all duration-300">
+              <CardContent className="pt-6 text-center py-12">
+                <div className="text-6xl mb-4 animate-bounce">🎵</div>
+                <h3 className="text-lg font-medium mb-2 bg-gradient-to-r from-vinyl-purple to-vinyl-gold bg-clip-text text-transparent">
+                  Geen items gevonden
+                </h3>
+                <p className="text-muted-foreground">
+                  {searchTerm || filterFormat !== 'all' 
+                    ? '🔍 Probeer je zoekcriteria aan te passen'
+                    : '📸 Scan eerst enkele albums om ze hier te zien verschijnen'
+                  }
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </>
   );

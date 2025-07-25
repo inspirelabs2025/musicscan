@@ -5,18 +5,14 @@ import { HeroSection } from '@/components/HeroSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 const Home = () => {
-  const { user, loading, signOut } = useAuth();
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background relative overflow-hidden">
+  const {
+    user,
+    loading,
+    signOut
+  } = useAuth();
+  return <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background relative overflow-hidden">
       {/* Musical Background Elements */}
       <div className="fixed inset-0 opacity-5 pointer-events-none">
         <div className="absolute top-20 left-10 text-4xl animate-pulse">🎵</div>
@@ -36,17 +32,12 @@ const Home = () => {
           </div>
           
           <div className="flex items-center gap-4">
-            {loading ? (
-              <div className="w-20 h-10 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md" />
-            ) : user ? (
-              <Button asChild variant="ghost" className="hover-scale">
+            {loading ? <div className="w-20 h-10 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md" /> : user ? <Button asChild variant="ghost" className="hover-scale">
                 <Link to="/scanner" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
                   🎯 Account
                 </Link>
-              </Button>
-            ) : (
-              <>
+              </Button> : <>
                 <Button asChild variant="ghost" className="hover-scale">
                   <Link to="/auth">
                     <LogIn className="w-4 h-4 mr-2" />
@@ -59,8 +50,7 @@ const Home = () => {
                     ✨ Registreren
                   </Link>
                 </Button>
-              </>
-            )}
+              </>}
           </div>
         </div>
       </header>
@@ -104,10 +94,7 @@ const Home = () => {
                   <h3 className="text-2xl font-bold mb-4 group-hover:text-vinyl-purple transition-colors">
                     🎵 Vinyl Treasure Hunt
                   </h3>
-                  <p className="text-muted-foreground mb-6 group-hover:text-foreground/80 transition-colors">
-                    Ontdek de verhalen achter je vinyl! Scan voorkant, achterkant en matrix - 
-                    onze AI onthult elk geheim van je zwarte goud. 💎🎶
-                  </p>
+                  <p className="text-muted-foreground mb-6 group-hover:text-foreground/80 transition-colors">Ontdek je vinyl! Scan voorkant, achterkant en matrix - onze AI onthult de albums, waarde en specificaties. 💎🎶</p>
                   <Button asChild size="lg" className="w-full hover:shadow-lg group-hover:shadow-vinyl-purple/30">
                     <Link to={user ? "/scanner" : "/auth"}>
                       <Camera className="w-5 h-5 mr-2" />
@@ -130,10 +117,7 @@ const Home = () => {
                   <h3 className="text-2xl font-bold mb-4 group-hover:text-vinyl-gold transition-colors">
                     💿 CD Schatten Zoeken
                   </h3>
-                  <p className="text-muted-foreground mb-6 group-hover:text-foreground/80 transition-colors">
-                    Van eerste druk tot limited edition - scan je CD's en krijg direct 
-                    Discogs prijzen. Je collectie kent geen geheimen meer! 🏆💰
-                  </p>
+                  <p className="text-muted-foreground mb-6 group-hover:text-foreground/80 transition-colors">Van eerste druk tot limited edition - scan je CD's en krijg direct de waarde. Je collectie kent geen geheimen meer! 🏆💰</p>
                   <Button asChild size="lg" className="w-full hover:shadow-lg group-hover:shadow-vinyl-gold/30">
                     <Link to={user ? "/scanner" : "/auth"}>
                       <Camera className="w-5 h-5 mr-2" />
@@ -146,11 +130,9 @@ const Home = () => {
           </div>
           
           <div className="text-center mt-8 animate-fade-in delay-300">
-            {!user && (
-              <p className="text-sm text-muted-foreground">
+            {!user && <p className="text-sm text-muted-foreground">
                 🎪 Al een account? <Link to="/auth" className="text-primary hover:underline story-link font-semibold">Spring direct in de actie!</Link> ✨
-              </p>
-            )}
+              </p>}
           </div>
         </div>
       </section>
@@ -234,8 +216,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 };
-
 export default Home;

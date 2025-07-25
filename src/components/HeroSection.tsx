@@ -1,12 +1,9 @@
-
 import React from 'react';
 import { Disc3, Camera, Brain, DollarSign, Sparkles, Users, TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
 export const HeroSection = () => {
-  return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-background via-background to-accent/5">
+  return <div className="relative overflow-hidden bg-gradient-to-br from-background via-background to-accent/5">
       {/* Background decorative elements */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       <div className="absolute top-10 left-10 w-32 h-32 bg-vinyl-purple/10 rounded-full blur-3xl" />
@@ -108,13 +105,10 @@ export const HeroSection = () => {
                 <TrendingUp className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold mb-3">3. Prijscheck</h3>
-              <p className="text-muted-foreground">
-                Krijg direct actuele prijzen van Discogs marketplace, inclusief adviesprijs op basis van conditie en marktwaarde.
-              </p>
+              <p className="text-muted-foreground">Krijg direct de  actuele waarde, inclusief adviesprijs op basis van conditie en marktwaarde.</p>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };

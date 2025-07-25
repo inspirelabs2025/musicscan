@@ -397,13 +397,13 @@ Discogs export mogelijk</p>
                 
                 <CardContent className="relative">
                   <div className="space-y-3 bg-zinc-200">
-                    <div className="flex justify-between items-center p-2 bg-gradient-to-r from-vinyl-purple/10 to-vinyl-gold/10 rounded-lg">
+                    <div className="flex justify-between items-center p-2 bg-gradient-to-r from-vinyl-purple/10 to-vinyl-gold/10 rounded-lg bg-gray-200">
                       <span className="text-sm font-medium text-vinyl-purple">📋 Conditie:</span>
                       <Badge variant="outline" className="border-vinyl-purple/30 bg-vinyl-purple/5">
                         {item.condition_grade || 'Onbekend'}
                       </Badge>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-gradient-to-r from-vinyl-gold/10 to-vinyl-purple/10 rounded-lg bg-zinc-200">
+                    <div className="flex justify-between items-center p-2 bg-gradient-to-r from-vinyl-gold/10 to-vinyl-purple/10 rounded-lg bg-slate-400">
                       <span className="text-sm font-medium text-vinyl-gold">💰 Prijs:</span>
                       <div className="flex items-center gap-1 text-vinyl-gold font-bold">
                         <Euro className="h-4 w-4 bg-transparent" />

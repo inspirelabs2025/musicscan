@@ -427,41 +427,66 @@ const Scanner = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-scan">
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background relative overflow-hidden">
+      {/* Musical Background Elements */}
+      <div className="fixed inset-0 opacity-5 pointer-events-none">
+        <div className="absolute top-20 left-10 text-4xl animate-pulse">🎵</div>
+        <div className="absolute top-40 right-20 text-3xl animate-pulse delay-500">🎶</div>
+        <div className="absolute bottom-40 left-20 text-4xl animate-pulse delay-1000">🎼</div>
+        <div className="absolute bottom-20 right-10 text-3xl animate-pulse delay-700">🎸</div>
+        <div className="absolute top-60 left-1/2 text-2xl animate-pulse delay-300">🥁</div>
+        <div className="absolute top-80 left-1/4 animate-pulse delay-200">🎺</div>
+        <div className="absolute bottom-60 right-1/4 animate-pulse delay-600">🎻</div>
+        <div className="absolute top-1/2 right-10 animate-pulse delay-800">🎹</div>
+      </div>
+      
       <Navigation />
       
       {/* Scanner Header with Logout */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg relative">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Scanner</h1>
-          <Button variant="ghost" onClick={signOut} className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold bg-clip-text text-transparent">
+            🎯 Scanner Dashboard
+          </h1>
+          <Button variant="ghost" onClick={signOut} className="flex items-center gap-2 hover-scale">
             <LogOut className="w-4 h-4" />
-            Uitloggen
+            ✨ Uitloggen
           </Button>
         </div>
       </div>
 
-      <main className="container mx-auto px-4 py-8">
+       <main className="container mx-auto px-4 py-8 relative">
         {(state.mediaType || state.discogsIdMode) && (
-          <div className="max-w-4xl mx-auto mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Scan Progress</h2>
-              <span className="text-sm text-muted-foreground">
-                Stap {state.currentStep + 1} van {steps.length}
-              </span>
-            </div>
-            <Progress value={(state.currentStep / (steps.length - 1)) * 100} className="w-full" />
-            <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-              {steps.map((step) => (
-                <span key={step.id} className={step.active ? "text-primary font-medium" : ""}>
-                  {step.title}
-                </span>
-              ))}
-            </div>
-          </div>
+          <Card className="max-w-4xl mx-auto mb-8 group hover:shadow-xl transition-all duration-300 border-2 hover:border-vinyl-gold/30 animate-fade-in">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold bg-gradient-to-r from-vinyl-purple to-vinyl-gold bg-clip-text text-transparent">
+                  🎶 Scan Voortgang
+                </h2>
+                <Badge variant="outline" className="text-sm">
+                  ✨ Stap {state.currentStep + 1} van {steps.length}
+                </Badge>
+              </div>
+              <Progress value={(state.currentStep / (steps.length - 1)) * 100} className="w-full mb-4" />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                {steps.map((step) => (
+                  <span key={step.id} className={step.active ? "text-vinyl-purple font-medium animate-pulse" : ""}>
+                    {step.title}
+                  </span>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-4xl mx-auto space-y-8 relative">
+          {/* Floating Music Elements */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute top-10 left-1/4 animate-pulse delay-200">🎺</div>
+            <div className="absolute top-20 right-1/4 animate-pulse delay-600">🎻</div>
+            <div className="absolute bottom-20 left-1/3 animate-pulse delay-400">🎹</div>
+            <div className="absolute bottom-40 right-1/3 animate-pulse delay-800">🎯</div>
+          </div>
           {!state.mediaType && !state.discogsIdMode && (
             <MediaTypeSelector
               onSelectMediaType={handleMediaTypeSelect}

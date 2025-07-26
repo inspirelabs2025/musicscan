@@ -9,13 +9,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ImageGallery } from "@/components/ImageGallery";
 import { PriceAnalysisSection } from "@/components/PriceAnalysisSection";
 import { TechnicalSpecsSection } from "@/components/TechnicalSpecsSection";
+import { AlbumInsightsSection } from "@/components/AlbumInsightsSection";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 
 export default function ReleaseDetail() {
   const { releaseId } = useParams<{ releaseId: string }>();
   const { release, scans, isLoading, error } = useReleaseDetail(releaseId!);
-  const { insights, isLoading: isLoadingInsights, generateInsights } = useAlbumInsights();
+  // Use the first scan to determine album type and enable auto-generation
+  const firstScan = scans?.[0];
+  const albumType = firstScan?.media_type as 'cd' | 'vinyl' | undefined;
+  const { insights, isLoading: isLoadingInsights, generateInsights } = useAlbumInsights(
+    release?.id, 
+    albumType, 
+    !!release && !!firstScan // auto-generate when we have release and scan data
+  );
 
   if (isLoading) {
     return (
@@ -212,40 +220,12 @@ export default function ReleaseDetail() {
 
             {/* AI Insights */}
             {insights ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>AI Insights</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold mb-2">Historische Context</h4>
-                    <p className="text-sm text-muted-foreground">{insights.historical_context}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Artistieke Betekenis</h4>
-                    <p className="text-sm text-muted-foreground">{insights.artistic_significance}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Culturele Impact</h4>
-                    <p className="text-sm text-muted-foreground">{insights.cultural_impact}</p>
-                  </div>
-                  {insights.fun_facts && insights.fun_facts.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold mb-2">Leuke Weetjes</h4>
-                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                        {insights.fun_facts.map((fact, index) => (
-                          <li key={index}>{fact}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <AlbumInsightsSection insights={insights} />
             ) : (
               <Card>
                 <CardContent className="p-6 text-center">
                   <Button 
-                    onClick={() => generateInsights(release.id)}
+                    onClick={() => generateInsights(release.id, albumType)}
                     disabled={isLoadingInsights}
                     variant="outline"
                   >

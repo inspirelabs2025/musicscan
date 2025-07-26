@@ -20,7 +20,8 @@ export default function AlbumDetail() {
   const { albumId } = useParams<{ albumId: string }>();
   const navigate = useNavigate();
   const { album, isLoading, error } = useAlbumDetail(albumId!);
-  const { insights, isLoading: insightsLoading, generateInsights } = useAlbumInsights();
+  const albumType = album?.media_type as 'cd' | 'vinyl' | undefined;
+  const { insights, isLoading: insightsLoading, generateInsights } = useAlbumInsights(albumId, albumType, true);
   
   // Check if a canonical release exists for this album
   const { release: canonicalRelease } = useReleaseByDiscogs(album?.discogs_id || 0);
@@ -52,12 +53,7 @@ export default function AlbumDetail() {
     return images;
   };
 
-  // Auto-generate insights when album loads
-  useEffect(() => {
-    if (albumId && album && !insights && !insightsLoading) {
-      generateInsights(albumId);
-    }
-  }, [albumId, album, insights, insightsLoading, generateInsights]);
+  // Auto-generate insights is now handled by the hook
 
   if (isLoading) {
     return (

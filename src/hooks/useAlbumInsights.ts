@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,19 +18,50 @@ export interface AlbumInsights {
   }>;
 }
 
-export const useAlbumInsights = () => {
+export const useAlbumInsights = (albumId?: string, albumType?: 'cd' | 'vinyl', autoGenerate: boolean = false) => {
   const [insights, setInsights] = useState<AlbumInsights | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const generateInsights = async (albumId: string) => {
+  // Check for cached insights first
+  const checkCachedInsights = async (id: string, type: 'cd' | 'vinyl') => {
+    try {
+      const { data, error } = await supabase
+        .from('album_insights')
+        .select('insights_data, cached_until')
+        .eq('album_id', id)
+        .eq('album_type', type)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data && data.cached_until && new Date(data.cached_until) > new Date()) {
+        console.log('🎯 Found cached insights for album:', id);
+        setInsights(data.insights_data as unknown as AlbumInsights);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking cached insights:', error);
+      return false;
+    }
+  };
+
+  const generateInsights = async (albumIdToGenerate: string, albumTypeToGenerate?: 'cd' | 'vinyl') => {
+    if (isLoading) return; // Prevent multiple concurrent requests
+    
     setIsLoading(true);
     setError(null);
 
     try {
+      console.log('🤖 Generating AI insights for album:', albumIdToGenerate, 'type:', albumTypeToGenerate);
+
       const { data, error } = await supabase.functions.invoke('album-ai-insights', {
-        body: { albumId }
+        body: { 
+          albumId: albumIdToGenerate,
+          albumType: albumTypeToGenerate 
+        }
       });
 
       if (error) throw error;
@@ -58,11 +89,27 @@ export const useAlbumInsights = () => {
     }
   };
 
+  // Auto-generate insights when albumId and albumType are provided
+  useEffect(() => {
+    if (autoGenerate && albumId && albumType && !insights && !isLoading) {
+      console.log('🚀 Auto-generating insights for:', albumId, albumType);
+      
+      // First check for cached insights
+      checkCachedInsights(albumId, albumType).then((foundCached) => {
+        if (!foundCached) {
+          // No cached insights found, generate new ones
+          generateInsights(albumId, albumType);
+        }
+      });
+    }
+  }, [albumId, albumType, autoGenerate, insights, isLoading]);
+
   return {
     insights,
     isLoading,
     error,
     generateInsights,
+    checkCachedInsights,
     clearInsights: () => setInsights(null)
   };
 };

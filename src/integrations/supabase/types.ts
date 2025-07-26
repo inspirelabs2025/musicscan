@@ -119,6 +119,45 @@ export type Database = {
         }
         Relationships: []
       }
+      album_insights: {
+        Row: {
+          ai_model: string
+          album_id: string
+          album_type: string
+          cached_until: string | null
+          created_at: string
+          generation_time_ms: number | null
+          id: string
+          insights_data: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_model?: string
+          album_id: string
+          album_type: string
+          cached_until?: string | null
+          created_at?: string
+          generation_time_ms?: number | null
+          id?: string
+          insights_data: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_model?: string
+          album_id?: string
+          album_type?: string
+          cached_until?: string | null
+          created_at?: string
+          generation_time_ms?: number | null
+          id?: string
+          insights_data?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       batch_uploads: {
         Row: {
           condition_grade: string | null

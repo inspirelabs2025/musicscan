@@ -17,44 +17,61 @@ serve(async (req) => {
   }
 
   try {
+    const startTime = Date.now();
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-    const { albumId } = await req.json();
+    const { albumId, albumType } = await req.json();
 
-    console.log('Generating AI insights for album:', albumId);
+    console.log('Generating AI insights for album:', albumId, 'type:', albumType);
 
-    // Get album data from database
-    const [cdResult, vinylResult] = await Promise.all([
-      supabase.from("cd_scan").select("*").eq("id", albumId).single(),
-      supabase.from("vinyl2_scan").select("*").eq("id", albumId).single()
-    ]);
+    if (!albumId) {
+      throw new Error("Album ID is required");
+    }
 
-    const album = cdResult.data || vinylResult.data;
+    // Determine album type if not provided
+    let detectedAlbumType = albumType;
+    let album = null;
+
+    if (detectedAlbumType) {
+      // Get album data from specific table
+      const tableName = detectedAlbumType === 'cd' ? 'cd_scan' : 'vinyl2_scan';
+      const result = await supabase.from(tableName).select("*").eq("id", albumId).maybeSingle();
+      album = result.data;
+    } else {
+      // Try both tables to find the album
+      const [cdResult, vinylResult] = await Promise.all([
+        supabase.from("cd_scan").select("*").eq("id", albumId).maybeSingle(),
+        supabase.from("vinyl2_scan").select("*").eq("id", albumId).maybeSingle()
+      ]);
+
+      if (cdResult.data) {
+        album = cdResult.data;
+        detectedAlbumType = 'cd';
+      } else if (vinylResult.data) {
+        album = vinylResult.data;
+        detectedAlbumType = 'vinyl';
+      }
+    }
     
     if (!album) {
       throw new Error("Album not found");
     }
 
-    // Check if we already have cached insights
-    const cacheKey = `ai_insights_${albumId}`;
+    // Check if we already have cached insights in the new table
     const { data: cachedInsights } = await supabase
-      .from('chat_messages')
+      .from('album_insights')
       .select('*')
-      .eq('session_id', albumId)
-      .eq('sender_type', 'ai')
-      .eq('ai_model', 'gpt-4.1-2025-04-14')
-      .order('created_at', { ascending: false })
-      .limit(1);
+      .eq('album_id', albumId)
+      .eq('album_type', detectedAlbumType)
+      .eq('user_id', album.user_id)
+      .maybeSingle();
 
-    // Return cached insights if less than 24 hours old
-    if (cachedInsights && cachedInsights.length > 0) {
-      const cacheAge = Date.now() - new Date(cachedInsights[0].created_at).getTime();
-      if (cacheAge < 24 * 60 * 60 * 1000) { // 24 hours
-        console.log('Returning cached insights');
-        return new Response(
-          JSON.stringify(JSON.parse(cachedInsights[0].message)),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+    // Return cached insights if still valid (less than 7 days old)
+    if (cachedInsights && cachedInsights.cached_until && new Date(cachedInsights.cached_until) > new Date()) {
+      console.log('Returning cached insights from album_insights table');
+      return new Response(
+        JSON.stringify(cachedInsights.insights_data),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Generate new AI insights
@@ -112,18 +129,37 @@ Schrijf boeiend en informatief, alsof je een muziekhistoricus bent die passie he
 
     const aiResponse = await response.json();
     const insights = JSON.parse(aiResponse.choices[0].message.content);
+    const generationTime = Date.now() - startTime;
 
-    // Cache the insights
-    await supabase.from('chat_messages').insert({
-      user_id: album.user_id,
-      session_id: albumId,
-      message: JSON.stringify(insights),
-      sender_type: 'ai',
-      ai_model: 'gpt-4.1-2025-04-14',
-      format_type: 'json'
-    });
+    // Cache the insights in the new dedicated table
+    const cacheUntil = new Date();
+    cacheUntil.setDate(cacheUntil.getDate() + 7); // Cache for 7 days
 
-    console.log('Generated and cached new AI insights');
+    if (cachedInsights) {
+      // Update existing insights
+      await supabase
+        .from('album_insights')
+        .update({
+          insights_data: insights,
+          cached_until: cacheUntil.toISOString(),
+          generation_time_ms: generationTime,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', cachedInsights.id);
+    } else {
+      // Insert new insights
+      await supabase.from('album_insights').insert({
+        album_id: albumId,
+        album_type: detectedAlbumType,
+        user_id: album.user_id,
+        insights_data: insights,
+        cached_until: cacheUntil.toISOString(),
+        generation_time_ms: generationTime,
+        ai_model: 'gpt-4.1-2025-04-14'
+      });
+    }
+
+    console.log(`Generated and cached new AI insights in ${generationTime}ms`);
 
     return new Response(
       JSON.stringify(insights),

@@ -40,8 +40,13 @@ export default function MyCollection() {
     });
   };
 
-  const handleBulkAction = () => {
+  const handleBulkAction = async () => {
     if (!bulkAction || selectedItems.size === 0) return;
+
+    if (bulkAction === "fetch_artwork") {
+      await batchFetchArtworkForSelected();
+      return;
+    }
 
     const selectedItemsData = Array.from(selectedItems).map(itemId => {
       const item = items.find(i => i.id === itemId);
@@ -81,6 +86,67 @@ export default function MyCollection() {
         });
       },
     });
+  };
+
+  const batchFetchArtworkForSelected = async () => {
+    if (!user || selectedItems.size === 0) return;
+
+    setIsBatchFetching(true);
+    try {
+      const selectedItemsList = Array.from(selectedItems).map(itemId => {
+        return items.find(i => i.id === itemId);
+      }).filter(Boolean);
+
+      let successCount = 0;
+      const totalCount = selectedItemsList.length;
+
+      for (const item of selectedItemsList) {
+        if (!item || (!item.discogs_url && (!item.artist || !item.title))) continue;
+
+        try {
+          const { data, error } = await supabase.functions.invoke('fetch-album-artwork', {
+            body: {
+              discogs_url: item.discogs_url,
+              artist: item.artist,
+              title: item.title,
+              media_type: item.media_type,
+              item_id: item.id,
+            }
+          });
+
+          if (!error && data?.success) {
+            successCount++;
+          }
+
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          console.error(`Error fetching artwork for ${item.artist} - ${item.title}:`, error);
+        }
+      }
+
+      toast({
+        title: "Artwork zoeken voltooid",
+        description: `${totalCount} items verwerkt, ${successCount} artwork gevonden.`,
+      });
+
+      setSelectedItems(new Set());
+      setBulkAction("");
+
+      // Refresh the collection to show new artwork
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error('Error batch fetching artwork for selected:', error);
+      toast({
+        title: "Fout bij artwork zoeken",
+        description: "Er is een fout opgetreden bij het zoeken naar artwork.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBatchFetching(false);
+    }
   };
 
   const toggleItemSelection = (itemId: string) => {
@@ -261,15 +327,16 @@ export default function MyCollection() {
                     <SelectItem value="make_private">Maak privé</SelectItem>
                     <SelectItem value="add_to_shop">Zet te koop</SelectItem>
                     <SelectItem value="remove_from_shop">Haal uit winkel</SelectItem>
+                    <SelectItem value="fetch_artwork">Zoek artwork</SelectItem>
                   </SelectContent>
                 </Select>
 
                 <Button
                   onClick={handleBulkAction}
-                  disabled={!bulkAction || isBulkUpdating}
+                  disabled={!bulkAction || isBulkUpdating || isBatchFetching}
                   className="whitespace-nowrap"
                 >
-                  {isBulkUpdating ? "Bezig..." : "Uitvoeren"}
+                  {(isBulkUpdating || isBatchFetching) ? "Bezig..." : "Uitvoeren"}
                 </Button>
               </div>
             )}

@@ -325,7 +325,8 @@ export default function MyCollection() {
         {/* Price Warnings */}
         {(() => {
           const itemsForSaleWithoutPrice = items.filter(item => 
-            item.is_for_sale && (!item.marketplace_price || item.marketplace_price === 0)
+            item.is_for_sale && (!item.marketplace_price || item.marketplace_price === 0) && 
+            (!item.calculated_advice_price || item.calculated_advice_price === 0)
           );
           
           if (itemsForSaleWithoutPrice.length > 0) {

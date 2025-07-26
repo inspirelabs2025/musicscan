@@ -19,6 +19,11 @@ export interface CollectionItem {
   marketplace_price: number | null;
   currency: string | null;
   created_at: string;
+  // Price fields
+  calculated_advice_price?: number | null;
+  lowest_price?: number | null;
+  median_price?: number | null;
+  highest_price?: number | null;
   // CD image fields
   front_image?: string | null;
   back_image?: string | null;

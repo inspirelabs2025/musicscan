@@ -107,6 +107,10 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
           <div className="absolute bottom-2 right-2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-bold shadow-lg">
             {item.currency}{item.marketplace_price}
           </div>
+        ) : item.calculated_advice_price ? (
+          <div className="absolute bottom-2 right-2 bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-xs font-medium shadow-lg">
+            ~{item.currency}{item.calculated_advice_price}
+          </div>
         ) : (
           <div className="absolute bottom-2 right-2 bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-xs font-medium shadow-lg flex items-center gap-1">
             <AlertTriangle className="w-3 h-3" />
@@ -144,7 +148,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
               className="flex-1 text-xs"
             >
               <Mail className="w-3 h-3 mr-1" />
-              {item.marketplace_price ? 'Kopen' : 'Interesse?'}
+              {(item.marketplace_price || item.calculated_advice_price) ? 'Kopen' : 'Interesse?'}
             </Button>
           )}
           

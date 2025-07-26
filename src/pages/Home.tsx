@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { LogIn, UserPlus, Camera, Disc, Music, User, ChevronDown, Sparkles, MessageSquare, TrendingUp, Headphones, Zap } from 'lucide-react';
 import { HeroSection } from '@/components/HeroSection';
 import { NewUsersSection } from '@/components/NewUsersSection';
+import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -221,6 +222,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Latest Albums Section */}
+      <LatestAlbumsSection />
 
       {/* New Users Section */}
       <NewUsersSection />

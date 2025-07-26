@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database, LogOut, User } from "lucide-react";
+import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database, LogOut, User, Music, Store } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -20,7 +20,9 @@ const navigationItems = [
   { title: "Release ID Scan", url: "/ai-scan-v2", icon: Brain },
   { title: "Release ID Overzicht", url: "/ai-scan-overview", icon: Database },
   { title: "Marketplace", url: "/marketplace-overview", icon: ShoppingCart },
-  { title: "Collection", url: "/collection-overview", icon: Archive }
+  { title: "Collection", url: "/collection-overview", icon: Archive },
+  { title: "Mijn Collectie", url: "/my-collection", icon: Music },
+  { title: "Mijn Winkel", url: "/my-shop", icon: Store }
 ];
 
 export function Navigation() {

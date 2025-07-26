@@ -20,6 +20,10 @@ import AIScan from "./pages/AIScan";
 import AIScanOverview from "./pages/AIScanOverview";
 import AIScanV2 from "./pages/AIScanV2";
 import AIScanV2Overview from "./pages/AIScanV2Overview";
+import MyCollection from "./pages/MyCollection";
+import MyShop from "./pages/MyShop";
+import PublicShop from "./pages/PublicShop";
+import PublicCollection from "./pages/PublicCollection";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,6 +88,18 @@ const App = () => (
                 <AIAnalysis />
               </ProtectedRoute>
             } />
+            <Route path="/my-collection" element={
+              <ProtectedRoute>
+                <MyCollection />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-shop" element={
+              <ProtectedRoute>
+                <MyShop />
+              </ProtectedRoute>
+            } />
+            <Route path="/shop/:shopSlug" element={<PublicShop />} />
+            <Route path="/collection/:userId" element={<PublicCollection />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -4,7 +4,7 @@ import { toast } from '@/hooks/use-toast';
 
 export interface DiscogsSearchResult {
   id: number;
-  discogs_id?: number; // Added for proper database mapping
+  discogs_id?: number;
   title: string;
   artist: string;
   year: number | null;
@@ -31,7 +31,6 @@ export interface DiscogsSearchResult {
   };
 }
 
-// Cache interface for browser storage
 interface CachedSearchResult {
   results: DiscogsSearchResult[];
   strategies: string[];
@@ -45,13 +44,11 @@ export const useDiscogsSearch = () => {
   const [searchStrategies, setSearchStrategies] = useState<string[]>([]);
   const [isPricingRetrying, setIsPricingRetrying] = useState(false);
   
-  // Mobile-specific tracking to prevent duplicate calls
   const lastSearchRef = useRef<string>('');
   const isCallInProgressRef = useRef(false);
   const callTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cache management
-  const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+  const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
   const CACHE_PREFIX = 'discogs_search_';
 
   const getCachedResult = useCallback((searchKey: string): CachedSearchResult | null => {
@@ -67,10 +64,8 @@ export const useDiscogsSearch = () => {
         return null;
       }
 
-      console.log('🎯 Cache HIT for:', searchKey);
       return parsedCache;
-    } catch (error) {
-      console.warn('Cache read error:', error);
+    } catch {
       return null;
     }
   }, [CACHE_DURATION, CACHE_PREFIX]);
@@ -84,13 +79,11 @@ export const useDiscogsSearch = () => {
         searchKey
       };
       localStorage.setItem(CACHE_PREFIX + searchKey, JSON.stringify(cacheData));
-      console.log('💾 Cached results for:', searchKey);
-    } catch (error) {
-      console.warn('Cache write error:', error);
+    } catch {
+      // Silent fail for storage errors
     }
   }, [CACHE_PREFIX]);
 
-  // Clear corrupted cache entries
   const clearCache = useCallback(() => {
     try {
       Object.keys(localStorage).forEach(key => {
@@ -98,13 +91,11 @@ export const useDiscogsSearch = () => {
           localStorage.removeItem(key);
         }
       });
-      console.log('🗑️ Cleared all Discogs search cache');
-    } catch (error) {
-      console.warn('Cache clear error:', error);
+    } catch {
+      // Silent fail for storage errors
     }
   }, [CACHE_PREFIX]);
 
-  // Reset all states and clear timeouts
   const resetSearchState = useCallback(() => {
     setIsSearching(false);
     setSearchResults([]);
@@ -135,7 +126,6 @@ export const useDiscogsSearch = () => {
       return null;
     }
 
-    // Mobile-specific deduplication: prevent duplicate calls (unless force retry)
     const searchKey = `${catalogNumber}-${artist}-${title}-${includePricing}`;
     
     // Check cache first (skip if force retry)
@@ -154,13 +144,10 @@ export const useDiscogsSearch = () => {
     }
     
     if (!forceRetry && (isCallInProgressRef.current || lastSearchRef.current === searchKey)) {
-      console.log('🚫 [MOBILE] Duplicate search call prevented:', searchKey);
       return null;
     }
     
     if (forceRetry) {
-      console.log('🔄 [FORCE RETRY] Bypassing duplicate prevention for retry:', searchKey);
-      // Reset to allow retry
       lastSearchRef.current = '';
     }
     
@@ -170,11 +157,9 @@ export const useDiscogsSearch = () => {
     setSearchResults([]);
     setSearchStrategies([]);
     
-    // Mobile-optimized timeout
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const SEARCH_TIMEOUT = isMobile ? 20000 : 35000; // 20s mobile, 35s desktop
+    const SEARCH_TIMEOUT = isMobile ? 20000 : 35000;
     callTimeoutRef.current = setTimeout(() => {
-      console.log('⏰ Search timeout, resetting state');
       resetSearchState();
       toast({
         title: "Zoeken Onderbroken",
@@ -184,8 +169,6 @@ export const useDiscogsSearch = () => {
     }, SEARCH_TIMEOUT);
     
     try {
-      console.log('🔍 [MOBILE] Starting Discogs search:', { catalogNumber, artist, title, includePricing, searchKey });
-      
       const { data, error } = await supabase.functions.invoke('test-catalog-search', {
         body: {
           catalog_number: catalogNumber.trim(),
@@ -195,26 +178,19 @@ export const useDiscogsSearch = () => {
         }
       });
 
-      if (error) {
-        console.error('❌ Discogs search error:', error);
-        throw error;
-      }
-
-      console.log('✅ Discogs search completed:', data);
+      if (error) throw error;
 
       setSearchResults(data.results || []);
       setSearchStrategies(data.strategies_used || []);
       
-      // Cache successful results
       if (data.results?.length > 0) {
         setCachedResult(searchKey, data.results, data.strategies_used || []);
       }
       
-      // Check if pricing failed and retry automatically
+      // Auto-retry pricing if missing
       const hasPricingResults = data.results?.some((result: any) => result.pricing_stats?.lowest_price);
       if (includePricing && data.results?.length > 0 && !hasPricingResults) {
-        console.log('🔄 No pricing found, attempting automatic retry...');
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
         try {
           const retryData = await supabase.functions.invoke('test-catalog-search', {
@@ -229,12 +205,10 @@ export const useDiscogsSearch = () => {
           
           if (retryData.data?.results) {
             setSearchResults(retryData.data.results);
-            // Update cache with pricing results
             setCachedResult(searchKey, retryData.data.results, data.strategies_used || []);
-            console.log('✅ Pricing retry completed');
           }
-        } catch (retryError) {
-          console.error('❌ Pricing retry failed:', retryError);
+        } catch {
+          // Silent fail for retry pricing
         }
       }
       
@@ -245,10 +219,7 @@ export const useDiscogsSearch = () => {
       });
 
       return data;
-    } catch (error) {
-      console.error('❌ Discogs search failed:', error);
-      
-      // Clear cache on error to prevent corruption
+    } catch (error: any) {
       clearCache();
       
       toast({
@@ -258,7 +229,6 @@ export const useDiscogsSearch = () => {
       });
       return null;
     } finally {
-      // Clear timeout and reset state
       if (callTimeoutRef.current) {
         clearTimeout(callTimeoutRef.current);
         callTimeoutRef.current = null;
@@ -274,8 +244,6 @@ export const useDiscogsSearch = () => {
     setIsPricingRetrying(true);
     
     try {
-      console.log('🔄 Retrying pricing for Discogs ID:', discogsId);
-      
       const { data, error } = await supabase.functions.invoke('test-catalog-search', {
         body: {
           discogs_id: discogsId,
@@ -286,7 +254,6 @@ export const useDiscogsSearch = () => {
       if (error) throw error;
 
       if (data.pricing_stats) {
-        // Update the search results with new pricing
         setSearchResults(prev => prev.map(result => 
           result.id === discogsId 
             ? { ...result, pricing_stats: data.pricing_stats }
@@ -301,8 +268,7 @@ export const useDiscogsSearch = () => {
       }
 
       return data;
-    } catch (error) {
-      console.error('❌ Pricing retry failed:', error);
+    } catch (error: any) {
       toast({
         title: "Prijzen Ophalen Mislukt",
         description: "Kon geen nieuwe prijsinformatie ophalen",
@@ -314,17 +280,13 @@ export const useDiscogsSearch = () => {
     }
   }, []);
 
-  // Search by Discogs ID directly
   const searchByDiscogsId = useCallback(async (discogsId: string) => {
-    console.log('🆔 Searching by Discogs ID:', discogsId);
-    
     resetSearchState();
     setIsSearching(true);
     setSearchResults([]);
     setSearchStrategies([]);
     
     try {
-      console.log('📡 Calling test-catalog-search with direct Discogs ID');
       const { data, error } = await supabase.functions.invoke('test-catalog-search', {
         body: { 
           direct_discogs_id: discogsId,
@@ -333,15 +295,10 @@ export const useDiscogsSearch = () => {
         }
       });
 
-      if (error) {
-        console.error('❌ Discogs ID search error:', error);
-        throw error;
-      }
-
-      console.log('✅ Discogs ID search successful:', data);
+      if (error) throw error;
       
       if (data.results && data.results.length > 0) {
-        const result = data.results[0]; // Should only be one result
+        const result = data.results[0];
         const formattedResult: DiscogsSearchResult = {
           id: parseInt(result.discogs_id),
           discogs_id: parseInt(result.discogs_id),
@@ -351,7 +308,7 @@ export const useDiscogsSearch = () => {
           title: result.title || '',
           artist: result.artist || '',
           year: result.year ? parseInt(result.year) : null,
-          similarity_score: 1.0, // Perfect match since it's direct ID
+          similarity_score: 1.0,
           search_strategy: 'Direct Discogs ID',
           catalog_number: result.catalog_number || '',
           pricing_stats: result.pricing_stats
@@ -359,11 +316,9 @@ export const useDiscogsSearch = () => {
         
         setSearchResults([formattedResult]);
         setSearchStrategies(['Direct Discogs ID']);
-        console.log('✅ Formatted Discogs ID result:', formattedResult);
       }
 
-    } catch (error: any) {
-      console.error('❌ Discogs ID search failed:', error);
+    } catch {
       setSearchResults([]);
       setSearchStrategies([]);
     } finally {

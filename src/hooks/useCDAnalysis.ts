@@ -19,7 +19,7 @@ export const useCDAnalysis = () => {
     setIsAnalyzing(true);
     
     try {
-      console.log('💿 Starting CD analysis with images:', imageUrls);
+      // Starting CD analysis with images
       
       // Mobile-optimized timeout
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -42,11 +42,10 @@ export const useCDAnalysis = () => {
       
 
       if (error) {
-        console.error('❌ CD Analysis error:', error);
         throw error;
       }
 
-      console.log('✅ CD Analysis completed:', data);
+      // CD analysis completed successfully
 
       // Transform the data structure to match what the frontend expects
       const transformedData = {

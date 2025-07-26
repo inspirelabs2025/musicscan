@@ -96,6 +96,23 @@ serve(async (req) => {
 
         if (releaseError) {
           console.error(`Error creating release ${release.id}:`, releaseError);
+        } else {
+          // Fetch artwork for the new release
+          try {
+            await supabase.functions.invoke('fetch-album-artwork', {
+              body: {
+                discogs_url: `https://www.discogs.com${release.uri}`,
+                artist: artist,
+                title: title,
+                media_type: 'release',
+                item_id: releaseData?.release_id
+              }
+            });
+            console.log(`Artwork fetch initiated for release ${release.id}`);
+          } catch (artworkError) {
+            console.error(`Error fetching artwork for release ${release.id}:`, artworkError);
+            // Continue processing even if artwork fails
+          }
         }
 
         const formattedRelease: DiscogsRelease = {

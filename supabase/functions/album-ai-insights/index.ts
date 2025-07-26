@@ -37,7 +37,7 @@ serve(async (req) => {
       album = result.data;
       // For releases, we don't have a user_id so we'll use a system user
       if (album) {
-        album.user_id = 'system'; // Special system user for releases
+        album.user_id = '00000000-0000-0000-0000-000000000000'; // Special system user UUID for releases
       }
     } else if (detectedAlbumType) {
       // Get album data from specific table
@@ -60,7 +60,7 @@ serve(async (req) => {
         detectedAlbumType = 'vinyl';
       } else if (releaseResult.data) {
         album = releaseResult.data;
-        album.user_id = 'system'; // Special system user for releases
+        album.user_id = '00000000-0000-0000-0000-000000000000'; // Special system user UUID for releases
         detectedAlbumType = 'release';
       }
     }

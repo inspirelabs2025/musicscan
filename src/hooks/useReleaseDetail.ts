@@ -63,7 +63,7 @@ export const useReleaseDetail = (releaseId: string) => {
         .from("releases")
         .select("*")
         .eq("id", releaseId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data as ReleaseItem;
@@ -87,8 +87,7 @@ export const useReleaseDetail = (releaseId: string) => {
             marketplace_location, marketplace_allow_offers, marketplace_weight,
             shop_description
           `)
-          .eq("release_id", releaseId)
-          .eq("is_public", true),
+          .eq("release_id", releaseId),
         supabase
           .from("vinyl2_scan")
           .select(`
@@ -98,7 +97,6 @@ export const useReleaseDetail = (releaseId: string) => {
             marketplace_weight, shop_description
           `)
           .eq("release_id", releaseId)
-          .eq("is_public", true)
       ]);
 
       if (cdResults.error) throw cdResults.error;

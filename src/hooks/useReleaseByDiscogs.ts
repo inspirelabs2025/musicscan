@@ -12,13 +12,9 @@ export const useReleaseByDiscogs = (discogsId: number) => {
         .from("releases")
         .select("*")
         .eq("discogs_id", discogsId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // No rows returned - release doesn't exist yet
-          return null;
-        }
         throw error;
       }
       

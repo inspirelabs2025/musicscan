@@ -34,7 +34,6 @@ const PublicCatalog = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90">
       <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Openbare Catalogus</h1>
           <p className="text-muted-foreground">
@@ -50,7 +49,6 @@ const PublicCatalog = () => {
           </div>
         </div>
 
-        {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -76,7 +74,6 @@ const PublicCatalog = () => {
           </div>
         </div>
 
-        {/* Results */}
         {filteredItems.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">

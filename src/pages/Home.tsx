@@ -7,11 +7,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 const Home = () => {
+  console.log('🏠 Home.tsx: Rendering Home component');
+  
   const {
     user,
     loading,
     signOut
   } = useAuth();
+  
+  console.log('🏠 Home.tsx: Auth state -', { user: !!user, loading });
   return <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background relative overflow-hidden">
       {/* Musical Background Elements */}
       <div className="fixed inset-0 opacity-5 pointer-events-none">

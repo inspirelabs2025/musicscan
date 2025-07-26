@@ -38,17 +38,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       errorInfo,
     });
 
+    // Enhanced logging for debugging
+    console.group('🚨 Error Boundary Caught Error');
+    console.error('Error:', error);
+    console.error('Error Stack:', error.stack);
+    console.error('Error Info:', errorInfo);
+    console.error('Component Stack:', errorInfo.componentStack);
+    console.error('Error Name:', error.name);
+    console.error('Error Message:', error.message);
+    console.groupEnd();
+
     // Log error to monitoring service
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
-    }
-
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.group('🚨 Error Boundary Caught Error');
-      console.error('Error:', error);
-      console.error('Error Info:', errorInfo);
-      console.groupEnd();
     }
   }
 

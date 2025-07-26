@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Home from "./pages/Home";
 import Scanner from "./pages/Scanner";
 import Auth from "./pages/Auth";
@@ -49,13 +50,17 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+const App = () => {
+  console.log('🎯 App.tsx: Rendering App component');
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <ErrorBoundary showDetails={true}>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Home />} />
@@ -133,11 +138,13 @@ const App = () => (
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+            </Routes>
+          </BrowserRouter>
+        </ErrorBoundary>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

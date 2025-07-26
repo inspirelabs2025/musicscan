@@ -113,6 +113,20 @@ serve(async (req) => {
             console.error(`Error fetching artwork for release ${release.id}:`, artworkError);
             // Continue processing even if artwork fails
           }
+
+          // Generate AI insights for the new release
+          try {
+            await supabase.functions.invoke('album-ai-insights', {
+              body: {
+                albumId: releaseData?.release_id,
+                albumType: 'release'
+              }
+            });
+            console.log(`AI insights generation initiated for release ${release.id}`);
+          } catch (insightsError) {
+            console.error(`Error generating AI insights for release ${release.id}:`, insightsError);
+            // Continue processing even if insights generation fails
+          }
         }
 
         const formattedRelease: DiscogsRelease = {

@@ -31,16 +31,25 @@ serve(async (req) => {
     let detectedAlbumType = albumType;
     let album = null;
 
-    if (detectedAlbumType) {
+    if (detectedAlbumType === 'release') {
+      // Get album data from releases table
+      const result = await supabase.from('releases').select("*").eq("id", albumId).maybeSingle();
+      album = result.data;
+      // For releases, we don't have a user_id so we'll use a system user
+      if (album) {
+        album.user_id = 'system'; // Special system user for releases
+      }
+    } else if (detectedAlbumType) {
       // Get album data from specific table
       const tableName = detectedAlbumType === 'cd' ? 'cd_scan' : 'vinyl2_scan';
       const result = await supabase.from(tableName).select("*").eq("id", albumId).maybeSingle();
       album = result.data;
     } else {
-      // Try both tables to find the album
-      const [cdResult, vinylResult] = await Promise.all([
+      // Try all tables to find the album
+      const [cdResult, vinylResult, releaseResult] = await Promise.all([
         supabase.from("cd_scan").select("*").eq("id", albumId).maybeSingle(),
-        supabase.from("vinyl2_scan").select("*").eq("id", albumId).maybeSingle()
+        supabase.from("vinyl2_scan").select("*").eq("id", albumId).maybeSingle(),
+        supabase.from("releases").select("*").eq("id", albumId).maybeSingle()
       ]);
 
       if (cdResult.data) {
@@ -49,6 +58,10 @@ serve(async (req) => {
       } else if (vinylResult.data) {
         album = vinylResult.data;
         detectedAlbumType = 'vinyl';
+      } else if (releaseResult.data) {
+        album = releaseResult.data;
+        album.user_id = 'system'; // Special system user for releases
+        detectedAlbumType = 'release';
       }
     }
     

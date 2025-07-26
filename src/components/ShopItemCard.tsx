@@ -138,7 +138,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
           </div>
         ) : item.calculated_advice_price ? (
           <div className="absolute bottom-3 right-3 bg-gradient-to-r from-vinyl-purple/90 to-primary/90 text-white px-4 py-2 rounded-full text-xs font-semibold shadow-xl border border-white/20 z-10 hover-scale">
-            💎 ~{item.currency}{item.calculated_advice_price}
+            💎 {item.currency}{item.calculated_advice_price}
           </div>
         ) : (
           <div className="absolute bottom-3 right-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full text-xs font-semibold shadow-xl border border-red-300/30 z-10 flex items-center gap-1 hover-scale">

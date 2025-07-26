@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Navigation } from "@/components/Navigation";
 import Home from "./pages/Home";
 import Scanner from "./pages/Scanner";
 import Auth from "./pages/Auth";
@@ -64,6 +65,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <Navigation />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Home />} />

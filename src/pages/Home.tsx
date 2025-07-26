@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { LogIn, UserPlus, Camera, Disc, Music, User, ChevronDown, Sparkles, MessageSquare, TrendingUp, Headphones, Zap } from 'lucide-react';
+import { Camera, Disc, Music, Sparkles, MessageSquare, TrendingUp, Headphones, Zap } from 'lucide-react';
 import { HeroSection } from '@/components/HeroSection';
 import { NewUsersSection } from '@/components/NewUsersSection';
 import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
@@ -8,17 +8,12 @@ import { NewsSection } from '@/components/NewsSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 const Home = () => {
   console.log('🏠 Home.tsx: Rendering Home component');
   
-  const {
-    user,
-    loading,
-    signOut
-  } = useAuth();
+  const { user } = useAuth();
   
-  console.log('🏠 Home.tsx: Auth state -', { user: !!user, loading });
+  console.log('🏠 Home.tsx: Auth state -', { user: !!user });
   return <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background relative overflow-hidden">
       {/* Musical Background Elements */}
       <div className="fixed inset-0 opacity-5 pointer-events-none">
@@ -28,39 +23,6 @@ const Home = () => {
         <div className="absolute bottom-20 right-10 text-3xl animate-pulse delay-700">🎸</div>
         <div className="absolute top-60 left-1/2 text-2xl animate-pulse delay-300">🥁</div>
       </div>
-
-      {/* Header with conditional auth buttons */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link to="/" className="hover-scale">
-              <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer transition-all duration-300 hover:drop-shadow-lg" />
-            </Link>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {loading ? <div className="w-20 h-10 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md" /> : user ? <Button asChild variant="ghost" className="hover-scale">
-                <Link to="/scanner" className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  🎯 Account
-                </Link>
-              </Button> : <>
-                <Button asChild variant="ghost" className="hover-scale">
-                  <Link to="/auth">
-                    <LogIn className="w-4 h-4 mr-2" />
-                    🎪 Inloggen
-                  </Link>
-                </Button>
-                <Button asChild className="hover-scale bg-gradient-to-r from-vinyl-purple to-vinyl-gold hover:shadow-lg">
-                  <Link to="/auth">
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    ✨ Registreren
-                  </Link>
-                </Button>
-              </>}
-          </div>
-        </div>
-      </header>
 
       {/* Hero Section */}
       <HeroSection />

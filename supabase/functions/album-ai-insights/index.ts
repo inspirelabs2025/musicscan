@@ -87,61 +87,45 @@ serve(async (req) => {
       );
     }
 
-    // Generate new AI insights
-    const prompt = `Genereer uitgebreide AI insights voor dit album:
+    // Generate new structured story using the story-generator function
+    const albumPrompt = `Genereer een uitgebreid verhaal over dit album:
 
-Artiest: ${album.artist}
-Titel: ${album.title}
-Label: ${album.label}
-Jaar: ${album.year}
-Genre: ${album.genre}
-Land: ${album.country}
-Catalogusnummer: ${album.catalog_number}
+Album: ${album.title} door ${album.artist}
+Label: ${album.label || 'Onbekend'}
+Jaar: ${album.year || 'Onbekend'}
+Genre: ${album.genre || 'Onbekend'}
+Land: ${album.country || 'Onbekend'}
+Catalogusnummer: ${album.catalog_number || 'Onbekend'}
 
-Schrijf een gedetailleerd verhaal in het Nederlands dat de volgende aspecten behandelt:
+Extra context: Dit is een ${detectedAlbumType === 'cd' ? 'CD' : detectedAlbumType === 'vinyl' ? 'vinyl plaat' : 'muziekrelease'} uit de collectie van een muziekliefhebber.
 
-1. **Historische Context**: Wat gebeurde er in de muziekwereld toen dit album uitkwam?
-2. **Artistieke Betekenis**: Waarom is dit album belangrijk in de carrière van de artiest?
-3. **Culturele Impact**: Hoe beïnvloedde dit album de muziekcultuur?
-4. **Productie & Opname**: Interessante feiten over hoe het album tot stand kwam
-5. **Muzikale Innovaties**: Wat maakte dit album uniek of invloedrijk?
-6. **Collecteurswaarde**: Waarom is dit album waardevol voor verzamelaars?
+Volg de verplichte structuur met alle 7 secties en zorg voor concrete, specifieke details over dit album, de artiest, en de muziekhistorische context.`;
 
-Retourneer je antwoord als JSON met deze structuur:
-{
-  "historical_context": "...",
-  "artistic_significance": "...",
-  "cultural_impact": "...",
-  "production_story": "...",
-  "musical_innovations": "...",
-  "collector_value": "...",
-  "fun_facts": ["feit1", "feit2", "feit3"],
-  "recommended_listening": ["track1", "track2"],
-  "similar_albums": [{"artist": "...", "title": "...", "reason": "..."}]
-}
-
-Schrijf boeiend en informatief, alsof je een muziekhistoricus bent die passie heeft voor vinyl en muziek.`;
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        response_format: { type: "json_object" }
-      }),
+    // Call the story-generator function
+    const storyResponse = await supabase.functions.invoke('story-generator', {
+      body: { prompt: albumPrompt }
     });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+    if (storyResponse.error) {
+      throw new Error(`Story generation error: ${storyResponse.error.message}`);
     }
 
-    const aiResponse = await response.json();
-    const insights = JSON.parse(aiResponse.choices[0].message.content);
+    const { story } = storyResponse.data;
+    
+    // Create structured insights object with the markdown story
+    const insights = {
+      story_markdown: story,
+      generation_method: 'structured_story',
+      album_info: {
+        artist: album.artist,
+        title: album.title,
+        label: album.label,
+        year: album.year,
+        genre: album.genre,
+        country: album.country,
+        catalog_number: album.catalog_number
+      }
+    };
     const generationTime = Date.now() - startTime;
 
     // Cache the insights in the new dedicated table

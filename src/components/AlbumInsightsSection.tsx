@@ -4,12 +4,24 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Brain, Lightbulb, Clock, Music, Sparkles, TrendingUp } from "lucide-react";
 import { AlbumInsights } from "@/hooks/useAlbumInsights";
+import { StructuredStorySection } from "./StructuredStorySection";
 
 interface AlbumInsightsSectionProps {
   insights: AlbumInsights;
 }
 
 export function AlbumInsightsSection({ insights }: AlbumInsightsSectionProps) {
+  // Check if we have the new structured story format
+  if (insights.story_markdown) {
+    return (
+      <StructuredStorySection 
+        storyMarkdown={insights.story_markdown}
+        albumInfo={insights.album_info}
+      />
+    );
+  }
+
+  // Fallback to legacy format for backward compatibility
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-6">
@@ -17,76 +29,88 @@ export function AlbumInsightsSection({ insights }: AlbumInsightsSectionProps) {
         <h2 className="text-2xl font-bold">AI Insights</h2>
         <Badge variant="secondary" className="ml-auto">
           <Sparkles className="w-3 h-3 mr-1" />
-          AI Gegenereerd
+          AI Gegenereerd (Legacy)
         </Badge>
       </div>
 
       <div className="grid gap-6">
         {/* Historical Context */}
-        <Card className="p-6 bg-gradient-to-br from-primary/5 to-background">
-          <div className="flex items-center gap-2 mb-3">
-            <Clock className="w-4 h-4 text-primary" />
-            <h3 className="font-semibold">Historische Context</h3>
-          </div>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {insights.historical_context}
-          </p>
-        </Card>
+        {insights.historical_context && (
+          <Card className="p-6 bg-gradient-to-br from-primary/5 to-background">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-4 h-4 text-primary" />
+              <h3 className="font-semibold">Historische Context</h3>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {insights.historical_context}
+            </p>
+          </Card>
+        )}
 
         {/* Artistic Significance */}
-        <Card className="p-6 bg-gradient-to-br from-accent/5 to-background">
-          <div className="flex items-center gap-2 mb-3">
-            <Music className="w-4 h-4 text-accent-foreground" />
-            <h3 className="font-semibold">Artistieke Betekenis</h3>
-          </div>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {insights.artistic_significance}
-          </p>
-        </Card>
+        {insights.artistic_significance && (
+          <Card className="p-6 bg-gradient-to-br from-accent/5 to-background">
+            <div className="flex items-center gap-2 mb-3">
+              <Music className="w-4 h-4 text-accent-foreground" />
+              <h3 className="font-semibold">Artistieke Betekenis</h3>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {insights.artistic_significance}
+            </p>
+          </Card>
+        )}
 
         {/* Cultural Impact */}
-        <Card className="p-6 bg-gradient-to-br from-secondary/5 to-background">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-4 h-4 text-secondary-foreground" />
-            <h3 className="font-semibold">Culturele Impact</h3>
-          </div>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {insights.cultural_impact}
-          </p>
-        </Card>
+        {insights.cultural_impact && (
+          <Card className="p-6 bg-gradient-to-br from-secondary/5 to-background">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="w-4 h-4 text-secondary-foreground" />
+              <h3 className="font-semibold">Culturele Impact</h3>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {insights.cultural_impact}
+            </p>
+          </Card>
+        )}
 
         {/* Production Story */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Lightbulb className="w-4 h-4 text-orange-500" />
-            <h3 className="font-semibold">Productie & Opname</h3>
-          </div>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {insights.production_story}
-          </p>
-        </Card>
+        {insights.production_story && (
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Lightbulb className="w-4 h-4 text-orange-500" />
+              <h3 className="font-semibold">Productie & Opname</h3>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {insights.production_story}
+            </p>
+          </Card>
+        )}
 
         {/* Musical Innovations */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4 text-purple-500" />
-            <h3 className="font-semibold">Muzikale Innovaties</h3>
-          </div>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {insights.musical_innovations}
-          </p>
-        </Card>
+        {insights.musical_innovations && (
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-4 h-4 text-purple-500" />
+              <h3 className="font-semibold">Muzikale Innovaties</h3>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {insights.musical_innovations}
+            </p>
+          </Card>
+        )}
 
         {/* Collector Value */}
-        <Card className="p-6 bg-gradient-to-br from-green-50/50 to-background dark:from-green-900/10">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-4 h-4 text-green-600" />
-            <h3 className="font-semibold">Collecteurswaarde</h3>
-          </div>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {insights.collector_value}
-          </p>
-        </Card>
+        {insights.collector_value && (
+          <Card className="p-6 bg-gradient-to-br from-green-50/50 to-background dark:from-green-900/10">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="w-4 h-4 text-green-600" />
+              <h3 className="font-semibold">Collecteurswaarde</h3>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {insights.collector_value}
+            </p>
+          </Card>
+        )}
 
         <Separator />
 

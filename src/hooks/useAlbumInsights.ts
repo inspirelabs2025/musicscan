@@ -3,15 +3,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface AlbumInsights {
-  historical_context: string;
-  artistic_significance: string;
-  cultural_impact: string;
-  production_story: string;
-  musical_innovations: string;
-  collector_value: string;
-  fun_facts: string[];
-  recommended_listening: string[];
-  similar_albums: Array<{
+  // New structured story format
+  story_markdown?: string;
+  generation_method?: string;
+  album_info?: {
+    artist: string;
+    title: string;
+    label?: string;
+    year?: number;
+    genre?: string;
+    country?: string;
+    catalog_number?: string;
+  };
+  
+  // Legacy format (backward compatibility)
+  historical_context?: string;
+  artistic_significance?: string;
+  cultural_impact?: string;
+  production_story?: string;
+  musical_innovations?: string;
+  collector_value?: string;
+  fun_facts?: string[];
+  recommended_listening?: string[];
+  similar_albums?: Array<{
     artist: string;
     title: string;
     reason: string;

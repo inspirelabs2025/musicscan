@@ -1,11 +1,14 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLink, Calendar, Tag, Hash, Music } from "lucide-react";
+import { ExternalLink, Calendar, Tag, Hash, Music, Plus, Check } from "lucide-react";
 import { AIScanResult } from "@/hooks/useAIScans";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface AIScanDetailModalProps {
   scan: AIScanResult | null;
@@ -14,7 +17,86 @@ interface AIScanDetailModalProps {
 }
 
 export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModalProps) => {
+  const [isAddingToCollection, setIsAddingToCollection] = useState(false);
+  const [addedToCollection, setAddedToCollection] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
   if (!scan) return null;
+
+  const addToCollection = async () => {
+    if (!user || !scan) return;
+
+    setIsAddingToCollection(true);
+    try {
+      const collectionData = {
+        user_id: user.id,
+        artist: scan.artist,
+        title: scan.title,
+        label: scan.label,
+        catalog_number: scan.catalog_number,
+        year: scan.year,
+        genre: scan.genre,
+        country: scan.country,
+        format: scan.format,
+        style: scan.style,
+        discogs_id: scan.discogs_id,
+        discogs_url: scan.discogs_url,
+        condition_grade: scan.condition_grade,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      if (scan.media_type === 'cd') {
+        // Add images to CD scan
+        const cdData = {
+          ...collectionData,
+          front_image: scan.photo_urls?.[0] || null,
+          back_image: scan.photo_urls?.[1] || null,
+          barcode_image: scan.photo_urls?.[2] || null,
+          matrix_image: scan.photo_urls?.[3] || null,
+          matrix_number: scan.matrix_number,
+          barcode: scan.barcode,
+        };
+
+        const { error } = await supabase
+          .from('cd_scan')
+          .insert(cdData);
+
+        if (error) throw error;
+      } else if (scan.media_type === 'vinyl') {
+        // Add images to vinyl scan
+        const vinylData = {
+          ...collectionData,
+          catalog_image: scan.photo_urls?.[0] || null,
+          matrix_image: scan.photo_urls?.[1] || null,
+          additional_image: scan.photo_urls?.[2] || null,
+          matrix_number: scan.matrix_number,
+        };
+
+        const { error } = await supabase
+          .from('vinyl2_scan')
+          .insert(vinylData);
+
+        if (error) throw error;
+      }
+
+      setAddedToCollection(true);
+      toast({
+        title: "Toegevoegd aan collectie",
+        description: `${scan.artist} - ${scan.title} is toegevoegd aan je collectie.`,
+      });
+    } catch (error) {
+      console.error('Error adding to collection:', error);
+      toast({
+        title: "Fout",
+        description: "Er is een fout opgetreden bij het toevoegen aan je collectie.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToCollection(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -44,6 +126,31 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Add to Collection Button */}
+          {scan.status === 'completed' && user && (
+            <div className="flex justify-center">
+              <Button
+                onClick={addToCollection}
+                disabled={isAddingToCollection || addedToCollection}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {addedToCollection ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Toegevoegd aan collectie
+                  </>
+                ) : isAddingToCollection ? (
+                  "Toevoegen..."
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Opslaan in collectie
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
           {/* Photo Gallery */}
           {scan.photo_urls && scan.photo_urls.length > 0 && (
             <Card variant="dark">

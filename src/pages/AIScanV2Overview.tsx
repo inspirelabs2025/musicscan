@@ -1,15 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Brain, Sparkles, Clock, TrendingUp, Zap, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Navigation } from '@/components/Navigation';
 import { useAIScans } from '@/hooks/useAIScans';
+import { AIScanDetailModal } from '@/components/AIScanDetailModal';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import type { AIScanResult } from '@/hooks/useAIScans';
 
 export default function AIScanV2Overview() {
   const { data, isLoading, error } = useAIScans();
   const scans = data?.data || [];
+  const [selectedScan, setSelectedScan] = useState<AIScanResult | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   // Filter for V2 scans
   const v2Scans = scans.filter(scan => 
@@ -186,7 +190,14 @@ export default function AIScanV2Overview() {
                     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                     .slice(0, 10)
                     .map((scan) => (
-                      <div key={scan.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div 
+                        key={scan.id} 
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          setSelectedScan(scan);
+                          setModalOpen(true);
+                        }}
+                      >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-medium truncate">
@@ -273,6 +284,13 @@ export default function AIScanV2Overview() {
               </div>
             </CardContent>
           </Card>
+
+          {/* AI Scan Detail Modal */}
+          <AIScanDetailModal
+            scan={selectedScan}
+            open={modalOpen}
+            onOpenChange={setModalOpen}
+          />
         </div>
       </div>
     </div>

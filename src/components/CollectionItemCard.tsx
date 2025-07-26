@@ -5,9 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Edit, ExternalLink, Music } from "lucide-react";
+import { Edit, ExternalLink, Music, Download } from "lucide-react";
 import { useState } from "react";
 import type { CollectionItem } from "@/hooks/useMyCollection";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface CollectionItemCardProps {
   item: CollectionItem;
@@ -24,6 +26,8 @@ export const CollectionItemCard = ({
 }: CollectionItemCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isFetchingArtwork, setIsFetchingArtwork] = useState(false);
+  const { toast } = useToast();
   const [editValues, setEditValues] = useState({
     shop_description: item.shop_description || "",
     marketplace_price: item.marketplace_price || 0,
@@ -49,6 +53,56 @@ export const CollectionItemCard = ({
 
   const imageUrl = getImageUrl();
 
+  const fetchOfficialArtwork = async () => {
+    if (!item.discogs_url && (!item.artist || !item.title)) {
+      toast({
+        title: "Kan geen artwork zoeken",
+        description: "Geen Discogs URL of artiest/titel informatie beschikbaar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsFetchingArtwork(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-album-artwork', {
+        body: {
+          discogs_url: item.discogs_url,
+          artist: item.artist,
+          title: item.title,
+          media_type: item.media_type,
+          item_id: item.id,
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "Artwork gevonden!",
+          description: `Officiële artwork opgehaald van ${data.source}`,
+        });
+        // Refresh the page to show new artwork
+        window.location.reload();
+      } else {
+        toast({
+          title: "Geen artwork gevonden",
+          description: "Er kon geen officiële artwork gevonden worden voor dit album.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching artwork:', error);
+      toast({
+        title: "Fout bij ophalen artwork",
+        description: "Er is een fout opgetreden bij het zoeken naar artwork.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingArtwork(false);
+    }
+  };
+
   return (
     <Card className="overflow-hidden bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50 hover:border-primary/30 transition-all duration-300">
       <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-muted/30 to-background/50">
@@ -61,8 +115,26 @@ export const CollectionItemCard = ({
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-muted/10">
             <Music className="w-12 h-12 text-muted-foreground/50" />
+            {showControls && (item.discogs_url || (item.artist && item.title)) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchOfficialArtwork}
+                disabled={isFetchingArtwork}
+                className="text-xs"
+              >
+                {isFetchingArtwork ? (
+                  "Zoeken..."
+                ) : (
+                  <>
+                    <Download className="h-3 w-3 mr-1" />
+                    Artwork zoeken
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         )}
         

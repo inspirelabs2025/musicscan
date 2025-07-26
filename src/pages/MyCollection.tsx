@@ -5,15 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Music, Package, Store, Eye, EyeOff, ShoppingCart } from "lucide-react";
+import { Music, Package, Store, Eye, EyeOff, ShoppingCart, Sparkles, Download } from "lucide-react";
 import { useMyCollection } from "@/hooks/useMyCollection";
 import { CollectionItemCard } from "@/components/CollectionItemCard";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function MyCollection() {
+  const { user } = useAuth();
   const [filter, setFilter] = useState<"all" | "public" | "for_sale" | "private">("all");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [bulkAction, setBulkAction] = useState<string>("");
+  const [isBatchFetching, setIsBatchFetching] = useState(false);
   
   const { items, isLoading, updateItem, isUpdating, bulkUpdate, isBulkUpdating } = useMyCollection(filter);
   const { toast } = useToast();
@@ -97,6 +101,38 @@ export default function MyCollection() {
     }
   };
 
+  const batchFetchArtwork = async () => {
+    if (!user) return;
+
+    setIsBatchFetching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('batch-fetch-artwork', {
+        body: { user_id: user.id }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Artwork zoeken voltooid",
+        description: `${data.total_processed} items verwerkt, ${data.success_count} artwork gevonden.`,
+      });
+
+      // Refresh the collection to show new artwork
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error('Error batch fetching artwork:', error);
+      toast({
+        title: "Fout bij artwork zoeken",
+        description: "Er is een fout opgetreden bij het automatisch zoeken naar artwork.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBatchFetching(false);
+    }
+  };
+
   const stats = {
     total: items.length,
     public: items.filter(item => item.is_public).length,
@@ -119,14 +155,35 @@ export default function MyCollection() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-4">
-            Mijn Collectie
-          </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Beheer je muziekcollectie, maak items publiek zichtbaar of zet ze te koop in je persoonlijke winkel.
-          </p>
+        {/* Header with Artwork Search */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+              Mijn Collectie
+            </h1>
+            <p className="text-muted-foreground">
+              Beheer je muziekcollectie, maak items publiek zichtbaar of zet ze te koop in je persoonlijke winkel.
+            </p>
+          </div>
+          
+          <Button
+            onClick={batchFetchArtwork}
+            disabled={isBatchFetching}
+            variant="outline"
+            className="bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10"
+          >
+            {isBatchFetching ? (
+              <>
+                <Download className="w-4 h-4 mr-2 animate-spin" />
+                Artwork zoeken...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Automatisch artwork zoeken
+              </>
+            )}
+          </Button>
         </div>
 
         {/* Stats */}

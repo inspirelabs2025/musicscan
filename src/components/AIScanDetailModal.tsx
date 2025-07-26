@@ -47,6 +47,8 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
         updated_at: new Date().toISOString(),
       };
 
+      let insertedItemId = null;
+
       if (scan.media_type === 'cd') {
         // Add images to CD scan
         const cdData = {
@@ -59,11 +61,14 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
           barcode: scan.barcode,
         };
 
-        const { error } = await supabase
+        const { data: insertData, error } = await supabase
           .from('cd_scan')
-          .insert(cdData);
+          .insert(cdData)
+          .select('id')
+          .single();
 
         if (error) throw error;
+        insertedItemId = insertData.id;
       } else if (scan.media_type === 'vinyl') {
         // Add images to vinyl scan
         const vinylData = {
@@ -74,17 +79,40 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
           matrix_number: scan.matrix_number,
         };
 
-        const { error } = await supabase
+        const { data: insertData, error } = await supabase
           .from('vinyl2_scan')
-          .insert(vinylData);
+          .insert(vinylData)
+          .select('id')
+          .single();
 
         if (error) throw error;
+        insertedItemId = insertData.id;
+      }
+
+      // Automatically fetch official artwork after successful insertion
+      if (insertedItemId && (scan.discogs_url || (scan.artist && scan.title))) {
+        try {
+          console.log('🎨 Automatically fetching artwork for new collection item...');
+          await supabase.functions.invoke('fetch-album-artwork', {
+            body: {
+              discogs_url: scan.discogs_url,
+              artist: scan.artist,
+              title: scan.title,
+              media_type: scan.media_type,
+              item_id: insertedItemId,
+            }
+          });
+          console.log('✅ Automatic artwork fetch initiated');
+        } catch (artworkError) {
+          console.log('⚠️ Automatic artwork fetch failed:', artworkError);
+          // Don't show error to user - artwork is optional
+        }
       }
 
       setAddedToCollection(true);
       toast({
         title: "Toegevoegd aan collectie",
-        description: `${scan.artist} - ${scan.title} is toegevoegd aan je collectie.`,
+        description: `${scan.artist} - ${scan.title} is toegevoegd. Artwork wordt automatisch gezocht...`,
       });
     } catch (error) {
       console.error('Error adding to collection:', error);

@@ -4,6 +4,7 @@ import { LogIn, UserPlus, Camera, Disc, Music, User, ChevronDown, Sparkles, Mess
 import { HeroSection } from '@/components/HeroSection';
 import { NewUsersSection } from '@/components/NewUsersSection';
 import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
+import { NewsSection } from '@/components/NewsSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -225,6 +226,9 @@ const Home = () => {
 
       {/* Latest Albums Section */}
       <LatestAlbumsSection />
+
+      {/* News Section */}
+      <NewsSection />
 
       {/* New Users Section */}
       <NewUsersSection />

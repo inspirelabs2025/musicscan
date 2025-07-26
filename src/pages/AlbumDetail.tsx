@@ -1,16 +1,20 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useAlbumDetail } from "@/hooks/useAlbumDetail";
+import { useAlbumInsights } from "@/hooks/useAlbumInsights";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ExternalLink, Calendar, Tag, Music2, Disc3 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { AlbumInsightsSection } from "@/components/AlbumInsightsSection";
+import { ArrowLeft, ExternalLink, Calendar, Tag, Music2, Disc3, Brain, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 export default function AlbumDetail() {
   const { albumId } = useParams<{ albumId: string }>();
   const navigate = useNavigate();
   const { album, isLoading, error } = useAlbumDetail(albumId!);
+  const { insights, isLoading: insightsLoading, generateInsights } = useAlbumInsights();
   const [imageError, setImageError] = useState(false);
 
   if (isLoading) {
@@ -214,9 +218,31 @@ export default function AlbumDetail() {
                     Bekijk op Discogs
                   </Button>
                 )}
+                
+                <Button
+                  variant="default"
+                  className="w-full"
+                  onClick={() => generateInsights(albumId!)}
+                  disabled={insightsLoading}
+                >
+                  {insightsLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Brain className="w-4 h-4 mr-2" />
+                  )}
+                  {insights ? 'Ververs AI Insights' : 'Genereer AI Insights'}
+                </Button>
               </div>
             </div>
           </div>
+
+          {/* AI Insights Section */}
+          {insights && (
+            <>
+              <Separator className="my-8" />
+              <AlbumInsightsSection insights={insights} />
+            </>
+          )}
         </div>
       </div>
     </div>

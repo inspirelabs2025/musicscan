@@ -38,11 +38,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a music news curator. Provide exactly 6 recent music news items in JSON format with title, summary (max 100 chars), source, publishedAt (ISO date), url, and category fields. Focus on album releases, artist news, and industry updates from the last 7 days.'
+            content: 'You are a music news curator. Provide exactly 12 recent music news items in JSON format with title, summary (max 150 chars), source, publishedAt (ISO date), url, and category fields. Focus on album releases, artist news, concert announcements, and industry updates from the last 14 days. Include diverse categories like "Album Release", "Artist News", "Concert", "Industry", "Awards", "Chart News".'
           },
           {
             role: 'user',
-            content: 'Get the latest 6 music news items from the past week, including new album releases, artist announcements, and music industry news. Return as JSON array.'
+            content: 'Get the latest 12 music news items from the past 2 weeks, including new album releases, artist announcements, concert news, industry updates, and chart news. Return as JSON array with diverse categories.'
           }
         ],
         temperature: 0.2,
@@ -91,8 +91,8 @@ serve(async (req) => {
       }];
     }
 
-    // Ensure we have exactly 6 items
-    newsItems = newsItems.slice(0, 6);
+    // Ensure we have exactly 12 items
+    newsItems = newsItems.slice(0, 12);
 
     console.log(`Fetched ${newsItems.length} music news items from Perplexity`);
 

@@ -27,6 +27,7 @@ import PublicShop from "./pages/PublicShop";
 import PublicCollection from "./pages/PublicCollection";
 import AlbumDetail from "./pages/AlbumDetail";
 import ReleaseDetail from "./pages/ReleaseDetail";
+import MusicNews from "./pages/MusicNews";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -136,6 +137,7 @@ const App = () => {
                 <ReleaseDetail />
               </ProtectedRoute>
             } />
+            <Route path="/muzieknieuws" element={<MusicNews />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>

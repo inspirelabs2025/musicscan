@@ -34,7 +34,7 @@ serve(async (req) => {
     }
 
     // Get trending releases from Discogs
-    const response = await fetch('https://api.discogs.com/database/search?type=release&sort=added%2Cdesc&per_page=20', {
+    const response = await fetch('https://api.discogs.com/database/search?type=release&sort=added%2Cdesc&per_page=100', {
       headers: {
         'Authorization': `Discogs token=${discogsToken}`,
         'User-Agent': 'VinylCollector/1.0'
@@ -49,8 +49,8 @@ serve(async (req) => {
     
     // Filter and format the releases
     const formattedReleases = data.results
-      .filter((release: any) => release.year >= 2024) // Only recent releases
-      .slice(0, 6)
+      .filter((release: any) => release.year >= 2023) // Only recent releases
+      .slice(0, 20)
       .map((release: any): DiscogsRelease => ({
         id: release.id,
         title: release.title,

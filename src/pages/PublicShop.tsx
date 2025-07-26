@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Store, Search, Heart, Mail } from "lucide-react";
 import { usePublicShop } from "@/hooks/usePublicShop";
-import { CollectionItemCard } from "@/components/CollectionItemCard";
+import { ShopItemCard } from "@/components/ShopItemCard";
 import { useState } from "react";
 
 export default function PublicShop() {
@@ -136,11 +136,10 @@ export default function PublicShop() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
             {filteredItems.map((item) => (
-              <CollectionItemCard
+              <ShopItemCard
                 key={item.id}
                 item={item}
-                onUpdate={() => {}} // No updates allowed in public view
-                showControls={false}
+                shopContactInfo={shop.contact_info}
               />
             ))}
           </div>

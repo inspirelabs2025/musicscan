@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Music, Package, Store, Eye, EyeOff, ShoppingCart, Sparkles, Download, ExternalLink, Globe, Users } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Music, Package, Store, Eye, EyeOff, ShoppingCart, Sparkles, Download, ExternalLink, Globe, Users, AlertTriangle } from "lucide-react";
 import { useMyCollection } from "@/hooks/useMyCollection";
 import { useUserShop } from "@/hooks/useUserShop";
 import { CollectionItemCard } from "@/components/CollectionItemCard";
@@ -320,6 +321,43 @@ export default function MyCollection() {
             )}
           </div>
         </Card>
+
+        {/* Price Warnings */}
+        {(() => {
+          const itemsForSaleWithoutPrice = items.filter(item => 
+            item.is_for_sale && (!item.marketplace_price || item.marketplace_price === 0)
+          );
+          
+          if (itemsForSaleWithoutPrice.length > 0) {
+            return (
+              <Alert className="mb-6 border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
+                <AlertTriangle className="h-4 w-4 text-orange-600" />
+                <AlertTitle className="text-orange-800 dark:text-orange-200">
+                  Items zonder prijs in winkel
+                </AlertTitle>
+                <AlertDescription className="text-orange-700 dark:text-orange-300">
+                  Je hebt {itemsForSaleWithoutPrice.length} item(s) die te koop staan maar geen prijs hebben.
+                  Deze items kunnen niet gekocht worden in je publieke winkel.
+                  <div className="mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Select all items without price
+                        const itemIds = new Set(itemsForSaleWithoutPrice.map(item => item.id));
+                        setSelectedItems(itemIds);
+                      }}
+                      className="text-orange-700 border-orange-300 hover:bg-orange-100 dark:text-orange-200 dark:border-orange-600 dark:hover:bg-orange-900"
+                    >
+                      Selecteer items zonder prijs
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            );
+          }
+          return null;
+        })()}
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

@@ -23,6 +23,7 @@ export const CollectionItemCard = ({
   showControls = true
 }: CollectionItemCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [editValues, setEditValues] = useState({
     shop_description: item.shop_description || "",
     marketplace_price: item.marketplace_price || 0,
@@ -36,16 +37,28 @@ export const CollectionItemCard = ({
     setIsEditing(false);
   };
 
-  const imageUrl = item.front_image || item.catalog_image;
+  // Enhanced image fallback logic based on media type
+  const getImageUrl = () => {
+    if (item.media_type === 'cd') {
+      return item.front_image || item.back_image || item.barcode_image || item.matrix_image;
+    } else if (item.media_type === 'vinyl') {
+      return item.catalog_image || item.matrix_image || item.additional_image;
+    }
+    return item.front_image || item.catalog_image;
+  };
+
+  const imageUrl = getImageUrl();
 
   return (
     <Card className="overflow-hidden bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50 hover:border-primary/30 transition-all duration-300">
       <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-muted/30 to-background/50">
-        {imageUrl ? (
+        {imageUrl && !imageError ? (
           <img
             src={imageUrl}
             alt={`${item.artist} - ${item.title}`}
             className="w-full h-full object-cover"
+            onError={() => setImageError(true)}
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

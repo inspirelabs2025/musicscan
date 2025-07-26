@@ -19,8 +19,14 @@ export interface CollectionItem {
   marketplace_price: number | null;
   currency: string | null;
   created_at: string;
+  // CD image fields
   front_image?: string | null;
+  back_image?: string | null;
+  barcode_image?: string | null;
+  // Vinyl image fields  
   catalog_image?: string | null;
+  matrix_image?: string | null;
+  additional_image?: string | null;
 }
 
 type FilterType = "all" | "public" | "for_sale" | "private";
@@ -41,7 +47,8 @@ export const useMyCollection = (filter: FilterType = "all") => {
           .select(`
             id, artist, title, label, catalog_number, year, discogs_id, discogs_url,
             is_public, is_for_sale, shop_description, condition_grade, 
-            marketplace_price, currency, created_at, front_image
+            marketplace_price, currency, created_at, front_image, back_image, 
+            barcode_image, matrix_image
           `)
           .eq("user_id", user.id),
         supabase
@@ -49,7 +56,8 @@ export const useMyCollection = (filter: FilterType = "all") => {
           .select(`
             id, artist, title, label, catalog_number, year, discogs_id, discogs_url,
             is_public, is_for_sale, shop_description, condition_grade, 
-            marketplace_price, currency, created_at, catalog_image
+            marketplace_price, currency, created_at, catalog_image, matrix_image, 
+            additional_image
           `)
           .eq("user_id", user.id)
       ]);

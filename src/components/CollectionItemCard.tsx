@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Edit, ExternalLink, Music, Download } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { CollectionItem } from "@/hooks/useMyCollection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +29,7 @@ export const CollectionItemCard = ({
   const [imageError, setImageError] = useState(false);
   const [isFetchingArtwork, setIsFetchingArtwork] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [editValues, setEditValues] = useState({
     shop_description: item.shop_description || "",
     marketplace_price: item.marketplace_price || 0,
@@ -105,7 +107,10 @@ export const CollectionItemCard = ({
 
   return (
     <Card className="overflow-hidden bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50 hover:border-primary/30 transition-all duration-300">
-      <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-muted/30 to-background/50">
+      <div 
+        className="aspect-square relative overflow-hidden bg-gradient-to-br from-muted/30 to-background/50 cursor-pointer hover:opacity-90 transition-opacity"
+        onClick={() => navigate(`/album/${item.id}`)}
+      >
         {imageUrl && !imageError ? (
           <img
             src={imageUrl}
@@ -121,7 +126,10 @@ export const CollectionItemCard = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={fetchOfficialArtwork}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fetchOfficialArtwork();
+                }}
                 disabled={isFetchingArtwork}
                 className="text-xs"
               >

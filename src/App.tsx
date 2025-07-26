@@ -24,6 +24,7 @@ import MyCollection from "./pages/MyCollection";
 import MyShop from "./pages/MyShop";
 import PublicShop from "./pages/PublicShop";
 import PublicCollection from "./pages/PublicCollection";
+import AlbumDetail from "./pages/AlbumDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -100,6 +101,11 @@ const App = () => (
             } />
             <Route path="/shop/:shopSlug" element={<PublicShop />} />
             <Route path="/collection/:userId" element={<PublicCollection />} />
+            <Route path="/album/:albumId" element={
+              <ProtectedRoute>
+                <AlbumDetail />
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

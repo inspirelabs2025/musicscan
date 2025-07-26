@@ -32,6 +32,13 @@ export interface CollectionItem {
   catalog_image?: string | null;
   matrix_image?: string | null;
   additional_image?: string | null;
+  // Additional fields
+  genre?: string | null;
+  country?: string | null;
+  format?: string | null;
+  matrix_number?: string | null;
+  barcode_number?: string | null;
+  user_id?: string;
 }
 
 type FilterType = "all" | "public" | "for_sale" | "private";

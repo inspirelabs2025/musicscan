@@ -23,6 +23,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
 
   // Check if user is already authenticated
   useEffect(() => {
@@ -80,8 +81,14 @@ const Auth = () => {
       return;
     }
 
+    if (!firstName.trim()) {
+      setError('Voornaam is verplicht');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      const { error } = await signUp(email, password);
+      const { error } = await signUp(email, password, firstName.trim());
       
       if (error) {
         if (error.message === 'User already registered') {
@@ -213,6 +220,18 @@ const Auth = () => {
             
             <TabsContent value="signup" className="space-y-4">
               <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-firstname">Voornaam</Label>
+                  <Input
+                    id="signup-firstname"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                  />
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input

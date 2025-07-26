@@ -9,6 +9,7 @@ interface User {
   id: string;
   email: string;
   created_at: string;
+  first_name?: string;
 }
 
 const useRecentUsers = () => {
@@ -35,12 +36,23 @@ const useRecentUsers = () => {
         }
       });
 
+      // Get user profiles for first names
+      const userIds = Array.from(uniqueUsers.keys());
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, first_name')
+        .in('user_id', userIds);
+
+      // Create profile map for quick lookup
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p.first_name]) || []);
+
       // Convert to array and sort by join date
       const users = Array.from(uniqueUsers.entries())
         .map(([userId, joinedAt]) => ({
           id: userId,
           email: `muziekliefhebber-${userId.slice(0, 6)}`, // Anonymous display
-          created_at: joinedAt
+          created_at: joinedAt,
+          first_name: profileMap.get(userId) || 'Nieuwe Ontdekker'
         }))
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 6); // Show last 6 users
@@ -71,7 +83,7 @@ const UserCard: React.FC<{ user: User; index: number }> = ({ user, index }) => {
           </div>
           <div className="space-y-1">
             <div className="text-sm font-medium text-foreground/90 group-hover:text-vinyl-purple transition-colors">
-              Nieuwe Ontdekker
+              {user.first_name}
             </div>
             <div className="text-xs text-muted-foreground group-hover:text-foreground/70 transition-colors">
               {joinDate}

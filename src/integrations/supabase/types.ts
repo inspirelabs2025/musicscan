@@ -208,6 +208,7 @@ export type Database = {
           matrix_image: string | null
           matrix_number: string | null
           median_price: number | null
+          release_id: string | null
           shop_description: string | null
           side: string | null
           stamper_codes: string | null
@@ -251,6 +252,7 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          release_id?: string | null
           shop_description?: string | null
           side?: string | null
           stamper_codes?: string | null
@@ -294,6 +296,7 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          release_id?: string | null
           shop_description?: string | null
           side?: string | null
           stamper_codes?: string | null
@@ -303,7 +306,15 @@ export type Database = {
           user_id?: string
           year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cd_scan_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_messages: {
         Row: {
@@ -1195,6 +1206,78 @@ export type Database = {
         }
         Relationships: []
       }
+      releases: {
+        Row: {
+          artist: string
+          catalog_number: string | null
+          condition_counts: Json | null
+          country: string | null
+          created_at: string
+          discogs_id: number
+          discogs_url: string | null
+          first_scan_date: string | null
+          format: string | null
+          genre: string | null
+          id: string
+          label: string | null
+          last_scan_date: string | null
+          master_id: number | null
+          price_range_max: number | null
+          price_range_min: number | null
+          style: string[] | null
+          title: string
+          total_scans: number | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          artist: string
+          catalog_number?: string | null
+          condition_counts?: Json | null
+          country?: string | null
+          created_at?: string
+          discogs_id: number
+          discogs_url?: string | null
+          first_scan_date?: string | null
+          format?: string | null
+          genre?: string | null
+          id?: string
+          label?: string | null
+          last_scan_date?: string | null
+          master_id?: number | null
+          price_range_max?: number | null
+          price_range_min?: number | null
+          style?: string[] | null
+          title: string
+          total_scans?: number | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          artist?: string
+          catalog_number?: string | null
+          condition_counts?: Json | null
+          country?: string | null
+          created_at?: string
+          discogs_id?: number
+          discogs_url?: string | null
+          first_scan_date?: string | null
+          format?: string | null
+          genre?: string | null
+          id?: string
+          label?: string | null
+          last_scan_date?: string | null
+          master_id?: number | null
+          price_range_max?: number | null
+          price_range_min?: number | null
+          style?: string[] | null
+          title?: string
+          total_scans?: number | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       tecdoc_matches: {
         Row: {
           alternative_numbers: string[] | null
@@ -1675,6 +1758,7 @@ export type Database = {
           matrix_image: string | null
           matrix_number: string | null
           median_price: number | null
+          release_id: string | null
           shop_description: string | null
           style: string[] | null
           title: string | null
@@ -1714,6 +1798,7 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          release_id?: string | null
           shop_description?: string | null
           style?: string[] | null
           title?: string | null
@@ -1753,6 +1838,7 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          release_id?: string | null
           shop_description?: string | null
           style?: string[] | null
           title?: string | null
@@ -1760,7 +1846,15 @@ export type Database = {
           user_id?: string
           year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vinyl2_scan_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1783,9 +1877,30 @@ export type Database = {
         Args: { url_text: string }
         Returns: number
       }
+      find_or_create_release: {
+        Args: {
+          p_discogs_id: number
+          p_artist: string
+          p_title: string
+          p_label?: string
+          p_catalog_number?: string
+          p_year?: number
+          p_format?: string
+          p_genre?: string
+          p_country?: string
+          p_style?: string[]
+          p_discogs_url?: string
+          p_master_id?: number
+        }
+        Returns: string
+      }
       update_cd_discogs_ids: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      update_release_aggregated_data: {
+        Args: { release_uuid: string }
+        Returns: undefined
       }
     }
     Enums: {

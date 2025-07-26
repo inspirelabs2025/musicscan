@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useAlbumDetail } from "@/hooks/useAlbumDetail";
+import { useReleaseByDiscogs } from "@/hooks/useReleaseByDiscogs";
 import { useAlbumInsights } from "@/hooks/useAlbumInsights";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,16 @@ export default function AlbumDetail() {
   const navigate = useNavigate();
   const { album, isLoading, error } = useAlbumDetail(albumId!);
   const { insights, isLoading: insightsLoading, generateInsights } = useAlbumInsights();
+  
+  // Check if a canonical release exists for this album
+  const { release: canonicalRelease } = useReleaseByDiscogs(album?.discogs_id || 0);
+  
+  // Redirect to canonical release page if it exists
+  useEffect(() => {
+    if (canonicalRelease && album?.discogs_id) {
+      navigate(`/release/${canonicalRelease.id}`, { replace: true });
+    }
+  }, [canonicalRelease, album?.discogs_id, navigate]);
 
   // Prepare images array for the gallery
   const getAlbumImages = () => {

@@ -11,6 +11,8 @@ import { useNavigate } from "react-router-dom";
 import type { CollectionItem } from "@/hooks/useMyCollection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useReleaseByDiscogs } from "@/hooks/useReleaseByDiscogs";
+import { useCreateOrFindRelease } from "@/hooks/useCreateOrFindRelease";
 
 interface CollectionItemCardProps {
   item: CollectionItem;
@@ -35,6 +37,10 @@ export const CollectionItemCard = ({
     marketplace_price: item.marketplace_price || 0,
   });
 
+  // Check if canonical release exists
+  const { release: canonicalRelease } = useReleaseByDiscogs(item.discogs_id || 0);
+  const createOrFindRelease = useCreateOrFindRelease();
+
   const handleSave = () => {
     onUpdate({
       shop_description: editValues.shop_description,
@@ -54,6 +60,40 @@ export const CollectionItemCard = ({
   };
 
   const imageUrl = getImageUrl();
+
+  const handleItemClick = async () => {
+    // If canonical release exists, navigate to it
+    if (canonicalRelease) {
+      navigate(`/release/${canonicalRelease.id}`);
+      return;
+    }
+
+    // If discogs_id exists but no canonical release, create one
+    if (item.discogs_id) {
+      try {
+        const releaseId = await createOrFindRelease.mutateAsync({
+          discogs_id: item.discogs_id,
+          artist: item.artist || "",
+          title: item.title || "",
+          label: item.label,
+          catalog_number: item.catalog_number,
+          year: item.year,
+          format: item.format,
+          genre: item.genre,
+          country: item.country,
+          style: item.style,
+          discogs_url: item.discogs_url,
+        });
+        navigate(`/release/${releaseId}`);
+      } catch (error) {
+        // Fallback to individual album page
+        navigate(`/album/${item.id}`);
+      }
+    } else {
+      // No discogs_id, go to individual album page
+      navigate(`/album/${item.id}`);
+    }
+  };
 
   const fetchOfficialArtwork = async () => {
     if (!item.discogs_url && (!item.artist || !item.title)) {
@@ -109,7 +149,7 @@ export const CollectionItemCard = ({
     <Card className="overflow-hidden bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50 hover:border-primary/30 transition-all duration-300">
       <div 
         className="aspect-square relative overflow-hidden bg-gradient-to-br from-muted/30 to-background/50 cursor-pointer hover:opacity-90 transition-opacity"
-        onClick={() => navigate(`/album/${item.id}`)}
+        onClick={handleItemClick}
       >
         {imageUrl && !imageError ? (
           <img

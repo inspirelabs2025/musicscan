@@ -25,6 +25,7 @@ import MyShop from "./pages/MyShop";
 import PublicShop from "./pages/PublicShop";
 import PublicCollection from "./pages/PublicCollection";
 import AlbumDetail from "./pages/AlbumDetail";
+import ReleaseDetail from "./pages/ReleaseDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -104,6 +105,11 @@ const App = () => (
             <Route path="/album/:albumId" element={
               <ProtectedRoute>
                 <AlbumDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/release/:releaseId" element={
+              <ProtectedRoute>
+                <ReleaseDetail />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

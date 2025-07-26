@@ -25,6 +25,8 @@ import MyCollection from "./pages/MyCollection";
 import MyShop from "./pages/MyShop";
 import PublicShop from "./pages/PublicShop";
 import PublicCollection from "./pages/PublicCollection";
+import PublicCatalog from "./pages/PublicCatalog";
+import PublicShopsOverview from "./pages/PublicShopsOverview";
 import AlbumDetail from "./pages/AlbumDetail";
 import ReleaseDetail from "./pages/ReleaseDetail";
 import MusicNews from "./pages/MusicNews";
@@ -132,12 +134,10 @@ const App = () => {
                 <AlbumDetail />
               </ProtectedRoute>
             } />
-            <Route path="/release/:releaseId" element={
-              <ProtectedRoute>
-                <ReleaseDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/muzieknieuws" element={<MusicNews />} />
+        <Route path="/release/:releaseId" element={<ReleaseDetail />} />
+        <Route path="/catalog" element={<PublicCatalog />} />
+        <Route path="/shops" element={<PublicShopsOverview />} />
+            <Route path="/news" element={<MusicNews />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>

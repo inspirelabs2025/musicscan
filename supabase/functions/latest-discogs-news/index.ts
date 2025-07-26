@@ -33,6 +33,8 @@ serve(async (req) => {
       throw new Error('Discogs token not configured');
     }
 
+    console.log('Fetching trending releases from Discogs...');
+    
     // Get trending releases from Discogs
     const response = await fetch('https://api.discogs.com/database/search?type=release&sort=added%2Cdesc&per_page=100', {
       headers: {
@@ -42,14 +44,20 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
+      console.error(`Discogs API error: ${response.status} - ${response.statusText}`);
       throw new Error(`Discogs API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log(`Fetched ${data.results?.length || 0} releases from Discogs API`);
     
-    // Filter and format the releases
+    // Filter and format the releases - relaxed year filter
+    const currentYear = new Date().getFullYear();
     const formattedReleases = data.results
-      .filter((release: any) => release.year >= 2023) // Only recent releases
+      .filter((release: any) => {
+        // More relaxed filtering - last 5 years or no year specified
+        return !release.year || release.year >= (currentYear - 5);
+      })
       .slice(0, 20)
       .map((release: any): DiscogsRelease => ({
         id: release.id,

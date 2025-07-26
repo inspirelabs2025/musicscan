@@ -27,6 +27,8 @@ serve(async (req) => {
       throw new Error('Perplexity API key not configured');
     }
 
+    console.log('Fetching music news from Perplexity...');
+    
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -57,10 +59,14 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
+      console.error(`Perplexity API error: ${response.status} - ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Perplexity error response:', errorText);
       throw new Error(`Perplexity API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('Perplexity response received:', data);
     const content = data.choices[0].message.content;
     
     let newsItems: NewsItem[] = [];

@@ -50,20 +50,28 @@ export default function MusicNews() {
   const fetchDiscogsNews = async () => {
     setLoading(true);
     setError(null);
+    console.log('Fetching Discogs news...');
     
     try {
       const { data, error } = await supabase.functions.invoke('latest-discogs-news');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
       
-      if (data.success) {
+      console.log('Discogs response:', data);
+      
+      if (data?.success && data?.releases) {
         setDiscogsReleases(data.releases);
+        console.log(`Loaded ${data.releases.length} Discogs releases`);
       } else {
-        throw new Error(data.error || 'Failed to fetch Discogs releases');
+        console.warn('No releases returned from Discogs API');
+        setDiscogsReleases([]);
       }
     } catch (err) {
       console.error('Error fetching Discogs news:', err);
-      setError('Kon geen nieuwe releases ophalen');
+      setError(`Kon geen nieuwe releases ophalen: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -72,20 +80,28 @@ export default function MusicNews() {
   const fetchMusicNews = async () => {
     setLoading(true);
     setError(null);
+    console.log('Fetching music news...');
     
     try {
       const { data, error } = await supabase.functions.invoke('music-news-perplexity');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
       
-      if (data.success) {
+      console.log('Music news response:', data);
+      
+      if (data?.success && data?.news) {
         setMusicNews(data.news);
+        console.log(`Loaded ${data.news.length} music news items`);
       } else {
-        throw new Error(data.error || 'Failed to fetch music news');
+        console.warn('No news returned from Perplexity API');
+        setMusicNews([]);
       }
     } catch (err) {
       console.error('Error fetching music news:', err);
-      setError('Kon geen muzieknieuws ophalen');
+      setError(`Kon geen muzieknieuws ophalen: ${err.message}`);
     } finally {
       setLoading(false);
     }

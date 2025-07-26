@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { Music, ExternalLink, Disc3, Newspaper, Search, Filter, Grid, List, Calendar, Star } from "lucide-react";
+import { Music, ExternalLink, Disc3, Newspaper, Search, Filter, Grid, List, Calendar, Star, Eye } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
+import { useNavigate } from "react-router-dom";
 interface DiscogsRelease {
   id: number;
   title: string;
@@ -17,6 +18,7 @@ interface DiscogsRelease {
   label: string[];
   genre: string[];
   uri: string;
+  release_id?: string;
 }
 interface NewsItem {
   title: string;
@@ -30,6 +32,7 @@ type NewsSource = 'discogs' | 'perplexity';
 type ViewMode = 'grid' | 'list';
 type SortBy = 'date' | 'title' | 'relevance';
 export default function MusicNews() {
+  const navigate = useNavigate();
   const [newsSource, setNewsSource] = useState<NewsSource>('discogs');
   const [discogsReleases, setDiscogsReleases] = useState<DiscogsRelease[]>([]);
   const [musicNews, setMusicNews] = useState<NewsItem[]>([]);
@@ -279,10 +282,36 @@ export default function MusicNews() {
                       {release.format.length > 0 && <p className="text-xs text-muted-foreground">
                           Format: {release.format.join(', ')}
                         </p>}
-                      {release.genre.length > 0 && <p className="text-xs text-muted-foreground">
+                       {release.genre.length > 0 && <p className="text-xs text-muted-foreground">
                           Genre: {release.genre.slice(0, 2).join(', ')}
                         </p>}
-                      
+                       <div className="flex items-center gap-2 mt-3">
+                         {release.release_id && (
+                           <Button 
+                             size="sm" 
+                             onClick={() => navigate(`/release/${release.release_id}`)}
+                             className="flex items-center gap-1"
+                           >
+                             <Eye className="w-3 h-3" />
+                             Bekijk Details
+                           </Button>
+                         )}
+                         <Button 
+                           variant="outline" 
+                           size="sm" 
+                           asChild
+                         >
+                           <a 
+                             href={`https://www.discogs.com${release.uri}`} 
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="flex items-center gap-1"
+                           >
+                             <ExternalLink className="w-3 h-3" />
+                             Discogs
+                           </a>
+                         </Button>
+                       </div>
                     </div>
                   </CardContent>
                 </div>

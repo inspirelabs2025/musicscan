@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { AlbumInsightsSection } from "@/components/AlbumInsightsSection";
 import { ArrowLeft, ExternalLink, Calendar, Tag, Music2, Disc3, Brain, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function AlbumDetail() {
   const { albumId } = useParams<{ albumId: string }>();
@@ -16,6 +16,13 @@ export default function AlbumDetail() {
   const { album, isLoading, error } = useAlbumDetail(albumId!);
   const { insights, isLoading: insightsLoading, generateInsights } = useAlbumInsights();
   const [imageError, setImageError] = useState(false);
+
+  // Auto-generate insights when album loads
+  useEffect(() => {
+    if (albumId && album && !insights && !insightsLoading) {
+      generateInsights(albumId);
+    }
+  }, [albumId, album, insights, insightsLoading, generateInsights]);
 
   if (isLoading) {
     return (
@@ -218,25 +225,23 @@ export default function AlbumDetail() {
                     Bekijk op Discogs
                   </Button>
                 )}
-                
-                <Button
-                  variant="default"
-                  className="w-full"
-                  onClick={() => generateInsights(albumId!)}
-                  disabled={insightsLoading}
-                >
-                  {insightsLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Brain className="w-4 h-4 mr-2" />
-                  )}
-                  {insights ? 'Ververs AI Insights' : 'Genereer AI Insights'}
-                </Button>
               </div>
             </div>
           </div>
 
           {/* AI Insights Section */}
+          {insightsLoading && (
+            <>
+              <Separator className="my-8" />
+              <Card className="p-8">
+                <div className="flex items-center justify-center space-x-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <span className="text-muted-foreground">AI Insights genereren...</span>
+                </div>
+              </Card>
+            </>
+          )}
+          
           {insights && (
             <>
               <Separator className="my-8" />

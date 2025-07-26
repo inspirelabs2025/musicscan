@@ -6,14 +6,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Music, Package, Store, Eye, EyeOff, ShoppingCart, Sparkles, Download, ExternalLink, Globe, Users, AlertTriangle } from "lucide-react";
+import { Music, Package, Store, Eye, EyeOff, ShoppingCart, Sparkles, Download, ExternalLink, Globe, Users, AlertTriangle, RefreshCw } from "lucide-react";
 import { useMyCollection } from "@/hooks/useMyCollection";
 import { useUserShop } from "@/hooks/useUserShop";
 import { CollectionItemCard } from "@/components/CollectionItemCard";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
+import { CollectionGridSkeleton } from "@/components/ui/skeletons";
+import { ErrorBoundary, CollectionErrorFallback } from "@/components/ErrorBoundary";
+import { OfflineIndicator } from "@/components/ProgressiveEnhancement";
+import { useMobileOptimized, usePullToRefresh } from "@/hooks/useMobileOptimized";
 
 export default function MyCollection() {
   const { user } = useAuth();
@@ -24,7 +28,19 @@ export default function MyCollection() {
   
   const { items, isLoading, updateItem, isUpdating, bulkUpdate, isBulkUpdating } = useMyCollection(filter);
   const { shop } = useUserShop();
-  const { toast } = useToast();
+  // Mobile and UX enhancements
+  const { isMobile } = useMobileOptimized();
+  const { 
+    isPulling, 
+    pullDistance, 
+    isRefreshing,
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd
+  } = usePullToRefresh(async () => {
+    // Refresh collection data
+    window.location.reload();
+  });
 
   const handleItemUpdate = (itemId: string, mediaType: "cd" | "vinyl", updates: any) => {
     updateItem({ id: itemId, media_type: mediaType, updates }, {
@@ -251,19 +267,80 @@ export default function MyCollection() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <ErrorBoundary fallback={<CollectionErrorFallback />}>
+        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+          <OfflineIndicator />
+          <div className="container mx-auto px-4 py-8">
+            {/* Header Skeleton */}
+            <Card className="p-8 mb-8 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
+              <div className="text-center space-y-4">
+                <div className="h-8 bg-muted animate-pulse rounded-lg mx-auto w-64" />
+                <div className="h-4 bg-muted animate-pulse rounded mx-auto w-96" />
+                <div className="flex justify-center gap-3">
+                  <div className="h-10 bg-muted animate-pulse rounded w-48" />
+                  <div className="h-10 bg-muted animate-pulse rounded w-40" />
+                </div>
+              </div>
+            </Card>
+            
+            {/* Stats Skeleton */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i} className="p-4">
+                  <div className="space-y-2">
+                    <div className="h-5 bg-muted animate-pulse rounded mx-auto w-5" />
+                    <div className="h-6 bg-muted animate-pulse rounded mx-auto w-8" />
+                    <div className="h-3 bg-muted animate-pulse rounded mx-auto w-12" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+            
+            {/* Collection Grid Skeleton */}
+            <CollectionGridSkeleton count={isMobile ? 6 : 12} />
           </div>
         </div>
-      </div>
+      </ErrorBoundary>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
-      <div className="container mx-auto px-4 py-8">
+    <ErrorBoundary fallback={<CollectionErrorFallback />}>
+      <div 
+        className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        style={{
+          transform: `translateY(${pullDistance * 0.5}px)`,
+          transition: isPulling ? 'none' : 'transform 0.3s ease-out'
+        }}
+      >
+        <OfflineIndicator />
+        
+        {/* Pull to refresh indicator */}
+        {isPulling && (
+          <div 
+            className="fixed top-0 left-1/2 transform -translate-x-1/2 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-b-lg transition-all duration-200"
+            style={{ opacity: Math.min(pullDistance / 80, 1) }}
+          >
+            <div className="flex items-center gap-2">
+              <RefreshCw className={`w-4 h-4 ${pullDistance > 80 ? 'animate-spin' : ''}`} />
+              {pullDistance > 80 ? 'Loslaten om te vernieuwen' : 'Trek naar beneden om te vernieuwen'}
+            </div>
+          </div>
+        )}
+        
+        {isRefreshing && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-lg">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              Vernieuwen...
+            </div>
+          </div>
+        )}
+        
+        <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <Card className="p-8 mb-8 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
           <div className="text-center">
@@ -550,6 +627,7 @@ export default function MyCollection() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

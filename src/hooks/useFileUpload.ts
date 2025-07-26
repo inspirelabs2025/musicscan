@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { compressImage, ImageCompressionOptions } from '@/utils/imageOptimization';
 
 export interface UploadedFile {
   file: File;
@@ -9,29 +10,38 @@ export interface UploadedFile {
   id?: string;
 }
 
-export const useFileUpload = () => {
+export const useFileUpload = (compressionOptions?: ImageCompressionOptions) => {
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
-  const uploadFile = async (file: File, step: number): Promise<string | null> => {
+  const uploadFile = async (file: File, step: number, compress: boolean = true): Promise<string | null> => {
     setUploading(true);
     
     try {
+      // Compress image if requested and it's an image file
+      let fileToUpload = file;
+      if (compress && file.type.startsWith('image/')) {
+        try {
+          fileToUpload = await compressImage(file, compressionOptions);
+        } catch (compressionError) {
+          // If compression fails, continue with original file
+        }
+      }
+
       // Create unique filename
-      const fileExt = file.name.split('.').pop();
+      const fileExt = fileToUpload.name.split('.').pop();
       const fileName = `${Date.now()}-step-${step}.${fileExt}`;
       const filePath = `uploads/${fileName}`;
 
-      // Upload to Supabase Storage
+      // Upload to Supabase Storage (use compressed file)
       const { data, error } = await supabase.storage
         .from('vinyl_images')
-        .upload(filePath, file, {
+        .upload(filePath, fileToUpload, {
           cacheControl: '3600',
           upsert: false
         });
 
       if (error) {
-        console.error('Upload error:', error);
         toast({
           title: "Upload Error",
           description: error.message,

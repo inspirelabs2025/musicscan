@@ -28,7 +28,26 @@ import AlbumDetail from "./pages/AlbumDetail";
 import ReleaseDetail from "./pages/ReleaseDetail";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 30 * 60 * 1000, // 30 minutes (previously cacheTime)
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: 'always',
+      retry: (failureCount, error: any) => {
+        // Don't retry for authentication errors
+        if (error?.status === 401 || error?.status === 403) {
+          return false;
+        }
+        return failureCount < 3;
+      },
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

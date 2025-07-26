@@ -19,8 +19,7 @@ export const useVinylAnalysis = () => {
     setIsAnalyzing(true);
     
     try {
-      console.log('🎵 Starting vinyl analysis with images:', imageUrls);
-      console.log('⚡ Performance: Starting analysis at', new Date().toISOString());
+      // Starting vinyl analysis with images
       
       // Mobile-optimized timeout
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -42,12 +41,10 @@ export const useVinylAnalysis = () => {
       const { data, error } = result;
 
       if (error) {
-        console.error('❌ Analysis error:', error);
         throw error;
       }
 
-      console.log('✅ Analysis completed:', data);
-      console.log('⚡ Performance: Analysis completed at', new Date().toISOString());
+      // Analysis completed successfully
 
       setAnalysisResult(data);
       
@@ -64,8 +61,8 @@ export const useVinylAnalysis = () => {
       });
 
       return data;
-    } catch (error) {
-      console.error('❌ Analysis failed:', error);
+    } catch (error: any) {
+      // Analysis failed
       
       // Reset state on error to prevent hanging
       setAnalysisResult(null);

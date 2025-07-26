@@ -43,7 +43,8 @@ export const usePublicShop = (shopSlug: string) => {
             id, artist, title, label, catalog_number, year, discogs_id, discogs_url,
             is_public, is_for_sale, shop_description, condition_grade, 
             marketplace_price, currency, created_at, front_image, back_image, 
-            barcode_image, matrix_image
+            barcode_image, matrix_image, calculated_advice_price, lowest_price,
+            median_price, highest_price
           `)
           .eq("user_id", shop.user_id)
           .eq("is_for_sale", true)
@@ -54,7 +55,8 @@ export const usePublicShop = (shopSlug: string) => {
             id, artist, title, label, catalog_number, year, discogs_id, discogs_url,
             is_public, is_for_sale, shop_description, condition_grade, 
             marketplace_price, currency, created_at, catalog_image, matrix_image, 
-            additional_image
+            additional_image, calculated_advice_price, lowest_price, median_price,
+            highest_price
           `)
           .eq("user_id", shop.user_id)
           .eq("is_for_sale", true)

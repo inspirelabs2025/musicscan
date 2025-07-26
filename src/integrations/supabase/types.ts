@@ -192,6 +192,8 @@ export type Database = {
           genre: string | null
           highest_price: number | null
           id: string
+          is_for_sale: boolean | null
+          is_public: boolean | null
           label: string | null
           lowest_price: number | null
           marketplace_allow_offers: boolean | null
@@ -206,6 +208,7 @@ export type Database = {
           matrix_image: string | null
           matrix_number: string | null
           median_price: number | null
+          shop_description: string | null
           side: string | null
           stamper_codes: string | null
           style: string[] | null
@@ -232,6 +235,8 @@ export type Database = {
           genre?: string | null
           highest_price?: number | null
           id?: string
+          is_for_sale?: boolean | null
+          is_public?: boolean | null
           label?: string | null
           lowest_price?: number | null
           marketplace_allow_offers?: boolean | null
@@ -246,6 +251,7 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          shop_description?: string | null
           side?: string | null
           stamper_codes?: string | null
           style?: string[] | null
@@ -272,6 +278,8 @@ export type Database = {
           genre?: string | null
           highest_price?: number | null
           id?: string
+          is_for_sale?: boolean | null
+          is_public?: boolean | null
           label?: string | null
           lowest_price?: number | null
           marketplace_allow_offers?: boolean | null
@@ -286,6 +294,7 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          shop_description?: string | null
           side?: string | null
           stamper_codes?: string | null
           style?: string[] | null
@@ -1075,6 +1084,39 @@ export type Database = {
           },
         ]
       }
+      public_collections: {
+        Row: {
+          collection_name: string | null
+          created_at: string
+          id: string
+          is_public: boolean | null
+          last_viewed_at: string | null
+          updated_at: string
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          collection_name?: string | null
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          last_viewed_at?: string | null
+          updated_at?: string
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          collection_name?: string | null
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          last_viewed_at?: string | null
+          updated_at?: string
+          user_id?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       rdw_lookups: {
         Row: {
           body_type: string | null
@@ -1204,6 +1246,45 @@ export type Database = {
           tecdoc_id?: string
           technical_specs?: Json | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_shops: {
+        Row: {
+          contact_info: string | null
+          created_at: string
+          id: string
+          is_public: boolean | null
+          shop_description: string | null
+          shop_name: string | null
+          shop_url_slug: string | null
+          updated_at: string
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          shop_description?: string | null
+          shop_name?: string | null
+          shop_url_slug?: string | null
+          updated_at?: string
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          shop_description?: string | null
+          shop_name?: string | null
+          shop_url_slug?: string | null
+          updated_at?: string
+          user_id?: string
+          view_count?: number | null
         }
         Relationships: []
       }
@@ -1578,6 +1659,8 @@ export type Database = {
           genre: string | null
           highest_price: number | null
           id: string
+          is_for_sale: boolean | null
+          is_public: boolean | null
           label: string | null
           lowest_price: number | null
           marketplace_allow_offers: boolean | null
@@ -1592,6 +1675,7 @@ export type Database = {
           matrix_image: string | null
           matrix_number: string | null
           median_price: number | null
+          shop_description: string | null
           style: string[] | null
           title: string | null
           updated_at: string
@@ -1614,6 +1698,8 @@ export type Database = {
           genre?: string | null
           highest_price?: number | null
           id?: string
+          is_for_sale?: boolean | null
+          is_public?: boolean | null
           label?: string | null
           lowest_price?: number | null
           marketplace_allow_offers?: boolean | null
@@ -1628,6 +1714,7 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          shop_description?: string | null
           style?: string[] | null
           title?: string | null
           updated_at?: string
@@ -1650,6 +1737,8 @@ export type Database = {
           genre?: string | null
           highest_price?: number | null
           id?: string
+          is_for_sale?: boolean | null
+          is_public?: boolean | null
           label?: string | null
           lowest_price?: number | null
           marketplace_allow_offers?: boolean | null
@@ -1664,6 +1753,7 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          shop_description?: string | null
           style?: string[] | null
           title?: string | null
           updated_at?: string

@@ -19,11 +19,21 @@ export interface CollectionItem {
   marketplace_price: number | null;
   currency: string | null;
   created_at: string;
+  updated_at?: string;
   // Price fields
   calculated_advice_price?: number | null;
   lowest_price?: number | null;
   median_price?: number | null;
   highest_price?: number | null;
+  // Marketplace fields
+  marketplace_allow_offers?: boolean | null;
+  marketplace_weight?: number | null;
+  marketplace_format_quantity?: number | null;
+  marketplace_status?: string | null;
+  marketplace_comments?: string | null;
+  marketplace_external_id?: string | null;
+  marketplace_location?: string | null;
+  marketplace_sleeve_condition?: string | null;
   // CD image fields
   front_image?: string | null;
   back_image?: string | null;
@@ -38,6 +48,9 @@ export interface CollectionItem {
   format?: string | null;
   matrix_number?: string | null;
   barcode_number?: string | null;
+  side?: string | null;
+  stamper_codes?: string | null;
+  style?: string[] | null;
   user_id?: string;
 }
 

@@ -15,8 +15,13 @@ export const useAlbumDetail = (albumId: string) => {
           .select(`
             id, artist, title, label, catalog_number, year, discogs_id, discogs_url,
             is_public, is_for_sale, shop_description, condition_grade, 
-            currency, created_at, front_image, back_image, barcode_image, matrix_image,
-            barcode_number, format, genre, country, marketplace_price, user_id
+            currency, created_at, updated_at, front_image, back_image, barcode_image, matrix_image,
+            barcode_number, format, genre, country, marketplace_price, user_id,
+            lowest_price, median_price, highest_price, calculated_advice_price,
+            marketplace_allow_offers, marketplace_weight, marketplace_format_quantity,
+            marketplace_status, marketplace_comments, marketplace_external_id,
+            marketplace_location, marketplace_sleeve_condition, matrix_number, side,
+            stamper_codes, style
           `)
           .eq("id", albumId)
           .single(),
@@ -25,8 +30,12 @@ export const useAlbumDetail = (albumId: string) => {
           .select(`
             id, artist, title, label, catalog_number, year, discogs_id, discogs_url,
             is_public, is_for_sale, shop_description, condition_grade, 
-            currency, created_at, catalog_image, matrix_image, additional_image,
-            format, genre, country, marketplace_price, user_id, matrix_number
+            currency, created_at, updated_at, catalog_image, matrix_image, additional_image,
+            format, genre, country, marketplace_price, user_id, matrix_number,
+            lowest_price, median_price, highest_price, calculated_advice_price,
+            marketplace_allow_offers, marketplace_weight, marketplace_format_quantity,
+            marketplace_sleeve_condition, marketplace_status, marketplace_comments,
+            marketplace_external_id, marketplace_location, style
           `)
           .eq("id", albumId)
           .single()

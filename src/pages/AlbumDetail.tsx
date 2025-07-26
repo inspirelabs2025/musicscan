@@ -2,20 +2,44 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAlbumDetail } from "@/hooks/useAlbumDetail";
 import { useAlbumInsights } from "@/hooks/useAlbumInsights";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { AlbumInsightsSection } from "@/components/AlbumInsightsSection";
-import { ArrowLeft, ExternalLink, Calendar, Tag, Music2, Disc3, Brain, Loader2 } from "lucide-react";
+import { ImageGallery } from "@/components/ImageGallery";
+import { PriceAnalysisSection } from "@/components/PriceAnalysisSection";
+import { TechnicalSpecsSection } from "@/components/TechnicalSpecsSection";
+import { ArrowLeft, ExternalLink, Calendar, Tag, Music2, Disc3, Brain, Loader2, Clock, Hash } from "lucide-react";
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
+import { nl } from "date-fns/locale";
 
 export default function AlbumDetail() {
   const { albumId } = useParams<{ albumId: string }>();
   const navigate = useNavigate();
   const { album, isLoading, error } = useAlbumDetail(albumId!);
   const { insights, isLoading: insightsLoading, generateInsights } = useAlbumInsights();
-  const [imageError, setImageError] = useState(false);
+
+  // Prepare images array for the gallery
+  const getAlbumImages = () => {
+    if (!album) return [];
+    
+    const images = [];
+    
+    if (album.media_type === 'cd') {
+      if (album.front_image) images.push({ url: album.front_image, label: "Voorkant", type: "front" });
+      if (album.back_image) images.push({ url: album.back_image, label: "Achterkant", type: "back" });
+      if (album.barcode_image) images.push({ url: album.barcode_image, label: "Barcode", type: "barcode" });
+      if (album.matrix_image) images.push({ url: album.matrix_image, label: "Matrix", type: "matrix" });
+    } else {
+      if (album.catalog_image) images.push({ url: album.catalog_image, label: "Catalogus", type: "catalog" });
+      if (album.matrix_image) images.push({ url: album.matrix_image, label: "Matrix", type: "matrix" });
+      if (album.additional_image) images.push({ url: album.additional_image, label: "Extra", type: "additional" });
+    }
+    
+    return images;
+  };
 
   // Auto-generate insights when album loads
   useEffect(() => {
@@ -84,7 +108,7 @@ export default function AlbumDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-vinyl-purple/5 via-transparent to-primary/5">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           {/* Back Navigation */}
           <Button
             variant="ghost"
@@ -96,136 +120,147 @@ export default function AlbumDetail() {
           </Button>
 
           {/* Main Content */}
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
-            {/* Album Art */}
-            <div className="space-y-4">
-              <Card className="overflow-hidden bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm">
-                <div className="aspect-square relative bg-gradient-to-br from-muted/30 to-background/50">
-                  {imageUrl && !imageError ? (
-                    <img
-                      src={imageUrl}
-                      alt={`${album.artist} - ${album.title}`}
-                      className="w-full h-full object-cover"
-                      onError={() => setImageError(true)}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      {album.media_type === 'cd' ? (
-                        <Disc3 className="w-24 h-24 text-muted-foreground/30" />
-                      ) : (
-                        <Music2 className="w-24 h-24 text-muted-foreground/30" />
-                      )}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Image Gallery */}
+            <div className="lg:col-span-1">
+              <ImageGallery images={getAlbumImages()} />
+            </div>
+
+            {/* Middle Column - Album Details */}
+            <div className="lg:col-span-1 space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">{album.title}</h1>
+                <h2 className="text-xl text-muted-foreground mb-4">{album.artist}</h2>
+                
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Disc3 className="w-3 h-3" />
+                    {album.media_type.toUpperCase()}
+                  </Badge>
+                  {album.is_public && (
+                    <Badge variant="default">Publiek</Badge>
+                  )}
+                  {album.is_for_sale && (
+                    <Badge variant="secondary">Te Koop</Badge>
+                  )}
+                  {album.condition_grade && (
+                    <Badge variant="outline">{album.condition_grade}</Badge>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 text-sm">
+                  {album.label && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Label:</span>
+                      <span className="font-medium">{album.label}</span>
+                    </div>
+                  )}
+                  {album.year && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Jaar:</span>
+                      <span className="font-medium flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {album.year}
+                      </span>
+                    </div>
+                  )}
+                  {album.catalog_number && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Catalogus:</span>
+                      <span className="font-medium">{album.catalog_number}</span>
+                    </div>
+                  )}
+                  {album.genre && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Genre:</span>
+                      <span className="font-medium flex items-center gap-1">
+                        <Tag className="w-3 h-3" />
+                        {album.genre}
+                      </span>
+                    </div>
+                  )}
+                  {album.country && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Land:</span>
+                      <span className="font-medium">{album.country}</span>
+                    </div>
+                  )}
+                  {album.discogs_id && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Discogs ID:</span>
+                      <span className="font-medium flex items-center gap-1">
+                        <Hash className="w-3 h-3" />
+                        {album.discogs_id}
+                      </span>
                     </div>
                   )}
                 </div>
-              </Card>
-              
-              {/* Status Badges */}
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">
-                  {album.media_type.toUpperCase()}
-                </Badge>
-                {album.is_public && (
-                  <Badge variant="outline" className="bg-primary/10">
-                    Publiek zichtbaar
-                  </Badge>
+
+                {album.shop_description && (
+                  <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                    <h3 className="font-medium mb-2">Beschrijving</h3>
+                    <p className="text-sm text-muted-foreground">{album.shop_description}</p>
+                  </div>
                 )}
-                {album.is_for_sale && (
-                  <Badge variant="default">
-                    Te koop
-                  </Badge>
-                )}
-                {album.condition_grade && (
-                  <Badge variant="outline">
-                    {album.condition_grade}
-                  </Badge>
+
+                {/* Timestamps */}
+                <Card className="mt-4">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Tijdsinformatie
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-xs space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Toegevoegd:</span>
+                      <span>{format(new Date(album.created_at), "dd MMM yyyy, HH:mm", { locale: nl })}</span>
+                    </div>
+                    {album.updated_at && album.updated_at !== album.created_at && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Bijgewerkt:</span>
+                        <span>{format(new Date(album.updated_at), "dd MMM yyyy, HH:mm", { locale: nl })}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {album.discogs_url && (
+                  <Button variant="outline" className="w-full mt-4" asChild>
+                    <a href={album.discogs_url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Bekijk op Discogs
+                    </a>
+                  </Button>
                 )}
               </div>
             </div>
 
-            {/* Album Information */}
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">
-                  {album.title || "Onbekende titel"}
-                </h1>
-                <h2 className="text-xl text-muted-foreground mb-4">
-                  {album.artist || "Onbekende artiest"}
-                </h2>
-                
-                {album.marketplace_price && (
-                  <div className="text-2xl font-bold text-primary mb-4">
-                    {album.currency}{album.marketplace_price}
-                  </div>
-                )}
-              </div>
-
-              {/* Details Grid */}
-              <div className="grid grid-cols-1 gap-4">
-                {album.label && (
-                  <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Label:</span>
-                    <span className="font-medium">{album.label}</span>
-                  </div>
-                )}
-                
-                {album.year && (
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Jaar:</span>
-                    <span className="font-medium">{album.year}</span>
-                  </div>
-                )}
-                
-                {album.catalog_number && (
-                  <div className="flex items-center gap-2">
-                    <Music2 className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Catalogusnummer:</span>
-                    <span className="font-medium">{album.catalog_number}</span>
-                  </div>
-                )}
-                
-                {album.genre && (
-                  <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Genre:</span>
-                    <span className="font-medium">{album.genre}</span>
-                  </div>
-                )}
-                
-                {album.country && (
-                  <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Land:</span>
-                    <span className="font-medium">{album.country}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Shop Description */}
-              {album.shop_description && (
-                <Card className="p-4 bg-accent/20">
-                  <h3 className="font-semibold mb-2">Beschrijving</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {album.shop_description}
-                  </p>
-                </Card>
-              )}
-
-              {/* Actions */}
-              <div className="space-y-2">
-                {album.discogs_url && (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => window.open(album.discogs_url!, '_blank')}
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Bekijk op Discogs
-                  </Button>
-                )}
-              </div>
+            {/* Right Column - Price Analysis & Technical Specs */}
+            <div className="lg:col-span-1 space-y-6">
+              <PriceAnalysisSection
+                lowestPrice={album.lowest_price}
+                medianPrice={album.median_price}
+                highestPrice={album.highest_price}
+                calculatedAdvicePrice={album.calculated_advice_price}
+                marketplacePrice={album.marketplace_price}
+                currency={album.currency}
+              />
+              
+              <TechnicalSpecsSection
+                format={album.format}
+                marketplaceWeight={album.marketplace_weight}
+                marketplaceFormatQuantity={album.marketplace_format_quantity}
+                marketplaceLocation={album.marketplace_location}
+                marketplaceAllowOffers={album.marketplace_allow_offers}
+                marketplaceStatus={album.marketplace_status}
+                barcode={album.media_type === 'cd' ? album.barcode_number : undefined}
+                matrixNumber={album.matrix_number}
+                side={album.media_type === 'cd' ? album.side : undefined}
+                stamperCodes={album.media_type === 'cd' ? album.stamper_codes : undefined}
+                style={album.style}
+                marketplaceSleeve={album.marketplace_sleeve_condition}
+              />
             </div>
           </div>
 

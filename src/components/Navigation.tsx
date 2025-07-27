@@ -31,7 +31,7 @@ const publicNavigationItems = [
 const scanMenuItems = [
   { title: "Scanner", url: "/scanner", icon: Home },
   { title: "AI-Scan", url: "/ai-scan-v2", icon: Brain },
-  { title: "AI-Scan Overview", url: "/ai-scan-v2-overview", icon: Database },
+  { title: "AI-Scan Overview", url: "/ai-scan-overview", icon: Database },
   { title: "Alle Gescande Items", url: "/unified-scan-overview", icon: Archive }
 ];
 

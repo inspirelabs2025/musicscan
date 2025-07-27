@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { Search, Filter, Edit, Upload, Disc3, Music, Euro, AlertTriangle, CheckCircle, Eye, Trash2 } from 'lucide-react';
-import { Navigation } from "@/components/Navigation";
+
 interface MarketplaceItem {
   id: string;
   type: 'CD' | 'Vinyl';
@@ -218,7 +218,6 @@ export default function MarketplaceOverview() {
       </>;
   }
   return <>
-      <Navigation />
       {/* Musical Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 text-6xl animate-bounce opacity-10">🎵</div>

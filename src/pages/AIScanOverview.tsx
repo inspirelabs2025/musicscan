@@ -45,8 +45,9 @@ import {
   Loader2,
   Users
 } from "lucide-react";
-import { useAIScansStats, AIScanResult } from "@/hooks/useAIScans";
-import { useInfiniteAIScans } from "@/hooks/useInfiniteAIScans";
+import { useInfiniteUnifiedScans, UnifiedScanResult } from "@/hooks/useInfiniteUnifiedScans";
+import { useUnifiedScansStats } from "@/hooks/useUnifiedScansStats";
+import { convertToAIScanResult } from "@/utils/scanAdapters";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessedRows } from "@/hooks/useProcessedRows";
 import { useDuplicateDetection } from "@/hooks/useDuplicateDetection";
@@ -55,21 +56,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
 const AIScanOverview = () => {
-  const [sortField, setSortField] = useState<keyof AIScanResult>("created_at");
+  const [sortField, setSortField] = useState<keyof UnifiedScanResult>("created_at");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [mediaTypeFilter, setMediaTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
-  const [selectedScan, setSelectedScan] = useState<AIScanResult | null>(null);
+  const [selectedScan, setSelectedScan] = useState<UnifiedScanResult | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
-  const [scanToEdit, setScanToEdit] = useState<AIScanResult | null>(null);
-  const [scanToDelete, setScanToDelete] = useState<AIScanResult | null>(null);
-  const [scanToComment, setScanToComment] = useState<AIScanResult | null>(null);
+  const [scanToEdit, setScanToEdit] = useState<UnifiedScanResult | null>(null);
+  const [scanToDelete, setScanToDelete] = useState<UnifiedScanResult | null>(null);
+  const [scanToComment, setScanToComment] = useState<UnifiedScanResult | null>(null);
   
   // Lightbox state
   const [showLightbox, setShowLightbox] = useState(false);
@@ -98,7 +99,7 @@ const AIScanOverview = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage
-  } = useInfiniteAIScans({
+  } = useInfiniteUnifiedScans({
     pageSize,
     sortField,
     sortDirection,
@@ -107,7 +108,7 @@ const AIScanOverview = () => {
     statusFilter
   });
 
-  const { data: statsData, isLoading: statsLoading } = useAIScansStats();
+  const { data: statsData, isLoading: statsLoading } = useUnifiedScansStats();
 
   // Flatten all pages data
   const allScans = useMemo(() => {
@@ -116,11 +117,20 @@ const AIScanOverview = () => {
 
   const totalCount = scansData?.pages[0]?.totalCount || 0;
 
-  // Initialize duplicate detection
-  const { getDuplicateInfo, duplicateStats } = useDuplicateDetection(allScans);
+  // Initialize duplicate detection - convert to compatible format for hook
+  const compatibleScansForDuplicates = useMemo(() => 
+    allScans.map(scan => ({
+      id: scan.id,
+      artist: scan.artist || '',
+      title: scan.title || '',
+      catalog_number: scan.catalog_number || '',
+      discogs_id: scan.discogs_id || 0
+    })), [allScans]
+  );
+  const { getDuplicateInfo, duplicateStats } = useDuplicateDetection(compatibleScansForDuplicates as any);
   
   // Initialize marketplace status checking
-  const { data: marketplaceStatusMap } = useMarketplaceStatus(allScans);
+  const { data: marketplaceStatusMap } = useMarketplaceStatus(compatibleScansForDuplicates as any);
 
   // Filter scans based on duplicates if showDuplicatesOnly is enabled
   const filteredScans = useMemo(() => {
@@ -153,7 +163,7 @@ const AIScanOverview = () => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const handleSort = useCallback((field: keyof AIScanResult) => {
+  const handleSort = useCallback((field: keyof UnifiedScanResult) => {
     if (sortField === field) {
       setSortDirection(prev => prev === "asc" ? "desc" : "asc");
     } else {
@@ -162,7 +172,7 @@ const AIScanOverview = () => {
     }
   }, [sortField]);
 
-  const getSortIcon = useCallback((field: keyof AIScanResult) => {
+  const getSortIcon = useCallback((field: keyof UnifiedScanResult) => {
     if (sortField !== field) return null;
     return sortDirection === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
   }, [sortField, sortDirection]);
@@ -216,7 +226,7 @@ const AIScanOverview = () => {
     window.URL.revokeObjectURL(url);
   }, [allScans]);
 
-  const handleViewDetails = useCallback((scan: AIScanResult) => {
+  const handleViewDetails = useCallback((scan: UnifiedScanResult) => {
     setSelectedScan(scan);
     setShowDetailModal(true);
   }, []);
@@ -229,7 +239,7 @@ const AIScanOverview = () => {
     setShowLightbox(true);
   }, []);
 
-  const copyDiscogsId = useCallback(async (scan: AIScanResult) => {
+  const copyDiscogsId = useCallback(async (scan: UnifiedScanResult) => {
     if (!scan.discogs_id) {
       console.warn('⚠️ No Discogs ID to copy for scan:', scan.id);
       return;
@@ -266,27 +276,54 @@ const AIScanOverview = () => {
     });
   }, [toast, resetProcessed]);
 
-  const handleEditScan = useCallback((scan: AIScanResult) => {
+  const handleEditScan = useCallback((scan: UnifiedScanResult) => {
+    // Only allow editing AI scan results for now
+    if (scan.source_table !== 'ai_scan_results') {
+      toast({
+        title: "Niet ondersteund",
+        description: "Bewerken is alleen beschikbaar voor AI scans.",
+        variant: "destructive",
+      });
+      return;
+    }
     setScanToEdit(scan);
     setShowEditModal(true);
-  }, []);
+  }, [toast]);
 
-  const handleDeleteScan = useCallback((scan: AIScanResult) => {
+  const handleDeleteScan = useCallback((scan: UnifiedScanResult) => {
+    // Only allow deleting AI scan results for now
+    if (scan.source_table !== 'ai_scan_results') {
+      toast({
+        title: "Niet ondersteund",
+        description: "Verwijderen is alleen beschikbaar voor AI scans.",
+        variant: "destructive",
+      });
+      return;
+    }
     setScanToDelete(scan);
     setShowDeleteDialog(true);
-  }, []);
+  }, [toast]);
 
-  const handleCommentScan = useCallback((scan: AIScanResult) => {
+  const handleCommentScan = useCallback((scan: UnifiedScanResult) => {
+    // Only allow commenting on AI scan results for now
+    if (scan.source_table !== 'ai_scan_results') {
+      toast({
+        title: "Niet ondersteund",
+        description: "Opmerkingen zijn alleen beschikbaar voor AI scans.",
+        variant: "destructive",
+      });
+      return;
+    }
     setScanToComment(scan);
     setShowCommentsModal(true);
-  }, []);
+  }, [toast]);
 
   const invalidateQueries = useCallback(() => {
     queryClient.invalidateQueries({
-      queryKey: ["ai-scans-infinite"]
+      queryKey: ["unified-scans-infinite"]
     });
     queryClient.invalidateQueries({
-      queryKey: ["ai-scans-stats"]
+      queryKey: ["unified-scans-stats"]
     });
   }, [queryClient]);
 
@@ -314,9 +351,19 @@ const AIScanOverview = () => {
     });
   }, [invalidateQueries, toast]);
 
-  const toggleFlagIncorrect = useCallback(async (scan: AIScanResult) => {
+  const toggleFlagIncorrect = useCallback(async (scan: UnifiedScanResult) => {
     try {
       const newFlaggedStatus = !scan.is_flagged_incorrect;
+      
+      // Only allow flagging for AI scan results
+      if (scan.source_table !== 'ai_scan_results') {
+        toast({
+          title: "Niet ondersteund",
+          description: "Markeren als incorrect is alleen beschikbaar voor AI scans.",
+          variant: "destructive",
+        });
+        return;
+      }
       
       const { error } = await supabase
         .from('ai_scan_results')
@@ -382,11 +429,11 @@ const AIScanOverview = () => {
           {/* Statistics */}
           {statsData && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard
+                <StatCard
                 title="Totaal Scans"
                 value={statsData.totalScans}
                 icon={Scan}
-                subtitle={`${statsData.mediaTypeBreakdown.vinyl} LP • ${statsData.mediaTypeBreakdown.cd} CD`}
+                subtitle={`${statsData.mediaTypeBreakdown.vinyl} LP • ${statsData.mediaTypeBreakdown.cd} CD • AI: ${statsData.sourceBreakdown.aiScans}`}
               />
               <StatCard
                 title="Succesvol"
@@ -698,6 +745,14 @@ const AIScanOverview = () => {
                                 {duplicateInfo.duplicateCount}x
                               </Badge>
                             )}
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs bg-muted"
+                              title={`Bron: ${scan.source_table}`}
+                            >
+                              {scan.source_table === 'ai_scan_results' ? 'AI' : 
+                               scan.source_table === 'cd_scan' ? 'CD' : 'LP'}
+                            </Badge>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -707,9 +762,16 @@ const AIScanOverview = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={getMediaTypeColor(scan.media_type)}>
-                            {scan.media_type.toUpperCase()}
-                          </Badge>
+                          <div className="flex flex-col gap-1">
+                            <Badge className={getMediaTypeColor(scan.media_type)}>
+                              {scan.media_type.toUpperCase()}
+                            </Badge>
+                            {scan.calculated_advice_price && (
+                              <div className="text-xs text-muted-foreground">
+                                €{scan.calculated_advice_price.toFixed(2)}
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           {scan.confidence_score !== null ? (
@@ -759,15 +821,17 @@ const AIScanOverview = () => {
                              >
                                <MessageSquare className="h-4 w-4" />
                              </Button>
-                             <Button 
-                               variant="ghost" 
-                               size="sm"
-                               onClick={() => toggleFlagIncorrect(scan)}
-                               title={isIncorrect ? "Verwijder markering als incorrect" : "Markeer als incorrect"}
-                               className={isIncorrect ? "text-purple-600 hover:text-purple-700" : "hover:text-purple-600"}
-                             >
-                               {isIncorrect ? <FlagOff className="h-4 w-4" /> : <Flag className="h-4 w-4" />}
-                             </Button>
+                              {scan.source_table === 'ai_scan_results' && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => toggleFlagIncorrect(scan)}
+                                  title={isIncorrect ? "Verwijder markering als incorrect" : "Markeer als incorrect"}
+                                  className={isIncorrect ? "text-purple-600 hover:text-purple-700" : "hover:text-purple-600"}
+                                >
+                                  {isIncorrect ? <FlagOff className="h-4 w-4" /> : <Flag className="h-4 w-4" />}
+                                </Button>
+                              )}
                             <Button 
                               variant="ghost" 
                               size="sm"
@@ -823,14 +887,14 @@ const AIScanOverview = () => {
 
       {/* Detail Modal */}
       <AIScanDetailModal
-        scan={selectedScan}
+        scan={selectedScan ? convertToAIScanResult(selectedScan) : null}
         open={showDetailModal}
         onOpenChange={setShowDetailModal}
       />
 
       {/* Edit Modal */}
       <EditScanModal
-        scan={scanToEdit}
+        scan={scanToEdit ? convertToAIScanResult(scanToEdit) : null}
         isOpen={showEditModal}
         onClose={() => {
           setShowEditModal(false);
@@ -841,7 +905,7 @@ const AIScanOverview = () => {
 
       {/* Delete Dialog */}
       <DeleteScanDialog
-        scan={scanToDelete}
+        scan={scanToDelete ? convertToAIScanResult(scanToDelete) : null}
         isOpen={showDeleteDialog}
         onClose={() => {
           setShowDeleteDialog(false);
@@ -852,7 +916,7 @@ const AIScanOverview = () => {
 
       {/* Comments Modal */}
       <CommentsModal
-        scan={scanToComment}
+        scan={scanToComment ? convertToAIScanResult(scanToComment) : null}
         isOpen={showCommentsModal}
         onClose={() => {
           setShowCommentsModal(false);

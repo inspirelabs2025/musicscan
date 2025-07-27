@@ -5,11 +5,11 @@ export const useUnifiedScansStats = () => {
   return useQuery({
     queryKey: ["unified-scans-stats"],
     queryFn: async () => {
-      // Fetch data from all three tables
+      // Fetch data from all three tables for the current user
       const [aiScansResult, cdScansResult, vinylScansResult] = await Promise.all([
-        supabase.from("ai_scan_results").select("*"),
-        supabase.from("cd_scan").select("*"),
-        supabase.from("vinyl2_scan").select("*")
+        supabase.from("ai_scan_results").select("*").eq("user_id", (await supabase.auth.getUser()).data.user?.id),
+        supabase.from("cd_scan").select("*").eq("user_id", (await supabase.auth.getUser()).data.user?.id),
+        supabase.from("vinyl2_scan").select("*").eq("user_id", (await supabase.auth.getUser()).data.user?.id)
       ]);
 
       if (aiScansResult.error) throw aiScansResult.error;

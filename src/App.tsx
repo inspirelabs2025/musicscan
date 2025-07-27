@@ -23,6 +23,7 @@ import AIScan from "./pages/AIScan";
 import AIScanOverview from "./pages/AIScanOverview";
 import AIScanV2 from "./pages/AIScanV2";
 import AIScanV2Overview from "./pages/AIScanV2Overview";
+import UnifiedScanOverview from "./pages/UnifiedScanOverview";
 import MyCollection from "./pages/MyCollection";
 import MyShop from "./pages/MyShop";
 import PublicShop from "./pages/PublicShop";
@@ -94,6 +95,11 @@ const App = () => {
             <Route path="/ai-scan-v2-overview" element={
               <ProtectedRoute>
                 <AIScanV2Overview />
+              </ProtectedRoute>
+            } />
+            <Route path="/unified-scan-overview" element={
+              <ProtectedRoute>
+                <UnifiedScanOverview />
               </ProtectedRoute>
             } />
             <Route path="/bulkerimage" element={

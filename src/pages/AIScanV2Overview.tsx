@@ -10,7 +10,11 @@ import { nl } from 'date-fns/locale';
 import type { AIScanResult } from '@/hooks/useAIScans';
 
 export default function AIScanV2Overview() {
-  const { data, isLoading, error } = useAIScans();
+  const { data, isLoading, error } = useAIScans({ 
+    pageSize: 1000,
+    sortField: 'created_at',
+    sortDirection: 'desc'
+  });
   const scans = data?.data || [];
   const [selectedScan, setSelectedScan] = useState<AIScanResult | null>(null);
   const [modalOpen, setModalOpen] = useState(false);

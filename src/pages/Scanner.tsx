@@ -440,8 +440,6 @@ const Scanner = () => {
         <div className="absolute top-1/2 right-10 animate-pulse delay-800">🎹</div>
       </div>
       
-      <Navigation />
-      
       {/* Scanner Header with Logout */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg relative">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">

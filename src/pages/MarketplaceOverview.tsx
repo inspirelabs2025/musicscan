@@ -187,7 +187,6 @@ export default function MarketplaceOverview() {
   };
   if (loading) {
     return <>
-        <Navigation />
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-vinyl-purple/5 relative">
           {/* Musical Background Elements */}
           <div className="fixed inset-0 overflow-hidden pointer-events-none">

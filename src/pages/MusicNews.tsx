@@ -162,11 +162,6 @@ export default function MusicNews() {
     </div>;
   const data = filteredData();
   return <div className="min-h-screen bg-background">
-      <header className="bg-card border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <Navigation />
-        </div>
-      </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Page Header */}

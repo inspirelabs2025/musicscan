@@ -53,11 +53,6 @@ export default function AIScanV2Overview() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-14 items-center">
-            <Navigation />
-          </div>
-        </header>
         <div className="p-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-center h-64">
@@ -73,11 +68,6 @@ export default function AIScanV2Overview() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-14 items-center">
-            <Navigation />
-          </div>
-        </header>
         <div className="p-4">
           <div className="max-w-6xl mx-auto">
             <Card>
@@ -93,12 +83,6 @@ export default function AIScanV2Overview() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <Navigation />
-        </div>
-      </header>
 
       <div className="p-4">
         <div className="max-w-6xl mx-auto space-y-6">

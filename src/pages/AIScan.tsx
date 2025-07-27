@@ -223,12 +223,6 @@ export default function AIScan() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <Navigation />
-        </div>
-      </header>
 
       <div className="p-4">
         <div className="max-w-4xl mx-auto space-y-6">

@@ -451,7 +451,6 @@ const BulkerImage = () => {
                 Terug
               </Button>
             </Link>
-            <Navigation />
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Bulk Image Scan</h1>
             </div>

@@ -103,7 +103,6 @@ export default function CollectionOverview() {
 
   return (
     <>
-      <Navigation />
       <div className="min-h-screen bg-gradient-to-br from-background via-card to-accent/5 relative overflow-hidden">
         {/* Animated Musical Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

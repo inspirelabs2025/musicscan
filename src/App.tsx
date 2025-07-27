@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Navigation } from "@/components/Navigation";
 import Home from "./pages/Home";
 import Scanner from "./pages/Scanner";
+import Scan from "./pages/Scan";
 import Auth from "./pages/Auth";
 
 
@@ -69,6 +70,7 @@ const App = () => {
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Home />} />
+            <Route path="/scan" element={<Scan />} />
             <Route path="/scanner" element={
               <ProtectedRoute>
                 <Scanner />

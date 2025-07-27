@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn } from "lucide-react";
+import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -18,7 +18,6 @@ import { useAuth } from "@/contexts/AuthContext";
 const navigationItems = [
   { title: "Muzieknieuws", url: "/news", icon: Newspaper },
   { title: "Marketplace", url: "/marketplace-overview", icon: ShoppingCart },
-  { title: "Collection", url: "/collection-overview", icon: Archive },
   { title: "Mijn Winkel", url: "/my-shop", icon: Store }
 ];
 
@@ -35,19 +34,26 @@ const scanMenuItems = [
   { title: "AI-Scan Overview", url: "/ai-scan-v2-overview", icon: Database }
 ];
 
-const profileMenuItems = [
-  { title: "Mijn Collectie", url: "/my-collection", icon: Music }
+const collectionMenuItems = [
+  { title: "Mijn Collectie", url: "/my-collection", icon: Music },
+  { title: "Collectie Inzicht", url: "/collection-overview", icon: BarChart3 },
+  { title: "Muziek Analyse", url: "/ai-analysis", icon: Brain },
+  { title: "Chat met je Muziek", url: "/collection-chat", icon: MessageCircle }
 ];
+
+const profileMenuItems = [];
 
 export function Navigation() {
   const location = useLocation();
   const currentPath = location.pathname;
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollectionMenuOpen, setIsCollectionMenuOpen] = useState(false);
   const [isScanMenuOpen, setIsScanMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
 
   const isScanPageActive = scanMenuItems.some(item => currentPath === item.url);
+  const isCollectionPageActive = collectionMenuItems.some(item => currentPath === item.url);
   const isProfilePageActive = profileMenuItems.some(item => currentPath === item.url);
 
   const NavLink = React.forwardRef<HTMLAnchorElement, { item: typeof navigationItems[0], mobile?: boolean }>(
@@ -107,6 +113,37 @@ export function Navigation() {
             
             {user && (
               <>
+                {/* Collection Dropdown */}
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className={cn(
+                    "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
+                    isCollectionPageActive && "bg-accent text-accent-foreground"
+                  )}>
+                    <Archive className="h-4 w-4 mr-2" />
+                    Collection
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="grid w-[300px] gap-1 p-4">
+                      {collectionMenuItems.map((item) => (
+                        <NavigationMenuLink key={item.title} asChild>
+                          <Link
+                            to={item.url}
+                            className={cn(
+                              "flex items-center gap-2 rounded-md p-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
+                              currentPath === item.url && "bg-accent text-accent-foreground"
+                            )}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <div>
+                              <div className="font-medium">{item.title}</div>
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      ))}
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+
                 {/* Scan je collectie Dropdown */}
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className={cn(
@@ -149,39 +186,20 @@ export function Navigation() {
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="grid w-[250px] gap-1 p-4">
-                      {profileMenuItems.map((item) => (
-                        <NavigationMenuLink key={item.title} asChild>
-                          <Link
-                            to={item.url}
-                            className={cn(
-                              "flex items-center gap-2 rounded-md p-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
-                              currentPath === item.url && "bg-accent text-accent-foreground"
-                            )}
-                          >
-                            <item.icon className="h-4 w-4" />
-                            <div>
-                              <div className="font-medium">{item.title}</div>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                      ))}
-                      
                       {/* User Info and Logout */}
-                      <div className="border-t mt-2 pt-2">
-                        <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-                          <User className="h-4 w-4" />
-                          {user?.email}
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={signOut}
-                          className="w-full justify-start text-muted-foreground hover:text-primary"
-                        >
-                          <LogOut className="h-4 w-4 mr-2" />
-                          Uitloggen
-                        </Button>
+                      <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                        <User className="h-4 w-4" />
+                        {user?.email}
                       </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={signOut}
+                        className="w-full justify-start text-muted-foreground hover:text-primary"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Uitloggen
+                      </Button>
                     </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -239,59 +257,85 @@ export function Navigation() {
                    ))
                  )}
                 
-                 {user && (
-                   <>
-                     {/* Scan je collectie Section */}
-                     <div className="mt-4">
-                       <Button
-                         variant="ghost"
-                         onClick={() => setIsScanMenuOpen(!isScanMenuOpen)}
-                         className={cn(
-                           "w-full justify-start text-muted-foreground hover:text-primary",
-                           isScanPageActive && "bg-muted text-primary"
-                         )}
-                       >
-                         <ScanLine className="h-4 w-4 mr-3" />
-                         <span className="text-base">Scan je collectie</span>
-                         <ChevronDown className={cn(
-                           "h-4 w-4 ml-auto transition-transform",
-                           isScanMenuOpen && "rotate-180"
-                         )} />
-                       </Button>
-                       {isScanMenuOpen && (
-                         <div className="ml-6 mt-1 space-y-1">
-                           {scanMenuItems.map((item) => (
-                             <NavLink key={item.title} item={item} mobile />
-                           ))}
-                         </div>
-                       )}
-                     </div>
-                     
-                     {/* Profiel Section */}
-                     <div className="mt-2">
-                       <Button
-                         variant="ghost"
-                         onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                         className={cn(
-                           "w-full justify-start text-muted-foreground hover:text-primary",
-                           isProfilePageActive && "bg-muted text-primary"
-                         )}
-                       >
-                         <User className="h-4 w-4 mr-3" />
-                         <span className="text-base">Profiel</span>
-                         <ChevronDown className={cn(
-                           "h-4 w-4 ml-auto transition-transform",
-                           isProfileMenuOpen && "rotate-180"
-                         )} />
-                       </Button>
-                       {isProfileMenuOpen && (
-                         <div className="ml-6 mt-1 space-y-1">
-                           {profileMenuItems.map((item) => (
-                             <NavLink key={item.title} item={item} mobile />
-                           ))}
-                         </div>
-                       )}
-                     </div>
+                  {user && (
+                    <>
+                      {/* Collection Section */}
+                      <div className="mt-4">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setIsCollectionMenuOpen(!isCollectionMenuOpen)}
+                          className={cn(
+                            "w-full justify-start text-muted-foreground hover:text-primary",
+                            isCollectionPageActive && "bg-muted text-primary"
+                          )}
+                        >
+                          <Archive className="h-4 w-4 mr-3" />
+                          <span className="text-base">Collection</span>
+                          <ChevronDown className={cn(
+                            "h-4 w-4 ml-auto transition-transform",
+                            isCollectionMenuOpen && "rotate-180"
+                          )} />
+                        </Button>
+                        {isCollectionMenuOpen && (
+                          <div className="ml-6 mt-1 space-y-1">
+                            {collectionMenuItems.map((item) => (
+                              <NavLink key={item.title} item={item} mobile />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Scan je collectie Section */}
+                      <div className="mt-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setIsScanMenuOpen(!isScanMenuOpen)}
+                          className={cn(
+                            "w-full justify-start text-muted-foreground hover:text-primary",
+                            isScanPageActive && "bg-muted text-primary"
+                          )}
+                        >
+                          <ScanLine className="h-4 w-4 mr-3" />
+                          <span className="text-base">Scan je collectie</span>
+                          <ChevronDown className={cn(
+                            "h-4 w-4 ml-auto transition-transform",
+                            isScanMenuOpen && "rotate-180"
+                          )} />
+                        </Button>
+                        {isScanMenuOpen && (
+                          <div className="ml-6 mt-1 space-y-1">
+                            {scanMenuItems.map((item) => (
+                              <NavLink key={item.title} item={item} mobile />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Profiel Section */}
+                      <div className="mt-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                          className={cn(
+                            "w-full justify-start text-muted-foreground hover:text-primary",
+                            isProfilePageActive && "bg-muted text-primary"
+                          )}
+                        >
+                          <User className="h-4 w-4 mr-3" />
+                          <span className="text-base">Profiel</span>
+                          <ChevronDown className={cn(
+                            "h-4 w-4 ml-auto transition-transform",
+                            isProfileMenuOpen && "rotate-180"
+                          )} />
+                        </Button>
+                        {isProfileMenuOpen && (
+                          <div className="ml-6 mt-1 space-y-1">
+                            {profileMenuItems.length > 0 && profileMenuItems.map((item) => (
+                              <NavLink key={item.title} item={item} mobile />
+                            ))}
+                          </div>
+                        )}
+                      </div>
                      
                      {/* Mobile User Section */}
                      <div className="border-t mt-auto pt-4">

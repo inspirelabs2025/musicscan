@@ -89,6 +89,32 @@ const Scan = () => {
                   </p>
                 </CardContent>
               </Card>
+
+              <Card className="p-6 bg-gradient-to-br from-vinyl-purple/5 to-vinyl-gold/5 border border-vinyl-purple/10">
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-8 h-8 text-vinyl-purple" />
+                    <h3 className="text-xl font-semibold">AI Muziek Analyse</h3>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Ontdek je muzikale DNA en krijg persoonlijke inzichten over je collectie. 
+                    AI analyseert je smaak, genres en muziekgeschiedenis.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="p-6 bg-gradient-to-br from-vinyl-gold/5 to-accent/5 border border-vinyl-gold/10">
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Zap className="w-8 h-8 text-vinyl-gold" />
+                    <h3 className="text-xl font-semibold">Chat met je Collectie</h3>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Praat met een AI die alles weet over je muziekcollectie. 
+                    Krijg aanbevelingen en ontdek nieuwe albums gebaseerd op je smaak.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
 

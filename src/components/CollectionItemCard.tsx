@@ -216,6 +216,13 @@ export const CollectionItemCard = ({
               {item.label} {item.year && `(${item.year})`}
             </p>
           )}
+          {item.calculated_advice_price && (
+            <div className="mt-2">
+              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                Gescande waarde: €{item.calculated_advice_price}
+              </Badge>
+            </div>
+          )}
         </div>
 
         {showControls && (

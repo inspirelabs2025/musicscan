@@ -263,6 +263,9 @@ export default function MyCollection() {
     public: items.filter(item => item.is_public).length,
     forSale: items.filter(item => item.is_for_sale).length,
     private: items.filter(item => !item.is_public && !item.is_for_sale).length,
+    totalScannedValue: items
+      .filter(item => item.calculated_advice_price && item.calculated_advice_price > 0)
+      .reduce((total, item) => total + (item.calculated_advice_price || 0), 0),
   };
 
   if (isLoading) {
@@ -438,7 +441,7 @@ export default function MyCollection() {
         })()}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
             <div className="flex items-center justify-center mb-2">
               <Music className="w-5 h-5 text-primary" />
@@ -470,6 +473,16 @@ export default function MyCollection() {
             <div className="text-2xl font-bold">{stats.private}</div>
             <div className="text-sm text-muted-foreground">Privé</div>
           </Card>
+          
+          {stats.totalScannedValue > 0 && (
+            <Card className="p-4 text-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 backdrop-blur-sm border-blue-200">
+              <div className="flex items-center justify-center mb-2">
+                <Package className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">€{stats.totalScannedValue.toFixed(0)}</div>
+              <div className="text-sm text-blue-600 dark:text-blue-400">Gescande waarde</div>
+            </Card>
+          )}
         </div>
 
         {/* Filters and Bulk Actions */}

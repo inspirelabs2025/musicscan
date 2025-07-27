@@ -47,20 +47,20 @@ export default function MarketplaceOverview() {
     try {
       setLoading(true);
 
-      // Fetch CD scans - show ALL scanned items
+      // Fetch CD scans - show only public items from all users
       const {
         data: cdData,
         error: cdError
-      } = await supabase.from('cd_scan').select('*').order('created_at', {
+      } = await supabase.from('cd_scan').select('*').eq('is_public', true).order('created_at', {
         ascending: false
       });
       if (cdError) throw cdError;
 
-      // Fetch Vinyl scans - show ALL scanned items
+      // Fetch Vinyl scans - show only public items from all users
       const {
         data: vinylData,
         error: vinylError
-      } = await supabase.from('vinyl2_scan').select('*').order('created_at', {
+      } = await supabase.from('vinyl2_scan').select('*').eq('is_public', true).order('created_at', {
         ascending: false
       });
       if (vinylError) throw vinylError;

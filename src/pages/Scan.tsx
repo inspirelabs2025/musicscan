@@ -2,12 +2,9 @@ import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Smartphone, Camera, Disc, Sparkles, Zap } from 'lucide-react';
-
 const Scan = () => {
   const currentUrl = window.location.origin;
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background relative overflow-hidden">
+  return <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background relative overflow-hidden">
       {/* Musical Background Elements */}
       <div className="fixed inset-0 opacity-5 pointer-events-none">
         <div className="absolute top-20 left-10 text-4xl animate-bounce delay-100">🎵</div>
@@ -28,9 +25,7 @@ const Scan = () => {
               </h1>
               <Sparkles className="w-8 h-8 text-vinyl-gold animate-pulse" />
             </div>
-            <p className="text-xl text-muted-foreground">
-              Scan je vinyl en CD collectie met AI-powered herkenning
-            </p>
+            <p className="text-xl text-muted-foreground">Scan je vinyl en CD collectie met foto herkenning</p>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8 items-start">
@@ -43,14 +38,7 @@ const Scan = () => {
                 </div>
                 
                 <div className="flex justify-center p-6 bg-white rounded-xl shadow-inner">
-                  <QRCodeSVG 
-                    value={currentUrl}
-                    size={200}
-                    level="M"
-                    includeMargin={true}
-                    fgColor="#1a1a1a"
-                    bgColor="#ffffff"
-                  />
+                  <QRCodeSVG value={currentUrl} size={200} level="M" includeMargin={true} fgColor="#1a1a1a" bgColor="#ffffff" />
                 </div>
                 
                 <p className="text-muted-foreground">
@@ -85,10 +73,7 @@ const Scan = () => {
                     <Disc className="w-8 h-8 text-vinyl-gold" />
                     <h3 className="text-xl font-semibold">Voor Vinyl & CD</h3>
                   </div>
-                  <p className="text-muted-foreground">
-                    Scan zowel vinyl platen als CD's. De app herkent automatisch 
-                    welk type media je scant en past de analyse daarop aan.
-                  </p>
+                  <p className="text-muted-foreground">Scan zowel vinyl platen als CD's. Maak jouw collectie zichtbaar , ontdek de waarde.</p>
                 </CardContent>
               </Card>
 
@@ -118,8 +103,6 @@ const Scan = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Scan;

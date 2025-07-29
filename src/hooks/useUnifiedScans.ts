@@ -82,8 +82,7 @@ export const useUnifiedScans = (options: UseUnifiedScansOptions = {}) => {
           discogs_url, condition_grade, confidence_score, status, created_at, updated_at,
           user_id, photo_urls, ai_description, error_message, genre, country, format,
           style, barcode, matrix_number, comments, is_flagged_incorrect
-        `)
-        .eq("user_id", user.id);
+        `);
 
       if (searchTerm) {
         aiQuery = aiQuery.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
@@ -104,8 +103,7 @@ export const useUnifiedScans = (options: UseUnifiedScansOptions = {}) => {
           style, matrix_number, calculated_advice_price, lowest_price, median_price,
           highest_price, is_public, is_for_sale, shop_description, marketplace_price,
           currency, front_image, back_image, barcode_image, matrix_image
-        `)
-        .eq("user_id", user.id);
+        `);
 
       if (searchTerm) {
         cdQuery = cdQuery.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
@@ -120,8 +118,7 @@ export const useUnifiedScans = (options: UseUnifiedScansOptions = {}) => {
           style, matrix_number, calculated_advice_price, lowest_price, median_price,
           highest_price, is_public, is_for_sale, shop_description, marketplace_price,
           currency, catalog_image, matrix_image, additional_image
-        `)
-        .eq("user_id", user.id);
+        `);
 
       if (searchTerm) {
         vinylQuery = vinylQuery.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
@@ -283,9 +280,9 @@ export const useUnifiedScansStats = () => {
       if (!user?.id) throw new Error("User not authenticated");
 
       const [aiResults, cdResults, vinylResults] = await Promise.all([
-        supabase.from("ai_scan_results").select("*").eq("user_id", user.id),
-        supabase.from("cd_scan").select("*").eq("user_id", user.id),
-        supabase.from("vinyl2_scan").select("*").eq("user_id", user.id)
+        supabase.from("ai_scan_results").select("*"),
+        supabase.from("cd_scan").select("*"),
+        supabase.from("vinyl2_scan").select("*")
       ]);
 
       if (aiResults.error) throw aiResults.error;

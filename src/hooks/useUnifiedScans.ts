@@ -142,6 +142,18 @@ export const useUnifiedScans = (options: UseUnifiedScansOptions = {}) => {
 
       const results = await Promise.all(queries);
       
+      // Debug logging to track record counts from each table
+      console.log('🔍 useUnifiedScans Raw Query Results:', {
+        resultsCount: results.length,
+        results: results.map((result, index) => ({
+          index,
+          source: result.source,
+          recordCount: result.data?.length || 0,
+          hasError: !!result.error
+        })),
+        filters: { searchTerm, mediaTypeFilter, statusFilter }
+      });
+      
       // Normalize and combine all results
       const allItems: UnifiedScanResult[] = [];
 

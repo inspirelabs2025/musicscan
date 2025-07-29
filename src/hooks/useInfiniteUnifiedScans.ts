@@ -69,6 +69,14 @@ export const useInfiniteUnifiedScans = (options: UseInfiniteUnifiedScansOptions 
         fetchVinylScans(searchTerm, mediaTypeFilter)
       ]);
 
+      // Debug logging
+      console.log('🔍 useInfiniteUnifiedScans Data:', {
+        aiScansCount: aiScansResult.length,
+        cdScansCount: cdScansResult.length,
+        vinylScansCount: vinylScansResult.length,
+        filters: { searchTerm, mediaTypeFilter, statusFilter }
+      });
+
       // Combine and normalize all data
       const allScans: UnifiedScanResult[] = [
         ...aiScansResult.map(normalizeAIScanResult),

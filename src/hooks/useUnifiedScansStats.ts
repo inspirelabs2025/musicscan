@@ -5,11 +5,15 @@ export const useUnifiedScansStats = () => {
   return useQuery({
     queryKey: ["unified-scans-stats"],
     queryFn: async () => {
+      // Get user_id once to avoid multiple auth calls
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       // Fetch data from all three tables for the current user
       const [aiScansResult, cdScansResult, vinylScansResult] = await Promise.all([
-        supabase.from("ai_scan_results").select("*").eq("user_id", (await supabase.auth.getUser()).data.user?.id),
-        supabase.from("cd_scan").select("*").eq("user_id", (await supabase.auth.getUser()).data.user?.id),
-        supabase.from("vinyl2_scan").select("*").eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+        supabase.from("ai_scan_results").select("*").eq("user_id", user.id),
+        supabase.from("cd_scan").select("*").eq("user_id", user.id),
+        supabase.from("vinyl2_scan").select("*").eq("user_id", user.id)
       ]);
 
       if (aiScansResult.error) throw aiScansResult.error;

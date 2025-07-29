@@ -98,7 +98,10 @@ export const useInfiniteUnifiedScans = (options: UseInfiniteUnifiedScansOptions 
 
 // Helper functions to fetch data from each table
 async function fetchAIScans(searchTerm: string, mediaTypeFilter: string, statusFilter: string) {
-  let query = supabase.from("ai_scan_results").select("*");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  let query = supabase.from("ai_scan_results").select("*").eq("user_id", user.id);
 
   if (searchTerm) {
     query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
@@ -122,7 +125,10 @@ async function fetchCDScans(searchTerm: string, mediaTypeFilter: string) {
     return [];
   }
 
-  let query = supabase.from("cd_scan").select("*");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  let query = supabase.from("cd_scan").select("*").eq("user_id", user.id);
 
   if (searchTerm) {
     query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
@@ -138,7 +144,10 @@ async function fetchVinylScans(searchTerm: string, mediaTypeFilter: string) {
     return [];
   }
 
-  let query = supabase.from("vinyl2_scan").select("*");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  let query = supabase.from("vinyl2_scan").select("*").eq("user_id", user.id);
 
   if (searchTerm) {
     query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);

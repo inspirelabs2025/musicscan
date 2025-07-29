@@ -24,6 +24,14 @@ export const useUnifiedScansStats = () => {
       const cdScans = cdScansResult.data || [];
       const vinylScans = vinylScansResult.data || [];
 
+      // Debug logging to see actual counts
+      console.log('🔍 useUnifiedScansStats Debug:', {
+        aiScansCount: aiScans.length,
+        cdScansCount: cdScans.length,
+        vinylScansCount: vinylScans.length,
+        totalCalculated: aiScans.length + cdScans.length + vinylScans.length
+      });
+
       // Calculate combined statistics
       const totalScans = aiScans.length + cdScans.length + vinylScans.length;
       

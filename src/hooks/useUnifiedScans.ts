@@ -67,8 +67,6 @@ export const useUnifiedScans = (options: UseUnifiedScansOptions = {}) => {
   return useInfiniteQuery({
     queryKey: ["unified-scans", user?.id, pageSize, sortField, sortDirection, searchTerm, mediaTypeFilter, statusFilter],
     queryFn: async ({ pageParam = 0 }) => {
-      if (!user?.id) throw new Error("User not authenticated");
-
       const offset = pageParam * pageSize;
       
       // Fetch from all tables in parallel
@@ -266,7 +264,6 @@ export const useUnifiedScans = (options: UseUnifiedScansOptions = {}) => {
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: 0,
-    enabled: !!user?.id,
   });
 };
 
@@ -277,8 +274,6 @@ export const useUnifiedScansStats = () => {
   return useInfiniteQuery({
     queryKey: ["unified-scans-stats", user?.id],
     queryFn: async () => {
-      if (!user?.id) throw new Error("User not authenticated");
-
       const [aiResults, cdResults, vinylResults] = await Promise.all([
         supabase.from("ai_scan_results").select("*"),
         supabase.from("cd_scan").select("*"),
@@ -319,6 +314,5 @@ export const useUnifiedScansStats = () => {
     },
     initialPageParam: 0,
     getNextPageParam: () => undefined,
-    enabled: !!user?.id,
   });
 };

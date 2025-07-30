@@ -30,6 +30,7 @@ import PublicShop from "./pages/PublicShop";
 import PublicCollection from "./pages/PublicCollection";
 import PublicCatalog from "./pages/PublicCatalog";
 import PublicShopsOverview from "./pages/PublicShopsOverview";
+import UserScans from "./pages/UserScans";
 import AlbumDetail from "./pages/AlbumDetail";
 import ReleaseDetail from "./pages/ReleaseDetail";
 import MusicNews from "./pages/MusicNews";
@@ -147,6 +148,7 @@ const App = () => {
         <Route path="/release/:releaseId" element={<ReleaseDetail />} />
         <Route path="/catalog" element={<PublicCatalog />} />
         <Route path="/shops" element={<PublicShopsOverview />} />
+        <Route path="/user-scans" element={<UserScans />} />
             <Route path="/news" element={<MusicNews />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

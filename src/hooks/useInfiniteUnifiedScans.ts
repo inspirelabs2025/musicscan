@@ -120,7 +120,7 @@ export const useInfiniteUnifiedScans = (options: UseInfiniteUnifiedScansOptions 
 
 // Helper functions to fetch data from each table
 async function fetchAIScans(searchTerm: string, mediaTypeFilter: string, statusFilter: string) {
-  // Fetch AI scans with pagination to get all records (Supabase limit is 1000)
+  // Use the same pagination logic as useDirectScans to fetch ALL AI records
   const allAIScans = [];
   let offset = 0;
   const pageSize = 1000;
@@ -129,16 +129,15 @@ async function fetchAIScans(searchTerm: string, mediaTypeFilter: string, statusF
     let query = supabase
       .from("ai_scan_results")
       .select("*")
+      .order("created_at", { ascending: false })
       .range(offset, offset + pageSize - 1);
 
+    // Apply search filter
     if (searchTerm) {
       query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
     }
 
-    if (mediaTypeFilter && mediaTypeFilter !== "all") {
-      query = query.eq("media_type", mediaTypeFilter);
-    }
-
+    // Apply status filter
     if (statusFilter && statusFilter !== "all") {
       query = query.eq("status", statusFilter);
     }

@@ -74,13 +74,7 @@ serve(async (req) => {
           }
         ],
         temperature: 0.2,
-        max_tokens: 1500,
-        top_p: 0.9,
-        return_images: false,
-        return_related_questions: false,
-        search_recency_filter: 'month',
-        frequency_penalty: 1,
-        presence_penalty: 0
+        max_tokens: 1500
       }),
     });
 

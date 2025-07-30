@@ -17,7 +17,7 @@ export const useDirectScans = () => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["direct-scans", user?.id],
+    queryKey: ["direct-scans-v2", user?.id],
     queryFn: async (): Promise<DirectScanItem[]> => {
       const userId = user?.id;
 

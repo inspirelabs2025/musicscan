@@ -1,4 +1,3 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -19,8 +18,13 @@ interface DiscogsRelease {
   style: string[];
   country: string;
   uri: string;
-  release_id?: string; // Added for database release ID
+  release_id?: string;
 }
+
+// Cache for 10 minutes
+let cachedReleases: any = null;
+let cacheTime: number = 0;
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -28,6 +32,15 @@ serve(async (req) => {
   }
 
   try {
+    // Check cache first
+    const now = Date.now();
+    if (cachedReleases && (now - cacheTime) < CACHE_DURATION) {
+      console.log('Returning cached releases');
+      return new Response(JSON.stringify(cachedReleases), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const discogsToken = Deno.env.get('DISCOGS_TOKEN');
     
     if (!discogsToken) {
@@ -37,7 +50,7 @@ serve(async (req) => {
     console.log('Fetching trending releases from Discogs...');
     
     // Get trending releases from Discogs
-    const response = await fetch('https://api.discogs.com/database/search?type=release&sort=added%2Cdesc&per_page=100', {
+    const response = await fetch('https://api.discogs.com/database/search?type=release&sort=added%2Cdesc&per_page=50', {
       headers: {
         'Authorization': `Discogs token=${discogsToken}`,
         'User-Agent': 'VinylCollector/1.0'
@@ -52,22 +65,40 @@ serve(async (req) => {
     const data = await response.json();
     console.log(`Fetched ${data.results?.length || 0} releases from Discogs API`);
     
-    // Initialize Supabase client for database operations
+    // Initialize Supabase client for optional database lookups
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Filter and format the releases - relaxed year filter
+    // Filter releases - last 3 years or no year specified
     const currentYear = new Date().getFullYear();
     const filteredReleases = data.results
       .filter((release: any) => {
-        // More relaxed filtering - last 5 years or no year specified
-        return !release.year || release.year >= (currentYear - 5);
+        return !release.year || release.year >= (currentYear - 3);
       })
       .slice(0, 20);
 
-    // Process each release and create database records
+    // Format releases without heavy database operations
     const formattedReleases: DiscogsRelease[] = [];
+    const discogsIds = filteredReleases.map((r: any) => r.id);
+    
+    // Single query to check which releases exist in database
+    let existingReleases: any = {};
+    try {
+      const { data: dbReleases } = await supabase
+        .from('releases')
+        .select('discogs_id, id')
+        .in('discogs_id', discogsIds);
+      
+      if (dbReleases) {
+        existingReleases = dbReleases.reduce((acc: any, rel: any) => {
+          acc[rel.discogs_id] = rel.id;
+          return acc;
+        }, {});
+      }
+    } catch (dbError) {
+      console.log('Database lookup failed, continuing without release_ids');
+    }
     
     for (const release of filteredReleases) {
       try {
@@ -76,59 +107,6 @@ serve(async (req) => {
         const artist = titleParts.length > 1 ? titleParts[0] : (release.artist || 'Unknown Artist');
         const title = titleParts.length > 1 ? titleParts.slice(1).join(' - ') : (titleParts[0] || 'Unknown Title');
         
-        // Call find-or-create-release to ensure the release exists in database
-        const { data: releaseData, error: releaseError } = await supabase.functions.invoke('find-or-create-release', {
-          body: {
-            discogs_id: release.id,
-            artist: artist,
-            title: title,
-            label: release.label?.[0] || null,
-            catalog_number: release.catno || null,
-            year: release.year || null,
-            format: release.format?.[0] || null,
-            genre: release.genre?.[0] || null,
-            country: release.country || null,
-            style: release.style || [],
-            discogs_url: `https://www.discogs.com${release.uri}`,
-            master_id: release.master_id || null
-          }
-        });
-
-        if (releaseError) {
-          console.error(`Error creating release ${release.id}:`, releaseError);
-        } else {
-          // Fetch artwork for the new release
-          try {
-            await supabase.functions.invoke('fetch-album-artwork', {
-              body: {
-                discogs_url: `https://www.discogs.com${release.uri}`,
-                artist: artist,
-                title: title,
-                media_type: 'release',
-                item_id: releaseData?.release_id
-              }
-            });
-            console.log(`Artwork fetch initiated for release ${release.id}`);
-          } catch (artworkError) {
-            console.error(`Error fetching artwork for release ${release.id}:`, artworkError);
-            // Continue processing even if artwork fails
-          }
-
-          // Generate AI insights for the new release
-          try {
-            await supabase.functions.invoke('album-ai-insights', {
-              body: {
-                albumId: releaseData?.release_id,
-                albumType: 'release'
-              }
-            });
-            console.log(`AI insights generation initiated for release ${release.id}`);
-          } catch (insightsError) {
-            console.error(`Error generating AI insights for release ${release.id}:`, insightsError);
-            // Continue processing even if insights generation fails
-          }
-        }
-
         const formattedRelease: DiscogsRelease = {
           id: release.id,
           title: title,
@@ -141,13 +119,10 @@ serve(async (req) => {
           style: release.style || [],
           country: release.country || '',
           uri: release.uri || '',
-          release_id: releaseData?.release_id || null
+          release_id: existingReleases[release.id] || null
         };
 
         formattedReleases.push(formattedRelease);
-        
-        // Small delay to respect rate limits
-        await new Promise(resolve => setTimeout(resolve, 100));
         
       } catch (error) {
         console.error(`Error processing release ${release.id}:`, error);
@@ -155,13 +130,19 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Processed ${formattedReleases.length} recent Discogs releases with database records`);
+    console.log(`Processed ${formattedReleases.length} recent Discogs releases`);
 
-    return new Response(JSON.stringify({
+    const result = {
       success: true,
       releases: formattedReleases,
       lastUpdated: new Date().toISOString()
-    }), {
+    };
+
+    // Cache the result
+    cachedReleases = result;
+    cacheTime = now;
+
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

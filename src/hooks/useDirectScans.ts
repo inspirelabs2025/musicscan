@@ -30,6 +30,7 @@ export const useDirectScans = () => {
       const vinylQuery = supabase
         .from("vinyl2_scan")
         .select("id, artist, title, created_at, catalog_image, user_id")
+        .order("created_at", { ascending: false })
         .limit(10000);
       
       const aiQuery = supabase
@@ -59,6 +60,9 @@ export const useDirectScans = () => {
       console.log("CD results:", cdResults.data?.length || 0);
       console.log("Vinyl results:", vinylResults.data?.length || 0);
       console.log("AI results:", aiResults.data?.length || 0);
+      console.log("CD latest date:", cdResults.data?.[0]?.created_at);
+      console.log("Vinyl latest date:", vinylResults.data?.[0]?.created_at);
+      console.log("AI latest date:", aiResults.data?.[0]?.created_at);
 
       // Transform and combine results
       const cdItems: DirectScanItem[] = (cdResults.data || []).map(item => ({

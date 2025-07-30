@@ -34,37 +34,60 @@ export const useDirectScans = () => {
         .order("created_at", { ascending: false })
         .limit(10000);
       
-      const aiQuery = supabase
-        .from("ai_scan_results")
-        .select("id, artist, title, created_at, user_id")
-        .order("created_at", { ascending: false })
-        .limit(10000);
-
       // Apply user filter only if user is logged in
       if (userId) {
         cdQuery.eq("user_id", userId);
         vinylQuery.eq("user_id", userId);
-        aiQuery.eq("user_id", userId);
       }
+
+      // Fetch AI scans with pagination to get all records (Supabase limit is 1000)
+      const fetchAllAIScans = async () => {
+        const allAIScans = [];
+        let offset = 0;
+        const pageSize = 1000;
+        
+        while (true) {
+          let aiQuery = supabase
+            .from("ai_scan_results")
+            .select("id, artist, title, created_at, user_id")
+            .order("created_at", { ascending: false })
+            .range(offset, offset + pageSize - 1);
+          
+          if (userId) {
+            aiQuery = aiQuery.eq("user_id", userId);
+          }
+          
+          const { data, error } = await aiQuery;
+          if (error) throw error;
+          
+          if (!data || data.length === 0) break;
+          
+          allAIScans.push(...data);
+          
+          if (data.length < pageSize) break;
+          offset += pageSize;
+        }
+        
+        return allAIScans;
+      };
 
       const [cdResults, vinylResults, aiResults] = await Promise.all([
         cdQuery,
         vinylQuery,
-        aiQuery
+        fetchAllAIScans()
       ]);
 
       if (cdResults.error) throw cdResults.error;
       if (vinylResults.error) throw vinylResults.error;
-      if (aiResults.error) throw aiResults.error;
 
       // Debug logging
       console.log("Direct scans debug:");
       console.log("CD results:", cdResults.data?.length || 0);
       console.log("Vinyl results:", vinylResults.data?.length || 0);
-      console.log("AI results:", aiResults.data?.length || 0);
+      console.log("AI results:", aiResults.length || 0);
       console.log("CD latest date:", cdResults.data?.[0]?.created_at);
       console.log("Vinyl latest date:", vinylResults.data?.[0]?.created_at);
-      console.log("AI latest date:", aiResults.data?.[0]?.created_at);
+      console.log("AI latest date:", aiResults[0]?.created_at);
 
       // Transform and combine results
       const cdItems: DirectScanItem[] = (cdResults.data || []).map(item => ({
@@ -87,7 +110,7 @@ export const useDirectScans = () => {
         user_id: item.user_id,
       }));
 
-      const aiItems: DirectScanItem[] = (aiResults.data || []).map(item => ({
+      const aiItems: DirectScanItem[] = (aiResults || []).map(item => ({
         id: item.id,
         artist: item.artist,
         title: item.title,

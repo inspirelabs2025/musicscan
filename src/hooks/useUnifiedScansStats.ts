@@ -9,18 +9,43 @@ export const useUnifiedScansStats = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Fetch AI scans with pagination to get all records (same logic as useInfiniteUnifiedScans)
+      const fetchAllAIScans = async () => {
+        const allAIScans = [];
+        let offset = 0;
+        const pageSize = 1000;
+        
+        while (true) {
+          const { data, error } = await supabase
+            .from("ai_scan_results")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .range(offset, offset + pageSize - 1);
+          
+          if (error) throw error;
+          
+          if (!data || data.length === 0) break;
+          
+          allAIScans.push(...data);
+          
+          if (data.length < pageSize) break;
+          offset += pageSize;
+        }
+        
+        return allAIScans;
+      };
+
       // Fetch data from all three tables for the current user
-      const [aiScansResult, cdScansResult, vinylScansResult] = await Promise.all([
-        supabase.from("ai_scan_results").select("*").eq("user_id", user.id),
+      const [aiScans, cdScansResult, vinylScansResult] = await Promise.all([
+        fetchAllAIScans(),
         supabase.from("cd_scan").select("*").eq("user_id", user.id),
         supabase.from("vinyl2_scan").select("*").eq("user_id", user.id)
       ]);
 
-      if (aiScansResult.error) throw aiScansResult.error;
       if (cdScansResult.error) throw cdScansResult.error;
       if (vinylScansResult.error) throw vinylScansResult.error;
 
-      const aiScans = aiScansResult.data || [];
       const cdScans = cdScansResult.data || [];
       const vinylScans = vinylScansResult.data || [];
 
@@ -75,7 +100,7 @@ export const useUnifiedScansStats = () => {
       }, {} as Record<string, number>);
 
       const topArtistsList = Object.entries(topArtists)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([,a], [,b]) => (b as number) - (a as number))
         .slice(0, 5)
         .map(([artist, count]) => ({ artist, count }));
 

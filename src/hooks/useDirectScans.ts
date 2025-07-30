@@ -25,6 +25,7 @@ export const useDirectScans = () => {
       const cdQuery = supabase
         .from("cd_scan")
         .select("id, artist, title, created_at, front_image, user_id")
+        .order("created_at", { ascending: false })
         .limit(10000);
       
       const vinylQuery = supabase
@@ -36,6 +37,7 @@ export const useDirectScans = () => {
       const aiQuery = supabase
         .from("ai_scan_results")
         .select("id, artist, title, created_at, user_id")
+        .order("created_at", { ascending: false })
         .limit(10000);
 
       // Apply user filter only if user is logged in

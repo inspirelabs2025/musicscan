@@ -54,6 +54,12 @@ export const useDirectScans = () => {
       if (vinylResults.error) throw vinylResults.error;
       if (aiResults.error) throw aiResults.error;
 
+      // Debug logging
+      console.log("Direct scans debug:");
+      console.log("CD results:", cdResults.data?.length || 0);
+      console.log("Vinyl results:", vinylResults.data?.length || 0);
+      console.log("AI results:", aiResults.data?.length || 0);
+
       // Transform and combine results
       const cdItems: DirectScanItem[] = (cdResults.data || []).map(item => ({
         id: item.id,
@@ -86,7 +92,12 @@ export const useDirectScans = () => {
 
       // Combine and sort by created_at
       const allItems = [...cdItems, ...vinylItems, ...aiItems];
-      return allItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      console.log("Total combined items:", allItems.length);
+      
+      const sortedItems = allItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      console.log("After sorting:", sortedItems.length);
+      
+      return sortedItems;
     },
   });
 };

@@ -19,6 +19,7 @@ interface DiscogsRelease {
   country: string;
   uri: string;
   release_id?: string;
+  stored_image?: string;
 }
 
 // Cache for 10 minutes
@@ -78,36 +79,119 @@ serve(async (req) => {
       })
       .slice(0, 20);
 
-    // Format releases without heavy database operations
-    const formattedReleases: DiscogsRelease[] = [];
-    const discogsIds = filteredReleases.map((r: any) => r.id);
+    // Fetch high-quality artwork for releases
+    const releasesWithArtwork = [];
     
-    // Single query to check which releases exist in database
-    let existingReleases: any = {};
-    try {
-      const { data: dbReleases } = await supabase
-        .from('releases')
-        .select('discogs_id, id')
-        .in('discogs_id', discogsIds);
-      
-      if (dbReleases) {
-        existingReleases = dbReleases.reduce((acc: any, rel: any) => {
-          acc[rel.discogs_id] = rel.id;
-          return acc;
-        }, {});
-      }
-    } catch (dbError) {
-      console.log('Database lookup failed, continuing without release_ids');
-    }
-    
-    for (const release of filteredReleases) {
+    // Process releases in parallel for better performance
+    const artworkPromises = filteredReleases.map(async (release: any) => {
       try {
         // Extract title and artist properly
         const titleParts = release.title?.split(' - ') || ['Unknown', 'Unknown'];
         const artist = titleParts.length > 1 ? titleParts[0] : (release.artist || 'Unknown Artist');
         const title = titleParts.length > 1 ? titleParts.slice(1).join(' - ') : (titleParts[0] || 'Unknown Title');
         
+        let highQualityImage = release.thumb || '';
+        let storedImageUrl = null;
+        
+        // Try to get high-quality image from Discogs API
+        try {
+          const discogsApiUrl = `https://api.discogs.com/releases/${release.id}`;
+          const response = await fetch(discogsApiUrl, {
+            headers: {
+              'User-Agent': 'VinylScanner/1.0',
+              'Authorization': `Discogs token=${discogsToken}`
+            }
+          });
+          
+          if (response.ok) {
+            const detailData = await response.json();
+            
+            // Look for primary image or first available image
+            if (detailData.images && detailData.images.length > 0) {
+              const primaryImage = detailData.images.find((img: any) => img.type === 'primary') || detailData.images[0];
+              highQualityImage = primaryImage.resource_url || primaryImage.uri || highQualityImage;
+              
+              // Download and store the image
+              if (highQualityImage && highQualityImage !== release.thumb) {
+                try {
+                  const imageResponse = await fetch(highQualityImage);
+                  if (imageResponse.ok) {
+                    const imageBlob = await imageResponse.blob();
+                    const arrayBuffer = await imageBlob.arrayBuffer();
+                    const fileExt = highQualityImage.includes('.jpg') ? 'jpg' : 'png';
+                    const fileName = `news-releases/${release.id}-cover.${fileExt}`;
+                    
+                    // Upload to Supabase Storage
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                      .from('vinyl_images')
+                      .upload(fileName, arrayBuffer, {
+                        contentType: `image/${fileExt}`,
+                        upsert: true
+                      });
+
+                    if (!uploadError) {
+                      // Get public URL
+                      const { data: urlData } = supabase.storage
+                        .from('vinyl_images')
+                        .getPublicUrl(fileName);
+                      
+                      storedImageUrl = urlData.publicUrl;
+                      console.log(`✅ Stored artwork for ${artist} - ${title}`);
+                    }
+                  }
+                } catch (downloadError) {
+                  console.log(`⚠️ Failed to download artwork for ${release.id}:`, downloadError);
+                }
+              }
+            }
+          }
+        } catch (apiError) {
+          console.log(`⚠️ Failed to fetch details for ${release.id}:`, apiError);
+        }
+        
+        // Check if release exists in database
+        let release_id = null;
+        try {
+          const { data: dbRelease } = await supabase
+            .from('releases')
+            .select('id')
+            .eq('discogs_id', release.id)
+            .single();
+          
+          if (dbRelease) {
+            release_id = dbRelease.id;
+          }
+        } catch (dbError) {
+          // Release doesn't exist in database, that's okay
+        }
+        
         const formattedRelease: DiscogsRelease = {
+          id: release.id,
+          title: title,
+          artist: artist,
+          year: release.year || new Date().getFullYear(),
+          thumb: storedImageUrl || highQualityImage || release.thumb || '',
+          format: release.format || [],
+          label: release.label || [],
+          genre: release.genre || [],
+          style: release.style || [],
+          country: release.country || '',
+          uri: release.uri || '',
+          release_id: release_id,
+          stored_image: storedImageUrl
+        };
+
+        return formattedRelease;
+        
+      } catch (error) {
+        console.error(`Error processing release ${release.id}:`, error);
+        
+        // Return basic release info as fallback
+        const titleParts = release.title?.split(' - ') || ['Unknown', 'Unknown'];
+        const artist = titleParts.length > 1 ? titleParts[0] : (release.artist || 'Unknown Artist');
+        const title = titleParts.length > 1 ? titleParts.slice(1).join(' - ') : (titleParts[0] || 'Unknown Title');
+        
+        return {
           id: release.id,
           title: title,
           artist: artist,
@@ -119,16 +203,14 @@ serve(async (req) => {
           style: release.style || [],
           country: release.country || '',
           uri: release.uri || '',
-          release_id: existingReleases[release.id] || null
+          release_id: null,
+          stored_image: null
         };
-
-        formattedReleases.push(formattedRelease);
-        
-      } catch (error) {
-        console.error(`Error processing release ${release.id}:`, error);
-        // Continue with the next release even if one fails
       }
-    }
+    });
+    
+    // Wait for all artwork processing to complete
+    const formattedReleases = await Promise.all(artworkPromises);
 
     console.log(`Processed ${formattedReleases.length} recent Discogs releases`);
 

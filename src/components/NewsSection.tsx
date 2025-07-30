@@ -14,6 +14,7 @@ interface DiscogsRelease {
   label: string[];
   genre: string[];
   uri: string;
+  stored_image?: string;
 }
 interface NewsItem {
   title: string;
@@ -137,8 +138,18 @@ export const NewsSection = () => {
                   <p className="text-sm text-muted-foreground">{release.artist} • {release.year}</p>
                 </CardHeader>
                 <CardContent>
-                  {release.thumb && <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                      <img src={release.thumb} alt={`${release.title} cover`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  {(release.stored_image || release.thumb) && <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                      <img 
+                        src={release.stored_image || release.thumb} 
+                        alt={`${release.title} cover`} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          // Fallback to original thumb if stored image fails
+                          if (release.stored_image && e.currentTarget.src === release.stored_image) {
+                            e.currentTarget.src = release.thumb;
+                          }
+                        }}
+                      />
                     </div>}
                   <div className="space-y-2">
                     {release.format.length > 0 && <p className="text-xs text-muted-foreground">

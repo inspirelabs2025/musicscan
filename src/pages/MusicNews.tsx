@@ -19,6 +19,7 @@ interface DiscogsRelease {
   genre: string[];
   uri: string;
   release_id?: string;
+  stored_image?: string;
 }
 interface NewsItem {
   title: string;
@@ -259,8 +260,18 @@ export default function MusicNews() {
 
         {!loading && !error && newsSource === 'discogs' && <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
             {(data as DiscogsRelease[]).map(release => <Card key={release.id} className={`group hover:shadow-lg transition-all duration-300 overflow-hidden ${viewMode === 'list' ? 'flex' : ''}`}>
-                {viewMode === 'list' && release.thumb && <div className="w-24 h-24 bg-muted flex-shrink-0">
-                    <img src={release.thumb} alt={`${release.title} cover`} className="w-full h-full object-cover" />
+                {viewMode === 'list' && (release.stored_image || release.thumb) && <div className="w-24 h-24 bg-muted flex-shrink-0">
+                    <img 
+                      src={release.stored_image || release.thumb} 
+                      alt={`${release.title} cover`} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to original thumb if stored image fails
+                        if (release.stored_image && e.currentTarget.src === release.stored_image) {
+                          e.currentTarget.src = release.thumb;
+                        }
+                      }}
+                    />
                   </div>}
                 <div className="flex-1">
                   <CardHeader className="pb-3">
@@ -270,8 +281,18 @@ export default function MusicNews() {
                     <p className="text-sm text-muted-foreground">{release.artist} • {release.year}</p>
                   </CardHeader>
                   <CardContent>
-                    {viewMode === 'grid' && release.thumb && <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                        <img src={release.thumb} alt={`${release.title} cover`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    {viewMode === 'grid' && (release.stored_image || release.thumb) && <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                        <img 
+                          src={release.stored_image || release.thumb} 
+                          alt={`${release.title} cover`} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            // Fallback to original thumb if stored image fails
+                            if (release.stored_image && e.currentTarget.src === release.stored_image) {
+                              e.currentTarget.src = release.thumb;
+                            }
+                          }}
+                        />
                       </div>}
                     <div className="space-y-2">
                       {release.format.length > 0 && <p className="text-xs text-muted-foreground">

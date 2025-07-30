@@ -24,15 +24,18 @@ export const useDirectScans = () => {
       // Build queries with optional user filtering
       const cdQuery = supabase
         .from("cd_scan")
-        .select("id, artist, title, created_at, front_image, user_id");
+        .select("id, artist, title, created_at, front_image, user_id")
+        .limit(10000);
       
       const vinylQuery = supabase
         .from("vinyl2_scan")
-        .select("id, artist, title, created_at, catalog_image, user_id");
+        .select("id, artist, title, created_at, catalog_image, user_id")
+        .limit(10000);
       
       const aiQuery = supabase
         .from("ai_scan_results")
-        .select("id, artist, title, created_at, user_id");
+        .select("id, artist, title, created_at, user_id")
+        .limit(10000);
 
       // Apply user filter only if user is logged in
       if (userId) {

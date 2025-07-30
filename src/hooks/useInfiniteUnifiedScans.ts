@@ -106,23 +106,41 @@ export const useInfiniteUnifiedScans = (options: UseInfiniteUnifiedScansOptions 
 
 // Helper functions to fetch data from each table
 async function fetchAIScans(searchTerm: string, mediaTypeFilter: string, statusFilter: string) {
-  let query = supabase.from("ai_scan_results").select("*");
+  // Fetch AI scans with pagination to get all records (Supabase limit is 1000)
+  const allAIScans = [];
+  let offset = 0;
+  const pageSize = 1000;
+  
+  while (true) {
+    let query = supabase
+      .from("ai_scan_results")
+      .select("*")
+      .range(offset, offset + pageSize - 1);
 
-  if (searchTerm) {
-    query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
+    if (searchTerm) {
+      query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
+    }
+
+    if (mediaTypeFilter && mediaTypeFilter !== "all") {
+      query = query.eq("media_type", mediaTypeFilter);
+    }
+
+    if (statusFilter && statusFilter !== "all") {
+      query = query.eq("status", statusFilter);
+    }
+    
+    const { data, error } = await query;
+    if (error) throw error;
+    
+    if (!data || data.length === 0) break;
+    
+    allAIScans.push(...data);
+    
+    if (data.length < pageSize) break;
+    offset += pageSize;
   }
-
-  if (mediaTypeFilter && mediaTypeFilter !== "all") {
-    query = query.eq("media_type", mediaTypeFilter);
-  }
-
-  if (statusFilter && statusFilter !== "all") {
-    query = query.eq("status", statusFilter);
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return data || [];
+  
+  return allAIScans;
 }
 
 async function fetchCDScans(searchTerm: string, mediaTypeFilter: string) {

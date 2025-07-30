@@ -49,6 +49,10 @@ interface UseInfiniteUnifiedScansOptions {
   statusFilter?: string;
 }
 
+// Store for all scans data to avoid refetching
+let cachedAllScans: UnifiedScanResult[] | null = null;
+let cacheKey: string | null = null;
+
 export const useInfiniteUnifiedScans = (options: UseInfiniteUnifiedScansOptions = {}) => {
   const {
     pageSize = 25,
@@ -62,36 +66,46 @@ export const useInfiniteUnifiedScans = (options: UseInfiniteUnifiedScansOptions 
   return useInfiniteQuery({
     queryKey: ["unified-scans-infinite", pageSize, sortField, sortDirection, searchTerm, mediaTypeFilter, statusFilter],
     queryFn: async ({ pageParam = 0 }) => {
-      // Fetch data from all three tables
-      const [aiScansResult, cdScansResult, vinylScansResult] = await Promise.all([
-        fetchAIScans(searchTerm, mediaTypeFilter, statusFilter),
-        fetchCDScans(searchTerm, mediaTypeFilter),
-        fetchVinylScans(searchTerm, mediaTypeFilter)
-      ]);
+      const currentCacheKey = `${sortField}-${sortDirection}-${searchTerm}-${mediaTypeFilter}-${statusFilter}`;
+      
+      // Only fetch data if it's the first page or cache is invalid
+      if (pageParam === 0 || cacheKey !== currentCacheKey) {
+        // Fetch data from all three tables
+        const [aiScansResult, cdScansResult, vinylScansResult] = await Promise.all([
+          fetchAIScans(searchTerm, mediaTypeFilter, statusFilter),
+          fetchCDScans(searchTerm, mediaTypeFilter),
+          fetchVinylScans(searchTerm, mediaTypeFilter)
+        ]);
 
-      // Debug logging
-      console.log('🔍 useInfiniteUnifiedScans Data:', {
-        aiScansCount: aiScansResult.length,
-        cdScansCount: cdScansResult.length,
-        vinylScansCount: vinylScansResult.length,
-        filters: { searchTerm, mediaTypeFilter, statusFilter }
-      });
+        // Debug logging
+        console.log('🔍 useInfiniteUnifiedScans Data:', {
+          aiScansCount: aiScansResult.length,
+          cdScansCount: cdScansResult.length,
+          vinylScansCount: vinylScansResult.length,
+          totalScans: aiScansResult.length + cdScansResult.length + vinylScansResult.length,
+          filters: { searchTerm, mediaTypeFilter, statusFilter }
+        });
 
-      // Combine and normalize all data
-      const allScans: UnifiedScanResult[] = [
-        ...aiScansResult.map(normalizeAIScanResult),
-        ...cdScansResult.map(normalizeCDScanResult),
-        ...vinylScansResult.map(normalizeVinylScanResult)
-      ];
+        // Combine and normalize all data
+        const allScans: UnifiedScanResult[] = [
+          ...aiScansResult.map(normalizeAIScanResult),
+          ...cdScansResult.map(normalizeCDScanResult),
+          ...vinylScansResult.map(normalizeVinylScanResult)
+        ];
 
-      // Apply sorting
-      const sortedScans = sortScans(allScans, sortField, sortDirection);
+        // Apply sorting
+        const sortedScans = sortScans(allScans, sortField, sortDirection);
+        
+        // Cache the sorted data
+        cachedAllScans = sortedScans;
+        cacheKey = currentCacheKey;
+      }
 
-      // Apply pagination
-      const totalCount = sortedScans.length;
+      // Use cached data for pagination
+      const totalCount = cachedAllScans?.length || 0;
       const from = pageParam * pageSize;
       const to = from + pageSize;
-      const paginatedScans = sortedScans.slice(from, to);
+      const paginatedScans = cachedAllScans?.slice(from, to) || [];
 
       return {
         data: paginatedScans,

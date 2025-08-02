@@ -851,28 +851,17 @@ const AIScanOverview = () => {
             </CardContent>
           </Card>
 
-          {/* Load More / Loading indicator */}
+          {/* Infinite scroll loading indicator */}
           <div className="flex flex-col items-center gap-4">
-            {hasNextPage && (
-              <Button 
-                onClick={() => fetchNextPage()} 
-                disabled={isFetchingNextPage}
-                variant="outline"
-                className="w-full max-w-sm"
-              >
-                {isFetchingNextPage ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                    Laden...
-                  </>
-                ) : (
-                  'Laad meer'
-                )}
-              </Button>
+            {isFetchingNextPage && (
+              <div className="flex items-center gap-2 py-4">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <span className="text-sm text-muted-foreground">Laden...</span>
+              </div>
             )}
             
             {!hasNextPage && filteredScans.length > 0 && (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground py-4">
                 {showDuplicatesOnly 
                   ? `${filteredScans.length} duplicaten geladen` 
                   : `Alle ${totalCount} resultaten geladen`}

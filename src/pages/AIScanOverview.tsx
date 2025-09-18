@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatCard } from "@/components/StatCard";
 import { AIScanDetailModal } from "@/components/AIScanDetailModal";
 import { EditScanModal } from "@/components/EditScanModal";
 import { DeleteScanDialog } from "@/components/DeleteScanDialog";
 import { CommentsModal } from "@/components/CommentsModal";
 import { ImageLightboxModal } from "@/components/ImageLightboxModal";
+import { VerhaalTab } from "@/components/VerhaalTab";
 import { 
   Table, 
   TableBody, 
@@ -43,7 +45,8 @@ import {
   MessageSquare,
   X,
   Loader2,
-  Users
+  Users,
+  FileText
 } from "lucide-react";
 import { useInfiniteUnifiedScans, UnifiedScanResult } from "@/hooks/useInfiniteUnifiedScans";
 import { useUnifiedScansStats } from "@/hooks/useUnifiedScansStats";
@@ -408,7 +411,6 @@ const AIScanOverview = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           {/* Header */}
@@ -454,6 +456,30 @@ const AIScanOverview = () => {
               />
             </div>
           )}
+
+          {/* Enhanced Tabs */}
+          <Tabs defaultValue="scans" className="w-full">
+            <div className="overflow-x-auto pb-2">
+              <TabsList className="grid w-full grid-cols-2 min-w-max sm:min-w-0 bg-white/10 backdrop-blur-md border border-white/20 p-1 rounded-xl">
+                <TabsTrigger 
+                  value="scans" 
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                >
+                  <Scan className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">📱 Scans</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="verhalen" 
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                >
+                  <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">📚 Verhalen</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            {/* Tab Contents */}
+            <TabsContent value="scans" className="space-y-6 animate-fade-in">
 
           {/* Filters */}
           <Card>
@@ -861,15 +887,21 @@ const AIScanOverview = () => {
             )}
             
             {!hasNextPage && filteredScans.length > 0 && (
-              <div className="text-sm text-muted-foreground py-4">
-                {showDuplicatesOnly 
-                  ? `${filteredScans.length} duplicaten geladen` 
-                  : `Alle ${totalCount} resultaten geladen`}
-              </div>
-            )}
-            
-            <div ref={loadingRef} className="h-4" />
-          </div>
+            <div className="text-sm text-muted-foreground py-4">
+              {showDuplicatesOnly 
+                ? `${filteredScans.length} duplicaten geladen` 
+                : `Alle ${totalCount} resultaten geladen`}
+            </div>
+          )}
+          
+          <div ref={loadingRef} className="h-4" />
+        </div>
+            </TabsContent>
+
+            <TabsContent value="verhalen" className="space-y-6 animate-fade-in">
+              <VerhaalTab />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 

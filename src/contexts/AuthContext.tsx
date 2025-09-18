@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = async (email: string, password: string, firstName: string) => {
-    const redirectUrl = `${window.location.origin}/scanner`;
+    const redirectUrl = `${window.location.origin}/unified-scan-overview`;
     
     const { error } = await supabase.auth.signUp({
       email,

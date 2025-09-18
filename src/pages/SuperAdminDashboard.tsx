@@ -16,10 +16,17 @@ const SUPERADMIN_EMAIL = 'rogiervisser76@gmail.com';
 const SECRET_KEY = 'superadmin_secret_2024';
 
 const SuperAdminDashboard: React.FC = () => {
+  console.log('🔐 SuperAdminDashboard: Component loading...');
+  
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  console.log('🔐 SuperAdminDashboard: User state:', { 
+    email: user?.email, 
+    searchKey: searchParams.get('key') 
+  });
 
   const { data: stats, isLoading, refetch } = useSuperAdminStats();
 
@@ -27,6 +34,13 @@ const SuperAdminDashboard: React.FC = () => {
   useEffect(() => {
     const key = searchParams.get('key');
     const authorized = key === SECRET_KEY && user?.email === SUPERADMIN_EMAIL;
+    console.log('🔐 SuperAdminDashboard: Authorization check:', {
+      key,
+      userEmail: user?.email,
+      expectedEmail: SUPERADMIN_EMAIL,
+      expectedKey: SECRET_KEY,
+      authorized
+    });
     setIsAuthorized(authorized);
   }, [searchParams, user]);
 

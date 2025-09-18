@@ -59,6 +59,8 @@ export interface SuperAdminStats {
 }
 
 export const useSuperAdminStats = () => {
+  console.log('🔍 useSuperAdminStats: Hook starting...');
+  
   return useQuery<SuperAdminStats>({
     queryKey: ['superadmin-stats'],
     queryFn: async () => {

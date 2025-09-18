@@ -25,6 +25,16 @@ export default function MusicNews() {
 
   const loading = newsSource === 'discogs' ? isLoadingDiscogs : isLoadingPerplexity;
   const error = newsSource === 'discogs' ? discogsError : perplexityError;
+
+  // Debug logging
+  console.log('📊 MusicNews Debug:', {
+    newsSource,
+    discogsCount: discogsReleases?.length || 0,
+    perplexityCount: musicNews?.length || 0,
+    loading,
+    error: error?.message || error,
+    discogsData: discogsReleases?.slice(0, 2) // Log first 2 items for debugging
+  });
   // Filter and sort logic
   const filteredData = () => {
     if (newsSource === 'discogs') {
@@ -83,6 +93,15 @@ export default function MusicNews() {
         </Card>)}
     </div>;
   const data = filteredData();
+  
+  // Debug filtered data
+  console.log('🎯 Filtered Data Debug:', {
+    dataLength: data?.length || 0,
+    firstItem: data?.[0],
+    newsSource,
+    filters: { searchQuery, selectedGenre, selectedYear }
+  });
+  
   return <div className="min-h-screen bg-background">
 
       <main className="max-w-7xl mx-auto px-4 py-8">
@@ -295,8 +314,14 @@ export default function MusicNews() {
             <Music className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Geen resultaten gevonden</h3>
             <p className="text-muted-foreground">
-              Pas je zoekcriteria aan om meer resultaten te zien.
+              {newsSource === 'discogs' 
+                ? 'Probeer de filters aan te passen of probeer later opnieuw.' 
+                : 'Pas je zoekcriteria aan om meer resultaten te zien.'
+              }
             </p>
+            <div className="mt-4 text-sm text-muted-foreground">
+              Debug: {newsSource} - {data?.length || 0} items - Loading: {loading ? 'Yes' : 'No'} - Error: {error ? 'Yes' : 'No'}
+            </div>
           </div>}
       </main>
     </div>;

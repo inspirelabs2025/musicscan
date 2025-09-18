@@ -53,16 +53,19 @@ Deno.serve(async (req) => {
       console.log('❌ Failed to fetch Discogs data');
     }
 
-    // Fetch Perplexity news
-    console.log('Fetching Perplexity news...');
-    const perplexityResponse = await supabase.functions.invoke('music-news-perplexity');
-    let perplexityData = [];
-    if (perplexityResponse.data?.success !== false && perplexityResponse.data?.length) {
-      perplexityData = perplexityResponse.data;
-      console.log(`✅ Fetched ${perplexityData.length} Perplexity news items`);
-    } else {
-      console.log('❌ Failed to fetch Perplexity data');
-    }
+  // Fetch Perplexity news
+  console.log('Fetching Perplexity news...');
+  const perplexityResponse = await supabase.functions.invoke('music-news-perplexity');
+  let perplexityData = [];
+  if (perplexityResponse.data?.news && Array.isArray(perplexityResponse.data.news)) {
+    perplexityData = perplexityResponse.data.news;
+    console.log(`✅ Fetched ${perplexityData.length} Perplexity news items`);
+  } else if (perplexityResponse.data && Array.isArray(perplexityResponse.data)) {
+    perplexityData = perplexityResponse.data;
+    console.log(`✅ Fetched ${perplexityData.length} Perplexity news items (direct array)`);
+  } else {
+    console.log('❌ Failed to fetch Perplexity data:', perplexityResponse);
+  }
 
     // Clear old cache entries
     await supabase

@@ -62,7 +62,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
+        model: 'sonar',
         messages: [
           {
             role: 'system',
@@ -73,7 +73,6 @@ serve(async (req) => {
             content: 'Get the latest 12 music news items from the past 2 weeks, including new album releases, artist announcements, concert news, industry updates, and chart news. Return as JSON array with diverse categories.'
           }
         ],
-        temperature: 0.2,
         max_tokens: 1500
       }),
     });

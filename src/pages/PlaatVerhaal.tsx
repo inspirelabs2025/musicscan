@@ -173,6 +173,12 @@ export const PlaatVerhaal: React.FC = () => {
     { name: `${artist} - ${album}`, url: `/plaat-verhaal/${slug}` }
   ];
 
+  // Clean markdown: strip YAML frontmatter and SOCIAL_POST block if present
+  const cleanedMarkdown = (blog.markdown_content || '')
+    .replace(/^---\n[\s\S]*?\n---\n?/, '')
+    .replace(/<!-- SOCIAL_POST -->[\s\S]*$/, '')
+    .trim();
+
   return (
     <>
       <ArticleStructuredData
@@ -348,7 +354,7 @@ export const PlaatVerhaal: React.FC = () => {
                     ),
                   }}
                 >
-                  {blog.markdown_content}
+                  {cleanedMarkdown}
                 </ReactMarkdown>
               </div>
             </div>

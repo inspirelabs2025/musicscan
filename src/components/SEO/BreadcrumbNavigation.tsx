@@ -80,7 +80,7 @@ export const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
       <Breadcrumb>
         <BreadcrumbList>
           {breadcrumbs.map((item, index) => (
-            <React.Fragment key={item.url}>
+            <span key={item.url} className="contents">
               <BreadcrumbItem>
                 {index === breadcrumbs.length - 1 ? (
                   <BreadcrumbPage className="flex items-center gap-2">
@@ -97,7 +97,7 @@ export const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
                 )}
               </BreadcrumbItem>
               {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-            </React.Fragment>
+            </span>
           ))}
         </BreadcrumbList>
       </Breadcrumb>

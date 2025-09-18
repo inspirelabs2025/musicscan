@@ -239,7 +239,7 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
     const yamlMatch = blogContent.match(/---\n([\s\S]*?)\n---/);
     const socialMatch = blogContent.match(/<!-- SOCIAL_POST -->\n([\s\S]*?)(?=\n|$)/);
     
-    let yamlFrontmatter = {};
+    let yamlFrontmatter: Record<string, unknown> = {};
     let socialPost = '';
 
     if (yamlMatch) {
@@ -256,7 +256,7 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
               yamlFrontmatter[key] = JSON.parse(value);
             } else if (value === 'true' || value === 'false') {
               yamlFrontmatter[key] = value === 'true';
-            } else if (!isNaN(value) && value !== '') {
+            } else if (!isNaN(value as unknown as number) && value !== '') {
               yamlFrontmatter[key] = parseFloat(value);
             } else {
               yamlFrontmatter[key] = value.replace(/^["']|["']$/g, '');
@@ -272,6 +272,12 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
       socialPost = socialMatch[1].trim();
     }
 
+    // Strip YAML front matter from markdown so only the body is stored
+    let markdownBody = blogContent;
+    if (yamlMatch) {
+      markdownBody = blogContent.replace(/^---\n[\s\S]*?\n---\n?/, '').trimStart();
+    }
+
     // Generate slug
     const slug = `${albumData.artist?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${albumData.title?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${albumData.year || 'unknown'}`.replace(/--+/g, '-');
 
@@ -283,7 +289,7 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
         album_type: albumType,
         user_id: albumData.user_id,
         yaml_frontmatter: yamlFrontmatter,
-        markdown_content: blogContent,
+        markdown_content: markdownBody,
         social_post: socialPost,
         slug: slug,
         is_published: false

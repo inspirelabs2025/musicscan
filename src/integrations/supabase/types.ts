@@ -212,6 +212,108 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_comment_votes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: []
+      }
+      blog_comments: {
+        Row: {
+          blog_post_id: string
+          content: string
+          created_at: string
+          downvotes: number | null
+          id: string
+          is_flagged: boolean | null
+          parent_comment_id: string | null
+          updated_at: string
+          upvotes: number | null
+          user_id: string
+        }
+        Insert: {
+          blog_post_id: string
+          content: string
+          created_at?: string
+          downvotes?: number | null
+          id?: string
+          is_flagged?: boolean | null
+          parent_comment_id?: string | null
+          updated_at?: string
+          upvotes?: number | null
+          user_id: string
+        }
+        Update: {
+          blog_post_id?: string
+          content?: string
+          created_at?: string
+          downvotes?: number | null
+          id?: string
+          is_flagged?: boolean | null
+          parent_comment_id?: string | null
+          updated_at?: string
+          upvotes?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      blog_context: {
+        Row: {
+          ai_model: string | null
+          blog_post_id: string
+          cached_until: string | null
+          created_at: string
+          cultural_context: Json | null
+          generated_at: string
+          historical_events: Json | null
+          id: string
+          music_scene_context: Json | null
+          updated_at: string
+        }
+        Insert: {
+          ai_model?: string | null
+          blog_post_id: string
+          cached_until?: string | null
+          created_at?: string
+          cultural_context?: Json | null
+          generated_at?: string
+          historical_events?: Json | null
+          id?: string
+          music_scene_context?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          ai_model?: string | null
+          blog_post_id?: string
+          cached_until?: string | null
+          created_at?: string
+          cultural_context?: Json | null
+          generated_at?: string
+          historical_events?: Json | null
+          id?: string
+          music_scene_context?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           album_id: string
@@ -260,6 +362,42 @@ export type Database = {
           user_id?: string
           views_count?: number | null
           yaml_frontmatter?: Json
+        }
+        Relationships: []
+      }
+      blog_reviews: {
+        Row: {
+          blog_post_id: string
+          created_at: string
+          helpful_votes: number | null
+          id: string
+          rating: number
+          review_content: string | null
+          review_title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blog_post_id: string
+          created_at?: string
+          helpful_votes?: number | null
+          id?: string
+          rating: number
+          review_content?: string | null
+          review_title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blog_post_id?: string
+          created_at?: string
+          helpful_votes?: number | null
+          id?: string
+          rating?: number
+          review_content?: string | null
+          review_title?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

@@ -1,0 +1,1 @@
+DELETE FROM blog_posts WHERE id = '5f916c81-336a-45b0-b55d-9780343cdd01';

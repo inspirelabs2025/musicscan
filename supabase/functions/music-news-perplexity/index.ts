@@ -30,6 +30,34 @@ const fallbackNewsItems: NewsItem[] = [
     source: "Muziektrends",
     publishedAt: new Date().toISOString(),
     category: "Industry"
+  },
+  {
+    title: "Streaming platforms investeren in nieuwe technologie",
+    summary: "Verbeterde audio-kwaliteit en AI-features komen eraan",
+    source: "Tech Music",
+    publishedAt: new Date().toISOString(),
+    category: "Industry"
+  },
+  {
+    title: "Concertticket verkoop record gebroken",
+    summary: "2025 wordt een topjaar voor live muziek evenementen",
+    source: "Concert News",
+    publishedAt: new Date().toISOString(),
+    category: "Concert"
+  },
+  {
+    title: "Indie artiesten profiteren van social media",
+    summary: "Nieuwe platforms helpen onafhankelijke muzikanten hun publiek te bereiken",
+    source: "Artist Today",
+    publishedAt: new Date().toISOString(),
+    category: "Artist News"
+  },
+  {
+    title: "AI-gegenereerde muziek zorgt voor debat",
+    summary: "De muziekindustrie worstelt met nieuwe technologische ontwikkelingen",
+    source: "Music Tech",
+    publishedAt: new Date().toISOString(),
+    category: "Industry"
   }
 ];
 
@@ -62,17 +90,18 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'sonar',
+        model: 'llama-3.1-sonar-small-128k-online',
         messages: [
           {
             role: 'system',
-            content: 'You are a music news curator. Provide exactly 12 recent music news items in JSON format with title, summary (max 150 chars), source, publishedAt (ISO date), url, and category fields. Focus on album releases, artist news, concert announcements, and industry updates from the last 14 days. Include diverse categories like "Album Release", "Artist News", "Concert", "Industry", "Awards", "Chart News".'
+            content: 'You are a music news curator. Search for and return exactly 12 recent music news items from the past 14 days. Return ONLY a valid JSON array with objects containing: title, summary (max 150 chars), source, publishedAt (ISO date string), url (if available), and category. Categories should be: "Album Release", "Artist News", "Concert", "Industry", "Awards", or "Chart News". Example: [{"title":"New Album Released","summary":"Artist announces new album","source":"Rolling Stone","publishedAt":"2025-09-18T12:00:00Z","url":"https://example.com","category":"Album Release"}]'
           },
           {
             role: 'user',
-            content: 'Get the latest 12 music news items from the past 2 weeks, including new album releases, artist announcements, concert news, industry updates, and chart news. Return as JSON array with diverse categories.'
+            content: 'Find the latest music news from September 2025, including new album releases, artist announcements, tour dates, music industry updates, award shows, and chart information. Return as JSON array only.'
           }
         ],
+        temperature: 0.3,
         max_tokens: 1500
       }),
     });
@@ -116,7 +145,15 @@ serve(async (req) => {
       }];
     }
 
-    // Ensure we have exactly 12 items
+    // Ensure we have exactly 12 items, pad with fallback if needed
+    while (newsItems.length < 12 && fallbackNewsItems.length > 0) {
+      const fallbackIndex = newsItems.length % fallbackNewsItems.length;
+      newsItems.push({
+        ...fallbackNewsItems[fallbackIndex],
+        publishedAt: new Date().toISOString()
+      });
+    }
+    
     newsItems = newsItems.slice(0, 12);
 
     console.log(`Fetched ${newsItems.length} music news items from Perplexity`);

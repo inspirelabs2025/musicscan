@@ -11,6 +11,7 @@ import { UserOverviewSection } from '@/components/admin/UserOverviewSection';
 import { ScanActivitySection } from '@/components/admin/ScanActivitySection';
 import { ContentAnalyticsSection } from '@/components/admin/ContentAnalyticsSection';
 import { SystemHealthSection } from '@/components/admin/SystemHealthSection';
+import { UserScansSection } from '@/components/admin/UserScansSection';
 
 const SUPERADMIN_EMAIL = 'rogiervisser76@gmail.com';
 const SECRET_KEY = 'superadmin_secret_2024';
@@ -151,8 +152,9 @@ const SuperAdminDashboard: React.FC = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="users" key={refreshKey}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="users">Gebruikers</TabsTrigger>
+            <TabsTrigger value="user-scans">User Scans</TabsTrigger>
             <TabsTrigger value="scans">Scan Activiteit</TabsTrigger>
             <TabsTrigger value="content">Content Analytics</TabsTrigger>
             <TabsTrigger value="system">Systeem Status</TabsTrigger>
@@ -160,6 +162,10 @@ const SuperAdminDashboard: React.FC = () => {
 
           <TabsContent value="users" className="mt-6">
             <UserOverviewSection stats={stats} />
+          </TabsContent>
+
+          <TabsContent value="user-scans" className="mt-6">
+            <UserScansSection stats={stats} />
           </TabsContent>
 
           <TabsContent value="scans" className="mt-6">

@@ -43,11 +43,14 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('🔐 Processing email for:', { 
       email: user.email, 
       action: email_action_type,
-      redirectTo: redirect_to 
+      redirectTo: redirect_to,
+      siteUrl: site_url 
     });
 
-    // Create confirmation URL
-    const confirmationUrl = `${site_url}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}`;
+    // Create confirmation URL using the correct token (not token_hash)
+    const confirmationUrl = `${site_url}/auth/v1/verify?token=${token}&type=${email_action_type}&redirect_to=${encodeURIComponent(redirect_to)}`;
+    
+    console.log('🔗 Generated confirmation URL:', confirmationUrl.replace(token, '***TOKEN***'));
     
     // Create the HTML email using your template
     const emailHtml = `

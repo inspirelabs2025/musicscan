@@ -46,7 +46,8 @@ import {
   X,
   Loader2,
   Users,
-  FileText
+  FileText,
+  BookOpen
 } from "lucide-react";
 import { useInfiniteUnifiedScans, UnifiedScanResult } from "@/hooks/useInfiniteUnifiedScans";
 import { useUnifiedScansStats } from "@/hooks/useUnifiedScansStats";
@@ -55,6 +56,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useProcessedRows } from "@/hooks/useProcessedRows";
 import { useDuplicateDetection } from "@/hooks/useDuplicateDetection";
 import { useMarketplaceStatus } from "@/hooks/useMarketplaceStatus";
+import { usePlaatVerhaalGenerator } from "@/hooks/usePlaatVerhaalGenerator";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -82,6 +84,7 @@ const AIScanOverview = () => {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { generateBlog, isGenerating } = usePlaatVerhaalGenerator();
   const { processedRows, addProcessedRow, resetProcessedRows: resetProcessed, isProcessed } = useProcessedRows();
   const loadingRef = useRef<HTMLDivElement>(null);
 
@@ -393,6 +396,31 @@ const AIScanOverview = () => {
       });
     }
   }, [toast, invalidateQueries]);
+
+  const handleGenerateBlog = useCallback(async (scan: UnifiedScanResult) => {
+    try {
+      if (!scan.discogs_id) {
+        toast({
+          title: "Geen Discogs ID",
+          description: "Er is een Discogs ID nodig om een verhaal te genereren.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Map the source table to album type
+      const albumType = scan.media_type === 'vinyl' ? 'vinyl' : 'cd';
+      
+      await generateBlog(scan.id, albumType);
+    } catch (error) {
+      console.error('Error generating blog:', error);
+      toast({
+        title: "Fout bij verhaal generatie",
+        description: "Er is een fout opgetreden bij het genereren van het verhaal.",
+        variant: "destructive",
+      });
+    }
+  }, [generateBlog, toast]);
 
   if (scansLoading || statsLoading) {
     return (
@@ -837,15 +865,29 @@ const AIScanOverview = () => {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                             <Button 
-                               variant="ghost" 
-                               size="sm"
-                               onClick={() => handleCommentScan(scan)}
-                               title={scan.comments ? "Bewerk opmerking" : "Voeg opmerking toe"}
-                               className={scan.comments ? "text-blue-600 hover:text-blue-700" : "hover:text-blue-600"}
-                             >
-                               <MessageSquare className="h-4 w-4" />
-                             </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleCommentScan(scan)}
+                                title={scan.comments ? "Bewerk opmerking" : "Voeg opmerking toe"}
+                                className={scan.comments ? "text-blue-600 hover:text-blue-700" : "hover:text-blue-600"}
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleGenerateBlog(scan)}
+                                disabled={isGenerating || !scan.discogs_id}
+                                title={scan.discogs_id ? "Genereer verhaal voor dit album" : "Discogs ID vereist voor verhaal generatie"}
+                                className="hover:text-purple-600"
+                              >
+                                {isGenerating ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <BookOpen className="h-4 w-4" />
+                                )}
+                              </Button>
                               {scan.source_table === 'ai_scan_results' && (
                                 <Button 
                                   variant="ghost" 

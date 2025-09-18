@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -893,6 +893,36 @@ export type Database = {
           sync_type?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      news_cache: {
+        Row: {
+          cached_at: string
+          content: Json
+          created_at: string
+          expires_at: string
+          id: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          cached_at?: string
+          content: Json
+          created_at?: string
+          expires_at?: string
+          id?: string
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          cached_at?: string
+          content?: Json
+          created_at?: string
+          expires_at?: string
+          id?: string
+          source?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1942,18 +1972,18 @@ export type Database = {
       }
       find_or_create_release: {
         Args: {
-          p_discogs_id: number
           p_artist: string
-          p_title: string
-          p_label?: string
           p_catalog_number?: string
-          p_year?: number
+          p_country?: string
+          p_discogs_id: number
+          p_discogs_url?: string
           p_format?: string
           p_genre?: string
-          p_country?: string
-          p_style?: string[]
-          p_discogs_url?: string
+          p_label?: string
           p_master_id?: number
+          p_style?: string[]
+          p_title: string
+          p_year?: number
         }
         Returns: string
       }

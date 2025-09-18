@@ -1,151 +1,72 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
 import { Music, ExternalLink, Disc3, Newspaper, Search, Filter, Grid, List, Calendar, Star, Eye } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { useNavigate } from "react-router-dom";
-interface DiscogsRelease {
-  id: number;
-  title: string;
-  artist: string;
-  year: number;
-  thumb: string;
-  format: string[];
-  label: string[];
-  genre: string[];
-  uri: string;
-  release_id?: string;
-  stored_image?: string;
-}
-interface NewsItem {
-  title: string;
-  summary: string;
-  source: string;
-  publishedAt: string;
-  url?: string;
-  category: string;
-}
-type NewsSource = 'discogs' | 'perplexity';
-type ViewMode = 'grid' | 'list';
-type SortBy = 'date' | 'title' | 'relevance';
+import { useDiscogsNews, usePerplexityNews, DiscogsRelease, NewsItem } from "@/hooks/useNewsCache";
 export default function MusicNews() {
   const navigate = useNavigate();
-  const [newsSource, setNewsSource] = useState<NewsSource>('discogs');
-  const [discogsReleases, setDiscogsReleases] = useState<DiscogsRelease[]>([]);
-  const [musicNews, setMusicNews] = useState<NewsItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const [newsSource, setNewsSource] = useState<'discogs' | 'perplexity'>('discogs');
+  
   // Enhanced state for filtering and searching
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [sortBy, setSortBy] = useState<SortBy>('date');
-  const fetchDiscogsNews = async () => {
-    setLoading(true);
-    setError(null);
-    console.log('Fetching Discogs news...');
-    try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('latest-discogs-news');
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
-      }
-      console.log('Discogs response:', data);
-      if (data?.success && data?.releases) {
-        setDiscogsReleases(data.releases);
-        console.log(`Loaded ${data.releases.length} Discogs releases`);
-      } else {
-        console.warn('No releases returned from Discogs API');
-        setDiscogsReleases([]);
-      }
-    } catch (err) {
-      console.error('Error fetching Discogs news:', err);
-      setError(`Kon geen nieuwe releases ophalen: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const fetchMusicNews = async () => {
-    setLoading(true);
-    setError(null);
-    console.log('Fetching music news...');
-    try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('music-news-perplexity');
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
-      }
-      console.log('Music news response:', data);
-      if (data?.success && data?.news) {
-        setMusicNews(data.news);
-        console.log(`Loaded ${data.news.length} music news items`);
-      } else {
-        console.warn('No news returned from Perplexity API');
-        setMusicNews([]);
-      }
-    } catch (err) {
-      console.error('Error fetching music news:', err);
-      setError(`Kon geen muzieknieuws ophalen: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    if (newsSource === 'discogs') {
-      fetchDiscogsNews();
-    } else {
-      fetchMusicNews();
-    }
-  }, [newsSource]);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState<'date' | 'title' | 'relevance'>('date');
 
+  // Use the new cached hooks
+  const { data: discogsReleases = [], isLoading: isLoadingDiscogs, error: discogsError } = useDiscogsNews();
+  const { data: musicNews = [], isLoading: isLoadingPerplexity, error: perplexityError } = usePerplexityNews();
+
+  const loading = newsSource === 'discogs' ? isLoadingDiscogs : isLoadingPerplexity;
+  const error = newsSource === 'discogs' ? discogsError : perplexityError;
   // Filter and sort logic
   const filteredData = () => {
     if (newsSource === 'discogs') {
-      let filtered = discogsReleases.filter(release => {
-        const matchesSearch = searchQuery === '' || release.title.toLowerCase().includes(searchQuery.toLowerCase()) || release.artist.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesGenre = selectedGenre === 'all' || release.genre.some(g => g.toLowerCase().includes(selectedGenre.toLowerCase()));
-        const matchesYear = selectedYear === 'all' || release.year.toString() === selectedYear;
+      let filtered = (discogsReleases as any[]).filter(release => {
+        const matchesSearch = searchQuery === '' || 
+          release.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          release.artist?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesGenre = selectedGenre === 'all' || 
+          (release.genre && release.genre.some && release.genre.some((g: string) => g.toLowerCase().includes(selectedGenre.toLowerCase())));
+        const matchesYear = selectedYear === 'all' || 
+          (release.year && release.year.toString() === selectedYear);
         return matchesSearch && matchesGenre && matchesYear;
       });
 
       // Sort releases
       if (sortBy === 'title') {
-        filtered = filtered.sort((a, b) => a.title.localeCompare(b.title));
+        filtered = filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
       } else if (sortBy === 'date') {
-        filtered = filtered.sort((a, b) => b.year - a.year);
+        filtered = filtered.sort((a, b) => (b.year || 0) - (a.year || 0));
       }
       return filtered;
     } else {
-      let filtered = musicNews.filter(item => {
-        const matchesSearch = searchQuery === '' || item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.summary.toLowerCase().includes(searchQuery.toLowerCase());
+      let filtered = (musicNews as any[]).filter(item => {
+        const matchesSearch = searchQuery === '' || 
+          item.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          item.summary?.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesSearch;
       });
 
       // Sort news
       if (sortBy === 'title') {
-        filtered = filtered.sort((a, b) => a.title.localeCompare(b.title));
+        filtered = filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
       } else if (sortBy === 'date') {
-        filtered = filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+        filtered = filtered.sort((a, b) => new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime());
       }
       return filtered;
     }
   };
 
   // Get unique genres and years for filters
-  const availableGenres = [...new Set(discogsReleases.flatMap(r => r.genre))];
-  const availableYears = [...new Set(discogsReleases.map(r => r.year))].sort((a, b) => b - a);
+  const availableGenres = [...new Set((discogsReleases as any[]).flatMap(r => r.genre || []))];
+  const availableYears = [...new Set((discogsReleases as any[]).map(r => r.year).filter(Boolean))].sort((a, b) => b - a);
   const LoadingSkeleton = () => <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
       {Array.from({
       length: 6
@@ -252,8 +173,10 @@ export default function MusicNews() {
         {loading && <LoadingSkeleton />}
         
         {error && <div className="text-center py-8">
-            <p className="text-destructive mb-4">{error}</p>
-            <Button onClick={() => newsSource === 'discogs' ? fetchDiscogsNews() : fetchMusicNews()} variant="outline">
+            <p className="text-destructive mb-4">
+              {typeof error === 'string' ? error : 'Er is een fout opgetreden bij het ophalen van de gegevens.'}
+            </p>
+            <Button onClick={() => window.location.reload()} variant="outline">
               Opnieuw proberen
             </Button>
           </div>}

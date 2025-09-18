@@ -365,5 +365,6 @@ const Home = () => {
       {/* New Users Section */}
       <NewUsersSection />
     </div>
+  );
 };
 export default Home;

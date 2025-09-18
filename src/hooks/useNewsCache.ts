@@ -7,9 +7,11 @@ export interface DiscogsRelease {
   artist: string;
   year?: number;
   artwork?: string;
-  format?: string;
-  label?: string;
-  genre?: string[];
+  thumb?: string;
+  stored_image?: string;
+  format?: string[] | string;
+  label?: string[] | string;
+  genre?: string[] | string;
   style?: string[];
   country?: string;
   uri?: string;

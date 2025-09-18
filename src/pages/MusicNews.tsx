@@ -140,7 +140,7 @@ export default function MusicNews() {
               </Select>}
 
             {/* Sort */}
-            <Select value={sortBy} onValueChange={(value: SortBy) => setSortBy(value)}>
+            <Select value={sortBy} onValueChange={(value: 'date' | 'title' | 'relevance') => setSortBy(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Sorteren" />
               </SelectTrigger>
@@ -182,16 +182,16 @@ export default function MusicNews() {
           </div>}
 
         {!loading && !error && newsSource === 'discogs' && <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-            {(data as DiscogsRelease[]).map(release => <Card key={release.id} className={`group hover:shadow-lg transition-all duration-300 overflow-hidden ${viewMode === 'list' ? 'flex' : ''}`}>
-                {viewMode === 'list' && (release.stored_image || release.thumb) && <div className="w-24 h-24 bg-muted flex-shrink-0">
+            {(data as any[]).map((release: any) => <Card key={release.id} className={`group hover:shadow-lg transition-all duration-300 overflow-hidden ${viewMode === 'list' ? 'flex' : ''}`}>
+                {viewMode === 'list' && (release.stored_image || release.thumb || release.artwork) && <div className="w-24 h-24 bg-muted flex-shrink-0">
                     <img 
-                      src={release.stored_image || release.thumb} 
+                      src={release.stored_image || release.thumb || release.artwork} 
                       alt={`${release.title} cover`} 
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         // Fallback to original thumb if stored image fails
                         if (release.stored_image && e.currentTarget.src === release.stored_image) {
-                          e.currentTarget.src = release.thumb;
+                          e.currentTarget.src = release.thumb || release.artwork || '';
                         }
                       }}
                     />
@@ -199,31 +199,37 @@ export default function MusicNews() {
                 <div className="flex-1">
                   <CardHeader className="pb-3">
                     <CardTitle className={`${viewMode === 'list' ? 'text-base' : 'text-lg'} line-clamp-1`}>
-                      {release.title}
+                      {release.title || 'Onbekende titel'}
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">{release.artist} • {release.year}</p>
+                    <p className="text-sm text-muted-foreground">{release.artist || 'Onbekende artiest'} • {release.year || 'Jaar onbekend'}</p>
                   </CardHeader>
                   <CardContent>
-                    {viewMode === 'grid' && (release.stored_image || release.thumb) && <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                    {viewMode === 'grid' && (release.stored_image || release.thumb || release.artwork) && <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
                         <img 
-                          src={release.stored_image || release.thumb} 
+                          src={release.stored_image || release.thumb || release.artwork} 
                           alt={`${release.title} cover`} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
                             // Fallback to original thumb if stored image fails
                             if (release.stored_image && e.currentTarget.src === release.stored_image) {
-                              e.currentTarget.src = release.thumb;
+                              e.currentTarget.src = release.thumb || release.artwork || '';
                             }
                           }}
                         />
                       </div>}
                     <div className="space-y-2">
-                      {release.format.length > 0 && <p className="text-xs text-muted-foreground">
-                          Format: {release.format.join(', ')}
-                        </p>}
-                       {release.genre.length > 0 && <p className="text-xs text-muted-foreground">
-                          Genre: {release.genre.slice(0, 2).join(', ')}
-                        </p>}
+                    {release.format && Array.isArray(release.format) && release.format.length > 0 && <p className="text-xs text-muted-foreground">
+                        Format: {release.format.join(', ')}
+                      </p>}
+                    {release.format && typeof release.format === 'string' && <p className="text-xs text-muted-foreground">
+                        Format: {release.format}
+                      </p>}
+                   {release.genre && Array.isArray(release.genre) && release.genre.length > 0 && <p className="text-xs text-muted-foreground">
+                        Genre: {release.genre.slice(0, 2).join(', ')}
+                      </p>}
+                   {release.genre && typeof release.genre === 'string' && <p className="text-xs text-muted-foreground">
+                        Genre: {release.genre}
+                      </p>}
                        <div className="flex items-center gap-2 mt-3">
                          {release.release_id && (
                            <Button 

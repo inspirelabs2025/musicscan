@@ -80,12 +80,12 @@ export const UserOverviewSection: React.FC<UserOverviewSectionProps> = ({ stats 
                   <div>
                     <p className="font-medium">{user.email}</p>
                     <p className="text-sm text-muted-foreground">
-                      Laatste activiteit: {new Date(user.lastActive).toLocaleDateString('nl-NL')}
+                      {user.first_name || 'Gebruiker'}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-lg">{user.scanCount}</p>
+                  <p className="font-bold text-lg">{user.scan_count}</p>
                   <p className="text-sm text-muted-foreground">scans</p>
                 </div>
               </div>
@@ -113,7 +113,7 @@ export const UserOverviewSection: React.FC<UserOverviewSectionProps> = ({ stats 
               <div className="flex items-center justify-between">
                 <span className="text-sm">Met scans</span>
                 <Badge variant="default">
-                  {stats.topUsers.filter(u => u.scanCount > 0).length}
+                  {stats.topUsers.filter(u => u.scan_count > 0).length}
                 </Badge>
               </div>
             </div>
@@ -139,7 +139,7 @@ export const UserOverviewSection: React.FC<UserOverviewSectionProps> = ({ stats 
               <div className="flex items-center justify-between">
                 <span className="text-sm">Actieve scanners</span>
                 <Badge variant="default">
-                  {stats.topUsers.filter(u => u.scanCount > 5).length}
+                  {stats.topUsers.filter(u => u.scan_count > 5).length}
                 </Badge>
               </div>
             </div>

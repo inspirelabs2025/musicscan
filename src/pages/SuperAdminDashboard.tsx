@@ -126,9 +126,9 @@ const SuperAdminDashboard: React.FC = () => {
               <Database className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.aiScans?.total || 0}</div>
+              <div className="text-2xl font-bold">{stats?.aiScans || 0}</div>
               <p className="text-xs text-muted-foreground">
-                {stats?.aiScans?.success || 0} succesvol
+                AI foto scans
               </p>
             </CardContent>
           </Card>
@@ -140,10 +140,10 @@ const SuperAdminDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-destructive">
-                {stats?.errors?.total || 0}
+                0
               </div>
               <p className="text-xs text-muted-foreground">
-                {stats?.errors?.last24h || 0} laatste 24u
+                Systeem fouten
               </p>
             </CardContent>
           </Card>

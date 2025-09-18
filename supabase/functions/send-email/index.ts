@@ -58,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>Welkom bij MusicScan!</title>
+  <title>Bevestig je MusicScan account</title>
 </head>
 <body style="margin:0; padding:0; font-family:Arial, sans-serif; background-color:#f4f4f4;">
   <table width="100%" bgcolor="#f4f4f4" cellpadding="0" cellspacing="0">
@@ -69,7 +69,7 @@ const handler = async (req: Request): Promise<Response> => {
           <tr>
             <td align="center">
               <h1 style="color:#333333;">🎶 Welkom bij MusicScan!</h1>
-              <p style="color:#777777; font-size:14px;">Je inschrijving is succesvol afgerond.</p>
+              <p style="color:#777777; font-size:14px;">Bevestig je account om te beginnen.</p>
             </td>
           </tr>
 
@@ -132,7 +132,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { error } = await resend.emails.send({
       from: 'MusicScan <noreply@musicscan.app>',
       to: [user.email],
-      subject: 'Welkom bij MusicScan - Bevestig je account',
+      subject: 'Bevestig je MusicScan account',
       html: emailHtml,
     });
 

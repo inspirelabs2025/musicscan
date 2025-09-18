@@ -200,11 +200,10 @@ serve(async (req) => {
     .slice(0, 20);
 
     // Discogs matches and confidence
-    const discogsMatches = [
-      ...aiScans.filter(scan => scan.discogs_id).length,
-      ...cdScans.filter(scan => scan.discogs_id).length,
-      ...vinylScans.filter(scan => scan.discogs_id).length
-    ].reduce((a, b) => a + b, 0);
+    const discogsMatches = 
+      aiScans.filter(scan => scan.discogs_id).length +
+      cdScans.filter(scan => scan.discogs_id).length +
+      vinylScans.filter(scan => scan.discogs_id).length;
 
     const completedAIScans = aiScans.filter(scan => scan.status === 'completed' && scan.confidence_score);
     const avgConfidence = completedAIScans.length > 0

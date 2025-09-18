@@ -173,11 +173,30 @@ export const PlaatVerhaal: React.FC = () => {
     { name: `${artist} - ${album}`, url: `/plaat-verhaal/${slug}` }
   ];
 
-  // Clean markdown: strip YAML frontmatter and SOCIAL_POST block if present
-  const cleanedMarkdown = (blog.markdown_content || '')
-    .replace(/^---\n[\s\S]*?\n---\n?/, '')
-    .replace(/<!-- SOCIAL_POST -->[\s\S]*$/, '')
-    .trim();
+  // Robuuste schoonmaak van markdown: verwijder YAML/frontmatter (ook in codeblokken) en SOCIAL_POST
+  const cleanMarkdown = (raw: string): string => {
+    if (!raw) return '';
+    let s = raw.trimStart();
+
+    // 1) Verwijder vooraan een codefence met YAML-frontmatter
+    s = s.replace(
+      /^```(?:yaml|yml)?\s*\n(?:---\s*\n)?[\s\S]*?\n---\s*\n```(?:\s*\n)?/i,
+      ''
+    );
+
+    // 2) Verwijder normale YAML frontmatter aan het begin
+    s = s.replace(/^---\s*\n[\s\S]*?\n---\s*\n?/, '');
+
+    // 3) Verwijder SOCIAL_POST blok en alles erna
+    s = s.replace(/<!--\s*SOCIAL_POST\s*-->[\s\S]*$/i, '');
+
+    // 4) Haal evt. omvattende markdown-codefence weg
+    s = s.replace(/^```(?:markdown)?\s*\n([\s\S]*?)\n```$/i, '$1');
+
+    return s.trim();
+  };
+
+  const cleanedMarkdown = cleanMarkdown(blog.markdown_content || '');
 
   return (
     <>

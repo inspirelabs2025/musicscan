@@ -235,23 +235,41 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
 
     console.log('Successfully generated blog content');
 
-    // Parse the response to extract different parts
-    const yamlMatch = blogContent.match(/---\n([\s\S]*?)\n---/);
-    const socialMatch = blogContent.match(/<!-- SOCIAL_POST -->\n([\s\S]*?)(?=\n|$)/);
-    
+    // Parse the response to extract YAML (ook als het in codefences staat) en de SOCIAL_POST
+    let content = blogContent.trimStart();
     let yamlFrontmatter: Record<string, unknown> = {};
     let socialPost = '';
 
-    if (yamlMatch) {
+    // 1) Probeer YAML in een codefence aan het begin te vinden
+    const fencedYamlMatch = content.match(/^```(?:yaml|yml)?\s*\n([\s\S]*?)\n```/i);
+    let yamlCandidate: string | null = null;
+    if (fencedYamlMatch && fencedYamlMatch.index === 0) {
+      // Als er '---' markers in staan, pak de inhoud daartussen
+      const inner = fencedYamlMatch[1];
+      const innerFrontmatter = inner.match(/---\s*\n([\s\S]*?)\n---/);
+      yamlCandidate = innerFrontmatter ? innerFrontmatter[1] : inner;
+      // Verwijder de volledige codefence van het begin
+      content = content.slice(fencedYamlMatch[0].length).trimStart();
+    }
+
+    // 2) Zo niet, probeer normale YAML frontmatter aan het begin
+    if (!yamlCandidate) {
+      const plainYamlMatch = content.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/);
+      if (plainYamlMatch) {
+        yamlCandidate = plainYamlMatch[1];
+        content = content.replace(plainYamlMatch[0], '').trimStart();
+      }
+    }
+
+    // 3) Parse YAML lijnen (eenvoudige parser, verwacht key: value of JSON arrays)
+    if (yamlCandidate) {
       try {
-        // Simple YAML parsing for this specific structure
-        const yamlString = yamlMatch[1];
-        const yamlLines = yamlString.split('\n');
+        const yamlLines = yamlCandidate.split('\n');
         yamlLines.forEach(line => {
-          const match = line.match(/^([^:]+):\s*(.*)$/);
-          if (match) {
-            const key = match[1].trim();
-            const value = match[2].trim();
+          const m = line.match(/^([^:]+):\s*(.*)$/);
+          if (m) {
+            const key = m[1].trim();
+            const value = m[2].trim();
             if (value.startsWith('[') && value.endsWith(']')) {
               yamlFrontmatter[key] = JSON.parse(value);
             } else if (value === 'true' || value === 'false') {
@@ -268,15 +286,18 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
       }
     }
 
+    // 4) Haal SOCIAL_POST op en verwijder deze uit de body
+    const socialMatch = content.match(/<!--\s*SOCIAL_POST\s*-->\s*([\s\S]*?)$/i);
     if (socialMatch) {
       socialPost = socialMatch[1].trim();
+      content = content.replace(/<!--\s*SOCIAL_POST\s*-->[\s\S]*$/i, '').trimEnd();
     }
 
-    // Strip YAML front matter from markdown so only the body is stored
-    let markdownBody = blogContent;
-    if (yamlMatch) {
-      markdownBody = blogContent.replace(/^---\n[\s\S]*?\n---\n?/, '').trimStart();
-    }
+    // 5) Als de hele body nog in een codefence zit, haal die weg
+    content = content.replace(/^```(?:markdown)?\s*\n([\s\S]*?)\n```$/i, '$1');
+
+    // Gebruik de opgeschoonde body als markdown_content
+    const markdownBody = content.trim();
 
     // Generate slug
     const slug = `${albumData.artist?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${albumData.title?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${albumData.year || 'unknown'}`.replace(/--+/g, '-');

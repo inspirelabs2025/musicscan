@@ -34,6 +34,7 @@ import UserScans from "./pages/UserScans";
 import AlbumDetail from "./pages/AlbumDetail";
 import ReleaseDetail from "./pages/ReleaseDetail";
 import MusicNews from "./pages/MusicNews";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -150,6 +151,7 @@ const App = () => {
         <Route path="/shops" element={<PublicShopsOverview />} />
         <Route path="/user-scans" element={<UserScans />} />
             <Route path="/news" element={<MusicNews />} />
+            <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>

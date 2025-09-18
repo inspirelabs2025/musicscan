@@ -14,15 +14,15 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const PLAAT_VERHAAL_PROMPT = `Je bent een muziekjournalist die "Plaat & Verhaal" blogposts schrijft in het Nederlands.
 
 Schrijf een volledige blogpost in **Markdown** met **YAML front matter** + body volgens de exacte structuur hieronder.
-Voeg onderaan een korte social post en een product card JSON toe.
+Voeg onderaan een korte social post toe.
 
-**Regels:**
+**BELANGRIJKE INSTRUCTIES:**
+- Gebruik de scan informatie ALLEEN als inspiratie voor het album
+- Het verhaal gaat over het ALBUM IN HET ALGEMEEN, niet over de specifieke persing uit de scan
+- ZOEK ZELF OP en voeg toe: opnamestudio, producer, meewerkende muzikanten, wereldwijd commercieel succes
 - Feiten moeten kloppen; bij ontbrekende data gebruik "—" of "[ontbreekt]"
-- Vermeld altijd: studio, producer, muzikanten, covers (indien bekend)
 - Schrijf helder en deskundig, in het Nederlands
-- Eindig altijd met een CTA om het album te kopen/reserveren
-- Gebruik concrete details uit de albumdata
-- Maak het verhaal levendig en persoonlijk
+- Maak het verhaal levendig en persoonlijk over het album zelf
 
 **YAML Front Matter (gebruik deze exacte veldnamen):**
 \`\`\`yaml
@@ -34,29 +34,20 @@ year: 1985
 label: "Platenmaatschappij"
 catalog: "Catalogusnummer"
 country: "Land"
-pressing: "Persing info"
-matrix: "Matrix nummer"
 studio: "Opnamestudio"
 producer: "Producer"
-musicians: "Muzikanten"
-covers: "Cover info"
+musicians: "Belangrijkste muzikanten"
 genre: "Genre"
 styles: ["Style1", "Style2"]
-condition_media: "NM"
-condition_sleeve: "VG+"
-price_eur: 25.00
-quantity: 1
-sku: "SKU123"
 images: ["image1.jpg"]
 audio_links: ["spotify_link"]
-store: "VinylVault"
 slug: "artist-album-year"
 tags: ["tag1", "tag2", "tag3"]
 meta_title: "SEO titel (max 60 chars)"
 meta_description: "SEO beschrijving (max 160 chars)"
 og_image: "og-image.jpg"
-reading_time: 4
-word_count: 800
+reading_time: 5
+word_count: 1000
 ---
 \`\`\`
 
@@ -68,42 +59,30 @@ word_count: 800
 
 ## Het verhaal
 
-[Het verhaal achter het album - studio, producer, muzikanten, covers meenemen als beschikbaar]
+[Het verhaal achter het album - context, achtergronden, waarom het ontstond]
+
+## De opnames & productie
+
+[Studio, producer, opnameproces, betrokken muzikanten - ZOEK DIT OP]
+
+## Commercieel succes & impact
+
+[Wereldwijd succes, hitlijsten, awards, culturele impact - ZOEK DIT OP]
 
 ## Luistertips
 
-[Concrete tracks om naar te luisteren]
-
-## Persing & staat
-
-[Details over deze specifieke persing en staat]
+[Concrete tracks om naar te luisteren met korte uitleg waarom]
 
 ## Voor wie is dit?
 
-[Doelgroep en waarom zij dit album zouden willen]
-
-## Prijs & meenemen
-
-[Prijs uitleg en call-to-action]
+[Doelgroep en waarom zij dit album zouden willen hebben]
 
 **Extra blokken onderaan:**
 
 <!-- SOCIAL_POST -->
-[Korte alinea van max 280 tekens + relevante hashtags]
+[Korte alinea van max 280 tekens + relevante hashtags voor social media]
 
-<!-- PRODUCT_CARD -->
-\`\`\`json
-{
-  "title": "Artiest - Album (Year)",
-  "price_eur": 25.00,
-  "condition": "NM/VG+",
-  "slug": "artist-album-year",
-  "image": "image.jpg",
-  "tags": ["genre", "year", "label"]
-}
-\`\`\`
-
-Gebruik alleen de verstrekte albumdata. Geen fantasie of aannames.`;
+VERGEET NIET: Dit verhaal gaat over het album zelf, niet over een specifieke persing of conditie.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -208,24 +187,25 @@ serve(async (req) => {
       );
     }
 
-    // Prepare album data for prompt
+    // Prepare album data for prompt - focus on general album information only
     const albumInfo = `
-ALBUM_DATA:
+ALBUM_DATA (gebruik als inspiratie voor algemeen verhaal over dit album):
 - artist: ${albumData.artist || '—'}
 - album: ${albumData.title || '—'}
 - year: ${albumData.year || '—'}
 - label: ${albumData.label || '—'}
 - catalog: ${albumData.catalog_number || '—'}
 - country: ${albumData.country || '—'}
-- pressing: ${albumData.format || '—'}
+- format: ${albumData.format || '—'}
 - matrix: ${albumData.matrix_number || '—'}
 - genre: ${albumData.genre || '—'}
 - styles: ${albumData.style ? JSON.stringify(albumData.style) : '—'}
-- condition_media: ${albumData.condition_grade || 'VG+'}
-- condition_sleeve: ${albumData.marketplace_sleeve_condition || 'VG+'}
-- price_eur: ${albumData.marketplace_price || albumData.calculated_advice_price || '—'}
 - discogs_url: ${albumData.discogs_url || '—'}
 - discogs_id: ${albumData.discogs_id || '—'}
+
+INSTRUCTIE: Gebruik deze informatie als BASIS voor een verhaal over het album zelf. 
+ZOEK ZELF OP: studio, producer, muzikanten, commercieel succes wereldwijd.
+Het verhaal gaat NIET over deze specifieke persing of conditie.
 `;
 
     console.log('Calling OpenAI with album data...');
@@ -257,12 +237,10 @@ ALBUM_DATA:
 
     // Parse the response to extract different parts
     const yamlMatch = blogContent.match(/---\n([\s\S]*?)\n---/);
-    const socialMatch = blogContent.match(/<!-- SOCIAL_POST -->\n([\s\S]*?)(?=\n<!-- |$)/);
-    const productMatch = blogContent.match(/<!-- PRODUCT_CARD -->\n```json\n([\s\S]*?)\n```/);
+    const socialMatch = blogContent.match(/<!-- SOCIAL_POST -->\n([\s\S]*?)(?=\n|$)/);
     
     let yamlFrontmatter = {};
     let socialPost = '';
-    let productCard = {};
 
     if (yamlMatch) {
       try {
@@ -294,14 +272,6 @@ ALBUM_DATA:
       socialPost = socialMatch[1].trim();
     }
 
-    if (productMatch) {
-      try {
-        productCard = JSON.parse(productMatch[1]);
-      } catch (error) {
-        console.error('Error parsing product card JSON:', error);
-      }
-    }
-
     // Generate slug
     const slug = `${albumData.artist?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${albumData.title?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${albumData.year || 'unknown'}`.replace(/--+/g, '-');
 
@@ -315,7 +285,6 @@ ALBUM_DATA:
         yaml_frontmatter: yamlFrontmatter,
         markdown_content: blogContent,
         social_post: socialPost,
-        product_card: productCard,
         slug: slug,
         is_published: false
       })

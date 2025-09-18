@@ -34,6 +34,7 @@ import UserScans from "./pages/UserScans";
 import AlbumDetail from "./pages/AlbumDetail";
 import ReleaseDetail from "./pages/ReleaseDetail";
 import MusicNews from "./pages/MusicNews";
+import TestNewsUpdate from "./pages/TestNewsUpdate";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -151,6 +152,11 @@ const App = () => {
         <Route path="/shops" element={<PublicShopsOverview />} />
         <Route path="/user-scans" element={<UserScans />} />
             <Route path="/news" element={<MusicNews />} />
+            <Route path="/test-news-update" element={
+              <ProtectedRoute>
+                <TestNewsUpdate />
+              </ProtectedRoute>
+            } />
             <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

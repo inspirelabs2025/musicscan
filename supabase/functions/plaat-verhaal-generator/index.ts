@@ -121,27 +121,73 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch album data based on type
+    // Fetch album data based on type - try multiple tables if needed
     let albumData;
+    let actualTableUsed = '';
+    
     if (albumType === 'cd') {
-      const { data, error } = await supabase
-        .from('cd_scan')
-        .select('*')
-        .eq('id', albumId)
-        .single();
-      if (error) throw error;
-      albumData = data;
+      // Try cd_scan first, then ai_scan_results
+      try {
+        const { data, error } = await supabase
+          .from('cd_scan')
+          .select('*')
+          .eq('id', albumId)
+          .single();
+        if (error && error.code !== 'PGRST116') throw error;
+        if (data) {
+          albumData = data;
+          actualTableUsed = 'cd_scan';
+        }
+      } catch (error) {
+        console.log('Not found in cd_scan, trying ai_scan_results...');
+      }
+      
+      if (!albumData) {
+        const { data, error } = await supabase
+          .from('ai_scan_results')
+          .select('*')
+          .eq('id', albumId)
+          .single();
+        if (error) throw error;
+        albumData = data;
+        actualTableUsed = 'ai_scan_results';
+      }
     } else if (albumType === 'vinyl') {
-      const { data, error } = await supabase
-        .from('vinyl2_scan')
-        .select('*')
-        .eq('id', albumId)
-        .single();
-      if (error) throw error;
-      albumData = data;
+      // Try vinyl2_scan first, then ai_scan_results
+      try {
+        const { data, error } = await supabase
+          .from('vinyl2_scan')
+          .select('*')
+          .eq('id', albumId)
+          .single();
+        if (error && error.code !== 'PGRST116') throw error;
+        if (data) {
+          albumData = data;
+          actualTableUsed = 'vinyl2_scan';
+        }
+      } catch (error) {
+        console.log('Not found in vinyl2_scan, trying ai_scan_results...');
+      }
+      
+      if (!albumData) {
+        const { data, error } = await supabase
+          .from('ai_scan_results')
+          .select('*')
+          .eq('id', albumId)
+          .single();
+        if (error) throw error;
+        albumData = data;
+        actualTableUsed = 'ai_scan_results';
+      }
     } else {
-      throw new Error("Ongeldig album type");
+      throw new Error("Ongeldig album type: " + albumType);
     }
+
+    if (!albumData) {
+      throw new Error(`Album niet gevonden met ID: ${albumId}`);
+    }
+
+    console.log(`Found album data in table: ${actualTableUsed}`);
 
     // Check if blog already exists
     const { data: existingBlog } = await supabase

@@ -408,15 +408,28 @@ const AIScanOverview = () => {
         return;
       }
 
-      // Map the source table to album type
-      const albumType = scan.media_type === 'vinyl' ? 'vinyl' : 'cd';
+      // Map the source table to album type - for ai_scan_results, use the media_type
+      let albumType: 'cd' | 'vinyl';
+      if (scan.source_table === 'ai_scan_results') {
+        albumType = scan.media_type === 'vinyl' ? 'vinyl' : 'cd';
+      } else if (scan.source_table === 'vinyl2_scan' || scan.media_type === 'vinyl') {
+        albumType = 'vinyl';
+      } else {
+        albumType = 'cd';
+      }
       
+      console.log('Generating blog for:', { id: scan.id, albumType, source: scan.source_table, media_type: scan.media_type });
       await generateBlog(scan.id, albumType);
+      
+      toast({
+        title: "Verhaal gegenereerd!",
+        description: "Het verhaal is succesvol aangemaakt.",
+      });
     } catch (error) {
       console.error('Error generating blog:', error);
       toast({
         title: "Fout bij verhaal generatie",
-        description: "Er is een fout opgetreden bij het genereren van het verhaal.",
+        description: error.message || "Er is een fout opgetreden bij het genereren van het verhaal.",
         variant: "destructive",
       });
     }

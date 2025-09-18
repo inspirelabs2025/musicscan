@@ -4,11 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, Tag, ExternalLink, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Tag, ExternalLink, ShoppingCart, Music, Disc3, Share2, Copy, Eye, Heart } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useSEO } from '@/hooks/useSEO';
 import { ArticleStructuredData } from '@/components/SEO/StructuredData';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
+import { useToast } from '@/hooks/use-toast';
 
 interface BlogPost {
   id: string;
@@ -31,6 +32,7 @@ export const PlaatVerhaal: React.FC = () => {
   const [blog, setBlog] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const { toast } = useToast();
 
   const frontmatter = blog?.yaml_frontmatter || {};
   const title = frontmatter.title || 'Plaat & Verhaal';
@@ -91,16 +93,52 @@ export const PlaatVerhaal: React.FC = () => {
     fetchBlog();
   }, [slug]);
 
+  const handleShare = async () => {
+    const shareData = {
+      title: `${artist} - ${album}`,
+      text: blog?.social_post || `Check deze review van ${artist} - ${album}!`,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        console.log('Share cancelled');
+      }
+    } else {
+      await navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`);
+      toast({
+        title: "Link gekopieerd!",
+        description: "De link is naar je klembord gekopieerd.",
+      });
+    }
+  };
+
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded mb-4 w-1/3"></div>
-          <div className="h-12 bg-muted rounded mb-6 w-2/3"></div>
-          <div className="space-y-3">
-            <div className="h-4 bg-muted rounded w-full"></div>
-            <div className="h-4 bg-muted rounded w-full"></div>
-            <div className="h-4 bg-muted rounded w-3/4"></div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        
+        <div className="relative container mx-auto px-4 py-8">
+          <div className="animate-pulse max-w-4xl mx-auto">
+            {/* Header Skeleton */}
+            <div className="h-6 bg-muted rounded mb-4 w-32"></div>
+            <div className="h-16 bg-gradient-to-r from-vinyl-gold/20 to-primary/20 rounded-xl mb-8"></div>
+            
+            {/* Content Skeleton */}
+            <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-8 border border-border/50">
+              <div className="space-y-4">
+                <div className="h-8 bg-muted rounded w-2/3"></div>
+                <div className="h-4 bg-muted rounded w-1/2"></div>
+                <div className="space-y-3 mt-8">
+                  <div className="h-4 bg-muted rounded w-full"></div>
+                  <div className="h-4 bg-muted rounded w-full"></div>
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -109,15 +147,22 @@ export const PlaatVerhaal: React.FC = () => {
 
   if (notFound || !blog) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Artikel niet gevonden</h1>
-        <p className="text-muted-foreground mb-6">
-          Het artikel dat je zoekt bestaat niet of is niet meer beschikbaar.
-        </p>
-        <Button onClick={() => navigate('/')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Terug naar home
-        </Button>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        
+        <div className="relative text-center max-w-md mx-auto px-4">
+          <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-8 border border-border/50">
+            <Disc3 className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-spin [animation-duration:8s]" />
+            <h1 className="text-2xl font-bold mb-4">Artikel niet gevonden</h1>
+            <p className="text-muted-foreground mb-6">
+              Het artikel dat je zoekt bestaat niet of is niet meer beschikbaar.
+            </p>
+            <Button onClick={() => navigate('/')} size="lg" className="group">
+              <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+              Terug naar home
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -138,163 +183,264 @@ export const PlaatVerhaal: React.FC = () => {
         image={frontmatter.og_image}
       />
       
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <BreadcrumbNavigation items={breadcrumbs} />
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate(-1)}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Terug
-        </Button>
+        {/* Floating Musical Notes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <Music className="absolute top-20 left-[10%] w-6 h-6 text-vinyl-gold/20 animate-float" style={{ animationDelay: '0s' }} />
+          <Music className="absolute top-40 right-[15%] w-4 h-4 text-primary/20 animate-float" style={{ animationDelay: '2s' }} />
+          <Music className="absolute bottom-40 left-[20%] w-5 h-5 text-vinyl-gold/30 animate-float" style={{ animationDelay: '4s' }} />
+        </div>
 
-        <article className="prose prose-lg max-w-none">
-          {/* Header */}
-          <header className="mb-8 not-prose">
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <Badge variant="outline" className="uppercase">
-                {blog.album_type}
-              </Badge>
-              {genre && (
-                <Badge variant="secondary">
-                  <Tag className="w-3 h-3 mr-1" />
-                  {genre}
+        <div className="relative container mx-auto px-4 py-8 max-w-4xl">
+          <BreadcrumbNavigation items={breadcrumbs} />
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="mb-6 hover:bg-primary/10 group"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+            Terug
+          </Button>
+
+          {/* Hero Section */}
+          <div className="relative mb-12">
+            <div className="absolute inset-0 bg-gradient-vinyl opacity-20 rounded-3xl blur-xl"></div>
+            <div className="relative bg-card/80 backdrop-blur-sm rounded-3xl border border-border/50 p-8 md:p-12">
+              {/* Header Badges */}
+              <div className="flex flex-wrap items-center gap-3 mb-6">
+                <Badge 
+                  variant="secondary" 
+                  className="bg-vinyl-gold/20 text-vinyl-gold border-vinyl-gold/30 hover:bg-vinyl-gold/30 transition-colors"
+                >
+                  <Disc3 className="w-3 h-3 mr-1" />
+                  {blog.album_type.toUpperCase()}
                 </Badge>
-              )}
-              {year && (
-                <Badge variant="outline">
-                  <Calendar className="w-3 h-3 mr-1" />
-                  {year}
-                </Badge>
-              )}
-              <Badge variant="outline">
-                <Clock className="w-3 h-3 mr-1" />
-                {readingTime} min
-              </Badge>
-            </div>
-
-            <h1 className="text-4xl font-bold leading-tight mb-4">
-              {title}
-            </h1>
-            
-            <div className="text-lg text-muted-foreground mb-6">
-              {artist} - {album} {year && `(${year})`}
-            </div>
-
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-6">
-                {tags.map((tag: string, index: number) => (
-                  <Badge key={index} variant="outline" className="text-sm">
-                    {tag}
+                {genre && (
+                  <Badge variant="outline" className="border-primary/30 hover:bg-primary/10 transition-colors">
+                    <Tag className="w-3 h-3 mr-1" />
+                    {genre}
                   </Badge>
-                ))}
+                )}
+                {year && (
+                  <Badge variant="outline" className="border-muted-foreground/30">
+                    <Calendar className="w-3 h-3 mr-1" />
+                    {year}
+                  </Badge>
+                )}
+                <Badge variant="outline" className="border-muted-foreground/30">
+                  <Clock className="w-3 h-3 mr-1" />
+                  {readingTime} min leestijd
+                </Badge>
+                <Badge variant="outline" className="border-muted-foreground/30">
+                  <Eye className="w-3 h-3 mr-1" />
+                  {blog.views_count || 0} views
+                </Badge>
               </div>
-            )}
 
-            <div className="text-sm text-muted-foreground flex items-center gap-4">
-              <span>
-                Gepubliceerd op {new Date(blog.published_at || blog.created_at).toLocaleDateString('nl-NL', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </span>
-              <span>
-                {blog.views_count || 0} views
-              </span>
+              {/* Main Title */}
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                {title}
+              </h1>
+              
+              {/* Artist & Album */}
+              <div className="text-xl md:text-2xl text-muted-foreground mb-8 font-medium">
+                <span className="text-primary">{artist}</span>
+                <span className="mx-3 text-vinyl-gold">•</span>
+                <span>{album}</span>
+                {year && <span className="text-muted-foreground/70 ml-2">({year})</span>}
+              </div>
+
+              {/* Tags */}
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-8">
+                  {tags.map((tag: string, index: number) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary" 
+                      className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors"
+                    >
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Meta Info */}
+              <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+                <span className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Gepubliceerd op {new Date(blog.published_at || blog.created_at).toLocaleDateString('nl-NL', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleShare}
+                  className="h-auto p-0 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <Share2 className="w-4 h-4 mr-1" />
+                  Delen
+                </Button>
+              </div>
             </div>
-          </header>
-
-          {/* Content */}
-          <div className="markdown-content">
-            <ReactMarkdown
-              components={{
-                h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
-                h2: ({ children }) => <h2 className="text-2xl font-semibold mt-6 mb-3">{children}</h2>,
-                h3: ({ children }) => <h3 className="text-xl font-medium mt-4 mb-2">{children}</h3>,
-                p: ({ children }) => <p className="mb-4 leading-relaxed">{children}</p>,
-                ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-1">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-1">{children}</ol>,
-                blockquote: ({ children }) => (
-                  <blockquote className="border-l-4 border-primary pl-4 italic my-4 text-muted-foreground">
-                    {children}
-                  </blockquote>
-                ),
-                code: ({ children }) => (
-                  <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
-                    {children}
-                  </code>
-                ),
-              }}
-            >
-              {blog.markdown_content}
-            </ReactMarkdown>
           </div>
-        </article>
 
-        {/* Product Card */}
-        {blog.product_card && price > 0 && (
-          <Card className="mt-8 border-primary/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">
-                    <ShoppingCart className="w-5 h-5 inline mr-2" />
-                    Deze plaat kopen
-                  </h3>
-                  <p className="text-muted-foreground mb-2">
-                    {artist} - {album}
-                  </p>
-                  <p className="text-2xl font-bold text-primary">
-                    €{price.toFixed(2)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <Button size="lg" className="mb-2">
-                    In winkelwagen
-                  </Button>
-                  <div className="text-sm text-muted-foreground">
-                    Staat: {frontmatter.condition_media}/{frontmatter.condition_sleeve}
-                  </div>
-                </div>
+          {/* Main Content */}
+          <article className="relative">
+            <div className="bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50 p-8 md:p-12">
+              <div className="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-foreground prose-p:text-foreground/90 prose-p:leading-relaxed prose-strong:text-foreground prose-blockquote:border-l-primary prose-blockquote:text-foreground/80 prose-code:bg-muted prose-code:text-foreground prose-code:px-2 prose-code:py-1 prose-code:rounded">
+                <ReactMarkdown
+                  components={{
+                    h1: ({ children }) => (
+                      <h1 className="text-3xl font-bold mt-12 mb-6 first:mt-0 bg-gradient-to-r from-primary to-vinyl-gold bg-clip-text text-transparent">
+                        {children}
+                      </h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2 className="text-2xl font-semibold mt-10 mb-5 text-foreground flex items-center gap-3">
+                        <Music className="w-6 h-6 text-vinyl-gold flex-shrink-0" />
+                        {children}
+                      </h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className="text-xl font-medium mt-8 mb-4 text-foreground">
+                        {children}
+                      </h3>
+                    ),
+                    p: ({ children }) => (
+                      <p className="mb-6 leading-relaxed text-foreground/90 text-lg">
+                        {children}
+                      </p>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="list-none pl-0 mb-6 space-y-2">
+                        {children}
+                      </ul>
+                    ),
+                    li: ({ children }) => (
+                      <li className="flex items-start gap-3 text-foreground/90">
+                        <span className="w-2 h-2 bg-vinyl-gold rounded-full mt-3 flex-shrink-0"></span>
+                        <span>{children}</span>
+                      </li>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="list-decimal pl-6 mb-6 space-y-2 text-foreground/90">
+                        {children}
+                      </ol>
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote className="border-l-4 border-primary pl-6 my-8 italic text-lg text-foreground/80 bg-primary/5 py-4 rounded-r-lg">
+                        {children}
+                      </blockquote>
+                    ),
+                    code: ({ children }) => (
+                      <code className="bg-muted px-3 py-1 rounded-md text-sm font-mono text-foreground border border-border/50">
+                        {children}
+                      </code>
+                    ),
+                  }}
+                >
+                  {blog.markdown_content}
+                </ReactMarkdown>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          </article>
 
-        {/* Social Share */}
-        {blog.social_post && (
-          <Card className="mt-6 bg-muted/50">
-            <CardContent className="p-4">
-              <h4 className="font-medium mb-2">Delen op social media:</h4>
-              <p className="text-sm text-muted-foreground">
-                {blog.social_post}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title,
-                      text: blog.social_post,
-                      url: window.location.href
-                    });
-                  } else {
-                    navigator.clipboard.writeText(`${blog.social_post}\n\n${window.location.href}`);
-                  }
-                }}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Delen
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+          {/* Product Card */}
+          {blog.product_card && price > 0 && (
+            <div className="mt-12">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-vinyl-gold/20 to-primary/20 rounded-2xl blur-xl"></div>
+                <Card className="relative bg-card/80 backdrop-blur-sm border-vinyl-gold/30 hover:border-vinyl-gold/50 transition-colors">
+                  <CardContent className="p-8">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                      <div className="flex-1">
+                        <h3 className="text-2xl font-bold mb-3 text-foreground flex items-center gap-3">
+                          <ShoppingCart className="w-6 h-6 text-vinyl-gold" />
+                          Deze plaat kopen
+                        </h3>
+                        <p className="text-lg text-muted-foreground mb-4">
+                          {artist} - {album}
+                        </p>
+                        <div className="flex items-center gap-4 mb-4">
+                          <span className="text-3xl font-bold text-vinyl-gold">
+                            €{price.toFixed(2)}
+                          </span>
+                          {frontmatter.condition_media && (
+                            <Badge variant="outline" className="border-primary/30">
+                              Staat: {frontmatter.condition_media}/{frontmatter.condition_sleeve}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        <Button size="lg" className="bg-vinyl-gold hover:bg-vinyl-gold/90 text-black font-semibold px-8 group">
+                          <ShoppingCart className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                          In winkelwagen
+                        </Button>
+                        <Button variant="outline" size="lg" className="border-primary/30 hover:bg-primary/10">
+                          <Heart className="w-5 h-5 mr-2" />
+                          Opslaan
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {/* Social Share */}
+          {blog.social_post && (
+            <div className="mt-8">
+              <Card className="bg-muted/30 backdrop-blur-sm border-border/50">
+                <CardContent className="p-6">
+                  <h4 className="font-semibold mb-3 text-foreground flex items-center gap-2">
+                    <Share2 className="w-5 h-5 text-primary" />
+                    Deel dit verhaal
+                  </h4>
+                  <p className="text-muted-foreground mb-4 italic">
+                    "{blog.social_post}"
+                  </p>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleShare}
+                      className="hover:bg-primary/10 border-primary/30"
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Delen
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(window.location.href);
+                        toast({
+                          title: "Link gekopieerd!",
+                          description: "De link is naar je klembord gekopieerd.",
+                        });
+                      }}
+                      className="hover:bg-muted/50"
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Kopieer link
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

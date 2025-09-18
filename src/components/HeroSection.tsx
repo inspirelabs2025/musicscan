@@ -26,7 +26,7 @@ export const HeroSection = () => {
           <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
             <span className="bg-gradient-vinyl bg-clip-text text-transparent">Het leukste muziekplatform</span>
             <br />
-            <span className="text-vinyl-gold text-2xl md:text-3xl">Ontdek muziek of allerlei leuke manieren</span>
+            <span className="text-vinyl-gold text-2xl md:text-3xl">Ontdek muziek op allerlei leuke manieren</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">Bekijk de laatste albums, het laatste nieuws, de leukste muziekverhalen, of bouw superslim met AI je eigen collectie, open een winkel of krijg inzicht en ontdek de waarde</p>

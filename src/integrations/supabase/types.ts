@@ -212,6 +212,57 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_posts: {
+        Row: {
+          album_id: string
+          album_type: string
+          created_at: string
+          id: string
+          is_published: boolean | null
+          markdown_content: string
+          product_card: Json | null
+          published_at: string | null
+          slug: string
+          social_post: string | null
+          updated_at: string
+          user_id: string
+          views_count: number | null
+          yaml_frontmatter: Json
+        }
+        Insert: {
+          album_id: string
+          album_type: string
+          created_at?: string
+          id?: string
+          is_published?: boolean | null
+          markdown_content: string
+          product_card?: Json | null
+          published_at?: string | null
+          slug: string
+          social_post?: string | null
+          updated_at?: string
+          user_id: string
+          views_count?: number | null
+          yaml_frontmatter: Json
+        }
+        Update: {
+          album_id?: string
+          album_type?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean | null
+          markdown_content?: string
+          product_card?: Json | null
+          published_at?: string | null
+          slug?: string
+          social_post?: string | null
+          updated_at?: string
+          user_id?: string
+          views_count?: number | null
+          yaml_frontmatter?: Json
+        }
+        Relationships: []
+      }
       cd_scan: {
         Row: {
           artist: string | null

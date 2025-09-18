@@ -37,6 +37,7 @@ import MusicNews from "./pages/MusicNews";
 import TestNewsUpdate from "./pages/TestNewsUpdate";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
+import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -152,6 +153,7 @@ const App = () => {
         <Route path="/shops" element={<PublicShopsOverview />} />
         <Route path="/user-scans" element={<UserScans />} />
             <Route path="/news" element={<MusicNews />} />
+            <Route path="/plaat-verhaal/:slug" element={<PlaatVerhaal />} />
             <Route path="/test-news-update" element={
               <ProtectedRoute>
                 <TestNewsUpdate />

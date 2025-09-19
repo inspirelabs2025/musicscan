@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ReviewsSection } from '@/components/blog/ReviewsSection';
 import { CommentsSection } from '@/components/blog/CommentsSection';
 
-import { ContextModule } from '@/components/blog/ContextModule';
+
 
 interface BlogPost {
   id: string;
@@ -470,15 +470,6 @@ export const PlaatVerhaal: React.FC = () => {
           )}
 
 
-          {/* Context Module */}
-          <div className="mt-12">
-            <ContextModule 
-              blogPostId={blog.id}
-              albumTitle={album}
-              albumArtist={artist}
-              albumYear={year}
-            />
-          </div>
 
           {/* Reviews Section */}
           <div className="mt-12">

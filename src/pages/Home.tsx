@@ -22,13 +22,8 @@ const Home = () => {
   
   console.log('🏠 Home.tsx: Auth state -', { user: !!user, loading });
 
-  // Redirect authenticated users to dashboard
-  useEffect(() => {
-    if (user && !loading) {
-      console.log('🏠 Redirecting authenticated user to dashboard');
-      navigate('/dashboard');
-    }
-  }, [user, loading, navigate]);
+  // Show logged in users a different experience but don't auto-redirect
+  // (they can still access the marketing home page if they want)
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background relative overflow-hidden">

@@ -39,13 +39,26 @@ Promise.all(
       console.log(`Regenerating ${post.name}...`);
       const result = await regenerateBlogPost(post.id, post.type as 'cd' | 'vinyl', true);
       
-      // Publish the blog post immediately after generation
+// Publish the blog post immediately after generation
       if (result?.id) {
         await supabase
           .from('blog_posts')
-          .update({ is_published: true })
+          .update({ 
+            is_published: true,
+            published_at: new Date().toISOString()
+          })
           .eq('id', result.id);
         console.log(`${post.name} regenerated and published successfully`);
+      } else {
+        // Fallback: publish by album_id when id is not returned (e.g., duplicate slug scenario)
+        await supabase
+          .from('blog_posts')
+          .update({ 
+            is_published: true,
+            published_at: new Date().toISOString()
+          })
+          .eq('album_id', post.id);
+        console.log(`${post.name} published via album_id fallback`);
       }
       
       return result;

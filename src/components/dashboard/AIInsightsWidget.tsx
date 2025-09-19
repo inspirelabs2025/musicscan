@@ -100,7 +100,7 @@ export const AIInsightsWidget = () => {
             </Link>
           </Button>
           <Button asChild size="sm" variant="outline" className="flex-1 hover:bg-vinyl-gold/10">
-            <Link to="/collection-overview?tab=quiz">
+            <Link to="/quiz">
               <Trophy className="w-4 h-4 mr-2" />
               Quiz Starten
             </Link>

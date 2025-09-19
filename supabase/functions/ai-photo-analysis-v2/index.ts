@@ -294,7 +294,7 @@ async function analyzePhotosWithOpenAI(photoUrls: string[], mediaType: string, a
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14', // Latest model
+        model: 'gpt-4o', // Reliable vision model
         messages: [
           {
             role: 'system',

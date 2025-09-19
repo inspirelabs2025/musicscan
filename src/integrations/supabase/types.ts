@@ -158,6 +158,60 @@ export type Database = {
         }
         Relationships: []
       }
+      batch_processing_status: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_batch: number | null
+          current_items: Json | null
+          failed_details: Json | null
+          failed_items: number | null
+          id: string
+          process_type: string
+          processed_items: number | null
+          started_at: string | null
+          status: string
+          stopped_at: string | null
+          successful_items: number | null
+          total_items: number | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_batch?: number | null
+          current_items?: Json | null
+          failed_details?: Json | null
+          failed_items?: number | null
+          id?: string
+          process_type: string
+          processed_items?: number | null
+          started_at?: string | null
+          status?: string
+          stopped_at?: string | null
+          successful_items?: number | null
+          total_items?: number | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_batch?: number | null
+          current_items?: Json | null
+          failed_details?: Json | null
+          failed_items?: number | null
+          id?: string
+          process_type?: string
+          processed_items?: number | null
+          started_at?: string | null
+          status?: string
+          stopped_at?: string | null
+          successful_items?: number | null
+          total_items?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       batch_uploads: {
         Row: {
           condition_grade: string | null

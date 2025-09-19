@@ -28,6 +28,7 @@ import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
 import { ChatWidget } from '@/components/dashboard/ChatWidget';
 import { QuizWidget } from '@/components/dashboard/QuizWidget';
 import { BlogPreviewWidget } from '@/components/dashboard/BlogPreviewWidget';
+import { BatchBlogGenerator } from '@/components/admin/BatchBlogGenerator';
 import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
 import { NewUsersSection } from '@/components/NewUsersSection';
 
@@ -331,6 +332,15 @@ const Dashboard = () => {
             </Card>
           </section>
         )}
+
+        {/* Admin Tools Section */}
+        <section className="mt-12 animate-fade-in delay-700">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-vinyl-purple" />
+            ⚡ Admin Tools
+          </h2>
+          <BatchBlogGenerator />
+        </section>
       </div>
     </div>
   );

@@ -15,5 +15,8 @@ verify_jwt = false
 [functions.album-cover-backfill]
 verify_jwt = false
 
+[functions.batch-blog-generator]
+verify_jwt = true
+
 [functions.collection-quiz-generator]
 verify_jwt = true

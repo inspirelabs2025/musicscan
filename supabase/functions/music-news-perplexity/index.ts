@@ -94,16 +94,16 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: 'Je bent een muzieknieuws curator. Zoek naar exacte 12 recente muzieknieuwsberichten van de afgelopen 14 dagen. Geef ALLEEN een geldige JSON array terug met objecten die bevatten: title, summary (max 150 karakters), source, publishedAt (ISO datum string), url (indien beschikbaar), en category. Antwoord alleen met JSON, geen extra tekst.'
+              content: 'Je bent een muzieknieuws curator. Zoek breed muzieknieuws van de afgelopen 24 uur. Geef ALLEEN een geldige JSON array terug met objecten die bevatten: title, summary (max 150 karakters), source, publishedAt (ISO datum string), url (indien beschikbaar), en category. Antwoord alleen met JSON, geen extra tekst.'
             },
             {
               role: 'user',
-              content: 'Vind het laatste muzieknieuws van september 2025, inclusief nieuwe albumreleases, artiest aankondigingen, tour data, muziekindustrie updates, award shows, en chart informatie. Geef alleen als JSON array terug.'
+              content: 'Vind het laatste muzieknieuws van de afgelopen 24 uur: muziek release nieuws, concert aankondigingen, algemeen muzieknieuws over artiesten, en leuke berichten over muzikanten of aanverwante songs en nummers. Geef alleen als JSON array terug.'
             }
           ],
           temperature: 0.2,
           max_tokens: 1500,
-          search_recency_filter: 'week',
+          search_recency_filter: 'day',
           return_images: false,
           return_related_questions: false
         }),
@@ -148,17 +148,7 @@ serve(async (req) => {
       }];
     }
 
-    // Ensure we have exactly 12 items, pad with fallback if needed
-    while (newsItems.length < 12 && fallbackNewsItems.length > 0) {
-      const fallbackIndex = newsItems.length % fallbackNewsItems.length;
-      newsItems.push({
-        ...fallbackNewsItems[fallbackIndex],
-        publishedAt: new Date().toISOString()
-      });
-    }
-    
-    newsItems = newsItems.slice(0, 12);
-
+    // Use natural amount of news items found, no forced padding
     console.log(`Fetched ${newsItems.length} music news items from Perplexity`);
 
     return new Response(JSON.stringify({

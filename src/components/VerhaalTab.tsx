@@ -26,20 +26,12 @@ export const VerhaalTab: React.FC = () => {
   const { getUserBlogs } = usePlaatVerhaalGenerator();
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [publishedCount, setPublishedCount] = useState(0);
-  const [conceptCount, setConceptCount] = useState(0);
 
   const loadBlogs = async () => {
     setLoading(true);
     try {
       const allBlogs = await getUserBlogs();
       setBlogs(allBlogs);
-      
-      const published = allBlogs.filter(blog => blog.is_published).length;
-      const concepts = allBlogs.filter(blog => !blog.is_published).length;
-      
-      setPublishedCount(published);
-      setConceptCount(concepts);
     } catch (error) {
       console.error('Error loading blogs:', error);
     } finally {
@@ -69,12 +61,14 @@ export const VerhaalTab: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse">
-              <div className="h-32 bg-muted rounded-lg"></div>
-            </div>
-          ))}
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-muted rounded w-1/3"></div>
+          <div className="h-4 bg-muted rounded w-2/3"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-48 bg-muted rounded-lg"></div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -82,60 +76,6 @@ export const VerhaalTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header with Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="w-5 h-5 text-primary" />
-              Totaal Verhalen
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-primary">
-              {blogs.length}
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Alle gegenereerde verhalen
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="w-5 h-5 text-green-600" />
-              Gepubliceerd
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">
-              {publishedCount}
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Live beschikbaar
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="w-5 h-5 text-orange-600" />
-              Concepten
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-orange-600">
-              {conceptCount}
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Nog niet gepubliceerd
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Action Buttons */}
       <div className="flex items-center justify-between">
         <div>
@@ -185,7 +125,7 @@ export const VerhaalTab: React.FC = () => {
       )}
 
       {/* Empty State for Specific Categories */}
-      {blogs.length > 0 && conceptCount === 0 && (
+      {blogs.length > 0 && (
         <Card className="p-6 bg-muted/50">
           <div className="text-center">
             <h4 className="font-medium text-muted-foreground mb-2">

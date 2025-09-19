@@ -20,6 +20,7 @@ Voeg onderaan een korte social post toe.
 - Gebruik de scan informatie ALLEEN als inspiratie voor het album
 - Het verhaal gaat over het ALBUM IN HET ALGEMEEN, niet over de specifieke persing uit de scan
 - ZOEK ZELF OP en voeg toe: opnamestudio, producer, meewerkende muzikanten, wereldwijd commercieel succes
+- Zoek informatie over: albumhoes, historische reviews, collectorswaarde, anekdotes van de artiest
 - Feiten moeten kloppen; bij ontbrekende data gebruik "—" of "[ontbreekt]"
 - Schrijf helder en deskundig, in het Nederlands
 - Maak het verhaal levendig en persoonlijk over het album zelf
@@ -46,8 +47,8 @@ tags: ["tag1", "tag2", "tag3"]
 meta_title: "SEO titel (max 60 chars)"
 meta_description: "SEO beschrijving (max 160 chars)"
 og_image: "og-image.jpg"
-reading_time: 5
-word_count: 1000
+reading_time: 8
+word_count: 1500
 ---
 \`\`\`
 
@@ -63,15 +64,31 @@ word_count: 1000
 
 ## De opnames & productie
 
-[Studio, producer, opnameproces, betrokken muzikanten - ZOEK DIT OP]
+[Studio, producer, opnameproces, betrokken muzikanten, opnametechnieken - ZOEK DIT OP]
+
+## Albumhoes & artwork
+
+[Beschrijving van de cover (visueel, stijl, tijdgeest). Symboliek: wat zegt de presentatie van dit album over hoe men de artiest in die periode wilde neerzetten? Wie ontwierp de hoes?]
+
+## Kritieken & ontvangst
+
+[Hoe reageerde de pers destijds? Werd het gezien als waardevol werk, of als commerciële uitmelking? Quotes uit recensies of fanbladen van toen kunnen het verhaal levend maken.]
 
 ## Commercieel succes & impact
 
-[Wereldwijd succes, hitlijsten, awards, culturele impact - ZOEK DIT OP]
+[Wereldwijd succes, hitlijsten, awards, culturele impact, invloed op andere artiesten - ZOEK DIT OP]
 
-## Luistertips
+## Verzamelwaarde / vinylcultuur
 
-[Concrete tracks om naar te luisteren met korte uitleg waarom]
+[Hoe zeldzaam is deze plaat vandaag? Prijspieken, Discogs-waardes, collectors anecdotes. Verschillen tussen releases (UK/DE/US persingen, cassette- of cd-uitgaven).]
+
+## Persoonlijke touch
+
+[Anekdotes van de artiest uit die periode. Kleine verhalen die het album menselijker en memorabeler maken. Bijvoorbeeld studioanekdotes, verhalen over ontstaan van nummers, of persoonlijke omstandigheden.]
+
+## Luister met aandacht
+
+[Concrete aanwijzingen voor de luisteraar. Bijvoorbeeld: "Let bij [nummer] op hoe [artiest] in de tweede solo het tempo opdrijft met kleine slides – een voorbode van hun latere explosieve stijl." Geef specifieke tips wat er te horen valt.]
 
 ## Voor wie is dit?
 

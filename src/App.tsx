@@ -45,6 +45,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
+import Quiz from "./pages/Quiz";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -136,6 +137,11 @@ const App = () => {
             <Route path="/collection-chat" element={
               <ProtectedRoute>
                 <CollectionChat />
+              </ProtectedRoute>
+            } />
+            <Route path="/quiz" element={
+              <ProtectedRoute>
+                <Quiz />
               </ProtectedRoute>
             } />
             <Route path="/ai-analysis" element={

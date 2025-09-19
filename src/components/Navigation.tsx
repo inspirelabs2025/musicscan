@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard } from "lucide-react";
+import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -39,6 +39,7 @@ const scanMenuItems = [
 const collectionMenuItems = [
   { title: "Mijn Collectie", url: "/my-collection", icon: Music },
   { title: "Collectie Inzicht", url: "/collection-overview", icon: BarChart3 },
+  { title: "Quiz", url: "/quiz", icon: Trophy },
   { title: "Muziek Analyse", url: "/ai-analysis", icon: Brain },
   { title: "Chat met je Muziek", url: "/collection-chat", icon: MessageCircle }
 ];

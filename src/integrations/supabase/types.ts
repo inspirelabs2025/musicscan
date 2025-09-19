@@ -2334,6 +2334,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      cleanup_stuck_batch_processes: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       extract_and_update_discogs_ids: {
         Args: Record<PropertyKey, never>
         Returns: number

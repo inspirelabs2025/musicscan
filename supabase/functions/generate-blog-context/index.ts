@@ -78,19 +78,17 @@ Keep descriptions concise (max 100 words each) and provide 2-4 items per categor
         messages: [
           {
             role: 'system',
-            content: 'You are a music historian and cultural expert. Provide accurate historical context in Dutch language. Always respond with valid JSON only.'
+            content: 'Je bent een muziekhistoricus en cultureel expert. Geef nauwkeurige historische context in het Nederlands. Antwoord altijd alleen met geldige JSON. Schrijf beknopt en informatief.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.3,
-        max_tokens: 2000,
-        return_images: false,
-        return_related_questions: false,
-        search_recency_filter: 'year',
-        frequency_penalty: 1,
+        temperature: 0.2,
+        max_tokens: 1500,
+        search_recency_filter: 'month',
+        frequency_penalty: 0.5,
         presence_penalty: 0
       }),
     });

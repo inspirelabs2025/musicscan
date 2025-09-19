@@ -29,7 +29,7 @@ export const usePlaatVerhaalGenerator = () => {
   const [blogPost, setBlogPost] = useState<BlogPost | null>(null);
   const { toast } = useToast();
 
-  const generateBlog = async (albumId: string, albumType: 'cd' | 'vinyl'): Promise<BlogPost | null> => {
+  const generateBlog = async (albumId: string, albumType: 'cd' | 'vinyl', forceRegenerate?: boolean): Promise<BlogPost | null> => {
     setIsGenerating(true);
     try {
       console.log('Generating Plaat & Verhaal blog for:', { albumId, albumType });
@@ -37,7 +37,8 @@ export const usePlaatVerhaalGenerator = () => {
       const { data, error } = await supabase.functions.invoke('plaat-verhaal-generator', {
         body: {
           albumId,
-          albumType
+          albumType,
+          forceRegenerate
         }
       });
 

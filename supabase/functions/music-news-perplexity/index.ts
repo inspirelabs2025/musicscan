@@ -89,21 +89,24 @@ serve(async (req) => {
         'Authorization': `Bearer ${perplexityApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a music news curator. Search for and return exactly 12 recent music news items from the past 14 days. Return ONLY a valid JSON array with objects containing: title, summary (max 150 chars), source, publishedAt (ISO date string), url (if available), and category. Categories should be: "Album Release", "Artist News", "Concert", "Industry", "Awards", or "Chart News". Example: [{"title":"New Album Released","summary":"Artist announces new album","source":"Rolling Stone","publishedAt":"2025-09-18T12:00:00Z","url":"https://example.com","category":"Album Release"}]'
-          },
-          {
-            role: 'user',
-            content: 'Find the latest music news from September 2025, including new album releases, artist announcements, tour dates, music industry updates, award shows, and chart information. Return as JSON array only.'
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 1500
-      }),
+        body: JSON.stringify({
+          model: 'llama-3.1-sonar-small-128k-online',
+          messages: [
+            {
+              role: 'system',
+              content: 'Je bent een muzieknieuws curator. Zoek naar exacte 12 recente muzieknieuwsberichten van de afgelopen 14 dagen. Geef ALLEEN een geldige JSON array terug met objecten die bevatten: title, summary (max 150 karakters), source, publishedAt (ISO datum string), url (indien beschikbaar), en category. Antwoord alleen met JSON, geen extra tekst.'
+            },
+            {
+              role: 'user',
+              content: 'Vind het laatste muzieknieuws van september 2025, inclusief nieuwe albumreleases, artiest aankondigingen, tour data, muziekindustrie updates, award shows, en chart informatie. Geef alleen als JSON array terug.'
+            }
+          ],
+          temperature: 0.2,
+          max_tokens: 1500,
+          search_recency_filter: 'month',
+          frequency_penalty: 0.5,
+          presence_penalty: 0
+        }),
     });
 
     if (!response.ok) {

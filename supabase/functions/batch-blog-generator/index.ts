@@ -22,35 +22,70 @@ serve(async (req) => {
     console.log('Batch blog generation request:', { action, batchSize, delaySeconds, mediaTypes, minConfidence, dryRun });
 
     if (action === 'start') {
-      // Get items that need blog posts
-      const itemsToProcess = await getItemsToProcess(mediaTypes, minConfidence);
-      
-      if (dryRun) {
-        return new Response(JSON.stringify({
-          success: true,
-          message: 'Dry run completed',
-          itemsFound: itemsToProcess.length,
-          items: itemsToProcess.slice(0, 10), // Show first 10 as preview
-          estimatedTime: Math.ceil(itemsToProcess.length / batchSize) * delaySeconds,
-          estimatedCost: itemsToProcess.length * 0.15 // Rough estimate per item
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+      // Check for existing running batch
+      const existingBatch = await getBatchStatus();
+      if (existingBatch?.status === 'running') {
+        return new Response(
+          JSON.stringify({ 
+            error: 'A batch is already running. Please wait for it to complete or stop it first.' 
+          }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
       }
 
-      // Start batch processing in background
-      processBatches(itemsToProcess, batchSize, delaySeconds).catch(error => {
-        console.error('Background batch processing failed:', error);
-      });
+      const itemsToProcess = await getItemsToProcess(mediaTypes, minConfidence);
       
-      return new Response(JSON.stringify({
-        success: true,
-        message: 'Batch processing started',
-        totalItems: itemsToProcess.length,
-        estimatedTime: Math.ceil(itemsToProcess.length / batchSize) * delaySeconds
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      if (itemsToProcess.length === 0) {
+        return new Response(
+          JSON.stringify({ message: 'No items found to process' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Reduce batch size for stability (was 3, now 2)
+      const optimizedBatchSize = Math.min(batchSize, 2);
+      // Increase delay for stability (minimum 60 seconds)
+      const optimizedDelay = Math.max(delaySeconds, 60);
+
+      if (dryRun) {
+        return new Response(
+          JSON.stringify({ 
+            message: `Dry run completed. Found ${itemsToProcess.length} items to process`,
+            batchSize: optimizedBatchSize,
+            delaySeconds: optimizedDelay,
+            items: itemsToProcess.slice(0, 10).map(item => ({ 
+              id: item.id, 
+              type: item.media_type, 
+              artist: item.artist, 
+              title: item.title,
+              confidence: item.confidence_score 
+            }))
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Start batch processing in background with error handling
+      processBatches(itemsToProcess, optimizedBatchSize, optimizedDelay).catch(error => {
+        console.error('Batch processing failed:', error);
+        updateBatchStatus({ 
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          error_message: error.message
+        });
       });
+
+      return new Response(
+        JSON.stringify({ 
+          message: `Started batch processing ${itemsToProcess.length} items`, 
+          batchSize: optimizedBatchSize,
+          delaySeconds: optimizedDelay
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     if (action === 'status') {
@@ -175,79 +210,106 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
 }
 
 async function processBatches(items: any[], batchSize: number, delaySeconds: number) {
-  console.log(`Starting batch processing: ${items.length} items, batch size ${batchSize}`);
-  
-  // Initialize batch status
-  await updateBatchStatus({
+  console.log(`Processing ${items.length} items in batches of ${batchSize} with ${delaySeconds}s delay`);
+
+  let status = await updateBatchStatus({
     status: 'running',
     total_items: items.length,
     processed_items: 0,
     successful_items: 0,
     failed_items: 0,
     started_at: new Date().toISOString(),
-    current_batch: 0
+    current_batch: 0,
+    failed_details: []
   });
 
+  const startTime = Date.now();
+  const maxProcessingTime = 50 * 60 * 1000; // 50 minutes max processing time
   let processed = 0;
   let successful = 0;
   let failed = 0;
   const failedItems = [];
 
   for (let i = 0; i < items.length; i += batchSize) {
-    // Check if processing should stop
-    const status = await getBatchStatus();
-    if (status.status === 'stopped') {
-      console.log('Batch processing stopped by user');
-      break;
+    // Check for timeout
+    if (Date.now() - startTime > maxProcessingTime) {
+      console.error('Batch processing timeout - stopping');
+      await updateBatchStatus({ 
+        status: 'failed',
+        completed_at: new Date().toISOString(),
+        error_message: 'Processing timeout after 50 minutes'
+      });
+      return { success: false, message: 'Batch processing timed out' };
+    }
+
+    // Check if batch should be stopped
+    const currentStatus = await getBatchStatus();
+    if (currentStatus?.status === 'stopped') {
+      await updateBatchStatus({ 
+        status: 'stopped',
+        completed_at: new Date().toISOString()
+      });
+      return { success: true, message: 'Batch stopped by user' };
     }
 
     const batch = items.slice(i, i + batchSize);
     const currentBatch = Math.floor(i / batchSize) + 1;
-    
-    console.log(`Processing batch ${currentBatch}: ${batch.length} items`);
-    
-    // Update status
-    await updateBatchStatus({
+    console.log(`Processing batch ${currentBatch}/${Math.ceil(items.length/batchSize)}:`, batch.map(item => item.id));
+
+    // Update heartbeat
+    await updateBatchStatus({ 
       current_batch: currentBatch,
-      current_items: batch.map(item => `${item.artist} - ${item.title}`)
+      current_items: batch.map(item => `${item.artist} - ${item.title}`),
+      updated_at: new Date().toISOString()
     });
 
-    // Process batch in parallel
-    const batchPromises = batch.map(async (item) => {
-      try {
-        console.log(`Generating blog for: ${item.artist} - ${item.title} (${item.media_type})`);
+    // Process batch items with retry logic
+    const batchResults = await Promise.all(
+      batch.map(async (item) => {
+        let attempts = 0;
+        const maxAttempts = 2;
         
-        const { data, error } = await supabase.functions.invoke('plaat-verhaal-generator', {
-          body: {
-            albumId: item.id,
-            albumType: item.media_type === 'ai' ? 'cd' : item.media_type,
-            forceRegenerate: false,
-            autoPublish: true
+        while (attempts < maxAttempts) {
+          try {
+            console.log(`Generating blog for ${item.media_type} item: ${item.id} (attempt ${attempts + 1})`);
+            
+            const { data, error } = await supabase.functions.invoke('plaat-verhaal-generator', {
+              body: {
+                albumId: item.id,
+                albumType: item.media_type === 'ai' ? 'cd' : item.media_type,
+                autoPublish: true,
+                forceRegenerate: false
+              }
+            });
+
+            if (error) throw error;
+
+            console.log(`Successfully generated blog for item ${item.id}`);
+            return { success: true, item };
+          } catch (error) {
+            attempts++;
+            console.error(`Attempt ${attempts} failed for item ${item.id}:`, error);
+            
+            if (attempts >= maxAttempts) {
+              return { success: false, item, error: error.message };
+            }
+            
+            // Wait before retry with exponential backoff
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
           }
-        });
-
-        if (error) {
-          console.error(`Failed to generate blog for ${item.id}:`, error);
-          failedItems.push({ item, error: error.message });
-          return false;
         }
+      })
+    );
 
-        console.log(`Successfully generated blog for: ${item.artist} - ${item.title}`);
-        return true;
-      } catch (error) {
-        console.error(`Error processing ${item.id}:`, error);
-        failedItems.push({ item, error: error.message });
-        return false;
-      }
-    });
-
-    const results = await Promise.all(batchPromises);
+    // Update status with results
+    const successCount = batchResults.filter(r => r.success).length;
+    const failedResults = batchResults.filter(r => !r.success);
     
     processed += batch.length;
-    successful += results.filter(r => r === true).length;
-    failed += results.filter(r => r === false).length;
-
-    // Update progress
+    successful += successCount;
+    failed += failedResults.length;
+    failedItems.push(...failedResults.map(r => ({ item: r.item, error: r.error })));
+    
     await updateBatchStatus({
       processed_items: processed,
       successful_items: successful,
@@ -255,22 +317,19 @@ async function processBatches(items: any[], batchSize: number, delaySeconds: num
       failed_details: failedItems
     });
 
-    console.log(`Batch ${currentBatch} complete. Progress: ${processed}/${items.length} (${successful} successful, ${failed} failed)`);
-
-    // Delay before next batch (except for last batch)
+    // Delay between batches (except for the last batch)
     if (i + batchSize < items.length) {
       console.log(`Waiting ${delaySeconds} seconds before next batch...`);
       await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
     }
   }
 
-  // Mark as completed
-  await updateBatchStatus({
+  await updateBatchStatus({ 
     status: 'completed',
     completed_at: new Date().toISOString()
   });
 
-  console.log(`Batch processing completed: ${successful}/${items.length} successful`);
+  return { success: true, message: 'Batch processing completed' };
 }
 
 async function getBatchStatus() {

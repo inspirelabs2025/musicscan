@@ -30,9 +30,10 @@ export function BatchBlogGenerator() {
   const [status, setStatus] = useState<BatchStatus>({ status: 'idle' });
   const [isLoading, setIsLoading] = useState(false);
   const [dryRunResult, setDryRunResult] = useState<any>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [settings, setSettings] = useState({
-    batchSize: 3,
-    delaySeconds: 45,
+    batchSize: 2, // Reduced for stability
+    delaySeconds: 60, // Increased for stability
     mediaTypes: ['cd', 'vinyl', 'ai'],
     minConfidence: 0.7,
     dryRun: false
@@ -40,10 +41,45 @@ export function BatchBlogGenerator() {
   const { toast } = useToast();
 
   useEffect(() => {
-    checkStatus();
-    const interval = setInterval(checkStatus, 5000); // Check every 5 seconds
-    return () => clearInterval(interval);
-  }, []);
+    let interval: NodeJS.Timeout;
+    
+    if (status.status === 'running') {
+      interval = setInterval(async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('batch-blog-generator', {
+            body: { action: 'status' }
+          });
+          
+          if (!error && data) {
+            setStatus(data);
+            setLastUpdate(new Date());
+            
+            // Auto-cleanup stuck batches (if no update for 10+ minutes)
+            if (data.updated_at) {
+              const lastUpdateTime = new Date(data.updated_at);
+              const timeSinceUpdate = Date.now() - lastUpdateTime.getTime();
+              
+              if (timeSinceUpdate > 10 * 60 * 1000) { // 10 minutes
+                toast({
+                  title: "Batch mogelijk vastgelopen",
+                  description: "De batch lijkt vastgelopen. Probeer de batch te stoppen en opnieuw te starten.",
+                  variant: "destructive"
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error checking batch status:', error);
+        }
+      }, 5000); // Check every 5 seconds
+    } else {
+      checkStatus();
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [status.status]);
 
   const checkStatus = async () => {
     try {
@@ -97,24 +133,52 @@ export function BatchBlogGenerator() {
   };
 
   const stopBatch = async () => {
-    setIsLoading(true);
-    
     try {
+      setIsLoading(true);
       const { data, error } = await supabase.functions.invoke('batch-blog-generator', {
         body: { action: 'stop' }
       });
-
+      
       if (error) throw error;
-
+      
+      setStatus(data || { status: 'stopped' });
+      setLastUpdate(new Date());
       toast({
-        title: "Batch Gestopt",
-        description: "Batch generatie is gestopt."
+        title: "Batch gestopt",
+        description: data?.message || 'Batch is gestopt'
       });
     } catch (error) {
-      console.error('Failed to stop batch:', error);
+      console.error('Error stopping batch:', error);
       toast({
-        title: "Fout bij Stoppen",
-        description: "Kon batch generatie niet stoppen.",
+        title: "Fout bij stoppen batch",
+        description: "Er is een fout opgetreden bij het stoppen van de batch",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const forceStopBatch = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Directly update database to force stop
+      await supabase.rpc('cleanup_stuck_batch_processes');
+      
+      // Refresh status
+      await checkStatus();
+      setLastUpdate(new Date());
+      
+      toast({
+        title: "Batch geforceerd gestopt",
+        description: "De batch is geforceerd gestopt en de status is gereset."
+      });
+    } catch (error) {
+      console.error('Error force stopping batch:', error);
+      toast({
+        title: "Fout bij geforceerd stoppen",
+        description: "Er is een fout opgetreden bij het geforceerd stoppen van de batch",
         variant: "destructive"
       });
     } finally {
@@ -233,15 +297,26 @@ export function BatchBlogGenerator() {
           </Button>
           
           {status.status === 'running' && (
-            <Button
-              onClick={stopBatch}
-              disabled={isLoading}
-              variant="destructive"
-              className="flex items-center gap-2"
-            >
-              <Square className="h-4 w-4" />
-              Stop
-            </Button>
+            <>
+              <Button
+                onClick={stopBatch}
+                disabled={isLoading}
+                variant="destructive"
+                className="flex items-center gap-2"
+              >
+                <Square className="h-4 w-4" />
+                Stop
+              </Button>
+              <Button
+                onClick={forceStopBatch}
+                disabled={isLoading}
+                variant="outline"
+                className="flex items-center gap-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Force Stop
+              </Button>
+            </>
           )}
         </div>
 

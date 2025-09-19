@@ -45,10 +45,9 @@ serve(async (req) => {
         );
       }
 
-      // Reduce batch size for stability (was 3, now 2)
-      const optimizedBatchSize = Math.min(batchSize, 2);
-      // Increase delay for stability (minimum 60 seconds)
-      const optimizedDelay = Math.max(delaySeconds, 60);
+      // Use exactly what the user configured - no forced overrides
+      const optimizedBatchSize = batchSize;
+      const optimizedDelay = delaySeconds;
 
       if (dryRun) {
         return new Response(
@@ -68,15 +67,21 @@ serve(async (req) => {
         );
       }
 
-      // Start batch processing in background with error handling
-      processBatches(itemsToProcess, optimizedBatchSize, optimizedDelay).catch(error => {
-        console.error('Batch processing failed:', error);
-        updateBatchStatus({ 
-          status: 'failed',
-          completed_at: new Date().toISOString(),
-          error_message: error.message
-        });
-      });
+      // Start batch processing in background with EdgeRuntime.waitUntil for proper lifecycle
+      EdgeRuntime.waitUntil(
+        processBatches(itemsToProcess, optimizedBatchSize, optimizedDelay).catch(async (error) => {
+          console.error('Batch processing failed:', error);
+          try {
+            await updateBatchStatus({ 
+              status: 'failed',
+              completed_at: new Date().toISOString(),
+              error_message: error.message
+            });
+          } catch (statusError) {
+            console.error('Failed to update batch status after error:', statusError);
+          }
+        })
+      );
 
       return new Response(
         JSON.stringify({ 
@@ -224,7 +229,7 @@ async function processBatches(items: any[], batchSize: number, delaySeconds: num
   });
 
   const startTime = Date.now();
-  const maxProcessingTime = 50 * 60 * 1000; // 50 minutes max processing time
+  const maxProcessingTime = 4 * 60 * 60 * 1000; // 4 hours max processing time (increased for single-item batches)
   let processed = 0;
   let successful = 0;
   let failed = 0;
@@ -234,11 +239,15 @@ async function processBatches(items: any[], batchSize: number, delaySeconds: num
     // Check for timeout
     if (Date.now() - startTime > maxProcessingTime) {
       console.error('Batch processing timeout - stopping');
-      await updateBatchStatus({ 
-        status: 'failed',
-        completed_at: new Date().toISOString(),
-        error_message: 'Processing timeout after 50 minutes'
-      });
+      try {
+        await updateBatchStatus({ 
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          error_message: 'Processing timeout after 4 hours'
+        });
+      } catch (statusError) {
+        console.error('Failed to update timeout status:', statusError);
+      }
       return { success: false, message: 'Batch processing timed out' };
     }
 
@@ -256,12 +265,17 @@ async function processBatches(items: any[], batchSize: number, delaySeconds: num
     const currentBatch = Math.floor(i / batchSize) + 1;
     console.log(`Processing batch ${currentBatch}/${Math.ceil(items.length/batchSize)}:`, batch.map(item => item.id));
 
-    // Update heartbeat
-    await updateBatchStatus({ 
-      current_batch: currentBatch,
-      current_items: batch.map(item => `${item.artist} - ${item.title}`),
-      updated_at: new Date().toISOString()
-    });
+    // Update heartbeat with error handling
+    try {
+      await updateBatchStatus({ 
+        current_batch: currentBatch,
+        current_items: batch.map(item => `${item.artist} - ${item.title}`),
+        updated_at: new Date().toISOString()
+      });
+    } catch (statusError) {
+      console.error('Failed to update batch heartbeat:', statusError);
+      // Continue processing despite status update failure
+    }
 
     // Process batch items with retry logic
     const batchResults = await Promise.all(
@@ -310,12 +324,17 @@ async function processBatches(items: any[], batchSize: number, delaySeconds: num
     failed += failedResults.length;
     failedItems.push(...failedResults.map(r => ({ item: r.item, error: r.error })));
     
-    await updateBatchStatus({
-      processed_items: processed,
-      successful_items: successful,
-      failed_items: failed,
-      failed_details: failedItems
-    });
+    try {
+      await updateBatchStatus({
+        processed_items: processed,
+        successful_items: successful,
+        failed_items: failed,
+        failed_details: failedItems
+      });
+    } catch (statusError) {
+      console.error('Failed to update batch progress:', statusError);
+      // Continue processing despite status update failure
+    }
 
     // Delay between batches (except for the last batch)
     if (i + batchSize < items.length) {

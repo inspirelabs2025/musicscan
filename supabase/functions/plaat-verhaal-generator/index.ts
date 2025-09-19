@@ -131,8 +131,8 @@ serve(async (req) => {
           .from('cd_scan')
           .select('*')
           .eq('id', albumId)
-          .single();
-        if (error && error.code !== 'PGRST116') throw error;
+          .maybeSingle();
+        if (error) throw error;
         if (data) {
           albumData = data;
           actualTableUsed = 'cd_scan';
@@ -146,7 +146,7 @@ serve(async (req) => {
           .from('ai_scan_results')
           .select('*')
           .eq('id', albumId)
-          .single();
+          .maybeSingle();
         if (error) throw error;
         albumData = data;
         actualTableUsed = 'ai_scan_results';
@@ -158,8 +158,8 @@ serve(async (req) => {
           .from('vinyl2_scan')
           .select('*')
           .eq('id', albumId)
-          .single();
-        if (error && error.code !== 'PGRST116') throw error;
+          .maybeSingle();
+        if (error) throw error;
         if (data) {
           albumData = data;
           actualTableUsed = 'vinyl2_scan';
@@ -173,7 +173,7 @@ serve(async (req) => {
           .from('ai_scan_results')
           .select('*')
           .eq('id', albumId)
-          .single();
+          .maybeSingle();
         if (error) throw error;
         albumData = data;
         actualTableUsed = 'ai_scan_results';
@@ -183,7 +183,14 @@ serve(async (req) => {
     }
 
     if (!albumData) {
-      throw new Error(`Album niet gevonden met ID: ${albumId}`);
+      console.log(`Album not found with ID: ${albumId}`);
+      return new Response(
+        JSON.stringify({ error: 'Album not found', code: 'ALBUM_NOT_FOUND' }),
+        { 
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     console.log(`Found album data in table: ${actualTableUsed}`);
@@ -194,7 +201,7 @@ serve(async (req) => {
       .select('*')
       .eq('album_id', albumId)
       .eq('album_type', albumType)
-      .single();
+      .maybeSingle();
 
     if (existingBlog && !forceRegenerate) {
       console.log('Blog already exists, returning cached version');
@@ -444,6 +451,29 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
 
     if (insertError) {
       console.error('Database insert error:', insertError);
+      
+      // Handle duplicate slug error gracefully
+      if (insertError.code === '23505' && insertError.message?.includes('blog_posts_slug_key')) {
+        console.log('Blog post with this slug already exists, returning as cached');
+        // Try to find the existing blog post
+        const { data: existingBySlug } = await supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('slug', slug)
+          .maybeSingle();
+        
+        if (existingBySlug) {
+          return new Response(
+            JSON.stringify({ 
+              blog: existingBySlug,
+              cached: true,
+              reason: 'duplicate_slug'
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+      
       throw insertError;
     }
 

@@ -1461,6 +1461,45 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_results: {
+        Row: {
+          created_at: string
+          id: string
+          questions_correct: number
+          questions_total: number
+          quiz_data: Json | null
+          quiz_type: string
+          score_percentage: number
+          time_taken_seconds: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          questions_correct: number
+          questions_total: number
+          quiz_data?: Json | null
+          quiz_type?: string
+          score_percentage: number
+          time_taken_seconds?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          questions_correct?: number
+          questions_total?: number
+          quiz_data?: Json | null
+          quiz_type?: string
+          score_percentage?: number
+          time_taken_seconds?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       rdw_lookups: {
         Row: {
           body_type: string | null

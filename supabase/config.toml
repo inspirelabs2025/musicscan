@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.album-cover-backfill]
 verify_jwt = false
+
+[functions.collection-quiz-generator]
+verify_jwt = true

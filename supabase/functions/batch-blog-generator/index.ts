@@ -142,7 +142,7 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
       .select('id, artist, title, discogs_id, confidence_score, media_type')
       .not('discogs_id', 'is', null)
       .not('artist', 'is', null)
-      .not('title', 'is', null')
+      .not('title', 'is', null)
       .gte('confidence_score', minConfidence);
 
     if (aiError) throw aiError;
@@ -152,7 +152,7 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
         .from('blog_posts')
         .select('id')
         .eq('album_id', scan.id)
-        .eq('album_type', scan.media_type)
+        .eq('album_type', scan.media_type === 'ai' ? 'cd' : scan.media_type)
         .single();
 
       if (!existingBlog) {
@@ -220,7 +220,7 @@ async function processBatches(items: any[], batchSize: number, delaySeconds: num
         const { data, error } = await supabase.functions.invoke('plaat-verhaal-generator', {
           body: {
             albumId: item.id,
-            albumType: item.media_type === 'ai' ? item.media_type : item.media_type,
+            albumType: item.media_type === 'ai' ? 'cd' : item.media_type,
             forceRegenerate: false,
             autoPublish: true
           }

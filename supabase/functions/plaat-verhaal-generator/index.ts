@@ -107,7 +107,7 @@ serve(async (req) => {
   }
 
   try {
-    const { albumId, albumType } = await req.json();
+    const { albumId, albumType, forceRegenerate = false } = await req.json();
 
     if (!albumId || !albumType) {
       throw new Error("Album ID en type zijn vereist");
@@ -193,7 +193,7 @@ serve(async (req) => {
       .eq('album_type', albumType)
       .single();
 
-    if (existingBlog) {
+    if (existingBlog && !forceRegenerate) {
       console.log('Blog already exists, returning cached version');
       return new Response(
         JSON.stringify({ 
@@ -202,6 +202,20 @@ serve(async (req) => {
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // If forceRegenerate is true and blog exists, delete it first
+    if (existingBlog && forceRegenerate) {
+      console.log('Force regenerate requested, deleting existing blog post');
+      const { error: deleteError } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', existingBlog.id);
+      
+      if (deleteError) {
+        console.error('Error deleting existing blog:', deleteError);
+        throw deleteError;
+      }
     }
 
     // Prepare album data for prompt - focus on general album information only

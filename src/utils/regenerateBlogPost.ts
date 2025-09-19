@@ -1,13 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export async function regenerateBlogPost(albumId: string, albumType: 'cd' | 'vinyl') {
+export async function regenerateBlogPost(albumId: string, albumType: 'cd' | 'vinyl', forceRegenerate = false) {
   try {
-    console.log('Regenerating blog post for:', { albumId, albumType });
+    console.log('Regenerating blog post for:', { albumId, albumType, forceRegenerate });
     
     const { data, error } = await supabase.functions.invoke('plaat-verhaal-generator', {
       body: {
         albumId,
-        albumType
+        albumType,
+        forceRegenerate
       }
     });
 
@@ -25,7 +26,7 @@ export async function regenerateBlogPost(albumId: string, albumType: 'cd' | 'vin
 }
 
 // Regenerate Jimi Hendrix post immediately when this module loads
-regenerateBlogPost('48903ef6-4bb1-4912-a332-f07c75de74dc', 'cd')
+regenerateBlogPost('48903ef6-4bb1-4912-a332-f07c75de74dc', 'cd', true)
   .then(() => {
     console.log('Jimi Hendrix blog post updated with new 8-section structure');
   })

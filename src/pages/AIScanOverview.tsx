@@ -144,7 +144,7 @@ const AIScanOverview = () => {
     return allScans.filter(scan => getDuplicateInfo(scan.id).isDuplicate);
   }, [allScans, showDuplicatesOnly, getDuplicateInfo]);
 
-  // Intersection Observer for infinite scroll
+  // Intersection Observer for infinite scroll with enhanced preloading
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -154,7 +154,8 @@ const AIScanOverview = () => {
         }
       },
       {
-        rootMargin: '100px', // Start loading when 100px before reaching the element
+        rootMargin: '400px', // Start loading when 400px before reaching the element
+        threshold: 0.1, // Trigger when 10% of the element is visible
       }
     );
 
@@ -168,6 +169,39 @@ const AIScanOverview = () => {
       }
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Additional preloading trigger based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const documentHeight = document.documentElement.scrollHeight;
+      const scrollPercentage = (scrollPosition / documentHeight) * 100;
+      
+      // Start loading next page when user has scrolled 80% of the content
+      if (scrollPercentage > 80 && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    };
+
+    const throttledScroll = throttle(handleScroll, 100);
+    window.addEventListener('scroll', throttledScroll);
+    
+    return () => {
+      window.removeEventListener('scroll', throttledScroll);
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Simple throttle function
+  function throttle(func: () => void, limit: number) {
+    let inThrottle: boolean;
+    return function() {
+      if (!inThrottle) {
+        func.apply(null, []);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  }
 
   const handleSort = useCallback((field: keyof UnifiedScanResult) => {
     if (sortField === field) {
@@ -932,22 +966,36 @@ const AIScanOverview = () => {
             </CardContent>
           </Card>
 
-          {/* Infinite scroll loading indicator */}
+          {/* Enhanced infinite scroll loading indicator with smooth animation */}
           <div className="flex flex-col items-center gap-4">
             {isFetchingNextPage && (
-              <div className="flex items-center gap-2 py-4">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                <span className="text-sm text-muted-foreground">Laden...</span>
+              <div className="flex items-center gap-2 py-6 animate-fadeIn">
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
+                <span className="text-sm text-muted-foreground">Meer resultaten laden...</span>
               </div>
             )}
             
             {!hasNextPage && filteredScans.length > 0 && (
-            <div className="text-sm text-muted-foreground py-4">
-              {showDuplicatesOnly 
-                ? `${filteredScans.length} duplicaten geladen` 
-                : `Alle ${totalCount} resultaten geladen`}
-            </div>
-          )}
+              <div className="text-sm text-muted-foreground py-6 text-center animate-fadeIn">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="h-px bg-border flex-1"></div>
+                  <span className="px-4">
+                    {showDuplicatesOnly 
+                      ? `${filteredScans.length} duplicaten geladen` 
+                      : `Alle ${totalCount} resultaten geladen`}
+                  </span>
+                  <div className="h-px bg-border flex-1"></div>
+                </div>
+              </div>
+            )}
+            
+            {/* Loading state for better UX */}
+            {scansLoading && (
+              <div className="flex items-center gap-2 py-6 animate-pulse">
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
+                <span className="text-sm text-muted-foreground">Scans laden...</span>
+              </div>
+            )}
           
           <div ref={loadingRef} className="h-4" />
         </div>

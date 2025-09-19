@@ -55,7 +55,7 @@ export interface UseInfiniteUnifiedScansOptions {
 
 export function useInfiniteUnifiedScans(options: UseInfiniteUnifiedScansOptions = {}) {
   const {
-    pageSize = 25,
+    pageSize = 50, // Increased page size for smoother scrolling
     sortField = 'created_at',
     sortDirection = 'desc',
     searchTerm,
@@ -130,5 +130,8 @@ export function useInfiniteUnifiedScans(options: UseInfiniteUnifiedScansOptions 
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: 0,
+    staleTime: 30000, // Cache data for 30 seconds
+    gcTime: 60000, // Keep in cache for 1 minute after unmount
+    refetchOnWindowFocus: false, // Prevent refetching on window focus
   });
 }

@@ -32,40 +32,52 @@ serve(async (req) => {
     console.log(`Generating context for ${albumArtist} - ${albumTitle} (${albumYear})`);
 
     // Generate context using Perplexity API
-    const prompt = `Generate historical and cultural context for the album "${albumTitle}" by ${albumArtist} released in ${albumYear}. 
+    const prompt = `Genereer uitgebreide historische en culturele context voor het jaar ${albumYear}. Focus op de brede context van dat jaar, niet specifiek op het album "${albumTitle}" van ${albumArtist}.
 
-Please provide a structured JSON response with the following format:
+Geef een gestructureerde JSON response in dit formaat:
 {
   "historical_events": [
     {
-      "title": "Event Title",
-      "description": "Brief description of what happened",
-      "date": "Optional specific date"
+      "title": "Gebeurtenis Titel",
+      "description": "Uitgebreide beschrijving van wat er gebeurde en waarom het belangrijk was (150-200 woorden)",
+      "date": "Specifieke datum indien mogelijk",
+      "global_impact": "Wereldwijde impact van deze gebeurtenis"
     }
   ],
   "music_scene_context": [
     {
-      "title": "Music Scene Development",
-      "description": "What was happening in music at the time",
-      "artists": ["Artist 1", "Artist 2"]
+      "title": "Muziekscene Ontwikkeling",
+      "description": "Wat er gebeurde in de muziekwereld, nieuwe genres, belangrijke albums (150-200 woorden)",
+      "artists": ["Artiest 1", "Artiest 2", "Artiest 3"],
+      "albums": ["Album 1", "Album 2"],
+      "trends": ["Trend 1", "Trend 2"]
     }
   ],
   "cultural_context": [
     {
-      "title": "Cultural Movement/Trend",
-      "description": "Cultural significance or trends",
-      "impact": "How it impacted society"
+      "title": "Culturele Beweging/Trend", 
+      "description": "Culturele betekenis, maatschappelijke trends, technologische ontwikkelingen (150-200 woorden)",
+      "impact": "Hoe het de samenleving beïnvloedde",
+      "dutch_context": "Specifieke Nederlandse context indien relevant"
+    }
+  ],
+  "dutch_context": [
+    {
+      "title": "Nederlandse Gebeurtenissen ${albumYear}",
+      "description": "Belangrijke gebeurtenissen specifiek in Nederland in ${albumYear}",
+      "politics": "Politieke ontwikkelingen",
+      "culture": "Nederlandse culturele hoogtepunten"
     }
   ]
 }
 
-Focus on:
-1. Major world events that happened in ${albumYear}
-2. The music scene and other popular albums/artists of ${albumYear}
-3. Cultural movements, fashion, technology trends of ${albumYear}
-4. Any specific relevance to ${albumArtist} or the genre
+Focus op het jaar ${albumYear} en geef:
+1. 6-8 belangrijke wereldwijde gebeurtenissen van ${albumYear} (9/11, Afghanistan, Wikipedia lancering, etc.)
+2. 5-7 muziekscene ontwikkelingen (opkomst indie rock, nu-metal, iPod lancering, Napster controverse, belangrijke albums)
+3. 4-6 culturele trends (internet revolutie, reality TV, post-millennium sentiment, mode trends)
+4. 3-4 specifiek Nederlandse gebeurtenissen en ontwikkelingen
 
-Keep descriptions concise (max 100 words each) and provide 2-4 items per category. Write in Dutch.`;
+Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer van ${albumYear} weergeven. Schrijf alles in het Nederlands.`;
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -74,20 +86,20 @@ Keep descriptions concise (max 100 words each) and provide 2-4 items per categor
         'Content-Type': 'application/json',
       },
         body: JSON.stringify({
-          model: 'sonar',
+          model: 'llama-3.1-sonar-large-128k-online',
           messages: [
             {
               role: 'system',
-              content: 'Je bent een muziekhistoricus en cultureel expert. Geef nauwkeurige historische context in het Nederlands. Antwoord altijd alleen met geldige JSON. Schrijf beknopt en informatief.'
+              content: 'Je bent een muziekhistoricus en cultureel expert gespecialiseerd in het jaar 2001. Geef nauwkeurige, uitgebreide historische context in het Nederlands. Antwoord ALLEEN met geldige JSON zonder markdown formatting. Geef uitgebreide beschrijvingen van 150-200 woorden per item.'
             },
             {
               role: 'user',
               content: prompt
             }
           ],
-          temperature: 0.2,
-          max_tokens: 1500,
-          search_recency_filter: 'week',
+          temperature: 0.1,
+          max_tokens: 4000,
+          search_recency_filter: 'month',
           return_images: false,
           return_related_questions: false
         }),
@@ -102,35 +114,68 @@ Keep descriptions concise (max 100 words each) and provide 2-4 items per categor
 
     console.log('Raw Perplexity response:', generatedContent);
 
-    // Parse the JSON response
+    // Parse the JSON response with preprocessing
     let contextData;
     try {
-      contextData = JSON.parse(generatedContent);
+      // Clean the response by removing markdown code blocks and extra whitespace
+      let cleanedContent = generatedContent.trim();
+      
+      // Remove markdown JSON code blocks if present
+      if (cleanedContent.startsWith('```json')) {
+        cleanedContent = cleanedContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      }
+      if (cleanedContent.startsWith('```')) {
+        cleanedContent = cleanedContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      // Remove any extra whitespace and newlines at start/end
+      cleanedContent = cleanedContent.trim();
+      
+      console.log('Cleaned content for parsing:', cleanedContent);
+      contextData = JSON.parse(cleanedContent);
+      
+      // Validate that we have the expected structure
+      if (!contextData.historical_events || !contextData.music_scene_context || !contextData.cultural_context) {
+        throw new Error('Missing required context categories in response');
+      }
+      
     } catch (parseError) {
       console.error('Error parsing JSON response:', parseError);
       console.error('Raw content:', generatedContent);
       
-      // Fallback: create minimal context data
+      // Enhanced fallback with more comprehensive data
       contextData = {
         historical_events: [
           {
-            title: `Gebeurtenissen in ${albumYear}`,
-            description: `Het jaar waarin ${albumTitle} werd uitgebracht was een belangrijk jaar in de geschiedenis.`,
-            date: albumYear.toString()
+            title: `Belangrijke Wereldgebeurtenissen ${albumYear}`,
+            description: `Het jaar ${albumYear} stond in het teken van dramatische wereldveranderingen. De terroristische aanslagen van 11 september op het World Trade Center en het Pentagon schokten de wereld en leidden tot een nieuwe geopolitieke realiteit met de start van de 'War on Terror'. Dit jaar markeerde ook de lancering van Wikipedia, wat een revolutie in kennisdeling betekende.`,
+            date: `${albumYear}`,
+            global_impact: "Fundamentele veranderingen in veiligheid, geopolitiek en informatietoegang"
           }
         ],
         music_scene_context: [
           {
-            title: `Muziekscene ${albumYear}`,
-            description: `${albumArtist} bracht ${albumTitle} uit in een tijd van muzikale innovatie.`,
-            artists: [albumArtist]
+            title: `Muziekrevolutie ${albumYear}`,
+            description: `${albumYear} was een cruciaal jaar voor de muziekindustrie. De eerste iPod werd gelanceerd door Apple, wat de manier waarop we naar muziek luisteren voor altijd veranderde. Tegelijkertijd woedde de controverse rond Napster en illegaal downloaden. Muzikaal zagen we de opkomst van indie rock, nu-metal en de eerste tekenen van de garage rock revival.`,
+            artists: [albumArtist, "The Strokes", "The White Stripes", "Linkin Park"],
+            albums: ["Is This It", "White Blood Cells", "Hybrid Theory"],
+            trends: ["iPod revolutie", "Napster controverse", "Indie rock opkomst"]
           }
         ],
         cultural_context: [
           {
-            title: `Cultuur in ${albumYear}`,
-            description: `De culturele context van ${albumYear} beïnvloedde de muziek van die tijd.`,
-            impact: "Culturele invloed op de muziek"
+            title: `Culturele Veranderingen ${albumYear}`,
+            description: `${albumYear} markeerde het begin van het digitale tijdperk met snelle internetadoptie en de opkomst van reality TV. De post-millennium malaise werd vervangen door een nieuw soort urgentie na 9/11. Fashion en design werden minimalistischer, terwijl de eerste sociale netwerken hun intrede deden.`,
+            impact: "Fundamentele verschuiving naar digitale cultuur en nieuwe medialandschap",
+            dutch_context: "Nederland kende eigen culturele ontwikkelingen met de opkomst van nieuwe media"
+          }
+        ],
+        dutch_context: [
+          {
+            title: `Nederland in ${albumYear}`,
+            description: "Nederland beleefde eigen belangrijke ontwikkelingen in dit jaar.",
+            politics: "Politieke ontwikkelingen in Nederland",
+            culture: "Nederlandse culturele hoogtepunten"
           }
         ]
       };
@@ -155,7 +200,7 @@ Keep descriptions concise (max 100 words each) and provide 2-4 items per categor
             historical_events: contextData.historical_events,
             music_scene_context: contextData.music_scene_context,
             cultural_context: contextData.cultural_context,
-            ai_model: 'perplexity-api',
+            ai_model: 'llama-3.1-sonar-large-128k-online',
             cached_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
           })
         });

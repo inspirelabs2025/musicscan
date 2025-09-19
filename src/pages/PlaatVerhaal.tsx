@@ -28,6 +28,7 @@ interface BlogPost {
   views_count: number;
   created_at: string;
   published_at?: string;
+  album_cover_url?: string;
 }
 
 export const PlaatVerhaal: React.FC = () => {
@@ -239,84 +240,106 @@ export const PlaatVerhaal: React.FC = () => {
           <div className="relative mb-12">
             <div className="absolute inset-0 bg-gradient-vinyl opacity-20 rounded-3xl blur-xl"></div>
             <div className="relative bg-card/80 backdrop-blur-sm rounded-3xl border border-border/50 p-8 md:p-12">
-              {/* Header Badges */}
-              <div className="flex flex-wrap items-center gap-3 mb-6">
-                <Badge 
-                  variant="secondary" 
-                  className="bg-vinyl-gold/20 text-vinyl-gold border-vinyl-gold/30 hover:bg-vinyl-gold/30 transition-colors"
-                >
-                  <Disc3 className="w-3 h-3 mr-1" />
-                  {blog.album_type.toUpperCase()}
-                </Badge>
-                {genre && (
-                  <Badge variant="outline" className="border-primary/30 hover:bg-primary/10 transition-colors">
-                    <Tag className="w-3 h-3 mr-1" />
-                    {genre}
-                  </Badge>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Album Cover */}
+                {blog.album_cover_url && (
+                  <div className="lg:col-span-3 order-first lg:order-last">
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-vinyl-gold/20 to-primary/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+                      <img
+                        src={blog.album_cover_url}
+                        alt={`${artist} - ${album} album cover`}
+                        className="relative w-full aspect-square object-cover rounded-2xl border border-border/30 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-[1.02]"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
                 )}
-                {year && (
-                  <Badge variant="outline" className="border-muted-foreground/30">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    {year}
-                  </Badge>
-                )}
-                <Badge variant="outline" className="border-muted-foreground/30">
-                  <Clock className="w-3 h-3 mr-1" />
-                  {readingTime} min leestijd
-                </Badge>
-                <Badge variant="outline" className="border-muted-foreground/30">
-                  <Eye className="w-3 h-3 mr-1" />
-                  {blog.views_count || 0} views
-                </Badge>
-              </div>
 
-              {/* Main Title */}
-              <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-                {title}
-              </h1>
-              
-              {/* Artist & Album */}
-              <div className="text-xl md:text-2xl text-muted-foreground mb-8 font-medium">
-                <span className="text-primary">{artist}</span>
-                <span className="mx-3 text-vinyl-gold">•</span>
-                <span>{album}</span>
-                {year && <span className="text-muted-foreground/70 ml-2">({year})</span>}
-              </div>
-
-              {/* Tags */}
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {tags.map((tag: string, index: number) => (
+                {/* Content */}
+                <div className={blog.album_cover_url ? "lg:col-span-9" : "lg:col-span-12"}>
+                  {/* Header Badges */}
+                  <div className="flex flex-wrap items-center gap-3 mb-6">
                     <Badge 
-                      key={index} 
                       variant="secondary" 
-                      className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors"
+                      className="bg-vinyl-gold/20 text-vinyl-gold border-vinyl-gold/30 hover:bg-vinyl-gold/30 transition-colors"
                     >
-                      #{tag}
+                      <Disc3 className="w-3 h-3 mr-1" />
+                      {blog.album_type.toUpperCase()}
                     </Badge>
-                  ))}
-                </div>
-              )}
+                    {genre && (
+                      <Badge variant="outline" className="border-primary/30 hover:bg-primary/10 transition-colors">
+                        <Tag className="w-3 h-3 mr-1" />
+                        {genre}
+                      </Badge>
+                    )}
+                    {year && (
+                      <Badge variant="outline" className="border-muted-foreground/30">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        {year}
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="border-muted-foreground/30">
+                      <Clock className="w-3 h-3 mr-1" />
+                      {readingTime} min leestijd
+                    </Badge>
+                    <Badge variant="outline" className="border-muted-foreground/30">
+                      <Eye className="w-3 h-3 mr-1" />
+                      {blog.views_count || 0} views
+                    </Badge>
+                  </div>
 
-              {/* Meta Info */}
-              <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
-                <span className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Gepubliceerd op {new Date(blog.published_at || blog.created_at).toLocaleDateString('nl-NL', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleShare}
-                  className="h-auto p-0 text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <Share2 className="w-4 h-4 mr-1" />
-                  Delen
-                </Button>
+                  {/* Main Title */}
+                  <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                    {title}
+                  </h1>
+                  
+                  {/* Artist & Album */}
+                  <div className="text-xl md:text-2xl text-muted-foreground mb-8 font-medium">
+                    <span className="text-primary">{artist}</span>
+                    <span className="mx-3 text-vinyl-gold">•</span>
+                    <span>{album}</span>
+                    {year && <span className="text-muted-foreground/70 ml-2">({year})</span>}
+                  </div>
+
+                  {/* Tags */}
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-8">
+                      {tags.map((tag: string, index: number) => (
+                        <Badge 
+                          key={index} 
+                          variant="secondary" 
+                          className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors"
+                        >
+                          #{tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Meta Info */}
+                  <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Gepubliceerd op {new Date(blog.published_at || blog.created_at).toLocaleDateString('nl-NL', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleShare}
+                      className="h-auto p-0 text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Share2 className="w-4 h-4 mr-1" />
+                      Delen
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

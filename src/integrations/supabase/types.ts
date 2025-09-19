@@ -316,6 +316,7 @@ export type Database = {
       }
       blog_posts: {
         Row: {
+          album_cover_url: string | null
           album_id: string
           album_type: string
           created_at: string
@@ -332,6 +333,7 @@ export type Database = {
           yaml_frontmatter: Json
         }
         Insert: {
+          album_cover_url?: string | null
           album_id: string
           album_type: string
           created_at?: string
@@ -348,6 +350,7 @@ export type Database = {
           yaml_frontmatter: Json
         }
         Update: {
+          album_cover_url?: string | null
           album_id?: string
           album_type?: string
           created_at?: string

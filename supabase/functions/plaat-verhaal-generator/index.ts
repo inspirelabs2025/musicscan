@@ -8,8 +8,9 @@ const corsHeaders = {
 };
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const PLAAT_VERHAAL_PROMPT = `Je bent een muziekjournalist die "Plaat & Verhaal" blogposts schrijft in het Nederlands.
 
@@ -267,6 +268,53 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
 
     console.log('Successfully generated blog content');
 
+    // Search for album cover using Perplexity
+    let albumCoverUrl = null;
+    if (perplexityApiKey) {
+      try {
+        console.log('Searching for album cover with Perplexity...');
+        const coverSearchQuery = `high quality album cover image URL for "${albumData.artist}" "${albumData.title}" ${albumData.year || ''} album`;
+        
+        const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${perplexityApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.1-sonar-large-128k-online',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an expert at finding high-quality album cover images. Return ONLY a direct image URL (jpg, png, webp) for the requested album cover. Do not include any other text or explanation.'
+              },
+              {
+                role: 'user',
+                content: coverSearchQuery
+              }
+            ],
+            temperature: 0.2,
+            max_tokens: 200,
+          }),
+        });
+
+        if (perplexityResponse.ok) {
+          const perplexityData = await perplexityResponse.json();
+          const coverContent = perplexityData.choices[0]?.message?.content?.trim();
+          
+          // Extract URL from response (basic validation)
+          const urlMatch = coverContent?.match(/(https?:\/\/[^\s]+\.(jpg|jpeg|png|webp))/i);
+          if (urlMatch) {
+            albumCoverUrl = urlMatch[0];
+            console.log('Found album cover URL:', albumCoverUrl);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching album cover:', error);
+        // Continue without cover - not critical
+      }
+    }
+
     // Parse the response to extract YAML (ook als het in codefences staat) en de SOCIAL_POST
     let content = blogContent.trimStart();
     let yamlFrontmatter: Record<string, unknown> = {};
@@ -345,6 +393,7 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
         markdown_content: markdownBody,
         social_post: socialPost,
         slug: slug,
+        album_cover_url: albumCoverUrl,
         is_published: autoPublish,
         published_at: autoPublish ? new Date().toISOString() : null
       })

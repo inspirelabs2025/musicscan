@@ -39,7 +39,9 @@ serve(async (req) => {
       }
 
       // Start batch processing in background
-      EdgeRuntime.waitUntil(processBatches(itemsToProcess, batchSize, delaySeconds));
+      processBatches(itemsToProcess, batchSize, delaySeconds).catch(error => {
+        console.error('Background batch processing failed:', error);
+      });
       
       return new Response(JSON.stringify({
         success: true,

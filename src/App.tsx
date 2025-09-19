@@ -34,6 +34,7 @@ import UserScans from "./pages/UserScans";
 import AlbumDetail from "./pages/AlbumDetail";
 import ReleaseDetail from "./pages/ReleaseDetail";
 import MusicNews from "./pages/MusicNews";
+import TestMusicNews from "./pages/TestMusicNews";
 import TestNewsUpdate from "./pages/TestNewsUpdate";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -153,6 +154,11 @@ const App = () => {
         <Route path="/shops" element={<PublicShopsOverview />} />
         <Route path="/user-scans" element={<UserScans />} />
             <Route path="/news" element={<MusicNews />} />
+            <Route path="/test-music-news" element={
+              <ProtectedRoute>
+                <TestMusicNews />
+              </ProtectedRoute>
+            } />
             <Route path="/plaat-verhaal/:slug" element={<PlaatVerhaal />} />
             <Route path="/test-news-update" element={
               <ProtectedRoute>

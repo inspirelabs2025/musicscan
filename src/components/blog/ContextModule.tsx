@@ -36,6 +36,7 @@ export function ContextModule({ blogPostId, albumYear, albumTitle, albumArtist }
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<'historical' | 'music' | 'cultural'>('historical');
+  const [error, setError] = useState<string | null>(null);
 
   const loadContext = async () => {
     try {
@@ -72,31 +73,42 @@ export function ContextModule({ blogPostId, albumYear, albumTitle, albumArtist }
     }
   };
 
-  const generateContext = async () => {
+  const generateContext = async (forceRegenerate = false) => {
     if (!albumYear) {
       console.warn('No album year provided for context generation');
+      setError('Geen jaartal beschikbaar voor context generatie');
       return;
     }
 
     setIsGenerating(true);
+    setError(null);
+    
     try {
-      // Call edge function to generate context using Perplexity API
       const { data, error } = await supabase.functions.invoke('generate-blog-context', {
         body: {
           blogPostId,
           albumYear,
           albumTitle,
           albumArtist,
+          force: forceRegenerate,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Fout bij het genereren van context');
+      }
 
       if (data?.success) {
         setContextData(data.context);
+        // Reload fresh data from database
+        await loadContext();
+      } else {
+        throw new Error(data?.error || 'Onbekende fout bij context generatie');
       }
     } catch (error) {
       console.error('Error generating context:', error);
+      setError(error instanceof Error ? error.message : 'Er is een fout opgetreden bij het genereren van de context');
     } finally {
       setIsGenerating(false);
     }
@@ -140,7 +152,12 @@ export function ContextModule({ blogPostId, albumYear, albumTitle, albumArtist }
           <p className="text-muted-foreground mb-4">
             Ontdek wat er gebeurde in {albumYear || 'het jaar'} waarin dit album uitkwam.
           </p>
-          <Button onClick={generateContext} disabled={!albumYear}>
+          {error && (
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded text-destructive text-sm">
+              {error}
+            </div>
+          )}
+          <Button onClick={() => generateContext()} disabled={!albumYear}>
             <Sparkles size={16} className="mr-2" />
             Context Genereren
           </Button>
@@ -270,18 +287,32 @@ export function ContextModule({ blogPostId, albumYear, albumTitle, albumArtist }
           </div>
         )}
         
-        {/* Regenerate button */}
-        <div className="flex justify-center pt-4 border-t">
+        {/* Regenerate buttons */}
+        <div className="flex justify-center gap-2 pt-4 border-t">
           <Button
             variant="ghost"
             size="sm"
-            onClick={generateContext}
+            onClick={() => generateContext()}
             disabled={isGenerating}
           >
             <Sparkles size={14} className="mr-1" />
             Context Vernieuwen
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => generateContext(true)}
+            disabled={isGenerating}
+          >
+            <Clock size={14} className="mr-1" />
+            Forceer Vernieuwen
+          </Button>
         </div>
+        {error && (
+          <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded text-destructive text-sm">
+            {error}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

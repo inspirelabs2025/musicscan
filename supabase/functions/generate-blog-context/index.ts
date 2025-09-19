@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { blogPostId, albumYear, albumTitle, albumArtist } = await req.json();
+    const { blogPostId, albumYear, albumTitle, albumArtist, force } = await req.json();
     
     if (!blogPostId || !albumYear || !albumTitle || !albumArtist) {
       return new Response(
@@ -30,6 +31,20 @@ serve(async (req) => {
     }
 
     console.log(`Generating context for ${albumArtist} - ${albumTitle} (${albumYear})`);
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+
+    // If force is true, delete existing context
+    if (force) {
+      console.log('Force regenerate requested, deleting existing context');
+      await supabase
+        .from('blog_context')
+        .delete()
+        .eq('blog_post_id', blogPostId);
+    }
 
     // Generate context using Perplexity API
     const prompt = `Genereer uitgebreide historische en culturele context voor het jaar ${albumYear}. Focus op de brede context van dat jaar, niet specifiek op het album "${albumTitle}" van ${albumArtist}.
@@ -90,7 +105,7 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
           messages: [
             {
               role: 'system',
-              content: 'Je bent een muziekhistoricus en cultureel expert gespecialiseerd in het jaar 2001. Geef nauwkeurige, uitgebreide historische context in het Nederlands. Antwoord ALLEEN met geldige JSON zonder markdown formatting. Geef uitgebreide beschrijvingen van 150-200 woorden per item.'
+              content: `Je bent een muziekhistoricus en cultureel expert gespecialiseerd in het jaar ${albumYear}. Geef nauwkeurige, uitgebreide historische context in het Nederlands. Antwoord ALLEEN met geldige JSON zonder markdown formatting. Geef uitgebreide beschrijvingen van 150-200 woorden per item.`
             },
             {
               role: 'user',
@@ -98,15 +113,56 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
             }
           ],
           temperature: 0.1,
-          max_tokens: 4000,
-          search_recency_filter: 'month',
+          top_p: 0.9,
+          max_tokens: 1500,
           return_images: false,
           return_related_questions: false
         }),
     });
 
     if (!response.ok) {
-      throw new Error(`Perplexity API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Perplexity API error - Status: ${response.status}, Text: ${errorText}`);
+      
+      // Try with smaller model on 400 Bad Request
+      if (response.status === 400) {
+        console.log('Retrying with smaller model due to 400 error');
+        const fallbackResponse = await fetch('https://api.perplexity.ai/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${perplexityApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.1-sonar-small-128k-online',
+            messages: [
+              {
+                role: 'system',
+                content: `Je bent een muziekhistoricus en cultureel expert gespecialiseerd in het jaar ${albumYear}. Geef nauwkeurige, uitgebreide historische context in het Nederlands. Antwoord ALLEEN met geldige JSON zonder markdown formatting.`
+              },
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            temperature: 0.1,
+            top_p: 0.9,
+            max_tokens: 1000,
+            return_images: false,
+            return_related_questions: false
+          }),
+        });
+
+        if (!fallbackResponse.ok) {
+          const fallbackErrorText = await fallbackResponse.text();
+          throw new Error(`Perplexity fallback API error - Status: ${fallbackResponse.status}, Text: ${fallbackErrorText}`);
+        }
+
+        response = fallbackResponse;
+        console.log('Fallback model response received');
+      } else {
+        throw new Error(`Perplexity API error - Status: ${response.status}, Text: ${errorText}`);
+      }
     }
 
     const data = await response.json();
@@ -181,32 +237,22 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
       };
     }
 
-    // Save to database
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (supabaseUrl && supabaseKey) {
+    // Save to database using Supabase client
+    if (supabaseUrl && supabaseServiceKey) {
       try {
-        const saveResponse = await fetch(`${supabaseUrl}/rest/v1/blog_context`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Content-Type': 'application/json',
-            'apikey': supabaseKey,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({
+        const { error: insertError } = await supabase
+          .from('blog_context')
+          .insert({
             blog_post_id: blogPostId,
             historical_events: contextData.historical_events,
             music_scene_context: contextData.music_scene_context,
             cultural_context: contextData.cultural_context,
             ai_model: 'llama-3.1-sonar-large-128k-online',
-            cached_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-          })
-        });
+            cached_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          });
 
-        if (!saveResponse.ok) {
-          console.error('Failed to save context to database:', await saveResponse.text());
+        if (insertError) {
+          console.error('Failed to save context to database:', insertError);
         } else {
           console.log('Context saved to database successfully');
         }

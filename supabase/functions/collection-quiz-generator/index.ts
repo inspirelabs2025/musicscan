@@ -24,6 +24,10 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Parse request body to get question count
+    const body = await req.json().catch(() => ({}));
+    const questionCount = body.questionCount || 10;
+
     // Get the authenticated user
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -78,7 +82,7 @@ serve(async (req) => {
     };
 
     const prompt = `
-Je bent een muziekquiz generator. Analyseer deze muziekcollectie en genereer precies 10 uitdagende maar eerlijke quiz vragen.
+Je bent een muziekquiz generator. Analyseer deze muziekcollectie en genereer precies ${questionCount} uitdagende maar eerlijke quiz vragen.
 
 COLLECTIE DATA:
 - Totaal albums: ${collectionSummary.totalAlbums}
@@ -89,7 +93,7 @@ COLLECTIE DATA:
 SAMPLE ALBUMS:
 ${collectionSummary.sampleAlbums.map(a => `${a.artist} - ${a.title} (${a.year || 'Unknown'})`).join('\n')}
 
-Genereer 10 verschillende vraagtypen:
+Genereer ${questionCount} verschillende vraagtypen uit deze categorieën:
 1. Album herkenning: "Welke artiest heeft het album [TITLE]?"
 2. Jaar vragen: "Uit welk jaar is [ALBUM] van [ARTIST]?"
 3. Genre classificatie: "Tot welk genre behoort [ALBUM]?"
@@ -130,13 +134,13 @@ Retourneer JSON format:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: 'Je bent een expert in het maken van muziekquizzes. Genereer altijd valid JSON.' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: questionCount > 20 ? 6000 : 4000,
       }),
     });
 

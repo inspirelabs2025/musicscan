@@ -49,10 +49,6 @@ interface UseInfiniteUnifiedScansOptions {
   statusFilter?: string;
 }
 
-// Store for all scans data to avoid refetching
-let cachedAllScans: UnifiedScanResult[] | null = null;
-let cacheKey: string | null = null;
-
 export const useInfiniteUnifiedScans = (options: UseInfiniteUnifiedScansOptions = {}) => {
   const {
     pageSize = 25,
@@ -66,50 +62,45 @@ export const useInfiniteUnifiedScans = (options: UseInfiniteUnifiedScansOptions 
   return useInfiniteQuery({
     queryKey: ["unified-scans-infinite", pageSize, sortField, sortDirection, searchTerm, mediaTypeFilter, statusFilter],
     queryFn: async ({ pageParam = 0 }) => {
-      const currentCacheKey = `${sortField}-${sortDirection}-${searchTerm}-${mediaTypeFilter}-${statusFilter}`;
+      const offset = pageParam * pageSize;
       
-      // Only fetch data if it's the first page or cache is invalid
-      if (pageParam === 0 || cacheKey !== currentCacheKey) {
-        // Fetch data from all three tables
-        const [aiScansResult, cdScansResult, vinylScansResult] = await Promise.all([
-          fetchAIScans(searchTerm, mediaTypeFilter, statusFilter),
-          fetchCDScans(searchTerm, mediaTypeFilter),
-          fetchVinylScans(searchTerm, mediaTypeFilter)
-        ]);
+      // Fetch data from all three tables with proper pagination
+      const [aiScansResult, cdScansResult, vinylScansResult, totalCounts] = await Promise.all([
+        fetchAIScansWithPagination(searchTerm, mediaTypeFilter, statusFilter, offset, pageSize, sortField, sortDirection),
+        fetchCDScansWithPagination(searchTerm, mediaTypeFilter, offset, pageSize, sortField, sortDirection),
+        fetchVinylScansWithPagination(searchTerm, mediaTypeFilter, offset, pageSize, sortField, sortDirection),
+        getTotalCounts(searchTerm, mediaTypeFilter, statusFilter)
+      ]);
 
-        // Debug logging
-        console.log('🔍 useInfiniteUnifiedScans Data:', {
-          aiScansCount: aiScansResult.length,
-          cdScansCount: cdScansResult.length,
-          vinylScansCount: vinylScansResult.length,
-          totalScans: aiScansResult.length + cdScansResult.length + vinylScansResult.length,
-          filters: { searchTerm, mediaTypeFilter, statusFilter }
-        });
+      // Debug logging
+      console.log('🔍 useInfiniteUnifiedScans Page Data:', {
+        page: pageParam,
+        offset,
+        pageSize,
+        aiScansCount: aiScansResult.length,
+        cdScansCount: cdScansResult.length,
+        vinylScansCount: vinylScansResult.length,
+        totalCounts,
+        filters: { searchTerm, mediaTypeFilter, statusFilter }
+      });
 
-        // Combine and normalize all data
-        const allScans: UnifiedScanResult[] = [
-          ...aiScansResult.map(normalizeAIScanResult),
-          ...cdScansResult.map(normalizeCDScanResult),
-          ...vinylScansResult.map(normalizeVinylScanResult)
-        ];
+      // Combine and normalize data for this page
+      const pageScans: UnifiedScanResult[] = [
+        ...aiScansResult.map(normalizeAIScanResult),
+        ...cdScansResult.map(normalizeCDScanResult),
+        ...vinylScansResult.map(normalizeVinylScanResult)
+      ];
 
-        // Apply sorting
-        const sortedScans = sortScans(allScans, sortField, sortDirection);
-        
-        // Cache the sorted data
-        cachedAllScans = sortedScans;
-        cacheKey = currentCacheKey;
-      }
-
-      // Use cached data for pagination
-      const totalCount = cachedAllScans?.length || 0;
-      const from = pageParam * pageSize;
-      const to = from + pageSize;
-      const paginatedScans = cachedAllScans?.slice(from, to) || [];
+      // Sort the combined page data
+      const sortedPageScans = sortScans(pageScans, sortField, sortDirection);
+      
+      // Calculate if there are more pages
+      const totalCount = totalCounts.ai + totalCounts.cd + totalCounts.vinyl;
+      const hasMore = (offset + pageSize) < totalCount;
 
       return {
-        data: paginatedScans,
-        nextPage: to < totalCount ? pageParam + 1 : undefined,
+        data: sortedPageScans,
+        nextPage: hasMore ? pageParam + 1 : undefined,
         totalCount,
       };
     },
@@ -118,74 +109,221 @@ export const useInfiniteUnifiedScans = (options: UseInfiniteUnifiedScansOptions 
   });
 };
 
-// Helper functions to fetch data from each table
-async function fetchAIScans(searchTerm: string, mediaTypeFilter: string, statusFilter: string) {
-  // Use the same pagination logic as useDirectScans to fetch ALL AI records
-  const allAIScans = [];
-  let offset = 0;
-  const pageSize = 1000;
-  
-  while (true) {
-    let query = supabase
-      .from("ai_scan_results")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .range(offset, offset + pageSize - 1);
-
-    // Apply search filter
-    if (searchTerm) {
-      query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
-    }
-
-    // Apply status filter
-    if (statusFilter && statusFilter !== "all") {
-      query = query.eq("status", statusFilter);
-    }
-    
-    const { data, error } = await query;
-    if (error) throw error;
-    
-    if (!data || data.length === 0) break;
-    
-    allAIScans.push(...data);
-    
-    if (data.length < pageSize) break;
-    offset += pageSize;
+// Helper functions to fetch data with proper pagination
+async function fetchAIScansWithPagination(
+  searchTerm: string, 
+  mediaTypeFilter: string, 
+  statusFilter: string, 
+  offset: number, 
+  limit: number, 
+  sortField: string, 
+  sortDirection: "asc" | "desc"
+) {
+  // Skip if media type filter excludes AI scans
+  if (mediaTypeFilter && mediaTypeFilter !== "all" && mediaTypeFilter !== "cd" && mediaTypeFilter !== "vinyl") {
+    return [];
   }
+
+  let query = supabase
+    .from("ai_scan_results")
+    .select("*")
+    .range(offset, offset + limit - 1);
+
+  // Apply search filter
+  if (searchTerm) {
+    query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
+  }
+
+  // Apply media type filter for AI scans
+  if (mediaTypeFilter && mediaTypeFilter !== "all") {
+    query = query.eq("media_type", mediaTypeFilter);
+  }
+
+  // Apply status filter
+  if (statusFilter && statusFilter !== "all") {
+    query = query.eq("status", statusFilter);
+  }
+
+  // Apply sorting - map sort field to appropriate column
+  const mappedSortField = mapSortFieldForAI(sortField);
+  query = query.order(mappedSortField, { ascending: sortDirection === "asc" });
   
-  return allAIScans;
+  const { data, error } = await query;
+  if (error) throw error;
+  
+  return data || [];
 }
 
-async function fetchCDScans(searchTerm: string, mediaTypeFilter: string) {
+async function fetchCDScansWithPagination(
+  searchTerm: string, 
+  mediaTypeFilter: string, 
+  offset: number, 
+  limit: number, 
+  sortField: string, 
+  sortDirection: "asc" | "desc"
+) {
   if (mediaTypeFilter && mediaTypeFilter !== "all" && mediaTypeFilter !== "cd") {
     return [];
   }
 
-  let query = supabase.from("cd_scan").select("*");
+  let query = supabase
+    .from("cd_scan")
+    .select("*")
+    .range(offset, offset + limit - 1);
 
   if (searchTerm) {
     query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
   }
+
+  // Apply sorting - map sort field to appropriate column
+  const mappedSortField = mapSortFieldForCD(sortField);
+  query = query.order(mappedSortField, { ascending: sortDirection === "asc" });
 
   const { data, error } = await query;
   if (error) throw error;
   return data || [];
 }
 
-async function fetchVinylScans(searchTerm: string, mediaTypeFilter: string) {
+async function fetchVinylScansWithPagination(
+  searchTerm: string, 
+  mediaTypeFilter: string, 
+  offset: number, 
+  limit: number, 
+  sortField: string, 
+  sortDirection: "asc" | "desc"
+) {
   if (mediaTypeFilter && mediaTypeFilter !== "all" && mediaTypeFilter !== "vinyl") {
     return [];
   }
 
-  let query = supabase.from("vinyl2_scan").select("*");
+  let query = supabase
+    .from("vinyl2_scan")
+    .select("*")
+    .range(offset, offset + limit - 1);
 
   if (searchTerm) {
     query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
   }
 
+  // Apply sorting - map sort field to appropriate column
+  const mappedSortField = mapSortFieldForVinyl(sortField);
+  query = query.order(mappedSortField, { ascending: sortDirection === "asc" });
+
   const { data, error } = await query;
   if (error) throw error;
   return data || [];
+}
+
+// Helper function to get total counts
+async function getTotalCounts(searchTerm: string, mediaTypeFilter: string, statusFilter: string) {
+  const [aiCount, cdCount, vinylCount] = await Promise.all([
+    getAIScansCount(searchTerm, mediaTypeFilter, statusFilter),
+    getCDScansCount(searchTerm, mediaTypeFilter),
+    getVinylScansCount(searchTerm, mediaTypeFilter)
+  ]);
+
+  return {
+    ai: aiCount,
+    cd: cdCount,
+    vinyl: vinylCount
+  };
+}
+
+async function getAIScansCount(searchTerm: string, mediaTypeFilter: string, statusFilter: string) {
+  if (mediaTypeFilter && mediaTypeFilter !== "all" && mediaTypeFilter !== "cd" && mediaTypeFilter !== "vinyl") {
+    return 0;
+  }
+
+  let query = supabase
+    .from("ai_scan_results")
+    .select("*", { count: 'exact', head: true });
+
+  if (searchTerm) {
+    query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
+  }
+
+  if (mediaTypeFilter && mediaTypeFilter !== "all") {
+    query = query.eq("media_type", mediaTypeFilter);
+  }
+
+  if (statusFilter && statusFilter !== "all") {
+    query = query.eq("status", statusFilter);
+  }
+
+  const { count, error } = await query;
+  if (error) throw error;
+  return count || 0;
+}
+
+async function getCDScansCount(searchTerm: string, mediaTypeFilter: string) {
+  if (mediaTypeFilter && mediaTypeFilter !== "all" && mediaTypeFilter !== "cd") {
+    return 0;
+  }
+
+  let query = supabase
+    .from("cd_scan")
+    .select("*", { count: 'exact', head: true });
+
+  if (searchTerm) {
+    query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
+  }
+
+  const { count, error } = await query;
+  if (error) throw error;
+  return count || 0;
+}
+
+async function getVinylScansCount(searchTerm: string, mediaTypeFilter: string) {
+  if (mediaTypeFilter && mediaTypeFilter !== "all" && mediaTypeFilter !== "vinyl") {
+    return 0;
+  }
+
+  let query = supabase
+    .from("vinyl2_scan")
+    .select("*", { count: 'exact', head: true });
+
+  if (searchTerm) {
+    query = query.or(`artist.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,label.ilike.%${searchTerm}%`);
+  }
+
+  const { count, error } = await query;
+  if (error) throw error;
+  return count || 0;
+}
+
+// Sort field mapping functions
+function mapSortFieldForAI(sortField: string): string {
+  const fieldMap: Record<string, string> = {
+    'created_at': 'created_at',
+    'artist': 'artist',
+    'title': 'title',
+    'confidence_score': 'confidence_score',
+    'status': 'status',
+    'media_type': 'media_type'
+  };
+  return fieldMap[sortField] || 'created_at';
+}
+
+function mapSortFieldForCD(sortField: string): string {
+  const fieldMap: Record<string, string> = {
+    'created_at': 'created_at',
+    'artist': 'artist',
+    'title': 'title',
+    'calculated_advice_price': 'calculated_advice_price',
+    'year': 'year'
+  };
+  return fieldMap[sortField] || 'created_at';
+}
+
+function mapSortFieldForVinyl(sortField: string): string {
+  const fieldMap: Record<string, string> = {
+    'created_at': 'created_at',
+    'artist': 'artist',
+    'title': 'title',
+    'calculated_advice_price': 'calculated_advice_price',  
+    'year': 'year'
+  };
+  return fieldMap[sortField] || 'created_at';
 }
 
 // Normalization functions

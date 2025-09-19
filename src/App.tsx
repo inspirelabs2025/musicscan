@@ -39,6 +39,7 @@ import TestMusicNews from "./pages/TestMusicNews";
 import TestNewsUpdate from "./pages/TestNewsUpdate";
 import TestNewsGeneration from "./pages/TestNewsGeneration";
 import TestBlogRegeneration from "./pages/TestBlogRegeneration";
+import TestAlbumCoverBackfill from "./pages/TestAlbumCoverBackfill";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
@@ -178,6 +179,11 @@ const App = () => {
             <Route path="/test-blog-regeneration" element={
               <ProtectedRoute>
                 <TestBlogRegeneration />
+              </ProtectedRoute>
+            } />
+            <Route path="/test-album-cover-backfill" element={
+              <ProtectedRoute>
+                <TestAlbumCoverBackfill />
               </ProtectedRoute>
             } />
             <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />

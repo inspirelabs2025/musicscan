@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.auto-blog-trigger]
 verify_jwt = false
+
+[functions.album-cover-backfill]
+verify_jwt = false

@@ -2188,7 +2188,46 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      unified_scans: {
+        Row: {
+          ai_description: string | null
+          artist: string | null
+          barcode: string | null
+          calculated_advice_price: number | null
+          catalog_number: string | null
+          comments: string | null
+          condition_grade: string | null
+          confidence_score: number | null
+          country: string | null
+          created_at: string | null
+          discogs_id: number | null
+          discogs_url: string | null
+          error_message: string | null
+          format: string | null
+          genre: string | null
+          highest_price: number | null
+          id: string | null
+          is_flagged_incorrect: boolean | null
+          is_for_sale: boolean | null
+          is_public: boolean | null
+          label: string | null
+          lowest_price: number | null
+          matrix_number: string | null
+          media_type: string | null
+          median_price: number | null
+          photo_urls: string[] | null
+          release_id: string | null
+          search_queries: string[] | null
+          source_table: string | null
+          status: string | null
+          style: string[] | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+          year: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_duplicate_cd_scans: {

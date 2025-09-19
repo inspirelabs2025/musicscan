@@ -40,6 +40,7 @@ producer: "Producer"
 musicians: "Belangrijkste muzikanten"
 genre: "Genre"
 styles: ["Style1", "Style2"]
+discogs_id: 123456
 images: ["image1.jpg"]
 audio_links: ["spotify_link"]
 slug: "artist-album-year"

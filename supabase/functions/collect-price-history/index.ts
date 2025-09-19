@@ -20,6 +20,12 @@ serve(async (req) => {
   }
 
   try {
+    const { 
+      manual = false, 
+      target_discogs_ids = null, 
+      priority = 'normal' 
+    } = await req.json().catch(() => ({}));
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const scraperApiKey = Deno.env.get('SCRAPERAPI_KEY');
@@ -29,22 +35,49 @@ serve(async (req) => {
     console.log('Starting price history collection...');
 
     // Get unique albums with discogs_id from both tables
-    const { data: cdAlbums, error: cdError } = await supabase
-      .from('cd_scan')
-      .select('discogs_id, artist, title, updated_at')
-      .not('discogs_id', 'is', null)
-      .order('updated_at', { ascending: false })
-      .limit(50); // Limit to avoid timeout
+    let cdAlbums, vinylAlbums;
+    
+    if (target_discogs_ids && Array.isArray(target_discogs_ids)) {
+      console.log(`Targeting specific discogs IDs: ${target_discogs_ids.join(', ')}`);
+      
+      const { data: cdTargetData, error: cdError } = await supabase
+        .from('cd_scan')
+        .select('discogs_id, artist, title, updated_at')
+        .in('discogs_id', target_discogs_ids);
+        
+      const { data: vinylTargetData, error: vinylError } = await supabase
+        .from('vinyl2_scan')
+        .select('discogs_id, artist, title, updated_at')
+        .in('discogs_id', target_discogs_ids);
+        
+      cdAlbums = cdTargetData;
+      vinylAlbums = vinylTargetData;
+      
+      if (cdError || vinylError) {
+        throw new Error(`Database error: ${cdError?.message || vinylError?.message}`);
+      }
+    } else {
+      // Get recent albums
+      const { data: cdRecentData, error: cdError } = await supabase
+        .from('cd_scan')
+        .select('discogs_id, artist, title, updated_at')
+        .not('discogs_id', 'is', null)
+        .order('updated_at', { ascending: false })
+        .limit(50);
 
-    const { data: vinylAlbums, error: vinylError } = await supabase
-      .from('vinyl2_scan')
-      .select('discogs_id, artist, title, updated_at')
-      .not('discogs_id', 'is', null)
-      .order('updated_at', { ascending: false })
-      .limit(50);
+      const { data: vinylRecentData, error: vinylError } = await supabase
+        .from('vinyl2_scan')
+        .select('discogs_id, artist, title, updated_at')
+        .not('discogs_id', 'is', null)
+        .order('updated_at', { ascending: false })
+        .limit(50);
 
-    if (cdError || vinylError) {
-      throw new Error(`Database error: ${cdError?.message || vinylError?.message}`);
+      cdAlbums = cdRecentData;
+      vinylAlbums = vinylRecentData;
+      
+      if (cdError || vinylError) {
+        throw new Error(`Database error: ${cdError?.message || vinylError?.message}`);
+      }
     }
 
     // Combine and deduplicate albums
@@ -69,7 +102,8 @@ serve(async (req) => {
     let errorCount = 0;
 
     // Process albums with rate limiting
-    for (const album of allAlbums.slice(0, 20)) { // Limit to 20 for initial run
+    const maxToProcess = target_discogs_ids ? Math.min(allAlbums.length, 30) : 20;
+    for (const album of allAlbums.slice(0, maxToProcess)) {
       try {
         await collectPriceForAlbum(album, supabase, scraperApiKey);
         successCount++;

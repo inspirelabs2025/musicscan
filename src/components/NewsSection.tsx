@@ -2,18 +2,81 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Music, ExternalLink, Disc3, Newspaper } from "lucide-react";
-import { useDiscogsNews, usePerplexityNews } from "@/hooks/useNewsCache";
+import { Music, Disc3, Newspaper, ArrowRight } from "lucide-react";
+import { useDiscogsNews } from "@/hooks/useNewsCache";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
+
+interface BlogPost {
+  id: string;
+  title: string;
+  summary: string;
+  source: string;
+  published_at: string;
+  category: string;
+  slug: string;
+}
+
+const fetchBlogPosts = async (): Promise<BlogPost[]> => {
+  // First try to get from database
+  const { data: blogPosts, error } = await supabase
+    .from('news_blog_posts')
+    .select('id, title, summary, source, published_at, category, slug')
+    .order('published_at', { ascending: false })
+    .limit(6);
+
+  if (error) {
+    console.error('Error fetching blog posts from database:', error);
+  }
+
+  // If we have recent blog posts from database, use them
+  if (blogPosts && blogPosts.length > 0) {
+    const latestPost = new Date(blogPosts[0].published_at);
+    const now = new Date();
+    const hoursDiff = (now.getTime() - latestPost.getTime()) / (1000 * 60 * 60);
+    
+    // Use cached posts if they are less than 6 hours old
+    if (hoursDiff < 6) {
+      return blogPosts;
+    }
+  }
+
+  // Fallback to generating new posts
+  const { data: newBlogPosts, error: functionError } = await supabase.functions.invoke('music-news-perplexity');
+  
+  if (functionError) {
+    console.error('Error generating new blog posts:', functionError);
+    // Return existing posts even if old
+    return blogPosts || [];
+  }
+
+  // Get fresh posts from database after generation
+  const { data: freshBlogPosts } = await supabase
+    .from('news_blog_posts')
+    .select('id, title, summary, source, published_at, category, slug')
+    .order('published_at', { ascending: false })
+    .limit(6);
+
+  return freshBlogPosts || [];
+};
 
 export const NewsSection = () => {
   const [newsSource, setNewsSource] = useState<'discogs' | 'perplexity'>('discogs');
 
-  // Use the new cached hooks
+  // Use the cached hooks for different sources
   const { data: discogsReleases = [], isLoading: isLoadingDiscogs, error: discogsError } = useDiscogsNews();
-  const { data: musicNews = [], isLoading: isLoadingPerplexity, error: perplexityError } = usePerplexityNews();
+  
+  // Use the blog posts query for perplexity news
+  const { data: blogPosts = [], isLoading: isLoadingBlogPosts, error: blogPostsError } = useQuery({
+    queryKey: ["music-blog-posts"],
+    queryFn: fetchBlogPosts,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+  });
 
-  const loading = newsSource === 'discogs' ? isLoadingDiscogs : isLoadingPerplexity;
-  const error = newsSource === 'discogs' ? discogsError : perplexityError;
+  const loading = newsSource === 'discogs' ? isLoadingDiscogs : isLoadingBlogPosts;
+  const error = newsSource === 'discogs' ? discogsError : blogPostsError;
 
   const handleSourceSwitch = (source: 'discogs' | 'perplexity') => {
     if (source !== newsSource) {
@@ -129,30 +192,26 @@ export const NewsSection = () => {
 
         {!loading && !error && newsSource === 'perplexity' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(musicNews as any[]).map((item: any, index: number) => (
-              <Card key={index} className="group hover:shadow-lg transition-all duration-300">
+            {blogPosts.map((post: BlogPost) => (
+              <Card key={post.id} className="group hover:shadow-lg transition-all duration-300">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg line-clamp-2">{item.title || 'Onbekende titel'}</CardTitle>
+                  <CardTitle className="text-lg line-clamp-2">{post.title}</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {item.source || 'Onbekende bron'} • {item.publishedAt ? new Date(item.publishedAt).toLocaleDateString('nl-NL') : 'Datum onbekend'}
+                    {post.source} • {new Date(post.published_at).toLocaleDateString('nl-NL')}
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm mb-4 line-clamp-3">{item.summary || 'Geen samenvatting beschikbaar'}</p>
+                  <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                      {item.category || 'Algemeen'}
+                      {post.category}
                     </span>
-                    {item.url && (
-                      <a 
-                        href={item.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm"
-                      >
-                        Lees meer <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
+                    <Link 
+                      to={`/nieuws/${post.slug}`}
+                      className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm group-hover:gap-2 transition-all duration-200"
+                    >
+                      Lees meer <ArrowRight className="w-3 h-3" />
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

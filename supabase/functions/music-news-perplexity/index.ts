@@ -1,63 +1,60 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface NewsItem {
+interface BlogPost {
   title: string;
+  content: string; // Full markdown content
   summary: string;
   source: string;
   publishedAt: string;
-  url?: string;
   category: string;
+  slug: string;
 }
 
-// Fallback news items in case API fails
-const fallbackNewsItems: NewsItem[] = [
+// Helper function to create URL-safe slugs
+function createSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[àáâäã]/g, 'a')
+    .replace(/[èéêë]/g, 'e')
+    .replace(/[ìíîï]/g, 'i')
+    .replace(/[òóôöõ]/g, 'o')
+    .replace(/[ùúûü]/g, 'u')
+    .replace(/[ýÿ]/g, 'y')
+    .replace(/[ñ]/g, 'n')
+    .replace(/[ç]/g, 'c')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
+    .substring(0, 100);
+}
+
+// Fallback blog posts in case API fails
+const fallbackBlogPosts: BlogPost[] = [
   {
     title: "Nieuwe muziektrends in 2025",
+    content: "## Nieuwe muziektrends in 2025\n\nDe muziekindustrie evolueert voortdurend, en 2025 brengt opnieuw fascinerende ontwikkelingen. Van AI-geassisteerde compositie tot innovatieve distributiemodellen - ontdek wat er dit jaar allemaal gebeurt in de wereld van muziek.\n\n### Belangrijkste trends\n\nStreaming platforms blijven innoveren met nieuwe technologieën, terwijl artiesten experimenteren met virtual reality concerten en interactieve ervaringen.",
     summary: "Ontdek de nieuwste ontwikkelingen in de muziekindustrie dit jaar",
     source: "Muzieknieuws",
     publishedAt: new Date().toISOString(),
-    category: "Industry"
+    category: "Industry",
+    slug: "nieuwe-muziektrends-in-2025"
   },
   {
     title: "Vinyl verkoop blijft groeien",
+    content: "## Vinyl verkoop blijft groeien\n\nFysieke media maken een opmerkelijke comeback bij muziekliefhebbers wereldwijd. Vinyl platen, ooit gedacht als verouderd medium, ervaren een renaissance die de muziekindustrie doet opveren.\n\n### Waarom vinyl populair blijft\n\nDe warme, analoge klank en het tactiele ervaring van vinyl spelen een rol, maar ook de nostalgie en het verzamelaspect maken vinyl aantrekkelijk voor zowel jongere als oudere generaties.",
     summary: "Fysieke media maken een comeback bij muziekliefhebbers",
     source: "Muziektrends",
     publishedAt: new Date().toISOString(),
-    category: "Industry"
-  },
-  {
-    title: "Streaming platforms investeren in nieuwe technologie",
-    summary: "Verbeterde audio-kwaliteit en AI-features komen eraan",
-    source: "Tech Music",
-    publishedAt: new Date().toISOString(),
-    category: "Industry"
-  },
-  {
-    title: "Concertticket verkoop record gebroken",
-    summary: "2025 wordt een topjaar voor live muziek evenementen",
-    source: "Concert News",
-    publishedAt: new Date().toISOString(),
-    category: "Concert"
-  },
-  {
-    title: "Indie artiesten profiteren van social media",
-    summary: "Nieuwe platforms helpen onafhankelijke muzikanten hun publiek te bereiken",
-    source: "Artist Today",
-    publishedAt: new Date().toISOString(),
-    category: "Artist News"
-  },
-  {
-    title: "AI-gegenereerde muziek zorgt voor debat",
-    summary: "De muziekindustrie worstelt met nieuwe technologische ontwikkelingen",
-    source: "Music Tech",
-    publishedAt: new Date().toISOString(),
-    category: "Industry"
+    category: "Industry", 
+    slug: "vinyl-verkoop-blijft-groeien"
   }
 ];
 
@@ -68,106 +65,218 @@ serve(async (req) => {
 
   try {
     const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    // Initialize Supabase client
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     if (!perplexityApiKey) {
       console.error('Perplexity API key not configured');
+      
+      // Save fallback blog posts to database
+      for (const post of fallbackBlogPosts) {
+        const { error } = await supabase
+          .from('news_blog_posts')
+          .upsert({
+            title: post.title,
+            content: post.content,
+            summary: post.summary,
+            source: post.source,
+            published_at: post.publishedAt,
+            category: post.category,
+            slug: post.slug
+          }, {
+            onConflict: 'slug',
+            ignoreDuplicates: false
+          });
+        
+        if (error) console.error('Error saving fallback blog post:', error);
+      }
+      
       return new Response(JSON.stringify({
         success: true,
-        news: fallbackNewsItems,
+        blogPosts: fallbackBlogPosts,
         lastUpdated: new Date().toISOString(),
-        message: 'Using fallback news items - API key not configured'
+        message: 'Using fallback blog posts - API key not configured'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log('Fetching music news from Perplexity with sonar model...');
+    console.log('Generating music blog posts with Perplexity...');
     
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    // First, get news topics from Perplexity
+    const topicsResponse = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${perplexityApiKey}`,
         'Content-Type': 'application/json',
       },
-        body: JSON.stringify({
-          model: 'sonar',
-          messages: [
-            {
-              role: 'system',
-              content: 'Je bent een muzieknieuws curator. Zoek breed muzieknieuws van de afgelopen 24 uur. Geef ALLEEN een geldige JSON array terug met objecten die bevatten: title, summary (max 150 karakters), source, publishedAt (ISO datum string), url (indien beschikbaar), en category. Antwoord alleen met JSON, geen extra tekst.'
-            },
-            {
-              role: 'user',
-              content: 'Vind het laatste muzieknieuws van de afgelopen 24 uur: muziek release nieuws, concert aankondigingen, algemeen muzieknieuws over artiesten, en leuke berichten over muzikanten of aanverwante songs en nummers. Geef alleen als JSON array terug.'
-            }
-          ],
-          temperature: 0.2,
-          max_tokens: 1500,
-          search_recency_filter: 'day',
-          return_images: false,
-          return_related_questions: false
-        }),
+      body: JSON.stringify({
+        model: 'sonar',
+        messages: [
+          {
+            role: 'system',
+            content: 'Je bent een muzieknieuws curator. Zoek 3-5 interessante muziek nieuwsonderwerpen van de afgelopen 24 uur. Geef ALLEEN een JSON array terug met objecten die bevatten: title (korte titel), summary (max 100 karakters), source, category. Antwoord alleen met JSON, geen extra tekst.'
+          },
+          {
+            role: 'user',
+            content: 'Vind de meest interessante muzieknieuws onderwerpen van vandaag: nieuwe releases, concert nieuws, industrie ontwikkelingen, artiest nieuws. Geef alleen JSON array terug.'
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 800,
+        search_recency_filter: 'day',
+        return_images: false,
+        return_related_questions: false
+      }),
     });
 
-    if (!response.ok) {
-      console.error(`Perplexity API error: ${response.status} - ${response.statusText}`);
-      const errorText = await response.text();
-      console.error('Perplexity error response:', errorText);
-      throw new Error(`Perplexity API error: ${response.status}`);
+    if (!topicsResponse.ok) {
+      console.error(`Perplexity topics API error: ${topicsResponse.status}`);
+      throw new Error(`Perplexity API error: ${topicsResponse.status}`);
     }
 
-    const data = await response.json();
-    console.log('Perplexity response received:', data);
-    const content = data.choices[0].message.content;
+    const topicsData = await topicsResponse.json();
+    const topicsContent = topicsData.choices[0].message.content;
     
-    let newsItems: NewsItem[] = [];
-    
+    let newsTopics = [];
     try {
-      // Try to parse JSON from the response
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      const jsonMatch = topicsContent.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
-        newsItems = JSON.parse(jsonMatch[0]);
-      } else {
-        // Fallback: create structured news from text
-        newsItems = [{
-          title: "Music News Update",
-          summary: "Latest music industry news and releases",
-          source: "Perplexity",
-          publishedAt: new Date().toISOString(),
-          category: "General"
-        }];
+        newsTopics = JSON.parse(jsonMatch[0]);
       }
     } catch (parseError) {
-      console.log('Failed to parse JSON, using fallback news items');
-      newsItems = [{
-        title: "Music Industry Updates",
-        summary: "Stay tuned for the latest music news and album releases",
-        source: "Music News",
-        publishedAt: new Date().toISOString(),
-        category: "Industry"
-      }];
+      console.log('Failed to parse topics, using fallback');
+      newsTopics = [
+        { title: "Muzieknieuws Update", summary: "Laatste ontwikkelingen", source: "Algemeen", category: "Industry" }
+      ];
     }
 
-    // Use natural amount of news items found, no forced padding
-    console.log(`Fetched ${newsItems.length} music news items from Perplexity`);
+    console.log(`Found ${newsTopics.length} news topics, generating blog posts...`);
+    
+    const blogPosts: BlogPost[] = [];
+    
+    // Generate full blog posts for each topic
+    for (const topic of newsTopics.slice(0, 4)) { // Limit to 4 posts
+      try {
+        const blogResponse = await fetch('https://api.perplexity.ai/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${perplexityApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'sonar',
+            messages: [
+              {
+                role: 'system',
+                content: 'Je bent een ervaren muziekjournalist. Schrijf een uitgebreid blog artikel van 400-600 woorden in het Nederlands over het gegeven onderwerp. Gebruik Markdown formatting met ## voor hoofdingen en ### voor subheadings. Maak het informatief en boeiend. Geef alleen de blog content terug, geen andere tekst.'
+              },
+              {
+                role: 'user',
+                content: `Schrijf een uitgebreid blog artikel over: "${topic.title}". Zoek actuele informatie en maak er een interessant verhaal van met details, context en relevante bronnen.`
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 2000,
+            search_recency_filter: 'day',
+            return_images: false,
+            return_related_questions: false
+          }),
+        });
+
+        if (blogResponse.ok) {
+          const blogData = await blogResponse.json();
+          const blogContent = blogData.choices[0].message.content;
+          
+          const slug = createSlug(topic.title);
+          
+          const blogPost: BlogPost = {
+            title: topic.title,
+            content: blogContent,
+            summary: topic.summary,
+            source: topic.source || 'Muzieknieuws',
+            publishedAt: new Date().toISOString(),
+            category: topic.category || 'Industry',
+            slug: slug
+          };
+          
+          // Save to database
+          const { error } = await supabase
+            .from('news_blog_posts')
+            .upsert({
+              title: blogPost.title,
+              content: blogPost.content,
+              summary: blogPost.summary,
+              source: blogPost.source,
+              published_at: blogPost.publishedAt,
+              category: blogPost.category,
+              slug: blogPost.slug
+            }, {
+              onConflict: 'slug',
+              ignoreDuplicates: false
+            });
+          
+          if (error) {
+            console.error('Error saving blog post:', error);
+          } else {
+            blogPosts.push(blogPost);
+            console.log(`Saved blog post: ${blogPost.title}`);
+          }
+        }
+        
+        // Small delay between requests
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+      } catch (error) {
+        console.error('Error generating blog post for topic:', topic.title, error);
+      }
+    }
+
+    // If no blog posts were generated, use fallbacks
+    if (blogPosts.length === 0) {
+      console.log('No blog posts generated, using fallbacks');
+      for (const post of fallbackBlogPosts) {
+        const { error } = await supabase
+          .from('news_blog_posts')
+          .upsert({
+            title: post.title,
+            content: post.content,
+            summary: post.summary,
+            source: post.source,
+            published_at: post.publishedAt,
+            category: post.category,
+            slug: post.slug
+          }, {
+            onConflict: 'slug',
+            ignoreDuplicates: false
+          });
+        
+        if (!error) blogPosts.push(post);
+      }
+    }
+
+    console.log(`Generated and saved ${blogPosts.length} blog posts`);
 
     return new Response(JSON.stringify({
       success: true,
-      news: newsItems,
+      blogPosts: blogPosts,
       lastUpdated: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error fetching music news:', error);
+    console.error('Error generating blog posts:', error);
     
-    // Return fallback news items instead of empty array on error
+    // Return fallback blog posts on error
     return new Response(JSON.stringify({
       success: true,
-      news: fallbackNewsItems,
+      blogPosts: fallbackBlogPosts,
       lastUpdated: new Date().toISOString(),
-      message: `API error, using fallback news: ${error.message}`
+      message: `API error, using fallback blogs: ${error.message}`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

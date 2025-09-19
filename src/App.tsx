@@ -12,6 +12,7 @@ import Home from "./pages/Home";
 import Scanner from "./pages/Scanner";
 import Scan from "./pages/Scan";
 import Auth from "./pages/Auth";
+import { NewsPost } from "./pages/NewsPost";
 
 
 import BulkerImage from "./pages/BulkerImage";
@@ -154,6 +155,7 @@ const App = () => {
         <Route path="/shops" element={<PublicShopsOverview />} />
         <Route path="/user-scans" element={<UserScans />} />
             <Route path="/news" element={<MusicNews />} />
+            <Route path="/nieuws/:slug" element={<NewsPost />} />
             <Route path="/test-music-news" element={
               <ProtectedRoute>
                 <TestMusicNews />

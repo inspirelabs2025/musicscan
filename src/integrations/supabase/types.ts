@@ -1085,6 +1085,51 @@ export type Database = {
         }
         Relationships: []
       }
+      news_blog_posts: {
+        Row: {
+          author: string
+          category: string
+          content: string
+          created_at: string
+          id: string
+          published_at: string
+          slug: string
+          source: string
+          summary: string
+          title: string
+          updated_at: string
+          views_count: number | null
+        }
+        Insert: {
+          author?: string
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          published_at: string
+          slug: string
+          source: string
+          summary: string
+          title: string
+          updated_at?: string
+          views_count?: number | null
+        }
+        Update: {
+          author?: string
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          published_at?: string
+          slug?: string
+          source?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       news_cache: {
         Row: {
           cached_at: string

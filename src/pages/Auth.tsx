@@ -28,7 +28,7 @@ const Auth = () => {
   // Check if user is already authenticated
   useEffect(() => {
     if (user && !loading) {
-      navigate('/unified-scan-overview');
+      navigate('/');
     }
   }, [user, loading, navigate]);
 
@@ -55,7 +55,7 @@ const Auth = () => {
         }
       } else {
         toast.success('Succesvol ingelogd!');
-        navigate('/unified-scan-overview');
+        navigate('/');
       }
     } catch (err) {
       setError('Er ging iets mis. Probeer het opnieuw.');

@@ -42,6 +42,7 @@ import TestBlogRegeneration from "./pages/TestBlogRegeneration";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
+import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -180,6 +181,11 @@ const App = () => {
               </ProtectedRoute>
             } />
             <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
+            <Route path="/admin/price-history" element={
+              <ProtectedRoute>
+                <PriceHistoryAdmin />
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>

@@ -453,11 +453,11 @@ const AIScanOverview = () => {
       }
       
       console.log('Generating blog for:', { id: scan.id, albumType, source: scan.source_table, media_type: scan.media_type });
-      await generateBlog(scan.id, albumType);
+      await generateBlog(scan.id, albumType, false, true);
       
       toast({
-        title: "Verhaal gegenereerd!",
-        description: "Het verhaal is succesvol aangemaakt.",
+        title: "Verhaal gegenereerd en gepubliceerd!",
+        description: "Het verhaal is succesvol aangemaakt en automatisch gepubliceerd.",
       });
     } catch (error) {
       console.error('Error generating blog:', error);

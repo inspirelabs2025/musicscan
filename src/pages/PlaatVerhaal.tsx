@@ -12,6 +12,7 @@ import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewsSection } from '@/components/blog/ReviewsSection';
 import { CommentsSection } from '@/components/blog/CommentsSection';
+import { RelatedArticles } from '@/components/SEO/RelatedArticles';
 
 
 
@@ -49,12 +50,33 @@ export const PlaatVerhaal: React.FC = () => {
   const tags = frontmatter.tags || [];
   const price = frontmatter.price_eur || 0;
 
-  // SEO setup
+  // Enhanced SEO setup
+  const seoDescription = blog?.social_post 
+    ? blog.social_post.slice(0, 160)
+    : frontmatter.meta_description || `Ontdek het verhaal achter ${artist} - ${album}. Een diepgaande AI-analyse van dit ${genre || 'muziek'} album uit ${year || 'de muziekgeschiedenis'}. Inclusief prijsanalyse en verzamelwaarde.`;
+  
+  const seoKeywords = [
+    artist,
+    album,
+    genre,
+    `${artist} ${album}`,
+    `${album} recensie`,
+    `${artist} album`,
+    'vinyl verzameling',
+    'cd collectie',
+    'muziek analyse',
+    'album verhaal',
+    'discogs waarde',
+    year && `${year} muziek`
+  ].filter(Boolean).join(', ');
+
   useSEO({
     title: frontmatter.meta_title || `${artist} - ${album} | Plaat & Verhaal`,
-    description: frontmatter.meta_description || `Het verhaal achter ${artist} - ${album} (${year}). Alles over deze ${genre} plaat.`,
-    keywords: [`${artist}`, `${album}`, genre, `${year}`, 'vinyl', 'cd', 'muziek', 'review'].filter(Boolean).join(', '),
-    image: frontmatter.og_image || '/placeholder.svg'
+    description: seoDescription,
+    keywords: seoKeywords,
+    image: blog?.album_cover_url || frontmatter.og_image || '/placeholder.svg',
+    type: 'article',
+    canonicalUrl: `https://www.musicscan.app/plaat-verhaal/${slug}`
   });
 
   useEffect(() => {
@@ -208,8 +230,12 @@ export const PlaatVerhaal: React.FC = () => {
         title={title}
         description={frontmatter.meta_description || `Het verhaal achter ${artist} - ${album}`}
         publishDate={blog.published_at || blog.created_at}
-        author="VinylVault"
-        image={frontmatter.og_image}
+        author="MusicScan AI"
+        image={blog?.album_cover_url || frontmatter.og_image}
+        artist={artist}
+        album={album}
+        genre={genre}
+        price={price > 0 ? price : undefined}
       />
       
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80">

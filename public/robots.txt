@@ -18,12 +18,20 @@ Crawl-delay: 2
 
 # Sitemaps
 Sitemap: https://www.musicscan.app/sitemap.xml
+Sitemap: https://www.musicscan.app/sitemap-blog.xml
 
 # SEO optimizations
 Allow: /public-catalog
 Allow: /public-shops-overview
 Allow: /music-news
 Allow: /scanner
+Allow: /plaat-verhaal
+
+# Encourage indexing of key content
+Allow: /plaat-verhaal/*
+Allow: /release/*
+Allow: /collection/*
+Allow: /shop/*
 
 # Disallow admin and internal paths
 Disallow: /admin/

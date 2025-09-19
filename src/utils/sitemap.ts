@@ -57,12 +57,48 @@ export const getStaticRoutes = (): SitemapEntry[] => {
       priority: 0.7
     },
     {
+      url: `${baseUrl}/plaat-verhaal`,
+      lastmod: currentDate,
+      changefreq: 'daily',
+      priority: 0.8
+    },
+    {
       url: `${baseUrl}/auth`,
       lastmod: currentDate,
       changefreq: 'monthly',
       priority: 0.6
     }
   ];
+};
+
+// Get blog posts for sitemap
+export const getBlogPostRoutes = async (): Promise<SitemapEntry[]> => {
+  const { supabase } = await import('@/integrations/supabase/client');
+  
+  try {
+    const { data: blogPosts, error } = await supabase
+      .from('blog_posts')
+      .select('slug, published_at, updated_at, yaml_frontmatter')
+      .eq('is_published', true)
+      .order('published_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching blog posts for sitemap:', error);
+      return [];
+    }
+
+    const baseUrl = 'https://www.musicscan.app';
+    
+    return blogPosts.map((post) => ({
+      url: `${baseUrl}/plaat-verhaal/${post.slug}`,
+      lastmod: post.updated_at || post.published_at || new Date().toISOString().split('T')[0],
+      changefreq: 'weekly' as const,
+      priority: 0.7
+    }));
+  } catch (error) {
+    console.error('Error generating blog post sitemap entries:', error);
+    return [];
+  }
 };
 
 // Generate robots.txt content

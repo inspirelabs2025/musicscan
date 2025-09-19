@@ -133,12 +133,16 @@ export const BreadcrumbStructuredData = ({ items }: { items: Array<{ name: strin
   />
 );
 
-export const ArticleStructuredData = ({ title, description, publishDate, author, image }: {
+export const ArticleStructuredData = ({ title, description, publishDate, author, image, artist, album, genre, price }: {
   title: string;
   description: string;
   publishDate: string;
   author?: string;
   image?: string;
+  artist?: string;
+  album?: string;
+  genre?: string;
+  price?: number;
 }) => (
   <StructuredData
     type="Article"
@@ -149,7 +153,7 @@ export const ArticleStructuredData = ({ title, description, publishDate, author,
       dateModified: publishDate,
       author: {
         '@type': 'Organization',
-        name: author || 'MusicScan'
+        name: author || 'MusicScan AI'
       },
       publisher: {
         '@type': 'Organization',
@@ -162,8 +166,35 @@ export const ArticleStructuredData = ({ title, description, publishDate, author,
       image: image || '/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png',
       mainEntityOfPage: {
         '@type': 'WebPage',
-        '@id': 'https://www.musicscan.app'
-      }
+        '@id': window.location.href
+      },
+      keywords: [
+        artist,
+        album,
+        genre,
+        'vinyl',
+        'cd',
+        'muziek',
+        'album recensie',
+        'plaat verhaal'
+      ].filter(Boolean).join(', '),
+      about: artist && album ? {
+        '@type': 'MusicAlbum',
+        name: album,
+        byArtist: {
+          '@type': 'MusicGroup',
+          name: artist
+        },
+        ...(genre && { genre }),
+        ...(price && {
+          offers: {
+            '@type': 'Offer',
+            price: price.toString(),
+            priceCurrency: 'EUR',
+            availability: 'https://schema.org/InStock'
+          }
+        })
+      } : undefined
     }}
   />
 );

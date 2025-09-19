@@ -90,7 +90,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
         body: JSON.stringify({
-          model: 'llama-3.1-sonar-small-128k-online',
+          model: 'sonar',
           messages: [
             {
               role: 'system',
@@ -103,9 +103,9 @@ serve(async (req) => {
           ],
           temperature: 0.2,
           max_tokens: 1500,
-          search_recency_filter: 'month',
-          frequency_penalty: 0.5,
-          presence_penalty: 0
+          search_recency_filter: 'week',
+          return_images: false,
+          return_related_questions: false
         }),
     });
 

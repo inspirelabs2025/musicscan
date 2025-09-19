@@ -73,24 +73,24 @@ Keep descriptions concise (max 100 words each) and provide 2-4 items per categor
         'Authorization': `Bearer ${perplexityApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
-        messages: [
-          {
-            role: 'system',
-            content: 'Je bent een muziekhistoricus en cultureel expert. Geef nauwkeurige historische context in het Nederlands. Antwoord altijd alleen met geldige JSON. Schrijf beknopt en informatief.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.2,
-        max_tokens: 1500,
-        search_recency_filter: 'month',
-        frequency_penalty: 0.5,
-        presence_penalty: 0
-      }),
+        body: JSON.stringify({
+          model: 'sonar',
+          messages: [
+            {
+              role: 'system',
+              content: 'Je bent een muziekhistoricus en cultureel expert. Geef nauwkeurige historische context in het Nederlands. Antwoord altijd alleen met geldige JSON. Schrijf beknopt en informatief.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.2,
+          max_tokens: 1500,
+          search_recency_filter: 'week',
+          return_images: false,
+          return_related_questions: false
+        }),
     });
 
     if (!response.ok) {

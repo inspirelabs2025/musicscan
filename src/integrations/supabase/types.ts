@@ -1400,6 +1400,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          auto_blog_generation: boolean | null
           created_at: string
           first_name: string
           id: string
@@ -1407,6 +1408,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_blog_generation?: boolean | null
           created_at?: string
           first_name: string
           id?: string
@@ -1414,6 +1416,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_blog_generation?: boolean | null
           created_at?: string
           first_name?: string
           id?: string

@@ -37,6 +37,7 @@ import ReleaseDetail from "./pages/ReleaseDetail";
 import MusicNews from "./pages/MusicNews";
 import TestMusicNews from "./pages/TestMusicNews";
 import TestNewsUpdate from "./pages/TestNewsUpdate";
+import TestNewsGeneration from "./pages/TestNewsGeneration";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
@@ -165,6 +166,11 @@ const App = () => {
             <Route path="/test-news-update" element={
               <ProtectedRoute>
                 <TestNewsUpdate />
+              </ProtectedRoute>
+            } />
+            <Route path="/test-news-generation" element={
+              <ProtectedRoute>
+                <TestNewsGeneration />
               </ProtectedRoute>
             } />
             <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />

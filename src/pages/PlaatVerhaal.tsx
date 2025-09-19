@@ -12,7 +12,7 @@ import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewsSection } from '@/components/blog/ReviewsSection';
 import { CommentsSection } from '@/components/blog/CommentsSection';
-import { PriceHistoryChart } from '@/components/blog/PriceHistoryChart';
+
 import { ContextModule } from '@/components/blog/ContextModule';
 
 interface BlogPost {
@@ -469,14 +469,6 @@ export const PlaatVerhaal: React.FC = () => {
             </div>
           )}
 
-          {/* Price History Chart */}
-          <div className="mt-12">
-            <PriceHistoryChart 
-              discogsId={frontmatter.discogs_id}
-              albumTitle={album}
-              albumArtist={artist}
-            />
-          </div>
 
           {/* Context Module */}
           <div className="mt-12">

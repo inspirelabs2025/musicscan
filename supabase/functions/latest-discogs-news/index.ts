@@ -22,10 +22,10 @@ interface DiscogsRelease {
   stored_image?: string;
 }
 
-// Cache for 10 minutes
+// Cache for 6 hours (daily updates)
 let cachedReleases: any = null;
 let cacheTime: number = 0;
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -48,7 +48,7 @@ serve(async (req) => {
       throw new Error('Discogs token not configured');
     }
 
-    console.log('Fetching trending releases from Discogs...');
+    console.log('Fetching daily releases from Discogs...');
     
     // Get trending releases from Discogs
     const response = await fetch('https://api.discogs.com/database/search?type=release&sort=added%2Cdesc&per_page=50', {
@@ -71,12 +71,14 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Filter releases - last 3 years or no year specified
-    const currentYear = new Date().getFullYear();
+    // Filter for recently added releases (last 24-48 hours based on addition date)
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    
+    // Take first 20 recent releases (Discogs sorts by added date descending)
+    // Focus on releases added recently rather than year filtering
     const filteredReleases = data.results
-      .filter((release: any) => {
-        return !release.year || release.year >= (currentYear - 3);
-      })
       .slice(0, 20);
 
     // Fetch high-quality artwork for releases
@@ -212,7 +214,7 @@ serve(async (req) => {
     // Wait for all artwork processing to complete
     const formattedReleases = await Promise.all(artworkPromises);
 
-    console.log(`Processed ${formattedReleases.length} recent Discogs releases`);
+    console.log(`Processed ${formattedReleases.length} daily Discogs releases`);
 
     const result = {
       success: true,

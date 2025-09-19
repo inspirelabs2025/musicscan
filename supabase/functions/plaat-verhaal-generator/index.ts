@@ -9,6 +9,7 @@ const corsHeaders = {
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
+const discogsToken = Deno.env.get('DISCOGS_TOKEN');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
@@ -268,85 +269,92 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
 
     console.log('Successfully generated blog content');
 
-    // Search for album cover using Perplexity
+    // Search for album cover - try Discogs API first, then Perplexity fallback
     let albumCoverUrl = null;
-    if (perplexityApiKey) {
+    
+    // Try Discogs API first if we have a discogs_id
+    if (albumData.discogs_id && discogsToken) {
       try {
-        console.log('Searching for album cover with Perplexity...');
+        console.log(`Fetching album cover from Discogs API for ID: ${albumData.discogs_id}`);
         
-        // Try multiple search strategies
-        const searchQueries = [
-          `Find direct image URL for album cover: "${albumData.artist}" - "${albumData.title}" ${albumData.year || ''} official album art`,
-          `${albumData.artist} ${albumData.title} ${albumData.year || ''} album cover high resolution image URL`,
-          `"${albumData.title}" by ${albumData.artist} album artwork image link`
-        ];
-        
-        for (const coverSearchQuery of searchQueries) {
-          console.log(`Trying search query: ${coverSearchQuery}`);
-          
-          const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${perplexityApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'llama-3.1-sonar-large-128k-online',
-              messages: [
-                {
-                  role: 'system',
-                  content: 'Find and return ONLY a direct, working image URL for the requested album cover. The URL must be a direct link to an image file (ending in .jpg, .jpeg, .png, .webp). Return only the URL, no other text.'
-                },
-                {
-                  role: 'user',
-                  content: coverSearchQuery
-                }
-              ],
-              temperature: 0.1,
-              max_tokens: 150,
-            }),
-          });
-
-          if (perplexityResponse.ok) {
-            const perplexityData = await perplexityResponse.json();
-            const coverContent = perplexityData.choices[0]?.message?.content?.trim();
-            console.log(`Perplexity response: ${coverContent}`);
-            
-            // More flexible URL extraction - look for any valid image URL
-            const urlPatterns = [
-              /(https?:\/\/[^\s\)]+\.(jpg|jpeg|png|webp)(\?[^\s\)]*)?)/gi,
-              /(https?:\/\/[^\s\)\"\']+)/gi
-            ];
-            
-            for (const pattern of urlPatterns) {
-              const matches = coverContent?.match(pattern);
-              if (matches) {
-                // Test each potential URL
-                for (const url of matches) {
-                  const cleanUrl = url.replace(/[\"\']+$/, ''); // Remove trailing quotes
-                  if (cleanUrl.match(/\.(jpg|jpeg|png|webp)(\?.*)?$/i)) {
-                    albumCoverUrl = cleanUrl;
-                    console.log('Found album cover URL:', albumCoverUrl);
-                    break;
-                  }
-                }
-                if (albumCoverUrl) break;
-              }
-            }
-            
-            if (albumCoverUrl) break; // Found a URL, stop trying other queries
-          } else {
-            console.log(`Perplexity API error: ${perplexityResponse.status}`);
+        const discogsResponse = await fetch(`https://api.discogs.com/releases/${albumData.discogs_id}`, {
+          headers: {
+            'Authorization': `Discogs token=${discogsToken}`,
+            'User-Agent': 'PlatenScanner/1.0'
           }
-        }
+        });
         
-        if (!albumCoverUrl) {
-          console.log('No valid album cover URL found via Perplexity');
+        if (discogsResponse.ok) {
+          const discogsData = await discogsResponse.json();
+          
+          // Get the primary image or first image from images array
+          if (discogsData.images && discogsData.images.length > 0) {
+            // Look for primary image first, otherwise take the first image
+            const primaryImage = discogsData.images.find((img: any) => img.type === 'primary') || discogsData.images[0];
+            if (primaryImage && primaryImage.uri) {
+              albumCoverUrl = primaryImage.uri;
+              console.log('Found album cover from Discogs:', albumCoverUrl);
+            }
+          }
+        } else {
+          console.log(`Discogs API error: ${discogsResponse.status} - ${discogsResponse.statusText}`);
         }
       } catch (error) {
-        console.error('Error fetching album cover:', error);
-        // Continue without cover - not critical
+        console.error('Error fetching from Discogs API:', error);
       }
+    }
+
+    // Fallback to Perplexity if Discogs didn't work
+    if (!albumCoverUrl && perplexityApiKey) {
+      try {
+        console.log('Discogs failed, trying Perplexity fallback...');
+        
+        const coverSearchQuery = `Find direct image URL for album cover: "${albumData.artist}" - "${albumData.title}" ${albumData.year || ''} official album art`;
+        console.log(`Trying search query: ${coverSearchQuery}`);
+        
+        const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${perplexityApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.1-sonar-large-128k-online',
+            messages: [
+              {
+                role: 'system',
+                content: 'Find and return ONLY a direct, working image URL for the requested album cover. The URL must be a direct link to an image file (ending in .jpg, .jpeg, .png, .webp). Return only the URL, no other text.'
+              },
+              {
+                role: 'user',
+                content: coverSearchQuery
+              }
+            ],
+            temperature: 0.1,
+            max_tokens: 150,
+          }),
+        });
+
+        if (perplexityResponse.ok) {
+          const perplexityData = await perplexityResponse.json();
+          const coverContent = perplexityData.choices[0]?.message?.content?.trim();
+          
+          // Extract image URL
+          const urlMatch = coverContent?.match(/(https?:\/\/[^\s\)]+\.(jpg|jpeg|png|webp)(\?[^\s\)]*)?)/i);
+          if (urlMatch) {
+            albumCoverUrl = urlMatch[0];
+            console.log('Found album cover from Perplexity:', albumCoverUrl);
+          }
+        } else {
+          console.log(`Perplexity API error: ${perplexityResponse.status}`);
+        }
+      } catch (error) {
+        console.error('Error with Perplexity fallback:', error);
+      }
+    }
+    
+    if (!albumCoverUrl) {
+      console.log('No album cover found from any source');
     }
 
     // Parse the response to extract YAML (ook als het in codefences staat) en de SOCIAL_POST

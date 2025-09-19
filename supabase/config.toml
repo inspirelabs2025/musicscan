@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.daily-news-update]
 verify_jwt = false
+
+[functions.collect-price-history]
+verify_jwt = false

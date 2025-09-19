@@ -149,11 +149,26 @@ Retourneer JSON format:
     const data = await response.json();
     console.log('OpenAI response received');
 
+    // Function to clean markdown formatting from OpenAI response
+    const cleanMarkdown = (content: string): string => {
+      return content
+        .replace(/```json\s*/g, '') // Remove ```json
+        .replace(/```\s*/g, '')     // Remove ```
+        .trim();                    // Remove extra whitespace
+    };
+
     let quizData;
     try {
-      quizData = JSON.parse(data.choices[0].message.content);
+      const rawContent = data.choices[0].message.content;
+      console.log('Raw OpenAI response:', rawContent);
+      
+      const cleanedContent = cleanMarkdown(rawContent);
+      console.log('Cleaned content for parsing:', cleanedContent);
+      
+      quizData = JSON.parse(cleanedContent);
     } catch (parseError) {
-      console.error('Failed to parse OpenAI response:', data.choices[0].message.content);
+      console.error('Failed to parse OpenAI response after cleaning:', data.choices[0].message.content);
+      console.error('Parse error details:', parseError);
       throw new Error('Invalid response format from OpenAI');
     }
 

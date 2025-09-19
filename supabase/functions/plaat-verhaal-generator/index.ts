@@ -54,7 +54,7 @@ word_count: 1500
 
 **Body structuur (gebruik deze exacte kopjes in deze volgorde):**
 
-## Waarom deze plaat nú?
+## De Plaat
 
 [Actuele hook waarom dit album nu relevant is]
 

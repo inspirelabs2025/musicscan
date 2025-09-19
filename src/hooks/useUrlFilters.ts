@@ -10,6 +10,8 @@ interface FilterState {
   year: string;
   sortBy: string;
   viewMode: string;
+  status: string;
+  albumType: string;
 }
 
 export function useUrlFilters(initialFilters: Partial<FilterState> = {}) {
@@ -28,6 +30,8 @@ export function useUrlFilters(initialFilters: Partial<FilterState> = {}) {
     year: getFilterFromUrl('year', 'all'),
     sortBy: getFilterFromUrl('sortBy', 'date'),
     viewMode: getFilterFromUrl('view', 'grid'),
+    status: getFilterFromUrl('status', 'all'),
+    albumType: getFilterFromUrl('albumType', 'all'),
     ...initialFilters
   });
 
@@ -52,7 +56,9 @@ export function useUrlFilters(initialFilters: Partial<FilterState> = {}) {
       genre: 'all',
       year: 'all',
       sortBy: 'date',
-      viewMode: 'grid'
+      viewMode: 'grid',
+      status: 'all',
+      albumType: 'all'
     });
     setSearchParams({});
   }, [setSearchParams]);
@@ -65,6 +71,8 @@ export function useUrlFilters(initialFilters: Partial<FilterState> = {}) {
     if (filters.source !== 'all') count++;
     if (filters.genre !== 'all') count++;
     if (filters.year !== 'all') count++;
+    if (filters.status !== 'all') count++;
+    if (filters.albumType !== 'all') count++;
     return count;
   }, [filters]);
 

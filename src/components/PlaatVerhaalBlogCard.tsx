@@ -24,12 +24,16 @@ interface PlaatVerhaalBlogCardProps {
   blog: BlogPost;
   onEdit?: (blog: BlogPost) => void;
   onView?: (blog: BlogPost) => void;
+  viewMode?: 'grid' | 'list';
+  searchTerm?: string;
 }
 
 export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
   blog,
   onEdit,
-  onView
+  onView,
+  viewMode = 'grid',
+  searchTerm = ''
 }) => {
   const { publishBlog } = usePlaatVerhaalGenerator();
   
@@ -40,6 +44,14 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
   const year = frontmatter.year || '';
   const genre = frontmatter.genre || '';
   const readingTime = frontmatter.reading_time || 5;
+
+  // Highlight search terms
+  const highlightText = (text: string) => {
+    if (!searchTerm || !text) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    return text.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-800">$1</mark>');
+  };
 
   const handlePublish = async () => {
     await publishBlog(blog.id);
@@ -63,102 +75,123 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold line-clamp-2 mb-2">
-              {title}
-            </CardTitle>
-            <div className="text-sm text-muted-foreground">
-              <div className="font-medium">{artist} - {album}</div>
-              {year && <div>{year}</div>}
+    <Card className={`hover:shadow-md transition-shadow ${viewMode === 'list' ? 'flex' : ''}`}>
+      {viewMode === 'list' && (
+        <div className="w-20 h-20 bg-muted flex-shrink-0 m-4 rounded">
+          <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+            {blog.album_type.toUpperCase()}
+          </div>
+        </div>
+      )}
+      <div className="flex-1">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <CardTitle className={`${viewMode === 'list' ? 'text-base' : 'text-lg'} font-semibold line-clamp-2 mb-2`}>
+                {searchTerm ? (
+                  <span dangerouslySetInnerHTML={{ __html: highlightText(title) }} />
+                ) : (
+                  title
+                )}
+              </CardTitle>
+              <div className="text-sm text-muted-foreground">
+                <div className="font-medium">
+                  {searchTerm ? (
+                    <span dangerouslySetInnerHTML={{ __html: highlightText(`${artist} - ${album}`) }} />
+                  ) : (
+                    `${artist} - ${album}`
+                  )}
+                </div>
+                {year && <div>{year}</div>}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 ml-4">
+              <Badge variant={blog.is_published ? "default" : "secondary"}>
+                {blog.is_published ? "Gepubliceerd" : "Concept"}
+              </Badge>
+              <Badge variant="outline" className="uppercase text-xs">
+                {blog.album_type}
+              </Badge>
             </div>
           </div>
-          <div className="flex items-center gap-2 ml-4">
-            <Badge variant={blog.is_published ? "default" : "secondary"}>
-              {blog.is_published ? "Gepubliceerd" : "Concept"}
-            </Badge>
-            <Badge variant="outline" className="uppercase text-xs">
-              {blog.album_type}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
-      <CardContent className="pt-0">
-        <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <FileText className="w-4 h-4" />
-              {readingTime} min lezen
-            </span>
-            {blog.is_published && (
+        <CardContent className="pt-0">
+          <div className={`flex items-center ${viewMode === 'list' ? 'justify-start flex-wrap' : 'justify-between'} text-sm text-muted-foreground mb-4 gap-2`}>
+            <div className="flex items-center gap-4 flex-wrap">
               <span className="flex items-center gap-1">
-                <Eye className="w-4 h-4" />
-                {blog.views_count || 0} views
+                <FileText className="w-4 h-4" />
+                {readingTime} min lezen
               </span>
-            )}
-            {genre && (
-              <Badge variant="outline" className="text-xs">
-                {genre}
-              </Badge>
+              {blog.is_published && (
+                <span className="flex items-center gap-1">
+                  <Eye className="w-4 h-4" />
+                  {blog.views_count || 0} views
+                </span>
+              )}
+              {genre && (
+                <Badge variant="outline" className="text-xs">
+                  {genre}
+                </Badge>
+              )}
+            </div>
+            {viewMode === 'grid' && (
+              <div className="text-xs">
+                {blog.is_published 
+                  ? `Gepubliceerd ${new Date(blog.published_at!).toLocaleDateString('nl-NL')}`
+                  : `Gemaakt ${new Date(blog.created_at).toLocaleDateString('nl-NL')}`
+                }
+              </div>
             )}
           </div>
-          <div className="text-xs">
-            {blog.is_published 
-              ? `Gepubliceerd ${new Date(blog.published_at!).toLocaleDateString('nl-NL')}`
-              : `Gemaakt ${new Date(blog.created_at).toLocaleDateString('nl-NL')}`
-            }
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          {onView && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onView(blog)}
-              className="flex-1"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Bekijk
-            </Button>
-          )}
-          
-          {onEdit && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEdit(blog)}
-              className="flex-1"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Bewerk
-            </Button>
-          )}
-          
-          {!blog.is_published && (
-            <Button
-              size="sm"
-              onClick={handlePublish}
-              className="flex-1"
-            >
-              Publiceer
-            </Button>
-          )}
-          
-          {blog.is_published && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-      </CardContent>
+          <div className={`flex items-center gap-2 ${viewMode === 'list' ? 'flex-wrap' : ''}`}>
+            {onView && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onView(blog)}
+                className={viewMode === 'list' ? 'flex-auto' : 'flex-1'}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Bekijk
+              </Button>
+            )}
+            
+            {onEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(blog)}
+                className={viewMode === 'list' ? 'flex-auto' : 'flex-1'}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Bewerk
+              </Button>
+            )}
+            
+            {!blog.is_published && (
+              <Button
+                size="sm"
+                onClick={handlePublish}
+                className={viewMode === 'list' ? 'flex-auto' : 'flex-1'}
+              >
+                Publiceer
+              </Button>
+            )}
+            
+            {blog.is_published && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShare}
+              >
+                <Share2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </div>
     </Card>
   );
 };

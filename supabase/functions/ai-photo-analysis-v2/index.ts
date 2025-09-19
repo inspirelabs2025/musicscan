@@ -70,25 +70,7 @@ serve(async (req) => {
       role: user.role
     })
 
-    // Validate user exists in auth.users table
-    try {
-      const { data: authUser, error: authCheckError } = await supabase
-        .from('auth.users')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (authCheckError) {
-        console.error('❌ Error checking user in auth table:', authCheckError)
-        // Continue anyway, as direct queries to auth.users might not be allowed
-      } else if (!authUser) {
-        console.warn('⚠️  User not found in auth.users table, but token is valid')
-      } else {
-        console.log('✅ User exists in auth.users table')
-      }
-    } catch (authCheckError) {
-      console.warn('⚠️  Could not verify user in auth table (this might be normal):', authCheckError)
-    }
+    // Skipping direct checks against auth.users (restricted schema). JWT already validated above.
 
     const { photoUrls, mediaType, conditionGrade }: AnalysisRequest = await req.json()
 
@@ -187,17 +169,24 @@ serve(async (req) => {
       const discogsResult = await searchDiscogsV2(combinedData)
 
       // Update record with final results
-      await supabase
+      const normalizedYear = typeof discogsResult.year === 'string'
+        ? parseInt(discogsResult.year, 10)
+        : (discogsResult.year ?? (typeof combinedData.year === 'string' ? parseInt(combinedData.year, 10) : (combinedData.year ?? null)))
+
+      const { error: finalUpdateError } = await supabase
         .from('ai_scan_results')
         .update({
-          discogs_id: discogsResult.discogsId,
-          discogs_url: discogsResult.discogsUrl,
-          artist: discogsResult.artist,
-          title: discogsResult.title,
-          label: discogsResult.label,
-          catalog_number: discogsResult.catalogNumber,
-          year: discogsResult.year,
-          confidence_score: discogsResult.confidence,
+          discogs_id: discogsResult.discogsId ?? null,
+          discogs_url: discogsResult.discogsUrl ?? null,
+          artist: discogsResult.artist ?? combinedData.artist ?? null,
+          title: discogsResult.title ?? combinedData.title ?? null,
+          label: discogsResult.label ?? combinedData.label ?? null,
+          catalog_number: discogsResult.catalogNumber ?? combinedData.catalogNumber ?? null,
+          year: Number.isFinite(normalizedYear as number) ? (normalizedYear as number) : null,
+          confidence_score: discogsResult.confidence ?? combinedData.confidence ?? null,
+          // Also persist key technical identifiers
+          barcode: combinedData.barcode ?? null,
+          matrix_number: combinedData.matrixNumber ?? null,
           analysis_data: {
             version: 'v2',
             phase: 'completed',
@@ -206,11 +195,16 @@ serve(async (req) => {
             combined: combinedData,
             discogsSearch: discogsResult.searchMetadata
           },
-          ai_description: combinedData.description,
-          search_queries: combinedData.searchQueries,
+          ai_description: combinedData.description ?? null,
+          search_queries: combinedData.searchQueries ?? null,
           status: 'completed'
         })
         .eq('id', scanId)
+
+      if (finalUpdateError) {
+        console.error('❌ Final database update failed:', { finalUpdateError, scanId })
+        throw new Error(`Final database update failed: ${finalUpdateError.message}`)
+      }
 
       console.log('✅ AI analysis V2 completed for scan:', scanId)
 

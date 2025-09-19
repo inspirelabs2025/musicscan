@@ -43,7 +43,7 @@ import {
   Euro,
   Brain
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { AIAnalysisTab } from "@/components/AIAnalysisTab";
 
@@ -51,7 +51,10 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accen
 
 export default function CollectionOverview() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: stats, isLoading, error } = useCollectionStats();
+  
+  const activeTab = searchParams.get('tab') || 'overview';
 
   if (isLoading) {
     return (
@@ -168,7 +171,7 @@ export default function CollectionOverview() {
           </div>
 
           {/* Enhanced Tabs */}
-          <Tabs defaultValue="overview" className="w-full">
+          <Tabs value={activeTab} className="w-full">
             <div className="overflow-x-auto pb-2">
               <TabsList className="grid w-full grid-cols-6 min-w-max sm:min-w-0 bg-white/10 backdrop-blur-md border border-white/20 p-1 rounded-xl">
                 <TabsTrigger 

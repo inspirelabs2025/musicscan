@@ -162,7 +162,7 @@ export const QuizWidget = () => {
         {/* Action Buttons */}
         <div className="space-y-2">
           <Button asChild className="w-full bg-gradient-to-r from-vinyl-gold to-yellow-500">
-            <Link to="/collection-overview?tab=quiz">
+            <Link to="/collection-overview?tab=ai-analysis&subtab=quiz">
               <Trophy className="w-4 h-4 mr-2" />
               {stats?.hasPlayed ? 'Nieuwe Quiz' : 'Start Quiz'}
               <ArrowRight className="w-4 h-4 ml-2" />

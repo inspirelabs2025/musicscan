@@ -1,13 +1,17 @@
 
 import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MusicDNAExplorer } from './MusicDNAExplorer';
 import { CollectionQuiz } from './CollectionQuiz';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Brain, Trophy } from 'lucide-react';
 
 export function AIAnalysisTab() {
+  const [searchParams] = useSearchParams();
+  const activeSubtab = searchParams.get('subtab') || 'dna';
+  
   return (
-    <Tabs defaultValue="dna" className="w-full">
+    <Tabs value={activeSubtab} className="w-full">
       <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-md border border-white/20">
         <TabsTrigger 
           value="dna" 

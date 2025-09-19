@@ -273,41 +273,75 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
     if (perplexityApiKey) {
       try {
         console.log('Searching for album cover with Perplexity...');
-        const coverSearchQuery = `high quality album cover image URL for "${albumData.artist}" "${albumData.title}" ${albumData.year || ''} album`;
         
-        const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${perplexityApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'llama-3.1-sonar-large-128k-online',
-            messages: [
-              {
-                role: 'system',
-                content: 'You are an expert at finding high-quality album cover images. Return ONLY a direct image URL (jpg, png, webp) for the requested album cover. Do not include any other text or explanation.'
-              },
-              {
-                role: 'user',
-                content: coverSearchQuery
-              }
-            ],
-            temperature: 0.2,
-            max_tokens: 200,
-          }),
-        });
-
-        if (perplexityResponse.ok) {
-          const perplexityData = await perplexityResponse.json();
-          const coverContent = perplexityData.choices[0]?.message?.content?.trim();
+        // Try multiple search strategies
+        const searchQueries = [
+          `Find direct image URL for album cover: "${albumData.artist}" - "${albumData.title}" ${albumData.year || ''} official album art`,
+          `${albumData.artist} ${albumData.title} ${albumData.year || ''} album cover high resolution image URL`,
+          `"${albumData.title}" by ${albumData.artist} album artwork image link`
+        ];
+        
+        for (const coverSearchQuery of searchQueries) {
+          console.log(`Trying search query: ${coverSearchQuery}`);
           
-          // Extract URL from response (basic validation)
-          const urlMatch = coverContent?.match(/(https?:\/\/[^\s]+\.(jpg|jpeg|png|webp))/i);
-          if (urlMatch) {
-            albumCoverUrl = urlMatch[0];
-            console.log('Found album cover URL:', albumCoverUrl);
+          const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${perplexityApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'llama-3.1-sonar-large-128k-online',
+              messages: [
+                {
+                  role: 'system',
+                  content: 'Find and return ONLY a direct, working image URL for the requested album cover. The URL must be a direct link to an image file (ending in .jpg, .jpeg, .png, .webp). Return only the URL, no other text.'
+                },
+                {
+                  role: 'user',
+                  content: coverSearchQuery
+                }
+              ],
+              temperature: 0.1,
+              max_tokens: 150,
+            }),
+          });
+
+          if (perplexityResponse.ok) {
+            const perplexityData = await perplexityResponse.json();
+            const coverContent = perplexityData.choices[0]?.message?.content?.trim();
+            console.log(`Perplexity response: ${coverContent}`);
+            
+            // More flexible URL extraction - look for any valid image URL
+            const urlPatterns = [
+              /(https?:\/\/[^\s\)]+\.(jpg|jpeg|png|webp)(\?[^\s\)]*)?)/gi,
+              /(https?:\/\/[^\s\)\"\']+)/gi
+            ];
+            
+            for (const pattern of urlPatterns) {
+              const matches = coverContent?.match(pattern);
+              if (matches) {
+                // Test each potential URL
+                for (const url of matches) {
+                  const cleanUrl = url.replace(/[\"\']+$/, ''); // Remove trailing quotes
+                  if (cleanUrl.match(/\.(jpg|jpeg|png|webp)(\?.*)?$/i)) {
+                    albumCoverUrl = cleanUrl;
+                    console.log('Found album cover URL:', albumCoverUrl);
+                    break;
+                  }
+                }
+                if (albumCoverUrl) break;
+              }
+            }
+            
+            if (albumCoverUrl) break; // Found a URL, stop trying other queries
+          } else {
+            console.log(`Perplexity API error: ${perplexityResponse.status}`);
           }
+        }
+        
+        if (!albumCoverUrl) {
+          console.log('No valid album cover URL found via Perplexity');
         }
       } catch (error) {
         console.error('Error fetching album cover:', error);

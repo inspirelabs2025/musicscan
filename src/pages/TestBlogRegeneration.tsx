@@ -14,26 +14,12 @@ interface BlogPost {
 }
 
 const EXISTING_POSTS: BlogPost[] = [
-  {
-    id: "9a9e4746-c44e-423f-8a68-e38602ca54a6",
-    album_id: "f94347b8-0d76-427e-b731-2a144fb72f4d",
-    album_type: "cd",
-    slug: "van-morrison-van-morrison-the-best-of-van-morrison-1990",
-    title: "Van Morrison - The Best Of Van Morrison"
-  },
-  {
-    id: "cb391a90-4a1f-457d-b0f5-b47bd2efb4d2",
-    album_id: "7b96b3db-26f8-4561-9891-11f8913cedcc",
-    album_type: "cd",
-    slug: "herman-grimme-herman-grimme-salad-days-2001",
-    title: "Herman Grimme - Salad Days"
-  },
-  {
-    id: "67911a47-fd9e-440c-9f2a-e2e705aa95b5",
-    album_id: "48903ef6-4bb1-4912-a332-f07c75de74dc",
-    album_type: "cd",
-    slug: "jimi-hendrix-jimi-hendrix-gangster-of-love-1984",
-    title: "Jimi Hendrix - Gangster Of Love"
+  { 
+    id: 'ab3c01d3-cbdd-4321-ae8d-aa3bc4807f6d',
+    album_id: 'cca58590-0b4b-4c94-aa7e-45804b80feaa',
+    album_type: 'cd',
+    slug: 'u2-u2-zooropa-1993',
+    title: 'U2 - Zooropa (1993) [Test Album Cover]'
   }
 ];
 
@@ -52,7 +38,9 @@ export const TestBlogRegeneration = () => {
       const { data, error } = await supabase.functions.invoke('plaat-verhaal-generator', {
         body: {
           albumId: post.album_id,
-          albumType: post.album_type
+          albumType: post.album_type,
+          forceRegenerate: true,
+          autoPublish: false
         }
       });
       
@@ -117,10 +105,10 @@ export const TestBlogRegeneration = () => {
     <div className="container mx-auto px-4 py-8">
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle>Blog Post Regeneration - New 8-Section Structure</CardTitle>
+          <CardTitle>U2 Zooropa Blog Regeneration - Test Album Cover via Perplexity</CardTitle>
           <p className="text-sm text-muted-foreground">
-            This will regenerate all 3 existing blog posts with the new enhanced structure including:
-            Album artwork, Critics & reception, Collector's value, Personal touch, and improved Listening tips.
+            This will regenerate the U2 Zooropa blog post to test the improved Perplexity album cover search functionality.
+            The function now tries multiple search strategies and better URL extraction patterns.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -131,7 +119,7 @@ export const TestBlogRegeneration = () => {
             size="lg"
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Regenerate All 3 Blog Posts with New Structure
+            Regenerate U2 Zooropa Blog with Album Cover
           </Button>
           
           <div className="space-y-3">

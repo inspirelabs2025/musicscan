@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, ExternalLink, Disc3, Newspaper, Search, Filter, Grid, List, Calendar, Star, Eye, FileText } from "lucide-react";
+import { Music, ArrowRight, Disc3, Newspaper, Search, Filter, Grid, List, Calendar, Star, Eye, FileText } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
-import { useNavigate } from "react-router-dom";
-import { useDiscogsNews, usePerplexityNews, DiscogsRelease, NewsItem } from "@/hooks/useNewsCache";
+import { useNavigate, Link } from "react-router-dom";
+import { useDiscogsNews, DiscogsRelease } from "@/hooks/useNewsCache";
 import { VerhaalTab } from "@/components/VerhaalTab";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 export default function MusicNews() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'releases' | 'news' | 'verhalen'>('releases');
@@ -24,7 +26,22 @@ export default function MusicNews() {
 
   // Use the new cached hooks
   const { data: discogsReleases = [], isLoading: isLoadingDiscogs, error: discogsError } = useDiscogsNews();
-  const { data: musicNews = [], isLoading: isLoadingPerplexity, error: perplexityError } = usePerplexityNews();
+  
+  // Fetch news blog posts directly from database
+  const { data: musicNews = [], isLoading: isLoadingPerplexity, error: perplexityError } = useQuery({
+    queryKey: ["news-blog-posts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('news_blog_posts')
+        .select('*')
+        .order('published_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const loading = newsSource === 'discogs' ? isLoadingDiscogs : isLoadingPerplexity;
   const error = newsSource === 'discogs' ? discogsError : perplexityError;
@@ -61,7 +78,7 @@ export default function MusicNews() {
       if (sortBy === 'title') {
         filtered = filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
       } else if (sortBy === 'date') {
-        filtered = filtered.sort((a, b) => new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime());
+        filtered = filtered.sort((a, b) => new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime());
       }
       return filtered;
     }
@@ -425,7 +442,7 @@ function ReleasesContent({
                           rel="noopener noreferrer"
                           className="flex items-center gap-1"
                         >
-                          <ExternalLink className="w-3 h-3" />
+                          <ArrowRight className="w-3 h-3" />
                           Discogs
                         </a>
                       </Button>
@@ -459,7 +476,7 @@ interface NewsContentProps {
   setViewMode: (mode: 'grid' | 'list') => void;
   sortBy: 'date' | 'title' | 'relevance';
   setSortBy: (sort: 'date' | 'title' | 'relevance') => void;
-  musicNews: NewsItem[];
+  musicNews: any[];
   isLoadingPerplexity: boolean;
   perplexityError: any;
 }
@@ -489,7 +506,7 @@ function NewsContent({
     if (sortBy === 'title') {
       filtered = filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     } else if (sortBy === 'date') {
-      filtered = filtered.sort((a, b) => new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime());
+      filtered = filtered.sort((a, b) => new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime());
     }
     return filtered;
   };
@@ -575,15 +592,15 @@ function NewsContent({
 
       {!isLoadingPerplexity && !perplexityError && (
         <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-          {(data as NewsItem[]).map((item, index) => (
-            <Card key={index} className={`group hover:shadow-lg transition-all duration-300 ${viewMode === 'list' ? 'flex' : ''}`}>
+          {(data as any[]).map((item, index) => (
+            <Card key={item.id || index} className={`group hover:shadow-lg transition-all duration-300 ${viewMode === 'list' ? 'flex' : ''}`}>
               <div className="flex-1">
                 <CardHeader className="pb-3">
                   <CardTitle className={`${viewMode === 'list' ? 'text-base' : 'text-lg'} line-clamp-2`}>
                     {item.title}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {item.source} • {new Date(item.publishedAt).toLocaleDateString('nl-NL')}
+                    {item.source} • {new Date(item.published_at).toLocaleDateString('nl-NL')}
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -594,15 +611,13 @@ function NewsContent({
                     <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
                       {item.category}
                     </span>
-                    {item.url && (
-                      <a 
-                        href={item.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
+                    {item.slug && (
+                      <Link 
+                        to={`/nieuws/${item.slug}`}
                         className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm"
                       >
-                        Lees meer <ExternalLink className="w-3 h-3" />
-                      </a>
+                        Lees meer <ArrowRight className="w-3 h-3" />
+                      </Link>
                     )}
                   </div>
                 </CardContent>

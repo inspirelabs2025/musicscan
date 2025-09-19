@@ -172,11 +172,11 @@ serve(async (req) => {
             messages: [
               {
                 role: 'system',
-                content: 'Je bent een ervaren muziekjournalist. Schrijf een uitgebreid blog artikel van 400-600 woorden in het Nederlands over het gegeven onderwerp. Gebruik Markdown formatting met ## voor hoofdingen en ### voor subheadings. Maak het informatief en boeiend. Geef alleen de blog content terug, geen andere tekst.'
+                content: 'Je bent een ervaren muziekjournalist die originele content schrijft. BELANGRIJKE INSTRUCTIES: 1) Herschrijf alle informatie volledig in je eigen woorden - kopieer NOOIT tekst. 2) Gebruik GEEN bronverwijzingen zoals [1], [2] of externe referenties. 3) Schrijf 400-600 woorden in vloeiend Nederlands. 4) Gebruik Markdown formatting met ## voor hoofdingen en ### voor subheadings. 5) Voeg je eigen analyse en inzichten toe. 6) Maak het verhaal uniek en oorspronkelijk. Geef alleen de blog content terug, geen andere tekst of bronnen.'
               },
               {
                 role: 'user',
-                content: `Schrijf een uitgebreid blog artikel over: "${topic.title}". Zoek actuele informatie en maak er een interessant verhaal van met details, context en relevante bronnen.`
+                content: `Herschrijf alle informatie over "${topic.title}" volledig in je eigen woorden. Maak er een origineel verhaal van zonder directe citaten of bronverwijzingen. Voeg context, analyse en jouw eigen perspectief toe.`
               }
             ],
             temperature: 0.7,

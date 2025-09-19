@@ -32,8 +32,8 @@ export function BatchBlogGenerator() {
   const [dryRunResult, setDryRunResult] = useState<any>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [settings, setSettings] = useState({
-    batchSize: 2, // Reduced for stability
-    delaySeconds: 60, // Increased for stability
+    batchSize: 1, // One album at a time for maximum stability
+    delaySeconds: 30, // Shorter delay since processing one at a time
     mediaTypes: ['cd', 'vinyl', 'ai'],
     minConfidence: 0.7,
     dryRun: false

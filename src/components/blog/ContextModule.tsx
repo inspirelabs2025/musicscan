@@ -111,7 +111,12 @@ export function ContextModule({ blogPostId, albumYear, albumTitle, albumArtist }
         // Reload fresh data from database
         await loadContext();
       } else {
-        throw new Error(data?.error || 'Onbekende fout bij context generatie');
+        // Show detailed error information
+        let errorMessage = data?.error || 'Onbekende fout bij context generatie';
+        if (data?.tried_models?.length > 0) {
+          errorMessage += ` (Geprobeerde modellen: ${data.tried_models.join(', ')})`;
+        }
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('Error generating context:', error);

@@ -94,10 +94,12 @@ Focus op het jaar ${albumYear} en geef:
 
 Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer van ${albumYear} weergeven. Schrijf alles in het Nederlands.`;
 
-    const primaryModel = 'llama-3.1-sonar-large-128k-online';
-    const fallbackModel = 'llama-3.1-sonar-small-128k-online';
+    const primaryModel = 'llama-3.1-70b-instruct';
+    const fallbackModel = 'llama-3.1-8b-instruct';
     let currentModel = primaryModel;
+    let triedModels = [];
 
+    triedModels.push(currentModel);
     let response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -128,10 +130,12 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
       const errorText = await response.text();
       console.error(`Perplexity API error - Status: ${response.status}, Model: ${currentModel}, Text: ${errorText}`);
       
-      // Try with smaller model on 400 Bad Request
+      // Try with fallback model on 400 Bad Request
       if (response.status === 400) {
-        console.log('Retrying with smaller model due to 400 error');
+        console.log('Retrying with fallback model due to 400 error');
         currentModel = fallbackModel;
+        triedModels.push(currentModel);
+        
         const fallbackResponse = await fetch('https://api.perplexity.ai/chat/completions', {
           method: 'POST',
           headers: {
@@ -161,13 +165,33 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
         if (!fallbackResponse.ok) {
           const fallbackErrorText = await fallbackResponse.text();
           console.error(`Perplexity fallback API error - Status: ${fallbackResponse.status}, Model: ${currentModel}, Text: ${fallbackErrorText}`);
-          throw new Error(`Perplexity fallback API error - Status: ${fallbackResponse.status}, Text: ${fallbackErrorText}`);
+          
+          // Return detailed error information
+          return new Response(
+            JSON.stringify({ 
+              success: false,
+              error: `Beide Perplexity modellen faalden. Primair model (${primaryModel}): ${response.status}. Fallback model (${currentModel}): ${fallbackResponse.status}`,
+              tried_models: triedModels,
+              primary_error: errorText,
+              fallback_error: fallbackErrorText
+            }), 
+            { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
 
         response = fallbackResponse;
         console.log(`Fallback model response received: ${currentModel}`);
       } else {
-        throw new Error(`Perplexity API error - Status: ${response.status}, Text: ${errorText}`);
+        // Return detailed error for non-400 errors
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: `Perplexity API fout - Status: ${response.status}`,
+            tried_models: triedModels,
+            response_text: errorText
+          }), 
+          { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
     }
 

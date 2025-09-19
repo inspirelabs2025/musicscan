@@ -1,0 +1,293 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  Camera, 
+  TrendingUp, 
+  Music, 
+  Disc, 
+  MessageSquare, 
+  Zap, 
+  Clock, 
+  Star,
+  BarChart3,
+  Upload,
+  Search,
+  Shuffle,
+  Sparkles
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatCard } from '@/components/StatCard';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCollectionStats } from '@/hooks/useCollectionStats';
+import { useDirectScans } from '@/hooks/useDirectScans';
+import { useUnifiedScansStats } from '@/hooks/useUnifiedScansStats';
+
+const Dashboard = () => {
+  const { user } = useAuth();
+  const { data: collectionStats, isLoading: collectionLoading } = useCollectionStats();
+  const { data: recentScans, isLoading: scansLoading } = useDirectScans();
+  const { data: scanStats, isLoading: statsLoading } = useUnifiedScansStats();
+
+  // Get recent scans (last 5)
+  const latestScans = recentScans?.slice(0, 5) || [];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background">
+      {/* Musical Background Elements */}
+      <div className="fixed inset-0 opacity-5 pointer-events-none">
+        <div className="absolute top-20 left-10 text-4xl animate-pulse">🎵</div>
+        <div className="absolute top-40 right-20 text-3xl animate-pulse delay-500">🎶</div>
+        <div className="absolute bottom-40 left-20 text-4xl animate-pulse delay-1000">🎼</div>
+        <div className="absolute bottom-20 right-10 text-3xl animate-pulse delay-700">🎸</div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 relative">
+        {/* Welcome Header */}
+        <div className="text-center mb-8 animate-fade-in">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Sparkles className="w-8 h-8 text-vinyl-purple animate-pulse" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-vinyl-purple via-primary to-vinyl-gold bg-clip-text text-transparent">
+              🎵 Welkom terug, Muziekontdekker!
+            </h1>
+            <Sparkles className="w-8 h-8 text-vinyl-gold animate-pulse delay-300" />
+          </div>
+          <p className="text-muted-foreground text-lg">
+            ✨ Je persoonlijke muziek command center wacht op je
+          </p>
+        </div>
+
+        {/* Quick Actions Hero */}
+        <section className="mb-12 animate-fade-in delay-200">
+          <Card className="border-2 hover:border-vinyl-purple/50 transition-all duration-300 hover:shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-vinyl-purple" />
+                🚀 Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Button asChild size="lg" className="h-16 bg-gradient-to-r from-vinyl-purple to-vinyl-purple/80 hover:shadow-lg group">
+                  <Link to="/scanner">
+                    <div className="flex flex-col items-center gap-2">
+                      <Camera className="w-6 h-6 group-hover:animate-pulse" />
+                      <span>📸 Scan Nu</span>
+                    </div>
+                  </Link>
+                </Button>
+                
+                <Button asChild size="lg" variant="outline" className="h-16 hover:bg-vinyl-gold/10 group">
+                  <Link to="/my-collection">
+                    <div className="flex flex-col items-center gap-2">
+                      <Search className="w-6 h-6 group-hover:animate-pulse" />
+                      <span>🔍 Mijn Collectie</span>
+                    </div>
+                  </Link>
+                </Button>
+                
+                <Button asChild size="lg" variant="outline" className="h-16 hover:bg-vinyl-purple/10 group">
+                  <Link to="/bulkerimage">
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="w-6 h-6 group-hover:animate-pulse" />
+                      <span>📤 Bulk Upload</span>
+                    </div>
+                  </Link>
+                </Button>
+                
+                <Button asChild size="lg" variant="outline" className="h-16 hover:bg-accent/20 group">
+                  <Link to="/collection-chat">
+                    <div className="flex flex-col items-center gap-2">
+                      <Shuffle className="w-6 h-6 group-hover:animate-pulse" />
+                      <span>🎲 Random Album</span>
+                    </div>
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Stats Cards */}
+        <section className="mb-12 animate-fade-in delay-300">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 text-vinyl-purple" />
+            📊 Jouw Muziek DNA
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatCard
+              title="Totale Collectie"
+              value={collectionLoading ? "..." : `${collectionStats?.totalItems || 0}`}
+              subtitle="Albums ontdekt"
+              icon={Disc}
+            />
+            <StatCard
+              title="Collectie Waarde"
+              value={collectionLoading ? "..." : `€${collectionStats?.totalValue ? Math.round(collectionStats.totalValue) : 0}`}
+              subtitle="Geschatte totaal"
+              icon={TrendingUp}
+            />
+            <StatCard
+              title="Deze Maand"
+              value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`}
+              subtitle="Nieuwe scans"
+              icon={Camera}
+            />
+            <StatCard
+              title="Success Rate"
+              value={statsLoading ? "..." : `${scanStats?.successRate || 0}%`}
+              subtitle="Geslaagde scans"
+              icon={Star}
+            />
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Recent Activity */}
+          <section className="animate-fade-in delay-400">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-vinyl-purple" />
+                  🕒 Recente Activiteit
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {scansLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 animate-pulse">
+                        <div className="w-12 h-12 bg-muted rounded-lg"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded w-3/4"></div>
+                          <div className="h-3 bg-muted rounded w-1/2"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : latestScans.length > 0 ? (
+                  <div className="space-y-4">
+                    {latestScans.map((scan) => (
+                      <div key={scan.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/10 transition-colors">
+                        <div className="w-12 h-12 bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20 rounded-lg flex items-center justify-center">
+                          {scan.media_type === 'vinyl' ? (
+                            <Disc className="w-6 h-6 text-vinyl-purple" />
+                          ) : (
+                            <Music className="w-6 h-6 text-vinyl-gold" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{scan.artist}</p>
+                          <p className="text-sm text-muted-foreground truncate">{scan.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(scan.created_at).toLocaleDateString('nl-NL')}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Music className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground">Nog geen scans. Begin je collectie!</p>
+                    <Button asChild className="mt-3">
+                      <Link to="/scanner">
+                        <Camera className="w-4 h-4 mr-2" />
+                        Start Scannen
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Navigation Shortcuts */}
+          <section className="animate-fade-in delay-500">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-vinyl-gold" />
+                  🎯 Snelle Navigatie
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-purple/10">
+                    <Link to="/ai-analysis">
+                      <TrendingUp className="w-5 h-5" />
+                      <span className="text-xs">🧠 AI Analyse</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-gold/10">
+                    <Link to="/collection-chat">
+                      <MessageSquare className="w-5 h-5" />
+                      <span className="text-xs">💬 Collectie Chat</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-accent/20">
+                    <Link to="/my-shop">
+                      <Star className="w-5 h-5" />
+                      <span className="text-xs">🏪 Mijn Shop</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-secondary/50">
+                    <Link to="/unified-scan-overview">
+                      <BarChart3 className="w-5 h-5" />
+                      <span className="text-xs">📈 Overzicht</span>
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        </div>
+
+        {/* Top Genres/Artists Quick Preview */}
+        {collectionStats && !collectionLoading && (
+          <section className="mt-12 animate-fade-in delay-600">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Music className="w-5 h-5 text-vinyl-purple" />
+                  🎵 Je Muziekstijl
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold mb-3 text-sm text-muted-foreground">🎨 TOP GENRES</h4>
+                    <div className="space-y-2">
+                      {collectionStats.genres?.slice(0, 3).map((genre, index) => (
+                        <div key={genre.genre} className="flex justify-between items-center">
+                          <span className="text-sm">{genre.genre}</span>
+                          <span className="text-xs text-muted-foreground">{genre.count} albums</span>
+                        </div>
+                      )) || <p className="text-sm text-muted-foreground">Nog geen genres ontdekt</p>}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-3 text-sm text-muted-foreground">🎤 TOP ARTIESTEN</h4>
+                    <div className="space-y-2">
+                      {collectionStats.artists?.slice(0, 3).map((artist, index) => (
+                        <div key={artist.artist} className="flex justify-between items-center">
+                          <span className="text-sm">{artist.artist}</span>
+                          <span className="text-xs text-muted-foreground">{artist.count} albums</span>
+                        </div>
+                      )) || <p className="text-sm text-muted-foreground">Nog geen artiesten ontdekt</p>}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;

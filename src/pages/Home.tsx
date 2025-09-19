@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Camera, Disc, Music, Sparkles, MessageSquare, TrendingUp, Headphones, Zap } from 'lucide-react';
 import { HeroSection } from '@/components/HeroSection';
 import { NewUsersSection } from '@/components/NewUsersSection';
@@ -14,12 +14,21 @@ import { AppStructuredData } from '@/components/SEO/StructuredData';
 const Home = () => {
   console.log('🏠 Home.tsx: Rendering Home component');
   
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   
   // Apply SEO for home page
   useSEO(SEO_CONFIGS['/']);
   
-  console.log('🏠 Home.tsx: Auth state -', { user: !!user });
+  console.log('🏠 Home.tsx: Auth state -', { user: !!user, loading });
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (user && !loading) {
+      console.log('🏠 Redirecting authenticated user to dashboard');
+      navigate('/dashboard');
+    }
+  }, [user, loading, navigate]);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background relative overflow-hidden">

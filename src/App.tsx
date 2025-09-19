@@ -12,6 +12,7 @@ import Home from "./pages/Home";
 import Scanner from "./pages/Scanner";
 import Scan from "./pages/Scan";
 import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
 import { NewsPost } from "./pages/NewsPost";
 
 
@@ -81,6 +82,11 @@ const App = () => {
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Home />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
             <Route path="/scan" element={<Scan />} />
             <Route path="/scanner" element={
               <ProtectedRoute>

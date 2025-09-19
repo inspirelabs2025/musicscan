@@ -23,9 +23,9 @@ const navigationItems = [
 
 // Public navigation items for non-logged-in users
 const publicNavigationItems = [
+  { title: "Muzieknieuws", url: "/news", icon: Newspaper },
   { title: "Catalogus", url: "/catalog", icon: Library },
   { title: "Winkels", url: "/shops", icon: Store },
-  { title: "Muzieknieuws", url: "/news", icon: Newspaper },
 ];
 
 const scanMenuItems = [

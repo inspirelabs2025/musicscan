@@ -2,7 +2,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Edit, Share2, FileText } from 'lucide-react';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Eye, Edit, Share2, FileText, Music, Disc3 } from 'lucide-react';
 import { usePlaatVerhaalGenerator } from '@/hooks/usePlaatVerhaalGenerator';
 
 interface BlogPost {
@@ -18,6 +19,7 @@ interface BlogPost {
   views_count: number;
   created_at: string;
   published_at?: string;
+  album_cover_url?: string;
 }
 
 interface PlaatVerhaalBlogCardProps {
@@ -74,124 +76,261 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
     }
   };
 
-  return (
-    <Card className={`hover:shadow-md transition-shadow ${viewMode === 'list' ? 'flex' : ''}`}>
-      {viewMode === 'list' && (
-        <div className="w-20 h-20 bg-muted flex-shrink-0 m-4 rounded">
-          <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
-            {blog.album_type.toUpperCase()}
-          </div>
+  // Album Cover Component with Fallback
+  const AlbumCover = ({ size }: { size: 'large' | 'small' }) => {
+    const [imageError, setImageError] = React.useState(false);
+    const [imageLoaded, setImageLoaded] = React.useState(false);
+    
+    const sizeClasses = size === 'large' ? 'w-full h-full' : 'w-20 h-20';
+    const iconSize = size === 'large' ? 'w-16 h-16' : 'w-8 h-8';
+    
+    const FallbackIcon = blog.album_type === 'vinyl' ? Disc3 : Music;
+    
+    if (!blog.album_cover_url || imageError) {
+      return (
+        <div className={`${sizeClasses} bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center ${
+          blog.album_type === 'vinyl' ? 'rounded-full' : 'rounded-lg'
+        } ${size === 'large' ? 'group-hover:scale-105 transition-transform duration-300' : ''}`}>
+          <FallbackIcon className={`${iconSize} text-muted-foreground/60`} />
         </div>
-      )}
-      <div className="flex-1">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <CardTitle className={`${viewMode === 'list' ? 'text-base' : 'text-lg'} font-semibold line-clamp-2 mb-2`}>
-                {searchTerm ? (
-                  <span dangerouslySetInnerHTML={{ __html: highlightText(title) }} />
-                ) : (
-                  title
-                )}
-              </CardTitle>
-              <div className="text-sm text-muted-foreground">
-                <div className="font-medium">
+      );
+    }
+
+    return (
+      <div className={`${sizeClasses} relative overflow-hidden ${
+        blog.album_type === 'vinyl' ? 'rounded-full' : 'rounded-lg'
+      }`}>
+        {!imageLoaded && (
+          <div className={`absolute inset-0 bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center`}>
+            <FallbackIcon className={`${iconSize} text-muted-foreground/60 animate-pulse`} />
+          </div>
+        )}
+        <img
+          src={blog.album_cover_url}
+          alt={`${artist} - ${album} album cover`}
+          className={`${sizeClasses} object-cover ${
+            size === 'large' ? 'group-hover:scale-105 transition-all duration-300' : ''
+          } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setImageError(true)}
+          loading="lazy"
+        />
+      </div>
+    );
+  };
+
+  if (viewMode === 'list') {
+    return (
+      <Card className="group hover:shadow-lg transition-all duration-300 hover:shadow-primary/10 flex overflow-hidden">
+        {/* Album Cover - List View */}
+        <div className="w-20 h-20 flex-shrink-0 m-4">
+          <AlbumCover size="small" />
+        </div>
+        
+        {/* Content */}
+        <div className="flex-1 flex flex-col">
+          <CardHeader className="pb-2 pt-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-base font-semibold line-clamp-1 mb-1">
+                  {searchTerm ? (
+                    <span dangerouslySetInnerHTML={{ __html: highlightText(title) }} />
+                  ) : (
+                    title
+                  )}
+                </CardTitle>
+                <div className="text-sm text-muted-foreground font-medium">
                   {searchTerm ? (
                     <span dangerouslySetInnerHTML={{ __html: highlightText(`${artist} - ${album}`) }} />
                   ) : (
                     `${artist} - ${album}`
                   )}
                 </div>
-                {year && <div>{year}</div>}
+                {year && <div className="text-xs text-muted-foreground mt-1">{year}</div>}
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <Badge variant={blog.is_published ? "default" : "secondary"} className="text-xs">
+                  {blog.is_published ? "Live" : "Draft"}
+                </Badge>
               </div>
             </div>
-            <div className="flex items-center gap-2 ml-4">
-              <Badge variant={blog.is_published ? "default" : "secondary"}>
-                {blog.is_published ? "Gepubliceerd" : "Concept"}
-              </Badge>
-              <Badge variant="outline" className="uppercase text-xs">
-                {blog.album_type}
-              </Badge>
-            </div>
-          </div>
-        </CardHeader>
+          </CardHeader>
 
-        <CardContent className="pt-0">
-          <div className={`flex items-center ${viewMode === 'list' ? 'justify-start flex-wrap' : 'justify-between'} text-sm text-muted-foreground mb-4 gap-2`}>
-            <div className="flex items-center gap-4 flex-wrap">
+          <CardContent className="pt-0 pb-4 flex-1 flex flex-col justify-between">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
               <span className="flex items-center gap-1">
-                <FileText className="w-4 h-4" />
-                {readingTime} min lezen
+                <FileText className="w-3 h-3" />
+                {readingTime}m
               </span>
               {blog.is_published && (
                 <span className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  {blog.views_count || 0} views
+                  <Eye className="w-3 h-3" />
+                  {blog.views_count || 0}
                 </span>
               )}
               {genre && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs px-1 py-0">
                   {genre}
                 </Badge>
               )}
             </div>
-            {viewMode === 'grid' && (
-              <div className="text-xs">
-                {blog.is_published 
-                  ? `Gepubliceerd ${new Date(blog.published_at!).toLocaleDateString('nl-NL')}`
-                  : `Gemaakt ${new Date(blog.created_at).toLocaleDateString('nl-NL')}`
-                }
-              </div>
-            )}
-          </div>
 
-          <div className={`flex items-center gap-2 ${viewMode === 'list' ? 'flex-wrap' : ''}`}>
-            {onView && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onView(blog)}
-                className={viewMode === 'list' ? 'flex-auto' : 'flex-1'}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Bekijk
-              </Button>
-            )}
-            
-            {onEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(blog)}
-                className={viewMode === 'list' ? 'flex-auto' : 'flex-1'}
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Bewerk
-              </Button>
-            )}
-            
-            {!blog.is_published && (
-              <Button
-                size="sm"
-                onClick={handlePublish}
-                className={viewMode === 'list' ? 'flex-auto' : 'flex-1'}
-              >
-                Publiceer
-              </Button>
-            )}
-            
-            {blog.is_published && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShare}
-              >
-                <Share2 className="w-4 h-4" />
-              </Button>
+            <div className="flex items-center gap-2">
+              {onView && (
+                <Button variant="outline" size="sm" onClick={() => onView(blog)} className="h-8 text-xs">
+                  <Eye className="w-3 h-3 mr-1" />
+                  Bekijk
+                </Button>
+              )}
+              {onEdit && (
+                <Button variant="outline" size="sm" onClick={() => onEdit(blog)} className="h-8 text-xs">
+                  <Edit className="w-3 h-3 mr-1" />
+                  Bewerk
+                </Button>
+              )}
+              {!blog.is_published && (
+                <Button size="sm" onClick={handlePublish} className="h-8 text-xs">
+                  Publiceer
+                </Button>
+              )}
+              {blog.is_published && (
+                <Button variant="outline" size="sm" onClick={handleShare} className="h-8 px-2">
+                  <Share2 className="w-3 h-3" />
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </div>
+      </Card>
+    );
+  }
+
+  // Grid View
+  return (
+    <Card className="group hover:shadow-xl transition-all duration-300 hover:shadow-primary/20 hover:-translate-y-1 overflow-hidden">
+      {/* Album Cover - Grid View */}
+      <div className="relative">
+        <AspectRatio ratio={1} className="bg-gradient-to-br from-muted/30 to-muted/60">
+          <AlbumCover size="large" />
+        </AspectRatio>
+        
+        {/* Overlay Badges */}
+        <div className="absolute top-3 right-3 flex gap-2">
+          <Badge variant={blog.is_published ? "default" : "secondary"} className="text-xs shadow-sm">
+            {blog.is_published ? "Live" : "Draft"}
+          </Badge>
+          <Badge 
+            variant="outline" 
+            className={`text-xs shadow-sm backdrop-blur-sm ${
+              blog.album_type === 'vinyl' 
+                ? 'bg-purple-500/10 border-purple-500/30' 
+                : 'bg-blue-500/10 border-blue-500/30'
+            }`}
+          >
+            {blog.album_type.toUpperCase()}
+          </Badge>
+        </div>
+
+        {/* Gradient Overlay for Better Text Contrast */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/20 to-transparent" />
+      </div>
+
+      {/* Content */}
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-semibold line-clamp-2 mb-2 leading-tight">
+          {searchTerm ? (
+            <span dangerouslySetInnerHTML={{ __html: highlightText(title) }} />
+          ) : (
+            title
+          )}
+        </CardTitle>
+        <div className="text-sm text-muted-foreground">
+          <div className="font-medium line-clamp-1">
+            {searchTerm ? (
+              <span dangerouslySetInnerHTML={{ __html: highlightText(`${artist} - ${album}`) }} />
+            ) : (
+              `${artist} - ${album}`
             )}
           </div>
-        </CardContent>
-      </div>
+          <div className="flex items-center gap-2 mt-1">
+            {year && <span className="text-xs">{year}</span>}
+            {genre && (
+              <Badge variant="outline" className="text-xs">
+                {genre}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-0">
+        <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <FileText className="w-4 h-4" />
+              {readingTime} min
+            </span>
+            {blog.is_published && (
+              <span className="flex items-center gap-1">
+                <Eye className="w-4 h-4" />
+                {blog.views_count || 0}
+              </span>
+            )}
+          </div>
+          <div className="text-xs">
+            {blog.is_published 
+              ? new Date(blog.published_at!).toLocaleDateString('nl-NL')
+              : new Date(blog.created_at).toLocaleDateString('nl-NL')
+            }
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {onView && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onView(blog)}
+              className="flex-1"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Bekijk
+            </Button>
+          )}
+          
+          {onEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEdit(blog)}
+              className="flex-1"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Bewerk
+            </Button>
+          )}
+          
+          {!blog.is_published && (
+            <Button
+              size="sm"
+              onClick={handlePublish}
+              className="flex-1"
+            >
+              Publiceer
+            </Button>
+          )}
+          
+          {blog.is_published && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 };

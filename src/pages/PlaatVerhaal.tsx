@@ -334,7 +334,7 @@ export const PlaatVerhaal: React.FC = () => {
                     ),
                     h2: ({ children }) => (
                       <h2 className="text-2xl font-semibold mt-10 mb-5 text-foreground flex items-center gap-3">
-                        <Music className="w-6 h-6 text-vinyl-gold flex-shrink-0" />
+                        <Disc3 className="w-6 h-6 text-vinyl-gold flex-shrink-0" />
                         {children}
                       </h2>
                     ),

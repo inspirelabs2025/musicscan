@@ -101,7 +101,7 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
         'Content-Type': 'application/json',
       },
         body: JSON.stringify({
-          model: 'llama-3.1-sonar-large-128k-online',
+          model: 'sonar-large-online',
           messages: [
             {
               role: 'system',
@@ -114,7 +114,7 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
           ],
           temperature: 0.1,
           top_p: 0.9,
-          max_tokens: 1500,
+          max_tokens: 1400,
           return_images: false,
           return_related_questions: false
         }),
@@ -122,7 +122,7 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Perplexity API error - Status: ${response.status}, Text: ${errorText}`);
+      console.error(`Perplexity API error - Status: ${response.status}, Model: sonar-large-online, Text: ${errorText}`);
       
       // Try with smaller model on 400 Bad Request
       if (response.status === 400) {
@@ -134,7 +134,7 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'llama-3.1-sonar-small-128k-online',
+            model: 'sonar-small-online',
             messages: [
               {
                 role: 'system',
@@ -147,7 +147,7 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
             ],
             temperature: 0.1,
             top_p: 0.9,
-            max_tokens: 1000,
+            max_tokens: 1200,
             return_images: false,
             return_related_questions: false
           }),
@@ -155,6 +155,7 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
 
         if (!fallbackResponse.ok) {
           const fallbackErrorText = await fallbackResponse.text();
+          console.error(`Perplexity fallback API error - Status: ${fallbackResponse.status}, Model: sonar-small-online, Text: ${fallbackErrorText}`);
           throw new Error(`Perplexity fallback API error - Status: ${fallbackResponse.status}, Text: ${fallbackErrorText}`);
         }
 
@@ -247,7 +248,7 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
             historical_events: contextData.historical_events,
             music_scene_context: contextData.music_scene_context,
             cultural_context: contextData.cultural_context,
-            ai_model: 'llama-3.1-sonar-large-128k-online',
+            ai_model: 'sonar-online',
             cached_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
           });
 

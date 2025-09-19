@@ -83,6 +83,11 @@ export function ContextModule({ blogPostId, albumYear, albumTitle, albumArtist }
     setIsGenerating(true);
     setError(null);
     
+    // Clear old content when force regenerating
+    if (forceRegenerate) {
+      setContextData(null);
+    }
+    
     try {
       const { data, error } = await supabase.functions.invoke('generate-blog-context', {
         body: {
@@ -109,6 +114,9 @@ export function ContextModule({ blogPostId, albumYear, albumTitle, albumArtist }
     } catch (error) {
       console.error('Error generating context:', error);
       setError(error instanceof Error ? error.message : 'Er is een fout opgetreden bij het genereren van de context');
+      
+      // Try to load existing context in case there's cached data
+      await loadContext();
     } finally {
       setIsGenerating(false);
     }

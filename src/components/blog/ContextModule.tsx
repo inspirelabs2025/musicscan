@@ -44,7 +44,9 @@ export function ContextModule({ blogPostId, albumYear, albumTitle, albumArtist }
         .from('blog_context')
         .select('historical_events, music_scene_context, cultural_context, cached_until')
         .eq('blog_post_id', blogPostId)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
         throw error;

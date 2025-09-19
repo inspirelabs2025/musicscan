@@ -94,7 +94,7 @@ Focus op het jaar ${albumYear} en geef:
 
 Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer van ${albumYear} weergeven. Schrijf alles in het Nederlands.`;
 
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    let response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${perplexityApiKey}`,
@@ -241,6 +241,12 @@ Geef uitgebreide, informatieve beschrijvingen die echt het gevoel en de sfeer va
     // Save to database using Supabase client
     if (supabaseUrl && supabaseServiceKey) {
       try {
+        // Delete any existing context for this blog post to ensure uniqueness
+        await supabase
+          .from('blog_context')
+          .delete()
+          .eq('blog_post_id', blogPostId);
+
         const { error: insertError } = await supabase
           .from('blog_context')
           .insert({

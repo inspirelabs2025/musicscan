@@ -13,7 +13,9 @@ import {
   Upload,
   Search,
   Shuffle,
-  Sparkles
+  Sparkles,
+  Users,
+  Newspaper
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +24,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCollectionStats } from '@/hooks/useCollectionStats';
 import { useDirectScans } from '@/hooks/useDirectScans';
 import { useUnifiedScansStats } from '@/hooks/useUnifiedScansStats';
+import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
+import { ChatWidget } from '@/components/dashboard/ChatWidget';
+import { QuizWidget } from '@/components/dashboard/QuizWidget';
+import { BlogPreviewWidget } from '@/components/dashboard/BlogPreviewWidget';
+import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
+import { NewUsersSection } from '@/components/NewUsersSection';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -142,13 +150,33 @@ const Dashboard = () => {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Activity */}
-          <section className="animate-fade-in delay-400">
-            <Card>
+        {/* AI & Interactive Widgets Section */}
+        <section className="mb-12 animate-fade-in delay-400">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-vinyl-purple" />
+            🚀 Jouw Muziek Command Center
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <AIInsightsWidget />
+            <ChatWidget />
+            <QuizWidget />
+          </div>
+        </section>
+
+        {/* Content & Community Section */}
+        <section className="mb-12 animate-fade-in delay-500">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Newspaper className="w-6 h-6 text-vinyl-gold" />
+            📚 Ontdek & Leer
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <BlogPreviewWidget />
+            
+            {/* Recent Activity */}
+            <Card className="border-2 hover:border-accent/50 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-vinyl-purple" />
+                  <Clock className="w-5 h-5 text-accent" />
                   🕒 Recente Activiteit
                 </CardTitle>
               </CardHeader>
@@ -200,51 +228,69 @@ const Dashboard = () => {
                 )}
               </CardContent>
             </Card>
-          </section>
+          </div>
+        </section>
 
-          {/* Navigation Shortcuts */}
-          <section className="animate-fade-in delay-500">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-vinyl-gold" />
-                  🎯 Snelle Navigatie
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-purple/10">
-                    <Link to="/ai-analysis">
-                      <TrendingUp className="w-5 h-5" />
-                      <span className="text-xs">🧠 AI Analyse</span>
-                    </Link>
-                  </Button>
-                  
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-gold/10">
-                    <Link to="/collection-chat">
-                      <MessageSquare className="w-5 h-5" />
-                      <span className="text-xs">💬 Collectie Chat</span>
-                    </Link>
-                  </Button>
-                  
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-accent/20">
-                    <Link to="/my-shop">
-                      <Star className="w-5 h-5" />
-                      <span className="text-xs">🏪 Mijn Shop</span>
-                    </Link>
-                  </Button>
-                  
-                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-secondary/50">
-                    <Link to="/unified-scan-overview">
-                      <BarChart3 className="w-5 h-5" />
-                      <span className="text-xs">📈 Overzicht</span>
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-        </div>
+        {/* Community Section - Latest Albums from all users */}
+        <LatestAlbumsSection />
+
+        {/* Navigation Shortcuts */}
+        <section className="mb-12 animate-fade-in delay-600">
+          <Card className="border-2 hover:border-primary/50 transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-primary" />
+                🎯 Snelle Navigatie
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-purple/10">
+                  <Link to="/collection-overview">
+                    <TrendingUp className="w-5 h-5" />
+                    <span className="text-xs">📊 Collectie Overzicht</span>
+                  </Link>
+                </Button>
+                
+                <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-gold/10">
+                  <Link to="/collection-chat">
+                    <MessageSquare className="w-5 h-5" />
+                    <span className="text-xs">💬 Collectie Chat</span>
+                  </Link>
+                </Button>
+                
+                <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-accent/20">
+                  <Link to="/my-shop">
+                    <Star className="w-5 h-5" />
+                    <span className="text-xs">🏪 Mijn Shop</span>
+                  </Link>
+                </Button>
+                
+                <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-secondary/50">
+                  <Link to="/unified-scan-overview">
+                    <BarChart3 className="w-5 h-5" />
+                    <span className="text-xs">📈 Alle Scans</span>
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Community Highlights */}
+        <section className="mb-12 animate-fade-in delay-700">
+          <Card className="border-2 hover:border-accent/50 transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-accent" />
+                👥 Muziek Community
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <NewUsersSection />
+            </CardContent>
+          </Card>
+        </section>
 
         {/* Top Genres/Artists Quick Preview */}
         {collectionStats && !collectionLoading && (

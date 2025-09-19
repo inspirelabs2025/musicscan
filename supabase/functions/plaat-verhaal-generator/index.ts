@@ -108,7 +108,7 @@ serve(async (req) => {
   }
 
   try {
-    const { albumId, albumType, forceRegenerate = false } = await req.json();
+    const { albumId, albumType, forceRegenerate = false, autoPublish = false } = await req.json();
 
     if (!albumId || !albumType) {
       throw new Error("Album ID en type zijn vereist");
@@ -345,7 +345,8 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
         markdown_content: markdownBody,
         social_post: socialPost,
         slug: slug,
-        is_published: false
+        is_published: autoPublish,
+        published_at: autoPublish ? new Date().toISOString() : null
       })
       .select()
       .single();

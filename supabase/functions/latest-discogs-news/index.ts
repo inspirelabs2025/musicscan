@@ -72,9 +72,9 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Filter for recently added releases (last 24-48 hours based on addition date)
-    const now = new Date();
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    const currentTime = new Date();
+    const yesterday = new Date(currentTime.getTime() - 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(currentTime.getTime() - 48 * 60 * 60 * 1000);
     
     // Take first 20 recent releases (Discogs sorts by added date descending)
     // Focus on releases added recently rather than year filtering

@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface BatchStatus {
   id?: string;
-  status: 'idle' | 'active' | 'paused' | 'completed' | 'failed' | 'stopped';
+  status: 'idle' | 'active' | 'running' | 'paused' | 'completed' | 'failed' | 'stopped';
   total_items?: number;
   processed_items?: number;
   successful_items?: number;
@@ -233,9 +233,119 @@ export function BatchBlogGenerator() {
     }
   };
 
+  const fixBatchStatus = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Update running batch to active and reset counters
+      const { error } = await supabase
+        .from('batch_processing_status')
+        .update({ 
+          status: 'active',
+          processed_items: 0,
+          successful_items: 0,
+          failed_items: 0,
+          last_heartbeat: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('process_type', 'blog_generation')
+        .eq('status', 'running');
+      
+      if (error) throw error;
+
+      // Check status immediately
+      await checkStatus();
+      setLastUpdate(new Date());
+      
+      toast({
+        title: "Batch status gerepareerd",
+        description: "Status veranderd van 'running' naar 'active'. Cron job zal nu verder gaan."
+      });
+    } catch (error) {
+      console.error('Error fixing batch status:', error);
+      toast({
+        title: "Fout bij repareren batch status",
+        description: "Er is een fout opgetreden bij het repareren van de batch status",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const pauseBatch = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('batch_processing_status')
+        .update({ 
+          status: 'paused',
+          updated_at: new Date().toISOString()
+        })
+        .eq('process_type', 'blog_generation')
+        .eq('status', 'active');
+      
+      if (error) throw error;
+
+      setStatus(prev => ({ ...prev, status: 'paused' }));
+      setLastUpdate(new Date());
+      
+      toast({
+        title: "Batch gepauzeerd",
+        description: "Batch is gepauzeerd. Cron job zal stoppen met verwerken."
+      });
+    } catch (error) {
+      console.error('Error pausing batch:', error);
+      toast({
+        title: "Fout bij pauzeren batch",
+        description: "Er is een fout opgetreden bij het pauzeren van de batch",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const stopAllBatches = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('batch_processing_status')
+        .update({ 
+          status: 'stopped',
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('process_type', 'blog_generation')
+        .in('status', ['active', 'running', 'paused']);
+      
+      if (error) throw error;
+
+      await checkStatus();
+      setLastUpdate(new Date());
+      
+      toast({
+        title: "Alle batches gestopt",
+        description: "Alle actieve batches zijn gestopt."
+      });
+    } catch (error) {
+      console.error('Error stopping all batches:', error);
+      toast({
+        title: "Fout bij stoppen batches",
+        description: "Er is een fout opgetreden bij het stoppen van de batches",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-blue-500';
+      case 'running': return 'bg-orange-500';
       case 'paused': return 'bg-yellow-500';
       case 'completed': return 'bg-green-500';
       case 'stopped': return 'bg-orange-500';
@@ -247,6 +357,7 @@ export function BatchBlogGenerator() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active': return <RotateCcw className="h-4 w-4 animate-spin" />;
+      case 'running': return <AlertTriangle className="h-4 w-4" />;
       case 'paused': return <Pause className="h-4 w-4" />;
       case 'completed': return <CheckCircle className="h-4 w-4" />;
       case 'stopped': return <XCircle className="h-4 w-4" />;
@@ -317,6 +428,19 @@ export function BatchBlogGenerator() {
 
         {/* Controls */}
         <div className="flex gap-2 flex-wrap">
+          {/* Fix batch status if stuck in running */}
+          {status.status === 'running' && (
+            <Button
+              onClick={fixBatchStatus}
+              disabled={isLoading}
+              variant="outline"
+              className="flex items-center gap-2 border-yellow-500 text-yellow-700"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              Repareer Status
+            </Button>
+          )}
+
           <Button
             onClick={startBatch}
             disabled={isLoading || !canStart}
@@ -328,7 +452,7 @@ export function BatchBlogGenerator() {
           
           {canPause && (
             <Button
-              onClick={stopBatch}
+              onClick={pauseBatch}
               disabled={isLoading}
               variant="secondary"
               className="flex items-center gap-2"
@@ -352,13 +476,13 @@ export function BatchBlogGenerator() {
           
           {(isActive || isPaused) && (
             <Button
-              onClick={forceStopBatch}
+              onClick={stopAllBatches}
               disabled={isLoading}
               variant="destructive"
               className="flex items-center gap-2"
             >
-              <AlertTriangle className="h-4 w-4" />
-              Force Stop
+              <Square className="h-4 w-4" />
+              Stop Alles
             </Button>
           )}
         </div>

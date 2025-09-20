@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { AlertTriangle, Play, Square, RotateCcw, Clock, CheckCircle, XCircle, Pause, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { BatchProgressDashboard } from './BatchProgressDashboard';
 
 interface BatchStatus {
   id?: string;
@@ -377,7 +378,13 @@ export function BatchBlogGenerator() {
   const canResume = isPaused && (status.queue_pending || 0) > 0;
 
   return (
-    <Card className="w-full">
+    <div className="space-y-6">
+      {/* Live Dashboard - only show when batch is active/running */}
+      {['active', 'running', 'paused'].includes(status.status) && (
+        <BatchProgressDashboard />
+      )}
+
+      <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Zap className="h-5 w-5" />
@@ -582,5 +589,6 @@ export function BatchBlogGenerator() {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }

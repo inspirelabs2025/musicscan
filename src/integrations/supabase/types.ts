@@ -160,6 +160,7 @@ export type Database = {
       }
       batch_processing_status: {
         Row: {
+          auto_mode: boolean | null
           completed_at: string | null
           created_at: string
           current_batch: number | null
@@ -167,8 +168,10 @@ export type Database = {
           failed_details: Json | null
           failed_items: number | null
           id: string
+          last_heartbeat: string | null
           process_type: string
           processed_items: number | null
+          queue_size: number | null
           started_at: string | null
           status: string
           stopped_at: string | null
@@ -177,6 +180,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto_mode?: boolean | null
           completed_at?: string | null
           created_at?: string
           current_batch?: number | null
@@ -184,8 +188,10 @@ export type Database = {
           failed_details?: Json | null
           failed_items?: number | null
           id?: string
+          last_heartbeat?: string | null
           process_type: string
           processed_items?: number | null
+          queue_size?: number | null
           started_at?: string | null
           status?: string
           stopped_at?: string | null
@@ -194,6 +200,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto_mode?: boolean | null
           completed_at?: string | null
           created_at?: string
           current_batch?: number | null
@@ -201,13 +208,60 @@ export type Database = {
           failed_details?: Json | null
           failed_items?: number | null
           id?: string
+          last_heartbeat?: string | null
           process_type?: string
           processed_items?: number | null
+          queue_size?: number | null
           started_at?: string | null
           status?: string
           stopped_at?: string | null
           successful_items?: number | null
           total_items?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      batch_queue_items: {
+        Row: {
+          attempts: number
+          batch_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          item_id: string
+          item_type: string
+          max_attempts: number
+          priority: number
+          processed_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          batch_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          item_id: string
+          item_type: string
+          max_attempts?: number
+          priority?: number
+          processed_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          batch_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          item_id?: string
+          item_type?: string
+          max_attempts?: number
+          priority?: number
+          processed_at?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []

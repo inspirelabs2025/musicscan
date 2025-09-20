@@ -1203,6 +1203,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_url: string | null
           published_at: string
           slug: string
           source: string
@@ -1217,6 +1218,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          image_url?: string | null
           published_at: string
           slug: string
           source: string
@@ -1231,6 +1233,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           published_at?: string
           slug?: string
           source?: string

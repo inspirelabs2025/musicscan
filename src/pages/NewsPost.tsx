@@ -18,6 +18,7 @@ interface BlogPost {
   category: string;
   author: string;
   views_count: number;
+  image_url?: string;
 }
 
 const fetchBlogPost = async (slug: string): Promise<BlogPost | null> => {
@@ -104,6 +105,16 @@ export const NewsPost = () => {
 
           {/* Article header */}
           <header>
+            {post.image_url && (
+              <div className="mb-6">
+                <img 
+                  src={post.image_url} 
+                  alt={post.title}
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+              </div>
+            )}
+            
             <h1 className="text-4xl font-bold mb-4 leading-tight">
               {post.title}
             </h1>

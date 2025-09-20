@@ -125,28 +125,9 @@ const BulkerImage = () => {
       // Set media type
       dispatch({ type: 'SET_MEDIA_TYPE', payload: urlMediaType });
       
-      // Create mock search result from URL parameters
-      const mockSearchResult = {
-        id: parseInt(urlDiscogsId),
-        discogs_id: parseInt(urlDiscogsId),
-        artist: urlArtist || '',
-        title: urlTitle || '',
-        label: urlLabel || '',
-        catalog_number: urlCatalogNumber || '',
-        year: urlYear ? parseInt(urlYear) : null,
-        discogs_url: `https://www.discogs.com/release/${urlDiscogsId}`,
-        api_url: `https://api.discogs.com/releases/${urlDiscogsId}`,
-        similarity_score: 1.0,
-        pricing_stats: null, // Will be populated later if needed
-        format: urlMediaType === 'vinyl' ? 'Vinyl' : 'CD',
-        genre: null,
-        country: null,
-        style: null
-      };
-      
-      // Set search results and skip to condition selection
-      setSearchResults([mockSearchResult]);
-      dispatch({ type: 'SET_CURRENT_STEP', payload: 5 }); // Skip to condition selection
+      // Go to Discogs ID mode with pre-filled ID
+      dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
+      dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: urlDiscogsId });
       
       toast({
         title: "Data uit AI-scan geladen",
@@ -598,6 +579,8 @@ const BulkerImage = () => {
             <DiscogsIdInput 
               onSubmit={handleDiscogsIdSubmit}
               isSearching={isSearching}
+              prefilledDiscogsId={state.directDiscogsId || undefined}
+              prefilledMediaType={state.mediaType || undefined}
             />
           </div>
         )}

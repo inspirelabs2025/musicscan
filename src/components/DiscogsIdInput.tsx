@@ -10,19 +10,25 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 interface DiscogsIdInputProps {
   onSubmit: (discogsId: string, mediaType: 'vinyl' | 'cd') => void;
   isSearching?: boolean;
+  prefilledDiscogsId?: string;
+  prefilledMediaType?: 'vinyl' | 'cd';
 }
 
-export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false }: DiscogsIdInputProps) => {
-  const [discogsId, setDiscogsId] = useState('');
-  const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | null>(null);
+export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false, prefilledDiscogsId, prefilledMediaType }: DiscogsIdInputProps) => {
+  const [discogsId, setDiscogsId] = useState(prefilledDiscogsId || '');
+  const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | null>(prefilledMediaType || null);
   const [error, setError] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false);
   
-  // Reset state when component mounts to ensure no pre-selected value
+  // Initialize with prefilled values when component mounts
   useEffect(() => {
-    // Force reset mediaType on mount
-    setMediaType(null);
-  }, []);
+    if (prefilledDiscogsId) {
+      setDiscogsId(prefilledDiscogsId);
+    }
+    if (prefilledMediaType) {
+      setMediaType(prefilledMediaType);
+    }
+  }, [prefilledDiscogsId, prefilledMediaType]);
 
   const processInput = (input: string): { id: string | null; error: string | null } => {
     const trimmedInput = input.trim();

@@ -17,80 +17,87 @@ serve(async (req) => {
   }
 
   try {
-    const { action, batchSize = 3, delaySeconds = 45, mediaTypes = ['cd', 'vinyl', 'ai'], minConfidence = 0.7, dryRun = false } = await req.json();
+    const { action, batchSize = 1, delaySeconds = 30, mediaTypes = ['cd', 'vinyl', 'ai'], minConfidence = 0.7, dryRun = false } = await req.json();
     
     console.log('Batch blog generation request:', { action, batchSize, delaySeconds, mediaTypes, minConfidence, dryRun });
 
     if (action === 'start') {
-      // Check for existing running batch
+      // Check if there's already an active batch
       const existingBatch = await getBatchStatus();
-      if (existingBatch?.status === 'running') {
-        return new Response(
-          JSON.stringify({ 
-            error: 'A batch is already running. Please wait for it to complete or stop it first.' 
-          }),
-          { 
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
+      if (existingBatch?.status === 'active') {
+        return new Response(JSON.stringify({
+          error: 'Batch is already active',
+          status: existingBatch
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
-      const itemsToProcess = await getItemsToProcess(mediaTypes, minConfidence);
+      // Get items to process
+      const items = await getItemsToProcess(mediaTypes, minConfidence);
       
-      if (itemsToProcess.length === 0) {
-        return new Response(
-          JSON.stringify({ message: 'No items found to process' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      if (items.length === 0) {
+        return new Response(JSON.stringify({
+          message: 'No items found to process',
+          itemsFound: 0
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
-
-      // Use exactly what the user configured - no forced overrides
-      const optimizedBatchSize = batchSize;
-      const optimizedDelay = delaySeconds;
 
       if (dryRun) {
-        return new Response(
-          JSON.stringify({ 
-            message: `Dry run completed. Found ${itemsToProcess.length} items to process`,
-            batchSize: optimizedBatchSize,
-            delaySeconds: optimizedDelay,
-            items: itemsToProcess.slice(0, 10).map(item => ({ 
-              id: item.id, 
-              type: item.media_type, 
-              artist: item.artist, 
-              title: item.title,
-              confidence: item.confidence_score 
-            }))
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({
+          message: 'Dry run completed',
+          itemsFound: items.length,
+          items: items.slice(0, 10) // Show first 10 items
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
-      // Start batch processing in background with EdgeRuntime.waitUntil for proper lifecycle
-      EdgeRuntime.waitUntil(
-        processBatches(itemsToProcess, optimizedBatchSize, optimizedDelay).catch(async (error) => {
-          console.error('Batch processing failed:', error);
-          try {
-            await updateBatchStatus({ 
-              status: 'failed',
-              completed_at: new Date().toISOString(),
-              error_message: error.message
-            });
-          } catch (statusError) {
-            console.error('Failed to update batch status after error:', statusError);
-          }
-        })
-      );
+      // Initialize batch processing status and queue
+      const batchId = crypto.randomUUID();
+      await updateBatchStatus({
+        id: batchId,
+        status: 'active',
+        total_items: items.length,
+        processed_items: 0,
+        successful_items: 0,
+        failed_items: 0,
+        started_at: new Date().toISOString(),
+        current_item: null,
+        failed_item_details: [],
+        queue_size: items.length,
+        last_heartbeat: new Date().toISOString(),
+        auto_mode: true
+      });
 
-      return new Response(
-        JSON.stringify({ 
-          message: `Started batch processing ${itemsToProcess.length} items`, 
-          batchSize: optimizedBatchSize,
-          delaySeconds: optimizedDelay
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      // Populate the queue
+      const queueItems = items.map((item, index) => ({
+        batch_id: batchId,
+        item_id: item.id,
+        item_type: item.type,
+        priority: item.type === 'cd' ? 3 : item.type === 'vinyl' ? 2 : 1 // CD priority > vinyl > AI
+      }));
+
+      // Insert queue items in batches to avoid timeout
+      const BATCH_SIZE = 100;
+      for (let i = 0; i < queueItems.length; i += BATCH_SIZE) {
+        const batch = queueItems.slice(i, i + BATCH_SIZE);
+        await supabase.from('batch_queue_items').insert(batch);
+      }
+
+      console.log(`Started batch processing with ${items.length} items`);
+      
+      return new Response(JSON.stringify({
+        message: 'Batch processing started - will be processed by cron job',
+        batchId,
+        totalItems: items.length,
+        note: 'Processing runs automatically every minute via cron job'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     if (action === 'status') {
@@ -101,10 +108,60 @@ serve(async (req) => {
     }
 
     if (action === 'stop') {
-      await updateBatchStatus({ status: 'stopped', stopped_at: new Date().toISOString() });
-      return new Response(JSON.stringify({ success: true, message: 'Batch processing stopped' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      try {
+        await updateBatchStatus({
+          status: 'paused',
+          updated_at: new Date().toISOString()
+        });
+
+        return new Response(JSON.stringify({
+          message: 'Batch processing paused'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        console.error('Error pausing batch:', error);
+        return new Response(JSON.stringify({
+          error: 'Failed to pause batch processing'
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    if (action === 'force_stop') {
+      try {
+        // Mark current batch as stopped and clear queue
+        const currentBatch = await getBatchStatus();
+        if (currentBatch) {
+          await updateBatchStatus({
+            status: 'stopped',
+            completed_at: new Date().toISOString()
+          });
+
+          // Clear remaining queue items
+          await supabase
+            .from('batch_queue_items')
+            .update({ status: 'skipped' })
+            .eq('batch_id', currentBatch.id)
+            .in('status', ['pending', 'processing']);
+        }
+
+        return new Response(JSON.stringify({
+          message: 'Batch processing force stopped and queue cleared'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        console.error('Error force stopping batch:', error);
+        return new Response(JSON.stringify({
+          error: 'Failed to force stop batch processing'
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     return new Response(JSON.stringify({ error: 'Invalid action' }), {
@@ -145,7 +202,7 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
         .single();
 
       if (!existingBlog) {
-        items.push({ ...scan, media_type: 'cd' });
+        items.push({ ...scan, type: 'cd' });
       }
     }
   }
@@ -170,7 +227,7 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
         .single();
 
       if (!existingBlog) {
-        items.push({ ...scan, media_type: 'vinyl' });
+        items.push({ ...scan, type: 'vinyl' });
       }
     }
   }
@@ -196,7 +253,7 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
         .single();
 
       if (!existingBlog) {
-        items.push(scan);
+        items.push({ ...scan, type: scan.media_type || 'cd' });
       }
     }
   }
@@ -204,173 +261,63 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
   // Sort by priority: CD, vinyl, then AI by confidence
   return items.sort((a, b) => {
     const priorityOrder = { cd: 1, vinyl: 2, ai: 3 };
-    if (a.media_type !== b.media_type) {
-      return priorityOrder[a.media_type] - priorityOrder[b.media_type];
+    if (a.type !== b.type) {
+      return priorityOrder[a.type] - priorityOrder[b.type];
     }
-    if (a.media_type === 'ai' && b.media_type === 'ai') {
+    if (a.type === 'ai' && b.type === 'ai') {
       return (b.confidence_score || 0) - (a.confidence_score || 0);
     }
     return 0;
   });
 }
 
-async function processBatches(items: any[], batchSize: number, delaySeconds: number) {
-  console.log(`Processing ${items.length} items in batches of ${batchSize} with ${delaySeconds}s delay`);
-
-  let status = await updateBatchStatus({
-    status: 'running',
-    total_items: items.length,
-    processed_items: 0,
-    successful_items: 0,
-    failed_items: 0,
-    started_at: new Date().toISOString(),
-    current_batch: 0,
-    failed_details: []
-  });
-
-  const startTime = Date.now();
-  const maxProcessingTime = 4 * 60 * 60 * 1000; // 4 hours max processing time (increased for single-item batches)
-  let processed = 0;
-  let successful = 0;
-  let failed = 0;
-  const failedItems = [];
-
-  for (let i = 0; i < items.length; i += batchSize) {
-    // Check for timeout
-    if (Date.now() - startTime > maxProcessingTime) {
-      console.error('Batch processing timeout - stopping');
-      try {
-        await updateBatchStatus({ 
-          status: 'failed',
-          completed_at: new Date().toISOString(),
-          error_message: 'Processing timeout after 4 hours'
-        });
-      } catch (statusError) {
-        console.error('Failed to update timeout status:', statusError);
-      }
-      return { success: false, message: 'Batch processing timed out' };
-    }
-
-    // Check if batch should be stopped
-    const currentStatus = await getBatchStatus();
-    if (currentStatus?.status === 'stopped') {
-      await updateBatchStatus({ 
-        status: 'stopped',
-        completed_at: new Date().toISOString()
-      });
-      return { success: true, message: 'Batch stopped by user' };
-    }
-
-    const batch = items.slice(i, i + batchSize);
-    const currentBatch = Math.floor(i / batchSize) + 1;
-    console.log(`Processing batch ${currentBatch}/${Math.ceil(items.length/batchSize)}:`, batch.map(item => item.id));
-
-    // Update heartbeat with error handling
-    try {
-      await updateBatchStatus({ 
-        current_batch: currentBatch,
-        current_items: batch.map(item => `${item.artist} - ${item.title}`),
-        updated_at: new Date().toISOString()
-      });
-    } catch (statusError) {
-      console.error('Failed to update batch heartbeat:', statusError);
-      // Continue processing despite status update failure
-    }
-
-    // Process batch items with retry logic
-    const batchResults = await Promise.all(
-      batch.map(async (item) => {
-        let attempts = 0;
-        const maxAttempts = 2;
-        
-        while (attempts < maxAttempts) {
-          try {
-            console.log(`Generating blog for ${item.media_type} item: ${item.id} (attempt ${attempts + 1})`);
-            
-            const { data, error } = await supabase.functions.invoke('plaat-verhaal-generator', {
-              body: {
-                albumId: item.id,
-                albumType: item.media_type === 'ai' ? 'cd' : item.media_type,
-                autoPublish: true,
-                forceRegenerate: false
-              }
-            });
-
-            if (error) throw error;
-
-            console.log(`Successfully generated blog for item ${item.id}`);
-            return { success: true, item };
-          } catch (error) {
-            attempts++;
-            console.error(`Attempt ${attempts} failed for item ${item.id}:`, error);
-            
-            if (attempts >= maxAttempts) {
-              return { success: false, item, error: error.message };
-            }
-            
-            // Wait before retry with exponential backoff
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
-          }
-        }
-      })
-    );
-
-    // Update status with results
-    const successCount = batchResults.filter(r => r.success).length;
-    const failedResults = batchResults.filter(r => !r.success);
-    
-    processed += batch.length;
-    successful += successCount;
-    failed += failedResults.length;
-    failedItems.push(...failedResults.map(r => ({ item: r.item, error: r.error })));
-    
-    try {
-      await updateBatchStatus({
-        processed_items: processed,
-        successful_items: successful,
-        failed_items: failed,
-        failed_details: failedItems
-      });
-    } catch (statusError) {
-      console.error('Failed to update batch progress:', statusError);
-      // Continue processing despite status update failure
-    }
-
-    // Delay between batches (except for the last batch)
-    if (i + batchSize < items.length) {
-      console.log(`Waiting ${delaySeconds} seconds before next batch...`);
-      await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
-    }
-  }
-
-  await updateBatchStatus({ 
-    status: 'completed',
-    completed_at: new Date().toISOString()
-  });
-
-  return { success: true, message: 'Batch processing completed' };
-}
-
 async function getBatchStatus() {
-  const { data, error } = await supabase
-    .from('batch_processing_status')
-    .select('*')
-    .eq('process_type', 'blog_generation')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('batch_processing_status')
+      .select(`
+        *,
+        queue_stats:batch_queue_items(
+          status,
+          count
+        )
+      `)
+      .eq('process_type', 'blog_generation')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching batch status:', error);
+      return null;
+    }
 
-  if (error && error.code !== 'PGRST116') {
-    throw error;
+    // Add queue statistics if data exists
+    if (data) {
+      const { data: queueStats } = await supabase
+        .from('batch_queue_items')
+        .select('status')
+        .eq('batch_id', data.id);
+
+      if (queueStats) {
+        data.queue_pending = queueStats.filter(item => item.status === 'pending').length;
+        data.queue_processing = queueStats.filter(item => item.status === 'processing').length;
+        data.queue_completed = queueStats.filter(item => item.status === 'completed').length;
+        data.queue_failed = queueStats.filter(item => item.status === 'failed').length;
+      }
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Failed to get batch status:', error);
+    return null;
   }
-
-  return data || { status: 'idle' };
 }
 
 async function updateBatchStatus(updates: any) {
   const currentStatus = await getBatchStatus();
   
-  if (currentStatus.id) {
+  if (currentStatus && currentStatus.id) {
     await supabase
       .from('batch_processing_status')
       .update({ ...updates, updated_at: new Date().toISOString() })

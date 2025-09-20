@@ -7,23 +7,32 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, Play, Square, RotateCcw, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { AlertTriangle, Play, Square, RotateCcw, Clock, CheckCircle, XCircle, Pause, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface BatchStatus {
   id?: string;
-  status: 'idle' | 'running' | 'completed' | 'stopped';
+  status: 'idle' | 'active' | 'paused' | 'completed' | 'failed' | 'stopped';
   total_items?: number;
   processed_items?: number;
   successful_items?: number;
   failed_items?: number;
-  current_batch?: number;
-  current_items?: string[];
   started_at?: string;
   completed_at?: string;
-  failed_details?: Array<{ item: any; error: string }>;
+  current_item?: string;
+  failed_item_details?: Array<{
+    id: string;
+    error: string;
+    type: string;
+  }>;
+  queue_size?: number;
+  last_heartbeat?: string;
+  auto_mode?: boolean;
+  queue_pending?: number;
+  queue_processing?: number;
+  queue_completed?: number;
+  queue_failed?: number;
 }
 
 export function BatchBlogGenerator() {
@@ -43,7 +52,7 @@ export function BatchBlogGenerator() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    if (status.status === 'running') {
+    if (status.status === 'active') {
       interval = setInterval(async () => {
         try {
           const { data, error } = await supabase.functions.invoke('batch-blog-generator', {
@@ -54,15 +63,15 @@ export function BatchBlogGenerator() {
             setStatus(data);
             setLastUpdate(new Date());
             
-            // Auto-cleanup stuck batches (if no update for 10+ minutes)
-            if (data.updated_at) {
-              const lastUpdateTime = new Date(data.updated_at);
-              const timeSinceUpdate = Date.now() - lastUpdateTime.getTime();
+            // Auto-cleanup stuck batches (if no heartbeat for 5+ minutes)
+            if (data.last_heartbeat) {
+              const lastHeartbeat = new Date(data.last_heartbeat);
+              const timeSinceHeartbeat = Date.now() - lastHeartbeat.getTime();
               
-              if (timeSinceUpdate > 10 * 60 * 1000) { // 10 minutes
+              if (timeSinceHeartbeat > 5 * 60 * 1000) { // 5 minutes
                 toast({
-                  title: "Batch mogelijk vastgelopen",
-                  description: "De batch lijkt vastgelopen. Probeer de batch te stoppen en opnieuw te starten.",
+                  title: "Batch mogelijk gestopt",
+                  description: "De automatische verwerking lijkt gestopt. Cron job mogelijk inactief.",
                   variant: "destructive"
                 });
               }
@@ -71,7 +80,7 @@ export function BatchBlogGenerator() {
         } catch (error) {
           console.error('Error checking batch status:', error);
         }
-      }, 5000); // Check every 5 seconds
+      }, 10000); // Check every 10 seconds for active batches
     } else {
       checkStatus();
     }
@@ -88,7 +97,7 @@ export function BatchBlogGenerator() {
       });
 
       if (error) throw error;
-      setStatus(data);
+      setStatus(data || { status: 'idle' });
     } catch (error) {
       console.error('Failed to check batch status:', error);
     }
@@ -112,13 +121,15 @@ export function BatchBlogGenerator() {
         setDryRunResult(data);
         toast({
           title: "Dry Run Voltooid",
-          description: `${data.itemsFound} items gevonden. Geschatte tijd: ${Math.floor(data.estimatedTime / 60)} minuten.`
+          description: `${data.itemsFound} items gevonden.`
         });
       } else {
         toast({
           title: "Batch Generatie Gestart",
-          description: `${data.totalItems} items worden verwerkt. Geschatte tijd: ${Math.floor(data.estimatedTime / 60)} minuten.`
+          description: `${data.totalItems} items worden automatisch verwerkt door cron job.`
         });
+        // Check status immediately after starting
+        setTimeout(checkStatus, 1000);
       }
     } catch (error) {
       console.error('Failed to start batch:', error);
@@ -141,17 +152,17 @@ export function BatchBlogGenerator() {
       
       if (error) throw error;
       
-      setStatus(data || { status: 'stopped' });
+      setStatus(prev => ({ ...prev, status: 'paused' }));
       setLastUpdate(new Date());
       toast({
-        title: "Batch gestopt",
-        description: data?.message || 'Batch is gestopt'
+        title: "Batch gepauzeerd",
+        description: "Batch is gepauzeerd. Cron job zal stoppen met verwerken."
       });
     } catch (error) {
       console.error('Error stopping batch:', error);
       toast({
-        title: "Fout bij stoppen batch",
-        description: "Er is een fout opgetreden bij het stoppen van de batch",
+        title: "Fout bij pauzeren batch",
+        description: "Er is een fout opgetreden bij het pauzeren van de batch",
         variant: "destructive"
       });
     } finally {
@@ -163,8 +174,11 @@ export function BatchBlogGenerator() {
     try {
       setIsLoading(true);
       
-      // Directly update database to force stop
-      await supabase.rpc('cleanup_stuck_batch_processes');
+      const { data, error } = await supabase.functions.invoke('batch-blog-generator', {
+        body: { action: 'force_stop' }
+      });
+      
+      if (error) throw error;
       
       // Refresh status
       await checkStatus();
@@ -172,7 +186,7 @@ export function BatchBlogGenerator() {
       
       toast({
         title: "Batch geforceerd gestopt",
-        description: "De batch is geforceerd gestopt en de status is gereset."
+        description: "De batch is geforceerd gestopt en de wachtrij is geleegd."
       });
     } catch (error) {
       console.error('Error force stopping batch:', error);
@@ -186,20 +200,57 @@ export function BatchBlogGenerator() {
     }
   };
 
+  const resumeBatch = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Change status back to active
+      await supabase
+        .from('batch_processing_status')
+        .update({ 
+          status: 'active',
+          updated_at: new Date().toISOString()
+        })
+        .eq('process_type', 'blog_generation')
+        .eq('status', 'paused');
+      
+      setStatus(prev => ({ ...prev, status: 'active' }));
+      setLastUpdate(new Date());
+      
+      toast({
+        title: "Batch hervat",
+        description: "Batch is hervat. Cron job zal verwerking hervatten."
+      });
+    } catch (error) {
+      console.error('Error resuming batch:', error);
+      toast({
+        title: "Fout bij hervatten batch",
+        description: "Er is een fout opgetreden bij het hervatten van de batch",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'running': return 'bg-blue-500';
+      case 'active': return 'bg-blue-500';
+      case 'paused': return 'bg-yellow-500';
       case 'completed': return 'bg-green-500';
       case 'stopped': return 'bg-orange-500';
+      case 'failed': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'running': return <RotateCcw className="h-4 w-4 animate-spin" />;
+      case 'active': return <RotateCcw className="h-4 w-4 animate-spin" />;
+      case 'paused': return <Pause className="h-4 w-4" />;
       case 'completed': return <CheckCircle className="h-4 w-4" />;
       case 'stopped': return <XCircle className="h-4 w-4" />;
+      case 'failed': return <AlertTriangle className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
     }
   };
@@ -208,21 +259,26 @@ export function BatchBlogGenerator() {
     ? Math.round((status.processed_items || 0) / status.total_items * 100) 
     : 0;
 
-  const estimatedTimeRemaining = status.total_items && status.processed_items && status.status === 'running'
-    ? Math.ceil(((status.total_items - status.processed_items) / settings.batchSize) * settings.delaySeconds / 60)
-    : 0;
+  const isActive = status.status === 'active';
+  const isPaused = status.status === 'paused';
+  const canStart = ['idle', 'completed', 'stopped', 'failed'].includes(status.status);
+  const canPause = isActive;
+  const canResume = isPaused && (status.queue_pending || 0) > 0;
 
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5" />
-          Batch Blog Generator
+          <Zap className="h-5 w-5" />
+          Automatische Batch Blog Generator
           <Badge variant="outline" className={getStatusColor(status.status)}>
             {getStatusIcon(status.status)}
             {status.status}
           </Badge>
         </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Werkt automatisch via cron job - geen sessie-afhankelijkheid
+        </p>
       </CardHeader>
       
       <CardContent className="space-y-6">
@@ -231,32 +287,6 @@ export function BatchBlogGenerator() {
           <h3 className="text-lg font-semibold">Instellingen</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="batchSize">Batch Grootte</Label>
-              <Input
-                id="batchSize"
-                type="number"
-                min="1"
-                max="10"
-                value={settings.batchSize}
-                onChange={(e) => setSettings(prev => ({ ...prev, batchSize: parseInt(e.target.value) || 3 }))}
-                disabled={status.status === 'running'}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="delay">Vertraging (seconden)</Label>
-              <Input
-                id="delay"
-                type="number"
-                min="10"
-                max="120"
-                value={settings.delaySeconds}
-                onChange={(e) => setSettings(prev => ({ ...prev, delaySeconds: parseInt(e.target.value) || 45 }))}
-                disabled={status.status === 'running'}
-              />
-            </div>
-            
             <div className="space-y-2">
               <Label htmlFor="minConfidence">Min. Betrouwbaarheid (AI scans)</Label>
               <Input
@@ -267,7 +297,7 @@ export function BatchBlogGenerator() {
                 step="0.1"
                 value={settings.minConfidence}
                 onChange={(e) => setSettings(prev => ({ ...prev, minConfidence: parseFloat(e.target.value) || 0.7 }))}
-                disabled={status.status === 'running'}
+                disabled={isActive}
               />
             </div>
           </div>
@@ -277,7 +307,7 @@ export function BatchBlogGenerator() {
               id="dryRun"
               checked={settings.dryRun}
               onCheckedChange={(checked) => setSettings(prev => ({ ...prev, dryRun: checked }))}
-              disabled={status.status === 'running'}
+              disabled={isActive}
             />
             <Label htmlFor="dryRun">Dry Run (alleen testen, geen echte generatie)</Label>
           </div>
@@ -286,37 +316,50 @@ export function BatchBlogGenerator() {
         <Separator />
 
         {/* Controls */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             onClick={startBatch}
-            disabled={isLoading || status.status === 'running'}
+            disabled={isLoading || !canStart}
             className="flex items-center gap-2"
           >
             <Play className="h-4 w-4" />
-            {settings.dryRun ? 'Test Run' : 'Start Generatie'}
+            {settings.dryRun ? 'Test Run' : 'Start Automatische Generatie'}
           </Button>
           
-          {status.status === 'running' && (
-            <>
-              <Button
-                onClick={stopBatch}
-                disabled={isLoading}
-                variant="destructive"
-                className="flex items-center gap-2"
-              >
-                <Square className="h-4 w-4" />
-                Stop
-              </Button>
-              <Button
-                onClick={forceStopBatch}
-                disabled={isLoading}
-                variant="outline"
-                className="flex items-center gap-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-              >
-                <AlertTriangle className="h-4 w-4" />
-                Force Stop
-              </Button>
-            </>
+          {canPause && (
+            <Button
+              onClick={stopBatch}
+              disabled={isLoading}
+              variant="secondary"
+              className="flex items-center gap-2"
+            >
+              <Pause className="h-4 w-4" />
+              Pauzeer
+            </Button>
+          )}
+
+          {canResume && (
+            <Button
+              onClick={resumeBatch}
+              disabled={isLoading}
+              variant="secondary"
+              className="flex items-center gap-2"
+            >
+              <Play className="h-4 w-4" />
+              Hervat
+            </Button>
+          )}
+          
+          {(isActive || isPaused) && (
+            <Button
+              onClick={forceStopBatch}
+              disabled={isLoading}
+              variant="destructive"
+              className="flex items-center gap-2"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              Force Stop
+            </Button>
           )}
         </div>
 
@@ -331,14 +374,6 @@ export function BatchBlogGenerator() {
                 <div>
                   <p className="text-sm text-muted-foreground">Items Gevonden</p>
                   <p className="text-2xl font-bold">{dryRunResult.itemsFound}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Geschatte Tijd</p>
-                  <p className="text-2xl font-bold">{Math.floor(dryRunResult.estimatedTime / 60)}m</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Geschatte Kosten</p>
-                  <p className="text-2xl font-bold">€{dryRunResult.estimatedCost?.toFixed(0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -358,7 +393,7 @@ export function BatchBlogGenerator() {
               <Progress value={progressPercentage} className="w-full" />
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
               <div>
                 <p className="text-sm text-muted-foreground">Succesvol</p>
                 <p className="text-xl font-bold text-green-600">{status.successful_items || 0}</p>
@@ -368,41 +403,34 @@ export function BatchBlogGenerator() {
                 <p className="text-xl font-bold text-red-600">{status.failed_items || 0}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Huidige Batch</p>
-                <p className="text-xl font-bold">{status.current_batch || 0}</p>
+                <p className="text-sm text-muted-foreground">Wachtend</p>
+                <p className="text-xl font-bold text-blue-600">{status.queue_pending || 0}</p>
               </div>
-              {status.status === 'running' && estimatedTimeRemaining > 0 && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Resterende Tijd</p>
-                  <p className="text-xl font-bold">{estimatedTimeRemaining}m</p>
-                </div>
-              )}
+              <div>
+                <p className="text-sm text-muted-foreground">Bezig</p>
+                <p className="text-xl font-bold text-yellow-600">{status.queue_processing || 0}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Klaar</p>
+                <p className="text-xl font-bold text-green-600">{status.queue_completed || 0}</p>
+              </div>
             </div>
 
-            {/* Current Items */}
-            {status.current_items && status.current_items.length > 0 && (
+            {/* Current Item */}
+            {status.current_item && (
               <div>
-                <p className="text-sm font-medium mb-2">Huidige Items:</p>
-                <div className="space-y-1">
-                  {status.current_items.map((item, index) => (
-                    <p key={index} className="text-sm text-muted-foreground">• {item}</p>
-                  ))}
-                </div>
+                <p className="text-sm font-medium mb-2">Huidig Item:</p>
+                <p className="text-sm text-muted-foreground">• {status.current_item}</p>
               </div>
             )}
 
-            {/* Failed Items */}
-            {status.failed_details && status.failed_details.length > 0 && (
+            {/* Heartbeat Info */}
+            {status.last_heartbeat && (
               <div>
-                <p className="text-sm font-medium mb-2 text-red-600">Mislukte Items:</p>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {status.failed_details.map((failed, index) => (
-                    <div key={index} className="text-sm">
-                      <p className="font-medium">{failed.item.artist} - {failed.item.title}</p>
-                      <p className="text-red-600 text-xs">{failed.error}</p>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-sm font-medium mb-1">Laatste Activiteit:</p>
+                <p className="text-sm text-muted-foreground">
+                  {new Date(status.last_heartbeat).toLocaleString()}
+                </p>
               </div>
             )}
 
@@ -417,6 +445,17 @@ export function BatchBlogGenerator() {
             )}
           </div>
         )}
+
+        {/* Status Info */}
+        <div className="bg-muted/50 p-4 rounded-lg">
+          <h4 className="font-medium mb-2">🤖 Automatische Verwerking</h4>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            <li>• Cron job draait elke minuut automatisch</li>
+            <li>• Verwerkt 1 item per keer voor maximum stabiliteit</li>
+            <li>• Loopt door onafhankelijk van je browser sessie</li>
+            <li>• Heartbeat toont laatste activiteit van de processor</li>
+          </ul>
+        </div>
       </CardContent>
     </Card>
   );

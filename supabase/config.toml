@@ -16,7 +16,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.batch-blog-generator]
-verify_jwt = true
+verify_jwt = false
+
+[functions.batch-blog-processor]
+verify_jwt = false
 
 [functions.collection-quiz-generator]
 verify_jwt = true

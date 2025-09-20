@@ -490,7 +490,7 @@ const BulkerImage = () => {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Bulk Image Scan</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Image Scan</h1>
             </div>
           </div>
           {(analysisResult || searchResults.length > 0 || state.uploadedFiles.length > 0) && (

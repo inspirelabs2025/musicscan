@@ -334,30 +334,56 @@ export function BatchBlogGenerator() {
     try {
       setIsLoading(true);
       
-      // Update running batch to active and reset counters
-      const { error } = await supabase
-        .from('batch_processing_status')
-        .update({ 
-          status: 'active',
-          processed_items: 0,
-          successful_items: 0,
-          failed_items: 0,
-          last_heartbeat: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('process_type', 'blog_generation')
-        .eq('status', 'running');
+      // Check current queue status
+      const { data: queueData } = await supabase
+        .from('batch_queue_items')
+        .select('status')
+        .eq('batch_id', status.id);
       
-      if (error) throw error;
+      const pendingCount = queueData?.filter(item => item.status === 'pending').length || 0;
+      
+      if (pendingCount > 0) {
+        // Reset batch to active since there are pending items
+        const { error } = await supabase
+          .from('batch_processing_status')
+          .update({ 
+            status: 'active',
+            completed_at: null,
+            last_heartbeat: new Date().toISOString(),
+            processed_items: 0,
+            successful_items: 0,
+            failed_items: 0,
+            queue_size: pendingCount,
+            updated_at: new Date().toISOString()
+          })
+          .eq('process_type', 'blog_generation')
+          .eq('id', status.id);
 
-      // Check status immediately
-      await checkStatus();
-      setLastUpdate(new Date());
+        if (error) throw error;
+        toast({
+          title: "Batch herstart",
+          description: `Batch herstart met ${pendingCount} items in de wachtrij`
+        });
+      } else {
+        // No pending items, set to idle
+        const { error } = await supabase
+          .from('batch_processing_status')
+          .update({ 
+            status: 'idle',
+            stopped_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('process_type', 'blog_generation')
+          .eq('id', status.id);
+
+        if (error) throw error;
+        toast({
+          title: "Batch status gerepareerd",
+          description: "Batch status gerepareerd naar idle (geen items in wachtrij)"
+        });
+      }
       
-      toast({
-        title: "Batch status gerepareerd",
-        description: "Status veranderd van 'running' naar 'active'. Cron job zal nu verder gaan."
-      });
+      await checkStatus();
     } catch (error) {
       console.error('Error fixing batch status:', error);
       toast({
@@ -529,22 +555,38 @@ export function BatchBlogGenerator() {
 
         <Separator />
 
-        {/* Debug Information - Show when status might be inconsistent */}
-        {status.status === 'running' && (
-          <div className="space-y-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h4 className="text-sm font-semibold text-yellow-800">🔍 Debug Info</h4>
-            <p className="text-xs text-yellow-700">
-              Status: <Badge variant="outline">{status.status}</Badge> | 
-              Verwerkt: {status.processed_items || 0}/{status.total_items || 0} | 
-              Wachtrij: {status.queue_pending || 0} pending
-            </p>
-            <p className="text-xs text-yellow-600">
-              De "Repareer Status" knop zou zichtbaar moeten zijn omdat database status = "running"
-            </p>
-            {lastUpdate && (
-              <p className="text-xs text-yellow-600">
-                Laatste update: {lastUpdate.toLocaleTimeString()}
-              </p>
+        {/* Status Info with Problem Detection */}
+        {status && (
+          <div className="bg-muted/50 p-4 rounded-lg">
+            <h4 className="font-medium mb-2">Huidige Status Details:</h4>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Status:</span>
+                <span className="ml-2 font-mono">{status.status}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Items in wachtrij:</span>
+                <span className="ml-2 font-mono">{status.queue_pending || 0}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Verwerkt:</span>
+                <span className="ml-2 font-mono">{status.processed_items || 0} / {status.total_items || 0}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Succesvol:</span>
+                <span className="ml-2 font-mono">{status.successful_items || 0}</span>
+              </div>
+            </div>
+            
+            {status.status === 'completed' && (status.processed_items || 0) === 0 && (status.queue_pending || 0) > 0 && (
+              <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <p className="text-orange-700 text-sm font-medium">
+                  ⚠️ Probleem gedetecteerd: Batch is gemarkeerd als voltooid maar er zijn nog {status.queue_pending} items in de wachtrij die niet verwerkt zijn.
+                </p>
+                <p className="text-orange-600 text-xs mt-1">
+                  Gebruik "Repareer Status" om de batch opnieuw te activeren.
+                </p>
+              </div>
             )}
           </div>
         )}
@@ -553,8 +595,9 @@ export function BatchBlogGenerator() {
 
         {/* Controls */}
         <div className="flex gap-2 flex-wrap">
-          {/* Fix batch status if stuck in running */}
-          {status.status === 'running' && (
+          {/* Fix batch status if stuck in running or completed with pending items */}
+          {(status.status === 'running' || 
+            (status.status === 'completed' && (status.processed_items || 0) === 0 && (status.queue_pending || 0) > 0)) && (
             <Button
               onClick={fixBatchStatus}
               disabled={isLoading}

@@ -43,6 +43,7 @@ const Scanner = () => {
   const urlDiscogsId = searchParams.get('discogsId');
   const urlArtist = searchParams.get('artist');
   const urlTitle = searchParams.get('title');
+  const urlCondition = searchParams.get('condition');
 
   const { 
     isAnalyzing: isAnalyzingVinyl, 
@@ -124,6 +125,11 @@ const Scanner = () => {
       // Set media type
       dispatch({ type: 'SET_MEDIA_TYPE', payload: urlMediaType });
       
+      // Auto-fill condition if provided
+      if (urlCondition) {
+        dispatch({ type: 'SET_SELECTED_CONDITION', payload: urlCondition });
+      }
+      
       // Go directly to Discogs ID mode
       dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
       dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: urlDiscogsId });
@@ -134,7 +140,7 @@ const Scanner = () => {
       
       toast({
         title: "AI-scan herkend",
-        description: `${urlArtist} - ${urlTitle} wordt automatisch gezocht...`,
+        description: `${urlArtist} - ${urlTitle} wordt automatisch gezocht${urlCondition ? ' met conditie ingevuld' : ''}...`,
         variant: "default"
       });
       
@@ -143,7 +149,7 @@ const Scanner = () => {
         searchByDiscogsId(urlDiscogsId);
       }, 1000);
     }
-  }, [fromAiScan, urlMediaType, urlDiscogsId, urlArtist, urlTitle, searchByDiscogsId]);
+  }, [fromAiScan, urlMediaType, urlDiscogsId, urlCondition, urlArtist, urlTitle, searchByDiscogsId]);
 
   useEffect(() => {
     if (!state.mediaType || !analyzeImages) return;

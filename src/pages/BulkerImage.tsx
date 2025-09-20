@@ -49,6 +49,7 @@ const BulkerImage = () => {
   const urlLabel = searchParams.get('label');
   const urlCatalogNumber = searchParams.get('catalogNumber');
   const urlYear = searchParams.get('year');
+  const urlCondition = searchParams.get('condition');
 
   const { 
     isAnalyzing: isAnalyzingVinyl, 
@@ -132,6 +133,11 @@ const BulkerImage = () => {
       // Set media type
       dispatch({ type: 'SET_MEDIA_TYPE', payload: urlMediaType });
       
+      // Auto-fill condition if provided
+      if (urlCondition) {
+        dispatch({ type: 'SET_SELECTED_CONDITION', payload: urlCondition });
+      }
+      
       // Go directly to Discogs ID mode
       dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
       dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: urlDiscogsId });
@@ -142,7 +148,7 @@ const BulkerImage = () => {
       
       toast({
         title: "AI-scan herkend",
-        description: `${urlArtist} - ${urlTitle} wordt automatisch gezocht...`,
+        description: `${urlArtist} - ${urlTitle} wordt automatisch gezocht${urlCondition ? ' met conditie ingevuld' : ''}...`,
         variant: "default"
       });
       
@@ -151,7 +157,7 @@ const BulkerImage = () => {
         searchByDiscogsId(urlDiscogsId);
       }, 1000);
     }
-  }, [fromAiScan, urlMediaType, urlDiscogsId, urlArtist, urlTitle, searchByDiscogsId, isDiscogsRoute]);
+  }, [fromAiScan, urlMediaType, urlDiscogsId, urlCondition, urlArtist, urlTitle, searchByDiscogsId, isDiscogsRoute]);
 
   // Auto-trigger analysis when photos are uploaded
   useEffect(() => {

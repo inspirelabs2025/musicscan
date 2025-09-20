@@ -3,9 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLink, Calendar, Tag, Hash, Music, Plus, Check } from "lucide-react";
+import { ExternalLink, Calendar, Tag, Hash, Music, Plus, Check, ShoppingCart } from "lucide-react";
 import { AIScanResult } from "@/hooks/useAIScans";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +22,7 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
   const [addedToCollection, setAddedToCollection] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   if (!scan) return null;
 
@@ -154,13 +156,34 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Add to Collection Button */}
+          {/* Add to Collection Buttons */}
           {scan.status === 'completed' && user && (
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-3">
+              <Button
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    mediaType: scan.media_type,
+                    discogsId: scan.discogs_id?.toString() || '',
+                    artist: scan.artist || '',
+                    title: scan.title || '',
+                    label: scan.label || '',
+                    catalogNumber: scan.catalog_number || '',
+                    year: scan.year?.toString() || '',
+                    condition: scan.condition_grade || '',
+                    fromAiScan: 'true'
+                  });
+                  navigate(`/scanner/discogs?${params.toString()}`);
+                }}
+                variant="secondary" 
+                className="flex-1"
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Toevoegen aan Collectie
+              </Button>
               <Button
                 onClick={addToCollection}
                 disabled={isAddingToCollection || addedToCollection}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 flex-1"
               >
                 {addedToCollection ? (
                   <>
@@ -172,7 +195,7 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
                 ) : (
                   <>
                     <Plus className="h-4 w-4 mr-2" />
-                    Opslaan in collectie
+                    Direct opslaan
                   </>
                 )}
               </Button>

@@ -533,6 +533,7 @@ export default function AIScanV2() {
                         label: analysisResult.result.label || '',
                         catalogNumber: analysisResult.result.catalog_number || '',
                         year: analysisResult.result.year?.toString() || '',
+                        condition: conditionGrade,
                         fromAiScan: 'true'
                       });
                       navigate(`/scanner/discogs?${params.toString()}`);

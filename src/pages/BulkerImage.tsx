@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useCallback, useMemo } from 'react';
+import React, { useReducer, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ArrowLeft, Loader2, AlertTriangle, RefreshCcw, BarChart3, Camera, Search, ExternalLink, Copy, CheckCircle, AlertCircle, Disc3, Archive } from 'lucide-react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,9 @@ const BulkerImage = () => {
   const isDiscogsRoute = location.pathname === '/scanner/discogs';
   const [state, dispatch] = useReducer(scanReducer, initialScanState);
   const { user } = useAuth();
+  
+  // Ref to prevent multiple auto-starts
+  const autoStartTriggered = useRef(false);
 
   // Check if we're coming from AI scan with pre-filled data
   const fromAiScan = searchParams.get('fromAiScan') === 'true';
@@ -121,31 +124,34 @@ const BulkerImage = () => {
     return {};
   }, [state.mediaType]);
 
-  // Auto-populate from AI scan URL parameters
+  // Auto-populate from AI scan URL parameters and auto-start search
   useEffect(() => {
-    if (fromAiScan && urlMediaType && urlDiscogsId) {
+    if (fromAiScan && urlMediaType && urlDiscogsId && !autoStartTriggered.current) {
       console.log('🔗 Auto-populating from AI scan URL parameters');
       
       // Set media type
       dispatch({ type: 'SET_MEDIA_TYPE', payload: urlMediaType });
       
-      // If on /scanner/discogs route, go directly to Discogs ID mode
-      if (isDiscogsRoute) {
-        dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
-        dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: urlDiscogsId });
-      } else {
-        // Legacy behavior for /scanner route
-        dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
-        dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: urlDiscogsId });
-      }
+      // Go directly to Discogs ID mode
+      dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
+      dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: urlDiscogsId });
+      dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
+      
+      // Auto-start the Discogs search
+      autoStartTriggered.current = true;
       
       toast({
-        title: "Data uit AI-scan geladen",
-        description: `${urlArtist} - ${urlTitle} vooringevuld`,
+        title: "AI-scan herkend",
+        description: `${urlArtist} - ${urlTitle} wordt automatisch gezocht...`,
         variant: "default"
       });
+      
+      // Trigger the search after a short delay
+      setTimeout(() => {
+        searchByDiscogsId(urlDiscogsId);
+      }, 1000);
     }
-  }, [fromAiScan, urlMediaType, urlDiscogsId, urlArtist, urlTitle, setSearchResults, isDiscogsRoute]);
+  }, [fromAiScan, urlMediaType, urlDiscogsId, urlArtist, urlTitle, searchByDiscogsId, isDiscogsRoute]);
 
   // Auto-trigger analysis when photos are uploaded
   useEffect(() => {

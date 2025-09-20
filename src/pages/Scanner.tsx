@@ -1,6 +1,6 @@
-import React, { useReducer, useEffect, useCallback, useMemo } from 'react';
+import React, { useReducer, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Loader2, AlertTriangle, RefreshCcw, BarChart3, Camera, Search, ExternalLink, Copy, CheckCircle, AlertCircle, Disc3, Store, LogOut } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,8 +30,19 @@ import { Navigation } from "@/components/Navigation";
 
 const Scanner = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [state, dispatch] = useReducer(scanReducer, initialScanState);
   const { user, signOut } = useAuth();
+  
+  // Ref to prevent multiple auto-starts
+  const autoStartTriggered = useRef(false);
+  
+  // Extract URL parameters
+  const fromAiScan = searchParams.get('fromAiScan') === 'true';
+  const urlMediaType = searchParams.get('mediaType') as 'vinyl' | 'cd' | null;
+  const urlDiscogsId = searchParams.get('discogsId');
+  const urlArtist = searchParams.get('artist');
+  const urlTitle = searchParams.get('title');
 
   const { 
     isAnalyzing: isAnalyzingVinyl, 
@@ -104,6 +115,35 @@ const Scanner = () => {
     }
     return {};
   }, [state.mediaType]);
+
+  // Auto-populate from AI scan URL parameters and auto-start search (for legacy /scanner route)
+  useEffect(() => {
+    if (fromAiScan && urlMediaType && urlDiscogsId && !autoStartTriggered.current) {
+      console.log('🔗 Auto-populating from AI scan URL parameters (legacy route)');
+      
+      // Set media type
+      dispatch({ type: 'SET_MEDIA_TYPE', payload: urlMediaType });
+      
+      // Go directly to Discogs ID mode
+      dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
+      dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: urlDiscogsId });
+      dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
+      
+      // Auto-start the Discogs search
+      autoStartTriggered.current = true;
+      
+      toast({
+        title: "AI-scan herkend",
+        description: `${urlArtist} - ${urlTitle} wordt automatisch gezocht...`,
+        variant: "default"
+      });
+      
+      // Trigger the search after a short delay
+      setTimeout(() => {
+        searchByDiscogsId(urlDiscogsId);
+      }, 1000);
+    }
+  }, [fromAiScan, urlMediaType, urlDiscogsId, urlArtist, urlTitle, searchByDiscogsId]);
 
   useEffect(() => {
     if (!state.mediaType || !analyzeImages) return;

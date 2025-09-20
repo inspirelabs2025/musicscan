@@ -327,29 +327,37 @@ export const ConditionSelector = React.memo(({
                 </div>
               )}
             </div>
-
-            <Button 
-              onClick={() => {
-                console.log('🔘 ConditionSelector OPSLAAN button clicked');
-                onSave();
-              }}
-              disabled={isSaving || (!calculatedAdvicePrice && !manualAdvicePrice)}
-              className="w-full"
-              size="lg"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Opslaan...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Scan Opslaan
-                </>
-              )}
-            </Button>
           </div>
+        )}
+
+        {/* Save Button - Always visible when pricing data is available */}
+        {(lowestPrice || medianPrice || highestPrice) && (
+          <Button 
+            onClick={() => {
+              console.log('🔘 ConditionSelector OPSLAAN button clicked');
+              onSave();
+            }}
+            disabled={isSaving || !selectedCondition || (!calculatedAdvicePrice && !manualAdvicePrice)}
+            className="w-full"
+            size="lg"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Opslaan...
+              </>
+            ) : !selectedCondition ? (
+              <>
+                <Info className="h-4 w-4 mr-2" />
+                Selecteer eerst een conditie
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Scan Opslaan
+              </>
+            )}
+          </Button>
         )}
       </CardContent>
     </Card>

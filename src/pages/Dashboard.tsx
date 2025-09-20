@@ -96,10 +96,10 @@ const Dashboard = () => {
                 </Button>
                 
                 <Button asChild size="lg" variant="outline" className="h-16 hover:bg-vinyl-purple/10 group">
-                  <Link to="/bulkerimage">
+                  <Link to="/collection-chat">
                     <div className="flex flex-col items-center gap-2">
-                      <Upload className="w-6 h-6 group-hover:animate-pulse" />
-                      <span>📤 Bulk Upload</span>
+                      <MessageSquare className="w-6 h-6 group-hover:animate-pulse" />
+                      <span>💬 Chat met collectie</span>
                     </div>
                   </Link>
                 </Button>

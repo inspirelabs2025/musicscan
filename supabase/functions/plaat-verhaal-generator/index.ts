@@ -26,6 +26,8 @@ Voeg onderaan een korte social post toe.
 - Feiten moeten kloppen; bij ontbrekende data gebruik "—" of "[ontbreekt]"
 - Schrijf helder en deskundig, in het Nederlands
 - Maak het verhaal levendig en persoonlijk over het album zelf
+- VERMIJD specifieke jaartallen in de tekst - schrijf tijdloos
+- Gebruik formulering zoals "vandaag de dag", "nog steeds", "tegenwoordig" in plaats van "in 2024"
 
 **YAML Front Matter (gebruik deze exacte veldnamen):**
 \`\`\`yaml
@@ -59,7 +61,7 @@ word_count: 1500
 
 ## De Plaat
 
-[Actuele hook waarom dit album nu relevant is]
+[Waarom dit album tijdloos relevant is]
 
 ## Het verhaal
 

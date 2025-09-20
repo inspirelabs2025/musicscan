@@ -45,7 +45,12 @@ const collectionMenuItems = [
   { title: "Chat met je Muziek", url: "/collection-chat", icon: MessageCircle }
 ];
 
-const profileMenuItems = [];
+const getProfileMenuItems = (userId?: string) => {
+  if (!userId) return [];
+  return [
+    { title: "Mijn Profiel", url: `/profile/${userId}`, icon: User }
+  ];
+};
 
 export function Navigation() {
   const location = useLocation();
@@ -56,6 +61,7 @@ export function Navigation() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
 
+  const profileMenuItems = getProfileMenuItems(user?.id);
   const isScanPageActive = scanMenuItems.some(item => currentPath === item.url);
   const isCollectionPageActive = collectionMenuItems.some(item => currentPath === item.url);
   const isProfilePageActive = profileMenuItems.some(item => currentPath === item.url);
@@ -190,8 +196,25 @@ export function Navigation() {
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="grid w-[250px] gap-1 p-4">
+                      {/* Profile Menu Items */}
+                      {profileMenuItems.map((item) => (
+                        <NavigationMenuLink key={item.title} asChild>
+                          <Link
+                            to={item.url}
+                            className={cn(
+                              "flex items-center gap-2 rounded-md p-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
+                              currentPath === item.url && "bg-accent text-accent-foreground"
+                            )}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <div>
+                              <div className="font-medium">{item.title}</div>
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      ))}
                       {/* User Info and Logout */}
-                      <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground border-t mt-2 pt-2">
                         <User className="h-4 w-4" />
                         {user?.email}
                       </div>
@@ -332,9 +355,9 @@ export function Navigation() {
                             isProfileMenuOpen && "rotate-180"
                           )} />
                         </Button>
-                        {isProfileMenuOpen && (
+                         {isProfileMenuOpen && (
                           <div className="ml-6 mt-1 space-y-1">
-                            {profileMenuItems.length > 0 && profileMenuItems.map((item) => (
+                            {profileMenuItems.map((item) => (
                               <NavLink key={item.title} item={item} mobile />
                             ))}
                           </div>

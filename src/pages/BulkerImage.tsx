@@ -216,8 +216,8 @@ const BulkerImage = () => {
         return cleanOcr;
       };
       
-      const bestArtist = getBestData(searchResults[0]?.artist, analysisResult.analysis?.artist);
-      const bestTitle = getBestData(searchResults[0]?.title, analysisResult.analysis?.title);
+      const bestArtist = getBestData(searchResults[0]?.artist, analysisResult?.analysis?.artist);
+      const bestTitle = getBestData(searchResults[0]?.title, analysisResult?.analysis?.title);
       
       console.log('💾 Saving with artist:', bestArtist, 'title:', bestTitle);
       
@@ -302,7 +302,7 @@ const BulkerImage = () => {
       console.error('❌ Error inserting scan:', error);
       toast({
         title: "Fout bij Opslaan",
-        description: "Kon scan niet opslaan in database",
+        description: error?.message ?? "Kon scan niet opslaan in database",
         variant: "destructive"
       });
     } finally {

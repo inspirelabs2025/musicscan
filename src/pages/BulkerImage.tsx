@@ -129,13 +129,17 @@ const BulkerImage = () => {
   useEffect(() => {
     if (fromAiScan && urlMediaType && urlDiscogsId && !autoStartTriggered.current) {
       console.log('🔗 Auto-populating from AI scan URL parameters');
+      console.log('📊 URL Condition:', urlCondition);
       
       // Set media type
       dispatch({ type: 'SET_MEDIA_TYPE', payload: urlMediaType });
       
       // Auto-fill condition if provided
       if (urlCondition) {
+        console.log('✅ Setting condition from URL:', urlCondition);
         dispatch({ type: 'SET_SELECTED_CONDITION', payload: urlCondition });
+      } else {
+        console.log('⚠️ No condition found in URL parameters');
       }
       
       // Go directly to Discogs ID mode

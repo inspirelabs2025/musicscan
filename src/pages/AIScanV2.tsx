@@ -525,6 +525,16 @@ export default function AIScanV2() {
                   
                   <Button 
                     onClick={() => {
+                      if (!conditionGrade) {
+                        toast({
+                          title: "Conditie vereist",
+                          description: "Selecteer eerst een conditie voordat je het item aan je collectie toevoegt.",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      
+                      console.log('🔗 Adding to collection with condition:', conditionGrade);
                       const params = new URLSearchParams({
                         mediaType: mediaType,
                         discogsId: analysisResult.result.discogs_id?.toString() || '',
@@ -536,10 +546,12 @@ export default function AIScanV2() {
                         condition: conditionGrade,
                         fromAiScan: 'true'
                       });
+                      console.log('🚀 Navigating to:', `/scanner/discogs?${params.toString()}`);
                       navigate(`/scanner/discogs?${params.toString()}`);
                     }}
                     variant="secondary" 
                     className="w-full"
+                    disabled={!conditionGrade}
                   >
                     <ShoppingCart className="mr-2 h-4 w-4" />
                     Toevoegen aan Collectie

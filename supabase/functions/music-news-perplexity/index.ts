@@ -46,8 +46,8 @@ async function generateAndUploadImage(title: string, content: string, slug: stri
       return undefined;
     }
 
-    // Create a focused prompt for music industry imagery
-    const imagePrompt = `Create a professional music industry illustration for the article titled "${title}". Style: modern, clean, minimalist design with musical elements like vinyl records, musical notes, sound waves, or concert imagery. Color palette: vibrant but professional. No text or logos. High quality, detailed artwork suitable for a music news website header.`;
+    // Create artist-focused prompt for realistic images
+    const imagePrompt = `Professional portrait or press photo style image for music artist related to: "${title}". Realistic, high quality, professional lighting, music industry style. No text or logos. If specific artist mentioned in title, create realistic portrait of that type of musician.`;
 
     console.log(`Generating image for: ${title}`);
     

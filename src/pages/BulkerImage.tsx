@@ -216,8 +216,8 @@ const BulkerImage = () => {
         return cleanOcr;
       };
       
-      const bestArtist = getBestData(searchResults[0]?.artist, analysisResult.analysis.artist);
-      const bestTitle = getBestData(searchResults[0]?.title, analysisResult.analysis.title);
+      const bestArtist = getBestData(searchResults[0]?.artist, analysisResult.analysis?.artist);
+      const bestTitle = getBestData(searchResults[0]?.title, analysisResult.analysis?.title);
       
       console.log('💾 Saving with artist:', bestArtist, 'title:', bestTitle);
       

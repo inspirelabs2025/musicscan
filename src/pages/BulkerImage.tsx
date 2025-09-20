@@ -134,10 +134,12 @@ const BulkerImage = () => {
       // Set media type
       dispatch({ type: 'SET_MEDIA_TYPE', payload: urlMediaType });
       
-      // Auto-fill condition if provided
+  // Auto-fill condition if provided
       if (urlCondition) {
-        console.log('✅ Setting condition from URL:', urlCondition);
-        dispatch({ type: 'SET_SELECTED_CONDITION', payload: urlCondition });
+        // Normalize condition for better matching
+        const decodedCondition = decodeURIComponent(urlCondition);
+        console.log('✅ Setting condition from URL:', decodedCondition);
+        dispatch({ type: 'SET_SELECTED_CONDITION', payload: decodedCondition });
       } else {
         console.log('⚠️ No condition found in URL parameters');
       }
@@ -221,6 +223,23 @@ const BulkerImage = () => {
     const multiplier = conditionMultipliers[condition];
     return Math.round(price * multiplier * 100) / 100;
   }, [conditionMultipliers]);
+
+  // Auto-calculate advice price when condition and pricing are available
+  useEffect(() => {
+    if (
+      state.selectedCondition && 
+      searchResults[0]?.pricing_stats?.lowest_price && 
+      !state.calculatedAdvicePrice &&
+      !state.useManualAdvicePrice
+    ) {
+      console.log('🎯 Auto-calculating advice price for condition:', state.selectedCondition);
+      const advicePrice = calculateAdvicePrice(state.selectedCondition, searchResults[0].pricing_stats.lowest_price);
+      if (advicePrice !== null) {
+        dispatch({ type: 'SET_CALCULATED_ADVICE_PRICE', payload: advicePrice });
+        console.log('💰 Auto-set advice price:', advicePrice);
+      }
+    }
+  }, [state.selectedCondition, searchResults, state.calculatedAdvicePrice, state.useManualAdvicePrice, calculateAdvicePrice]);
 
   const checkForDuplicates = useCallback(async (artist: string, title: string, catalogNumber: string) => {
     try {

@@ -482,6 +482,7 @@ const AIScanOverview = () => {
       return;
     }
 
+    console.log('🔗 Adding to collection with condition:', scan.condition_grade);
     const params = new URLSearchParams({
       mediaType: scan.media_type || 'vinyl',
       discogsId: scan.discogs_id.toString(),
@@ -490,6 +491,7 @@ const AIScanOverview = () => {
       label: scan.label || '',
       catalogNumber: scan.catalog_number || '',
       ...(scan.year && { year: scan.year.toString() }),
+      ...(scan.condition_grade && { condition: scan.condition_grade }),
       fromAiScan: 'true'
     });
 

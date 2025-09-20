@@ -58,6 +58,9 @@ serve(async (req) => {
 
       // Initialize batch processing status and queue
       const batchId = crypto.randomUUID();
+      
+      console.log(`🚀 Starting nieuwe batch with ${items.length} items, batch ID: ${batchId}`);
+      
       await updateBatchStatus({
         id: batchId,
         status: 'active',
@@ -73,22 +76,54 @@ serve(async (req) => {
         auto_mode: true
       });
 
-      // Populate the queue
+      console.log(`✅ Batch status initialized for batch ${batchId}`);
+
+      // Populate the queue with detailed logging
       const queueItems = items.map((item, index) => ({
         batch_id: batchId,
         item_id: item.id,
         item_type: item.type,
-        priority: item.type === 'cd' ? 3 : item.type === 'vinyl' ? 2 : 1 // CD priority > vinyl > AI
+        priority: item.type === 'cd' ? 3 : item.type === 'vinyl' ? 2 : 1, // CD priority > vinyl > AI
+        status: 'pending',
+        attempts: 0,
+        max_attempts: 3
       }));
 
-      // Insert queue items in batches to avoid timeout
+      console.log(`📝 Prepared ${queueItems.length} queue items for insertion`);
+
+      // Insert queue items in batches to avoid timeout with error handling
       const BATCH_SIZE = 100;
+      let totalInserted = 0;
+      
       for (let i = 0; i < queueItems.length; i += BATCH_SIZE) {
         const batch = queueItems.slice(i, i + BATCH_SIZE);
-        await supabase.from('batch_queue_items').insert(batch);
+        
+        console.log(`🔄 Inserting batch ${Math.floor(i/BATCH_SIZE) + 1} of ${Math.ceil(queueItems.length/BATCH_SIZE)} (${batch.length} items)`);
+        
+        const { data, error } = await supabase.from('batch_queue_items').insert(batch).select('id');
+        
+        if (error) {
+          console.error(`❌ Error inserting queue batch ${Math.floor(i/BATCH_SIZE) + 1}:`, error);
+          throw new Error(`Failed to insert queue items: ${error.message}`);
+        }
+        
+        totalInserted += batch.length;
+        console.log(`✅ Successfully inserted batch ${Math.floor(i/BATCH_SIZE) + 1}, total inserted: ${totalInserted}`);
       }
 
-      console.log(`Started batch processing with ${items.length} items`);
+      // Verify queue population
+      const { data: queueVerification, error: verifyError } = await supabase
+        .from('batch_queue_items')
+        .select('id, status')
+        .eq('batch_id', batchId);
+
+      if (verifyError) {
+        console.error('❌ Error verifying queue:', verifyError);
+      } else {
+        console.log(`🔍 Queue verification: Found ${queueVerification?.length || 0} items in queue for batch ${batchId}`);
+      }
+
+      console.log(`🎉 Successfully started batch processing with ${totalInserted} items in queue`);
       
       return new Response(JSON.stringify({
         message: 'Batch processing started - will be processed by cron job',

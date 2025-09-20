@@ -34,6 +34,7 @@ import { NewUsersSection } from '@/components/NewUsersSection';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const ADMIN_EMAIL = 'rogiervisser76@gmail.com';
   const { data: collectionStats, isLoading: collectionLoading } = useCollectionStats();
   const { data: recentScans, isLoading: scansLoading } = useDirectScans();
   const { data: scanStats, isLoading: statsLoading } = useUnifiedScansStats();
@@ -324,14 +325,16 @@ const Dashboard = () => {
           </section>
         )}
 
-        {/* Admin Tools Section */}
-        <section className="mt-12 animate-fade-in delay-700">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-vinyl-purple" />
-            ⚡ Admin Tools
-          </h2>
-          <BatchBlogGenerator />
-        </section>
+        {/* Admin Tools Section - Only visible for admin */}
+        {user?.email === ADMIN_EMAIL && (
+          <section className="mt-12 animate-fade-in delay-700">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-vinyl-purple" />
+              ⚡ Admin Tools
+            </h2>
+            <BatchBlogGenerator />
+          </section>
+        )}
       </div>
     </div>
   );

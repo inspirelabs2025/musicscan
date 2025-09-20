@@ -7,6 +7,7 @@ import { Users, MessageCircle, Eye } from "lucide-react";
 import { Profile } from "@/hooks/useProfile";
 import { useToggleFollow, useIsFollowing } from "@/hooks/useFollows";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface UserCardProps {
   profile: Profile;
@@ -22,6 +23,7 @@ const UserCard: React.FC<UserCardProps> = ({
   showActions = true 
 }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: isFollowing, isLoading: isFollowingLoading } = useIsFollowing(profile.user_id);
   const toggleFollow = useToggleFollow();
 
@@ -40,6 +42,8 @@ const UserCard: React.FC<UserCardProps> = ({
   const handleViewProfile = () => {
     if (onViewProfile) {
       onViewProfile(profile.user_id);
+    } else {
+      navigate(`/profile/${profile.user_id}`);
     }
   };
 

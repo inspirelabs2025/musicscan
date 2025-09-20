@@ -45,6 +45,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 import Social from "./pages/Social";
+import Profile from "./pages/Profile";
 import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
 import Quiz from "./pages/Quiz";
 
@@ -153,6 +154,11 @@ const App = () => {
             <Route path="/social" element={
               <ProtectedRoute>
                 <Social />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile/:userId" element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             } />
             <Route path="/ai-analysis" element={

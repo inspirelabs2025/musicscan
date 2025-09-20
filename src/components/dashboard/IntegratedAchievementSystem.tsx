@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -33,6 +33,9 @@ export const IntegratedAchievementSystem = ({
 }: AchievementSystemProps) => {
   const [expandedAchievement, setExpandedAchievement] = useState<string | null>(null);
   const [newlyUnlocked, setNewlyUnlocked] = useState<string[]>([]);
+  const previousUnlockedRef = useRef<string[]>(unlockedAchievements);
+  const lastNotificationRef = useRef<number>(0);
+  const NOTIFICATION_COOLDOWN = 5000; // 5 seconds
 
   const achievements: Achievement[] = [
     {
@@ -117,39 +120,55 @@ export const IntegratedAchievementSystem = ({
     }
   ];
 
-  // Check for newly unlocked achievements
+  // Memoize calculations to prevent unnecessary re-renders
+  const combinedStats = useMemo(() => ({ ...collectionStats, ...scanStats }), [collectionStats, scanStats]);
+  
+  const currentlyUnlocked = useMemo(() => {
+    if (!collectionStats || !scanStats) return [];
+    return achievements.filter(achievement => achievement.condition(combinedStats)).map(a => a.id);
+  }, [combinedStats, achievements]);
+
+  // Check for newly unlocked achievements with proper dependency management
   useEffect(() => {
-    if (!collectionStats) return;
+    // Skip if data is not ready or cooldown is active
+    if (!collectionStats || !scanStats || Date.now() - lastNotificationRef.current < NOTIFICATION_COOLDOWN) return;
 
-    const currentlyUnlocked = achievements.filter(achievement => 
-      achievement.condition({ ...collectionStats, ...scanStats })
-    ).map(a => a.id);
-
+    // Get stored achievements to prevent duplicate notifications
+    const storedAchievements = JSON.parse(localStorage.getItem('shownAchievements') || '[]');
+    
     const newUnlocks = currentlyUnlocked.filter(id => 
-      !unlockedAchievements.includes(id) && !newlyUnlocked.includes(id)
+      !previousUnlockedRef.current.includes(id) && !storedAchievements.includes(id)
     );
 
     if (newUnlocks.length > 0) {
-      setNewlyUnlocked(prev => [...prev, ...newUnlocks]);
+      setNewlyUnlocked(newUnlocks);
+      lastNotificationRef.current = Date.now();
       
-      // Show toast notification for new achievements
-      newUnlocks.forEach(id => {
-        const achievement = achievements.find(a => a.id === id);
-        if (achievement) {
-          toast({
-            title: "🏆 Nieuwe Prestatie Behaald!",
-            description: `${achievement.title} - ${achievement.points} punten!`,
-          });
-        }
-        onAchievementUnlock?.(id);
-      });
+      // Store shown achievements to prevent duplicates
+      const updatedShownAchievements = [...storedAchievements, ...newUnlocks];
+      localStorage.setItem('shownAchievements', JSON.stringify(updatedShownAchievements));
+      
+      // Show toast notification for new achievements (max 1 to avoid spam)
+      const firstAchievement = achievements.find(a => a.id === newUnlocks[0]);
+      if (firstAchievement) {
+        toast({
+          title: "🏆 Nieuwe Prestatie Behaald!",
+          description: newUnlocks.length > 1 
+            ? `${firstAchievement.title} en ${newUnlocks.length - 1} andere!`
+            : `${firstAchievement.title} - ${firstAchievement.points} punten!`,
+        });
+      }
+      
+      // Call callback for each achievement
+      newUnlocks.forEach(id => onAchievementUnlock?.(id));
       
       // Clear newly unlocked after animation
-      setTimeout(() => {
-        setNewlyUnlocked([]);
-      }, 3000);
+      setTimeout(() => setNewlyUnlocked([]), 3000);
     }
-  }, [collectionStats, scanStats, unlockedAchievements, newlyUnlocked, onAchievementUnlock]);
+
+    // Update previous reference
+    previousUnlockedRef.current = [...unlockedAchievements, ...currentlyUnlocked];
+  }, [collectionStats, scanStats, currentlyUnlocked, unlockedAchievements, onAchievementUnlock]);
 
   const getRarityGradient = (rarity: string) => {
     switch (rarity) {
@@ -171,22 +190,41 @@ export const IntegratedAchievementSystem = ({
     }
   };
 
-  const totalUnlocked = achievements.filter(achievement => 
-    unlockedAchievements.includes(achievement.id) || 
-    achievement.condition({ ...collectionStats, ...scanStats })
-  ).length;
+  // Memoize expensive calculations
+  const { totalUnlocked, totalPoints, nextAchievement } = useMemo(() => {
+    if (!collectionStats || !scanStats) {
+      return { totalUnlocked: 0, totalPoints: 0, nextAchievement: achievements[0] };
+    }
 
-  const totalPoints = achievements
-    .filter(achievement => 
-      unlockedAchievements.includes(achievement.id) || 
-      achievement.condition({ ...collectionStats, ...scanStats })
-    )
-    .reduce((sum, achievement) => sum + achievement.points, 0);
+    const unlockedAchievements = achievements.filter(achievement => 
+      achievement.condition(combinedStats)
+    );
 
-  // Get next achievement to unlock
-  const nextAchievement = achievements.find(achievement => 
-    !achievement.condition({ ...collectionStats, ...scanStats })
-  );
+    const totalUnlocked = unlockedAchievements.length;
+    const totalPoints = unlockedAchievements.reduce((sum, achievement) => sum + achievement.points, 0);
+    const nextAchievement = achievements.find(achievement => !achievement.condition(combinedStats));
+
+    return { totalUnlocked, totalPoints, nextAchievement };
+  }, [combinedStats, achievements]);
+
+  // Don't render if data is not ready
+  if (!collectionStats || !scanStats) {
+    return (
+      <section className="animate-fade-in delay-500">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Trophy className="w-6 h-6 text-vinyl-gold" />
+            🏆 Prestaties & Voortgang
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="h-48 animate-pulse bg-muted/30" />
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="animate-fade-in delay-500">
@@ -225,11 +263,11 @@ export const IntegratedAchievementSystem = ({
                 {nextAchievement.progressCondition && (
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span>{nextAchievement.progressCondition({ ...collectionStats, ...scanStats }).current}</span>
-                      <span>{nextAchievement.progressCondition({ ...collectionStats, ...scanStats }).target}</span>
+                      <span>{nextAchievement.progressCondition(combinedStats).current}</span>
+                      <span>{nextAchievement.progressCondition(combinedStats).target}</span>
                     </div>
                     <Progress 
-                      value={Math.min(100, (nextAchievement.progressCondition({ ...collectionStats, ...scanStats }).current / nextAchievement.progressCondition({ ...collectionStats, ...scanStats }).target) * 100)} 
+                      value={Math.min(100, (nextAchievement.progressCondition(combinedStats).current / nextAchievement.progressCondition(combinedStats).target) * 100)} 
                       className="h-2"
                     />
                   </div>
@@ -247,10 +285,9 @@ export const IntegratedAchievementSystem = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <AnimatePresence>
           {achievements.map((achievement) => {
-            const isUnlocked = unlockedAchievements.includes(achievement.id) || 
-              achievement.condition({ ...collectionStats, ...scanStats });
+            const isUnlocked = achievement.condition(combinedStats);
             const isNew = newlyUnlocked.includes(achievement.id);
-            const progress = achievement.progressCondition?.({ ...collectionStats, ...scanStats });
+            const progress = achievement.progressCondition?.(combinedStats);
             const progressPercentage = progress ? Math.min(100, (progress.current / progress.target) * 100) : 0;
             
             return (

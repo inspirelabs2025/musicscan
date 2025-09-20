@@ -221,19 +221,34 @@ const BulkerImage = () => {
       
       console.log('💾 Saving with artist:', bestArtist, 'title:', bestTitle);
       
+      // Derive best-available metadata (prefer Discogs > OCR)
+      const bestCatalogNumber = getBestData(searchResults[0]?.catalog_number, analysisResult?.analysis?.catalog_number);
+      const bestLabel = getBestData(searchResults[0]?.label, analysisResult?.analysis?.label);
+      const bestGenre = getBestData(searchResults[0]?.genre, analysisResult?.analysis?.genre);
+      const bestCountry = getBestData(searchResults[0]?.country, analysisResult?.analysis?.country);
+      const bestFormat = state.mediaType === 'vinyl' ? 'Vinyl' : 'CD';
+      const bestYearStr = getBestData(
+        (searchResults[0]?.year != null ? String(searchResults[0]?.year) : undefined),
+        analysisResult?.analysis?.year ? String(analysisResult?.analysis?.year) : undefined
+      );
+      const bestYear = bestYearStr ? parseInt(bestYearStr) : null;
+      const bestMatrixNumber = analysisResult?.analysis?.matrix_number;
+
+      console.log('🧾 Best data prepared', { bestArtist, bestTitle, bestCatalogNumber, bestYear, bestLabel, bestGenre, bestCountry });
+
       const insertData = state.mediaType === 'vinyl' ? {
-        catalog_image: state.uploadedFiles[0],
-        matrix_image: state.uploadedFiles[1], 
-        additional_image: state.uploadedFiles[2],
-        catalog_number: analysisResult.analysis.catalog_number,
-        matrix_number: analysisResult.analysis.matrix_number,
-        artist: bestArtist,
-        title: bestTitle,
-        year: analysisResult.analysis.year ? parseInt(analysisResult.analysis.year) : null,
-        format: 'Vinyl',
-        label: analysisResult.analysis.label,
-        genre: analysisResult.analysis.genre,
-        country: analysisResult.analysis.country,
+        catalog_image: state.uploadedFiles[0] || null,
+        matrix_image: state.uploadedFiles[1] || null,
+        additional_image: state.uploadedFiles[2] || null,
+        catalog_number: bestCatalogNumber ?? null,
+        matrix_number: bestMatrixNumber ?? null,
+        artist: bestArtist ?? null,
+        title: bestTitle ?? null,
+        year: bestYear,
+        format: bestFormat,
+        label: bestLabel ?? null,
+        genre: bestGenre ?? null,
+        country: bestCountry ?? null,
         condition_grade: condition,
         calculated_advice_price: advicePrice,
         discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
@@ -243,19 +258,19 @@ const BulkerImage = () => {
         highest_price: searchResults[0]?.pricing_stats?.highest_price ? parseFloat(searchResults[0].pricing_stats.highest_price.replace(',', '.')) : null,
         user_id: user?.id
       } : {
-        front_image: state.uploadedFiles[0],
-        back_image: state.uploadedFiles[1],
-        barcode_image: state.uploadedFiles[2],
-        matrix_image: state.uploadedFiles[3],
-        barcode_number: analysisResult.analysis.barcode,
-        artist: bestArtist,
-        title: bestTitle,
-        label: analysisResult.analysis.label,
-        catalog_number: analysisResult.analysis.catalog_number,
-        year: analysisResult.analysis.year,
-        format: 'CD',
-        genre: analysisResult.analysis.genre,
-        country: analysisResult.analysis.country,
+        front_image: state.uploadedFiles[0] || null,
+        back_image: state.uploadedFiles[1] || null,
+        barcode_image: state.uploadedFiles[2] || null,
+        matrix_image: state.uploadedFiles[3] || null,
+        barcode_number: analysisResult?.analysis?.barcode ?? null,
+        artist: bestArtist ?? null,
+        title: bestTitle ?? null,
+        label: bestLabel ?? null,
+        catalog_number: bestCatalogNumber ?? null,
+        year: bestYear,
+        format: bestFormat,
+        genre: bestGenre ?? null,
+        country: bestCountry ?? null,
         condition_grade: condition,
         calculated_advice_price: advicePrice,
         discogs_id: searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url) || null,
@@ -265,6 +280,8 @@ const BulkerImage = () => {
         highest_price: searchResults[0]?.pricing_stats?.highest_price ? parseFloat(searchResults[0].pricing_stats.highest_price.replace(',', '.')) : null,
         user_id: user?.id
       };
+
+      console.log('📦 Insert payload (keys only):', Object.keys(insertData));
 
       const { data, error } = await supabase
         .from(tableName)
@@ -282,6 +299,7 @@ const BulkerImage = () => {
         variant: "default"
       });
     } catch (error) {
+      console.error('❌ Error inserting scan:', error);
       toast({
         title: "Fout bij Opslaan",
         description: "Kon scan niet opslaan in database",
@@ -294,10 +312,30 @@ const BulkerImage = () => {
 
   const saveFinalScan = useCallback(async (condition: string, advicePrice: number) => {
     console.log('🚀 saveFinalScan called with condition:', condition, 'advicePrice:', advicePrice);
-    if (!analysisResult?.analysis || !state.mediaType) return;
+    // Allow save when either we have analysis OR we are in Discogs-ID modus
+    if ((!analysisResult?.analysis && !state.discogsIdMode) || !state.mediaType) {
+      console.log('⛔ saveFinalScan guard failed', {
+        hasAnalysis: !!analysisResult?.analysis,
+        discogsIdMode: state.discogsIdMode,
+        mediaType: state.mediaType,
+      });
+      return;
+    }
 
-    const { artist, title, catalog_number } = analysisResult.analysis;
-    const duplicates = await checkForDuplicates(artist || '', title || '', catalog_number || '');
+    // Use best-available data (Discogs > OCR) for duplicate check
+    const getBestData = (discogsValue?: string, ocrValue?: string) => {
+      const cleanDiscogs = discogsValue?.trim();
+      const cleanOcr = ocrValue?.trim();
+      if (cleanDiscogs && cleanDiscogs !== '' && cleanDiscogs.toLowerCase() !== 'unknown') return cleanDiscogs;
+      return cleanOcr || '';
+    };
+
+    const artist = getBestData(searchResults[0]?.artist, analysisResult?.analysis?.artist);
+    const title = getBestData(searchResults[0]?.title, analysisResult?.analysis?.title);
+    const catalog_number = getBestData(searchResults[0]?.catalog_number, analysisResult?.analysis?.catalog_number);
+
+    console.log('🔎 Duplicate check with:', { artist, title, catalog_number });
+    const duplicates = await checkForDuplicates(artist, title, catalog_number);
     
     if (duplicates.length > 0) {
       dispatch({ type: 'SET_DUPLICATE_RECORDS', payload: duplicates });
@@ -307,7 +345,7 @@ const BulkerImage = () => {
     }
 
     await performSave(condition, advicePrice);
-  }, [analysisResult, state.mediaType, checkForDuplicates, performSave]);
+  }, [analysisResult, state.mediaType, state.discogsIdMode, searchResults, checkForDuplicates, performSave]);
 
   // Event handlers
   const handleMediaTypeSelect = useCallback((type: 'vinyl' | 'cd') => {

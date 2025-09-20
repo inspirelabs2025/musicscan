@@ -19,7 +19,26 @@ const Social: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const createConversation = useCreateConversation();
 
-  // Search users
+  // Get all public users
+  const { data: allUsers, isLoading: isLoadingUsers } = useQuery({
+    queryKey: ["allUsers"],
+    queryFn: async () => {
+      if (!user?.id) return [];
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("is_public", true)
+        .neq("user_id", user.id)
+        .limit(50);
+
+      if (error) throw error;
+      return data as Profile[];
+    },
+    enabled: !!user?.id && activeTab === "discover",
+  });
+
+  // Search users (filtered results)
   const { data: searchResults, isLoading: isSearching } = useQuery({
     queryKey: ["userSearch", searchQuery],
     queryFn: async () => {
@@ -83,58 +102,70 @@ const Social: React.FC = () => {
     });
   };
 
-  const renderDiscoverTab = () => (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Gebruikers Zoeken</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Zoek op naam of bio..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline" disabled={isSearching}>
-              {isSearching && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Zoeken
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {searchResults && searchResults.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Zoekresultaten</h3>
-          <div className="grid gap-4">
-            {searchResults.map((profile) => (
-              <UserCard
-                key={profile.user_id}
-                profile={profile}
-                onMessage={handleMessage}
-                onViewProfile={handleViewProfile}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {searchQuery.length >= 2 && searchResults?.length === 0 && !isSearching && (
+  const renderDiscoverTab = () => {
+    const isSearching = searchQuery.length >= 2;
+    const usersToShow = isSearching ? searchResults : allUsers;
+    const isLoading = isSearching ? isSearching : isLoadingUsers;
+    
+    return (
+      <div className="space-y-6">
         <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-muted-foreground">
-              Geen gebruikers gevonden voor "{searchQuery}"
+          <CardHeader>
+            <CardTitle className="text-lg">Gebruikers Ontdekken</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Filter gebruikers op naam of bio..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              {isSearching ? `Zoekresultaten voor "${searchQuery}"` : "Alle beschikbare gebruikers"}
             </p>
           </CardContent>
         </Card>
-      )}
-    </div>
-  );
+
+        {isLoading ? (
+          <Card>
+            <CardContent className="text-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+              <p className="text-muted-foreground">Gebruikers laden...</p>
+            </CardContent>
+          </Card>
+        ) : usersToShow && usersToShow.length > 0 ? (
+          <div className="space-y-4">
+            <div className="grid gap-4">
+              {usersToShow.map((profile) => (
+                <UserCard
+                  key={profile.user_id}
+                  profile={profile}
+                  onMessage={handleMessage}
+                  onViewProfile={handleViewProfile}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="text-center py-8">
+              <p className="text-muted-foreground">
+                {isSearching 
+                  ? `Geen gebruikers gevonden voor "${searchQuery}"`
+                  : "Geen gebruikers beschikbaar"
+                }
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  };
 
   const renderFollowingTab = () => (
     <div className="space-y-4">

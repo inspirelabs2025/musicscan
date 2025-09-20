@@ -16,13 +16,14 @@ interface BlogPost {
   published_at: string;
   category: string;
   slug: string;
+  image_url?: string;
 }
 
 const fetchBlogPosts = async (): Promise<BlogPost[]> => {
   // First try to get from database
   const { data: blogPosts, error } = await supabase
     .from('news_blog_posts')
-    .select('id, title, summary, source, published_at, category, slug')
+    .select('id, title, summary, source, published_at, category, slug, image_url')
     .order('published_at', { ascending: false })
     .limit(6);
 
@@ -54,7 +55,7 @@ const fetchBlogPosts = async (): Promise<BlogPost[]> => {
   // Get fresh posts from database after generation
   const { data: freshBlogPosts } = await supabase
     .from('news_blog_posts')
-    .select('id, title, summary, source, published_at, category, slug')
+    .select('id, title, summary, source, published_at, category, slug, image_url')
     .order('published_at', { ascending: false })
     .limit(6);
 
@@ -193,7 +194,7 @@ export const NewsSection = () => {
         {!loading && !error && newsSource === 'perplexity' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {blogPosts.map((post: BlogPost) => (
-              <Card key={post.id} className="group hover:shadow-lg transition-all duration-300">
+              <Card key={post.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg line-clamp-2">{post.title}</CardTitle>
                   <p className="text-sm text-muted-foreground">
@@ -201,6 +202,15 @@ export const NewsSection = () => {
                   </p>
                 </CardHeader>
                 <CardContent>
+                  {post.image_url && (
+                    <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                      <img 
+                        src={post.image_url} 
+                        alt={post.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
                   <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">

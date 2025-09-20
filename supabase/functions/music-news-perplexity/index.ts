@@ -15,6 +15,7 @@ interface BlogPost {
   publishedAt: string;
   category: string;
   slug: string;
+  image_url?: string;
 }
 
 // Helper function to create URL-safe slugs
@@ -34,6 +35,80 @@ function createSlug(title: string): string {
     .replace(/-+/g, '-')
     .trim()
     .substring(0, 100);
+}
+
+// Helper function to generate and upload images with OpenAI DALL-E
+async function generateAndUploadImage(title: string, content: string, slug: string, supabase: any): Promise<string | undefined> {
+  try {
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      console.log('OpenAI API key not configured, skipping image generation');
+      return undefined;
+    }
+
+    // Create a focused prompt for music industry imagery
+    const imagePrompt = `Create a professional music industry illustration for the article titled "${title}". Style: modern, clean, minimalist design with musical elements like vinyl records, musical notes, sound waves, or concert imagery. Color palette: vibrant but professional. No text or logos. High quality, detailed artwork suitable for a music news website header.`;
+
+    console.log(`Generating image for: ${title}`);
+    
+    const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-image-1',
+        prompt: imagePrompt,
+        n: 1,
+        size: '1024x1024',
+        quality: 'standard',
+        output_format: 'png'
+      }),
+    });
+
+    if (!imageResponse.ok) {
+      console.error(`OpenAI Image API error: ${imageResponse.status}`);
+      return undefined;
+    }
+
+    const imageData = await imageResponse.json();
+    const imageBase64 = imageData.data[0].b64_json;
+    
+    if (!imageBase64) {
+      console.error('No image data received from OpenAI');
+      return undefined;
+    }
+
+    // Convert base64 to blob for upload
+    const imageBuffer = Uint8Array.from(atob(imageBase64), c => c.charCodeAt(0));
+    const filename = `${slug}-${Date.now()}.png`;
+    
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('news-images')
+      .upload(filename, imageBuffer, {
+        contentType: 'image/png',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Error uploading image to storage:', uploadError);
+      return undefined;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('news-images')
+      .getPublicUrl(filename);
+
+    console.log(`Image generated and uploaded successfully: ${urlData.publicUrl}`);
+    return urlData.publicUrl;
+
+  } catch (error) {
+    console.error('Error in image generation:', error);
+    return undefined;
+  }
 }
 
 // Fallback blog posts in case API fails
@@ -193,6 +268,9 @@ serve(async (req) => {
           
           const slug = createSlug(topic.title);
           
+          // Generate and upload image for this blog post
+          const imageUrl = await generateAndUploadImage(topic.title, blogContent, slug, supabase);
+          
           const blogPost: BlogPost = {
             title: topic.title,
             content: blogContent,
@@ -200,10 +278,11 @@ serve(async (req) => {
             source: topic.source || 'Muzieknieuws',
             publishedAt: new Date().toISOString(),
             category: topic.category || 'Industry',
-            slug: slug
+            slug: slug,
+            image_url: imageUrl
           };
           
-          // Save to database
+          // Save to database with image_url
           const { error } = await supabase
             .from('news_blog_posts')
             .upsert({
@@ -213,7 +292,8 @@ serve(async (req) => {
               source: blogPost.source,
               published_at: blogPost.publishedAt,
               category: blogPost.category,
-              slug: blogPost.slug
+              slug: blogPost.slug,
+              image_url: blogPost.image_url
             }, {
               onConflict: 'slug',
               ignoreDuplicates: false

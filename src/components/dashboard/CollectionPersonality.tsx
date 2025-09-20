@@ -23,6 +23,14 @@ export const CollectionPersonality = ({
   averageYear 
 }: CollectionPersonalityProps) => {
   
+  // Helper functions (defined before useMemo to avoid hoisting issues)
+  const getPersonalityType = (traits: any[], diversityScore: number, averageValue: number) => {
+    if (diversityScore > 15) return 'De Ontdekker';
+    if (averageValue > 50) return 'De Kenner';
+    if (traits.some(t => t.trait.includes('Specialist'))) return 'De Specialist';
+    return 'De Verzamelaar';
+  };
+
   const personality = useMemo(() => {
     if (!genres.length) return null;
 
@@ -127,12 +135,6 @@ export const CollectionPersonality = ({
     };
   }, [genres, totalItems, totalValue, averageYear]);
 
-  const getPersonalityType = (traits: any[], diversityScore: number, averageValue: number) => {
-    if (diversityScore > 15) return 'De Ontdekker';
-    if (averageValue > 50) return 'De Kenner';
-    if (traits.some(t => t.trait.includes('Specialist'))) return 'De Specialist';
-    return 'De Verzamelaar';
-  };
 
   const getPersonalityDescription = (type: string) => {
     switch (type) {

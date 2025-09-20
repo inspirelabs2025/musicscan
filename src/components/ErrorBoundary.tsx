@@ -102,11 +102,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 <RefreshCw className="w-4 h-4" />
                 Probeer opnieuw
               </Button>
-              <Button asChild variant="outline" className="flex items-center gap-2">
-                <Link to="/">
-                  <Home className="w-4 h-4" />
-                  Naar homepage
-                </Link>
+              <Button 
+                onClick={() => window.location.href = '/'} 
+                variant="outline" 
+                className="flex items-center gap-2"
+              >
+                <Home className="w-4 h-4" />
+                Naar homepage
               </Button>
             </div>
           </CardContent>

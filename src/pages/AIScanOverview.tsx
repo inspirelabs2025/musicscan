@@ -1,5 +1,6 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,8 @@ import {
   Loader2,
   Users,
   FileText,
-  BookOpen
+  BookOpen,
+  Plus
 } from "lucide-react";
 import { useInfiniteUnifiedScans, UnifiedScanResult } from "@/hooks/useInfiniteUnifiedScans";
 import { useUnifiedScansStats } from "@/hooks/useUnifiedScansStats";
@@ -61,6 +63,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
 const AIScanOverview = () => {
+  const navigate = useNavigate();
   const [sortField, setSortField] = useState<keyof UnifiedScanResult>("created_at");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [searchTerm, setSearchTerm] = useState("");
@@ -468,6 +471,30 @@ const AIScanOverview = () => {
       });
     }
   }, [generateBlog, toast]);
+
+  const handleAddToCollection = useCallback((scan: UnifiedScanResult) => {
+    if (!scan.discogs_id) {
+      toast({
+        title: "Geen Discogs ID",
+        description: "Er is een Discogs ID nodig om toe te voegen aan de collectie.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const params = new URLSearchParams({
+      mediaType: scan.media_type || 'vinyl',
+      discogsId: scan.discogs_id.toString(),
+      artist: scan.artist || '',
+      title: scan.title || '',
+      label: scan.label || '',
+      catalogNumber: scan.catalog_number || '',
+      ...(scan.year && { year: scan.year.toString() }),
+      fromAiScan: 'true'
+    });
+
+    navigate(`/scanner?${params.toString()}`);
+  }, [navigate, toast]);
 
   if (scansLoading || statsLoading) {
     return (
@@ -934,6 +961,16 @@ const AIScanOverview = () => {
                                 ) : (
                                   <BookOpen className="h-4 w-4" />
                                 )}
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleAddToCollection(scan)}
+                                disabled={!scan.discogs_id}
+                                title={scan.discogs_id ? "Toevoegen aan collectie" : "Discogs ID vereist"}
+                                className="hover:text-green-600"
+                              >
+                                <Plus className="h-4 w-4" />
                               </Button>
                               {scan.source_table === 'ai_scan_results' && (
                                 <Button 

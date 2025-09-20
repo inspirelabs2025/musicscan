@@ -31,7 +31,7 @@ import { BlogPreviewWidget } from '@/components/dashboard/BlogPreviewWidget';
 import { BatchBlogGenerator } from '@/components/admin/BatchBlogGenerator';
 import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
 import { NewUsersSection } from '@/components/NewUsersSection';
-import { AchievementSystem } from '@/components/dashboard/AchievementSystem';
+import { IntegratedAchievementSystem } from '@/components/dashboard/IntegratedAchievementSystem';
 import { AlbumOfTheDay } from '@/components/dashboard/AlbumOfTheDay';
 import { CollectionMilestones } from '@/components/dashboard/CollectionMilestones';
 import { VinylRoulette } from '@/components/dashboard/VinylRoulette';
@@ -165,7 +165,7 @@ const Dashboard = () => {
         <section className="mb-12 animate-fade-in delay-450">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Star className="w-6 h-6 text-vinyl-gold" />
-            🎯 Collectie Doelen & Prestaties
+            🎯 Collectie Doelen & Milestones
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <CollectionMilestones 
@@ -180,6 +180,12 @@ const Dashboard = () => {
             />
           </div>
         </section>
+
+        {/* Integrated Achievement System */}
+        <IntegratedAchievementSystem 
+          collectionStats={collectionStats}
+          scanStats={scanStats}
+        />
 
         {/* Fun & Interactive Section */}
         <section className="mb-12 animate-fade-in delay-500">
@@ -373,11 +379,6 @@ const Dashboard = () => {
           </section>
         )}
 
-        {/* Achievement System - Fixed Position */}
-        <AchievementSystem 
-          collectionStats={collectionStats}
-          scanStats={scanStats}
-        />
       </div>
     </div>
   );

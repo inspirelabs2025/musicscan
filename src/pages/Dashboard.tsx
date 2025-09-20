@@ -31,6 +31,11 @@ import { BlogPreviewWidget } from '@/components/dashboard/BlogPreviewWidget';
 import { BatchBlogGenerator } from '@/components/admin/BatchBlogGenerator';
 import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
 import { NewUsersSection } from '@/components/NewUsersSection';
+import { AchievementSystem } from '@/components/dashboard/AchievementSystem';
+import { AlbumOfTheDay } from '@/components/dashboard/AlbumOfTheDay';
+import { CollectionMilestones } from '@/components/dashboard/CollectionMilestones';
+import { VinylRoulette } from '@/components/dashboard/VinylRoulette';
+import { CollectionPersonality } from '@/components/dashboard/CollectionPersonality';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -156,8 +161,40 @@ const Dashboard = () => {
           </div>
         </section>
 
-        {/* Content & Community Section */}
+        {/* Collection Milestones & Goals */}
+        <section className="mb-12 animate-fade-in delay-450">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Star className="w-6 h-6 text-vinyl-gold" />
+            🎯 Collectie Doelen & Prestaties
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CollectionMilestones 
+              totalItems={collectionStats?.totalItems || 0}
+              totalValue={collectionStats?.totalValue || 0}
+              totalScans={scanStats?.totalScans || 0}
+            />
+            <CollectionPersonality 
+              genres={collectionStats?.genres || []}
+              totalItems={collectionStats?.totalItems || 0}
+              totalValue={collectionStats?.totalValue || 0}
+            />
+          </div>
+        </section>
+
+        {/* Fun & Interactive Section */}
         <section className="mb-12 animate-fade-in delay-500">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Disc className="w-6 h-6 text-vinyl-purple" />
+            🎰 Muziek & Fun
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AlbumOfTheDay albums={latestScans || []} />
+            <VinylRoulette albums={latestScans || []} />
+          </div>
+        </section>
+
+        {/* Content & Community Section */}
+        <section className="mb-12 animate-fade-in delay-600">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Newspaper className="w-6 h-6 text-vinyl-gold" />
             📚 Ontdek & Leer
@@ -228,7 +265,7 @@ const Dashboard = () => {
         <LatestAlbumsSection />
 
         {/* Navigation Shortcuts */}
-        <section className="mb-12 animate-fade-in delay-600">
+        <section className="mb-12 animate-fade-in delay-700">
           <Card className="border-2 hover:border-primary/50 transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -271,7 +308,7 @@ const Dashboard = () => {
         </section>
 
         {/* Community Highlights */}
-        <section className="mb-12 animate-fade-in delay-700">
+        <section className="mb-12 animate-fade-in delay-800">
           <Card className="border-2 hover:border-accent/50 transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -287,7 +324,7 @@ const Dashboard = () => {
 
         {/* Top Genres/Artists Quick Preview */}
         {collectionStats && !collectionLoading && (
-          <section className="mt-12 animate-fade-in delay-600">
+          <section className="mt-12 animate-fade-in delay-900">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -327,7 +364,7 @@ const Dashboard = () => {
 
         {/* Admin Tools Section - Only visible for admin */}
         {user?.email === ADMIN_EMAIL && (
-          <section className="mt-12 animate-fade-in delay-700">
+          <section className="mt-12 animate-fade-in delay-1000">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-vinyl-purple" />
               ⚡ Admin Tools
@@ -335,6 +372,12 @@ const Dashboard = () => {
             <BatchBlogGenerator />
           </section>
         )}
+
+        {/* Achievement System - Fixed Position */}
+        <AchievementSystem 
+          collectionStats={collectionStats}
+          scanStats={scanStats}
+        />
       </div>
     </div>
   );

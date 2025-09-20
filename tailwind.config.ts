@@ -131,7 +131,8 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'vinyl-spin': 'vinyl-spin 4s linear infinite',
 				'fade-in': 'fade-in 0.6s ease-out',
-				'scan-pulse': 'scan-pulse 2s infinite'
+				'scan-pulse': 'scan-pulse 2s infinite',
+				'spin-slow': 'spin 3s linear infinite'
 			}
 		}
 	},

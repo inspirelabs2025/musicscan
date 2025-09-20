@@ -44,6 +44,7 @@ import TestAlbumCoverBackfill from "./pages/TestAlbumCoverBackfill";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
+import Social from "./pages/Social";
 import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
 import Quiz from "./pages/Quiz";
 
@@ -147,6 +148,11 @@ const App = () => {
             <Route path="/quiz" element={
               <ProtectedRoute>
                 <Quiz />
+              </ProtectedRoute>
+            } />
+            <Route path="/social" element={
+              <ProtectedRoute>
+                <Social />
               </ProtectedRoute>
             } />
             <Route path="/ai-analysis" element={

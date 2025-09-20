@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy } from "lucide-react";
+import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Sociaal", url: "/social", icon: Users },
   { title: "Muzieknieuws", url: "/news", icon: Newspaper },
   { title: "Marketplace", url: "/marketplace-overview", icon: ShoppingCart },
   { title: "Mijn Winkel", url: "/my-shop", icon: Store }

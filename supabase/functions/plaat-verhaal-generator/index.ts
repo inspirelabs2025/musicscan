@@ -178,6 +178,16 @@ serve(async (req) => {
         albumData = data;
         actualTableUsed = 'ai_scan_results';
       }
+    } else if (albumType === 'ai') {
+      // Direct AI scan results query
+      const { data, error } = await supabase
+        .from('ai_scan_results')
+        .select('*')
+        .eq('id', albumId)
+        .maybeSingle();
+      if (error) throw error;
+      albumData = data;
+      actualTableUsed = 'ai_scan_results';
     } else {
       throw new Error("Ongeldig album type: " + albumType);
     }

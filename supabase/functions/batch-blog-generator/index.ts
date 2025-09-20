@@ -310,13 +310,7 @@ async function getBatchStatus() {
   try {
     const { data, error } = await supabase
       .from('batch_processing_status')
-      .select(`
-        *,
-        queue_stats:batch_queue_items(
-          status,
-          count
-        )
-      `)
+      .select('*')
       .eq('process_type', 'blog_generation')
       .order('created_at', { ascending: false })
       .limit(1)
@@ -327,18 +321,30 @@ async function getBatchStatus() {
       return null;
     }
 
-    // Add queue statistics if data exists
+    // Add queue statistics using separate count queries for reliability
     if (data) {
-      const { data: queueStats } = await supabase
-        .from('batch_queue_items')
-        .select('status')
-        .eq('batch_id', data.id);
+      // Get all queue stats in parallel for efficiency
+      const [pendingResult, processingResult, completedResult, failedResult] = await Promise.all([
+        supabase.from('batch_queue_items').select('id', { count: 'exact' }).eq('batch_id', data.id).eq('status', 'pending'),
+        supabase.from('batch_queue_items').select('id', { count: 'exact' }).eq('batch_id', data.id).eq('status', 'processing'),
+        supabase.from('batch_queue_items').select('id', { count: 'exact' }).eq('batch_id', data.id).eq('status', 'completed'),
+        supabase.from('batch_queue_items').select('id', { count: 'exact' }).eq('batch_id', data.id).eq('status', 'failed')
+      ]);
 
-      if (queueStats) {
-        data.queue_pending = queueStats.filter(item => item.status === 'pending').length;
-        data.queue_processing = queueStats.filter(item => item.status === 'processing').length;
-        data.queue_completed = queueStats.filter(item => item.status === 'completed').length;
-        data.queue_failed = queueStats.filter(item => item.status === 'failed').length;
+      data.queue_pending = pendingResult.count || 0;
+      data.queue_processing = processingResult.count || 0;
+      data.queue_completed = completedResult.count || 0;
+      data.queue_failed = failedResult.count || 0;
+      
+      // Update queue_size to match actual totals
+      const totalQueueItems = data.queue_pending + data.queue_processing + data.queue_completed + data.queue_failed;
+      if (totalQueueItems !== data.queue_size) {
+        data.queue_size = totalQueueItems;
+        // Optionally sync this back to database
+        await supabase
+          .from('batch_processing_status')
+          .update({ queue_size: totalQueueItems })
+          .eq('id', data.id);
       }
     }
     

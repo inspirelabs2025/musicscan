@@ -21,18 +21,56 @@ serve(async (req) => {
     console.log('🔄 Batch blog processor tick started');
 
     // Check if there's an active batch
-    const { data: batchStatus } = await supabase
+    let { data: batchStatus } = await supabase
       .from('batch_processing_status')
       .select('*')
       .eq('process_type', 'blog_generation')
       .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
+    // Auto-recovery: if no active batch but pending items exist, reactivate most recent batch
     if (!batchStatus) {
-      console.log('📴 No active batch found');
-      return new Response(JSON.stringify({ message: 'No active batch' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      console.log('📴 No active batch found, checking for recoverable batch...');
+      
+      const { data: pendingItems } = await supabase
+        .from('batch_queue_items')
+        .select('batch_id')
+        .eq('status', 'pending')
+        .limit(1);
+        
+      if (pendingItems && pendingItems.length > 0) {
+        console.log('🔄 Found pending items, reactivating most recent batch...');
+        
+        const { data: recentBatch } = await supabase
+          .from('batch_processing_status')
+          .select('*')
+          .eq('process_type', 'blog_generation')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+          
+        if (recentBatch) {
+          await supabase
+            .from('batch_processing_status')
+            .update({ 
+              status: 'active',
+              completed_at: null,
+              last_heartbeat: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', recentBatch.id);
+          
+          batchStatus = { ...recentBatch, status: 'active' };
+          console.log('✅ Reactivated batch:', batchStatus.id);
+        }
+      }
+      
+      if (!batchStatus) {
+        console.log('📴 No recoverable batch found');
+        return new Response(JSON.stringify({ message: 'No active batch' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     console.log('📋 Found active batch:', batchStatus.id);
@@ -46,19 +84,17 @@ serve(async (req) => {
       })
       .eq('id', batchStatus.id);
 
-    // Get next pending item to process
-    const { data: nextItem } = await supabase
+    // Get next pending items (corrected query without broken filter)
+    const { data: pendingItems } = await supabase
       .from('batch_queue_items')
       .select('*')
       .eq('batch_id', batchStatus.id)
       .eq('status', 'pending')
-      .lt('attempts', 'max_attempts')
       .order('priority', { ascending: false })
       .order('created_at', { ascending: true })
-      .limit(1)
-      .single();
+      .limit(25);
 
-    if (!nextItem) {
+    if (!pendingItems || pendingItems.length === 0) {
       console.log('✅ No more pending items - marking batch as completed');
       
       // Mark batch as completed
@@ -72,6 +108,34 @@ serve(async (req) => {
         .eq('id', batchStatus.id);
 
       return new Response(JSON.stringify({ message: 'Batch completed' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Find first item with attempts < max_attempts, auto-fail others
+    let nextItem = null;
+    for (const item of pendingItems) {
+      const maxAttempts = item.max_attempts || 3;
+      if (item.attempts < maxAttempts) {
+        nextItem = item;
+        break;
+      } else {
+        // Auto-fail items that exceeded max attempts
+        console.log(`💀 Auto-failing item ${item.item_id} (${item.attempts}/${maxAttempts} attempts)`);
+        await supabase
+          .from('batch_queue_items')
+          .update({ 
+            status: 'failed',
+            error_message: `Exceeded maximum attempts (${maxAttempts})`,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', item.id);
+      }
+    }
+
+    if (!nextItem) {
+      console.log('✅ No valid pending items found in current batch');
+      return new Response(JSON.stringify({ message: 'No processable items found' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

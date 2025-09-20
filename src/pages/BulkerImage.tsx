@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect, useCallback, useMemo } from 'react';
 import { ArrowLeft, Loader2, AlertTriangle, RefreshCcw, BarChart3, Camera, Search, ExternalLink, Copy, CheckCircle, AlertCircle, Disc3, Archive } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,8 +29,19 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const BulkerImage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [state, dispatch] = useReducer(scanReducer, initialScanState);
   const { user } = useAuth();
+
+  // Check if we're coming from AI scan with pre-filled data
+  const fromAiScan = searchParams.get('fromAiScan') === 'true';
+  const urlMediaType = searchParams.get('mediaType') as 'vinyl' | 'cd' | null;
+  const urlDiscogsId = searchParams.get('discogsId');
+  const urlArtist = searchParams.get('artist');
+  const urlTitle = searchParams.get('title');
+  const urlLabel = searchParams.get('label');
+  const urlCatalogNumber = searchParams.get('catalogNumber');
+  const urlYear = searchParams.get('year');
 
   const { 
     isAnalyzing: isAnalyzingVinyl, 
@@ -105,6 +116,45 @@ const BulkerImage = () => {
     }
     return {};
   }, [state.mediaType]);
+
+  // Auto-populate from AI scan URL parameters
+  useEffect(() => {
+    if (fromAiScan && urlMediaType && urlDiscogsId) {
+      console.log('🔗 Auto-populating from AI scan URL parameters');
+      
+      // Set media type
+      dispatch({ type: 'SET_MEDIA_TYPE', payload: urlMediaType });
+      
+      // Create mock search result from URL parameters
+      const mockSearchResult = {
+        id: parseInt(urlDiscogsId),
+        discogs_id: parseInt(urlDiscogsId),
+        artist: urlArtist || '',
+        title: urlTitle || '',
+        label: urlLabel || '',
+        catalog_number: urlCatalogNumber || '',
+        year: urlYear ? parseInt(urlYear) : null,
+        discogs_url: `https://www.discogs.com/release/${urlDiscogsId}`,
+        api_url: `https://api.discogs.com/releases/${urlDiscogsId}`,
+        similarity_score: 1.0,
+        pricing_stats: null, // Will be populated later if needed
+        format: urlMediaType === 'vinyl' ? 'Vinyl' : 'CD',
+        genre: null,
+        country: null,
+        style: null
+      };
+      
+      // Set search results and skip to condition selection
+      setSearchResults([mockSearchResult]);
+      dispatch({ type: 'SET_CURRENT_STEP', payload: 5 }); // Skip to condition selection
+      
+      toast({
+        title: "Data uit AI-scan geladen",
+        description: `${urlArtist} - ${urlTitle} vooringevuld`,
+        variant: "default"
+      });
+    }
+  }, [fromAiScan, urlMediaType, urlDiscogsId, urlArtist, urlTitle, setSearchResults]);
 
   // Auto-trigger analysis when photos are uploaded
   useEffect(() => {
@@ -489,8 +539,23 @@ const BulkerImage = () => {
                 Terug
               </Button>
             </Link>
+            {fromAiScan && (
+              <Link to="/ai-scan-v2">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Terug naar AI-scan
+                </Button>
+              </Link>
+            )}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Image Scan</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {fromAiScan ? 'Toevoegen aan Collectie' : 'Image Scan'}
+              </h1>
+              {fromAiScan && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Data uit AI-scan vooringevuld - selecteer alleen conditie
+                </p>
+              )}
             </div>
           </div>
           {(analysisResult || searchResults.length > 0 || state.uploadedFiles.length > 0) && (
@@ -517,8 +582,8 @@ const BulkerImage = () => {
           </div>
         </div>
 
-        {/* Media Type Selection */}
-        {!state.mediaType && !state.discogsIdMode && (
+        {/* Media Type Selection - Skip if coming from AI scan */}
+        {!state.mediaType && !state.discogsIdMode && !fromAiScan && (
           <div className="mb-8">
             <MediaTypeSelector 
               onSelectMediaType={handleMediaTypeSelect}
@@ -537,8 +602,8 @@ const BulkerImage = () => {
           </div>
         )}
 
-        {/* Upload Section */}
-        {state.mediaType && !state.discogsIdMode && (
+        {/* Upload Section - Skip if coming from AI scan */}
+        {state.mediaType && !state.discogsIdMode && !fromAiScan && (
           <div className="mb-8">
             <UploadSection 
               mediaType={state.mediaType}

@@ -1,6 +1,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles } from 'lucide-react';
+import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +40,7 @@ interface AnalysisResult {
 
 export default function AIScanV2() {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | ''>('');
   const [conditionGrade, setConditionGrade] = useState('');
@@ -508,9 +510,9 @@ export default function AIScanV2() {
                 </div>
               </div>
 
-              {/* Discogs Link */}
+              {/* Action Buttons */}
               {analysisResult.result.discogs_url && (
-                <div className="pt-4">
+                <div className="pt-4 space-y-3">
                   <Button asChild className="w-full">
                     <a 
                       href={analysisResult.result.discogs_url} 
@@ -519,6 +521,27 @@ export default function AIScanV2() {
                     >
                       Bekijk op Discogs
                     </a>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => {
+                      const params = new URLSearchParams({
+                        mediaType: mediaType,
+                        discogsId: analysisResult.result.discogs_id?.toString() || '',
+                        artist: analysisResult.result.artist || '',
+                        title: analysisResult.result.title || '',
+                        label: analysisResult.result.label || '',
+                        catalogNumber: analysisResult.result.catalog_number || '',
+                        year: analysisResult.result.year?.toString() || '',
+                        fromAiScan: 'true'
+                      });
+                      navigate(`/scanner?${params.toString()}`);
+                    }}
+                    variant="secondary" 
+                    className="w-full"
+                  >
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Toevoegen aan Collectie
                   </Button>
                 </div>
               )}

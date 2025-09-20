@@ -535,7 +535,7 @@ export default function AIScanV2() {
                         year: analysisResult.result.year?.toString() || '',
                         fromAiScan: 'true'
                       });
-                      navigate(`/scanner?${params.toString()}`);
+                      navigate(`/scanner/discogs?${params.toString()}`);
                     }}
                     variant="secondary" 
                     className="w-full"

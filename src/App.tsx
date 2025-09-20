@@ -94,6 +94,11 @@ const App = () => {
                 <Scanner />
               </ProtectedRoute>
             } />
+            <Route path="/scanner/discogs" element={
+              <ProtectedRoute>
+                <BulkerImage />
+              </ProtectedRoute>
+            } />
             <Route path="/ai-scan" element={
               <ProtectedRoute>
                 <AIScan />

@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect, useCallback, useMemo } from 'react';
 import { ArrowLeft, Loader2, AlertTriangle, RefreshCcw, BarChart3, Camera, Search, ExternalLink, Copy, CheckCircle, AlertCircle, Disc3, Archive } from 'lucide-react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +30,10 @@ import { useAuth } from "@/contexts/AuthContext";
 const BulkerImage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+
+  // Check if we're on the /scanner/discogs route
+  const isDiscogsRoute = location.pathname === '/scanner/discogs';
   const [state, dispatch] = useReducer(scanReducer, initialScanState);
   const { user } = useAuth();
 
@@ -125,9 +129,15 @@ const BulkerImage = () => {
       // Set media type
       dispatch({ type: 'SET_MEDIA_TYPE', payload: urlMediaType });
       
-      // Go to Discogs ID mode with pre-filled ID
-      dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
-      dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: urlDiscogsId });
+      // If on /scanner/discogs route, go directly to Discogs ID mode
+      if (isDiscogsRoute) {
+        dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
+        dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: urlDiscogsId });
+      } else {
+        // Legacy behavior for /scanner route
+        dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
+        dispatch({ type: 'SET_DIRECT_DISCOGS_ID', payload: urlDiscogsId });
+      }
       
       toast({
         title: "Data uit AI-scan geladen",
@@ -135,7 +145,7 @@ const BulkerImage = () => {
         variant: "default"
       });
     }
-  }, [fromAiScan, urlMediaType, urlDiscogsId, urlArtist, urlTitle, setSearchResults]);
+  }, [fromAiScan, urlMediaType, urlDiscogsId, urlArtist, urlTitle, setSearchResults, isDiscogsRoute]);
 
   // Auto-trigger analysis when photos are uploaded
   useEffect(() => {

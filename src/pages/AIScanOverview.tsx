@@ -493,7 +493,7 @@ const AIScanOverview = () => {
       fromAiScan: 'true'
     });
 
-    navigate(`/scanner?${params.toString()}`);
+    navigate(`/scanner/discogs?${params.toString()}`);
   }, [navigate, toast]);
 
   if (scansLoading || statsLoading) {

@@ -103,15 +103,6 @@ const Dashboard = () => {
                     </div>
                   </Link>
                 </Button>
-                
-                <Button asChild size="lg" variant="outline" className="h-16 hover:bg-accent/20 group">
-                  <Link to="/collection-chat">
-                    <div className="flex flex-col items-center gap-2">
-                      <Shuffle className="w-6 h-6 group-hover:animate-pulse" />
-                      <span>🎲 Random Album</span>
-                    </div>
-                  </Link>
-                </Button>
               </div>
             </CardContent>
           </Card>

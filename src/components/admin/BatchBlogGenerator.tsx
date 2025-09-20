@@ -53,33 +53,56 @@ export function BatchBlogGenerator() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    if (status.status === 'active') {
+    if (status.status === 'active' || status.status === 'running') {
       interval = setInterval(async () => {
         try {
-          const { data, error } = await supabase.functions.invoke('batch-blog-generator', {
+          const { data: edgeFunctionData, error: edgeError } = await supabase.functions.invoke('batch-blog-generator', {
             body: { action: 'status' }
           });
           
-          if (!error && data) {
-            setStatus(data);
-            setLastUpdate(new Date());
+          // Always check database status for comparison
+          const databaseStatus = await checkDatabaseStatus();
+
+          console.log('🔄 Polling Status Debug:', {
+            edgeFunction: edgeFunctionData,
+            database: databaseStatus,
+            edgeError
+          });
+
+          let activeStatus: BatchStatus;
+
+          // Use database status if Edge Function fails or shows inconsistent data
+          if (edgeError || !edgeFunctionData || (databaseStatus && databaseStatus.status !== edgeFunctionData.status)) {
+            console.log('⚠️ Using database status during polling');
+            activeStatus = databaseStatus || { status: 'idle' };
+          } else {
+            activeStatus = edgeFunctionData;
+          }
+
+          setStatus(activeStatus);
+          setLastUpdate(new Date());
+          
+          // Auto-cleanup stuck batches (if no heartbeat for 5+ minutes)
+          if (activeStatus.last_heartbeat) {
+            const lastHeartbeat = new Date(activeStatus.last_heartbeat);
+            const timeSinceHeartbeat = Date.now() - lastHeartbeat.getTime();
             
-            // Auto-cleanup stuck batches (if no heartbeat for 5+ minutes)
-            if (data.last_heartbeat) {
-              const lastHeartbeat = new Date(data.last_heartbeat);
-              const timeSinceHeartbeat = Date.now() - lastHeartbeat.getTime();
-              
-              if (timeSinceHeartbeat > 5 * 60 * 1000) { // 5 minutes
-                toast({
-                  title: "Batch mogelijk gestopt",
-                  description: "De automatische verwerking lijkt gestopt. Cron job mogelijk inactief.",
-                  variant: "destructive"
-                });
-              }
+            if (timeSinceHeartbeat > 5 * 60 * 1000) { // 5 minutes
+              toast({
+                title: "Batch mogelijk gestopt",
+                description: "De automatische verwerking lijkt gestopt. Cron job mogelijk inactief.",
+                variant: "destructive"
+              });
             }
           }
         } catch (error) {
           console.error('Error checking batch status:', error);
+          // Fallback to database status
+          const databaseStatus = await checkDatabaseStatus();
+          if (databaseStatus) {
+            console.log('🔄 Using database status as polling fallback');
+            setStatus(databaseStatus);
+          }
         }
       }, 10000); // Check every 10 seconds for active batches
     } else {
@@ -91,16 +114,89 @@ export function BatchBlogGenerator() {
     };
   }, [status.status]);
 
+  const checkDatabaseStatus = async (): Promise<BatchStatus | null> => {
+    try {
+      const { data: dbStatus, error: dbError } = await supabase
+        .from('batch_processing_status')
+        .select('*')
+        .eq('process_type', 'blog_generation')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (dbError) throw dbError;
+
+      const { data: queueData, error: queueError } = await supabase
+        .from('batch_queue_items')
+        .select('status')
+        .eq('batch_id', dbStatus.id);
+
+      if (queueError) throw queueError;
+
+      const queueStats = {
+        queue_pending: queueData.filter(item => item.status === 'pending').length,
+        queue_processing: queueData.filter(item => item.status === 'processing').length,
+        queue_completed: queueData.filter(item => item.status === 'completed').length,
+        queue_failed: queueData.filter(item => item.status === 'failed').length,
+      };
+
+      return {
+        id: dbStatus.id,
+        status: dbStatus.status as BatchStatus['status'],
+        total_items: dbStatus.total_items,
+        processed_items: dbStatus.processed_items,
+        successful_items: dbStatus.successful_items,
+        failed_items: dbStatus.failed_items,
+        started_at: dbStatus.started_at,
+        completed_at: dbStatus.completed_at,
+        last_heartbeat: dbStatus.last_heartbeat,
+        auto_mode: dbStatus.auto_mode,
+        ...queueStats,
+        queue_size: queueData.length
+      };
+    } catch (error) {
+      console.error('Failed to check database status:', error);
+      return null;
+    }
+  };
+
   const checkStatus = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('batch-blog-generator', {
+      // First try Edge Function
+      const { data: edgeFunctionData, error: edgeError } = await supabase.functions.invoke('batch-blog-generator', {
         body: { action: 'status' }
       });
 
-      if (error) throw error;
-      setStatus(data || { status: 'idle' });
+      // Always check database status as well
+      const databaseStatus = await checkDatabaseStatus();
+
+      console.log('🔍 Status Check Debug:', {
+        edgeFunction: edgeFunctionData,
+        database: databaseStatus,
+        edgeError
+      });
+
+      // Use database status if Edge Function fails or shows inconsistent data
+      if (edgeError || !edgeFunctionData || (databaseStatus && databaseStatus.status !== edgeFunctionData.status)) {
+        console.log('⚠️ Using database status as fallback');
+        if (databaseStatus) {
+          setStatus(databaseStatus);
+          return;
+        }
+      }
+
+      if (edgeError) throw edgeError;
+      setStatus(edgeFunctionData || { status: 'idle' });
     } catch (error) {
       console.error('Failed to check batch status:', error);
+      // Try database status as final fallback
+      const databaseStatus = await checkDatabaseStatus();
+      if (databaseStatus) {
+        console.log('🔄 Using database status as final fallback');
+        setStatus(databaseStatus);
+      } else {
+        setStatus({ status: 'idle' });
+      }
     }
   };
 
@@ -430,6 +526,28 @@ export function BatchBlogGenerator() {
             <Label htmlFor="dryRun">Dry Run (alleen testen, geen echte generatie)</Label>
           </div>
         </div>
+
+        <Separator />
+
+        {/* Debug Information - Show when status might be inconsistent */}
+        {status.status === 'running' && (
+          <div className="space-y-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h4 className="text-sm font-semibold text-yellow-800">🔍 Debug Info</h4>
+            <p className="text-xs text-yellow-700">
+              Status: <Badge variant="outline">{status.status}</Badge> | 
+              Verwerkt: {status.processed_items || 0}/{status.total_items || 0} | 
+              Wachtrij: {status.queue_pending || 0} pending
+            </p>
+            <p className="text-xs text-yellow-600">
+              De "Repareer Status" knop zou zichtbaar moeten zijn omdat database status = "running"
+            </p>
+            {lastUpdate && (
+              <p className="text-xs text-yellow-600">
+                Laatste update: {lastUpdate.toLocaleTimeString()}
+              </p>
+            )}
+          </div>
+        )}
 
         <Separator />
 

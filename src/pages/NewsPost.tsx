@@ -125,7 +125,6 @@ export const NewsPost = () => {
                 <Eye className="w-4 h-4" />
                 {post.views_count} weergaves
               </div>
-              <span>Bron: {post.source}</span>
             </div>
 
             <Badge variant="secondary" className="mb-8">
@@ -174,7 +173,7 @@ export const NewsPost = () => {
         <footer className="mt-12 pt-8 border-t">
           <div className="flex justify-between items-center">
             <p className="text-sm text-muted-foreground">
-              Gepubliceerd op {new Date(post.published_at).toLocaleDateString('nl-NL')} door {post.author}
+              Gepubliceerd op {new Date(post.published_at).toLocaleDateString('nl-NL')}
             </p>
             <Link to="/nieuws">
               <Button variant="outline">

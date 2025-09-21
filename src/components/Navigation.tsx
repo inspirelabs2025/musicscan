@@ -20,7 +20,6 @@ const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Sociaal", url: "/social", icon: Users },
   { title: "Muzieknieuws", url: "/news", icon: Newspaper },
-  { title: "Marketplace", url: "/marketplace-overview", icon: ShoppingCart },
   { title: "Mijn Winkel", url: "/my-shop", icon: Store }
 ];
 

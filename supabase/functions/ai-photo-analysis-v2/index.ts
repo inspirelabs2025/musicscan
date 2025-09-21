@@ -70,6 +70,39 @@ serve(async (req) => {
       role: user.role
     })
 
+    // Check AI scan usage limits
+    console.log('🔍 Checking AI scan usage limits for user:', user.id)
+    
+    const { data: usageCheck, error: usageError } = await supabase.rpc('check_usage_limit', {
+      p_user_id: user.id,
+      p_usage_type: 'ai_scans'
+    });
+
+    if (usageError) {
+      console.error('❌ Usage check error:', usageError);
+      throw new Error('Failed to check usage limits');
+    }
+
+    const limitCheck = usageCheck[0];
+    console.log('📊 Usage check result:', limitCheck);
+
+    if (!limitCheck.can_use) {
+      console.log(`🚫 Usage limit reached: ${limitCheck.current_usage}/${limitCheck.limit_amount} for ${limitCheck.plan_name}`);
+      
+      return new Response(JSON.stringify({
+        error: 'USAGE_LIMIT_EXCEEDED',
+        message: `Je hebt je limiet van ${limitCheck.limit_amount} AI scans deze maand bereikt. Upgrade je plan voor meer scans.`,
+        usage: {
+          current: limitCheck.current_usage,
+          limit: limitCheck.limit_amount,
+          plan: limitCheck.plan_name
+        }
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     // Skipping direct checks against auth.users (restricted schema). JWT already validated above.
 
     const { photoUrls, mediaType, conditionGrade }: AnalysisRequest = await req.json()
@@ -207,6 +240,21 @@ serve(async (req) => {
       }
 
       console.log('✅ AI analysis V2 completed for scan:', scanId)
+
+      // Increment usage counter for successful scan
+      console.log('📈 Incrementing AI scan usage for user:', user.id)
+      const { error: usageError } = await supabase.rpc('increment_usage', {
+        p_user_id: user.id,
+        p_usage_type: 'ai_scans',
+        p_increment: 1
+      });
+
+      if (usageError) {
+        console.error('⚠️ Failed to increment usage counter:', usageError);
+        // Don't fail the whole request for usage tracking errors
+      } else {
+        console.log('✅ Usage counter incremented successfully');
+      }
 
       return new Response(
         JSON.stringify({

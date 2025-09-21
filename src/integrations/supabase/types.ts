@@ -1938,6 +1938,105 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_events: {
+        Row: {
+          created_at: string
+          data: Json | null
+          event_type: string
+          id: string
+          processed: boolean | null
+          stripe_event_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          event_type: string
+          id?: string
+          processed?: boolean | null
+          stripe_event_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          event_type?: string
+          id?: string
+          processed?: boolean | null
+          stripe_event_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          ai_chat_limit: number | null
+          ai_scans_limit: number | null
+          api_access: boolean | null
+          billing_interval: string
+          bulk_upload_limit: number | null
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean | null
+          marketplace_access: boolean | null
+          multi_user: boolean | null
+          name: string
+          price_amount: number
+          priority_support: boolean | null
+          slug: string
+          sort_order: number | null
+          stripe_price_id: string | null
+          stripe_product_id: string | null
+          updated_at: string
+          white_label: boolean | null
+        }
+        Insert: {
+          ai_chat_limit?: number | null
+          ai_scans_limit?: number | null
+          api_access?: boolean | null
+          billing_interval?: string
+          bulk_upload_limit?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean | null
+          marketplace_access?: boolean | null
+          multi_user?: boolean | null
+          name: string
+          price_amount: number
+          priority_support?: boolean | null
+          slug: string
+          sort_order?: number | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          updated_at?: string
+          white_label?: boolean | null
+        }
+        Update: {
+          ai_chat_limit?: number | null
+          ai_scans_limit?: number | null
+          api_access?: boolean | null
+          billing_interval?: string
+          bulk_upload_limit?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean | null
+          marketplace_access?: boolean | null
+          multi_user?: boolean | null
+          name?: string
+          price_amount?: number
+          priority_support?: boolean | null
+          slug?: string
+          sort_order?: number | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          updated_at?: string
+          white_label?: boolean | null
+        }
+        Relationships: []
+      }
       tecdoc_matches: {
         Row: {
           alternative_numbers: string[] | null
@@ -1989,6 +2088,42 @@ export type Database = {
           tecdoc_id?: string
           technical_specs?: Json | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      usage_tracking: {
+        Row: {
+          ai_chat_used: number | null
+          ai_scans_used: number | null
+          bulk_uploads_used: number | null
+          created_at: string
+          id: string
+          period_end: string
+          period_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_chat_used?: number | null
+          ai_scans_used?: number | null
+          bulk_uploads_used?: number | null
+          created_at?: string
+          id?: string
+          period_end: string
+          period_start: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_chat_used?: number | null
+          ai_scans_used?: number | null
+          bulk_uploads_used?: number | null
+          created_at?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2066,6 +2201,62 @@ export type Database = {
           view_count?: number | null
         }
         Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_id: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_end: string | null
+          trial_start: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicle_parts: {
         Row: {
@@ -2596,6 +2787,15 @@ export type Database = {
       }
     }
     Functions: {
+      check_usage_limit: {
+        Args: { p_usage_type: string; p_user_id: string }
+        Returns: {
+          can_use: boolean
+          current_usage: number
+          limit_amount: number
+          plan_name: string
+        }[]
+      }
       cleanup_duplicate_cd_scans: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -2632,6 +2832,20 @@ export type Database = {
           p_year?: number
         }
         Returns: string
+      }
+      get_current_usage: {
+        Args: { p_user_id: string }
+        Returns: {
+          ai_chat_used: number
+          ai_scans_used: number
+          bulk_uploads_used: number
+          period_end: string
+          period_start: string
+        }[]
+      }
+      increment_usage: {
+        Args: { p_increment?: number; p_usage_type: string; p_user_id: string }
+        Returns: boolean
       }
       update_cd_discogs_ids: {
         Args: Record<PropertyKey, never>

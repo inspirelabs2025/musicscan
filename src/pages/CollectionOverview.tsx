@@ -51,10 +51,14 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accen
 
 export default function CollectionOverview() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: stats, isLoading, error } = useCollectionStats();
   
   const activeTab = searchParams.get('tab') || 'overview';
+  
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
 
   if (isLoading) {
     return (
@@ -171,7 +175,7 @@ export default function CollectionOverview() {
           </div>
 
           {/* Enhanced Tabs */}
-          <Tabs value={activeTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <div className="overflow-x-auto pb-2">
               <TabsList className="grid w-full grid-cols-6 min-w-max sm:min-w-0 bg-white/10 backdrop-blur-md border border-white/20 p-1 rounded-xl">
                 <TabsTrigger 

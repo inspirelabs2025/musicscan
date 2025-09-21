@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Trophy, Target, Sparkles, Gift, Crown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePersistentMilestones } from '@/hooks/usePersistentMilestones';
 
 interface Milestone {
   id: string;
@@ -30,7 +31,13 @@ export const CollectionMilestones = ({
   onMilestoneReached 
 }: CollectionMilestonesProps) => {
   const [showCelebration, setShowCelebration] = useState<Milestone | null>(null);
-  const [reachedMilestones, setReachedMilestones] = useState<string[]>([]);
+  
+  const { 
+    reachedMilestones, 
+    addMultipleMilestones, 
+    isMilestoneReached,
+    isInitialized 
+  } = usePersistentMilestones();
 
   const milestones: Milestone[] = [
     {
@@ -91,8 +98,11 @@ export const CollectionMilestones = ({
 
   // Check for newly reached milestones
   useEffect(() => {
+    // Wait for initialization before checking milestones
+    if (!isInitialized) return;
+
     const newlyReached = milestones.filter(milestone => 
-      totalItems >= milestone.target && !reachedMilestones.includes(milestone.id)
+      totalItems >= milestone.target && !isMilestoneReached(milestone.id)
     );
 
     if (newlyReached.length > 0) {
@@ -102,15 +112,15 @@ export const CollectionMilestones = ({
       );
       
       setShowCelebration(highestMilestone);
-      setReachedMilestones(prev => [...prev, ...newlyReached.map(m => m.id)]);
+      addMultipleMilestones(newlyReached.map(m => m.id));
       onMilestoneReached?.(highestMilestone);
 
-      // Hide celebration after 5 seconds
+      // Hide celebration after 3 seconds (reduced from 5)
       setTimeout(() => {
         setShowCelebration(null);
-      }, 5000);
+      }, 3000);
     }
-  }, [totalItems, reachedMilestones, onMilestoneReached]);
+  }, [totalItems, isInitialized, isMilestoneReached, addMultipleMilestones, onMilestoneReached]);
 
   const getNextMilestone = () => {
     return milestones.find(milestone => totalItems < milestone.target);

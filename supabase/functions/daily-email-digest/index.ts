@@ -103,7 +103,7 @@ async function collectDailyData(): Promise<DailyDigestData> {
 
 function generateEmailHTML(firstName: string, data: DailyDigestData, userId: string): string {
   const unsubscribeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/daily-email-digest?action=unsubscribe&user_id=${userId}`;
-  const baseUrl = "https://musicscan.ai";
+  const baseUrl = "https://musicscan.app";
   
   return `
 <!DOCTYPE html>
@@ -125,16 +125,16 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
   <style>
     /* Reset & Base */
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #0a0a0b; color: #ffffff; line-height: 1.6; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #ffffff; color: #0f172a; line-height: 1.6; }
     table { border-collapse: collapse; width: 100%; }
     
     /* Container */
-    .container { max-width: 600px; margin: 0 auto; background-color: #0a0a0b; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     
     /* Header with gradient */
     .header { 
       background: linear-gradient(135deg, #9c4dcc 0%, #ffcc00 100%); 
-      color: #0a0a0b; 
+      color: #ffffff; 
       padding: 32px 24px; 
       text-align: center; 
       border-radius: 12px 12px 0 0;
@@ -143,7 +143,7 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
     .header p { margin: 0; font-size: 16px; opacity: 0.9; }
     
     /* Content */
-    .content { padding: 24px; background-color: #111113; }
+    .content { padding: 24px; background-color: #f8fafc; }
     
     /* Sections */
     .section { margin-bottom: 32px; }
@@ -151,7 +151,7 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
       font-size: 20px; 
       font-weight: 700; 
       margin-bottom: 20px; 
-      color: #ffcc00; 
+      color: #9c4dcc; 
       border-bottom: 2px solid #9c4dcc; 
       padding-bottom: 12px; 
       display: block;
@@ -161,10 +161,11 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
     .card { 
       margin-bottom: 16px; 
       padding: 20px; 
-      background: linear-gradient(145deg, #1a1a1d 0%, #16161a 100%);
+      background: #ffffff;
       border-radius: 12px; 
-      border: 1px solid #2a2a2f;
+      border: 1px solid #e2e8f0;
       transition: all 0.3s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     .card:hover { 
       border-color: #9c4dcc; 
@@ -177,18 +178,18 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
       color: inherit; 
       display: block;
     }
-    .card-link:hover .card-title { color: #ffcc00; }
+    .card-link:hover .card-title { color: #9c4dcc; }
     
     .card-title { 
       font-weight: 700; 
       margin-bottom: 8px; 
-      color: #ffffff; 
+      color: #0f172a; 
       font-size: 16px;
       line-height: 1.4;
       transition: color 0.3s ease;
     }
     .card-summary { 
-      color: #b8b8b8; 
+      color: #64748b; 
       font-size: 14px; 
       line-height: 1.5; 
       margin: 0;
@@ -196,10 +197,11 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
     
     /* Stats */
     .stats-container { 
-      background: linear-gradient(145deg, #1a1a1d 0%, #16161a 100%);
+      background: #ffffff;
       border-radius: 12px;
-      border: 1px solid #2a2a2f;
+      border: 1px solid #e2e8f0;
       padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     .stats-grid { 
       display: grid; 
@@ -211,7 +213,7 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
       padding: 20px; 
       background: linear-gradient(135deg, #9c4dcc 0%, #ffcc00 100%);
       border-radius: 8px; 
-      color: #0a0a0b;
+      color: #ffffff;
     }
     .stat-number { 
       font-size: 32px; 
@@ -231,15 +233,16 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
       text-align: center; 
       margin: 40px 0; 
       padding: 32px 24px;
-      background: linear-gradient(145deg, #1a1a1d 0%, #16161a 100%);
+      background: #ffffff;
       border-radius: 12px;
-      border: 1px solid #2a2a2f;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     .cta-button { 
       display: inline-block; 
       padding: 16px 32px; 
       background: linear-gradient(135deg, #9c4dcc 0%, #ffcc00 100%); 
-      color: #0a0a0b; 
+      color: #ffffff; 
       text-decoration: none; 
       border-radius: 8px; 
       font-weight: 700; 
@@ -276,20 +279,20 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
     
     /* Footer */
     .footer { 
-      background-color: #0a0a0b; 
+      background-color: #f8fafc; 
       padding: 32px 24px; 
       text-align: center; 
-      color: #888888; 
+      color: #64748b; 
       font-size: 12px;
-      border-top: 1px solid #2a2a2f;
+      border-top: 1px solid #e2e8f0;
     }
     .footer p { margin: 8px 0; }
     .unsubscribe { 
-      color: #888888; 
+      color: #64748b; 
       text-decoration: underline; 
       font-weight: 500;
     }
-    .unsubscribe:hover { color: #aaaaaa; }
+    .unsubscribe:hover { color: #9c4dcc; }
     
     /* Mobile Responsive */
     @media only screen and (max-width: 480px) {
@@ -305,7 +308,7 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
   </style>
 </head>
 <body>
-  <table role="presentation" width="100%" style="background-color: #0a0a0b;">
+  <table role="presentation" width="100%" style="background-color: #ffffff;">
     <tr>
       <td align="center">
         <div class="container">
@@ -390,7 +393,7 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
             </div>
 
             <div class="cta">
-              <h3 style="margin: 0 0 16px 0; color: #ffffff; font-size: 18px;">Klaar om je collectie te scannen?</h3>
+              <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px;">Klaar om je collectie te scannen?</h3>
               <a href="${baseUrl}" class="cta-button">Ga naar MusicScan</a>
             </div>
           </div>

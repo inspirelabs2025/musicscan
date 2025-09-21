@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { SubscriptionStatus } from "@/components/SubscriptionStatus";
 
 const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -183,6 +184,13 @@ export function Navigation() {
                       ))}
                     </div>
                   </NavigationMenuContent>
+                </NavigationMenuItem>
+
+                {/* Subscription Status */}
+                <NavigationMenuItem>
+                  <div className="px-2">
+                    <SubscriptionStatus compact />
+                  </div>
                 </NavigationMenuItem>
 
                 {/* Profiel Dropdown */}

@@ -11,6 +11,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUsageTracking } from '@/hooks/useUsageTracking';
+import { UpgradePrompt } from '@/components/UpgradePrompt';
+import { useSubscription } from '@/hooks/useSubscription';
 
 // Simple V2 components for media type and condition selection
 
@@ -48,6 +51,10 @@ export default function AIScanV2() {
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
+  const { checkUsageLimit, incrementUsage } = useUsageTracking();
+  const { subscription } = useSubscription();
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -142,6 +149,14 @@ export default function AIScanV2() {
     setAnalysisResult(null);
 
     try {
+      // Check usage limits before proceeding
+      const usageCheck = await checkUsageLimit('ai_scans');
+      if (!usageCheck.can_use) {
+        setShowUpgradePrompt(true);
+        setIsAnalyzing(false);
+        return;
+      }
+
       // Upload images
       setAnalysisProgress(20);
       console.log('📤 Uploading images to Supabase storage...');
@@ -195,6 +210,9 @@ export default function AIScanV2() {
       setAnalysisProgress(100);
       setAnalysisResult(data);
 
+      // Increment usage after successful analysis
+      await incrementUsage('ai_scans');
+
       console.log('✅ Analysis completed successfully');
       toast({
         title: "Analyse voltooid!",
@@ -246,7 +264,8 @@ export default function AIScanV2() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
 
       <div className="p-4">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -573,6 +592,15 @@ export default function AIScanV2() {
         )}
         </div>
       </div>
-    </div>
+      </div>
+
+      {/* Upgrade Prompt Modal */}
+      <UpgradePrompt 
+        isOpen={showUpgradePrompt}
+        onClose={() => setShowUpgradePrompt(false)}
+        reason="usage_limit"
+        currentPlan={subscription?.plan_slug || 'free'}
+      />
+    </>
   );
 }

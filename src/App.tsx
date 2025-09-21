@@ -48,6 +48,7 @@ import Social from "./pages/Social";
 import Profile from "./pages/Profile";
 import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
 import Quiz from "./pages/Quiz";
+import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -151,6 +152,7 @@ const App = () => {
                 <Quiz />
               </ProtectedRoute>
             } />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/social" element={
               <ProtectedRoute>
                 <Social />

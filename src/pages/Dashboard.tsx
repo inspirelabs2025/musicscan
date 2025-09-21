@@ -36,6 +36,7 @@ import { AlbumOfTheDay } from '@/components/dashboard/AlbumOfTheDay';
 import { CollectionMilestones } from '@/components/dashboard/CollectionMilestones';
 import { VinylRoulette } from '@/components/dashboard/VinylRoulette';
 import { CollectionPersonality } from '@/components/dashboard/CollectionPersonality';
+import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -112,6 +113,11 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </section>
+
+        {/* Subscription Status */}
+        <section className="mb-12 animate-fade-in delay-250">
+          <SubscriptionStatus />
         </section>
 
         {/* Stats Cards */}

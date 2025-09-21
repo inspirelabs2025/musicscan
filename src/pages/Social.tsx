@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import SocialNavigation from "@/components/social/SocialNavigation";
 import UserCard from "@/components/social/UserCard";
@@ -15,6 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 const Social: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"discover" | "following" | "messages" | "settings">("discover");
   const [searchQuery, setSearchQuery] = useState("");
   const createConversation = useCreateConversation();
@@ -95,11 +97,7 @@ const Social: React.FC = () => {
   };
 
   const handleViewProfile = (userId: string) => {
-    // In a real app, you'd navigate to the user's profile
-    toast({
-      title: "Profiel bekijken",
-      description: "Navigatie naar profiel wordt binnenkort toegevoegd.",
-    });
+    navigate(`/profile/${userId}`);
   };
 
   const renderDiscoverTab = () => {

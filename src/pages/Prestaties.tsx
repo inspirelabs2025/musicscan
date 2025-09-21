@@ -1,5 +1,4 @@
 import React from 'react';
-import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -137,7 +136,6 @@ const Prestaties = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-background">
-      <Navigation />
       <div className="container mx-auto p-6 max-w-6xl">
         <div className="space-y-8">
           {/* Header */}

@@ -280,8 +280,8 @@ async function sendDigestEmails(data: DailyDigestData, testUserId?: string, test
         console.log(`✅ Email sent successfully to ${emailAddress}`, emailResult ? `(ID: ${emailResult.id})` : '');
       }
 
-      // Rate limiting - wait 100ms between emails
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Rate limiting - wait 1 second between emails to prevent rate limit errors
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
     } catch (error) {
       console.error(`❌ Error processing recipient ${recipient.user_id}:`, error);

@@ -33,10 +33,10 @@ import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
 import { NewUsersSection } from '@/components/NewUsersSection';
 import { IntegratedAchievementSystem } from '@/components/dashboard/IntegratedAchievementSystem';
 import { AlbumOfTheDay } from '@/components/dashboard/AlbumOfTheDay';
-import { CollectionMilestones } from '@/components/dashboard/CollectionMilestones';
 import { VinylRoulette } from '@/components/dashboard/VinylRoulette';
 import { CollectionPersonality } from '@/components/dashboard/CollectionPersonality';
 import { SubscriptionStatus } from '@/components/SubscriptionStatus';
+import { NextGoalWidget } from '@/components/dashboard/NextGoalWidget';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -167,31 +167,14 @@ const Dashboard = () => {
           </div>
         </section>
 
-        {/* Collection Milestones & Goals */}
+        {/* Next Goal Widget - Clean and Minimal */}
         <section className="mb-12 animate-fade-in delay-450">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Star className="w-6 h-6 text-vinyl-gold" />
-            🎯 Collectie Doelen & Milestones
-          </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <CollectionMilestones 
-              totalItems={collectionStats?.totalItems || 0}
-              totalValue={collectionStats?.totalValue || 0}
-              totalScans={scanStats?.totalScans || 0}
-            />
-            <CollectionPersonality 
-              genres={collectionStats?.genres || []}
-              totalItems={collectionStats?.totalItems || 0}
-              totalValue={collectionStats?.totalValue || 0}
-            />
-          </div>
+          <NextGoalWidget 
+            totalItems={collectionStats?.totalItems || 0}
+            totalValue={collectionStats?.totalValue || 0}
+            totalScans={scanStats?.totalScans || 0}
+          />
         </section>
-
-        {/* Integrated Achievement System */}
-        <IntegratedAchievementSystem 
-          collectionStats={collectionStats}
-          scanStats={scanStats}
-        />
 
         {/* Fun & Interactive Section */}
         <section className="mb-12 animate-fade-in delay-500">
@@ -199,9 +182,14 @@ const Dashboard = () => {
             <Disc className="w-6 h-6 text-vinyl-purple" />
             🎰 Muziek & Fun
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <AlbumOfTheDay albums={latestScans || []} />
             <VinylRoulette albums={latestScans || []} />
+            <CollectionPersonality 
+              genres={collectionStats?.genres || []}
+              totalItems={collectionStats?.totalItems || 0}
+              totalValue={collectionStats?.totalValue || 0}
+            />
           </div>
         </section>
 

@@ -41,6 +41,7 @@ const scanMenuItems = [
 const collectionMenuItems = [
   { title: "Mijn Collectie", url: "/my-collection", icon: Music },
   { title: "Collectie Inzicht", url: "/collection-overview", icon: BarChart3 },
+  { title: "Prestaties", url: "/prestaties", icon: Trophy },
   { title: "Quiz", url: "/quiz", icon: Trophy },
   { title: "Muziek Analyse", url: "/ai-analysis", icon: Brain },
   { title: "Chat met je Muziek", url: "/collection-chat", icon: MessageCircle }

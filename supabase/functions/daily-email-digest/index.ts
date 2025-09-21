@@ -207,13 +207,21 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
   `;
 }
 
-async function sendDigestEmails(data: DailyDigestData) {
+async function sendDigestEmails(data: DailyDigestData, testUserId?: string, testEmail?: string) {
   console.log('Fetching users who want email notifications...');
   
-  const { data: recipients, error } = await supabase
+  let query = supabase
     .from('profiles')
     .select('user_id, first_name')
     .eq('email_notifications', true);
+
+  // Filter to specific user if test parameter provided
+  if (testUserId) {
+    query = query.eq('user_id', testUserId);
+    console.log(`🧪 Test mode: filtering to user ${testUserId}`);
+  }
+
+  const { data: recipients, error } = await query;
 
   if (error) {
     console.error('Error fetching recipients:', error);
@@ -235,12 +243,17 @@ async function sendDigestEmails(data: DailyDigestData) {
 
   for (const recipient of recipients) {
     try {
-      // Get user email from auth metadata
-      const { data: authUser } = await supabase.auth.admin.getUserById(recipient.user_id);
+      let emailAddress = testEmail;
       
-      if (!authUser.user?.email) {
-        console.log(`No email found for user ${recipient.user_id}`);
-        continue;
+      if (!testEmail) {
+        // Get user email from auth metadata
+        const { data: authUser } = await supabase.auth.admin.getUserById(recipient.user_id);
+        
+        if (!authUser.user?.email) {
+          console.log(`No email found for user ${recipient.user_id}`);
+          continue;
+        }
+        emailAddress = authUser.user.email;
       }
 
       const emailHTML = generateEmailHTML(
@@ -249,26 +262,29 @@ async function sendDigestEmails(data: DailyDigestData) {
         recipient.user_id
       );
 
-      const { error: emailError } = await resend.emails.send({
-        from: 'MusicScan <dagelijks@musicscan.ai>',
-        to: [authUser.user.email],
+      console.log(`📧 Sending email to ${emailAddress}...`);
+
+      const { data: emailResult, error: emailError } = await resend.emails.send({
+        // Using verified sender temporarily - switch to 'MusicScan <dagelijks@musicscan.ai>' when domain is verified
+        from: 'MusicScan <onboarding@resend.dev>',
+        to: [emailAddress],
         subject: `🎵 Je dagelijkse muziekupdate - ${new Date().toLocaleDateString('nl-NL')}`,
         html: emailHTML,
       });
 
       if (emailError) {
-        console.error(`Failed to send email to ${authUser.user.email}:`, emailError);
+        console.error(`❌ Failed to send email to ${emailAddress}:`, emailError);
         errors.push({ user_id: recipient.user_id, error: emailError.message });
       } else {
         sentCount++;
-        console.log(`✅ Email sent to ${authUser.user.email}`);
+        console.log(`✅ Email sent successfully to ${emailAddress}`, emailResult ? `(ID: ${emailResult.id})` : '');
       }
 
       // Rate limiting - wait 100ms between emails
       await new Promise(resolve => setTimeout(resolve, 100));
 
     } catch (error) {
-      console.error(`Error processing recipient ${recipient.user_id}:`, error);
+      console.error(`❌ Error processing recipient ${recipient.user_id}:`, error);
       errors.push({ user_id: recipient.user_id, error: error.message });
     }
   }
@@ -318,6 +334,8 @@ serve(async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
     const userId = url.searchParams.get('user_id');
+    const testUserId = url.searchParams.get('only_user');
+    const testEmail = url.searchParams.get('test_email');
 
     // Handle unsubscribe requests
     if (action === 'unsubscribe' && userId) {
@@ -326,6 +344,14 @@ serve(async (req) => {
 
     // Main digest sending logic
     console.log('🚀 Starting daily email digest process...');
+    
+    if (testUserId) {
+      console.log(`🧪 Test mode enabled: sending only to user ${testUserId}`);
+    } else if (testEmail) {
+      console.log(`🧪 Test mode enabled: sending only to email ${testEmail}`);
+    } else {
+      console.log('📧 Normal mode: sending to all subscribed users');
+    }
     
     const data = await collectDailyData();
     console.log('Collected data:', {
@@ -336,7 +362,7 @@ serve(async (req) => {
       newUsers: data.newUsers
     });
 
-    const result = await sendDigestEmails(data);
+    const result = await sendDigestEmails(data, testUserId || undefined, testEmail || undefined);
     
     console.log('✅ Daily digest process completed:', result);
 

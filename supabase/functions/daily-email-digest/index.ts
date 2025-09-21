@@ -103,105 +103,306 @@ async function collectDailyData(): Promise<DailyDigestData> {
 
 function generateEmailHTML(firstName: string, data: DailyDigestData, userId: string): string {
   const unsubscribeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/daily-email-digest?action=unsubscribe&user_id=${userId}`;
+  const baseUrl = "https://musicscan.ai";
   
   return `
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MusicScan - Dagelijkse Update</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:AllowPNG/>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f8fafc; }
-    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; text-align: center; }
-    .content { padding: 24px; }
+    /* Reset & Base */
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #0a0a0b; color: #ffffff; line-height: 1.6; }
+    table { border-collapse: collapse; width: 100%; }
+    
+    /* Container */
+    .container { max-width: 600px; margin: 0 auto; background-color: #0a0a0b; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    
+    /* Header with gradient */
+    .header { 
+      background: linear-gradient(135deg, #9c4dcc 0%, #ffcc00 100%); 
+      color: #0a0a0b; 
+      padding: 32px 24px; 
+      text-align: center; 
+      border-radius: 12px 12px 0 0;
+    }
+    .header h1 { margin: 0 0 8px 0; font-size: 28px; font-weight: 700; }
+    .header p { margin: 0; font-size: 16px; opacity: 0.9; }
+    
+    /* Content */
+    .content { padding: 24px; background-color: #111113; }
+    
+    /* Sections */
     .section { margin-bottom: 32px; }
-    .section-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
-    .news-item, .blog-item { margin-bottom: 16px; padding: 16px; background-color: #f9fafb; border-radius: 8px; border-left: 4px solid #667eea; }
-    .news-title, .blog-title { font-weight: 600; margin-bottom: 8px; color: #1f2937; }
-    .news-summary { color: #6b7280; font-size: 14px; line-height: 1.5; }
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .stat-item { text-align: center; padding: 16px; background-color: #f0f4ff; border-radius: 8px; }
-    .stat-number { font-size: 24px; font-weight: 700; color: #667eea; }
-    .stat-label { font-size: 14px; color: #6b7280; margin-top: 4px; }
-    .cta { text-align: center; margin: 32px 0; }
-    .cta-button { display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; }
-    .footer { background-color: #f9fafb; padding: 24px; text-align: center; color: #6b7280; font-size: 12px; }
-    .unsubscribe { color: #9ca3af; text-decoration: none; }
+    .section-title { 
+      font-size: 20px; 
+      font-weight: 700; 
+      margin-bottom: 20px; 
+      color: #ffcc00; 
+      border-bottom: 2px solid #9c4dcc; 
+      padding-bottom: 12px; 
+      display: block;
+    }
+    
+    /* Cards */
+    .card { 
+      margin-bottom: 16px; 
+      padding: 20px; 
+      background: linear-gradient(145deg, #1a1a1d 0%, #16161a 100%);
+      border-radius: 12px; 
+      border: 1px solid #2a2a2f;
+      transition: all 0.3s ease;
+    }
+    .card:hover { 
+      border-color: #9c4dcc; 
+      box-shadow: 0 8px 25px rgba(156, 77, 204, 0.15);
+    }
+    
+    /* Card Links */
+    .card-link { 
+      text-decoration: none; 
+      color: inherit; 
+      display: block;
+    }
+    .card-link:hover .card-title { color: #ffcc00; }
+    
+    .card-title { 
+      font-weight: 700; 
+      margin-bottom: 8px; 
+      color: #ffffff; 
+      font-size: 16px;
+      line-height: 1.4;
+      transition: color 0.3s ease;
+    }
+    .card-summary { 
+      color: #b8b8b8; 
+      font-size: 14px; 
+      line-height: 1.5; 
+      margin: 0;
+    }
+    
+    /* Stats */
+    .stats-container { 
+      background: linear-gradient(145deg, #1a1a1d 0%, #16161a 100%);
+      border-radius: 12px;
+      border: 1px solid #2a2a2f;
+      padding: 24px;
+    }
+    .stats-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 20px; 
+    }
+    .stat-item { 
+      text-align: center; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #9c4dcc 0%, #ffcc00 100%);
+      border-radius: 8px; 
+      color: #0a0a0b;
+    }
+    .stat-number { 
+      font-size: 32px; 
+      font-weight: 900; 
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label { 
+      font-size: 12px; 
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* CTA Section */
+    .cta { 
+      text-align: center; 
+      margin: 40px 0; 
+      padding: 32px 24px;
+      background: linear-gradient(145deg, #1a1a1d 0%, #16161a 100%);
+      border-radius: 12px;
+      border: 1px solid #2a2a2f;
+    }
+    .cta-button { 
+      display: inline-block; 
+      padding: 16px 32px; 
+      background: linear-gradient(135deg, #9c4dcc 0%, #ffcc00 100%); 
+      color: #0a0a0b; 
+      text-decoration: none; 
+      border-radius: 8px; 
+      font-weight: 700; 
+      font-size: 16px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .cta-button:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 8px 25px rgba(156, 77, 204, 0.3);
+    }
+    
+    /* Stats CTA */
+    .stats-cta { 
+      margin-top: 20px; 
+      text-align: center; 
+    }
+    .stats-cta-link { 
+      display: inline-block; 
+      color: #9c4dcc; 
+      text-decoration: none; 
+      font-weight: 600; 
+      font-size: 14px;
+      padding: 8px 16px;
+      border: 1px solid #9c4dcc;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    .stats-cta-link:hover { 
+      background-color: #9c4dcc; 
+      color: #ffffff; 
+    }
+    
+    /* Footer */
+    .footer { 
+      background-color: #0a0a0b; 
+      padding: 32px 24px; 
+      text-align: center; 
+      color: #888888; 
+      font-size: 12px;
+      border-top: 1px solid #2a2a2f;
+    }
+    .footer p { margin: 8px 0; }
+    .unsubscribe { 
+      color: #888888; 
+      text-decoration: underline; 
+      font-weight: 500;
+    }
+    .unsubscribe:hover { color: #aaaaaa; }
+    
+    /* Mobile Responsive */
+    @media only screen and (max-width: 480px) {
+      .container { margin: 0; }
+      .header { padding: 24px 16px; }
+      .content { padding: 16px; }
+      .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+      .cta { padding: 24px 16px; }
+      .card { padding: 16px; }
+      .header h1 { font-size: 24px; }
+      .stat-number { font-size: 28px; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🎵 MusicScan Dagelijkse Update</h1>
-      <p>Hallo ${firstName}! Hier is wat er vandaag gebeurt in de muziekwereld.</p>
-    </div>
-    
-    <div class="content">
-      ${data.news.length > 0 ? `
-      <div class="section">
-        <h2 class="section-title">🎵 Muzieknieuws</h2>
-        ${data.news.map(item => `
-          <div class="news-item">
-            <div class="news-title">${item.title || 'Nieuw Muzieknieuws'}</div>
-            <div class="news-summary">${item.summary || item.content || 'Interessant muzieuws van vandaag'}</div>
+  <table role="presentation" width="100%" style="background-color: #0a0a0b;">
+    <tr>
+      <td align="center">
+        <div class="container">
+          <div class="header">
+            <h1>🎵 MusicScan Dagelijkse Update</h1>
+            <p>Hallo ${firstName}! Hier is wat er vandaag gebeurt in de muziekwereld.</p>
           </div>
-        `).join('')}
-      </div>
-      ` : ''}
-
-      ${data.releases.length > 0 ? `
-      <div class="section">
-        <h2 class="section-title">🆕 Nieuwe Releases</h2>
-        ${data.releases.map(release => `
-          <div class="news-item">
-            <div class="news-title">${release.title}</div>
-            <div class="news-summary">${release.summary}</div>
-          </div>
-        `).join('')}
-      </div>
-      ` : ''}
-
-      ${data.blogs.length > 0 ? `
-      <div class="section">
-        <h2 class="section-title">📝 Nieuwe Community Blogs</h2>
-        ${data.blogs.map(blog => {
-          const frontmatter = blog.yaml_frontmatter || {};
-          return `
-            <div class="blog-item">
-              <div class="blog-title">${frontmatter.title || 'Nieuwe Blog Post'}</div>
-              <div class="news-summary">Door een community member - ${frontmatter.artist || 'Onbekende artiest'}</div>
+          
+          <div class="content">
+            ${data.news.length > 0 ? `
+            <div class="section">
+              <h2 class="section-title">🎵 Muzieknieuws</h2>
+              ${data.news.map(item => `
+                <a href="${baseUrl}/music-news" class="card-link">
+                  <div class="card">
+                    <div class="card-title">${item.title || 'Nieuw Muzieknieuws'}</div>
+                    <p class="card-summary">${item.summary || item.content || 'Interessant muzieknieuws van vandaag'}</p>
+                  </div>
+                </a>
+              `).join('')}
+              <div style="text-align: center; margin-top: 20px;">
+                <a href="${baseUrl}/music-news" style="color: #9c4dcc; text-decoration: none; font-weight: 600;">→ Bekijk al het muzieknieuws</a>
+              </div>
             </div>
-          `;
-        }).join('')}
-      </div>
-      ` : ''}
+            ` : ''}
 
-      <div class="section">
-        <h2 class="section-title">📊 Community Activiteit</h2>
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-number">${data.uploads}</div>
-            <div class="stat-label">Nieuwe Uploads</div>
+            ${data.releases.length > 0 ? `
+            <div class="section">
+              <h2 class="section-title">🆕 Nieuwe Releases</h2>
+              ${data.releases.map(release => `
+                <a href="${baseUrl}/music-news" class="card-link">
+                  <div class="card">
+                    <div class="card-title">${release.title}</div>
+                    <p class="card-summary">${release.summary}</p>
+                  </div>
+                </a>
+              `).join('')}
+              <div style="text-align: center; margin-top: 20px;">
+                <a href="${baseUrl}/music-news" style="color: #9c4dcc; text-decoration: none; font-weight: 600;">→ Ontdek alle nieuwe releases</a>
+              </div>
+            </div>
+            ` : ''}
+
+            ${data.blogs.length > 0 ? `
+            <div class="section">
+              <h2 class="section-title">📝 Nieuwe Community Blogs</h2>
+              ${data.blogs.map(blog => {
+                const frontmatter = blog.yaml_frontmatter || {};
+                const blogUrl = `${baseUrl}/plaat-verhaal/${blog.slug}`;
+                return `
+                  <a href="${blogUrl}" class="card-link">
+                    <div class="card">
+                      <div class="card-title">${frontmatter.title || 'Nieuwe Blog Post'}</div>
+                      <p class="card-summary">Door een community member - ${frontmatter.artist || 'Onbekende artiest'}</p>
+                    </div>
+                  </a>
+                `;
+              }).join('')}
+              <div style="text-align: center; margin-top: 20px;">
+                <a href="${baseUrl}/plaat-verhaal" style="color: #9c4dcc; text-decoration: none; font-weight: 600;">→ Lees alle community verhalen</a>
+              </div>
+            </div>
+            ` : ''}
+
+            <div class="section">
+              <h2 class="section-title">📊 Community Activiteit</h2>
+              <div class="stats-container">
+                <div class="stats-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">${data.uploads}</div>
+                    <div class="stat-label">Nieuwe Uploads</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">${data.newUsers}</div>
+                    <div class="stat-label">Nieuwe Gebruikers</div>
+                  </div>
+                </div>
+                <div class="stats-cta">
+                  <a href="${baseUrl}/dashboard" class="stats-cta-link">Bekijk je Dashboard</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="cta">
+              <h3 style="margin: 0 0 16px 0; color: #ffffff; font-size: 18px;">Klaar om je collectie te scannen?</h3>
+              <a href="${baseUrl}" class="cta-button">Ga naar MusicScan</a>
+            </div>
           </div>
-          <div class="stat-item">
-            <div class="stat-number">${data.newUsers}</div>
-            <div class="stat-label">Nieuwe Gebruikers</div>
+
+          <div class="footer">
+            <p>Je ontvangt deze email omdat je ingeschreven bent voor dagelijkse updates van MusicScan.</p>
+            <p><a href="${unsubscribeUrl}" class="unsubscribe">Uitschrijven</a> | MusicScan Team</p>
           </div>
         </div>
-      </div>
-
-      <div class="cta">
-        <a href="https://musicscan.ai" class="cta-button">Bekijk MusicScan App</a>
-      </div>
-    </div>
-
-    <div class="footer">
-      <p>Je ontvangt deze email omdat je ingeschreven bent voor dagelijkse updates van MusicScan.</p>
-      <p><a href="${unsubscribeUrl}" class="unsubscribe">Uitschrijven</a> | MusicScan Team</p>
-    </div>
-  </div>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `;

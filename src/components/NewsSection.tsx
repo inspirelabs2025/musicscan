@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Music, Disc3, Newspaper, ArrowRight } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Music, Disc3, Newspaper, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import { useDiscogsNews } from "@/hooks/useNewsCache";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +65,7 @@ const fetchBlogPosts = async (): Promise<BlogPost[]> => {
 
 export const NewsSection = () => {
   const [newsSource, setNewsSource] = useState<'discogs' | 'perplexity'>('discogs');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Use the cached hooks for different sources
   const { data: discogsReleases = [], isLoading: isLoadingDiscogs, error: discogsError } = useDiscogsNews();
@@ -148,84 +150,214 @@ export const NewsSection = () => {
         )}
 
         {!loading && !error && newsSource === 'discogs' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(discogsReleases as any[]).map((release: any) => (
-              <Card key={release.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg line-clamp-1">{release.title || 'Onbekende titel'}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {release.artist || 'Onbekende artiest'} • {release.year || 'Jaar onbekend'}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  {(release.stored_image || release.thumb || release.artwork) && (
-                    <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                      <img 
-                        src={release.stored_image || release.thumb || release.artwork} 
-                        alt={`${release.title} cover`} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          // Fallback to original thumb if stored image fails
-                          if (release.stored_image && e.currentTarget.src === release.stored_image) {
-                            e.currentTarget.src = release.thumb || release.artwork || '';
-                          }
-                        }}
-                      />
+          <div>
+            {/* Initial 3 items */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {(discogsReleases as any[]).slice(0, 3).map((release: any) => (
+                <Card key={release.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg line-clamp-1">{release.title || 'Onbekende titel'}</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {release.artist || 'Onbekende artiest'} • {release.year || 'Jaar onbekend'}
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    {(release.stored_image || release.thumb || release.artwork) && (
+                      <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                        <img 
+                          src={release.stored_image || release.thumb || release.artwork} 
+                          alt={`${release.title} cover`} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            // Fallback to original thumb if stored image fails
+                            if (release.stored_image && e.currentTarget.src === release.stored_image) {
+                              e.currentTarget.src = release.thumb || release.artwork || '';
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      {release.format && Array.isArray(release.format) && release.format.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Format: {release.format.join(', ')}
+                        </p>
+                      )}
+                      {release.genre && Array.isArray(release.genre) && release.genre.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Genre: {release.genre.slice(0, 2).join(', ')}
+                        </p>
+                      )}
                     </div>
-                  )}
-                  <div className="space-y-2">
-                    {release.format && Array.isArray(release.format) && release.format.length > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Format: {release.format.join(', ')}
-                      </p>
-                    )}
-                    {release.genre && Array.isArray(release.genre) && release.genre.length > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Genre: {release.genre.slice(0, 2).join(', ')}
-                      </p>
-                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Collapsible section for remaining items */}
+            {(discogsReleases as any[]).length > 3 && (
+              <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+                <CollapsibleContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                    {(discogsReleases as any[]).slice(3).map((release: any) => (
+                      <Card key={release.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg line-clamp-1">{release.title || 'Onbekende titel'}</CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            {release.artist || 'Onbekende artiest'} • {release.year || 'Jaar onbekend'}
+                          </p>
+                        </CardHeader>
+                        <CardContent>
+                          {(release.stored_image || release.thumb || release.artwork) && (
+                            <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                              <img 
+                                src={release.stored_image || release.thumb || release.artwork} 
+                                alt={`${release.title} cover`} 
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                onError={(e) => {
+                                  // Fallback to original thumb if stored image fails
+                                  if (release.stored_image && e.currentTarget.src === release.stored_image) {
+                                    e.currentTarget.src = release.thumb || release.artwork || '';
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
+                          <div className="space-y-2">
+                            {release.format && Array.isArray(release.format) && release.format.length > 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                Format: {release.format.join(', ')}
+                              </p>
+                            )}
+                            {release.genre && Array.isArray(release.genre) && release.genre.length > 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                Genre: {release.genre.slice(0, 2).join(', ')}
+                              </p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </CollapsibleContent>
+                
+                <div className="flex justify-center mt-8">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      {isExpanded ? (
+                        <>
+                          Toon minder <ChevronUp className="w-4 h-4" />
+                        </>
+                      ) : (
+                        <>
+                          Toon meer ({(discogsReleases as any[]).length - 3} meer) <ChevronDown className="w-4 h-4" />
+                        </>
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+              </Collapsible>
+            )}
           </div>
         )}
 
         {!loading && !error && newsSource === 'perplexity' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {blogPosts.map((post: BlogPost) => (
-              <Card key={post.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg line-clamp-2">{post.title}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {post.source} • {new Date(post.published_at).toLocaleDateString('nl-NL')}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  {post.image_url && (
-                    <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                      <img 
-                        src={post.image_url} 
-                        alt={post.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+          <div>
+            {/* Initial 3 items */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {blogPosts.slice(0, 3).map((post: BlogPost) => (
+                <Card key={post.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg line-clamp-2">{post.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {post.source} • {new Date(post.published_at).toLocaleDateString('nl-NL')}
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    {post.image_url && (
+                      <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                        <img 
+                          src={post.image_url} 
+                          alt={post.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                        {post.category}
+                      </span>
+                      <Link 
+                        to={`/nieuws/${post.slug}`}
+                        className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm group-hover:gap-2 transition-all duration-200"
+                      >
+                        Lees meer <ArrowRight className="w-3 h-3" />
+                      </Link>
                     </div>
-                  )}
-                  <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                      {post.category}
-                    </span>
-                    <Link 
-                      to={`/nieuws/${post.slug}`}
-                      className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm group-hover:gap-2 transition-all duration-200"
-                    >
-                      Lees meer <ArrowRight className="w-3 h-3" />
-                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Collapsible section for remaining items */}
+            {blogPosts.length > 3 && (
+              <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+                <CollapsibleContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                    {blogPosts.slice(3).map((post: BlogPost) => (
+                      <Card key={post.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg line-clamp-2">{post.title}</CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            {post.source} • {new Date(post.published_at).toLocaleDateString('nl-NL')}
+                          </p>
+                        </CardHeader>
+                        <CardContent>
+                          {post.image_url && (
+                            <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                              <img 
+                                src={post.image_url} 
+                                alt={post.title} 
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                          )}
+                          <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                              {post.category}
+                            </span>
+                            <Link 
+                              to={`/nieuws/${post.slug}`}
+                              className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm group-hover:gap-2 transition-all duration-200"
+                            >
+                              Lees meer <ArrowRight className="w-3 h-3" />
+                            </Link>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </CollapsibleContent>
+                
+                <div className="flex justify-center mt-8">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      {isExpanded ? (
+                        <>
+                          Toon minder <ChevronUp className="w-4 h-4" />
+                        </>
+                      ) : (
+                        <>
+                          Toon meer ({blogPosts.length - 3} meer) <ChevronDown className="w-4 h-4" />
+                        </>
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+              </Collapsible>
+            )}
           </div>
         )}
       </div>

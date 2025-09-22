@@ -547,9 +547,12 @@ export type Database = {
           matrix_image: string | null
           matrix_number: string | null
           median_price: number | null
+          order_id: string | null
           release_id: string | null
           shop_description: string | null
           side: string | null
+          sold_at: string | null
+          sold_to: string | null
           stamper_codes: string | null
           style: string[] | null
           title: string | null
@@ -591,9 +594,12 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          order_id?: string | null
           release_id?: string | null
           shop_description?: string | null
           side?: string | null
+          sold_at?: string | null
+          sold_to?: string | null
           stamper_codes?: string | null
           style?: string[] | null
           title?: string | null
@@ -635,9 +641,12 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          order_id?: string | null
           release_id?: string | null
           shop_description?: string | null
           side?: string | null
+          sold_at?: string | null
+          sold_to?: string | null
           stamper_codes?: string | null
           style?: string[] | null
           title?: string | null
@@ -1941,6 +1950,148 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_data: Json | null
+          item_id: string
+          item_type: string
+          order_id: string
+          price: number
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_data?: Json | null
+          item_id: string
+          item_type: string
+          order_id: string
+          price: number
+          quantity?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_data?: Json | null
+          item_id?: string
+          item_type?: string
+          order_id?: string
+          price?: number
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "shop_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_orders: {
+        Row: {
+          buyer_email: string | null
+          buyer_id: string
+          buyer_name: string | null
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          payment_status: string
+          seller_id: string
+          shipping_address: Json | null
+          shipping_cost: number | null
+          status: string
+          stripe_payment_intent_id: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          buyer_email?: string | null
+          buyer_id: string
+          buyer_name?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          payment_status?: string
+          seller_id: string
+          shipping_address?: Json | null
+          shipping_cost?: number | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          buyer_email?: string | null
+          buyer_id?: string
+          buyer_name?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          payment_status?: string
+          seller_id?: string
+          shipping_address?: Json | null
+          shipping_cost?: number | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shop_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          order_id: string
+          payment_method: string | null
+          status: string
+          stripe_charge_id: string | null
+          stripe_payment_intent_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id: string
+          payment_method?: string | null
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id?: string
+          payment_method?: string | null
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "shop_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_events: {
         Row: {
           created_at: string
@@ -2648,8 +2799,11 @@ export type Database = {
           matrix_image: string | null
           matrix_number: string | null
           median_price: number | null
+          order_id: string | null
           release_id: string | null
           shop_description: string | null
+          sold_at: string | null
+          sold_to: string | null
           style: string[] | null
           title: string | null
           updated_at: string
@@ -2688,8 +2842,11 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          order_id?: string | null
           release_id?: string | null
           shop_description?: string | null
+          sold_at?: string | null
+          sold_to?: string | null
           style?: string[] | null
           title?: string | null
           updated_at?: string
@@ -2728,8 +2885,11 @@ export type Database = {
           matrix_image?: string | null
           matrix_number?: string | null
           median_price?: number | null
+          order_id?: string | null
           release_id?: string | null
           shop_description?: string | null
+          sold_at?: string | null
+          sold_to?: string | null
           style?: string[] | null
           title?: string | null
           updated_at?: string

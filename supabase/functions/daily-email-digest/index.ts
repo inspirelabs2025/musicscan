@@ -318,26 +318,9 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
           </div>
           
           <div class="content">
-            ${data.news.length > 0 ? `
-            <div class="section">
-              <h2 class="section-title">🎵 Muzieknieuws</h2>
-              ${data.news.map(item => `
-                <a href="${baseUrl}/news" class="card-link">
-                  <div class="card">
-                    <div class="card-title">${item.title || 'Nieuw Muzieknieuws'}</div>
-                    <p class="card-summary">${item.summary || item.content || 'Interessant muzieknieuws van vandaag'}</p>
-                  </div>
-                </a>
-              `).join('')}
-              <div style="text-align: center; margin-top: 20px;">
-                <a href="${baseUrl}/news" style="color: #9c4dcc; text-decoration: none; font-weight: 600;">→ Bekijk al het muzieknieuws</a>
-              </div>
-            </div>
-            ` : ''}
-
             ${data.releases.length > 0 ? `
             <div class="section">
-              <h2 class="section-title">🆕 Nieuwe Releases</h2>
+              <h2 class="section-title">🆕 Nieuwe Vinyl Releases</h2>
               ${data.releases.map(release => {
                 const releaseUrl = release.slug ? `${baseUrl}/nieuws/${release.slug}` : `${baseUrl}/news`;
                 return `
@@ -351,6 +334,23 @@ function generateEmailHTML(firstName: string, data: DailyDigestData, userId: str
               }).join('')}
               <div style="text-align: center; margin-top: 20px;">
                 <a href="${baseUrl}/news" style="color: #9c4dcc; text-decoration: none; font-weight: 600;">→ Ontdek alle nieuwe releases</a>
+              </div>
+            </div>
+            ` : ''}
+
+            ${data.news.length > 0 ? `
+            <div class="section">
+              <h2 class="section-title">📰 Muzieknieuws</h2>
+              ${data.news.map(item => `
+                <a href="${baseUrl}/news" class="card-link">
+                  <div class="card">
+                    <div class="card-title">${item.title || 'Nieuw Muzieknieuws'}</div>
+                    <p class="card-summary">${item.summary || item.content || 'Interessant muzieknieuws van vandaag'}</p>
+                  </div>
+                </a>
+              `).join('')}
+              <div style="text-align: center; margin-top: 20px;">
+                <a href="${baseUrl}/news" style="color: #9c4dcc; text-decoration: none; font-weight: 600;">→ Bekijk al het muzieknieuws</a>
               </div>
             </div>
             ` : ''}

@@ -69,42 +69,6 @@ export const HeroSection = () => {
           </Card>
         </div>
 
-        {/* How it works section */}
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">
-            Zo werkt het in 3 eenvoudige stappen
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center group">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Camera className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">1. Foto's maken</h3>
-              <p className="text-muted-foreground">
-                Upload duidelijke foto's van je vinyl of CD. Voor vinyl: voorkant, achterkant en matrix. Voor CD's: voorkant, achterkant, barcode en matrix.
-              </p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Brain className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">2. AI Analyse</h3>
-              <p className="text-muted-foreground">
-                Onze geavanceerde AI analyseert je foto's en herkent automatisch artiest, titel, label, catalogusnummer en andere belangrijke details.
-              </p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                <TrendingUp className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">3. Prijscheck</h3>
-              <p className="text-muted-foreground">Krijg direct de  actuele waarde, inclusief adviesprijs op basis van conditie en marktwaarde.</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>;
 };

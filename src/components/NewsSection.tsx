@@ -8,6 +8,9 @@ import { useDiscogsNews } from "@/hooks/useNewsCache";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import blogPlaceholder1 from "@/assets/blog-placeholder-1.jpg";
+import blogPlaceholder2 from "@/assets/blog-placeholder-2.jpg";
+import blogPlaceholder3 from "@/assets/blog-placeholder-3.jpg";
 
 interface BlogPost {
   id: string;
@@ -19,6 +22,13 @@ interface BlogPost {
   slug: string;
   image_url?: string;
 }
+
+// Helper function to get a placeholder image based on blog post ID
+const getPlaceholderImage = (postId: string) => {
+  const placeholders = [blogPlaceholder1, blogPlaceholder2, blogPlaceholder3];
+  const index = postId.charCodeAt(0) % placeholders.length;
+  return placeholders[index];
+};
 
 const fetchBlogPosts = async (): Promise<BlogPost[]> => {
   // First try to get from database
@@ -282,15 +292,13 @@ export const NewsSection = () => {
                     </p>
                   </CardHeader>
                   <CardContent>
-                    {post.image_url && (
-                      <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                        <img 
-                          src={post.image_url} 
-                          alt={post.title} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    )}
+                    <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                      <img 
+                        src={post.image_url || getPlaceholderImage(post.id)} 
+                        alt={post.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
                     <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
@@ -322,15 +330,13 @@ export const NewsSection = () => {
                           </p>
                         </CardHeader>
                         <CardContent>
-                          {post.image_url && (
-                            <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                              <img 
-                                src={post.image_url} 
-                                alt={post.title} 
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            </div>
-                          )}
+                          <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                            <img 
+                              src={post.image_url || getPlaceholderImage(post.id)} 
+                              alt={post.title} 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
                           <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
                           <div className="flex items-center justify-between">
                             <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
@@ -382,15 +388,13 @@ export const NewsSection = () => {
                     </p>
                   </CardHeader>
                   <CardContent>
-                    {post.image_url && (
-                      <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                        <img 
-                          src={post.image_url} 
-                          alt={post.title} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    )}
+                    <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                      <img 
+                        src={post.image_url || getPlaceholderImage(post.id)} 
+                        alt={post.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
                     <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">
@@ -422,15 +426,13 @@ export const NewsSection = () => {
                           </p>
                         </CardHeader>
                         <CardContent>
-                          {post.image_url && (
-                            <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                              <img 
-                                src={post.image_url} 
-                                alt={post.title} 
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            </div>
-                          )}
+                          <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                            <img 
+                              src={post.image_url || getPlaceholderImage(post.id)} 
+                              alt={post.title} 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
                           <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
                           <div className="flex items-center justify-between">
                             <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">

@@ -47,7 +47,7 @@ serve(async (req) => {
           .select('*')
           .eq('process_type', 'blog_generation')
           .eq('id', pendingItems[0].batch_id)
-          .single();
+          .maybeSingle();
           
         if (batchWithPendingItems) {
           await supabase
@@ -62,6 +62,18 @@ serve(async (req) => {
           
           batchStatus = { ...batchWithPendingItems, status: 'active' };
           console.log('✅ Reactivated batch:', batchStatus.id);
+        } else {
+          // Orphaned queue items - batch status record is missing
+          console.log('💀 Found orphaned queue items - cleaning up');
+          await supabase
+            .from('batch_queue_items')
+            .update({ 
+              status: 'failed',
+              error_message: 'Missing batch_status record - orphaned item',
+              updated_at: new Date().toISOString()
+            })
+            .eq('batch_id', pendingItems[0].batch_id)
+            .eq('status', 'pending');
         }
       }
       
@@ -152,11 +164,15 @@ serve(async (req) => {
       })
       .eq('id', nextItem.id);
 
-    // Update batch status with current item
+    // Update batch status with current item info
     await supabase
       .from('batch_processing_status')
       .update({ 
-        current_item: nextItem.item_id,
+        current_items: {
+          id: nextItem.item_id,
+          type: nextItem.item_type,
+          started_at: new Date().toISOString()
+        },
         updated_at: new Date().toISOString()
       })
       .eq('id', batchStatus.id);

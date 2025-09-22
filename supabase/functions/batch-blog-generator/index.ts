@@ -61,20 +61,31 @@ serve(async (req) => {
       
       console.log(`🚀 Starting nieuwe batch with ${items.length} items, batch ID: ${batchId}`);
       
-      await updateBatchStatus({
-        id: batchId,
-        status: 'active',
-        total_items: items.length,
-        processed_items: 0,
-        successful_items: 0,
-        failed_items: 0,
-        started_at: new Date().toISOString(),
-        current_item: null,
-        failed_item_details: [],
-        queue_size: items.length,
-        last_heartbeat: new Date().toISOString(),
-        auto_mode: true
-      });
+      // Insert new batch status record with error checking
+      const { error: batchError } = await supabase
+        .from('batch_processing_status')
+        .insert({
+          id: batchId,
+          process_type: 'blog_generation',
+          status: 'active',
+          total_items: items.length,
+          processed_items: 0,
+          successful_items: 0,
+          failed_items: 0,
+          started_at: new Date().toISOString(),
+          current_items: null,
+          failed_details: [],
+          queue_size: items.length,
+          last_heartbeat: new Date().toISOString(),
+          auto_mode: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (batchError) {
+        console.error('❌ Failed to create batch status:', batchError);
+        throw new Error(`Failed to create batch status: ${batchError.message}`);
+      }
 
       console.log(`✅ Batch status initialized for batch ${batchId}`);
 
@@ -254,8 +265,8 @@ serve(async (req) => {
         // Create new batch for retry
         const retryBatchId = crypto.randomUUID();
         
-        // Insert new batch status record directly (don't update existing)
-        await supabase
+        // Insert new batch status record with error checking  
+        const { error: retryBatchError } = await supabase
           .from('batch_processing_status')
           .insert({
             id: retryBatchId,
@@ -266,14 +277,19 @@ serve(async (req) => {
             successful_items: 0,
             failed_items: 0,
             started_at: new Date().toISOString(),
-            current_item: null,
-            failed_item_details: [],
+            current_items: null,
+            failed_details: [],
             queue_size: failedItems.length,
             last_heartbeat: new Date().toISOString(),
             auto_mode: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
+
+        if (retryBatchError) {
+          console.error('❌ Failed to create retry batch status:', retryBatchError);
+          throw new Error(`Failed to create retry batch status: ${retryBatchError.message}`);
+        }
 
         // Create queue items for retry with reset attempts
         const retryQueueItems = failedItems.map((item) => ({

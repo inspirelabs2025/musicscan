@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import Home from "./pages/Home";
 import Scanner from "./pages/Scanner";
 import Scan from "./pages/Scan";
@@ -238,7 +239,8 @@ const App = () => {
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
+              <Footer />
+           </BrowserRouter>
         </ErrorBoundary>
       </TooltipProvider>
     </AuthProvider>

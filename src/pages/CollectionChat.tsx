@@ -9,6 +9,9 @@ import { MessageCircle, Send, Brain, Music, TrendingUp, Loader2 } from 'lucide-r
 import { useCollectionAIAnalysis } from '@/hooks/useCollectionAIAnalysis';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/Navigation';
+import { useUsageTracking } from '@/hooks/useUsageTracking';
+import { UpgradePrompt } from '@/components/UpgradePrompt';
+import { toast } from '@/hooks/use-toast';
 
 interface ChatMessage {
   id: string;
@@ -27,6 +30,10 @@ const CollectionChat = () => {
   const [sessionId] = useState(() => crypto.randomUUID());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { data: analysisData } = useCollectionAIAnalysis();
+  const { checkUsageLimit, incrementUsage } = useUsageTracking();
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<'usage_limit' | 'feature_limit'>('usage_limit');
+  const [usageInfo, setUsageInfo] = useState<{current: number, limit: number, plan: string} | undefined>();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -56,6 +63,29 @@ const CollectionChat = () => {
   const sendMessage = async () => {
     if (!input.trim()) return;
 
+    // Check AI chat usage limit before sending
+    try {
+      const usageCheck = await checkUsageLimit('ai_chat');
+      if (!usageCheck.can_use) {
+        setUsageInfo({
+          current: usageCheck.current_usage,
+          limit: usageCheck.limit_amount || 0,
+          plan: usageCheck.plan_name
+        });
+        setUpgradeReason('usage_limit');
+        setShowUpgradePrompt(true);
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to check usage limit:', error);
+      toast({
+        title: "Fout bij Controle",
+        description: "Kon gebruikslimiet niet controleren. Probeer het opnieuw.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       message: input,
@@ -76,6 +106,13 @@ const CollectionChat = () => {
       });
 
       if (error) throw error;
+
+      // Increment usage after successful AI response
+      try {
+        await incrementUsage('ai_chat', 1);
+      } catch (error) {
+        console.error('Failed to increment usage:', error);
+      }
 
       // Reload messages to get the AI response
       await loadMessages();
@@ -106,6 +143,27 @@ const CollectionChat = () => {
 
   const startAnalysis = async () => {
     setIsLoading(true);
+    
+    // Check AI chat usage limit before starting analysis
+    try {
+      const usageCheck = await checkUsageLimit('ai_chat');
+      if (!usageCheck.can_use) {
+        setUsageInfo({
+          current: usageCheck.current_usage,
+          limit: usageCheck.limit_amount || 0,
+          plan: usageCheck.plan_name
+        });
+        setUpgradeReason('usage_limit');
+        setShowUpgradePrompt(true);
+        setIsLoading(false);
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to check usage limit:', error);
+      setIsLoading(false);
+      return;
+    }
+    
     const analysisMessage = 'Geef me een uitgebreide AI analyse van mijn hele muziekcollectie met persoonlijke inzichten, waarde-analyse, en aanbevelingen.';
     
     const userMessage: ChatMessage = {
@@ -124,6 +182,13 @@ const CollectionChat = () => {
           session_id: sessionId
         }
       });
+
+      // Increment usage after successful analysis
+      try {
+        await incrementUsage('ai_chat', 1);
+      } catch (error) {
+        console.error('Failed to increment usage:', error);
+      }
 
       await loadMessages();
       
@@ -339,6 +404,24 @@ const CollectionChat = () => {
                           size="sm"
                           className="w-full text-left justify-start h-auto p-4 text-wrap bg-muted/30 hover:bg-muted/50 border border-border/50 rounded-2xl transition-all duration-200 shadow-sm hover:shadow-md"
                           onClick={async () => {
+                            // Check AI chat usage limit before sending
+                            try {
+                              const usageCheck = await checkUsageLimit('ai_chat');
+                              if (!usageCheck.can_use) {
+                                setUsageInfo({
+                                  current: usageCheck.current_usage,
+                                  limit: usageCheck.limit_amount || 0,
+                                  plan: usageCheck.plan_name
+                                });
+                                setUpgradeReason('usage_limit');
+                                setShowUpgradePrompt(true);
+                                return;
+                              }
+                            } catch (error) {
+                              console.error('Failed to check usage limit:', error);
+                              return;
+                            }
+                            
                             setInput(question);
                             
                             const userMessage: ChatMessage = {
@@ -359,6 +442,13 @@ const CollectionChat = () => {
                                   session_id: sessionId
                                 }
                               });
+
+                              // Increment usage after successful response
+                              try {
+                                await incrementUsage('ai_chat', 1);
+                              } catch (error) {
+                                console.error('Failed to increment usage:', error);
+                              }
 
                               await loadMessages();
                               setSuggestedQuestions(getRandomSuggestedQuestions());
@@ -409,6 +499,24 @@ const CollectionChat = () => {
                               size="sm"
                               className="w-full text-left justify-start h-auto p-3 text-wrap bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 border border-primary/10 rounded-xl hover-scale transition-all duration-300"
                               onClick={async () => {
+                                // Check AI chat usage limit before sending
+                                try {
+                                  const usageCheck = await checkUsageLimit('ai_chat');
+                                  if (!usageCheck.can_use) {
+                                    setUsageInfo({
+                                      current: usageCheck.current_usage,
+                                      limit: usageCheck.limit_amount || 0,
+                                      plan: usageCheck.plan_name
+                                    });
+                                    setUpgradeReason('usage_limit');
+                                    setShowUpgradePrompt(true);
+                                    return;
+                                  }
+                                } catch (error) {
+                                  console.error('Failed to check usage limit:', error);
+                                  return;
+                                }
+                                
                                 setInput(question);
                                 
                                 const userMessage: ChatMessage = {
@@ -429,6 +537,13 @@ const CollectionChat = () => {
                                       session_id: sessionId
                                     }
                                   });
+
+                                  // Increment usage after successful response
+                                  try {
+                                    await incrementUsage('ai_chat', 1);
+                                  } catch (error) {
+                                    console.error('Failed to increment usage:', error);
+                                  }
 
                                   await loadMessages();
                                   setSuggestedQuestions(getRandomSuggestedQuestions());
@@ -479,6 +594,15 @@ const CollectionChat = () => {
             </CardContent>
           </Card>
         </div>
+        
+        {/* Upgrade Prompt */}
+        <UpgradePrompt
+          isOpen={showUpgradePrompt}
+          onClose={() => setShowUpgradePrompt(false)}
+          reason={upgradeReason}
+          currentPlan={usageInfo?.plan || 'free'}
+          usageInfo={usageInfo}
+        />
       </div>
     </div>
   );

@@ -26,6 +26,8 @@ import { DiscogsIdInput } from "@/components/DiscogsIdInput";
 import { SearchingLoadingCard } from "@/components/SearchingLoadingCard";
 import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 
 const BulkerImage = () => {
   const navigate = useNavigate();
@@ -36,6 +38,10 @@ const BulkerImage = () => {
   const isDiscogsRoute = location.pathname === '/scanner/discogs';
   const [state, dispatch] = useReducer(scanReducer, initialScanState);
   const { user } = useAuth();
+  const { checkUsageLimit, incrementUsage } = useUsageTracking();
+  const [showUpgradePrompt, setShowUpgradePrompt] = React.useState(false);
+  const [upgradeReason, setUpgradeReason] = React.useState<'usage_limit' | 'feature_limit'>('usage_limit');
+  const [usageInfo, setUsageInfo] = React.useState<{current: number, limit: number, plan: string} | undefined>();
   
   // Ref to prevent multiple auto-starts
   const autoStartTriggered = useRef(false);
@@ -271,6 +277,29 @@ const BulkerImage = () => {
   const performSave = useCallback(async (condition: string, advicePrice: number) => {
     if ((!analysisResult?.analysis && !state.discogsIdMode) || !state.mediaType) return;
     
+    // Check bulk upload usage limit
+    try {
+      const usageCheck = await checkUsageLimit('bulk_uploads');
+      if (!usageCheck.can_use) {
+        setUsageInfo({
+          current: usageCheck.current_usage,
+          limit: usageCheck.limit_amount || 0,
+          plan: usageCheck.plan_name
+        });
+        setUpgradeReason('usage_limit');
+        setShowUpgradePrompt(true);
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to check usage limit:', error);
+      toast({
+        title: "Fout bij Controle",
+        description: "Kon gebruikslimiet niet controleren. Probeer het opnieuw.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     dispatch({ type: 'SET_IS_SAVING_CONDITION', payload: true });
 
     try {
@@ -368,6 +397,13 @@ const BulkerImage = () => {
       if (error) throw error;
 
       dispatch({ type: 'SET_COMPLETED_SCAN_DATA', payload: data });
+      
+      // Increment usage after successful save
+      try {
+        await incrementUsage('bulk_uploads', 1);
+      } catch (error) {
+        console.error('Failed to increment usage:', error);
+      }
       
       toast({
         title: "Scan Voltooid! ✅",
@@ -870,6 +906,15 @@ const BulkerImage = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        
+        {/* Upgrade Prompt */}
+        <UpgradePrompt
+          isOpen={showUpgradePrompt}
+          onClose={() => setShowUpgradePrompt(false)}
+          reason={upgradeReason}
+          currentPlan={usageInfo?.plan || 'free'}
+          usageInfo={usageInfo}
+        />
       </div>
     </div>
   );

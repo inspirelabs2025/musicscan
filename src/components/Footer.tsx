@@ -15,7 +15,7 @@ export const Footer = () => {
                 <Music className="w-4 h-4 text-white" />
               </div>
               <span className="text-xl font-bold bg-gradient-vinyl bg-clip-text text-transparent">
-                VinylVault
+                MusicScan
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -68,7 +68,12 @@ export const Footer = () => {
               <Link to="/pricing" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 Prijzen
               </Link>
-              <a href="mailto:info@vinylvault.nl" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a
+                href="mailto:info@musicscan.nl"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
                 Contact
               </a>
               <a href="/privacy" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -85,7 +90,7 @@ export const Footer = () => {
         <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           {/* Copyright */}
           <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-            <span>© 2024 VinylVault</span>
+            <span>© 2024 MusicScan</span>
             <span>•</span>
             <span>Gemaakt met</span>
             <Heart className="w-4 h-4 text-red-500 fill-current" />
@@ -95,7 +100,7 @@ export const Footer = () => {
           {/* Social Links */}
           <div className="flex items-center space-x-4">
             <a
-              href="https://twitter.com/vinylvault"
+              href="https://twitter.com/musicscan"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-primary transition-colors"
@@ -104,7 +109,7 @@ export const Footer = () => {
               <Twitter className="w-5 h-5" />
             </a>
             <a
-              href="https://instagram.com/vinylvault"
+              href="https://instagram.com/musicscan"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-primary transition-colors"
@@ -113,7 +118,7 @@ export const Footer = () => {
               <Instagram className="w-5 h-5" />
             </a>
             <a
-              href="https://github.com/vinylvault"
+              href="https://github.com/musicscan"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-primary transition-colors"
@@ -122,7 +127,7 @@ export const Footer = () => {
               <Github className="w-5 h-5" />
             </a>
             <a
-              href="mailto:info@vinylvault.nl"
+              href="mailto:info@musicscan.nl"
               className="text-muted-foreground hover:text-primary transition-colors"
               aria-label="Email"
             >

@@ -195,7 +195,8 @@ export const PlaatVerhaal: React.FC = () => {
 
   const breadcrumbs = [
     { name: 'Home', url: '/' },
-    { name: 'Plaat & Verhaal', url: '/plaat-verhaal' },
+    { name: 'Muziek Nieuws', url: '/news' },
+    { name: 'Album Verhalen', url: '/news?tab=verhalen' },
     { name: `${artist} - ${album}`, url: `/plaat-verhaal/${slug}` }
   ];
 

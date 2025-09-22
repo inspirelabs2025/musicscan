@@ -181,7 +181,7 @@ export const BlogPreviewWidget = () => {
             </Link>
           </Button>
           <Button asChild size="sm" variant="outline" className="flex-1 hover:bg-vinyl-gold/10">
-            <Link to="/music-news">
+            <Link to="/news">
               <Newspaper className="w-4 h-4 mr-2" />
               Meer Nieuws
             </Link>

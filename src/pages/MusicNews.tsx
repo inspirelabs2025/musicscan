@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Music, ArrowRight, Disc3, Newspaper, Search, Filter, Grid, List, Calendar, Star, Eye, FileText, X, RotateCcw, ChevronDown, FilterX } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
+import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 import { useNavigate, Link } from "react-router-dom";
 import { useDiscogsNews, DiscogsRelease } from "@/hooks/useNewsCache";
 import { VerhaalTab } from "@/components/VerhaalTab";
@@ -72,6 +73,9 @@ export default function MusicNews() {
     </div>;
   
   return <div className="min-h-screen bg-background">
+
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Page Header */}

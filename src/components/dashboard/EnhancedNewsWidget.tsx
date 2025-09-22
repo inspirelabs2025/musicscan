@@ -181,7 +181,7 @@ export const EnhancedNewsWidget = () => {
                   </div>
                 ))}
                 <Button asChild size="sm" variant="outline" className="w-full hover:bg-vinyl-purple/10">
-                  <Link to="/music-news">
+                  <Link to="/news">
                     <Disc3 className="w-4 h-4 mr-2" />
                     Alle Nieuwe Releases
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -236,7 +236,7 @@ export const EnhancedNewsWidget = () => {
                   </Link>
                 ))}
                 <Button asChild size="sm" variant="outline" className="w-full hover:bg-vinyl-gold/10">
-                  <Link to="/music-news">
+                  <Link to="/news">
                     <Newspaper className="w-4 h-4 mr-2" />
                     Alle Muzieknieuws
                     <ArrowRight className="w-4 h-4 ml-2" />

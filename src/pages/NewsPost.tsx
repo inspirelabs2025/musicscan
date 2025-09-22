@@ -88,7 +88,7 @@ export const NewsPost = () => {
   }
 
   if (error || !post) {
-    return <Navigate to="/nieuws" replace />;
+    return <Navigate to="/news" replace />;
   }
 
   return (
@@ -96,7 +96,7 @@ export const NewsPost = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Navigation */}
         <div className="mb-8">
-          <Link to="/nieuws">
+          <Link to="/news">
             <Button variant="ghost" className="mb-6 group">
               <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
               Terug naar nieuws
@@ -186,7 +186,7 @@ export const NewsPost = () => {
             <p className="text-sm text-muted-foreground">
               Gepubliceerd op {new Date(post.published_at).toLocaleDateString('nl-NL')}
             </p>
-            <Link to="/nieuws">
+            <Link to="/news">
               <Button variant="outline">
                 Meer muzieklnieuws
               </Button>

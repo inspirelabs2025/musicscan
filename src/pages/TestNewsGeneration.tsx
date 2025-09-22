@@ -37,7 +37,7 @@ export const TestNewsGeneration = () => {
         
         // Refresh the page after a delay to show updated news
         setTimeout(() => {
-          window.location.href = '/nieuws';
+          window.location.href = '/news';
         }, 2000);
       }
     } catch (error: any) {

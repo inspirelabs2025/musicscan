@@ -33,16 +33,20 @@ export const HeroSection = () => {
           
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <Badge variant="secondary" className="px-4 py-2 text-sm">
-              <Camera className="w-4 h-4 mr-2" />
-              Foto analyse
-            </Badge>
-            <Badge variant="secondary" className="px-4 py-2 text-sm">
               <Brain className="w-4 h-4 mr-2" />
-              AI herkenning
+              AI Muziekanalyse
             </Badge>
             <Badge variant="secondary" className="px-4 py-2 text-sm">
-              <DollarSign className="w-4 h-4 mr-2" />
-              Live prijzen
+              <Users className="w-4 h-4 mr-2" />
+              Collectie Chat
+            </Badge>
+            <Badge variant="secondary" className="px-4 py-2 text-sm">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Prijsanalyses
+            </Badge>
+            <Badge variant="secondary" className="px-4 py-2 text-sm">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Muziekverhalen
             </Badge>
           </div>
         </div>

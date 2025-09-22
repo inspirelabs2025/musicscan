@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,19 @@ export default function MyShop() {
     shop_url_slug: shop?.shop_url_slug || "",
     is_public: shop?.is_public || false,
   });
+
+  // Update local state when shop data changes
+  useEffect(() => {
+    if (shop) {
+      setShopSettings({
+        shop_name: shop.shop_name || "",
+        shop_description: shop.shop_description || "",
+        contact_info: shop.contact_info || "",
+        shop_url_slug: shop.shop_url_slug || "",
+        is_public: shop.is_public || false,
+      });
+    }
+  }, [shop]);
 
   const handleShopUpdate = () => {
     updateShop(shopSettings, {

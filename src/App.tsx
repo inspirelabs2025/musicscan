@@ -50,7 +50,8 @@ import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
 import Quiz from "./pages/Quiz";
 import Pricing from "./pages/Pricing";
 import Prestaties from "./pages/Prestaties";
-import OrderSuccess from "./pages/OrderSuccess";
+import { TrackOrder } from "./pages/TrackOrder";
+import { OrderSuccess } from "./pages/OrderSuccess";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -188,6 +189,8 @@ const App = () => {
             <Route path="/shop" element={<Navigate to="/shops" replace />} />
             <Route path="/shop/:shopSlug" element={<PublicShop />} />
             <Route path="/shop/order-success" element={<OrderSuccess />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/track-order" element={<TrackOrder />} />
             <Route path="/collection/:userId" element={<PublicCollection />} />
             <Route path="/album/:albumId" element={
               <ProtectedRoute>

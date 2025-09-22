@@ -1,174 +1,146 @@
-import React from 'react';
-import { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, Package, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useShopOrder } from '@/hooks/useShopOrders';
-import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
+import { useEffect, useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Package, Home, ShoppingBag } from "lucide-react";
+import { useShopOrder } from "@/hooks/useShopOrders";
+import { useGuestOrderTracking } from "@/hooks/useGuestOrderTracking";
+import { useAuth } from "@/contexts/AuthContext";
 
-export default function OrderSuccess() {
-  const navigate = useNavigate();
-  const { order_id } = useParams();
-  const { data: order, isLoading } = useShopOrder(order_id || '');
+export const OrderSuccess = () => {
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('session_id');
+  const orderId = searchParams.get('order_id');
+  const { user } = useAuth();
+  
+  // Use authenticated hook if user is logged in, otherwise use guest tracking
+  const { data: authOrder, isLoading: authLoading } = useShopOrder(orderId || '');
+  const { order: guestOrder, loading: guestLoading, trackOrder } = useGuestOrderTracking();
+  
+  const [guestEmail, setGuestEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!order_id) {
-      navigate('/');
+    // For guest orders, try to get email from session storage or URL
+    if (!user && orderId) {
+      const storedEmail = sessionStorage.getItem('guest-checkout-email');
+      if (storedEmail) {
+        setGuestEmail(storedEmail);
+        trackOrder(orderId, storedEmail);
+        // Clear the email from session storage
+        sessionStorage.removeItem('guest-checkout-email');
+      }
     }
-  }, [order_id, navigate]);
+  }, [orderId, user, trackOrder]);
 
-  if (isLoading) {
+  const order = user ? authOrder : guestOrder;
+  const loading = user ? authLoading : guestLoading;
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
-
-  if (!order) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-        <div className="container mx-auto px-4 py-8">
-          <Card className="max-w-md mx-auto">
-            <CardContent className="text-center py-8">
-              <h1 className="text-xl font-bold text-destructive mb-2">Bestelling niet gevonden</h1>
-              <p className="text-muted-foreground mb-4">We konden je bestelling niet vinden.</p>
-              <Button onClick={() => navigate('/')}>
-                Terug naar home
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  const formatPrice = (price: number) => `€${price.toFixed(2)}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-      <div className="container mx-auto px-4 py-8">
-        <BreadcrumbNavigation />
-        
-        <div className="max-w-2xl mx-auto mt-8">
-          <Card className="mb-8">
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-center mb-4">
-                <CheckCircle className="w-16 h-16 text-green-500" />
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <Card className="text-center">
+          <CardHeader>
+            <div className="flex justify-center mb-4">
+              <CheckCircle className="w-16 h-16 text-green-500" />
+            </div>
+            <CardTitle className="text-2xl text-green-600">
+              {user ? "Bestelling Geplaatst!" : "Gastbestelling Geplaatst!"}
+            </CardTitle>
+            <CardDescription>
+              {user 
+                ? "Je bestelling is succesvol geplaatst en wordt verwerkt."
+                : "Je gastbestelling is succesvol geplaatst. Check je e-mail voor bevestiging."
+              }
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            {orderId && (
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <p className="text-sm text-muted-foreground">Bestelnummer</p>
+                <p className="font-mono text-lg font-semibold">{orderId}</p>
+                {!user && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Bewaar dit nummer om je bestelling te kunnen volgen
+                  </p>
+                )}
               </div>
-              <CardTitle className="text-2xl text-green-600">
-                Betaling Geslaagd!
-              </CardTitle>
-              <p className="text-muted-foreground">
-                Bedankt voor je aankoop. Je bestelling is bevestigd.
-              </p>
-            </CardHeader>
-          </Card>
+            )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="w-5 h-5" />
-                Bestelling Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            {order && (
+              <div className="text-left space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Bestelnummer:</span>
-                  <span className="font-mono text-sm">{order.id}</span>
+                  <span>Status:</span>
+                  <Badge variant="secondary">{order.status}</Badge>
                 </div>
-                
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Status:</span>
-                  <Badge variant="default">{order.status}</Badge>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Besteldatum:</span>
-                  <span className="text-sm">
-                    {new Date(order.created_at).toLocaleDateString('nl-NL')}
+                  <span>Totaal:</span>
+                  <span className="font-semibold text-lg">
+                    €{order.total_amount.toFixed(2)}
                   </span>
                 </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="font-semibold mb-3">Bestelde Items:</h3>
-                  <div className="space-y-3">
-                    {order.order_items?.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg">
-                        <div className="flex-1">
-                          <h4 className="font-medium">
-                            {item.item_data?.artist} - {item.item_data?.title}
-                          </h4>
-                          <div className="flex gap-2 mt-1">
-                            <Badge variant="secondary" className="text-xs">
-                              {item.item_type === 'cd_scan' ? 'CD' : 'VINYL'}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              {item.item_data?.condition_grade}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="font-semibold">{formatPrice(item.price)}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="flex justify-between items-center text-lg font-bold">
-                  <span>Totaal:</span>
-                  <span>{formatPrice(order.total_amount)}</span>
-                </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
 
-          <div className="mt-8 space-y-4">
-            <Card>
-              <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div className="text-left bg-muted/30 p-4 rounded-lg">
                 <h3 className="font-semibold mb-2">Wat gebeurt er nu?</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
+                <ul className="space-y-1 text-sm text-muted-foreground">
                   <li>• Je ontvangt een bevestigingsmail</li>
                   <li>• De verkoper wordt op de hoogte gebracht</li>
-                  <li>• Je kunt de bestelling volgen in je account</li>
+                  {user ? (
+                    <li>• Je kunt de bestelling volgen in je dashboard</li>
+                  ) : (
+                    <li>• Je kunt je bestelling volgen met het bestelnummer en je e-mail</li>
+                  )}
                   <li>• De verkoper neemt contact met je op voor verzending</li>
                 </ul>
-              </CardContent>
-            </Card>
+              </div>
 
-            <div className="flex gap-4">
-              <Button 
-                onClick={() => navigate('/my-orders')} 
-                className="flex-1"
-              >
-                <Package className="w-4 h-4 mr-2" />
-                Mijn Bestellingen
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/shops')} 
-                className="flex-1"
-              >
-                Verder Winkelen
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <div className="flex flex-col gap-3">
+                {user ? (
+                  <Button asChild className="w-full">
+                    <Link to="/dashboard">
+                      <Package className="w-4 h-4 mr-2" />
+                      Ga naar Dashboard
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild className="w-full">
+                    <Link to="/track-order">
+                      <Package className="w-4 h-4 mr-2" />
+                      Bestelling Volgen
+                    </Link>
+                  </Button>
+                )}
+                
+                <Button variant="outline" asChild className="w-full">
+                  <Link to="/shops">
+                    <ShoppingBag className="w-4 h-4 mr-2" />
+                    Verder Winkelen
+                  </Link>
+                </Button>
+
+                <Button variant="ghost" asChild className="w-full">
+                  <Link to="/">
+                    <Home className="w-4 h-4 mr-2" />
+                    Terug naar Home
+                  </Link>
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
-}
+};

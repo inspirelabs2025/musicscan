@@ -57,21 +57,60 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
   };
 
   const handleBuyNow = async () => {
+    // Check if user is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+    
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-shop-payment', {
-        body: {
-          items: [{
-            id: item.id,
-            media_type: item.media_type === 'vinyl' ? 'vinyl' : 'cd'
-          }]
+      if (user) {
+        // Authenticated user - use existing flow
+        const { data, error } = await supabase.functions.invoke('create-shop-payment', {
+          body: {
+            items: [{
+              id: item.id,
+              media_type: item.media_type === 'vinyl' ? 'vinyl' : 'cd'
+            }]
+          }
+        });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          window.open(data.url, '_blank');
+          toast({
+            title: "Betalingslink geopend",
+            description: "Voltooi je betaling in het nieuwe venster.",
+          });
         }
-      });
+      } else {
+        // Guest user - add to cart for guest checkout
+        const price = parseFloat(String(item.marketplace_price || item.calculated_advice_price || '0'));
+        
+        if (price <= 0) {
+          toast({
+            title: "Geen prijs beschikbaar",
+            description: "Neem contact op met de verkoper voor de prijs",
+            variant: "destructive",
+          });
+          return;
+        }
 
-      if (error) throw error;
-
-      if (data?.url) {
-        window.open(data.url, '_blank');
+        const cartItem = {
+          id: item.id,
+          media_type: (item.media_type === 'vinyl' ? 'vinyl' : 'cd') as 'cd' | 'vinyl',
+          artist: item.artist || '',
+          title: item.title || '',
+          price,
+          condition_grade: item.condition_grade || '',
+          seller_id: item.user_id || '',
+          image: getImageUrl()
+        };
+        
+        addToCart(cartItem);
+        toast({
+          title: "Toegevoegd aan winkelwagen",
+          description: "Je kunt afrekenen als gast via de winkelwagen.",
+        });
       }
     } catch (error) {
       toast({

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ShoppingCart, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,23 +7,38 @@ import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useShoppingCart } from '@/hooks/useShoppingCart';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { GuestCheckoutModal } from './GuestCheckoutModal';
 
 export const ShoppingCartWidget = () => {
-  const { items, removeFromCart, getTotalPrice, getItemCount, checkout, isLoading } = useShoppingCart();
+  const { items, removeFromCart, getTotalPrice, getItemCount, checkout, isLoading, clearCart } = useShoppingCart();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [guestCheckoutOpen, setGuestCheckoutOpen] = useState(false);
 
   const handleCheckout = async () => {
-    try {
-      const result = await checkout();
-      if (result?.url) {
-        window.open(result.url, '_blank');
+    if (user) {
+      // Authenticated user checkout
+      try {
+        const result = await checkout();
+        if (result?.url) {
+          window.open(result.url, '_blank');
+          
+          toast({
+            title: "Betalingslink geopend",
+            description: "Voltooi je betaling in het nieuwe venster.",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Checkout Failed",
+          description: error instanceof Error ? error.message : "Something went wrong",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
-      toast({
-        title: "Checkout Failed",
-        description: error instanceof Error ? error.message : "Something went wrong",
-        variant: "destructive",
-      });
+    } else {
+      // Guest checkout
+      setGuestCheckoutOpen(true);
     }
   };
 
@@ -108,7 +123,7 @@ export const ShoppingCartWidget = () => {
                   className="w-full"
                   size="lg"
                 >
-                  {isLoading ? "Bezig met afrekenen..." : "Afrekenen"}
+                  {isLoading ? "Bezig met afrekenen..." : user ? "Afrekenen" : "Afrekenen als gast"}
                 </Button>
                 
                 <p className="text-xs text-muted-foreground text-center">
@@ -119,6 +134,19 @@ export const ShoppingCartWidget = () => {
           )}
         </div>
       </SheetContent>
+      
+      <GuestCheckoutModal
+        open={guestCheckoutOpen}
+        onOpenChange={setGuestCheckoutOpen}
+        items={items}
+        onSuccess={() => {
+          clearCart();
+          toast({
+            title: "Bestelling aangemaakt",
+            description: "Check je e-mail voor de bestelnummer om je bestelling te volgen.",
+          });
+        }}
+      />
     </Sheet>
   );
 };

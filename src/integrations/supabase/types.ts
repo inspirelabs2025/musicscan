@@ -1994,7 +1994,7 @@ export type Database = {
       shop_orders: {
         Row: {
           buyer_email: string | null
-          buyer_id: string
+          buyer_id: string | null
           buyer_name: string | null
           created_at: string
           currency: string
@@ -2011,7 +2011,7 @@ export type Database = {
         }
         Insert: {
           buyer_email?: string | null
-          buyer_id: string
+          buyer_id?: string | null
           buyer_name?: string | null
           created_at?: string
           currency?: string
@@ -2028,7 +2028,7 @@ export type Database = {
         }
         Update: {
           buyer_email?: string | null
-          buyer_id?: string
+          buyer_id?: string | null
           buyer_name?: string | null
           created_at?: string
           currency?: string

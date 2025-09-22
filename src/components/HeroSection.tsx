@@ -52,11 +52,17 @@ export const HeroSection = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="flex justify-center mb-16">
+        <div className="flex justify-center gap-6 mb-16">
           <Card className="text-center border-accent/20 max-w-xs">
             <CardContent className="pt-6 pb-6 px-6">
               <div className="text-3xl font-bold text-vinyl-purple mb-2">10,000+</div>
               <div className="text-sm text-muted-foreground">Items gescand</div>
+            </CardContent>
+          </Card>
+          <Card className="text-center border-accent/20 max-w-xs">
+            <CardContent className="pt-6 pb-6 px-6">
+              <div className="text-3xl font-bold text-vinyl-gold mb-2">500+</div>
+              <div className="text-sm text-muted-foreground">Muziekverhalen</div>
             </CardContent>
           </Card>
         </div>

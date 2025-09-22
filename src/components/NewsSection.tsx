@@ -23,6 +23,17 @@ interface BlogPost {
   image_url?: string;
 }
 
+interface AlbumBlogPost {
+  id: string;
+  slug: string;
+  album_id: string;
+  artist: string;
+  title: string;
+  published_at: string;
+  album_cover_url?: string;
+  yaml_frontmatter: any;
+}
+
 // Helper function to get a placeholder image based on blog post ID
 const getPlaceholderImage = (postId: string) => {
   const placeholders = [blogPlaceholder1, blogPlaceholder2, blogPlaceholder3];
@@ -88,8 +99,60 @@ export const NewsSection = () => {
     gcTime: 60 * 60 * 1000, // 1 hour
   });
 
-  const loading = newsSource === 'discogs' ? isLoadingDiscogs : isLoadingBlogPosts;
-  const error = newsSource === 'discogs' ? discogsError : blogPostsError;
+  // Use album blogs query for blog stories - using mock data for now
+  const { data: albumBlogs = [], isLoading: isLoadingAlbumBlogs, error: albumBlogsError } = useQuery({
+    queryKey: ["album-blogs-mock"],
+    queryFn: async (): Promise<AlbumBlogPost[]> => {
+      // Mock album blog data until we can properly connect to the blog_posts table
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate loading
+      return [
+        {
+          id: "1",
+          slug: "pink-floyd-dark-side-moon",
+          album_id: "album1",
+          artist: "Pink Floyd",
+          title: "The Dark Side of the Moon",
+          published_at: "2024-09-20T12:00:00Z",
+          album_cover_url: null,
+          yaml_frontmatter: {}
+        },
+        {
+          id: "2", 
+          slug: "beatles-abbey-road",
+          album_id: "album2",
+          artist: "The Beatles",
+          title: "Abbey Road",
+          published_at: "2024-09-19T12:00:00Z",
+          album_cover_url: null,
+          yaml_frontmatter: {}
+        },
+        {
+          id: "3",
+          slug: "led-zeppelin-iv",
+          album_id: "album3", 
+          artist: "Led Zeppelin",
+          title: "Led Zeppelin IV",
+          published_at: "2024-09-18T12:00:00Z",
+          album_cover_url: null,
+          yaml_frontmatter: {}
+        }
+      ];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+  });
+
+  const loading = newsSource === 'discogs' 
+    ? isLoadingDiscogs 
+    : newsSource === 'perplexity' 
+    ? isLoadingBlogPosts 
+    : isLoadingAlbumBlogs;
+    
+  const error = newsSource === 'discogs' 
+    ? discogsError 
+    : newsSource === 'perplexity' 
+    ? blogPostsError 
+    : albumBlogsError;
 
   const handleSourceSwitch = (source: 'discogs' | 'perplexity' | 'blog') => {
     if (source !== newsSource) {
@@ -377,31 +440,33 @@ export const NewsSection = () => {
 
         {!loading && !error && newsSource === 'blog' && (
           <div>
-            {/* Blog stories content - same as perplexity for now */}
+            {/* Album blog stories content */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {blogPosts.slice(0, 3).map((post: BlogPost) => (
-                <Card key={post.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden border-accent/30">
+              {albumBlogs.slice(0, 3).map((blog: AlbumBlogPost) => (
+                <Card key={blog.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden border-accent/30">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg line-clamp-2 text-accent">{post.title}</CardTitle>
+                    <CardTitle className="text-lg line-clamp-2 text-accent">{blog.artist} - {blog.title}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Blog verhaal • {new Date(post.published_at).toLocaleDateString('nl-NL')}
+                      Album verhaal • {new Date(blog.published_at).toLocaleDateString('nl-NL')}
                     </p>
                   </CardHeader>
                   <CardContent>
                     <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
                       <img 
-                        src={post.image_url || getPlaceholderImage(post.id)} 
-                        alt={post.title} 
+                        src={blog.album_cover_url || getPlaceholderImage(blog.id)} 
+                        alt={`${blog.artist} - ${blog.title}`} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
-                    <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
+                    <p className="text-sm mb-4 line-clamp-3">
+                      Ontdek het verhaal achter "{blog.title}" van {blog.artist}. Een diepgaande blik op de muziek, de tijd en de betekenis van dit iconische album.
+                    </p>
                     <div className="flex items-center justify-between">
                       <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">
-                        Verhaal
+                        Album Verhaal
                       </span>
                       <Link 
-                        to={`/nieuws/${post.slug}`}
+                        to={`/plaat-verhaal/${blog.slug}`}
                         className="inline-flex items-center gap-1 text-accent hover:text-accent/80 text-sm group-hover:gap-2 transition-all duration-200"
                       >
                         Lees verhaal <ArrowRight className="w-3 h-3" />
@@ -412,34 +477,36 @@ export const NewsSection = () => {
               ))}
             </div>
 
-            {/* Collapsible section for remaining blog stories */}
-            {blogPosts.length > 3 && (
+            {/* Collapsible section for remaining album stories */}
+            {albumBlogs.length > 3 && (
               <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
                 <CollapsibleContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-                    {blogPosts.slice(3).map((post: BlogPost) => (
-                      <Card key={post.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden border-accent/30">
+                    {albumBlogs.slice(3).map((blog: AlbumBlogPost) => (
+                      <Card key={blog.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden border-accent/30">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-lg line-clamp-2 text-accent">{post.title}</CardTitle>
+                          <CardTitle className="text-lg line-clamp-2 text-accent">{blog.artist} - {blog.title}</CardTitle>
                           <p className="text-sm text-muted-foreground">
-                            Blog verhaal • {new Date(post.published_at).toLocaleDateString('nl-NL')}
+                            Album verhaal • {new Date(blog.published_at).toLocaleDateString('nl-NL')}
                           </p>
                         </CardHeader>
                         <CardContent>
                           <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
                             <img 
-                              src={post.image_url || getPlaceholderImage(post.id)} 
-                              alt={post.title} 
+                              src={blog.album_cover_url || getPlaceholderImage(blog.id)} 
+                              alt={`${blog.artist} - ${blog.title}`} 
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                           </div>
-                          <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
+                          <p className="text-sm mb-4 line-clamp-3">
+                            Ontdek het verhaal achter "{blog.title}" van {blog.artist}. Een diepgaande blik op de muziek, de tijd en de betekenis van dit iconische album.
+                          </p>
                           <div className="flex items-center justify-between">
                             <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">
-                              Verhaal
+                              Album Verhaal
                             </span>
                             <Link 
-                              to={`/nieuws/${post.slug}`}
+                              to={`/plaat-verhaal/${blog.slug}`}
                               className="inline-flex items-center gap-1 text-accent hover:text-accent/80 text-sm group-hover:gap-2 transition-all duration-200"
                             >
                               Lees verhaal <ArrowRight className="w-3 h-3" />
@@ -460,7 +527,7 @@ export const NewsSection = () => {
                         </>
                       ) : (
                         <>
-                          Toon meer ({blogPosts.length - 3} meer) <ChevronDown className="w-4 h-4" />
+                          Toon meer ({albumBlogs.length - 3} meer) <ChevronDown className="w-4 h-4" />
                         </>
                       )}
                     </Button>

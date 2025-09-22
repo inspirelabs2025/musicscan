@@ -465,6 +465,35 @@ export function BatchBlogGenerator() {
     }
   };
 
+  const retryFailedItems = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('batch-blog-generator', {
+        body: { action: 'retry_failed' }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Mislukte items herstarten",
+        description: `${data.failedItemsCount} mislukte items worden opnieuw verwerkt.`
+      });
+      
+      // Check status immediately after starting retry
+      setTimeout(checkStatus, 1000);
+    } catch (error) {
+      console.error('Error retrying failed items:', error);
+      toast({
+        title: "Fout bij herstarten",
+        description: "Er is een fout opgetreden bij het herstarten van mislukte items",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-blue-500';
@@ -498,6 +527,7 @@ export function BatchBlogGenerator() {
   const canStart = ['idle', 'completed', 'stopped', 'failed'].includes(status.status);
   const canPause = isActive;
   const canResume = isPaused && (status.queue_pending || 0) > 0;
+  const canRetryFailed = ['completed', 'stopped', 'failed', 'idle'].includes(status.status) && (status.queue_failed || 0) > 0;
 
   return (
     <div className="space-y-6">
@@ -588,6 +618,17 @@ export function BatchBlogGenerator() {
                 </p>
               </div>
             )}
+            
+            {(status.queue_failed || 0) > 0 && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-700 text-sm font-medium">
+                  ⚠️ {status.queue_failed} items zijn mislukt tijdens verwerking
+                </p>
+                <p className="text-red-600 text-xs mt-1">
+                  Gebruik "Probeer Mislukte Items Opnieuw" om deze items opnieuw te verwerken.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -617,6 +658,18 @@ export function BatchBlogGenerator() {
             <Play className="h-4 w-4" />
             {settings.dryRun ? 'Test Run' : 'Start Automatische Generatie'}
           </Button>
+          
+          {canRetryFailed && (
+            <Button
+              onClick={retryFailedItems}
+              disabled={isLoading}
+              variant="outline"
+              className="flex items-center gap-2 border-orange-500 text-orange-700"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Probeer Mislukte Items Opnieuw ({status.queue_failed})
+            </Button>
+          )}
           
           {canPause && (
             <Button

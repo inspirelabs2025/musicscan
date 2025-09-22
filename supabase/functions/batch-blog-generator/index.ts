@@ -199,6 +199,116 @@ serve(async (req) => {
       }
     }
 
+    if (action === 'retry_failed') {
+      try {
+        // Check if there's already an active batch
+        const existingBatch = await getBatchStatus();
+        if (existingBatch?.status === 'active') {
+          return new Response(JSON.stringify({
+            error: 'Cannot retry failed items while batch is active',
+            status: existingBatch
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Get all failed items from the most recent batch
+        const { data: recentBatch } = await supabase
+          .from('batch_processing_status')
+          .select('id')
+          .eq('process_type', 'blog_generation')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (!recentBatch) {
+          return new Response(JSON.stringify({
+            error: 'No recent batch found to retry'
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Get failed items from the most recent batch
+        const { data: failedItems, error: failedError } = await supabase
+          .from('batch_queue_items')
+          .select('item_id, item_type')
+          .eq('batch_id', recentBatch.id)
+          .eq('status', 'failed');
+
+        if (failedError) throw failedError;
+
+        if (!failedItems || failedItems.length === 0) {
+          return new Response(JSON.stringify({
+            message: 'No failed items found to retry',
+            failedItemsCount: 0
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        console.log(`🔄 Starting retry for ${failedItems.length} failed items`);
+
+        // Create new batch for retry
+        const retryBatchId = crypto.randomUUID();
+        
+        await updateBatchStatus({
+          id: retryBatchId,
+          status: 'active',
+          total_items: failedItems.length,
+          processed_items: 0,
+          successful_items: 0,
+          failed_items: 0,
+          started_at: new Date().toISOString(),
+          current_item: null,
+          failed_item_details: [],
+          queue_size: failedItems.length,
+          last_heartbeat: new Date().toISOString(),
+          auto_mode: true
+        });
+
+        // Create queue items for retry with reset attempts
+        const retryQueueItems = failedItems.map((item) => ({
+          batch_id: retryBatchId,
+          item_id: item.item_id,
+          item_type: item.item_type,
+          priority: item.item_type === 'cd' ? 3 : item.item_type === 'vinyl' ? 2 : 1,
+          status: 'pending',
+          attempts: 0, // Reset attempts for retry
+          max_attempts: 5 // Increase max attempts for retry
+        }));
+
+        // Insert retry queue items
+        const { error: insertError } = await supabase
+          .from('batch_queue_items')
+          .insert(retryQueueItems);
+
+        if (insertError) throw insertError;
+
+        console.log(`✅ Successfully created retry batch with ${failedItems.length} items`);
+
+        return new Response(JSON.stringify({
+          message: 'Failed items retry started',
+          retryBatchId,
+          failedItemsCount: failedItems.length,
+          note: 'Retry processing runs automatically every minute via cron job'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
+      } catch (error) {
+        console.error('Error retrying failed items:', error);
+        return new Response(JSON.stringify({
+          error: 'Failed to retry failed items'
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     return new Response(JSON.stringify({ error: 'Invalid action' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

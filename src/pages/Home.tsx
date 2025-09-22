@@ -5,6 +5,7 @@ import { HeroSection } from '@/components/HeroSection';
 import { NewUsersSection } from '@/components/NewUsersSection';
 import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
 import { NewsSection } from '@/components/NewsSection';
+import { MusicScanningSection } from '@/components/MusicScanningSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,6 +42,9 @@ const Home = () => {
 
       {/* Hero Section */}
       <HeroSection />
+
+      {/* Music Scanning Section */}
+      <MusicScanningSection />
 
       {/* Scan Options Section */}
       <section className="py-16 bg-gradient-to-r from-accent/10 via-background to-accent/10 relative">

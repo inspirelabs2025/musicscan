@@ -1,9 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Music, Heart, Mail, ExternalLink, AlertTriangle, Disc, Music2, Sparkles } from "lucide-react";
+import { Music, Heart, Mail, ExternalLink, AlertTriangle, Disc, Music2, Sparkles, ShoppingCart, CreditCard } from "lucide-react";
 import { useState } from "react";
 import type { CollectionItem } from "@/hooks/useMyCollection";
+import { useShoppingCart } from "@/hooks/useShoppingCart";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ShopItemCardProps {
   item: CollectionItem;
@@ -13,6 +16,9 @@ interface ShopItemCardProps {
 export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
   const [imageError, setImageError] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { addToCart, isInCart } = useShoppingCart();
+  const { toast } = useToast();
 
   // Enhanced image fallback logic based on media type
   const getImageUrl = () => {
@@ -48,6 +54,64 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
         navigator.clipboard.writeText(shopContactInfo);
       }
     }
+  };
+
+  const handleBuyNow = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-shop-payment', {
+        body: {
+          items: [{
+            id: item.id,
+            media_type: item.media_type === 'vinyl' ? 'vinyl' : 'cd'
+          }]
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      toast({
+        title: "Aankoop mislukt",
+        description: error instanceof Error ? error.message : "Er ging iets mis",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddToCart = () => {
+    const price = parseFloat(String(item.marketplace_price || item.calculated_advice_price || '0'));
+    
+    if (price <= 0) {
+      toast({
+        title: "Geen prijs beschikbaar",
+        description: "Neem contact op met de verkoper voor de prijs",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const cartItem = {
+      id: item.id,
+      media_type: (item.media_type === 'vinyl' ? 'vinyl' : 'cd') as 'cd' | 'vinyl',
+      artist: item.artist || '',
+      title: item.title || '',
+      price,
+      condition_grade: item.condition_grade || '',
+      seller_id: item.user_id || '',
+      image: getImageUrl()
+    };
+    
+    addToCart(cartItem);
+    toast({
+      title: "Toegevoegd aan winkelwagen",
+      description: `${item.artist} - ${item.title}`,
+    });
   };
 
   const toggleFavorite = () => {
@@ -173,16 +237,45 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
         )}
 
         {/* Enhanced action buttons */}
-        <div className="flex gap-2 pt-2">
-          {shopContactInfo && (
-            <Button
-              size="sm"
-              onClick={handleContact}
-              className="flex-1 text-xs font-semibold bg-gradient-to-r from-vinyl-purple to-primary hover:from-vinyl-purple/90 hover:to-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-white/20"
-            >
-              <Mail className="w-3 h-3 mr-2" />
-              {(item.marketplace_price || item.calculated_advice_price) ? '🛒 Kopen' : '💌 Contact'}
-            </Button>
+        <div className="space-y-2 pt-2">
+          {(item.marketplace_price || item.calculated_advice_price) ? (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={handleBuyNow}
+                disabled={isLoading}
+                className="flex-1 text-xs font-semibold bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-green-400/20"
+              >
+                <CreditCard className="w-3 h-3 mr-2" />
+                {isLoading ? 'Bezig...' : '💳 Koop Nu'}
+              </Button>
+              
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleAddToCart}
+                disabled={isInCart(item.id)}
+                className="text-xs font-semibold bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-vinyl-purple/50 transition-all duration-300 hover-scale"
+              >
+                <ShoppingCart className="w-3 h-3" />
+                <span className="hidden sm:inline ml-1">
+                  {isInCart(item.id) ? '✓ In winkelwagen' : '🛒 Toevoegen'}
+                </span>
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              {shopContactInfo && (
+                <Button
+                  size="sm"
+                  onClick={handleContact}
+                  className="flex-1 text-xs font-semibold bg-gradient-to-r from-vinyl-purple to-primary hover:from-vinyl-purple/90 hover:to-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-white/20"
+                >
+                  <Mail className="w-3 h-3 mr-2" />
+                  💌 Contact voor prijs
+                </Button>
+              )}
+            </div>
           )}
           
           {item.discogs_url && (
@@ -190,10 +283,10 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
               variant="outline"
               size="sm"
               onClick={() => window.open(item.discogs_url!, '_blank')}
-              className="text-xs font-semibold bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-vinyl-gold/50 transition-all duration-300 hover-scale"
+              className="w-full text-xs font-semibold bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-vinyl-gold/50 transition-all duration-300 hover-scale"
             >
-              <ExternalLink className="w-3 h-3" />
-              <span className="hidden sm:inline ml-1">🔗 Info</span>
+              <ExternalLink className="w-3 h-3 mr-2" />
+              🔗 Meer info op Discogs
             </Button>
           )}
         </div>

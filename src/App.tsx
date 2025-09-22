@@ -50,6 +50,7 @@ import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
 import Quiz from "./pages/Quiz";
 import Pricing from "./pages/Pricing";
 import Prestaties from "./pages/Prestaties";
+import OrderSuccess from "./pages/OrderSuccess";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,7 +85,7 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <Navigation />
-          <Routes>
+            <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={
@@ -186,6 +187,7 @@ const App = () => {
             } />
             <Route path="/shop" element={<Navigate to="/shops" replace />} />
             <Route path="/shop/:shopSlug" element={<PublicShop />} />
+            <Route path="/shop/order-success" element={<OrderSuccess />} />
             <Route path="/collection/:userId" element={<PublicCollection />} />
             <Route path="/album/:albumId" element={
               <ProtectedRoute>

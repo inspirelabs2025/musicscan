@@ -2836,6 +2836,10 @@ export type Database = {
         }
         Returns: string
       }
+      generate_shop_slug: {
+        Args: { shop_name: string }
+        Returns: string
+      }
       get_current_usage: {
         Args: { p_user_id: string }
         Returns: {

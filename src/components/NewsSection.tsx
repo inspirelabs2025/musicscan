@@ -64,7 +64,7 @@ const fetchBlogPosts = async (): Promise<BlogPost[]> => {
 };
 
 export const NewsSection = () => {
-  const [newsSource, setNewsSource] = useState<'discogs' | 'perplexity'>('discogs');
+  const [newsSource, setNewsSource] = useState<'discogs' | 'perplexity' | 'blog'>('discogs');
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Use the cached hooks for different sources
@@ -81,7 +81,7 @@ export const NewsSection = () => {
   const loading = newsSource === 'discogs' ? isLoadingDiscogs : isLoadingBlogPosts;
   const error = newsSource === 'discogs' ? discogsError : blogPostsError;
 
-  const handleSourceSwitch = (source: 'discogs' | 'perplexity') => {
+  const handleSourceSwitch = (source: 'discogs' | 'perplexity' | 'blog') => {
     if (source !== newsSource) {
       setNewsSource(source);
     }
@@ -132,6 +132,14 @@ export const NewsSection = () => {
             >
               <Newspaper className="w-4 h-4" />
               Muzieknieuws
+            </Button>
+            <Button 
+              variant={newsSource === 'blog' ? 'default' : 'outline'} 
+              onClick={() => handleSourceSwitch('blog')} 
+              className="flex items-center gap-2"
+            >
+              <Music className="w-4 h-4" />
+              Blog verhalen
             </Button>
           </div>
         </div>
@@ -333,6 +341,106 @@ export const NewsSection = () => {
                               className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm group-hover:gap-2 transition-all duration-200"
                             >
                               Lees meer <ArrowRight className="w-3 h-3" />
+                            </Link>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+                
+                <div className="flex justify-center mt-8">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      {isExpanded ? (
+                        <>
+                          Toon minder <ChevronUp className="w-4 h-4" />
+                        </>
+                      ) : (
+                        <>
+                          Toon meer ({blogPosts.length - 3} meer) <ChevronDown className="w-4 h-4" />
+                        </>
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+              </Collapsible>
+            )}
+          </div>
+        )}
+
+        {!loading && !error && newsSource === 'blog' && (
+          <div>
+            {/* Blog stories content - same as perplexity for now */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {blogPosts.slice(0, 3).map((post: BlogPost) => (
+                <Card key={post.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden border-accent/30">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg line-clamp-2 text-accent">{post.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Blog verhaal • {new Date(post.published_at).toLocaleDateString('nl-NL')}
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    {post.image_url && (
+                      <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                        <img 
+                          src={post.image_url} 
+                          alt={post.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">
+                        Verhaal
+                      </span>
+                      <Link 
+                        to={`/nieuws/${post.slug}`}
+                        className="inline-flex items-center gap-1 text-accent hover:text-accent/80 text-sm group-hover:gap-2 transition-all duration-200"
+                      >
+                        Lees verhaal <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Collapsible section for remaining blog stories */}
+            {blogPosts.length > 3 && (
+              <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+                <CollapsibleContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                    {blogPosts.slice(3).map((post: BlogPost) => (
+                      <Card key={post.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden border-accent/30">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg line-clamp-2 text-accent">{post.title}</CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            Blog verhaal • {new Date(post.published_at).toLocaleDateString('nl-NL')}
+                          </p>
+                        </CardHeader>
+                        <CardContent>
+                          {post.image_url && (
+                            <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                              <img 
+                                src={post.image_url} 
+                                alt={post.title} 
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                          )}
+                          <p className="text-sm mb-4 line-clamp-3">{post.summary}</p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">
+                              Verhaal
+                            </span>
+                            <Link 
+                              to={`/nieuws/${post.slug}`}
+                              className="inline-flex items-center gap-1 text-accent hover:text-accent/80 text-sm group-hover:gap-2 transition-all duration-200"
+                            >
+                              Lees verhaal <ArrowRight className="w-3 h-3" />
                             </Link>
                           </div>
                         </CardContent>

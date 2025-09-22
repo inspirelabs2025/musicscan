@@ -2850,6 +2850,10 @@ export type Database = {
           period_start: string
         }[]
       }
+      increment_shop_view_count: {
+        Args: { shop_slug: string }
+        Returns: undefined
+      }
       increment_usage: {
         Args: { p_increment?: number; p_usage_type: string; p_user_id: string }
         Returns: boolean

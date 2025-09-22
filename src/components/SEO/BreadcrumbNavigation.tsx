@@ -44,11 +44,13 @@ export const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
       'public-catalog': 'Public Catalog',
       'public-shops-overview': 'Public Shops',
       'news': 'Music News',
-      'nieuws': 'News Article',
+      'nieuws': 'News Article', 
       'plaat-verhaal': 'Album Stories',
       'auth': 'Login',
       'release': 'Album Details',
       'shop': 'Shop',
+      'shops': 'Shops',
+      'my-shop': 'My Shop',
       'collection': 'Collection'
     };
     

@@ -5,16 +5,26 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Store, Search, Heart, Mail, ArrowLeft, Users, Package } from "lucide-react";
 import { usePublicShop } from "@/hooks/usePublicShop";
+import { useShopViewCounter } from "@/hooks/useShopViewCounter";
+import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 import { ShopItemCard } from "@/components/ShopItemCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function PublicShop() {
   const { shopSlug } = useParams<{ shopSlug: string }>();
   const { shop, items, isLoading } = usePublicShop(shopSlug || "");
+  const { incrementViewCount } = useShopViewCounter();
   const [searchTerm, setSearchTerm] = useState("");
   const [formatFilter, setFormatFilter] = useState<string>("all");
   const navigate = useNavigate();
+
+  // Increment view count when shop loads
+  useEffect(() => {
+    if (shop && shopSlug) {
+      incrementViewCount(shopSlug);
+    }
+  }, [shop, shopSlug, incrementViewCount]);
 
   const filteredItems = items.filter(item => {
     const matchesSearch = !searchTerm || 
@@ -71,6 +81,9 @@ export default function PublicShop() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card to-accent/5 relative overflow-hidden">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />
+      
       {/* Animated Musical Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-4 -left-4 text-6xl opacity-10 animate-pulse">🎵</div>

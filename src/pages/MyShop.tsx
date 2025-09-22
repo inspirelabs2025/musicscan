@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings, Store, ExternalLink, Copy } from "lucide-react";
+import { Settings, Store, ExternalLink, Copy, AlertCircle, Package, Eye, Plus } from "lucide-react";
 import { useShopItems } from "@/hooks/useShopItems";
 import { useUserShop } from "@/hooks/useUserShop";
 import { CollectionItemCard } from "@/components/CollectionItemCard";
+import { ShopSetupWizard } from "@/components/ShopSetupWizard";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -17,6 +18,7 @@ export default function MyShop() {
   const { shopItems, isLoading: itemsLoading } = useShopItems();
   const { shop, isLoading: shopLoading, updateShop, isUpdating } = useUserShop();
   const { toast } = useToast();
+  const [showWizard, setShowWizard] = useState(false);
   
   const [shopSettings, setShopSettings] = useState({
     shop_name: shop?.shop_name || "",
@@ -38,6 +40,16 @@ export default function MyShop() {
       });
     }
   }, [shop]);
+
+  // Check if shop needs setup
+  const needsSetup = !shop?.shop_name || !shop?.shop_description || !shop?.contact_info;
+
+  // Show wizard automatically if shop needs setup
+  useEffect(() => {
+    if (needsSetup && !shopLoading) {
+      setShowWizard(true);
+    }
+  }, [needsSetup, shopLoading]);
 
   const handleShopUpdate = () => {
     updateShop(shopSettings, {

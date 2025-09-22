@@ -254,20 +254,26 @@ serve(async (req) => {
         // Create new batch for retry
         const retryBatchId = crypto.randomUUID();
         
-        await updateBatchStatus({
-          id: retryBatchId,
-          status: 'active',
-          total_items: failedItems.length,
-          processed_items: 0,
-          successful_items: 0,
-          failed_items: 0,
-          started_at: new Date().toISOString(),
-          current_item: null,
-          failed_item_details: [],
-          queue_size: failedItems.length,
-          last_heartbeat: new Date().toISOString(),
-          auto_mode: true
-        });
+        // Insert new batch status record directly (don't update existing)
+        await supabase
+          .from('batch_processing_status')
+          .insert({
+            id: retryBatchId,
+            process_type: 'blog_generation',
+            status: 'active',
+            total_items: failedItems.length,
+            processed_items: 0,
+            successful_items: 0,
+            failed_items: 0,
+            started_at: new Date().toISOString(),
+            current_item: null,
+            failed_item_details: [],
+            queue_size: failedItems.length,
+            last_heartbeat: new Date().toISOString(),
+            auto_mode: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
 
         // Create queue items for retry with reset attempts
         const retryQueueItems = failedItems.map((item) => ({

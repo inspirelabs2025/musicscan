@@ -28,7 +28,7 @@ serve(async (req) => {
       .eq('status', 'active')
       .maybeSingle();
 
-    // Auto-recovery: if no active batch but pending items exist, reactivate most recent batch
+    // Auto-recovery: if no active batch but pending items exist, reactivate correct batch
     if (!batchStatus) {
       console.log('📴 No active batch found, checking for recoverable batch...');
       
@@ -39,17 +39,17 @@ serve(async (req) => {
         .limit(1);
         
       if (pendingItems && pendingItems.length > 0) {
-        console.log('🔄 Found pending items, reactivating most recent batch...');
+        console.log('🔄 Found pending items, reactivating batch with pending items...');
         
-        const { data: recentBatch } = await supabase
+        // Find the batch that actually has pending items, not just the most recent
+        const { data: batchWithPendingItems } = await supabase
           .from('batch_processing_status')
           .select('*')
           .eq('process_type', 'blog_generation')
-          .order('created_at', { ascending: false })
-          .limit(1)
+          .eq('id', pendingItems[0].batch_id)
           .single();
           
-        if (recentBatch) {
+        if (batchWithPendingItems) {
           await supabase
             .from('batch_processing_status')
             .update({ 
@@ -58,9 +58,9 @@ serve(async (req) => {
               last_heartbeat: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })
-            .eq('id', recentBatch.id);
+            .eq('id', batchWithPendingItems.id);
           
-          batchStatus = { ...recentBatch, status: 'active' };
+          batchStatus = { ...batchWithPendingItems, status: 'active' };
           console.log('✅ Reactivated batch:', batchStatus.id);
         }
       }

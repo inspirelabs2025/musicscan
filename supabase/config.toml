@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.daily-news-update]
 verify_jwt = false
 
+[functions.latest-discogs-news]
+verify_jwt = false
+
 [functions.daily-email-digest]
 verify_jwt = false
 

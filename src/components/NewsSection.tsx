@@ -99,44 +99,37 @@ export const NewsSection = () => {
     gcTime: 60 * 60 * 1000, // 1 hour
   });
 
-  // Use album blogs query for blog stories - using mock data for now
+  // Use album blogs query for blog stories - fetch real data from database
   const { data: albumBlogs = [], isLoading: isLoadingAlbumBlogs, error: albumBlogsError } = useQuery({
-    queryKey: ["album-blogs-mock"],
+    queryKey: ["album-blogs-real"],
     queryFn: async (): Promise<AlbumBlogPost[]> => {
-      // Mock album blog data until we can properly connect to the blog_posts table
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate loading
-      return [
-        {
-          id: "1",
-          slug: "pink-floyd-dark-side-moon",
-          album_id: "album1",
-          artist: "Pink Floyd",
-          title: "The Dark Side of the Moon",
-          published_at: "2024-09-20T12:00:00Z",
-          album_cover_url: null,
-          yaml_frontmatter: {}
-        },
-        {
-          id: "2", 
-          slug: "beatles-abbey-road",
-          album_id: "album2",
-          artist: "The Beatles",
-          title: "Abbey Road",
-          published_at: "2024-09-19T12:00:00Z",
-          album_cover_url: null,
-          yaml_frontmatter: {}
-        },
-        {
-          id: "3",
-          slug: "led-zeppelin-iv",
-          album_id: "album3", 
-          artist: "Led Zeppelin",
-          title: "Led Zeppelin IV",
-          published_at: "2024-09-18T12:00:00Z",
-          album_cover_url: null,
-          yaml_frontmatter: {}
-        }
-      ];
+      const { data: blogPosts, error } = await supabase
+        .from('blog_posts')
+        .select('id, slug, album_id, published_at, created_at, album_cover_url, yaml_frontmatter')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false })
+        .limit(6);
+
+      if (error) {
+        console.error('Error fetching blog posts:', error);
+        throw error;
+      }
+
+      if (!blogPosts) return [];
+
+      return blogPosts.map(post => {
+        const frontmatter = (post.yaml_frontmatter as any) || {};
+        return {
+          id: post.id,
+          slug: post.slug,
+          album_id: post.album_id,
+          artist: frontmatter?.artist || 'Onbekende Artiest',
+          title: frontmatter?.title || 'Onbekende Titel',
+          published_at: post.published_at || post.created_at,
+          album_cover_url: post.album_cover_url,
+          yaml_frontmatter: frontmatter
+        };
+      });
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 60 * 60 * 1000, // 1 hour

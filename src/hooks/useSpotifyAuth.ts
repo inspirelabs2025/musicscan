@@ -264,11 +264,17 @@ export const useSpotifyAuth = () => {
       if (error) {
         console.error('❌ Spotify sync error:', error);
         
-        // Check if re-authorization is needed
-        if (error.message?.includes('needs_reauth') || error.message?.includes('refresh')) {
+        // Robust detection for re-authorization needed
+        const errAny: any = error as any;
+        const ctxBody = (errAny?.context?.body || errAny?.context?.responseBody || '').toString();
+        const combined = `${errAny?.message || ''} ${ctxBody}`.toLowerCase();
+        const reauthHints = ['needs_reauth', 'invalid_grant', 'refresh token revoked', 're-authorize'];
+        const needsReauth = reauthHints.some(h => combined.includes(h));
+        
+        if (needsReauth) {
           toast.error('Spotify autorisatie verlopen. Klik op "Herautoriseer Spotify" om opnieuw te verbinden.');
           setState(prev => ({ ...prev, isConnected: false }));
-          return { needsReauth: true };
+          return { needsReauth: true } as const;
         }
         
         throw error;

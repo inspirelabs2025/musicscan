@@ -8,7 +8,9 @@ import {
   PlayCircle, 
   TrendingUp,
   ExternalLink,
-  Plus
+  Plus,
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -20,6 +22,9 @@ export function SpotifyWidget() {
   const { data: profile } = useProfile(user?.id);
   const { data: spotifyStats } = useSpotifyStats();
   const { connectSpotify, syncSpotifyData, isConnecting } = useSpotifyAuth();
+  
+  const [needsReauth, setNeedsReauth] = React.useState(false);
+  const [isSyncing, setIsSyncing] = React.useState(false);
   
   const isConnected = (profile as any)?.spotify_connected || false;
   const spotifyDisplayName = (profile as any)?.spotify_display_name;
@@ -86,18 +91,58 @@ export function SpotifyWidget() {
               </CardDescription>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={syncSpotifyData}
-            className="h-8 w-8 p-0"
-          >
-            <TrendingUp className="w-4 h-4" />
-          </Button>
+          {needsReauth ? (
+            <Button
+              onClick={() => {
+                setNeedsReauth(false);
+                connectSpotify();
+              }}
+              size="sm"
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              <RefreshCw className="w-3 h-3 mr-1" />
+              Reauth
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                setIsSyncing(true);
+                const result = await syncSpotifyData();
+                if (result?.needsReauth) {
+                  setNeedsReauth(true);
+                }
+                setIsSyncing(false);
+              }}
+              disabled={isSyncing}
+              className="h-8 w-8 p-0"
+            >
+              {isSyncing ? (
+                <div className="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+              ) : (
+                <TrendingUp className="w-4 h-4" />
+              )}
+            </Button>
+          )}
         </div>
       </CardHeader>
       
-      {spotifyStats && (
+      {needsReauth && (
+        <CardContent className="pt-0">
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-center gap-2 text-amber-800">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="text-sm font-medium">Autorisatie verlopen</span>
+            </div>
+            <p className="text-xs text-amber-700 mt-1">
+              Verbind opnieuw met Spotify voor actuele data.
+            </p>
+          </div>
+        </CardContent>
+      )}
+      
+      {spotifyStats && !needsReauth && (
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">

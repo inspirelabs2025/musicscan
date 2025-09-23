@@ -91,6 +91,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Failed to refresh token', 
+          error_code: 'REAUTH_REQUIRED',
           details: 'Both PKCE and Basic Auth refresh methods failed',
           spotify_error: errorText,
           needs_reauth: true

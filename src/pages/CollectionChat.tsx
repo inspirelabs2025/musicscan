@@ -359,7 +359,33 @@ const CollectionChat = () => {
       "Vergelijk mijn streaming vs collecting voorkeuren",
       "Analyseer mijn Spotify data voor waardevolle vinyl tips",
       "Welke genres stream ik meer dan ik verzamel?",
-      "Toon me mijn meest complete artist coverage (Spotify + fysiek)"
+      "Toon me mijn meest complete artist coverage (Spotify + fysiek)",
+      // Playlist & Luistergedrag
+      "Welke van mijn Spotify playlists hebben de meeste vinyl potentieel?",
+      "Analyseer mijn recent played tracks voor nieuwe collectie ideeën",
+      "Welke Spotify albums luister ik het vaakst maar mis ik fysiek?",
+      "Toon me mijn Spotify repeat tracks vs mijn meest gedraaide vinyl",
+      "Welke Spotify saved tracks zou ik moeten upgraden naar vinyl?",
+      // Temporeel & Seizoensgebonden
+      "Vergelijk mijn winter Spotify gedrag met mijn warme vinyl selectie",
+      "Welke Spotify tracks speel ik 's ochtends vs mijn vinyl keuzes?",
+      "Analyseer mijn Spotify workout playlist vs energieke albums in collectie",
+      "Welke late night Spotify tracks ontbreken in mijn vinyl collectie?",
+      // Artist Discovery & Trends
+      "Welke nieuwe Spotify artiesten hebben vergelijkbare albums in mijn collectie?",
+      "Toon me Spotify artists die ik net ontdek vs mijn verzamelgeschiedenis",
+      "Welke Spotify collaborations leiden tot interessante vinyl uitgaven?",
+      "Analyseer mijn Spotify monthly wrapped vs mijn jaarlijkse vinyl aankopen",
+      // Technische Analyse
+      "Vergelijk audio kwaliteit: mijn meest gespeelde Spotify vs vinyl versies",
+      "Welke Spotify tracks zijn beter op vinyl dan digitaal?",
+      "Analyseer mijn Spotify skip rate vs vinyl play-through albums",
+      "Welke Spotify EQ preferences passen bij mijn vinyl setup?",
+      // Social & Discovery
+      "Welke vrienden op Spotify hebben albums die ik ook fysiek heb?",
+      "Analyseer mijn Spotify shared playlists voor collectie overlap",
+      "Welke Spotify discover weekly hits zijn nu vinyl geworden?",
+      "Toon me Spotify concert attendance vs albums in mijn collectie"
     ];
 
     // Combine questions and shuffle

@@ -37,6 +37,14 @@ export const useUsageTracking = () => {
       }
     } catch (err) {
       console.error('Failed to get usage:', err);
+      // Fallback to default usage data to prevent blocking UI
+      setUsage({
+        ai_scans_used: 0,
+        ai_chat_used: 0,
+        bulk_uploads_used: 0,
+        period_start: new Date().toISOString().split('T')[0],
+        period_end: new Date().toISOString().split('T')[0]
+      });
     } finally {
       setLoading(false);
     }
@@ -58,7 +66,13 @@ export const useUsageTracking = () => {
       return data[0] as UsageLimitCheck;
     } catch (err) {
       console.error('Failed to check usage limit:', err);
-      throw err;
+      // Fallback to allow usage for free plan when check fails
+      return {
+        can_use: true,
+        current_usage: 0,
+        limit_amount: null,
+        plan_name: 'FREE - Music Explorer'
+      };
     }
   }, [user]);
 

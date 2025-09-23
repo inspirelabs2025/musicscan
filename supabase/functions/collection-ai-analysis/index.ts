@@ -509,7 +509,7 @@ ${artistInfo.slice(0, 10).map(a => `- ${a.artist}: ${a.albums} album(s), genres:
       prompt += `
 
 SPOTIFY LUISTERGEDRAG (${spotifyTracks.length} tracks):
-- Totaal unieke artiesten: ${spotifyArtists.size}
+- Totaal unieke artiesten: ${spotifyArtistSet.size}
 - Playlists: ${spotifyPlaylists.length}
 
 TOP SPOTIFY ARTIESTEN:
@@ -668,7 +668,7 @@ BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatt
       uniqueGenres, 
       totalItems: allItems.length + spotifyTracks.length,
       topArtists: artistInfo.slice(0, 10),
-      topGenres: Object.keys(physicalGenres).slice(0, 10)
+      topGenres: Array.from(allGenresSet).slice(0, 10)
     };
     
     const aiAnalysis = safeJsonParse(rawContent, collectionData);
@@ -770,8 +770,8 @@ BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatt
         vinylCount: vinylItems?.length || 0,
         hasPhysicalCollection,
         hasSpotifyData,
-        physicalArtistsCount: physicalArtists.size,
-        spotifyArtistsCount: spotifyArtists.size
+        physicalArtistsCount: physicalArtistSet.size,
+        spotifyArtistsCount: spotifyArtistSet.size
       },
       chartData: {
         genreDistribution,

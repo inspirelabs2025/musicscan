@@ -1,13 +1,13 @@
 
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
 export const useMetadataEnrichment = () => {
   const [isEnriching, setIsEnriching] = useState(false);
   const [enrichmentProgress, setEnrichmentProgress] = useState(0);
   const { toast } = useToast();
-
+  const queryClient = useQueryClient();
   const enrichMetadata = async () => {
     setIsEnriching(true);
     setEnrichmentProgress(0);
@@ -25,6 +25,9 @@ export const useMetadataEnrichment = () => {
         variant: "default"
       });
 
+      // Force AI analysis refresh after enrichment
+      queryClient.invalidateQueries({ queryKey: ['collection-ai-analysis'] });
+      
       return data;
     } catch (error) {
       console.error('Metadata enrichment failed:', error);

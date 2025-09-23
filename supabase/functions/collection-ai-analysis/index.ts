@@ -264,6 +264,32 @@ function safeJsonParse(content: string, collectionData: any = {}): any {
   }
 }
 
+// Normalization helpers for consistent counting
+const normalizeString = (s: string | null | undefined) => {
+  if (!s) return '';
+  return s
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // remove diacritics
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const extractArtists = (s: string): string[] => {
+  if (!s) return [];
+  // Remove '(feat. ...)' blocks and anything after 'feat.' style markers
+  let cleaned = s.replace(/\((feat\.|featuring)[^)]+\)/gi, '')
+                 .replace(/feat\.|featuring.*/gi, '');
+  // Split on common separators
+  const parts = cleaned.split(/,|\&|\s+x\s+|\s+with\s+|\s*\/\s*/i)
+    .map(part => normalizeString(part))
+    .filter(Boolean);
+  return parts.length ? parts : [normalizeString(cleaned)];
+};
+
+const normalizeGenre = (g: string | null | undefined) => normalizeString(g);
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -383,17 +409,31 @@ serve(async (req) => {
     }
 
     // Prepare detailed collection statistics combining physical and Spotify data
-    const physicalArtists = new Set(allItems.map(item => item.artist).filter(Boolean));
-    const spotifyArtists = new Set(spotifyTracks.map(track => track.artist).filter(Boolean));
-    const allArtists = new Set([...physicalArtists, ...spotifyArtists]);
+    const physicalArtistSet = new Set<string>();
+    allItems.forEach(item => {
+      if (item.artist) {
+        extractArtists(item.artist).forEach(a => physicalArtistSet.add(a));
+      }
+    });
+
+    const spotifyArtistSet = new Set<string>();
+    spotifyTracks.forEach(track => {
+      if (track.artist) {
+        extractArtists(track.artist).forEach(a => spotifyArtistSet.add(a));
+      }
+    });
+
+    const allArtistSet = new Set<string>([...physicalArtistSet, ...spotifyArtistSet]);
     
-    const physicalGenres = new Set(allItems.map(item => item.genre).filter(Boolean));
-    const spotifyGenres = new Set(spotifyTracks.map(track => track.genre).filter(Boolean));
-    const allGenres = new Set([...physicalGenres, ...spotifyGenres]);
+    const physicalGenresSet = new Set<string>();
+    allItems.forEach(item => { if (item.genre) physicalGenresSet.add(normalizeGenre(item.genre)); });
+    const spotifyGenresSet = new Set<string>();
+    spotifyTracks.forEach(track => { if (track.genre) spotifyGenresSet.add(normalizeGenre(track.genre)); });
+    const allGenresSet = new Set<string>([...physicalGenresSet, ...spotifyGenresSet]);
     
-    const uniqueArtists = allArtists.size;
-    const uniqueLabels = new Set(allItems.map(item => item.label).filter(Boolean)).size;
-    const uniqueGenres = allGenres.size;
+    const uniqueArtists = allArtistSet.size;
+    const uniqueLabels = new Set(allItems.map(item => normalizeString(item.label || '')).filter(Boolean)).size;
+    const uniqueGenres = allGenresSet.size;
     const decades = [...new Set(allItems.map(item => Math.floor((item.year || 0) / 10) * 10))].sort();
     const oldestItem = Math.min(...allItems.map(item => item.year || 9999));
     const newestItem = Math.max(...allItems.map(item => item.year || 0));
@@ -403,21 +443,24 @@ serve(async (req) => {
     const totalValue = itemsWithPrices.reduce((sum, item) => sum + (item.calculated_advice_price || 0), 0);
     const avgValue = itemsWithPrices.length > 0 ? totalValue / itemsWithPrices.length : 0;
 
-    // Create detailed artist and genre information
+    // Create detailed artist and genre information (normalized keys)
     const artistInfo = Array.from(
       allItems.reduce((acc, item) => {
         if (item.artist) {
-          const current = acc.get(item.artist) || { count: 0, genres: new Set(), years: [], labels: new Set() };
-          current.count++;
-          if (item.genre) current.genres.add(item.genre);
-          if (item.year) current.years.push(item.year);
-          if (item.label) current.labels.add(item.label);
-          acc.set(item.artist, current);
+          const names = extractArtists(item.artist);
+          names.forEach((name) => {
+            const current = acc.get(name) || { display: item.artist, count: 0, genres: new Set<string>(), years: [] as number[], labels: new Set<string>() };
+            current.count++;
+            if (item.genre) current.genres.add(normalizeGenre(item.genre));
+            if (item.year) current.years.push(item.year);
+            if (item.label) current.labels.add(item.label);
+            acc.set(name, current);
+          });
         }
         return acc;
-      }, new Map())
-    ).map(([artist, data]) => ({
-      artist,
+      }, new Map<string, { display: string; count: number; genres: Set<string>; years: number[]; labels: Set<string>; }>())
+    ).map(([key, data]) => ({
+      artist: data.display?.split(',')[0] || key,
       albums: data.count,
       genres: Array.from(data.genres),
       yearSpan: data.years.length > 0 ? `${Math.min(...data.years)}-${Math.max(...data.years)}` : '',

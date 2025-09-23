@@ -103,15 +103,60 @@ export const useSpotifyAuth = () => {
       });
 
       const spotifyAuthUrl = `https://accounts.spotify.com/authorize?${params}`;
-      console.log('🚀 Redirecting to Spotify:', spotifyAuthUrl);
+      console.log('🚀 Attempting Spotify redirect:', spotifyAuthUrl);
       
-      // Force redirect to top-level window to bypass iframe restrictions
-      if (window.top && window.top !== window) {
-        console.log('🌐 Redirecting in top-level window (iframe detected)');
-        window.top.location.href = spotifyAuthUrl;
-      } else {
-        console.log('🌐 Redirecting in current window');
-        window.location.href = spotifyAuthUrl;
+      // Try multiple redirect methods to handle iframe restrictions
+      let redirectSuccess = false;
+      
+      // Method 1: Try top-level window redirect (best for iframes)
+      try {
+        if (window.top && window.top !== window) {
+          console.log('🌐 Method 1: Redirecting in top-level window (iframe detected)');
+          window.top.location.href = spotifyAuthUrl;
+          redirectSuccess = true;
+        }
+      } catch (securityError) {
+        console.log('⚠️ Method 1 failed (SecurityError):', securityError.message);
+      }
+      
+      // Method 2: Try window.open in new tab
+      if (!redirectSuccess) {
+        try {
+          console.log('🌐 Method 2: Opening in new tab');
+          const popup = window.open(spotifyAuthUrl, '_blank', 'width=600,height=700,scrollbars=yes,resizable=yes');
+          if (popup) {
+            redirectSuccess = true;
+            toast.success('Spotify wordt geopend in een nieuw tabblad');
+          } else {
+            console.log('⚠️ Method 2 failed: Popup blocked');
+          }
+        } catch (popupError) {
+          console.log('⚠️ Method 2 failed:', popupError.message);
+        }
+      }
+      
+      // Method 3: Try current window redirect (fallback)
+      if (!redirectSuccess) {
+        try {
+          console.log('🌐 Method 3: Redirecting in current window');
+          window.location.href = spotifyAuthUrl;
+          redirectSuccess = true;
+        } catch (redirectError) {
+          console.log('⚠️ Method 3 failed:', redirectError.message);
+        }
+      }
+      
+      // Method 4: Create hidden anchor link (final fallback)
+      if (!redirectSuccess) {
+        console.log('🌐 Method 4: Using anchor link fallback');
+        const link = document.createElement('a');
+        link.href = spotifyAuthUrl;
+        link.target = '_blank';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('Als Spotify niet opent, probeer het handmatig via de knop hierboven');
       }
     } catch (error) {
       console.error('❌ Error starting Spotify connection:', error);

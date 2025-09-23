@@ -11,7 +11,9 @@ import {
   TrendingUp,
   RefreshCw,
   Unlink,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  Loader2
 } from 'lucide-react';
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
 import { useSpotifyStats } from '@/hooks/useSpotifyData';
@@ -112,7 +114,7 @@ export function SpotifyConnect() {
           
           <Separator />
           
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-4">
             <Button 
               onClick={connectSpotify}
               disabled={isConnecting}
@@ -121,7 +123,7 @@ export function SpotifyConnect() {
             >
               {isConnecting ? (
                 <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Verbinden...
                 </>
               ) : (
@@ -132,19 +134,43 @@ export function SpotifyConnect() {
               )}
             </Button>
             
-            {isConnecting && (
-              <div className="text-sm text-muted-foreground">
-                <p>Als Spotify niet automatisch opent, probeer dan:</p>
+            <div className="bg-muted/50 p-4 rounded-lg text-sm space-y-3">
+              <p className="font-medium">Voor Spotify Developer Dashboard:</p>
+              <div className="flex items-center gap-2 text-xs">
+                <div className="flex-1 font-mono bg-background p-2 rounded border break-all">
+                  {window.location.origin}/auth/spotify/callback
+                </div>
                 <Button
-                  variant="link"
                   size="sm"
+                  variant="outline"
                   onClick={() => {
-                    toast.info('Probeer eerst de hoofdknop opnieuw. Als dat niet werkt, zorg dat pop-ups zijn toegestaan.');
+                    navigator.clipboard.writeText(`${window.location.origin}/auth/spotify/callback`);
+                    toast.success('Redirect URI gekopieerd!');
                   }}
-                  className="text-xs underline"
+                  className="h-8 w-8 p-0 flex-shrink-0"
                 >
-                  Handmatige verbinding
+                  <Copy className="h-3 w-3" />
                 </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Voeg deze URI toe onder "Redirect URIs" in je Spotify app instellingen
+              </p>
+              {window.location.hostname.includes('lovableproject.com') && (
+                <p className="text-xs text-amber-600">
+                  💡 Test ook op je live domein voor productie gebruik
+                </p>
+              )}
+            </div>
+            
+            {isConnecting && (
+              <div className="text-sm text-muted-foreground space-y-2">
+                <p className="font-medium text-amber-600">Als je een "Invalid redirect URI" fout krijgt:</p>
+                <ul className="text-xs space-y-1 list-disc list-inside text-left max-w-md mx-auto">
+                  <li>Controleer of bovenstaande URI is toegevoegd in Spotify Developer Dashboard</li>
+                  <li>Klik "Save" in je Spotify app instellingen</li>
+                  <li>Voeg jezelf toe als test gebruiker als de app in Development mode staat</li>
+                  <li>Wacht 1-2 minuten na het opslaan voordat je opnieuw probeert</li>
+                </ul>
               </div>
             )}
           </div>

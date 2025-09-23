@@ -12,7 +12,6 @@ interface SpotifyAuthState {
 interface SpotifyTokenResponse {
   access_token: string;
   refresh_token: string;
-  client_id: string;
   user_data: {
     id: string;
     display_name: string;
@@ -56,15 +55,6 @@ export const useSpotifyAuth = () => {
     setState(prev => ({ ...prev, isConnecting: true }));
 
     try {
-      // Get client ID from Edge Function first
-      const { data: configData, error: configError } = await supabase.functions.invoke('spotify-auth', {
-        body: { action: 'get_config' },
-      });
-
-      if (configError || !configData?.client_id) {
-        throw new Error('Failed to get Spotify configuration');
-      }
-
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
       
@@ -74,8 +64,11 @@ export const useSpotifyAuth = () => {
       // Redirect URL (must match Spotify app settings)
       const redirectUri = `${window.location.origin}/auth/spotify/callback`;
       
+      // Use environment variable for client ID, fallback to known working ID
+      const clientId = '7d491ba2a6b14c52b6f128585656cf51';
+      
       const params = new URLSearchParams({
-        client_id: configData.client_id,
+        client_id: clientId,
         response_type: 'code',
         redirect_uri: redirectUri,
         code_challenge_method: 'S256',

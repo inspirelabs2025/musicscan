@@ -105,7 +105,14 @@ export const useSpotifyAuth = () => {
       const spotifyAuthUrl = `https://accounts.spotify.com/authorize?${params}`;
       console.log('🚀 Redirecting to Spotify:', spotifyAuthUrl);
       
-      window.location.href = spotifyAuthUrl;
+      // Force redirect to top-level window to bypass iframe restrictions
+      if (window.top && window.top !== window) {
+        console.log('🌐 Redirecting in top-level window (iframe detected)');
+        window.top.location.href = spotifyAuthUrl;
+      } else {
+        console.log('🌐 Redirecting in current window');
+        window.location.href = spotifyAuthUrl;
+      }
     } catch (error) {
       console.error('❌ Error starting Spotify connection:', error);
       toast.error('Er ging iets mis bij het verbinden met Spotify');

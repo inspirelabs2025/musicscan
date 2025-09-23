@@ -1680,6 +1680,13 @@ export type Database = {
           location: string | null
           show_activity: boolean | null
           show_collection: boolean | null
+          spotify_connected: boolean | null
+          spotify_display_name: string | null
+          spotify_email: string | null
+          spotify_last_sync: string | null
+          spotify_refresh_token: string | null
+          spotify_sync_enabled: boolean | null
+          spotify_user_id: string | null
           total_followers: number | null
           total_following: number | null
           updated_at: string
@@ -1700,6 +1707,13 @@ export type Database = {
           location?: string | null
           show_activity?: boolean | null
           show_collection?: boolean | null
+          spotify_connected?: boolean | null
+          spotify_display_name?: string | null
+          spotify_email?: string | null
+          spotify_last_sync?: string | null
+          spotify_refresh_token?: string | null
+          spotify_sync_enabled?: boolean | null
+          spotify_user_id?: string | null
           total_followers?: number | null
           total_following?: number | null
           updated_at?: string
@@ -1720,6 +1734,13 @@ export type Database = {
           location?: string | null
           show_activity?: boolean | null
           show_collection?: boolean | null
+          spotify_connected?: boolean | null
+          spotify_display_name?: string | null
+          spotify_email?: string | null
+          spotify_last_sync?: string | null
+          spotify_refresh_token?: string | null
+          spotify_sync_enabled?: boolean | null
+          spotify_user_id?: string | null
           total_followers?: number | null
           total_following?: number | null
           updated_at?: string
@@ -2091,6 +2112,170 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      spotify_playlists: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_public: boolean | null
+          last_synced_at: string | null
+          name: string
+          owner_id: string | null
+          snapshot_id: string | null
+          spotify_playlist_id: string
+          spotify_url: string | null
+          track_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_public?: boolean | null
+          last_synced_at?: string | null
+          name: string
+          owner_id?: string | null
+          snapshot_id?: string | null
+          spotify_playlist_id: string
+          spotify_url?: string | null
+          track_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_public?: boolean | null
+          last_synced_at?: string | null
+          name?: string
+          owner_id?: string | null
+          snapshot_id?: string | null
+          spotify_playlist_id?: string
+          spotify_url?: string | null
+          track_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      spotify_tracks: {
+        Row: {
+          added_at: string | null
+          album: string | null
+          artist: string
+          audio_features: Json | null
+          created_at: string
+          duration_ms: number | null
+          explicit: boolean | null
+          genre: string | null
+          id: string
+          image_url: string | null
+          playlist_id: string | null
+          popularity: number | null
+          preview_url: string | null
+          spotify_track_id: string
+          spotify_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          year: number | null
+        }
+        Insert: {
+          added_at?: string | null
+          album?: string | null
+          artist: string
+          audio_features?: Json | null
+          created_at?: string
+          duration_ms?: number | null
+          explicit?: boolean | null
+          genre?: string | null
+          id?: string
+          image_url?: string | null
+          playlist_id?: string | null
+          popularity?: number | null
+          preview_url?: string | null
+          spotify_track_id: string
+          spotify_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          year?: number | null
+        }
+        Update: {
+          added_at?: string | null
+          album?: string | null
+          artist?: string
+          audio_features?: Json | null
+          created_at?: string
+          duration_ms?: number | null
+          explicit?: boolean | null
+          genre?: string | null
+          id?: string
+          image_url?: string | null
+          playlist_id?: string | null
+          popularity?: number | null
+          preview_url?: string | null
+          spotify_track_id?: string
+          spotify_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_spotify_tracks_playlist_id"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "spotify_playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spotify_user_stats: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          name: string
+          rank_position: number | null
+          spotify_id: string
+          stat_type: string
+          time_range: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          id?: string
+          name: string
+          rank_position?: number | null
+          spotify_id: string
+          stat_type: string
+          time_range: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          name?: string
+          rank_position?: number | null
+          spotify_id?: string
+          stat_type?: string
+          time_range?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       subscription_events: {
         Row: {

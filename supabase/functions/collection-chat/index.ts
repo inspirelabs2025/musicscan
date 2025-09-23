@@ -94,14 +94,14 @@ Deno.serve(async (req) => {
     // Get Spotify data for enhanced context
     const { data: spotifyTracks, error: spotifyTracksError } = await supabase
       .from('spotify_tracks')
-      .select('title, artist, album, duration_ms, explicit, popularity, preview_url, spotify_id')
+      .select('title, artist, album, duration_ms, explicit, popularity, preview_url, spotify_track_id')
       .eq('user_id', userId)
       .order('popularity', { ascending: false })
       .limit(500);
 
     const { data: spotifyPlaylists, error: spotifyPlaylistsError } = await supabase
       .from('spotify_playlists')
-      .select('name, description, track_count, is_public, spotify_id')
+      .select('name, description, track_count, is_public, spotify_playlist_id')
       .eq('user_id', userId)
       .order('track_count', { ascending: false });
 

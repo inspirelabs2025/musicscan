@@ -257,20 +257,37 @@ export const useSpotifyAuth = () => {
     console.log('🔄 Starting Spotify data sync...');
 
     try {
-      const { error } = await supabase.functions.invoke('spotify-sync', {
+      const { data, error } = await supabase.functions.invoke('spotify-sync', {
         body: { user_id: user.id },
       });
 
       if (error) {
         console.error('❌ Spotify sync error:', error);
+        
+        // Check if re-authorization is needed
+        if (error.message?.includes('needs_reauth') || error.message?.includes('refresh')) {
+          toast.error('Spotify autorisatie verlopen. Klik op "Herautoriseer Spotify" om opnieuw te verbinden.');
+          setState(prev => ({ ...prev, isConnected: false }));
+          return { needsReauth: true };
+        }
+        
         throw error;
       }
       
-      console.log('✅ Spotify data sync completed');
-      toast.success('Spotify data wordt gesynchroniseerd op de achtergrond');
+      console.log('✅ Spotify data sync completed:', data);
+      
+      if (data?.counts) {
+        const { playlists, tracks, topTracks, topArtists } = data.counts;
+        toast.success(`Spotify gesynchroniseerd: ${playlists} playlists, ${tracks} tracks, ${topTracks} top tracks, ${topArtists} top artiesten`);
+      } else {
+        toast.success('Spotify data gesynchroniseerd');
+      }
+      
+      return { success: true, data };
     } catch (error) {
       console.error('❌ Error syncing Spotify data:', error);
       toast.error('Er ging iets mis bij het synchroniseren van Spotify data');
+      return { success: false, error };
     }
   };
 

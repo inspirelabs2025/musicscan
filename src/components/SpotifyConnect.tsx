@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,8 @@ import {
   Unlink,
   ExternalLink,
   Copy,
-  Loader2
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
 import { useSpotifyStats } from '@/hooks/useSpotifyData';
@@ -26,6 +27,7 @@ export function SpotifyConnect() {
   const { data: profile } = useProfile(user?.id);
   const { connectSpotify, disconnectSpotify, syncSpotifyData, isConnecting, isDisconnecting, getManualSpotifyUrl } = useSpotifyAuth();
   const { data: spotifyStats } = useSpotifyStats();
+  const [needsReauth, setNeedsReauth] = useState(false);
   
   useEffect(() => {
     // Handle Spotify OAuth callback
@@ -58,6 +60,20 @@ export function SpotifyConnect() {
     if (diffInHours < 1) return 'Zojuist';
     if (diffInHours < 24) return `${diffInHours} uur geleden`;
     return `${Math.floor(diffInHours / 24)} dagen geleden`;
+  };
+
+  const handleSync = async () => {
+    const result = await syncSpotifyData();
+    if (result?.needsReauth) {
+      setNeedsReauth(true);
+    } else if (result?.success) {
+      setNeedsReauth(false);
+    }
+  };
+
+  const handleReauth = () => {
+    setNeedsReauth(false);
+    connectSpotify();
   };
 
   if (!isConnected) {
@@ -205,15 +221,22 @@ export function SpotifyConnect() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={syncSpotifyData}
-              disabled={isConnecting}
-            >
-              <RefreshCw className="w-4 h-4 mr-1" />
-              Sync
-            </Button>
+            {needsReauth ? (
+              <Button onClick={handleReauth} variant="default" size="sm">
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Herautoriseer Spotify
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSync}
+                disabled={isConnecting}
+              >
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Sync
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -227,75 +250,89 @@ export function SpotifyConnect() {
         </div>
       </CardHeader>
 
-      {spotifyStats && (
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{spotifyStats.totalTracks}</div>
-              <div className="text-sm text-muted-foreground">Tracks</div>
+      <CardContent className="space-y-6">
+        {needsReauth && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-center gap-2 text-amber-800">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="text-sm font-medium">Autorisatie verlopen</span>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{spotifyStats.totalPlaylists}</div>
-              <div className="text-sm text-muted-foreground">Playlists</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {spotifyStats.avgDurationMs > 0 ? formatDuration(spotifyStats.avgDurationMs) : '0:00'}
-              </div>
-              <div className="text-sm text-muted-foreground">Gem. Duur</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{spotifyStats.explicitPercentage}%</div>
-              <div className="text-sm text-muted-foreground">Explicit</div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {spotifyStats.topGenres.length > 0 && (
-            <div>
-              <h4 className="font-semibold mb-3 flex items-center">
-                <Music className="w-4 h-4 mr-2" />
-                Top Genres
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {spotifyStats.topGenres.map((genre, index) => (
-                  <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
-                    {genre.genre} ({genre.count})
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {spotifyStats.topArtists.length > 0 && (
-            <div>
-              <h4 className="font-semibold mb-3 flex items-center">
-                <Users className="w-4 h-4 mr-2" />
-                Top Artiesten (uit bibliotheek)
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {spotifyStats.topArtists.slice(0, 6).map((artist, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded">
-                    <span className="font-medium">{artist.artist}</span>
-                    <Badge variant="outline">{artist.count} tracks</Badge>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="pt-4 border-t">
-            <p className="text-sm text-muted-foreground text-center">
-              Deze gegevens worden gebruikt om je muziek DNA en quiz ervaring te verbeteren.
-              <Button variant="link" className="p-0 h-auto ml-1" size="sm">
-                <ExternalLink className="w-3 h-3 mr-1" />
-                Bekijk op Spotify
-              </Button>
+            <p className="text-xs text-amber-700 mt-1">
+              Je Spotify verbinding moet worden vernieuwd. Klik op "Herautoriseer Spotify" om opnieuw te verbinden.
             </p>
           </div>
-        </CardContent>
-      )}
+        )}
+        
+        {spotifyStats && (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{spotifyStats.totalTracks}</div>
+                <div className="text-sm text-muted-foreground">Tracks</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{spotifyStats.totalPlaylists}</div>
+                <div className="text-sm text-muted-foreground">Playlists</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {spotifyStats.avgDurationMs > 0 ? formatDuration(spotifyStats.avgDurationMs) : '0:00'}
+                </div>
+                <div className="text-sm text-muted-foreground">Gem. Duur</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{spotifyStats.explicitPercentage}%</div>
+                <div className="text-sm text-muted-foreground">Explicit</div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {spotifyStats.topGenres.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center">
+                  <Music className="w-4 h-4 mr-2" />
+                  Top Genres
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {spotifyStats.topGenres.map((genre, index) => (
+                    <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
+                      {genre.genre} ({genre.count})
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {spotifyStats.topArtists.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center">
+                  <Users className="w-4 h-4 mr-2" />
+                  Top Artiesten (uit bibliotheek)
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {spotifyStats.topArtists.slice(0, 6).map((artist, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                      <span className="font-medium">{artist.artist}</span>
+                      <Badge variant="outline">{artist.count} tracks</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        <div className="pt-4 border-t">
+          <p className="text-sm text-muted-foreground text-center">
+            Deze gegevens worden gebruikt om je muziek DNA en quiz ervaring te verbeteren.
+            <Button variant="link" className="p-0 h-auto ml-1" size="sm">
+              <ExternalLink className="w-3 h-3 mr-1" />
+              Bekijk op Spotify
+            </Button>
+          </p>
+        </div>
+      </CardContent>
     </Card>
   );
 }

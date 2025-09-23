@@ -51,23 +51,50 @@ serve(async (req) => {
       );
     }
 
-    // Refresh access token
-    const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+    // Refresh access token - try PKCE style first, then Basic Auth fallback
+    console.log('🔄 Attempting PKCE-style token refresh...');
+    let tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${btoa(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`)}`,
       },
       body: new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: profile.spotify_refresh_token,
+        client_id: SPOTIFY_CLIENT_ID,
       }),
     });
 
+    // If PKCE style fails, try Basic Auth fallback
     if (!tokenResponse.ok) {
-      console.error('Failed to refresh Spotify token');
+      console.log('⚠️ PKCE-style refresh failed, trying Basic Auth fallback...');
+      tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${btoa(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`)}`,
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: profile.spotify_refresh_token,
+        }),
+      });
+    }
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('❌ Failed to refresh Spotify token (both methods):', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        body: errorText,
+      });
       return new Response(
-        JSON.stringify({ error: 'Failed to refresh token' }),
+        JSON.stringify({ 
+          error: 'Failed to refresh token', 
+          details: 'Both PKCE and Basic Auth refresh methods failed',
+          spotify_error: errorText,
+          needs_reauth: true
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -75,17 +102,26 @@ serve(async (req) => {
     const tokenData: SpotifyRefreshResponse = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    console.log('Starting Spotify data sync for user:', user_id);
+    console.log('✅ Token refresh successful, starting Spotify data sync for user:', user_id);
+
+    let syncCounts = {
+      playlists: 0,
+      tracks: 0,
+      topTracks: 0,
+      topArtists: 0,
+    };
 
     // Sync user's playlists
+    console.log('📋 Syncing playlists...');
     const playlistsResponse = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
       headers: { 'Authorization': `Bearer ${accessToken}` },
     });
 
     if (playlistsResponse.ok) {
       const playlistsData = await playlistsResponse.json();
+      console.log(`📋 Found ${playlistsData.items?.length || 0} playlists`);
       
-      for (const playlist of playlistsData.items) {
+      for (const playlist of playlistsData.items || []) {
         // Upsert playlist
         await supabase
           .from('spotify_playlists')
@@ -104,10 +140,14 @@ serve(async (req) => {
           }, {
             onConflict: 'user_id,spotify_playlist_id',
           });
+        syncCounts.playlists++;
       }
     }
 
+    console.log(`✅ Synced ${syncCounts.playlists} playlists`);
+
     // Sync user's saved tracks (Library)
+    console.log('🎵 Syncing saved tracks...');
     let savedTracksUrl = 'https://api.spotify.com/v1/me/tracks?limit=50';
     let allSavedTracks = [];
     
@@ -122,6 +162,9 @@ serve(async (req) => {
       allSavedTracks.push(...tracksData.items);
       savedTracksUrl = tracksData.next;
     }
+
+    console.log(`🎵 Found ${allSavedTracks.length} saved tracks`);
+    syncCounts.tracks = allSavedTracks.length;
 
     // Process saved tracks in batches
     for (let i = 0; i < allSavedTracks.length; i += 20) {
@@ -149,7 +192,10 @@ serve(async (req) => {
         });
     }
 
+    console.log(`✅ Synced ${syncCounts.tracks} saved tracks`);
+
     // Sync top tracks and artists
+    console.log('🔥 Syncing top tracks and artists...');
     const timeRanges = ['short_term', 'medium_term', 'long_term'];
     
     for (const timeRange of timeRanges) {
@@ -189,6 +235,8 @@ serve(async (req) => {
         await supabase
           .from('spotify_user_stats')
           .insert(topTrackStats);
+        
+        syncCounts.topTracks += topTrackStats.length;
       }
 
       // Top artists
@@ -227,6 +275,8 @@ serve(async (req) => {
         await supabase
           .from('spotify_user_stats')
           .insert(topArtistStats);
+        
+        syncCounts.topArtists += topArtistStats.length;
       }
     }
 
@@ -236,12 +286,13 @@ serve(async (req) => {
       .update({ spotify_last_sync: new Date().toISOString() })
       .eq('user_id', user_id);
 
-    console.log('Spotify sync completed for user:', user_id);
+    console.log('✅ Spotify sync completed for user:', user_id, syncCounts);
 
     return new Response(
       JSON.stringify({ 
         message: 'Spotify data synced successfully',
-        synced_tracks: allSavedTracks.length,
+        counts: syncCounts,
+        success: true,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

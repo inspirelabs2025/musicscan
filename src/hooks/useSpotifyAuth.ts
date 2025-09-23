@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -21,6 +22,7 @@ interface SpotifyTokenResponse {
 
 export const useSpotifyAuth = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [state, setState] = useState<SpotifyAuthState>({
     isConnecting: false,
     isDisconnecting: false,
@@ -234,6 +236,10 @@ export const useSpotifyAuth = () => {
 
       console.log('✅ Profile updated successfully');
 
+      // Invalidate profile cache to refresh UI
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      console.log('🔄 Invalidated profile cache');
+
       // Clean up localStorage
       localStorage.removeItem('spotify_code_verifier');
       localStorage.removeItem('spotify_redirect_uri');
@@ -347,6 +353,9 @@ export const useSpotifyAuth = () => {
         supabase.from('spotify_tracks').delete().eq('user_id', user.id),
         supabase.from('spotify_user_stats').delete().eq('user_id', user.id),
       ]);
+
+      // Invalidate profile cache to refresh UI
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
 
       setState(prev => ({ ...prev, isConnected: false }));
       toast.success('Spotify koppeling verbroken');

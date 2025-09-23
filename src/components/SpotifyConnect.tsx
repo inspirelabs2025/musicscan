@@ -42,9 +42,9 @@ export function SpotifyConnect() {
     }
   }, []);
 
-  const isConnected = (profile as any)?.spotify_connected || false;
-  const spotifyDisplayName = (profile as any)?.spotify_display_name;
-  const lastSync = (profile as any)?.spotify_last_sync;
+  const isConnected = profile?.spotify_connected || false;
+  const spotifyDisplayName = profile?.spotify_display_name;
+  const lastSync = profile?.spotify_last_sync;
 
   const formatDuration = (ms: number) => {
     const minutes = Math.floor(ms / 60000);

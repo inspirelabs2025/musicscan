@@ -94,14 +94,14 @@ Deno.serve(async (req) => {
     // Get Spotify data for enhanced context
     const { data: spotifyTracks, error: spotifyTracksError } = await supabase
       .from('spotify_tracks')
-      .select('name, artist, album, duration_ms, explicit, popularity, preview_url, spotify_id')
+      .select('title, artist, album, duration_ms, explicit, popularity, preview_url, spotify_id')
       .eq('user_id', userId)
       .order('popularity', { ascending: false })
       .limit(500);
 
     const { data: spotifyPlaylists, error: spotifyPlaylistsError } = await supabase
       .from('spotify_playlists')
-      .select('name, description, track_count, public, spotify_id')
+      .select('name, description, track_count, is_public, spotify_id')
       .eq('user_id', userId)
       .order('track_count', { ascending: false });
 
@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
       spotifyArtistsCount: spotifyArtists.size,
       spotifyAlbumsCount: spotifyAlbums.size,
       topSpotifyTracks: topSpotifyTracks.map(t => ({
-        name: t.name,
+        name: t.title,
         artist: t.artist,
         album: t.album,
         popularity: t.popularity
@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
       spotifyPlaylists: spotifyPlaylists?.slice(0, 10).map(p => ({
         name: p.name,
         trackCount: p.track_count,
-        public: p.public
+        public: p.is_public
       })) || [],
       
       // Cross-analysis
@@ -293,7 +293,7 @@ ${collectionStats.topSpotifyTracks.slice(0, 5).map(t => `• "${t.name}" - ${t.a
 
 ## ONTDEK STEEDS NIEUWE ALBUMS! 
 **Spotlight vandaag:** ${collectionStats.featuredAlbums.slice(0, 8).map(a => 
-  a.title ? `"${a.title}" (${a.artist})` : `"${a.name}" - ${a.artist}`
+  a.title ? `"${a.title}" (${a.artist})` : a.name ? `"${a.name}" - ${a.artist}` : `"${a.artist}"`
 ).join(', ')}
 
 ## FYSIEKE COLLECTIE DIVERSITEIT

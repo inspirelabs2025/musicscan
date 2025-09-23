@@ -96,6 +96,8 @@ export interface ChartData {
 
 export interface CollectionStats {
   totalItems: number;
+  spotifyTracks: number;
+  spotifyPlaylists: number;
   uniqueArtists: number;
   uniqueLabels: number;
   uniqueGenres: number;
@@ -107,6 +109,10 @@ export interface CollectionStats {
   timeSpan: number;
   cdCount: number;
   vinylCount: number;
+  hasPhysicalCollection: boolean;
+  hasSpotifyData: boolean;
+  physicalArtistsCount: number;
+  spotifyArtistsCount: number;
 }
 
 export interface CollectionAIAnalysisResult {
@@ -122,7 +128,9 @@ export const useCollectionAIAnalysis = () => {
   return useQuery({
     queryKey: ["collection-ai-analysis"],
     queryFn: async (): Promise<CollectionAIAnalysisResult> => {
-      const { data, error } = await supabase.functions.invoke('collection-ai-analysis');
+      const { data, error } = await supabase.functions.invoke('collection-ai-analysis', {
+        body: {} // Empty body, function will use auth user automatically
+      });
       
       if (error) {
         console.error('AI Analysis failed:', error);

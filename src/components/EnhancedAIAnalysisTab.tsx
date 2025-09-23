@@ -266,7 +266,13 @@ export function EnhancedAIAnalysisTab() {
       {/* Enhanced Stats Cards with Hover Effects */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "Totaal Albums", value: stats.totalItems, icon: Music, color: "text-primary" },
+          { 
+            label: stats.hasSpotifyData ? "Fysieke Albums" : "Totaal Albums", 
+            value: stats.totalItems, 
+            icon: Music, 
+            color: "text-primary",
+            subtitle: stats.hasSpotifyData ? `+ ${stats.spotifyTracks} Spotify tracks` : undefined
+          },
           { label: "Genres", value: stats.uniqueGenres, icon: Target, color: "text-vinyl-gold" },
           { label: "Artiesten", value: stats.uniqueArtists, icon: Users, color: "text-blue-500" },
           { label: "Geschatte Waarde", value: `€${Math.round(stats.totalValue)}`, icon: DollarSign, color: "text-green-500" }
@@ -278,6 +284,9 @@ export function EnhancedAIAnalysisTab() {
                 {stat.value}
               </div>
               <div className="text-sm text-muted-foreground">{stat.label}</div>
+              {stat.subtitle && (
+                <div className="text-xs text-muted-foreground/70 mt-1">{stat.subtitle}</div>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -317,14 +326,54 @@ export function EnhancedAIAnalysisTab() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          {/* Spotify vs Physical Comparison (if both exist) */}
+          {stats.hasPhysicalCollection && stats.hasSpotifyData && (
+            <Card variant="purple" className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-green-500" />
+                  Fysiek vs Digitaal
+                </CardTitle>
+                <CardDescription>Vergelijking tussen je collectie en luistergedrag</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold text-primary">{stats.physicalArtistsCount}</div>
+                    <div className="text-sm text-muted-foreground">Fysieke Artiesten</div>
+                  </div>
+                  <div className="text-center p-4 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-500">{stats.spotifyArtistsCount}</div>
+                    <div className="text-sm text-muted-foreground">Spotify Artiesten</div>
+                  </div>
+                  <div className="text-center p-4 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-500">{stats.uniqueArtists}</div>
+                    <div className="text-sm text-muted-foreground">Totaal Uniek</div>
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-r from-primary/10 to-green-500/10 rounded-lg border border-primary/20">
+                  <p className="text-muted-foreground">
+                    Je luisterpatronen tonen interessante verschillen tussen wat je <strong>bezit</strong> en wat je <strong>luistert</strong>. 
+                    De AI analyse hieronder verkent deze fascinerende muziekpersoonlijkheid!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Music History Timeline */}
-          <Card variant="purple" className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5">\
+          <Card variant="purple" className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                Muziekgeschiedenis Timeline
+                {stats.hasSpotifyData ? "Muziekpersoonlijkheid Analyse" : "Muziekgeschiedenis Timeline"}
               </CardTitle>
-              <CardDescription>De historische context van jouw collectie</CardDescription>
+              <CardDescription>
+                {stats.hasSpotifyData 
+                  ? "De complete analyse van jouw muziekprofiel" 
+                  : "De historische context van jouw collectie"
+                }
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="p-6 bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-lg border border-primary/20">

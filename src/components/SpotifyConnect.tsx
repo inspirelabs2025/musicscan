@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 export function SpotifyConnect() {
   const { user } = useAuth();
   const { data: profile } = useProfile(user?.id);
-  const { connectSpotify, disconnectSpotify, syncSpotifyData, isConnecting, isDisconnecting } = useSpotifyAuth();
+  const { connectSpotify, disconnectSpotify, syncSpotifyData, isConnecting, isDisconnecting, getManualSpotifyUrl } = useSpotifyAuth();
   const { data: spotifyStats } = useSpotifyStats();
   
   useEffect(() => {
@@ -112,7 +112,7 @@ export function SpotifyConnect() {
           
           <Separator />
           
-          <div className="text-center">
+          <div className="text-center space-y-3">
             <Button 
               onClick={connectSpotify}
               disabled={isConnecting}
@@ -131,6 +131,22 @@ export function SpotifyConnect() {
                 </>
               )}
             </Button>
+            
+            {isConnecting && (
+              <div className="text-sm text-muted-foreground">
+                <p>Als Spotify niet automatisch opent, probeer dan:</p>
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => {
+                    toast.info('Probeer eerst de hoofdknop opnieuw. Als dat niet werkt, zorg dat pop-ups zijn toegestaan.');
+                  }}
+                  className="text-xs underline"
+                >
+                  Handmatige verbinding
+                </Button>
+              </div>
+            )}
           </div>
           
           <p className="text-xs text-muted-foreground text-center">

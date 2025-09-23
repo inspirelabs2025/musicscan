@@ -78,12 +78,14 @@ export const useSpotifyAuth = () => {
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
       
-      // Store code verifier for later use
-      localStorage.setItem('spotify_code_verifier', codeVerifier);
-      
       // Redirect URL (must match Spotify app settings exactly)
       const redirectUri = `${window.location.origin}/auth/spotify/callback`;
       console.log('🔗 Using redirect URI:', redirectUri);
+      
+      // Store both code verifier and redirect URI for later use
+      localStorage.setItem('spotify_code_verifier', codeVerifier);
+      localStorage.setItem('spotify_redirect_uri', redirectUri);
+      console.log('💾 Stored auth data in localStorage');
       
       const params = new URLSearchParams({
         client_id: clientId,
@@ -175,20 +177,25 @@ export const useSpotifyAuth = () => {
     }
 
     const codeVerifier = localStorage.getItem('spotify_code_verifier');
+    const storedRedirectUri = localStorage.getItem('spotify_redirect_uri');
+    
     if (!codeVerifier) {
       console.error('❌ Code verifier not found in localStorage');
       toast.error('Authenticatie gegevens niet gevonden');
       return;
     }
 
-    console.log('✅ Code verifier found, calling Edge Function...');
+    // Use stored redirect URI if available, fallback to current origin
+    const redirectUri = storedRedirectUri || `${window.location.origin}/auth/spotify/callback`;
+    console.log('✅ Using stored redirect URI:', redirectUri);
+    console.log('🔄 Starting token exchange with Edge Function...');
 
     try {
       const { data, error } = await supabase.functions.invoke('spotify-auth', {
         body: {
           code,
           code_verifier: codeVerifier,
-          redirect_uri: `${window.location.origin}/auth/spotify/callback`,
+          redirect_uri: redirectUri,
         },
       });
 
@@ -227,7 +234,11 @@ export const useSpotifyAuth = () => {
 
       console.log('✅ Profile updated successfully');
 
+      // Clean up localStorage
       localStorage.removeItem('spotify_code_verifier');
+      localStorage.removeItem('spotify_redirect_uri');
+      console.log('🧹 Cleaned up localStorage auth data');
+      
       setState(prev => ({ ...prev, isConnected: true }));
       toast.success('Spotify succesvol gekoppeld!');
 
@@ -299,11 +310,27 @@ export const useSpotifyAuth = () => {
     }
   };
 
+  const getManualSpotifyUrl = () => {
+    const storedRedirectUri = localStorage.getItem('spotify_redirect_uri');
+    const codeVerifier = localStorage.getItem('spotify_code_verifier');
+    
+    if (!storedRedirectUri || !codeVerifier) {
+      console.log('⚠️ No stored auth data for manual URL');
+      return null;
+    }
+    
+    // We would need to get the client ID and regenerate the URL
+    // For now, return null - the user should try connecting again
+    console.log('📋 Manual URL requested but requires fresh auth flow');
+    return null;
+  };
+
   return {
     ...state,
     connectSpotify,
     disconnectSpotify,
     handleCallback,
     syncSpotifyData,
+    getManualSpotifyUrl,
   };
 };

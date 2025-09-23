@@ -2,7 +2,7 @@
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MusicDNAExplorer } from './MusicDNAExplorer';
-import { CollectionQuiz } from './CollectionQuiz';
+import { EnhancedCollectionQuiz } from './EnhancedCollectionQuiz';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Brain, Trophy } from 'lucide-react';
 
@@ -34,7 +34,7 @@ export function AIAnalysisTab() {
       </TabsContent>
       
       <TabsContent value="quiz" className="mt-6">
-        <CollectionQuiz />
+        <EnhancedCollectionQuiz />
       </TabsContent>
     </Tabs>
   );

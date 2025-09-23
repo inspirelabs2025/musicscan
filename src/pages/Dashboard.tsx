@@ -28,6 +28,7 @@ import { useUnifiedScansStats } from '@/hooks/useUnifiedScansStats';
 import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
 import { ChatWidget } from '@/components/dashboard/ChatWidget';
 import { QuizWidget } from '@/components/dashboard/QuizWidget';
+import { SpotifyWidget } from '@/components/dashboard/SpotifyWidget';
 import { EnhancedNewsWidget } from '@/components/dashboard/EnhancedNewsWidget';
 import { BatchBlogGenerator } from '@/components/admin/BatchBlogGenerator';
 import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
@@ -162,10 +163,11 @@ const Dashboard = () => {
             <Sparkles className="w-6 h-6 text-vinyl-purple" />
             🚀 Jouw Muziek Command Center
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <AIInsightsWidget />
             <ChatWidget />
             <QuizWidget />
+            <SpotifyWidget />
           </div>
         </section>
 

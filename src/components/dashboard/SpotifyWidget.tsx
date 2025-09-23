@@ -51,7 +51,7 @@ export function SpotifyWidget() {
             <Button 
               onClick={connectSpotify}
               disabled={isConnecting}
-              className="bg-green-500 hover:bg-green-600 text-white"
+              className="bg-[#1DB954] hover:bg-[#1ed760] text-white"
             >
               {isConnecting ? (
                 <>
@@ -138,7 +138,12 @@ export function SpotifyWidget() {
           )}
 
           <div className="pt-2 border-t">
-            <Button variant="outline" size="sm" className="w-full h-8 text-xs">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full h-8 text-xs"
+              onClick={() => window.open('/spotify-profile', '_self')}
+            >
               <ExternalLink className="w-3 h-3 mr-1" />
               Bekijk Details
             </Button>

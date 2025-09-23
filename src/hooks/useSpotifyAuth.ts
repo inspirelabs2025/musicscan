@@ -65,7 +65,7 @@ export const useSpotifyAuth = () => {
       const redirectUri = `${window.location.origin}/auth/spotify/callback`;
       
       const params = new URLSearchParams({
-        client_id: '4b4f4c4e4a4d4b4e4a4d4b4e4a4d4b4e', // Will be replaced with actual client ID
+        client_id: '7d491ba2a6b14c52b6f128585656cf51', // Actual Spotify Client ID
         response_type: 'code',
         redirect_uri: redirectUri,
         code_challenge_method: 'S256',

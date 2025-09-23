@@ -51,6 +51,8 @@ import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
 import Quiz from "./pages/Quiz";
 import Pricing from "./pages/Pricing";
 import Prestaties from "./pages/Prestaties";
+import SpotifyProfile from "./pages/SpotifyProfile";
+import SpotifyCallback from "./pages/SpotifyCallback";
 import { TrackOrder } from "./pages/TrackOrder";
 import { OrderSuccess } from "./pages/OrderSuccess";
 
@@ -193,6 +195,8 @@ const App = () => {
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/track-order" element={<TrackOrder />} />
             <Route path="/collection/:userId" element={<PublicCollection />} />
+            <Route path="/spotify-profile" element={<ProtectedRoute><SpotifyProfile /></ProtectedRoute>} />
+            <Route path="/auth/spotify/callback" element={<ProtectedRoute><SpotifyCallback /></ProtectedRoute>} />
             <Route path="/album/:albumId" element={
               <ProtectedRoute>
                 <AlbumDetail />

@@ -7,6 +7,134 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper functions for different quiz types
+function generatePhysicalQuizPrompt(physical: any, questionCount: number) {
+  return `
+Je bent een muziekquiz generator. Analyseer deze fysieke muziekcollectie en genereer precies ${questionCount} uitdagende maar eerlijke quiz vragen.
+
+FYSIEKE COLLECTIE DATA:
+- Totaal albums: ${physical.totalAlbums}
+- Artiesten: ${physical.artists.join(', ')}
+- Genres: ${physical.genres.join(', ')}
+- Jaren: ${physical.years[0]} - ${physical.years[physical.years.length - 1]}
+
+SAMPLE ALBUMS:
+${physical.sampleAlbums.map((a: any) => `${a.artist} - ${a.title} (${a.year || 'Unknown'})`).join('\n')}
+
+Genereer ${questionCount} verschillende vraagtypen:
+1. Album herkenning: "Welke artiest heeft het album [TITLE]?"
+2. Jaar vragen: "Uit welk jaar is [ALBUM] van [ARTIST]?"
+3. Genre classificatie: "Tot welk genre behoort [ALBUM]?"
+4. Artiest tellen: "Hoeveel albums heb je van [ARTIST]?"
+5. Chronologie: "Wat is het oudste/nieuwste album van [ARTIST] in je collectie?"
+6. Label vragen: "Op welk label verscheen [ALBUM]?"
+7. Vergelijkingen: "Welke artiest heeft zowel een album uit de jaren 70 als 90?"
+8. Genre mix: "Hoeveel [GENRE] albums heb je?"
+9. Decade focus: "Welk album uit de jaren [DECADE] heb je?"
+10. Collectie trivia: Unieke vraag over de collectie
+
+BELANGRIJK: Alle antwoordopties moeten uit de DAADWERKELIJKE collectie komen.
+
+Retourneer JSON format:
+{
+  "questions": [
+    {
+      "id": 1,
+      "type": "album_recognition",
+      "question": "Welke artiest heeft het album 'Title'?",
+      "correctAnswer": "Artist Name",
+      "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+      "explanation": "Korte uitleg waarom dit klopt"
+    }
+  ]
+}`;
+}
+
+function generateSpotifyQuizPrompt(spotify: any, questionCount: number) {
+  return `
+Je bent een Spotify muziekquiz generator. Analyseer deze Spotify luisterdata en genereer precies ${questionCount} uitdagende maar eerlijke quiz vragen.
+
+SPOTIFY DATA:
+- Totaal tracks: ${spotify.totalTracks}
+- Totaal playlists: ${spotify.totalPlaylists}
+- Top artiesten: ${spotify.topArtists.join(', ')}
+- Top tracks: ${spotify.topTracks.join(', ')}
+- Playlist namen: ${spotify.playlistNames.join(', ')}
+
+SAMPLE TRACKS:
+${spotify.sampleTracks.map((t: any) => `${t.artist_name} - ${t.name} (Album: ${t.album_name || 'Unknown'})`).join('\n')}
+
+Genereer ${questionCount} verschillende Spotify vraagtypen:
+1. Top artiest herkenning: "Wie is jouw #1 meest beluisterde artiest?"
+2. Playlist trivia: "In welke playlist staat het nummer [TRACK]?"
+3. Artiest ranking: "Welke artiest staat hoger in jouw top lijst?"
+4. Track herkenning: "Van welke artiest is het nummer [TRACK]?"
+5. Luistergedrag: "Hoeveel playlists heb je?"
+6. Genre voorkeur: Gebaseerd op top artiesten
+7. Album herkenning: "Op welk album staat [TRACK]?"
+8. Vergelijkingen: "Welke artiest heb je vaker beluisterd?"
+9. Playlist grootte: "Welke playlist heeft de meeste nummers?"
+10. Muziek trivia: Unieke vraag over luistergedrag
+
+BELANGRIJK: Alle antwoordopties moeten uit de DAADWERKELIJKE Spotify data komen.
+
+Retourneer JSON format:
+{
+  "questions": [
+    {
+      "id": 1,
+      "type": "spotify_top_artist",
+      "question": "Wie is jouw meest beluisterde artiest op Spotify?",
+      "correctAnswer": "Artist Name",
+      "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+      "explanation": "Gebaseerd op jouw Spotify luisterdata"
+    }
+  ]
+}`;
+}
+
+function generateMixedQuizPrompt(summary: any, questionCount: number) {
+  return `
+Je bent een mixed muziekquiz generator. Analyseer zowel de fysieke collectie als Spotify data en genereer precies ${questionCount} uitdagende vragen.
+
+FYSIEKE COLLECTIE:
+- Albums: ${summary.physical.totalAlbums}
+- Artiesten: ${summary.physical.artists.slice(0, 20).join(', ')}
+
+SPOTIFY DATA:
+- Tracks: ${summary.spotify.totalTracks}
+- Top artiesten: ${summary.spotify.topArtists.slice(0, 10).join(', ')}
+- Playlists: ${summary.spotify.totalPlaylists}
+
+Genereer ${questionCount} mixed vragen:
+1. Cross-platform: "Welke artiest heb je zowel op vinyl/CD als in je Spotify top?"
+2. Collectie vs streaming: "Hoeveel albums van [ARTIST] heb je fysiek vs. hoeveel luister je op Spotify?"
+3. Ontbrekende albums: "Welke van jouw Spotify top artiesten mis je nog in je fysieke collectie?"
+4. Overlap analyse: "Van welke artiest heb je het meeste fysieke albums?"
+5. Platform voorkeur: Vergelijking tussen formaten
+6. Completist vragen: Over volledigheid van collecties
+7. Era vergelijking: Oude albums vs nieuwe Spotify tracks
+8. Format mix: CD vs vinyl vs digital
+9. Discovery: "Welke artiest ontdekte je via Spotify maar verzamel je nu ook fysiek?"
+10. Muziek DNA: Cross-platform persoonlijkheid vragen
+
+BELANGRIJK: Mix vragen over beide platforms en zoek verbindingen tussen fysiek en digitaal.
+
+Retourneer JSON format:
+{
+  "questions": [
+    {
+      "id": 1,
+      "type": "cross_platform",
+      "question": "Welke artiest heb je zowel fysiek als in je Spotify top 10?",
+      "correctAnswer": "Artist Name",
+      "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+      "explanation": "Deze artiest staat zowel in je fysieke collectie als Spotify statistieken"
+    }
+  ]
+}`;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -145,133 +273,6 @@ serve(async (req) => {
     } else if (quizMode === 'mixed') {
       prompt = generateMixedQuizPrompt(collectionSummary, questionCount);
     }
-
-// Helper functions for different quiz types
-function generatePhysicalQuizPrompt(physical: any, questionCount: number) {
-  return `
-Je bent een muziekquiz generator. Analyseer deze fysieke muziekcollectie en genereer precies ${questionCount} uitdagende maar eerlijke quiz vragen.
-
-FYSIEKE COLLECTIE DATA:
-- Totaal albums: ${physical.totalAlbums}
-- Artiesten: ${physical.artists.join(', ')}
-- Genres: ${physical.genres.join(', ')}
-- Jaren: ${physical.years[0]} - ${physical.years[physical.years.length - 1]}
-
-SAMPLE ALBUMS:
-${physical.sampleAlbums.map((a: any) => `${a.artist} - ${a.title} (${a.year || 'Unknown'})`).join('\n')}
-
-Genereer ${questionCount} verschillende vraagtypen:
-1. Album herkenning: "Welke artiest heeft het album [TITLE]?"
-2. Jaar vragen: "Uit welk jaar is [ALBUM] van [ARTIST]?"
-3. Genre classificatie: "Tot welk genre behoort [ALBUM]?"
-4. Artiest tellen: "Hoeveel albums heb je van [ARTIST]?"
-5. Chronologie: "Wat is het oudste/nieuwste album van [ARTIST] in je collectie?"
-6. Label vragen: "Op welk label verscheen [ALBUM]?"
-7. Vergelijkingen: "Welke artiest heeft zowel een album uit de jaren 70 als 90?"
-8. Genre mix: "Hoeveel [GENRE] albums heb je?"
-9. Decade focus: "Welk album uit de jaren [DECADE] heb je?"
-10. Collectie trivia: Unieke vraag over de collectie
-
-BELANGRIJK: Alle antwoordopties moeten uit de DAADWERKELIJKE collectie komen.
-
-Retourneer JSON format:
-{
-  "questions": [
-    {
-      "id": 1,
-      "type": "album_recognition",
-      "question": "Welke artiest heeft het album 'Title'?",
-      "correctAnswer": "Artist Name",
-      "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-      "explanation": "Korte uitleg waarom dit klopt"
-    }
-  ]
-}`;
-}
-
-function generateSpotifyQuizPrompt(spotify: any, questionCount: number) {
-  return `
-Je bent een Spotify muziekquiz generator. Analyseer deze Spotify luisterdata en genereer precies ${questionCount} uitdagende maar eerlijke quiz vragen.
-
-SPOTIFY DATA:
-- Totaal tracks: ${spotify.totalTracks}
-- Totaal playlists: ${spotify.totalPlaylists}
-- Top artiesten: ${spotify.topArtists.join(', ')}
-- Top tracks: ${spotify.topTracks.join(', ')}
-- Playlist namen: ${spotify.playlistNames.join(', ')}
-
-SAMPLE TRACKS:
-${spotify.sampleTracks.map((t: any) => `${t.artist_name} - ${t.name} (Album: ${t.album_name || 'Unknown'})`).join('\n')}
-
-Genereer ${questionCount} verschillende Spotify vraagtypen:
-1. Top artiest herkenning: "Wie is jouw #1 meest beluisterde artiest?"
-2. Playlist trivia: "In welke playlist staat het nummer [TRACK]?"
-3. Artiest ranking: "Welke artiest staat hoger in jouw top lijst?"
-4. Track herkenning: "Van welke artiest is het nummer [TRACK]?"
-5. Luistergedrag: "Hoeveel playlists heb je?"
-6. Genre voorkeur: Gebaseerd op top artiesten
-7. Album herkenning: "Op welk album staat [TRACK]?"
-8. Vergelijkingen: "Welke artiest heb je vaker beluisterd?"
-9. Playlist grootte: "Welke playlist heeft de meeste nummers?"
-10. Muziek trivia: Unieke vraag over luistergedrag
-
-BELANGRIJK: Alle antwoordopties moeten uit de DAADWERKELIJKE Spotify data komen.
-
-Retourneer JSON format:
-{
-  "questions": [
-    {
-      "id": 1,
-      "type": "spotify_top_artist",
-      "question": "Wie is jouw meest beluisterde artiest op Spotify?",
-      "correctAnswer": "Artist Name",
-      "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-      "explanation": "Gebaseerd op jouw Spotify luisterdata"
-    }
-  ]
-}`;
-}
-
-function generateMixedQuizPrompt(summary: any, questionCount: number) {
-  return `
-Je bent een mixed muziekquiz generator. Analyseer zowel de fysieke collectie als Spotify data en genereer precies ${questionCount} uitdagende vragen.
-
-FYSIEKE COLLECTIE:
-- Albums: ${summary.physical.totalAlbums}
-- Artiesten: ${summary.physical.artists.slice(0, 20).join(', ')}
-
-SPOTIFY DATA:
-- Tracks: ${summary.spotify.totalTracks}
-- Top artiesten: ${summary.spotify.topArtists.slice(0, 10).join(', ')}
-- Playlists: ${summary.spotify.totalPlaylists}
-
-Genereer ${questionCount} mixed vragen:
-1. Cross-platform: "Welke artiest heb je zowel op vinyl/CD als in je Spotify top?"
-2. Collectie vs streaming: "Hoeveel albums van [ARTIST] heb je fysiek vs. hoeveel luister je op Spotify?"
-3. Ontbrekende albums: "Welke van jouw Spotify top artiesten mis je nog in je fysieke collectie?"
-4. Overlap analyse: "Van welke artiest heb je het meeste fysieke albums?"
-5. Platform voorkeur: Vergelijking tussen formaten
-6. Completist vragen: Over volledigheid van collecties
-7. Era vergelijking: Oude albums vs nieuwe Spotify tracks
-8. Format mix: CD vs vinyl vs digital
-9. Discovery: "Welke artiest ontdekte je via Spotify maar verzamel je nu ook fysiek?"
-10. Muziek DNA: Cross-platform persoonlijkheid vragen
-
-BELANGRIJK: Mix vragen over beide platforms en zoek verbindingen tussen fysiek en digitaal.
-
-Retourneer JSON format:
-{
-  "questions": [
-    {
-      "id": 1,
-      "type": "cross_platform",
-      "question": "Welke artiest heb je zowel fysiek als in je Spotify top 10?",
-      "correctAnswer": "Artist Name",
-      "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-      "explanation": "Deze artiest staat zowel in je fysieke collectie als Spotify statistieken"
-    }
-  ]
-}`;
 
     console.log('Calling OpenAI with collection data...');
 

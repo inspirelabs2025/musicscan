@@ -320,6 +320,9 @@ export const useSpotifyAuth = () => {
         toast.success('Spotify data gesynchroniseerd');
       }
       
+      // Invalidate AI analysis cache to force refresh with new Spotify data
+      queryClient.invalidateQueries({ queryKey: ['collection-ai-analysis'] });
+      
       return { success: true, data };
     } catch (error) {
       console.error('❌ Error syncing Spotify data:', error);

@@ -523,9 +523,9 @@ GECOMBINEERD OVERZICHT:
 
     if (hasPhysicalCollection && hasSpotifyData) {
       // Find artists in both physical and digital
-      const commonArtists = [...physicalArtists].filter(artist => spotifyArtists.has(artist));
-      const physicalOnlyArtists = [...physicalArtists].filter(artist => !spotifyArtists.has(artist));
-      const spotifyOnlyArtists = [...spotifyArtists].filter(artist => !physicalArtists.has(artist));
+      const commonArtists = [...physicalArtistSet].filter(artist => spotifyArtistSet.has(artist));
+      const physicalOnlyArtists = [...physicalArtistSet].filter(artist => !spotifyArtistSet.has(artist));
+      const spotifyOnlyArtists = [...spotifyArtistSet].filter(artist => !physicalArtistSet.has(artist));
       
       prompt += `
 - ${commonArtists.length} artiesten komen voor in BEIDE collectie en Spotify

@@ -43,8 +43,8 @@ serve(async (req) => {
 
     console.log(`Generating quiz for user: ${user.id}`);
 
-    // Fetch user's collection from both tables
-    const [cdResult, vinylResult] = await Promise.all([
+    // Fetch user's collection from both tables AND Spotify data
+    const [cdResult, vinylResult, spotifyTracksResult, spotifyPlaylistsResult, spotifyStatsResult] = await Promise.all([
       supabase
         .from('cd_scan')
         .select('artist, title, label, catalog_number, year, genre, style, country')
@@ -56,7 +56,24 @@ serve(async (req) => {
         .select('artist, title, label, catalog_number, year, genre, style, country')
         .eq('user_id', user.id)
         .not('artist', 'is', null)
-        .not('title', 'is', null)
+        .not('title', 'is', null),
+      supabase
+        .from('spotify_tracks')
+        .select('name, artist_name, album_name, playlist_id')
+        .eq('user_id', user.id)
+        .limit(200),
+      supabase
+        .from('spotify_playlists')
+        .select('name, description, track_count')
+        .eq('user_id', user.id)
+        .limit(50),
+      supabase
+        .from('spotify_user_stats')
+        .select('name, stat_type, time_range, data, rank_position')
+        .eq('user_id', user.id)
+        .in('stat_type', ['top_artists', 'top_tracks'])
+        .eq('time_range', 'medium_term')
+        .limit(50)
     ]);
 
     if (cdResult.error || vinylResult.error) {
@@ -65,35 +82,85 @@ serve(async (req) => {
     }
 
     const allAlbums = [...(cdResult.data || []), ...(vinylResult.data || [])];
+    const spotifyTracks = spotifyTracksResult.data || [];
+    const spotifyPlaylists = spotifyPlaylistsResult.data || [];
+    const spotifyStats = spotifyStatsResult.data || [];
     
-    if (allAlbums.length === 0) {
-      throw new Error('No collection data found');
+    // Determine quiz mode based on available data
+    const hasPhysicalCollection = allAlbums.length > 0;
+    const hasSpotifyData = spotifyTracks.length > 0 || spotifyStats.length > 0;
+    
+    let quizMode = body.quizMode || 'auto';
+    if (quizMode === 'auto') {
+      if (hasPhysicalCollection && hasSpotifyData) {
+        quizMode = 'mixed';
+      } else if (hasSpotifyData) {
+        quizMode = 'spotify_only';
+      } else if (hasPhysicalCollection) {
+        quizMode = 'physical_only';
+      } else {
+        throw new Error('No collection or Spotify data found');
+      }
+    }
+    
+    console.log(`Quiz mode: ${quizMode}, Physical: ${allAlbums.length}, Spotify tracks: ${spotifyTracks.length}, Spotify stats: ${spotifyStats.length}`);
+
+    // Prepare data summary for OpenAI based on quiz mode
+    let collectionSummary: any = {};
+    let promptContext = '';
+    
+    if (quizMode === 'physical_only' || quizMode === 'mixed') {
+      collectionSummary.physical = {
+        totalAlbums: allAlbums.length,
+        artists: [...new Set(allAlbums.map(a => a.artist))].slice(0, 50),
+        genres: [...new Set(allAlbums.map(a => a.genre).filter(Boolean))],
+        years: [...new Set(allAlbums.map(a => a.year).filter(Boolean))].sort(),
+        sampleAlbums: allAlbums.slice(0, 30)
+      };
+    }
+    
+    if (quizMode === 'spotify_only' || quizMode === 'mixed') {
+      const topArtists = spotifyStats.filter(s => s.stat_type === 'top_artists').slice(0, 20);
+      const topTracks = spotifyStats.filter(s => s.stat_type === 'top_tracks').slice(0, 20);
+      const uniqueArtists = [...new Set(spotifyTracks.map(t => t.artist_name))].slice(0, 50);
+      
+      collectionSummary.spotify = {
+        totalTracks: spotifyTracks.length,
+        totalPlaylists: spotifyPlaylists.length,
+        topArtists: topArtists.map(a => a.name),
+        topTracks: topTracks.map(t => t.name),
+        playlistNames: spotifyPlaylists.map(p => p.name).slice(0, 20),
+        sampleTracks: spotifyTracks.slice(0, 30),
+        uniqueArtists
+      };
     }
 
-    console.log(`Found ${allAlbums.length} albums in collection`);
+    // Generate context-aware prompt based on quiz mode
+    let prompt = '';
+    
+    if (quizMode === 'physical_only') {
+      prompt = generatePhysicalQuizPrompt(collectionSummary.physical, questionCount);
+    } else if (quizMode === 'spotify_only') {
+      prompt = generateSpotifyQuizPrompt(collectionSummary.spotify, questionCount);
+    } else if (quizMode === 'mixed') {
+      prompt = generateMixedQuizPrompt(collectionSummary, questionCount);
+    }
 
-    // Prepare collection summary for OpenAI
-    const collectionSummary = {
-      totalAlbums: allAlbums.length,
-      artists: [...new Set(allAlbums.map(a => a.artist))].slice(0, 50), // Limit for token efficiency
-      genres: [...new Set(allAlbums.map(a => a.genre).filter(Boolean))],
-      years: [...new Set(allAlbums.map(a => a.year).filter(Boolean))].sort(),
-      sampleAlbums: allAlbums.slice(0, 30) // Sample for detailed questions
-    };
+// Helper functions for different quiz types
+function generatePhysicalQuizPrompt(physical: any, questionCount: number) {
+  return `
+Je bent een muziekquiz generator. Analyseer deze fysieke muziekcollectie en genereer precies ${questionCount} uitdagende maar eerlijke quiz vragen.
 
-    const prompt = `
-Je bent een muziekquiz generator. Analyseer deze muziekcollectie en genereer precies ${questionCount} uitdagende maar eerlijke quiz vragen.
-
-COLLECTIE DATA:
-- Totaal albums: ${collectionSummary.totalAlbums}
-- Artiesten: ${collectionSummary.artists.join(', ')}
-- Genres: ${collectionSummary.genres.join(', ')}
-- Jaren: ${collectionSummary.years[0]} - ${collectionSummary.years[collectionSummary.years.length - 1]}
+FYSIEKE COLLECTIE DATA:
+- Totaal albums: ${physical.totalAlbums}
+- Artiesten: ${physical.artists.join(', ')}
+- Genres: ${physical.genres.join(', ')}
+- Jaren: ${physical.years[0]} - ${physical.years[physical.years.length - 1]}
 
 SAMPLE ALBUMS:
-${collectionSummary.sampleAlbums.map(a => `${a.artist} - ${a.title} (${a.year || 'Unknown'})`).join('\n')}
+${physical.sampleAlbums.map((a: any) => `${a.artist} - ${a.title} (${a.year || 'Unknown'})`).join('\n')}
 
-Genereer ${questionCount} verschillende vraagtypen uit deze categorieën:
+Genereer ${questionCount} verschillende vraagtypen:
 1. Album herkenning: "Welke artiest heeft het album [TITLE]?"
 2. Jaar vragen: "Uit welk jaar is [ALBUM] van [ARTIST]?"
 3. Genre classificatie: "Tot welk genre behoort [ALBUM]?"
@@ -105,11 +172,7 @@ Genereer ${questionCount} verschillende vraagtypen uit deze categorieën:
 9. Decade focus: "Welk album uit de jaren [DECADE] heb je?"
 10. Collectie trivia: Unieke vraag over de collectie
 
-BELANGRIJK:
-- Alle antwoordopties moeten uit de DAADWERKELIJKE collectie komen
-- Mix makkelijke en moeilijke vragen
-- Zorg voor variety in vraagtypen
-- Alle artiesten/albums in vragen moeten bestaan in de collectie
+BELANGRIJK: Alle antwoordopties moeten uit de DAADWERKELIJKE collectie komen.
 
 Retourneer JSON format:
 {
@@ -121,6 +184,91 @@ Retourneer JSON format:
       "correctAnswer": "Artist Name",
       "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
       "explanation": "Korte uitleg waarom dit klopt"
+    }
+  ]
+}`;
+}
+
+function generateSpotifyQuizPrompt(spotify: any, questionCount: number) {
+  return `
+Je bent een Spotify muziekquiz generator. Analyseer deze Spotify luisterdata en genereer precies ${questionCount} uitdagende maar eerlijke quiz vragen.
+
+SPOTIFY DATA:
+- Totaal tracks: ${spotify.totalTracks}
+- Totaal playlists: ${spotify.totalPlaylists}
+- Top artiesten: ${spotify.topArtists.join(', ')}
+- Top tracks: ${spotify.topTracks.join(', ')}
+- Playlist namen: ${spotify.playlistNames.join(', ')}
+
+SAMPLE TRACKS:
+${spotify.sampleTracks.map((t: any) => `${t.artist_name} - ${t.name} (Album: ${t.album_name || 'Unknown'})`).join('\n')}
+
+Genereer ${questionCount} verschillende Spotify vraagtypen:
+1. Top artiest herkenning: "Wie is jouw #1 meest beluisterde artiest?"
+2. Playlist trivia: "In welke playlist staat het nummer [TRACK]?"
+3. Artiest ranking: "Welke artiest staat hoger in jouw top lijst?"
+4. Track herkenning: "Van welke artiest is het nummer [TRACK]?"
+5. Luistergedrag: "Hoeveel playlists heb je?"
+6. Genre voorkeur: Gebaseerd op top artiesten
+7. Album herkenning: "Op welk album staat [TRACK]?"
+8. Vergelijkingen: "Welke artiest heb je vaker beluisterd?"
+9. Playlist grootte: "Welke playlist heeft de meeste nummers?"
+10. Muziek trivia: Unieke vraag over luistergedrag
+
+BELANGRIJK: Alle antwoordopties moeten uit de DAADWERKELIJKE Spotify data komen.
+
+Retourneer JSON format:
+{
+  "questions": [
+    {
+      "id": 1,
+      "type": "spotify_top_artist",
+      "question": "Wie is jouw meest beluisterde artiest op Spotify?",
+      "correctAnswer": "Artist Name",
+      "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+      "explanation": "Gebaseerd op jouw Spotify luisterdata"
+    }
+  ]
+}`;
+}
+
+function generateMixedQuizPrompt(summary: any, questionCount: number) {
+  return `
+Je bent een mixed muziekquiz generator. Analyseer zowel de fysieke collectie als Spotify data en genereer precies ${questionCount} uitdagende vragen.
+
+FYSIEKE COLLECTIE:
+- Albums: ${summary.physical.totalAlbums}
+- Artiesten: ${summary.physical.artists.slice(0, 20).join(', ')}
+
+SPOTIFY DATA:
+- Tracks: ${summary.spotify.totalTracks}
+- Top artiesten: ${summary.spotify.topArtists.slice(0, 10).join(', ')}
+- Playlists: ${summary.spotify.totalPlaylists}
+
+Genereer ${questionCount} mixed vragen:
+1. Cross-platform: "Welke artiest heb je zowel op vinyl/CD als in je Spotify top?"
+2. Collectie vs streaming: "Hoeveel albums van [ARTIST] heb je fysiek vs. hoeveel luister je op Spotify?"
+3. Ontbrekende albums: "Welke van jouw Spotify top artiesten mis je nog in je fysieke collectie?"
+4. Overlap analyse: "Van welke artiest heb je het meeste fysieke albums?"
+5. Platform voorkeur: Vergelijking tussen formaten
+6. Completist vragen: Over volledigheid van collecties
+7. Era vergelijking: Oude albums vs nieuwe Spotify tracks
+8. Format mix: CD vs vinyl vs digital
+9. Discovery: "Welke artiest ontdekte je via Spotify maar verzamel je nu ook fysiek?"
+10. Muziek DNA: Cross-platform persoonlijkheid vragen
+
+BELANGRIJK: Mix vragen over beide platforms en zoek verbindingen tussen fysiek en digitaal.
+
+Retourneer JSON format:
+{
+  "questions": [
+    {
+      "id": 1,
+      "type": "cross_platform",
+      "question": "Welke artiest heb je zowel fysiek als in je Spotify top 10?",
+      "correctAnswer": "Artist Name",
+      "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+      "explanation": "Deze artiest staat zowel in je fysieke collectie als Spotify statistieken"
     }
   ]
 }`;
@@ -181,11 +329,22 @@ Retourneer JSON format:
     return new Response(JSON.stringify({
       success: true,
       quiz: quizData,
-      collectionStats: {
-        totalAlbums: collectionSummary.totalAlbums,
-        totalArtists: collectionSummary.artists.length,
-        genres: collectionSummary.genres.length,
-        yearRange: `${collectionSummary.years[0]} - ${collectionSummary.years[collectionSummary.years.length - 1]}`
+      quizMode: quizMode,
+      collectionStats: quizMode === 'spotify_only' ? {
+        totalTracks: collectionSummary.spotify?.totalTracks || 0,
+        totalPlaylists: collectionSummary.spotify?.totalPlaylists || 0,
+        totalArtists: collectionSummary.spotify?.uniqueArtists?.length || 0,
+        topArtists: collectionSummary.spotify?.topArtists?.slice(0, 5) || []
+      } : {
+        totalAlbums: collectionSummary.physical?.totalAlbums || 0,
+        totalArtists: collectionSummary.physical?.artists?.length || 0,
+        genres: collectionSummary.physical?.genres?.length || 0,
+        yearRange: collectionSummary.physical?.years?.length > 0 ? 
+          `${collectionSummary.physical.years[0]} - ${collectionSummary.physical.years[collectionSummary.physical.years.length - 1]}` : 'N/A',
+        ...(quizMode === 'mixed' && {
+          spotifyTracks: collectionSummary.spotify?.totalTracks || 0,
+          spotifyPlaylists: collectionSummary.spotify?.totalPlaylists || 0
+        })
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

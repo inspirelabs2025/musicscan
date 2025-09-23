@@ -544,7 +544,7 @@ const AIScanOverview = () => {
                 title="Succesvol"
                 value={statsData.completedScans}
                 icon={CheckCircle}
-                subtitle={`${Math.round(statsData.successRate)}% success rate`}
+                subtitle={`${(statsData.successRate || 0).toFixed(1)}% success rate`}
               />
               <StatCard
                 title="Gem. Vertrouwen"

@@ -412,7 +412,7 @@ const UnifiedScanOverview = () => {
             />
             <StatCard
               title="Succes Rate"
-              value={`${Math.round(stats?.successRate || 0)}%`}
+              value={`${(stats?.successRate || 0).toFixed(1)}%`}
               icon={TrendingUp}
             />
           </div>

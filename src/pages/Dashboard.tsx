@@ -149,7 +149,7 @@ const Dashboard = () => {
             />
             <StatCard
               title="Success Rate"
-              value={statsLoading ? "..." : `${scanStats?.successRate || 0}%`}
+              value={statsLoading ? "..." : `${(scanStats?.successRate || 0).toFixed(1)}%`}
               subtitle="Geslaagde scans"
               icon={Star}
             />

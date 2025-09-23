@@ -52,20 +52,38 @@ export const useSpotifyAuth = () => {
       return;
     }
 
+    console.log('🎵 Starting Spotify connection...');
     setState(prev => ({ ...prev, isConnecting: true }));
 
     try {
+      // First get Spotify configuration from Edge Function
+      console.log('📡 Getting Spotify configuration...');
+      const { data: configData, error: configError } = await supabase.functions.invoke('spotify-auth', {
+        body: { action: 'get_config' },
+      });
+
+      if (configError) {
+        console.error('❌ Config error:', configError);
+        throw new Error(`Configuration error: ${configError.message}`);
+      }
+
+      if (!configData?.client_id) {
+        console.error('❌ No client ID in config response:', configData);
+        throw new Error('Spotify Client ID not configured');
+      }
+
+      const clientId = configData.client_id;
+      console.log('✅ Got Spotify Client ID:', clientId);
+
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
       
       // Store code verifier for later use
       localStorage.setItem('spotify_code_verifier', codeVerifier);
       
-      // Redirect URL (must match Spotify app settings)
+      // Redirect URL (must match Spotify app settings exactly)
       const redirectUri = `${window.location.origin}/auth/spotify/callback`;
-      
-      // Use environment variable for client ID, fallback to known working ID
-      const clientId = '7d491ba2a6b14c52b6f128585656cf51';
+      console.log('🔗 Using redirect URI:', redirectUri);
       
       const params = new URLSearchParams({
         client_id: clientId,
@@ -85,25 +103,33 @@ export const useSpotifyAuth = () => {
       });
 
       const spotifyAuthUrl = `https://accounts.spotify.com/authorize?${params}`;
+      console.log('🚀 Redirecting to Spotify:', spotifyAuthUrl);
+      
       window.location.href = spotifyAuthUrl;
     } catch (error) {
-      console.error('Error initiating Spotify connection:', error);
+      console.error('❌ Error starting Spotify connection:', error);
       toast.error('Er ging iets mis bij het verbinden met Spotify');
       setState(prev => ({ ...prev, isConnecting: false }));
     }
   };
 
   const handleCallback = async (code: string, state: string) => {
+    console.log('🔄 Handling Spotify callback...', { code: code?.substring(0, 10) + '...', state });
+    
     if (!user || state !== user.id) {
+      console.error('❌ Invalid authentication state:', { user: user?.id, state });
       toast.error('Ongeldige authenticatie status');
       return;
     }
 
     const codeVerifier = localStorage.getItem('spotify_code_verifier');
     if (!codeVerifier) {
+      console.error('❌ Code verifier not found in localStorage');
       toast.error('Authenticatie gegevens niet gevonden');
       return;
     }
+
+    console.log('✅ Code verifier found, calling Edge Function...');
 
     try {
       const { data, error } = await supabase.functions.invoke('spotify-auth', {
@@ -114,12 +140,23 @@ export const useSpotifyAuth = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Edge Function error:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.error('❌ No data returned from Edge Function');
+        throw new Error('No data returned from Spotify authentication');
+      }
+
+      console.log('✅ Token exchange successful:', { has_access_token: !!data.access_token, user_id: data.user_data?.id });
 
       const tokenData = data as SpotifyTokenResponse;
       
       // Update user profile with Spotify connection
-      await supabase
+      console.log('📝 Updating user profile...');
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           spotify_connected: true,
@@ -131,14 +168,22 @@ export const useSpotifyAuth = () => {
         })
         .eq('user_id', user.id);
 
+      if (profileError) {
+        console.error('❌ Profile update error:', profileError);
+        throw profileError;
+      }
+
+      console.log('✅ Profile updated successfully');
+
       localStorage.removeItem('spotify_code_verifier');
       setState(prev => ({ ...prev, isConnected: true }));
       toast.success('Spotify succesvol gekoppeld!');
 
       // Trigger initial sync
+      console.log('🔄 Starting initial Spotify sync...');
       await syncSpotifyData();
     } catch (error) {
-      console.error('Error completing Spotify authentication:', error);
+      console.error('❌ Error completing Spotify authentication:', error);
       toast.error('Er ging iets mis bij het voltooien van de Spotify koppeling');
     }
   };
@@ -146,15 +191,22 @@ export const useSpotifyAuth = () => {
   const syncSpotifyData = async () => {
     if (!user) return;
 
+    console.log('🔄 Starting Spotify data sync...');
+
     try {
       const { error } = await supabase.functions.invoke('spotify-sync', {
         body: { user_id: user.id },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Spotify sync error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Spotify data sync completed');
       toast.success('Spotify data wordt gesynchroniseerd op de achtergrond');
     } catch (error) {
-      console.error('Error syncing Spotify data:', error);
+      console.error('❌ Error syncing Spotify data:', error);
       toast.error('Er ging iets mis bij het synchroniseren van Spotify data');
     }
   };

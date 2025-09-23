@@ -10,6 +10,19 @@ const corsHeaders = {
 const SPOTIFY_CLIENT_ID = Deno.env.get('SPOTIFY_CLIENT_ID') || '';
 const SPOTIFY_CLIENT_SECRET = Deno.env.get('SPOTIFY_CLIENT_SECRET') || '';
 
+console.log('🎵 Spotify Auth Function initialized', { 
+  hasClientId: !!SPOTIFY_CLIENT_ID, 
+  hasClientSecret: !!SPOTIFY_CLIENT_SECRET 
+});
+
+// Validate environment variables
+if (!SPOTIFY_CLIENT_ID) {
+  console.error('❌ SPOTIFY_CLIENT_ID is not set');
+}
+if (!SPOTIFY_CLIENT_SECRET) {
+  console.error('❌ SPOTIFY_CLIENT_SECRET is not set');
+}
+
 interface SpotifyTokenResponse {
   access_token: string;
   token_type: string;
@@ -28,20 +41,53 @@ interface SpotifyUserResponse {
 }
 
 serve(async (req) => {
+  console.log('📥 Request received:', req.method, req.url);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Check for required environment variables
+  if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
+    console.error('❌ Missing required environment variables');
+    return new Response(
+      JSON.stringify({ 
+        error: 'Server configuration error', 
+        details: 'Spotify credentials not configured' 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+
   try {
-    const { code, code_verifier, redirect_uri } = await req.json();
+    const body = await req.json();
+    console.log('📝 Request body action:', body.action);
+    
+    // Handle configuration request
+    if (body.action === 'get_config') {
+      console.log('⚙️ Returning Spotify configuration');
+      return new Response(
+        JSON.stringify({ client_id: SPOTIFY_CLIENT_ID }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Handle token exchange
+    const { code, code_verifier, redirect_uri } = body;
 
     if (!code || !code_verifier || !redirect_uri) {
+      console.error('❌ Missing required parameters:', { code: !!code, code_verifier: !!code_verifier, redirect_uri: !!redirect_uri });
       return new Response(
         JSON.stringify({ error: 'Missing required parameters' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('🔄 Starting token exchange...');
 
     // Exchange authorization code for access token
     const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
@@ -59,17 +105,26 @@ serve(async (req) => {
     });
 
     if (!tokenResponse.ok) {
-      const errorData = await tokenResponse.text();
-      console.error('Spotify token exchange failed:', errorData);
+      const errorBody = await tokenResponse.text();
+      console.error('❌ Spotify token exchange failed:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        body: errorBody
+      });
       return new Response(
-        JSON.stringify({ error: 'Failed to exchange code for token' }),
+        JSON.stringify({ 
+          error: 'Token exchange failed', 
+          details: `Spotify API error: ${tokenResponse.status} - ${errorBody}` 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const tokenData: SpotifyTokenResponse = await tokenResponse.json();
+    console.log('✅ Token exchange successful');
 
     // Get user profile from Spotify
+    console.log('👤 Fetching user profile...');
     const userResponse = await fetch('https://api.spotify.com/v1/me', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -77,16 +132,23 @@ serve(async (req) => {
     });
 
     if (!userResponse.ok) {
-      console.error('Failed to fetch Spotify user profile');
+      const errorBody = await userResponse.text();
+      console.error('❌ Spotify user profile fetch failed:', {
+        status: userResponse.status,
+        statusText: userResponse.statusText,
+        body: errorBody
+      });
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch user profile' }),
+        JSON.stringify({ 
+          error: 'User profile fetch failed', 
+          details: `Spotify API error: ${userResponse.status} - ${errorBody}` 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const userData: SpotifyUserResponse = await userResponse.json();
-
-    console.log('Spotify authentication successful for user:', userData.id);
+    console.log('✅ User profile fetched:', { id: userData.id, display_name: userData.display_name });
 
     return new Response(
       JSON.stringify({
@@ -107,13 +169,13 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in spotify-auth function:', error);
+    console.error('❌ Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

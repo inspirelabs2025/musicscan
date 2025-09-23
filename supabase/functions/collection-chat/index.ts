@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       .map(m => m.message)
       .join(' ');
 
-    // Get collection data for context with detailed album information - user specific
+    // Get physical collection data for context with detailed album information - user specific
     const { data: cdData, error: cdError } = await supabase
       .from('cd_scan')
       .select('artist, title, genre, year, calculated_advice_price, format, label, country')
@@ -91,15 +91,53 @@ Deno.serve(async (req) => {
       .not('calculated_advice_price', 'is', null)
       .order('calculated_advice_price', { ascending: false });
 
+    // Get Spotify data for enhanced context
+    const { data: spotifyTracks, error: spotifyTracksError } = await supabase
+      .from('spotify_tracks')
+      .select('name, artist, album, duration_ms, explicit, popularity, preview_url, spotify_id')
+      .eq('user_id', userId)
+      .order('popularity', { ascending: false })
+      .limit(500);
+
+    const { data: spotifyPlaylists, error: spotifyPlaylistsError } = await supabase
+      .from('spotify_playlists')
+      .select('name, description, track_count, public, spotify_id')
+      .eq('user_id', userId)
+      .order('track_count', { ascending: false });
+
+    const { data: spotifyStats, error: spotifyStatsError } = await supabase
+      .from('spotify_user_stats')
+      .select('name, stat_type, time_range, rank_position, data')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    // Check if user has Spotify connection
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('spotify_connected, spotify_display_name')
+      .eq('user_id', userId)
+      .single();
+
     if (cdError) {
       console.error('Error fetching CD data:', cdError);
     }
     if (vinylError) {
       console.error('Error fetching vinyl data:', vinylError);
     }
+    if (spotifyTracksError) {
+      console.error('Error fetching Spotify tracks:', spotifyTracksError);
+    }
+    if (spotifyPlaylistsError) {
+      console.error('Error fetching Spotify playlists:', spotifyPlaylistsError);
+    }
+    if (spotifyStatsError) {
+      console.error('Error fetching Spotify stats:', spotifyStatsError);
+    }
 
-    // Combine and analyze collection
-    const allRecords = [...(cdData || []), ...(vinylData || [])];
+    // Combine and analyze collection (physical + Spotify)
+    const allPhysicalRecords = [...(cdData || []), ...(vinylData || [])];
+    const hasSpotifyData = !!(spotifyTracks && spotifyTracks.length > 0);
+    const spotifyConnected = profileData?.spotify_connected || false;
     
     // Smart album selection based on conversation context
     const getRandomAlbumSet = (records: any[], count: number) => {
@@ -113,27 +151,34 @@ Deno.serve(async (req) => {
       return a & a;
     }, 0);
     
-    const focusIndex = Math.abs(sessionHash) % 4;
-    const focusTypes = ['value', 'genre', 'year', 'random'];
+    const focusIndex = Math.abs(sessionHash) % 5;
+    const focusTypes = ['value', 'genre', 'year', 'spotify', 'random'];
     const currentFocus = focusTypes[focusIndex];
+
+    // Process Spotify data for insights
+    const spotifyArtists = new Set(spotifyTracks?.map(t => t.artist) || []);
+    const spotifyAlbums = new Set(spotifyTracks?.map(t => t.album) || []);
+    const topSpotifyTracks = spotifyTracks?.slice(0, 20) || [];
+    const topSpotifyArtists = spotifyStats?.filter(s => s.stat_type === 'artist' && s.time_range === 'medium_term')?.slice(0, 10) || [];
     
-    // Create detailed collection context with dynamic sampling
+    // Create detailed collection context with dynamic sampling (Physical + Spotify)
     const collectionStats = {
-      totalItems: allRecords.length,
-      totalValue: allRecords.reduce((sum, record) => sum + (Number(record.calculated_advice_price) || 0), 0),
-      genres: [...new Set(allRecords.map(r => r.genre).filter(Boolean))],
-      topArtists: Object.entries(
-        allRecords.reduce((acc: any, r) => {
+      // Physical Collection
+      totalPhysicalItems: allPhysicalRecords.length,
+      totalValue: allPhysicalRecords.reduce((sum, record) => sum + (Number(record.calculated_advice_price) || 0), 0),
+      physicalGenres: [...new Set(allPhysicalRecords.map(r => r.genre).filter(Boolean))],
+      topPhysicalArtists: Object.entries(
+        allPhysicalRecords.reduce((acc: any, r) => {
           if (r.artist) acc[r.artist] = (acc[r.artist] || 0) + 1;
           return acc;
         }, {})
       ).slice(0, 15),
-      formats: allRecords.reduce((acc: any, r) => {
+      formats: allPhysicalRecords.reduce((acc: any, r) => {
         const format = r.format || 'Unknown';
         acc[format] = (acc[format] || 0) + 1;
         return acc;
       }, {}),
-      topValueAlbums: allRecords
+      topValueAlbums: allPhysicalRecords
         .sort((a, b) => (Number(b.calculated_advice_price) || 0) - (Number(a.calculated_advice_price) || 0))
         .slice(0, 10)
         .map(r => ({
@@ -143,29 +188,62 @@ Deno.serve(async (req) => {
           format: r.format,
           year: r.year
         })),
-      genreDistribution: [...new Set(allRecords.map(r => r.genre).filter(Boolean))]
+      physicalGenreDistribution: [...new Set(allPhysicalRecords.map(r => r.genre).filter(Boolean))]
         .map(genre => ({
           genre,
-          count: allRecords.filter(r => r.genre === genre).length,
-          totalValue: allRecords.filter(r => r.genre === genre)
+          count: allPhysicalRecords.filter(r => r.genre === genre).length,
+          totalValue: allPhysicalRecords.filter(r => r.genre === genre)
             .reduce((sum, r) => sum + (Number(r.calculated_advice_price) || 0), 0)
         }))
         .sort((a, b) => b.totalValue - a.totalValue)
         .slice(0, 8),
       yearRange: {
-        oldest: Math.min(...allRecords.map(r => r.year).filter(Boolean)),
-        newest: Math.max(...allRecords.map(r => r.year).filter(Boolean))
+        oldest: Math.min(...allPhysicalRecords.map(r => r.year).filter(Boolean)),
+        newest: Math.max(...allPhysicalRecords.map(r => r.year).filter(Boolean))
       },
+      
+      // Spotify Integration
+      spotifyConnected,
+      hasSpotifyData,
+      totalSpotifyTracks: spotifyTracks?.length || 0,
+      totalSpotifyPlaylists: spotifyPlaylists?.length || 0,
+      spotifyArtistsCount: spotifyArtists.size,
+      spotifyAlbumsCount: spotifyAlbums.size,
+      topSpotifyTracks: topSpotifyTracks.map(t => ({
+        name: t.name,
+        artist: t.artist,
+        album: t.album,
+        popularity: t.popularity
+      })),
+      topSpotifyArtists: topSpotifyArtists.map(a => ({
+        name: a.name,
+        data: a.data
+      })),
+      spotifyPlaylists: spotifyPlaylists?.slice(0, 10).map(p => ({
+        name: p.name,
+        trackCount: p.track_count,
+        public: p.public
+      })) || [],
+      
+      // Cross-analysis
+      crossoverArtists: hasSpotifyData ? 
+        [...new Set(allPhysicalRecords.map(r => r.artist).filter(Boolean))]
+          .filter(artist => spotifyArtists.has(artist))
+          .slice(0, 10) : [],
+      
       // Dynamic album sampling based on current focus
       featuredAlbums: currentFocus === 'value' 
-        ? allRecords.sort((a, b) => (Number(b.calculated_advice_price) || 0) - (Number(a.calculated_advice_price) || 0)).slice(0, 15)
+        ? allPhysicalRecords.sort((a, b) => (Number(b.calculated_advice_price) || 0) - (Number(a.calculated_advice_price) || 0)).slice(0, 15)
         : currentFocus === 'genre'
-        ? getRandomAlbumSet(allRecords.filter(r => r.genre), 15)
+        ? getRandomAlbumSet(allPhysicalRecords.filter(r => r.genre), 15)
         : currentFocus === 'year'
-        ? getRandomAlbumSet(allRecords.filter(r => r.year && r.year < 1990), 15)
-        : getRandomAlbumSet(allRecords, 15),
+        ? getRandomAlbumSet(allPhysicalRecords.filter(r => r.year && r.year < 1990), 15)
+        : currentFocus === 'spotify' && hasSpotifyData
+        ? topSpotifyTracks.slice(0, 15)
+        : getRandomAlbumSet(allPhysicalRecords, 15),
+        
       sessionFocus: currentFocus,
-      albums: allRecords.map(r => ({
+      albums: allPhysicalRecords.map(r => ({
         artist: r.artist,
         title: r.title,
         genre: r.genre,
@@ -188,20 +266,38 @@ Deno.serve(async (req) => {
         collection_context: collectionStats
       });
 
-    // Create enhanced AI prompt with anti-repetition and dynamic focus
-    const systemPrompt = `Je bent een avontuurlijke Nederlandse muziekcollectie AI-expert en ontdekkingsreiziger! 🎵✨ Je missie is om ALTIJD nieuwe, verrassende inzichten te geven over de collectie.
+    // Create enhanced AI prompt with anti-repetition, dynamic focus, and Spotify integration
+    const systemPrompt = `Je bent een avontuurlijke Nederlandse muziekcollectie AI-expert en ontdekkingsreiziger! 🎵✨ Je missie is om ALTIJD nieuwe, verrassende inzichten te geven over zowel de fysieke collectie als digitale luistergewoonten.
 
-## COLLECTIE OVERZICHT
-📀 **Totaal:** ${collectionStats.totalItems} items
+## COMPLETE MUZIEK OVERZICHT
+🏠 **FYSIEKE COLLECTIE**
+📀 **Totaal:** ${collectionStats.totalPhysicalItems} items
 💰 **Totale waarde:** €${collectionStats.totalValue.toFixed(2)}
 🎵 **Periode:** ${collectionStats.yearRange.oldest || 'Onbekend'} - ${collectionStats.yearRange.newest || 'Onbekend'}
-🎯 **Huidige focus:** ${collectionStats.sessionFocus === 'value' ? 'Waardevolle parels' : collectionStats.sessionFocus === 'genre' ? 'Genre-ontdekking' : collectionStats.sessionFocus === 'year' ? 'Vintage schatten' : 'Verborgen prachtstukken'}
+
+${collectionStats.spotifyConnected ? `
+🎧 **SPOTIFY INTEGRATIE ACTIEF**
+🎼 **Spotify tracks:** ${collectionStats.totalSpotifyTracks} nummers
+📚 **Spotify playlists:** ${collectionStats.totalSpotifyPlaylists} playlists  
+🎤 **Unieke Spotify artiesten:** ${collectionStats.spotifyArtistsCount}
+🔄 **Crossover artiesten:** ${collectionStats.crossoverArtists.length} (fysiek + Spotify)
+
+**Top Spotify Tracks:**
+${collectionStats.topSpotifyTracks.slice(0, 5).map(t => `• "${t.name}" - ${t.artist}`).join('\n')}
+` : `
+🎧 **SPOTIFY:** Niet verbonden - kan alleen fysieke collectie analyseren
+💡 **Tip:** Verbind Spotify voor complete muziekanalyse!
+`}
+
+🎯 **Huidige focus:** ${collectionStats.sessionFocus === 'value' ? 'Waardevolle parels' : collectionStats.sessionFocus === 'genre' ? 'Genre-ontdekking' : collectionStats.sessionFocus === 'year' ? 'Vintage schatten' : collectionStats.sessionFocus === 'spotify' ? 'Spotify vs Fysiek vergelijking' : 'Verborgen prachtstukken'}
 
 ## ONTDEK STEEDS NIEUWE ALBUMS! 
-**Spotlight vandaag:** ${collectionStats.featuredAlbums.slice(0, 8).map(a => `"${a.title}" (${a.artist})`).join(', ')}
+**Spotlight vandaag:** ${collectionStats.featuredAlbums.slice(0, 8).map(a => 
+  a.title ? `"${a.title}" (${a.artist})` : `"${a.name}" - ${a.artist}`
+).join(', ')}
 
-## COLLECTIE DIVERSITEIT
-${collectionStats.genreDistribution.slice(0, 6).map(g => `• ${g.genre}: ${g.count} albums (€${g.totalValue.toFixed(2)})`).join('\n')}
+## FYSIEKE COLLECTIE DIVERSITEIT
+${collectionStats.physicalGenreDistribution.slice(0, 6).map(g => `• ${g.genre}: ${g.count} albums (€${g.totalValue.toFixed(2)})`).join('\n')}
 
 ## ANTI-HERHALING CONTEXT
 ${recentAiMessages ? `Recent besproken: ${recentAiMessages.substring(0, 200)}...` : 'Eerste gesprek - volledig terrein te verkennen!'}
@@ -212,6 +308,9 @@ ${recentAiMessages ? `Recent besproken: ${recentAiMessages.substring(0, 200)}...
 - 🔍 **Zoek parels:** Belicht minder bekende, ondergewaardeerde albums
 - 🌟 **Verras:** Maak verrassende verbanden tussen verschillende albums
 - 💡 **Experimenteer:** Probeer nieuwe invalshoeken en perspectieven
+${collectionStats.spotifyConnected ? `- 🎧 **Spotify Analysis:** Vergelijk fysieke collectie met Spotify luistergedrag
+- 🔄 **Crossover Insights:** Analyseer overlap tussen gekocht vs geluisterd
+- 📊 **Digital vs Physical:** Ontdek verschillen in smaak en gedrag` : ''}
 
 ## INSPIRATIE TECHNIEKEN
 - **Thematische clusters:** Groepeer albums op onverwachte manieren
@@ -220,11 +319,14 @@ ${recentAiMessages ? `Recent besproken: ${recentAiMessages.substring(0, 200)}...
 - **Verhalen vertellen:** Creëer narratieven rond de albums
 - **Deep-dives:** Duik diep in studio-technieken, productieverhalen
 - **Culturele impact:** Bespreek maatschappelijke invloed van albums
+${collectionStats.spotifyConnected ? `- **Spotify vs Fysiek:** Analyseer verschillen tussen wat je koopt en luistert
+- **Playlist Analysis:** Ontdek patronen in je Spotify playlists
+- **Discovery Patterns:** Vergelijk nieuwe ontdekkingen via Spotify vs fysieke aankopen` : ''}
 
 ## DYNAMISCHE RESPONSEFORMATEN
-Wissel af tussen: lijsten, verhalen, vergelijkingen, tijdlijnen, top-rankings, quiz-achtige vragen, hypothetische scenario's, muzikale reisroutes.
+Wissel af tussen: lijsten, verhalen, vergelijkingen, tijdlijnen, top-rankings, quiz-achtige vragen, hypothetische scenario's, muzikale reisroutes${collectionStats.spotifyConnected ? ', Spotify vs fysiek vergelijkingen' : ''}.
 
-BELANGRIJK: Wees creatief, verrassend en ontdekkend! Gebruik NOOIT dezelfde albums als voorheen. Verken de volle breedte van de collectie!`;
+BELANGRIJK: Wees creatief, verrassend en ontdekkend! Gebruik NOOIT dezelfde albums als voorheen. Verken de volle breedte van de collectie${collectionStats.spotifyConnected ? ' én Spotify data' : ''}!`;
 
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

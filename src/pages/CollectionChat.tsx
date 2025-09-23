@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, Send, Brain, Music, TrendingUp, Loader2 } from 'lucide-react';
+import { MessageCircle, Send, Brain, Music, TrendingUp, Loader2, Headphones } from 'lucide-react';
 import { useCollectionAIAnalysis } from '@/hooks/useCollectionAIAnalysis';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/Navigation';
@@ -34,6 +34,7 @@ const CollectionChat = () => {
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<'usage_limit' | 'feature_limit'>('usage_limit');
   const [usageInfo, setUsageInfo] = useState<{current: number, limit: number, plan: string} | undefined>();
+  const [spotifyConnected, setSpotifyConnected] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -46,7 +47,24 @@ const CollectionChat = () => {
   useEffect(() => {
     // Load existing messages for this session
     loadMessages();
+    // Check Spotify connection status
+    checkSpotifyStatus();
   }, []);
+
+  const checkSpotifyStatus = async () => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('spotify_connected')
+        .single();
+      
+      if (data) {
+        setSpotifyConnected(data.spotify_connected || false);
+      }
+    } catch (error) {
+      console.error('Error checking Spotify status:', error);
+    }
+  };
 
   const loadMessages = async () => {
     const { data } = await supabase
@@ -235,7 +253,7 @@ const CollectionChat = () => {
   };
 
   const getRandomSuggestedQuestions = () => {
-    const allQuestions = [
+    const physicalQuestions = [
       "Wat zijn mijn meest waardevolle albums?",
       "Welke genres domineren mijn collectie?",
       "Geef me investeeringsadvies voor mijn collectie",
@@ -320,6 +338,32 @@ const CollectionChat = () => {
       "Toon me mijn instrumental en soundtrack gems",
       "Wat zijn mijn meest innovative en groundbreaking albums?"
     ];
+
+    const spotifyQuestions = [
+      "Vergelijk mijn Spotify top tracks met mijn fysieke collectie",
+      "Welke artiesten luister ik veel op Spotify maar heb ik niet fysiek?",
+      "Analyseer de overlap tussen mijn playlists en vinyl collectie",
+      "Wat zijn de verschillen tussen mijn digitale en fysieke muzieksmaak?",
+      "Welke albums zou ik moeten kopen gebaseerd op mijn Spotify gedrag?",
+      "Toon me mijn meest gespeelde Spotify genres vs mijn collectie",
+      "Welke Spotify discoveries zou ik fysiek moeten aanschaffen?",
+      "Analyseer mijn Spotify playlists voor collectie inspiratie",
+      "Vergelijk mijn Spotify luistergewoonten met mijn aankopen",
+      "Welke trending tracks op Spotify passen bij mijn collectie?",
+      "Toon me crossover artiesten tussen Spotify en mijn collectie",
+      "Analyseer mijn Spotify vs vinyl luistergedrag per seizoen",
+      "Welke Spotify hits ontbreken in mijn fysieke collectie?",
+      "Geef me aanbevelingen gebaseerd op mijn complete muziekprofiel",
+      "Analyseer mijn music discovery patterns: digital vs physical",
+      "Welke Spotify artiesten verdienen een plaats in mijn collectie?",
+      "Vergelijk mijn streaming vs collecting voorkeuren",
+      "Analyseer mijn Spotify data voor waardevolle vinyl tips",
+      "Welke genres stream ik meer dan ik verzamel?",
+      "Toon me mijn meest complete artist coverage (Spotify + fysiek)"
+    ];
+
+    // Combine questions and shuffle
+    const allQuestions = [...physicalQuestions, ...spotifyQuestions];
     
     // Shuffle en return 5 random questions
     const shuffled = allQuestions.sort(() => 0.5 - Math.random());
@@ -362,6 +406,12 @@ const CollectionChat = () => {
                     <TrendingUp className="w-4 h-4 mr-2" />
                     AI Analyse Beschikbaar 🧠
                   </Badge>
+                  {spotifyConnected && (
+                    <Badge variant="outline" className="px-4 py-2 bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-400 font-medium hover-scale">
+                      <Headphones className="w-4 h-4 mr-2" />
+                      Spotify Geïntegreerd 🎧
+                    </Badge>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -104,11 +104,14 @@ serve(async (req) => {
 
     console.log('✅ Token refresh successful, starting Spotify data sync for user:', user_id);
 
-    let syncCounts = {
-      playlists: 0,
-      tracks: 0,
-      topTracks: 0,
-      topArtists: 0,
+    let syncResult = {
+      success: {
+        playlists: 0,
+        tracks: 0,
+        topTracks: 0,
+        topArtists: 0,
+      },
+      errors: {} as Record<string, string>,
     };
 
     // Sync user's playlists
@@ -121,30 +124,41 @@ serve(async (req) => {
       const playlistsData = await playlistsResponse.json();
       console.log(`📋 Found ${playlistsData.items?.length || 0} playlists`);
       
-      for (const playlist of playlistsData.items || []) {
-        // Upsert playlist
-        await supabase
+      const playlists = (playlistsData.items || []).map((playlist: any) => ({
+        user_id,
+        spotify_playlist_id: playlist.id,
+        name: playlist.name,
+        description: playlist.description,
+        track_count: playlist.tracks.total,
+        is_public: playlist.public,
+        image_url: playlist.images?.[0]?.url,
+        spotify_url: playlist.external_urls?.spotify,
+        owner_id: playlist.owner.id,
+        snapshot_id: playlist.snapshot_id,
+        last_synced_at: new Date().toISOString(),
+      }));
+
+      // Upsert playlists with error handling
+      if (playlists.length > 0) {
+        console.log(`📋 Upserting ${playlists.length} playlists...`);
+        const { error: playlistError } = await supabase
           .from('spotify_playlists')
-          .upsert({
-            user_id,
-            spotify_playlist_id: playlist.id,
-            name: playlist.name,
-            description: playlist.description,
-            track_count: playlist.tracks.total,
-            is_public: playlist.public,
-            image_url: playlist.images?.[0]?.url,
-            spotify_url: playlist.external_urls?.spotify,
-            owner_id: playlist.owner.id,
-            snapshot_id: playlist.snapshot_id,
-            last_synced_at: new Date().toISOString(),
-          }, {
-            onConflict: 'user_id,spotify_playlist_id',
-          });
-        syncCounts.playlists++;
+          .upsert(playlists, { ignoreDuplicates: false });
+        
+        if (playlistError) {
+          console.error('❌ Playlist upsert error:', playlistError);
+          syncResult.errors.playlists = playlistError.message;
+        } else {
+          syncResult.success.playlists = playlists.length;
+          console.log(`✅ Successfully upserted ${playlists.length} playlists`);
+        }
       }
+    } else {
+      console.error('❌ Failed to fetch playlists:', playlistsResponse.status);
+      syncResult.errors.playlists = `Failed to fetch playlists: ${playlistsResponse.status}`;
     }
 
-    console.log(`✅ Synced ${syncCounts.playlists} playlists`);
+    console.log(`✅ Playlists sync completed: ${syncResult.success.playlists} synced, ${syncResult.errors.playlists ? 'with errors' : 'no errors'}`);
 
     // Sync user's saved tracks (Library)
     console.log('🎵 Syncing saved tracks...');
@@ -164,35 +178,48 @@ serve(async (req) => {
     }
 
     console.log(`🎵 Found ${allSavedTracks.length} saved tracks`);
-    syncCounts.tracks = allSavedTracks.length;
 
-    // Process saved tracks in batches
-    for (let i = 0; i < allSavedTracks.length; i += 20) {
-      const batch = allSavedTracks.slice(i, i + 20);
-      const trackUpserts = batch.map(item => ({
-        user_id,
-        spotify_track_id: item.track.id,
-        artist: item.track.artists.map((a: any) => a.name).join(', '),
-        title: item.track.name,
-        album: item.track.album.name,
-        year: item.track.album.release_date ? new Date(item.track.album.release_date).getFullYear() : null,
-        popularity: item.track.popularity,
-        duration_ms: item.track.duration_ms,
-        explicit: item.track.explicit,
-        preview_url: item.track.preview_url,
-        spotify_url: item.track.external_urls?.spotify,
-        image_url: item.track.album.images?.[0]?.url,
-        added_at: item.added_at,
-      }));
+    // Process saved tracks in batches with error handling
+    if (allSavedTracks.length > 0) {
+      try {
+        for (let i = 0; i < allSavedTracks.length; i += 20) {
+          const batch = allSavedTracks.slice(i, i + 20);
+          const trackUpserts = batch.map(item => ({
+            user_id,
+            spotify_track_id: item.track.id,
+            artist: item.track.artists.map((a: any) => a.name).join(', '),
+            title: item.track.name,
+            album: item.track.album.name,
+            year: item.track.album.release_date ? new Date(item.track.album.release_date).getFullYear() : null,
+            popularity: item.track.popularity,
+            duration_ms: item.track.duration_ms,
+            explicit: item.track.explicit,
+            preview_url: item.track.preview_url,
+            spotify_url: item.track.external_urls?.spotify,
+            image_url: item.track.album.images?.[0]?.url,
+            added_at: item.added_at,
+          }));
 
-      await supabase
-        .from('spotify_tracks')
-        .upsert(trackUpserts, {
-          onConflict: 'user_id,spotify_track_id',
-        });
+          const { error: tracksError } = await supabase
+            .from('spotify_tracks')
+            .upsert(trackUpserts, { ignoreDuplicates: false });
+          
+          if (tracksError) {
+            console.error(`❌ Tracks batch ${i}-${i + batch.length} upsert error:`, tracksError);
+            syncResult.errors.tracks = tracksError.message;
+            break;
+          }
+        }
+        
+        if (!syncResult.errors.tracks) {
+          syncResult.success.tracks = allSavedTracks.length;
+          console.log(`✅ Successfully synced ${allSavedTracks.length} saved tracks`);
+        }
+      } catch (error) {
+        console.error('❌ Tracks sync error:', error);
+        syncResult.errors.tracks = error.message;
+      }
     }
-
-    console.log(`✅ Synced ${syncCounts.tracks} saved tracks`);
 
     // Sync top tracks and artists
     console.log('🔥 Syncing top tracks and artists...');
@@ -236,7 +263,7 @@ serve(async (req) => {
           .from('spotify_user_stats')
           .insert(topTrackStats);
         
-        syncCounts.topTracks += topTrackStats.length;
+        syncResult.success.topTracks += topTrackStats.length;
       }
 
       // Top artists
@@ -276,7 +303,7 @@ serve(async (req) => {
           .from('spotify_user_stats')
           .insert(topArtistStats);
         
-        syncCounts.topArtists += topArtistStats.length;
+        syncResult.success.topArtists += topArtistStats.length;
       }
     }
 
@@ -286,13 +313,14 @@ serve(async (req) => {
       .update({ spotify_last_sync: new Date().toISOString() })
       .eq('user_id', user_id);
 
-    console.log('✅ Spotify sync completed for user:', user_id, syncCounts);
+    console.log('✅ Spotify sync completed for user:', user_id, syncResult);
 
     return new Response(
       JSON.stringify({ 
         message: 'Spotify data synced successfully',
-        counts: syncCounts,
-        success: true,
+        success: syncResult,
+        errors: syncResult.errors,
+        has_errors: Object.keys(syncResult.errors).length > 0,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

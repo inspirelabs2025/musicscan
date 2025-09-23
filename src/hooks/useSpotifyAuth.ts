@@ -276,7 +276,32 @@ export const useSpotifyAuth = () => {
       
       console.log('✅ Spotify data sync completed:', data);
       
-      if (data?.counts) {
+      if (data?.success) {
+        const success = data.success;
+        const errors = data.errors || {};
+        
+        // Show success message with counts
+        if (Object.keys(success).length > 0) {
+          const successParts = [];
+          if (success.playlists) successParts.push(`${success.playlists} playlists`);
+          if (success.tracks) successParts.push(`${success.tracks} tracks`);
+          if (success.topTracks) successParts.push(`${success.topTracks} top tracks`);
+          if (success.topArtists) successParts.push(`${success.topArtists} top artiesten`);
+          
+          if (successParts.length > 0) {
+            toast.success(`✅ Spotify gesynchroniseerd: ${successParts.join(', ')}`);
+          }
+        }
+        
+        // Show error messages if any
+        if (Object.keys(errors).length > 0) {
+          const errorParts = Object.entries(errors).map(([key, msg]) => `${key}: ${msg}`);
+          toast.error(`⚠️ Sommige data kon niet worden gesynchroniseerd: ${errorParts.join('; ')}`, {
+            duration: 7000,
+          });
+        }
+      } else if (data?.counts) {
+        // Fallback for old response format
         const { playlists, tracks, topTracks, topArtists } = data.counts;
         toast.success(`Spotify gesynchroniseerd: ${playlists} playlists, ${tracks} tracks, ${topTracks} top tracks, ${topArtists} top artiesten`);
       } else {

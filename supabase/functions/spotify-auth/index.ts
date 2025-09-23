@@ -34,7 +34,17 @@ serve(async (req) => {
   }
 
   try {
-    const { code, code_verifier, redirect_uri } = await req.json();
+    const body = await req.json();
+    
+    // Handle config request
+    if (body.action === 'get_config') {
+      return new Response(
+        JSON.stringify({ client_id: SPOTIFY_CLIENT_ID }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { code, code_verifier, redirect_uri } = body;
 
     if (!code || !code_verifier || !redirect_uri) {
       return new Response(
@@ -93,6 +103,7 @@ serve(async (req) => {
         access_token: tokenData.access_token,
         refresh_token: tokenData.refresh_token,
         expires_in: tokenData.expires_in,
+        client_id: SPOTIFY_CLIENT_ID,
         user_data: {
           id: userData.id,
           display_name: userData.display_name,

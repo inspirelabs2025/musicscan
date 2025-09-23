@@ -29,3 +29,9 @@ verify_jwt = false
 
 [functions.collection-quiz-generator]
 verify_jwt = true
+
+[functions.spotify-auth]
+verify_jwt = false
+
+[functions.spotify-sync]
+verify_jwt = true

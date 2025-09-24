@@ -33,14 +33,66 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Check if blog post already exists for this album
+    // Get album data to check for cross-media duplicates
+    let albumData = null;
+    try {
+      const tableName = media_type === 'vinyl' ? 'vinyl2_scan' : media_type === 'cd' ? 'cd_scan' : 'ai_scan_results';
+      const { data } = await supabase
+        .from(tableName)
+        .select('discogs_id, artist, title')
+        .eq('id', album_id)
+        .single();
+      albumData = data;
+    } catch (error) {
+      console.error('Error fetching album data:', error);
+    }
+
+    // Check if blog post already exists for this specific album+media_type
     const { data: existingBlog, error: checkError } = await supabase
       .from('blog_posts')
-      .select('id')
+      .select('id, album_type')
       .eq('album_id', album_id)
       .eq('album_type', media_type)
       .eq('user_id', user_id)
       .maybeSingle();
+
+    if (checkError) {
+      console.error('Error checking existing blog:', checkError);
+      throw checkError;
+    }
+
+    // Check for cross-media-type duplicates based on discogs_id or artist+title
+    let crossMediaDuplicate = null;
+    if (albumData && !existingBlog) {
+      let duplicateQuery = supabase
+        .from('blog_posts')
+        .select('id, album_type, yaml_frontmatter')
+        .eq('user_id', user_id);
+
+      if (albumData.discogs_id) {
+        // Use discogs_id for more accurate matching
+        const { data: discogsMatches } = await duplicateQuery
+          .not('yaml_frontmatter', 'is', null)
+          .not('yaml_frontmatter->discogs_id', 'is', null)
+          .eq('yaml_frontmatter->discogs_id', albumData.discogs_id);
+        
+        if (discogsMatches && discogsMatches.length > 0) {
+          crossMediaDuplicate = discogsMatches[0];
+          console.log('Found cross-media duplicate by discogs_id:', albumData.discogs_id);
+        }
+      } else if (albumData.artist && albumData.title) {
+        // Fallback to artist+title matching
+        const { data: titleMatches } = await duplicateQuery
+          .not('yaml_frontmatter', 'is', null)
+          .ilike('yaml_frontmatter->artist', `%${albumData.artist}%`)
+          .ilike('yaml_frontmatter->title', `%${albumData.title}%`);
+        
+        if (titleMatches && titleMatches.length > 0) {
+          crossMediaDuplicate = titleMatches[0];
+          console.log('Found cross-media duplicate by artist+title:', albumData.artist, '-', albumData.title);
+        }
+      }
+    }
 
     if (checkError) {
       console.error('Error checking existing blog:', checkError);
@@ -55,6 +107,23 @@ serve(async (req) => {
           success: true, 
           message: 'Blog post already exists',
           blog_id: existingBlog.id
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    }
+
+    // If cross-media duplicate exists, skip generation
+    if (crossMediaDuplicate) {
+      console.log('Cross-media duplicate blog exists:', crossMediaDuplicate.id, 'type:', crossMediaDuplicate.album_type);
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `Blog post already exists for this album as ${crossMediaDuplicate.album_type}`,
+          blog_id: crossMediaDuplicate.id,
+          duplicate_type: crossMediaDuplicate.album_type
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,4 +1,4 @@
-import { useCollectionStats } from "@/hooks/useCollectionStats";
+import { useUnifiedCollectionStats } from "@/hooks/useUnifiedCollectionStats";
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,7 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accen
 export default function CollectionOverview() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: stats, isLoading, error } = useCollectionStats();
+  const { data: stats, isLoading, error } = useUnifiedCollectionStats();
   
   const activeTab = searchParams.get('tab') || 'overview';
   

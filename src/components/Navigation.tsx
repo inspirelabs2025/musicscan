@@ -60,12 +60,10 @@ export function Navigation() {
   const currentPath = location.pathname;
   const [isOpen, setIsOpen] = useState(false);
   const [isCollectionMenuOpen, setIsCollectionMenuOpen] = useState(false);
-  const [isScanMenuOpen, setIsScanMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
 
   const profileMenuItems = getProfileMenuItems(user?.id);
-  const isScanPageActive = scanMenuItems.some(item => currentPath === item.url);
   const isCollectionPageActive = collectionMenuItems.some(item => currentPath === item.url);
   const isProfilePageActive = profileMenuItems.some(item => currentPath === item.url);
 
@@ -157,36 +155,6 @@ export function Navigation() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
-                {/* Scan je collectie Dropdown */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className={cn(
-                    "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
-                    isScanPageActive && "bg-accent text-accent-foreground"
-                  )}>
-                    <ScanLine className="h-4 w-4 mr-2" />
-                    Scan je collectie
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <div className="grid w-[300px] gap-1 p-4">
-                      {scanMenuItems.map((item) => (
-                        <NavigationMenuLink key={item.title} asChild>
-                          <Link
-                            to={item.url}
-                            className={cn(
-                              "flex items-center gap-2 rounded-md p-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
-                              currentPath === item.url && "bg-accent text-accent-foreground"
-                            )}
-                          >
-                            <item.icon className="h-4 w-4" />
-                            <div>
-                              <div className="font-medium">{item.title}</div>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                      ))}
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
 
                 {/* Subscription Status */}
                 <NavigationMenuItem>
@@ -322,31 +290,6 @@ export function Navigation() {
                         )}
                       </div>
 
-                      {/* Scan je collectie Section */}
-                      <div className="mt-2">
-                        <Button
-                          variant="ghost"
-                          onClick={() => setIsScanMenuOpen(!isScanMenuOpen)}
-                          className={cn(
-                            "w-full justify-start text-muted-foreground hover:text-primary",
-                            isScanPageActive && "bg-muted text-primary"
-                          )}
-                        >
-                          <ScanLine className="h-4 w-4 mr-3" />
-                          <span className="text-base">Scan je collectie</span>
-                          <ChevronDown className={cn(
-                            "h-4 w-4 ml-auto transition-transform",
-                            isScanMenuOpen && "rotate-180"
-                          )} />
-                        </Button>
-                        {isScanMenuOpen && (
-                          <div className="ml-6 mt-1 space-y-1">
-                            {scanMenuItems.map((item) => (
-                              <NavLink key={item.title} item={item} mobile />
-                            ))}
-                          </div>
-                        )}
-                      </div>
                       
                       {/* Profiel Section */}
                       <div className="mt-2">

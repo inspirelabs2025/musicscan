@@ -247,7 +247,18 @@ export default function MyCollection() {
   });
 
   // Flatten all items from all pages
-  const items = data?.pages.flatMap(page => page.data) || [];
+  const allItems = data?.pages.flatMap(page => page.data) || [];
+  const firstPage = data?.pages?.[0];
+  const stats = firstPage?.stats;
+  
+  // Use server-side statistics when available, fallback to client-side
+  const totalItems = stats?.totalCount ?? allItems.length;
+  const aiScans = stats?.aiScans ?? allItems.filter(item => item.source_table === 'ai_scan_results').length;
+  const physicalScans = stats?.physicalTotal ?? allItems.filter(item => item.source_table === 'cd_scan' || item.source_table === 'vinyl2_scan').length;
+  const itemsWithValue = stats?.withValue ?? allItems.filter(item => item.calculated_advice_price && item.calculated_advice_price > 0).length;
+  const totalValue = stats?.totalValue ?? allItems
+    .filter(item => item.calculated_advice_price && item.calculated_advice_price > 0)
+    .reduce((sum, item) => sum + (item.calculated_advice_price || 0), 0);
 
   // Auto-load more content when scrolling near bottom
   const handleScroll = useCallback(() => {
@@ -280,7 +291,7 @@ export default function MyCollection() {
 
     // Only work with collection items that are ready for shop
     const readyItems = Array.from(selectedItems)
-      .map(itemId => items.find(i => i.id === itemId))
+      .map(itemId => allItems.find(i => i.id === itemId))
       .filter(item => 
         item && 
         (item.source_table === 'cd_scan' || item.source_table === 'vinyl2_scan') &&
@@ -303,7 +314,7 @@ export default function MyCollection() {
     try {
       for (const item of readyItems) {
         const mediaType = item.source_table === 'cd_scan' ? 'cd' : 'vinyl';
-        await handleItemUpdate(item.id, mediaType, {
+        handleItemUpdate(item.id, mediaType, {
           is_for_sale: true,
           is_public: true,
           marketplace_price: item.calculated_advice_price
@@ -339,10 +350,10 @@ export default function MyCollection() {
   };
 
   const selectAll = () => {
-    if (selectedItems.size === items.length) {
+    if (selectedItems.size === allItems.length) {
       setSelectedItems(new Set());
     } else {
-      setSelectedItems(new Set(items.map(item => item.id)));
+      setSelectedItems(new Set(allItems.map(item => item.id)));
     }
   };
 
@@ -372,20 +383,16 @@ export default function MyCollection() {
     navigate(`/scanner/discogs?${params.toString()}`);
   };
 
-  // Calculate statistics  
-  const totalItems = items.length;
-  const itemsWithValue = items.filter(item => item.calculated_advice_price && item.calculated_advice_price > 0);
-  const totalValue = itemsWithValue.reduce((sum, item) => sum + (item.calculated_advice_price || 0), 0);
-
-  const stats = {
-    total: totalItems,
-    itemsWithValue: itemsWithValue.length,
-    physicalItems: items.filter(item => item.source_table === "cd_scan" || item.source_table === "vinyl2_scan").length,
-    completedAIScans: items.filter(item => item.source_table === "ai_scan_results").length,
-    readyForShop: items.filter(item => !item.is_for_sale && item.calculated_advice_price).length,
-    public: items.filter(item => item.is_public).length,
-    forSale: items.filter(item => item.is_for_sale).length,
-    totalCollectionValue: totalValue,
+  // Updated statistics using server-side data
+  const collectionStats = {
+    totalCount: totalItems,
+    withValue: itemsWithValue,
+    physicalTotal: physicalScans,
+    aiScans: aiScans,
+    readyForShop: stats?.readyForShop ?? allItems.filter(item => !item.is_for_sale && item.calculated_advice_price).length,
+    public: stats?.public ?? allItems.filter(item => item.is_public).length,
+    forSale: stats?.forSale ?? allItems.filter(item => item.is_for_sale).length,
+    totalValue: totalValue,
   };
 
   if (isLoading) {
@@ -466,42 +473,24 @@ export default function MyCollection() {
         <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <Card className="p-8 mb-8 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <Music className="w-8 h-8 text-primary mr-3" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-                Mijn Collectie
-              </h1>
-            </div>
-            
-            <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
-              Hier vind je alle gescande items - zowel incomplete scans als volledige collectie items met waardering.
+          <div className="text-center space-y-4">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
+              Mijn Collectie
+            </h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Overzicht van alle scans en collectie-items. Inclusief AI scans zonder waarde en voltooide items met prijzen.
             </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {/* Quick Links to Public Pages */}
-              {stats.public > 0 && (
-                <Button variant="outline" asChild>
-                  <Link to={`/collection/${user?.id}`} className="inline-flex items-center gap-2">
-                    <Globe className="w-4 h-4" />
-                    Bekijk Publieke Collectie
-                    <ExternalLink className="w-3 h-3" />
-                  </Link>
-                </Button>
-              )}
+            
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button asChild variant="default">
+                <Link to="/ai-scan-v2" className="flex items-center gap-2">
+                  <Scan className="w-4 h-4" />
+                  Nieuwe AI Scan
+                </Link>
+              </Button>
               
-              {shop?.is_public && stats.forSale > 0 && (
-                <Button variant="outline" asChild>
-                  <Link to={`/shop/${shop.shop_url_slug}`} className="inline-flex items-center gap-2">
-                    <Store className="w-4 h-4" />
-                    Bekijk Winkel
-                    <ExternalLink className="w-3 h-3" />
-                  </Link>
-                </Button>
-              )}
-
-              <Button variant="outline" asChild>
-                <Link to="/my-collection-old" className="inline-flex items-center gap-2">
+              <Button asChild variant="outline">
+                <Link to="/collection-overview" className="flex items-center gap-2">
                   <Package className="w-4 h-4" />
                   Beheer Collectie Items
                 </Link>
@@ -516,7 +505,7 @@ export default function MyCollection() {
             <div className="flex items-center justify-center mb-2">
               <Music className="w-5 h-5 text-primary" />
             </div>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-2xl font-bold">{collectionStats.totalCount}</div>
             <div className="text-sm text-muted-foreground">Totaal</div>
           </Card>
           
@@ -524,15 +513,15 @@ export default function MyCollection() {
             <div className="flex items-center justify-center mb-2">
               <Euro className="w-5 h-5 text-green-500" />
             </div>
-            <div className="text-2xl font-bold">{stats.itemsWithValue}</div>
-            <div className="text-sm text-muted-foreground">Met waarde</div>
+            <div className="text-2xl font-bold">{collectionStats.withValue}</div>
+            <div className="text-sm text-muted-foreground">Items met Waarde</div>
           </Card>
           
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
             <div className="flex items-center justify-center mb-2">
               <Package className="w-5 h-5 text-purple-500" />
             </div>
-            <div className="text-2xl font-bold">{stats.physicalItems}</div>
+            <div className="text-2xl font-bold">{collectionStats.physicalTotal}</div>
             <div className="text-sm text-muted-foreground">Fysiek</div>
           </Card>
           
@@ -540,7 +529,7 @@ export default function MyCollection() {
             <div className="flex items-center justify-center mb-2">
               <Sparkles className="w-5 h-5 text-blue-500" />
             </div>
-            <div className="text-2xl font-bold">{stats.completedAIScans}</div>
+            <div className="text-2xl font-bold">{collectionStats.aiScans}</div>
             <div className="text-sm text-muted-foreground">AI Scans</div>
           </Card>
           
@@ -548,7 +537,7 @@ export default function MyCollection() {
             <div className="flex items-center justify-center mb-2">
               <ShoppingCart className="w-5 h-5 text-amber-500" />
             </div>
-            <div className="text-2xl font-bold">{stats.readyForShop}</div>
+            <div className="text-2xl font-bold">{collectionStats.readyForShop}</div>
             <div className="text-sm text-muted-foreground">Winkel-klaar</div>
           </Card>
           
@@ -556,7 +545,7 @@ export default function MyCollection() {
             <div className="flex items-center justify-center mb-2">
               <Eye className="w-5 h-5 text-green-500" />
             </div>
-            <div className="text-2xl font-bold">{stats.public}</div>
+            <div className="text-2xl font-bold">{collectionStats.public}</div>
             <div className="text-sm text-muted-foreground">Publiek</div>
           </Card>
           
@@ -564,7 +553,7 @@ export default function MyCollection() {
             <div className="flex items-center justify-center mb-2">
               <ShoppingCart className="w-5 h-5 text-orange-500" />
             </div>
-            <div className="text-2xl font-bold">{stats.forSale}</div>
+            <div className="text-2xl font-bold">{collectionStats.forSale}</div>
             <div className="text-sm text-muted-foreground">Te koop</div>
           </Card>
           
@@ -572,7 +561,7 @@ export default function MyCollection() {
             <div className="flex items-center justify-center mb-2">
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
-            <div className="text-lg font-semibold">€{stats.totalCollectionValue.toFixed(2)}</div>
+            <div className="text-lg font-semibold">€{collectionStats.totalValue.toFixed(2)}</div>
             <div className="text-sm text-muted-foreground">Totale Waarde</div>
           </Card>
         </div>
@@ -618,7 +607,7 @@ export default function MyCollection() {
                 {selectedItems.size} geselecteerd
               </span>
               <Button variant="outline" size="sm" onClick={selectAll}>
-                {selectedItems.size === items.length ? 'Deselecteer alles' : 'Selecteer alles'}
+                {selectedItems.size === allItems.length ? 'Deselecteer alles' : 'Selecteer alles'}
               </Button>
             </div>
           </div>
@@ -640,7 +629,7 @@ export default function MyCollection() {
                 ) : (
                   <div className="flex items-center gap-2">
                     <ShoppingCart className="w-4 h-4" />
-                    Naar winkel ({selectedItems.size})
+                    Winkel-klare naar winkel
                   </div>
                 )}
               </Button>
@@ -657,7 +646,7 @@ export default function MyCollection() {
         </Card>
 
         {/* Collection Grid */}
-        {items.length === 0 ? (
+        {allItems.length === 0 ? (
           <Card className="p-8 text-center">
             <Music className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Geen collectie items</h3>
@@ -671,7 +660,7 @@ export default function MyCollection() {
         ) : (
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {items.map((item) => (
+              {allItems.map((item) => (
                 <CollectionItemCard
                   key={item.id}
                   item={item}
@@ -695,10 +684,10 @@ export default function MyCollection() {
             )}
             
             {/* End of results indicator */}
-            {!hasNextPage && items.length > 0 && (
+            {!hasNextPage && allItems.length > 0 && (
               <div className="text-center py-4">
                 <div className="text-sm text-muted-foreground">
-                  Alle {items.length} items geladen
+                  Alle {totalItems} items geladen ({allItems.length} weergegeven)
                 </div>
               </div>
             )}

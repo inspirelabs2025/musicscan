@@ -23,7 +23,7 @@ import { ScanResults } from "@/components/ScanResults";
 import { ConditionSelector } from "@/components/ConditionSelector";
 import { ManualSearch } from "@/components/ManualSearch";
 import { DiscogsIdInput } from "@/components/DiscogsIdInput";
-import { SearchingLoadingCard } from "@/components/SearchingLoadingCard";
+import { VinylLoadingCard } from "@/components/VinylLoadingCard";
 import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUsageTracking } from "@/hooks/useUsageTracking";
@@ -693,7 +693,7 @@ const BulkerImage = () => {
           </Card>
         )}
 
-        {isSearching && <SearchingLoadingCard />}
+        {isSearching && <VinylLoadingCard />}
 
         {/* Error Recovery Section */}
         {state.mediaType && state.uploadedFiles.length > 0 && !isAnalyzing && !analysisResult && !isSearching && (

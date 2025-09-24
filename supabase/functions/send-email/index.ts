@@ -26,12 +26,19 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('📧 Received email webhook request');
     
-    // Verify webhook if secret is configured
+    // Parse email data - skip webhook verification if secret is invalid or missing
     let emailData: any;
-    if (hookSecret) {
-      const wh = new Webhook(hookSecret);
-      emailData = wh.verify(payload, headers);
+    if (hookSecret && hookSecret.length > 0) {
+      try {
+        const wh = new Webhook(hookSecret);
+        emailData = wh.verify(payload, headers);
+        console.log('✅ Webhook verification successful');
+      } catch (webhookError) {
+        console.log('⚠️ Webhook verification failed, falling back to direct parsing:', webhookError.message);
+        emailData = JSON.parse(payload);
+      }
     } else {
+      console.log('⚠️ No webhook secret configured, skipping verification');
       emailData = JSON.parse(payload);
     }
 

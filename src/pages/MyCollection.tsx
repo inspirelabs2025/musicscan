@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Music, Package, Store, Eye, EyeOff, ShoppingCart, Sparkles, Download, ExternalLink, Globe, Users, AlertTriangle, RefreshCw, Scan } from "lucide-react";
-import { useInfiniteUnifiedScans } from "@/hooks/useInfiniteUnifiedScans";
+import { useMyActualCollection } from "@/hooks/useMyActualCollection";
 import { useUserShop } from "@/hooks/useUserShop";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,11 +17,11 @@ import { CollectionGridSkeleton } from "@/components/ui/skeletons";
 import { ErrorBoundary, CollectionErrorFallback } from "@/components/ErrorBoundary";
 import { OfflineIndicator } from "@/components/ProgressiveEnhancement";
 import { useMobileOptimized, usePullToRefresh } from "@/hooks/useMobileOptimized";
-import { UnifiedScanResult } from "@/hooks/useInfiniteUnifiedScans";
+import { CollectionItem } from "@/hooks/useMyActualCollection";
 import { ItemStatusBadge, isItemReadyForShop } from "@/components/ItemStatusBadge";
 
 // Enhanced collection item card for unified scans
-const UnifiedCollectionItemCard = ({ 
+const CollectionItemCard = ({ 
   item, 
   onUpdate, 
   isUpdating, 
@@ -30,13 +30,13 @@ const UnifiedCollectionItemCard = ({
   onToggleSelection,
   onAddToCollection
 }: {
-  item: UnifiedScanResult;
+  item: CollectionItem;
   onUpdate?: (itemId: string, mediaType: "cd" | "vinyl", updates: any) => void;
   isUpdating?: boolean;
   showControls?: boolean;
   isSelected?: boolean;
   onToggleSelection?: (itemId: string) => void;
-  onAddToCollection?: (item: UnifiedScanResult) => void;
+  onAddToCollection?: (item: CollectionItem) => void;
 }) => {
   const isCollectionItem = item.source_table === 'cd_scan' || item.source_table === 'vinyl2_scan';
   const isAIScan = item.source_table === 'ai_scan_results';
@@ -226,7 +226,7 @@ export default function MyCollection() {
     hasNextPage, 
     fetchNextPage, 
     isFetchingNextPage 
-  } = useInfiniteUnifiedScans({
+  } = useMyActualCollection({
     mediaTypeFilter: mediaTypeFilter === "all" ? undefined : mediaTypeFilter,
     statusFilter: statusFilter === "all" ? undefined : statusFilter,
   });
@@ -329,7 +329,7 @@ export default function MyCollection() {
     }
   };
 
-  const handleAddToCollection = (item: UnifiedScanResult) => {
+  const handleAddToCollection = (item: CollectionItem) => {
     if (!item.discogs_id) {
       toast({
         title: "Geen Discogs ID",
@@ -357,18 +357,12 @@ export default function MyCollection() {
 
   const stats = {
     total: items.length,
-    aiScans: items.filter(item => item.source_table === "ai_scan_results").length,
-    collectionItems: items.filter(item => item.source_table !== "ai_scan_results").length,
-    readyForShop: items.filter(item => 
-      item.calculated_advice_price && 
-      !item.is_for_sale && 
-      (item.source_table === "cd_scan" || item.source_table === "vinyl2_scan")
-    ).length,
+    physicalItems: items.filter(item => item.source_table === "cd_scan" || item.source_table === "vinyl2_scan").length,
+    completedAIScans: items.filter(item => item.source_table === "ai_scan_results").length,
+    readyForShop: items.filter(item => !item.is_for_sale).length,
     public: items.filter(item => item.is_public).length,
     forSale: items.filter(item => item.is_for_sale).length,
-    totalScannedValue: items
-      .filter(item => item.calculated_advice_price && item.calculated_advice_price > 0)
-      .reduce((total, item) => total + (item.calculated_advice_price || 0), 0),
+    totalCollectionValue: items.reduce((total, item) => total + item.calculated_advice_price, 0),
   };
 
   if (isLoading) {
@@ -458,7 +452,7 @@ export default function MyCollection() {
             </div>
             
             <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
-              Bekijk al je gescande items: AI scans en collectie items in één overzicht.
+              Je volledige collectie met waardering - alleen items met waarde ({stats.total} items).
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -494,7 +488,7 @@ export default function MyCollection() {
         </Card>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
             <div className="flex items-center justify-center mb-2">
               <Music className="w-5 h-5 text-primary" />
@@ -505,18 +499,18 @@ export default function MyCollection() {
           
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
             <div className="flex items-center justify-center mb-2">
-              <Scan className="w-5 h-5 text-blue-500" />
+              <Package className="w-5 h-5 text-purple-500" />
             </div>
-            <div className="text-2xl font-bold">{stats.aiScans}</div>
-            <div className="text-sm text-muted-foreground">AI Scans</div>
+            <div className="text-2xl font-bold">{stats.physicalItems}</div>
+            <div className="text-sm text-muted-foreground">Fysiek</div>
           </Card>
           
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
             <div className="flex items-center justify-center mb-2">
-              <Package className="w-5 h-5 text-purple-500" />
+              <Sparkles className="w-5 h-5 text-blue-500" />
             </div>
-            <div className="text-2xl font-bold">{stats.collectionItems}</div>
-            <div className="text-sm text-muted-foreground">Collectie</div>
+            <div className="text-2xl font-bold">{stats.completedAIScans}</div>
+            <div className="text-sm text-muted-foreground">AI Voltooid</div>
           </Card>
           
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
@@ -542,6 +536,14 @@ export default function MyCollection() {
             <div className="text-2xl font-bold">{stats.forSale}</div>
             <div className="text-sm text-muted-foreground">Te koop</div>
           </Card>
+          
+          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
+            <div className="flex items-center justify-center mb-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </div>
+            <div className="text-lg font-semibold">€{stats.totalCollectionValue.toFixed(2)}</div>
+            <div className="text-sm text-muted-foreground">Totale Waarde</div>
+          </Card>
         </div>
 
         {/* Filters and Controls */}
@@ -566,9 +568,13 @@ export default function MyCollection() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Alle items</SelectItem>
-                  <SelectItem value="completed">Voltooid</SelectItem>
-                  <SelectItem value="pending">Bezig</SelectItem>
-                  <SelectItem value="failed">Mislukt</SelectItem>
+                  <SelectItem value="ready_for_shop">Winkel-klaar</SelectItem>
+                  <SelectItem value="for_sale">Te koop</SelectItem>
+                  <SelectItem value="public">Publiek</SelectItem>
+                  <SelectItem value="private">Privé</SelectItem>
+                  <SelectItem value="cd_scan">Fysieke CD's</SelectItem>
+                  <SelectItem value="vinyl2_scan">Fysieke Vinyl</SelectItem>
+                  <SelectItem value="ai_scan_results">AI Voltooid</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -621,9 +627,9 @@ export default function MyCollection() {
         {items.length === 0 ? (
           <Card className="p-8 text-center">
             <Music className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nog geen items</h3>
+            <h3 className="text-lg font-semibold mb-2">Geen collectie items</h3>
             <p className="text-muted-foreground mb-4">
-              Je hebt nog geen items gescand. Begin met scannen om je collectie op te bouwen!
+              Je hebt nog geen items met waardering in je collectie. Scan items en laat ze verwerken om je collectie op te bouwen!
             </p>
             <Button asChild>
               <Link to="/ai-scan-v2">Start met scannen</Link>
@@ -633,7 +639,7 @@ export default function MyCollection() {
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {items.map((item) => (
-                <UnifiedCollectionItemCard
+                <CollectionItemCard
                   key={item.id}
                   item={item}
                   onUpdate={handleItemUpdate}

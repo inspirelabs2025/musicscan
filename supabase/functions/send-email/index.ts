@@ -54,12 +54,13 @@ const handler = async (req: Request): Promise<Response> => {
       siteUrl: site_url 
     });
 
-    // Create confirmation URL using the correct token (not token_hash)
+    // Create confirmation URL using the correct token_hash (not token)
     // Use the full Supabase project URL to avoid double /auth/v1 paths
     const supabaseUrl = 'https://ssxbpyqnjfiyubsuonar.supabase.co';
-    const confirmationUrl = `${supabaseUrl}/auth/v1/verify?token=${token}&type=${email_action_type}&redirect_to=${encodeURIComponent(redirect_to)}`;
+    const redirectUrl = redirect_to || 'https://www.musicscan.app/dashboard';
+    const confirmationUrl = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(redirectUrl)}`;
     
-    console.log('🔗 Generated confirmation URL:', confirmationUrl.replace(token, '***TOKEN***'));
+    console.log('🔗 Generated confirmation URL:', confirmationUrl.replace(token_hash, '***TOKEN_HASH***'));
     
     // Create the HTML email using your template
     const emailHtml = `

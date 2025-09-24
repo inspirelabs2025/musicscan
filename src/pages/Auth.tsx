@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const { signIn, signUp, resetPassword, user, loading } = useAuth();
@@ -18,6 +19,8 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('signin');
+  const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
   
   // Form states
   const [email, setEmail] = useState('');
@@ -32,10 +35,16 @@ const Auth = () => {
     }
   }, [user, loading, navigate]);
 
-  // Handle password reset flow
+  // Handle password reset flow and email confirmation
   useEffect(() => {
     if (searchParams.get('reset') === 'true') {
       setActiveTab('reset');
+    }
+    
+    // Check if user returned from email confirmation
+    if (searchParams.get('message') === 'Email bevestigd') {
+      setShowConfirmationMessage(true);
+      toast.success('Email bevestigd! Je kunt nu inloggen.');
     }
   }, [searchParams]);
 
@@ -50,6 +59,8 @@ const Auth = () => {
       if (error) {
         if (error.message === 'Invalid login credentials') {
           setError('Onjuiste email of wachtwoord');
+        } else if (error.message === 'Email not confirmed') {
+          setError('Email nog niet bevestigd. Check je inbox en klik op de bevestigingslink.');
         } else {
           setError(error.message);
         }
@@ -61,6 +72,36 @@ const Auth = () => {
       setError('Er ging iets mis. Probeer het opnieuw.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setError('Voer eerst je email adres in');
+      return;
+    }
+
+    setIsResendingEmail(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        toast.success('Bevestigingsmail opnieuw verzonden!');
+      }
+    } catch (err) {
+      setError('Er ging iets mis bij het verzenden van de bevestigingsmail.');
+    } finally {
+      setIsResendingEmail(false);
     }
   };
 
@@ -190,9 +231,40 @@ const Auth = () => {
                   </div>
                 </div>
                 
+                {showConfirmationMessage && (
+                  <Alert>
+                    <Mail className="h-4 w-4" />
+                    <AlertDescription>
+                      Email bevestigd! Je kunt nu inloggen met je gegevens.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
                 {error && (
                   <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>
+                      {error}
+                      {error.includes('Email nog niet bevestigd') && (
+                        <div className="mt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleResendConfirmation}
+                            disabled={isResendingEmail}
+                          >
+                            {isResendingEmail ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Verzenden...
+                              </>
+                            ) : (
+                              'Bevestigingsmail opnieuw sturen'
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </AlertDescription>
                   </Alert>
                 )}
                 

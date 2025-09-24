@@ -256,6 +256,36 @@ serve(async (req) => {
         console.log('✅ Usage counter incremented successfully');
       }
 
+      // Automatic artwork enrichment after successful scan
+      if (discogsResult?.discogsUrl || (combinedData.artist && combinedData.title)) {
+        try {
+          console.log('🎨 Starting automatic artwork enrichment...');
+          const { data: artworkData } = await supabase.functions.invoke('fetch-album-artwork', {
+            body: {
+              discogs_url: discogsResult?.discogsUrl,
+              artist: discogsResult?.artist || combinedData.artist,
+              title: discogsResult?.title || combinedData.title,
+              media_type: mediaType,
+              item_id: scanId,
+              item_type: 'ai_scan' // Flag to indicate this is for ai_scan_results table
+            }
+          });
+          
+          if (artworkData?.artwork_url) {
+            // Update scan record with artwork
+            await supabase.from('ai_scan_results')
+              .update({ artwork_url: artworkData.artwork_url })
+              .eq('id', scanId);
+            
+            console.log('✅ Artwork enrichment completed:', artworkData.artwork_url);
+          } else {
+            console.log('ℹ️ No artwork found during enrichment');
+          }
+        } catch (error) {
+          console.log('❌ Artwork enrichment failed but scan succeeded:', error);
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,

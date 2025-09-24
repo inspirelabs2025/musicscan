@@ -18,7 +18,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { discogs_url, artist, title, media_type, item_id } = await req.json();
+    const { discogs_url, artist, title, media_type, item_id, item_type } = await req.json();
 
     console.log('🎨 Starting artwork fetch for:', { artist, title, media_type, discogs_url });
 
@@ -128,21 +128,37 @@ serve(async (req) => {
             console.log('✅ Artwork stored at:', storedImageUrl);
 
             // Update database record with official artwork
-            const table = media_type === 'cd' ? 'cd_scan' : 'vinyl2_scan';
-            const imageColumn = media_type === 'cd' ? 'front_image' : 'catalog_image';
-            
-            // Only update if no image exists yet
-            const { error: updateError } = await supabase
-              .from(table)
-              .update({ [imageColumn]: storedImageUrl })
-              .eq('id', item_id)
-              .is(imageColumn, null);
-
-            if (updateError) {
-              console.log('❌ Database update error:', updateError);
+            if (item_type === 'ai_scan') {
+              // Update ai_scan_results table
+              const { error: updateError } = await supabase
+                .from('ai_scan_results')
+                .update({ artwork_url: storedImageUrl })
+                .eq('id', item_id);
+                
+              if (updateError) {
+                console.log('❌ AI scan artwork update error:', updateError);
+              } else {
+                console.log('✅ AI scan updated with official artwork');
+              }
             } else {
-              console.log('✅ Database updated with official artwork');
+              // Update legacy cd_scan/vinyl2_scan tables
+              const table = media_type === 'cd' ? 'cd_scan' : 'vinyl2_scan';
+              const imageColumn = media_type === 'cd' ? 'front_image' : 'catalog_image';
+              
+              // Only update if no image exists yet
+              const { error: updateError } = await supabase
+                .from(table)
+                .update({ [imageColumn]: storedImageUrl })
+                .eq('id', item_id)
+                .is(imageColumn, null);
+                
+              if (updateError) {
+                console.log('❌ Collection item artwork update error:', updateError);
+              } else {
+                console.log('✅ Collection item updated with official artwork');
+              }
             }
+
 
             return new Response(JSON.stringify({ 
               success: true, 

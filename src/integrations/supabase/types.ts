@@ -19,6 +19,7 @@ export type Database = {
           ai_description: string | null
           analysis_data: Json | null
           artist: string | null
+          artwork_url: string | null
           barcode: string | null
           catalog_number: string | null
           comments: string | null
@@ -53,6 +54,7 @@ export type Database = {
           ai_description?: string | null
           analysis_data?: Json | null
           artist?: string | null
+          artwork_url?: string | null
           barcode?: string | null
           catalog_number?: string | null
           comments?: string | null
@@ -87,6 +89,7 @@ export type Database = {
           ai_description?: string | null
           analysis_data?: Json | null
           artist?: string | null
+          artwork_url?: string | null
           barcode?: string | null
           catalog_number?: string | null
           comments?: string | null

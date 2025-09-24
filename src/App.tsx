@@ -28,6 +28,7 @@ import AIScanV2 from "./pages/AIScanV2";
 import AIScanV2Overview from "./pages/AIScanV2Overview";
 import UnifiedScanOverview from "./pages/UnifiedScanOverview";
 import MyCollection from "./pages/MyCollection";
+import MyCollectionOld from "./pages/MyCollectionOld";
 import MyShop from "./pages/MyShop";
 import PublicShop from "./pages/PublicShop";
 import PublicCollection from "./pages/PublicCollection";
@@ -183,6 +184,11 @@ const App = () => {
             <Route path="/my-collection" element={
               <ProtectedRoute>
                 <MyCollection />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-collection-old" element={
+              <ProtectedRoute>
+                <MyCollectionOld />
               </ProtectedRoute>
             } />
             <Route path="/my-shop" element={

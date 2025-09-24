@@ -79,20 +79,20 @@ Deno.serve(async (req) => {
     // Get physical collection data for context with detailed album information - user specific
     const { data: cdData, error: cdError } = await supabase
       .from('cd_scan')
-      .select('artist, title, genre, year, calculated_advice_price, format, label, country, status, error_message')
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     const { data: vinylData, error: vinylError } = await supabase
       .from('vinyl2_scan')
-      .select('artist, title, genre, year, calculated_advice_price, format, label, country, status, error_message')
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     // Get AI scan results for complete context
     const { data: aiScansData, error: aiScansError } = await supabase
       .from('ai_scan_results')
-      .select('artist, title, genre, year, calculated_advice_price, format, label, country, status, ai_description, search_queries')
+      .select('artist, title, genre, year, format, label, country, status, ai_description, search_queries')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -162,8 +162,9 @@ Deno.serve(async (req) => {
     // Separate items with/without calculated values for better context
     const itemsWithValues = allPhysicalRecords.filter(item => item.calculated_advice_price);
     const itemsWithoutValues = allPhysicalRecords.filter(item => !item.calculated_advice_price);
-    const aiScansWithValues = allAiScans.filter(item => item.calculated_advice_price);
-    const aiScansWithoutValues = allAiScans.filter(item => !item.calculated_advice_price);
+    // AI scans typically don't have calculated prices - they're for recognition/metadata
+    const aiScansWithValues = [];
+    const aiScansWithoutValues = allAiScans;
     
     // Total comprehensive collection
     const totalAllItems = allPhysicalRecords.length + allAiScans.length;
@@ -263,8 +264,8 @@ Deno.serve(async (req) => {
         recentScans: allAiScans.slice(0, 5).map(r => ({
           artist: r.artist,
           title: r.title,
-          status: r.status,
-          hasValue: !!r.calculated_advice_price
+          status: r.status || 'scanned',
+          hasValue: false
         }))
       },
       
@@ -329,7 +330,7 @@ Deno.serve(async (req) => {
         country: r.country,
         source: r.hasOwnProperty('ai_description') ? 'AI Scan' : 'Physical',
         status: r.status || 'completed',
-        hasValue: !!r.calculated_advice_price
+        hasValue: r.hasOwnProperty('ai_description') ? false : !!r.calculated_advice_price
       }))
     };
 

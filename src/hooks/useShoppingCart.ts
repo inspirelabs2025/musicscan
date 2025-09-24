@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface CartItem {
   id: string;
-  media_type: 'cd' | 'vinyl';
+  media_type: 'cd' | 'vinyl' | 'product';
   artist: string;
   title: string;
   price: number;
@@ -79,7 +79,7 @@ export const useShoppingCart = () => {
         body: {
           items: items.map(item => ({
             id: item.id,
-            media_type: item.media_type
+            type: item.media_type
           })),
           shippingAddress,
           buyerName

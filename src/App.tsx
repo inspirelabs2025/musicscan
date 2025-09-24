@@ -43,6 +43,7 @@ import TestNewsGeneration from "./pages/TestNewsGeneration";
 import TestBlogRegeneration from "./pages/TestBlogRegeneration";
 import TestAlbumCoverBackfill from "./pages/TestAlbumCoverBackfill";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import { ShopProducts } from "./pages/admin/ShopProducts";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 import Social from "./pages/Social";
@@ -238,6 +239,11 @@ const App = () => {
             <Route path="/admin/price-history" element={
               <ProtectedRoute>
                 <PriceHistoryAdmin />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/shop-products" element={
+              <ProtectedRoute>
+                <ShopProducts />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,9 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Music, Heart, Mail, ExternalLink, AlertTriangle, Disc, Music2, Sparkles, ShoppingCart, CreditCard } from "lucide-react";
+import { Music, Heart, Mail, ExternalLink, AlertTriangle, Disc, Music2, Sparkles, ShoppingCart, CreditCard, Package } from "lucide-react";
 import { useState } from "react";
-import type { CollectionItem } from "@/hooks/useMyCollection";
+import type { CollectionItem } from "@/hooks/useShopItems";
 import { useShoppingCart } from "@/hooks/useShoppingCart";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +22,9 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
 
   // Enhanced image fallback logic based on media type
   const getImageUrl = () => {
-    if (item.media_type === 'cd') {
+    if (item.media_type === 'product') {
+      return item.images?.[0] || '/placeholder.svg';
+    } else if (item.media_type === 'cd') {
       return item.front_image || item.back_image || item.barcode_image || item.matrix_image;
     } else if (item.media_type === 'vinyl') {
       return item.catalog_image || item.matrix_image || item.additional_image;
@@ -68,7 +70,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
           body: {
             items: [{
               id: item.id,
-              media_type: item.media_type === 'vinyl' ? 'vinyl' : 'cd'
+              type: item.media_type === 'vinyl' ? 'vinyl' : item.media_type === 'cd' ? 'cd' : 'product'
             }]
           }
         });
@@ -97,9 +99,9 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
 
         const cartItem = {
           id: item.id,
-          media_type: (item.media_type === 'vinyl' ? 'vinyl' : 'cd') as 'cd' | 'vinyl',
+          media_type: (item.media_type === 'vinyl' ? 'vinyl' : item.media_type === 'cd' ? 'cd' : 'product') as 'cd' | 'vinyl' | 'product',
           artist: item.artist || '',
-          title: item.title || '',
+          title: item.media_type === 'product' ? item.name || '' : item.title || '',
           price,
           condition_grade: item.condition_grade || '',
           seller_id: item.user_id || '',
@@ -137,9 +139,9 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
 
     const cartItem = {
       id: item.id,
-      media_type: (item.media_type === 'vinyl' ? 'vinyl' : 'cd') as 'cd' | 'vinyl',
+      media_type: (item.media_type === 'vinyl' ? 'vinyl' : item.media_type === 'cd' ? 'cd' : 'product') as 'cd' | 'vinyl' | 'product',
       artist: item.artist || '',
-      title: item.title || '',
+      title: item.media_type === 'product' ? item.name || '' : item.title || '',
       price,
       condition_grade: item.condition_grade || '',
       seller_id: item.user_id || '',
@@ -167,7 +169,14 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
   };
 
   const getMediaTypeIcon = () => {
-    return item.media_type === 'vinyl' ? Disc : Music2;
+    switch (item.media_type) {
+      case 'vinyl':
+        return Disc;
+      case 'product':
+        return Package;
+      default:
+        return Music2;
+    }
   };
 
   const MediaIcon = getMediaTypeIcon();
@@ -211,7 +220,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
             variant="secondary" 
             className="text-xs font-bold bg-gradient-to-r from-vinyl-purple to-primary text-white border-0 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300"
           >
-            {item.media_type === 'vinyl' ? '🎧 VINYL' : '💿 CD'}
+            {item.media_type === 'vinyl' ? '🎧 VINYL' : item.media_type === 'product' ? '📦 PRODUCT' : '💿 CD'}
           </Badge>
           {item.condition_grade && (
             <Badge 
@@ -254,17 +263,33 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
       <div className="p-5 space-y-4 relative">
         {/* Artist and title with enhanced typography */}
         <div className="space-y-2">
-          <h3 className="font-bold text-base leading-tight line-clamp-2 text-foreground group-hover:text-vinyl-purple transition-colors duration-300">
-            🎤 {item.artist || "Onbekende artiest"}
-          </h3>
-          <p className="text-muted-foreground text-sm line-clamp-2 font-medium">
-            🎵 {item.title || "Onbekende titel"}
-          </p>
-          {item.label && (
-            <p className="text-muted-foreground text-xs flex items-center gap-1">
-              <Music className="w-3 h-3" />
-              {item.label} {item.year && `(${item.year})`}
-            </p>
+          {item.media_type === 'product' ? (
+            <>
+              <h3 className="font-bold text-base leading-tight line-clamp-2 text-foreground group-hover:text-vinyl-purple transition-colors duration-300">
+                📦 {item.name || "Product"}
+              </h3>
+              {item.category && (
+                <p className="text-muted-foreground text-xs flex items-center gap-1">
+                  <Package className="w-3 h-3" />
+                  {item.category}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <h3 className="font-bold text-base leading-tight line-clamp-2 text-foreground group-hover:text-vinyl-purple transition-colors duration-300">
+                🎤 {item.artist || "Onbekende artiest"}
+              </h3>
+              <p className="text-muted-foreground text-sm line-clamp-2 font-medium">
+                🎵 {item.title || "Onbekende titel"}
+              </p>
+              {item.label && (
+                <p className="text-muted-foreground text-xs flex items-center gap-1">
+                  <Music className="w-3 h-3" />
+                  {item.label} {item.year && `(${item.year})`}
+                </p>
+              )}
+            </>
           )}
         </div>
 
@@ -317,17 +342,17 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
             </div>
           )}
           
-          {item.discogs_url && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.open(item.discogs_url!, '_blank')}
-              className="w-full text-xs font-semibold bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-vinyl-gold/50 transition-all duration-300 hover-scale"
-            >
-              <ExternalLink className="w-3 h-3 mr-2" />
-              🔗 Meer info op Discogs
-            </Button>
-          )}
+            {item.media_type !== 'product' && item.discogs_url && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(item.discogs_url!, '_blank')}
+                className="w-full text-xs font-semibold bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-vinyl-gold/50 transition-all duration-300 hover-scale"
+              >
+                <ExternalLink className="w-3 h-3 mr-2" />
+                🔗 Meer info op Discogs
+              </Button>
+            )}
         </div>
       </div>
 

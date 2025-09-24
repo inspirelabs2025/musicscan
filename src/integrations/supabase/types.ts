@@ -2066,6 +2066,60 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_products: {
+        Row: {
+          admin_user_id: string
+          category: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          metadata: Json | null
+          name: string
+          price: number
+          shipping_cost: number | null
+          stock_quantity: number | null
+          updated_at: string
+          weight: number | null
+        }
+        Insert: {
+          admin_user_id: string
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          name: string
+          price: number
+          shipping_cost?: number | null
+          stock_quantity?: number | null
+          updated_at?: string
+          weight?: number | null
+        }
+        Update: {
+          admin_user_id?: string
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          name?: string
+          price?: number
+          shipping_cost?: number | null
+          stock_quantity?: number | null
+          updated_at?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
       shop_transactions: {
         Row: {
           amount: number

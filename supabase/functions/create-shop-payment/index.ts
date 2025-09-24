@@ -45,34 +45,67 @@ serve(async (req) => {
     const orderItems = [];
 
     for (const item of items) {
-      // Fetch item details from database
-      const table = item.media_type === 'cd' ? 'cd_scan' : 'vinyl2_scan';
-      const { data: itemData, error } = await supabaseClient
-        .from(table)
-        .select('*')
-        .eq('id', item.id)
-        .eq('is_for_sale', true)
-        .is('sold_at', null)
-        .single();
-
-      if (error || !itemData) {
-        throw new Error(`Item ${item.id} not found or no longer available`);
+      console.log(`Processing item ${item.id} of type ${item.type}`);
+      
+      let itemData, tableName;
+      
+      if (item.type === 'product') {
+        // Handle shop products
+        const { data, error } = await supabaseClient
+          .from("shop_products")
+          .select("*")
+          .eq("id", item.id)
+          .single();
+          
+        if (error || !data) {
+          throw new Error(`Product not found: ${item.id}`);
+        }
+        
+        itemData = data;
+        tableName = 'shop_products';
+      } else {
+        // Handle CD/Vinyl items
+        tableName = item.type === 'cd' ? 'cd_scan' : 'vinyl2_scan';
+        
+        const { data, error } = await supabaseClient
+          .from(tableName)
+          .select('*')
+          .eq('id', item.id)
+          .eq('is_for_sale', true)
+          .is('sold_at', null)
+          .single();
+          
+        if (error || !data) {
+          throw new Error(`Item ${item.id} not found or no longer available`);
+        }
+        
+        itemData = data;
       }
 
-      const itemPrice = itemData.marketplace_price || itemData.calculated_advice_price || 0;
-      totalAmount += itemPrice;
+      // Calculate price
+      const itemPrice = item.type === 'product' 
+        ? itemData.price 
+        : (itemData.marketplace_price || itemData.calculated_advice_price || 0);
+      
+      const shippingCost = item.type === 'product' 
+        ? itemData.shipping_cost || 0
+        : 5; // Default shipping for albums
+      
+      totalAmount += itemPrice + shippingCost;
       
       orderItems.push({
         item_id: item.id,
-        item_type: table,
-        price: itemPrice,
+        item_type: item.type,
+        price: itemPrice + shippingCost,
         quantity: 1,
         item_data: itemData
       });
     }
 
     // Get seller info (assuming all items are from the same seller for now)
-    const sellerId = orderItems[0].item_data.user_id;
+    const sellerId = orderItems[0].item_type === 'product' 
+      ? orderItems[0].item_data.admin_user_id 
+      : orderItems[0].item_data.user_id;
 
     // Check if Stripe customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -111,17 +144,27 @@ serve(async (req) => {
     if (itemsError) throw itemsError;
 
     // Create Stripe checkout session
-    const lineItems = orderItems.map(item => ({
-      price_data: {
-        currency: 'eur',
-        product_data: {
-          name: `${item.item_data.artist} - ${item.item_data.title}`,
-          description: `${item.item_data.format} - ${item.item_data.condition_grade}`,
+    const lineItems = orderItems.map(item => {
+      const itemName = item.item_type === 'product' 
+        ? item.item_data.name
+        : `${item.item_data.artist || 'Unknown'} - ${item.item_data.title || 'Unknown'}`;
+      
+      const itemDescription = item.item_type === 'product'
+        ? item.item_data.description || 'Shop product'
+        : `${item.item_data.format || 'Album'} - ${item.item_data.condition_grade || 'Good'}`;
+      
+      return {
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: itemName,
+            description: itemDescription,
+          },
+          unit_amount: Math.round(item.price * 100), // Convert to cents
         },
-        unit_amount: Math.round(item.price * 100), // Convert to cents
-      },
-      quantity: 1,
-    }));
+        quantity: 1,
+      };
+    });
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

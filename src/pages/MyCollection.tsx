@@ -201,9 +201,9 @@ const CollectionItemCard = ({
               className="w-full text-xs"
               onClick={() => onAddToCollection(item)}
               disabled={!item.discogs_id}
-              title={item.discogs_id ? "Toevoegen aan collectie" : "Discogs ID vereist"}
+              title={item.discogs_id ? "Bereken de waarde van dit item" : "Discogs ID vereist"}
             >
-              Voeg toe aan collectie
+              Bereken de waarde
             </Button>
           )}
         </div>

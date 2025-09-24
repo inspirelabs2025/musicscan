@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -248,6 +248,23 @@ export default function MyCollection() {
 
   // Flatten all items from all pages
   const items = data?.pages.flatMap(page => page.data) || [];
+
+  // Auto-load more content when scrolling near bottom
+  const handleScroll = useCallback(() => {
+    if (
+      hasNextPage &&
+      !isFetchingNextPage &&
+      window.innerHeight + document.documentElement.scrollTop >=
+      document.documentElement.offsetHeight - 1000 // Load when 1000px from bottom
+    ) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
   const handleItemUpdate = (itemId: string, mediaType: "cd" | "vinyl", updates: any) => {
     // We'll need to implement this for the unified scans
@@ -651,16 +668,22 @@ export default function MyCollection() {
               ))}
             </div>
 
-            {/* Load more button */}
-            {hasNextPage && (
-              <div className="text-center">
-                <Button
-                  onClick={() => fetchNextPage()}
-                  disabled={isFetchingNextPage}
-                  variant="outline"
-                >
-                  {isFetchingNextPage ? 'Laden...' : 'Meer laden'}
-                </Button>
+            {/* Auto-loading indicator */}
+            {isFetchingNextPage && (
+              <div className="text-center py-4">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Meer items laden...</span>
+                </div>
+              </div>
+            )}
+            
+            {/* End of results indicator */}
+            {!hasNextPage && items.length > 0 && (
+              <div className="text-center py-4">
+                <div className="text-sm text-muted-foreground">
+                  Alle {items.length} items geladen
+                </div>
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { CheckCircle, Loader2, TrendingUp, Info, Edit3 } from 'lucide-react';
+import { CheckCircle, Loader2, TrendingUp, Info, Edit3, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -330,35 +330,70 @@ export const ConditionSelector = React.memo(({
           </div>
         )}
 
-        {/* Save Button - Always visible when pricing data is available */}
-        {(lowestPrice || medianPrice || highestPrice) && (
-          <Button 
-            onClick={() => {
-              console.log('🔘 ConditionSelector OPSLAAN button clicked');
-              onSave();
-            }}
-            disabled={isSaving || !selectedCondition || (!calculatedAdvicePrice && !manualAdvicePrice)}
-            className="w-full"
-            size="lg"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Opslaan...
-              </>
-            ) : !selectedCondition ? (
-              <>
-                <Info className="h-4 w-4 mr-2" />
-                Selecteer eerst een conditie
-              </>
-            ) : (
-              <>
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Scan Opslaan
-              </>
-            )}
-          </Button>
+        {/* No Pricing Data Warning */}
+        {!lowestPrice && !medianPrice && !highestPrice && (
+          <Card className="border-amber-200 bg-amber-50">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <div>
+                  <p className="font-medium text-amber-800">Geen prijsgegevens beschikbaar</p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    De prijsinformatie kon niet worden opgehaald. Je kunt handmatig een prijs invoeren of de scan opslaan zonder prijsgegevens.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Manual price input when no pricing data */}
+              <div className="mt-4 space-y-2">
+                <label className="text-sm font-medium text-amber-800">Handmatige Prijs (optioneel)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-amber-700">€</span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={manualAdvicePrice || ''}
+                    onChange={(e) => handleManualPriceInput(e.target.value)}
+                    placeholder="0.00"
+                    className="pl-7 bg-white border-amber-300"
+                  />
+                </div>
+                <p className="text-xs text-amber-600">
+                  Laat leeg om zonder prijs op te slaan
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         )}
+
+        {/* Save Button - Always visible */}
+        <Button 
+          onClick={() => {
+            console.log('🔘 ConditionSelector OPSLAAN button clicked');
+            onSave();
+          }}
+          disabled={isSaving || !selectedCondition}
+          className="w-full"
+          size="lg"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Opslaan...
+            </>
+          ) : !selectedCondition ? (
+            <>
+              <Info className="h-4 w-4 mr-2" />
+              Selecteer eerst een conditie
+            </>
+          ) : (
+            <>
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Scan Opslaan
+            </>
+          )}
+        </Button>
       </CardContent>
     </Card>
   );

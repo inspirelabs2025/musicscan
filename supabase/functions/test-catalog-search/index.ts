@@ -3,27 +3,94 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Discogs API fallback function for pricing when scraping fails
+const getDiscogsApiFallback = async (discogsId: string) => {
+  try {
+    console.log(`🔄 Attempting Discogs API fallback for ID: ${discogsId}`);
+    
+    const discogsToken = Deno.env.get('DISCOGS_TOKEN');
+    const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
+    const discogsConsumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET');
+    
+    if (!discogsToken && (!discogsConsumerKey || !discogsConsumerSecret)) {
+      console.log(`❌ No Discogs API credentials available for fallback`);
+      return null;
+    }
+    
+    const authHeaders = discogsToken 
+      ? { 'Authorization': `Discogs token=${discogsToken}` }
+      : { 'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}` };
+    
+    const apiUrl = `https://api.discogs.com/releases/${discogsId}`;
+    const response = await fetch(apiUrl, {
+      headers: {
+        ...authHeaders,
+        'User-Agent': 'VinylScanner/2.0'
+      }
+    });
+    
+    if (!response.ok) {
+      console.log(`❌ Discogs API fallback failed: ${response.status}`);
+      return null;
+    }
+    
+    const releaseData = await response.json();
+    console.log(`✅ Discogs API fallback successful, using lowest_price: ${releaseData.lowest_price}`);
+    
+    // Return minimal pricing stats with API fallback data
+    return {
+      lowest_price: releaseData.lowest_price || null,
+      median_price: null, // API doesn't provide median
+      highest_price: null, // API doesn't provide highest
+      have_count: releaseData.num_for_sale || 0,
+      want_count: 0, // API doesn't provide want count in release endpoint
+      avg_rating: 0,
+      ratings_count: 0,
+      last_sold: null,
+      fallback_source: 'discogs_api'
+    };
+  } catch (error) {
+    console.error(`❌ Discogs API fallback error:`, error);
+    return null;
+  }
+};
+
 Deno.serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
-  // Function to scrape pricing statistics with retry logic (moved to top)
-  const scrapePricingStatsWithRetry = async (sellUrl: string, apiKey: string, maxRetries: number = 2) => {
+  // Function to scrape pricing statistics with retry logic and fallback (improved)
+  const scrapePricingStatsWithRetry = async (sellUrl: string, apiKey: string, discogsId?: string, maxRetries: number = 3) => {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       console.log(`💰 Pricing attempt ${attempt}/${maxRetries} for: ${sellUrl}`);
       
       try {
-        const scraperUrl = `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(sellUrl)}`;
+        // Enhanced ScraperAPI URL with better parameters and headers
+        const scraperUrl = `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(sellUrl)}&keep_headers=true&render=false`;
         
-        const response = await fetch(scraperUrl);
+        const response = await fetch(scraperUrl, {
+          headers: {
+            'Accept-Language': 'en-US,en;q=0.9',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          }
+        });
+        
         if (!response.ok) {
           console.log(`❌ ScraperAPI request failed (attempt ${attempt}): ${response.status}`);
           if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, attempt * 2000)); // Exponential backoff
+            // Enhanced exponential backoff: 3s, 6s, 12s
+            await new Promise(resolve => setTimeout(resolve, attempt * 3000));
             continue;
           }
+          
+          // If all scraping attempts failed, try Discogs API fallback
+          if (discogsId) {
+            console.log(`🔄 ScraperAPI failed completely, attempting Discogs API fallback for ID: ${discogsId}`);
+            return await getDiscogsApiFallback(discogsId);
+          }
+          
           return null;
         }
 
@@ -122,9 +189,18 @@ Deno.serve(async (req) => {
         if (stats.lowest_price || stats.median_price || stats.highest_price) {
           return stats;
         } else if (attempt < maxRetries) {
-          console.log(`⚠️ No pricing data found, retrying...`);
-          await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+          console.log(`⚠️ No pricing data found in HTML, retrying...`);
+          await new Promise(resolve => setTimeout(resolve, attempt * 3000));
           continue;
+        }
+        
+        // If this is the last attempt and we still have no pricing data, try API fallback
+        if (attempt === maxRetries && discogsId) {
+          console.log(`🔄 Final attempt failed, trying Discogs API fallback for ID: ${discogsId}`);
+          const fallbackStats = await getDiscogsApiFallback(discogsId);
+          if (fallbackStats) {
+            return fallbackStats;
+          }
         }
         
         return stats;
@@ -157,7 +233,7 @@ Deno.serve(async (req) => {
       const sellUrl = `https://www.discogs.com/sell/release/${discogs_id}`;
       console.log(`💰 Retrying pricing for Discogs ID: ${discogs_id}`);
       
-      const pricingStats = await scrapePricingStatsWithRetry(sellUrl, scraperApiKey);
+      const pricingStats = await scrapePricingStatsWithRetry(sellUrl, scraperApiKey, discogs_id.toString());
       
       return new Response(
         JSON.stringify({ pricing_stats: pricingStats }),
@@ -237,8 +313,25 @@ Deno.serve(async (req) => {
         
         console.log(`🎵 Detected media type: ${mediaType}`);
         
-        // Fetch pricing stats
-        const pricingStats = await scrapePricingStatsWithRetry(sellUrl, scraperApiKey);
+        // Fetch pricing stats with fallback support
+        const pricingStats = await scrapePricingStatsWithRetry(sellUrl, scraperApiKey, direct_discogs_id.toString());
+        
+        // If no pricing stats and we have API access, ensure we have at least lowest price from API
+        let finalPricingStats = pricingStats;
+        if ((!pricingStats || (!pricingStats.lowest_price && !pricingStats.median_price && !pricingStats.highest_price)) && releaseData.lowest_price) {
+          console.log(`🔄 No scraping results, using API lowest_price as fallback: ${releaseData.lowest_price}`);
+          finalPricingStats = {
+            lowest_price: releaseData.lowest_price,
+            median_price: pricingStats?.median_price || null,
+            highest_price: pricingStats?.highest_price || null,
+            have_count: pricingStats?.have_count || 0,
+            want_count: pricingStats?.want_count || 0,
+            avg_rating: pricingStats?.avg_rating || 0,
+            ratings_count: pricingStats?.ratings_count || 0,
+            last_sold: pricingStats?.last_sold || null,
+            fallback_source: 'discogs_api'
+          };
+        }
         
         // Create complete result with full metadata
         const result = {
@@ -261,7 +354,7 @@ Deno.serve(async (req) => {
           media_type: mediaType,
           similarity_score: 1.0,
           search_strategy: 'Direct Discogs ID',
-          pricing_stats: pricingStats,
+          pricing_stats: finalPricingStats,
           // Include original release data for debugging
           release_metadata: {
             master_id: releaseData.master_id,
@@ -504,13 +597,24 @@ Deno.serve(async (req) => {
       pricing_stats: null as any
     }));
 
-    // Add pricing statistics if requested
+    // Add pricing statistics if requested and ScraperAPI is available
     if (include_pricing && scraperApiKey && formattedResults.length > 0) {
       console.log(`💰 Scraping pricing stats for ${formattedResults.length} results...`);
       
       for (const result of formattedResults) {
-        const pricingStats = await scrapePricingStatsWithRetry(result.sell_url, scraperApiKey);
+        // Extract Discogs ID from result for fallback
+        const discogsId = result.discogs_id;
+        const pricingStats = await scrapePricingStatsWithRetry(result.sell_url, scraperApiKey, discogsId);
         result.pricing_stats = pricingStats;
+        
+        // If no pricing stats from scraping, try to get minimal price from Discogs API
+        if ((!pricingStats || (!pricingStats.lowest_price && !pricingStats.median_price && !pricingStats.highest_price)) && discogsId) {
+          console.log(`🔄 No pricing from scraping for ${discogsId}, attempting API fallback...`);
+          const fallbackStats = await getDiscogsApiFallback(discogsId);
+          if (fallbackStats) {
+            result.pricing_stats = fallbackStats;
+          }
+        }
       }
     }
 

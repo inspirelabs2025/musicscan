@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Settings, Store, ExternalLink, Copy, AlertCircle, Package, Eye, Plus } from "lucide-react";
 import { useShopItems } from "@/hooks/useShopItems";
 import { useUserShop } from "@/hooks/useUserShop";
-import { CollectionItemCard } from "@/components/CollectionItemCard";
+import { ShopItemCard } from "@/components/ShopItemCard";
 import { ShopSetupWizard } from "@/components/ShopSetupWizard";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
@@ -269,11 +269,10 @@ export default function MyShop() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {shopItems.map((item) => (
-                <CollectionItemCard
+                <ShopItemCard
                   key={item.id}
                   item={item}
-                  onUpdate={() => {}} // Updates handled through collection page
-                  showControls={false}
+                  shopContactInfo={shop?.contact_info}
                 />
               ))}
             </div>

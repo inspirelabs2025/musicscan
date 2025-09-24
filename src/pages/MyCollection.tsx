@@ -19,6 +19,7 @@ import { OfflineIndicator } from "@/components/ProgressiveEnhancement";
 import { useMobileOptimized, usePullToRefresh } from "@/hooks/useMobileOptimized";
 import { CollectionItem } from "@/hooks/useMyActualCollection";
 import { ItemStatusBadge, isItemReadyForShop } from "@/components/ItemStatusBadge";
+import { QuickScanOptions } from "@/components/QuickScanOptions";
 
 // Enhanced collection item card for unified scans
 const CollectionItemCard = ({ 
@@ -471,33 +472,36 @@ export default function MyCollection() {
         )}
         
         <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <Card className="p-8 mb-8 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-          <div className="text-center space-y-4">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
-              Mijn Collectie
-            </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Overzicht van alle scans en collectie-items. Inclusief AI scans zonder waarde en voltooide items met prijzen.
-            </p>
-            
-            <div className="flex flex-wrap justify-center gap-3">
-              <Button asChild variant="default">
-                <Link to="/ai-scan-v2" className="flex items-center gap-2">
-                  <Scan className="w-4 h-4" />
-                  Nieuwe AI Scan
-                </Link>
-              </Button>
-              
-              <Button asChild variant="outline">
-                <Link to="/collection-overview" className="flex items-center gap-2">
-                  <Package className="w-4 h-4" />
-                  Beheer Collectie Items
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </Card>
+         {/* Header */}
+         <Card className="p-8 mb-8 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
+           <div className="text-center space-y-4">
+             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
+               Mijn Collectie
+             </h1>
+             <p className="text-muted-foreground max-w-2xl mx-auto">
+               Overzicht van alle scans en collectie-items. Inclusief AI scans zonder waarde en voltooide items met prijzen.
+             </p>
+             
+             <div className="flex flex-wrap justify-center gap-3">
+               <Button asChild variant="default">
+                 <Link to="/ai-scan-v2" className="flex items-center gap-2">
+                   <Scan className="w-4 h-4" />
+                   Nieuwe AI Scan
+                 </Link>
+               </Button>
+               
+               <Button asChild variant="outline">
+                 <Link to="/collection-overview" className="flex items-center gap-2">
+                   <Package className="w-4 h-4" />
+                   Beheer Collectie Items
+                 </Link>
+               </Button>
+             </div>
+           </div>
+         </Card>
+
+         {/* Quick Scan Options */}
+         <QuickScanOptions context="collection" className="mb-8" />
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">

@@ -16,6 +16,7 @@ import { CollectionItemCard } from "@/components/CollectionItemCard";
 import { ShopSetupWizard } from "@/components/ShopSetupWizard";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { QuickScanOptions } from "@/components/QuickScanOptions";
 
 export default function MyShop() {
   const { shopItems, isLoading: itemsLoading } = useShopItems();
@@ -253,6 +254,9 @@ export default function MyShop() {
             <div className="text-sm text-muted-foreground">Publiek zichtbaar</div>
           </Card>
         </div>
+
+        {/* Quick Scan Options */}
+        <QuickScanOptions context="shop" className="mb-8" />
 
         {/* Shop Tabs */}
         <Card className="p-6 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">

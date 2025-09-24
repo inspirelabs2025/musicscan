@@ -50,6 +50,8 @@ const Scanner = () => {
   const urlArtist = searchParams.get('artist');
   const urlTitle = searchParams.get('title');
   const urlCondition = searchParams.get('condition');
+  const returnTo = searchParams.get('returnTo') as 'collection' | 'shop' | null;
+  const quickScanType = searchParams.get('type') as 'vinyl' | 'cd' | null;
 
   const { 
     isAnalyzing: isAnalyzingVinyl, 
@@ -162,6 +164,25 @@ const Scanner = () => {
       }, 1000);
     }
   }, [fromAiScan, urlMediaType, urlDiscogsId, urlCondition, urlArtist, urlTitle, searchByDiscogsId]);
+
+  // Handle quick scan from QuickScanOptions (new flow)
+  useEffect(() => {
+    if (quickScanType && !autoStartTriggered.current && !fromAiScan) {
+      console.log('🔗 Quick scan flow detected:', quickScanType, 'returnTo:', returnTo);
+      
+      // Set media type and go to step 1 (upload)
+      dispatch({ type: 'SET_MEDIA_TYPE', payload: quickScanType });
+      dispatch({ type: 'SET_CURRENT_STEP', payload: 1 });
+      
+      autoStartTriggered.current = true;
+      
+      toast({
+        title: "Scan gestart",
+        description: `${quickScanType === 'vinyl' ? 'Vinyl' : 'CD'} scan voorbereid. Upload je foto's om te beginnen.`,
+        variant: "default"
+      });
+    }
+  }, [quickScanType, returnTo, fromAiScan]);
 
   useEffect(() => {
     if (!state.mediaType || !analyzeImages) return;
@@ -381,6 +402,17 @@ const Scanner = () => {
         description: `${state.mediaType === 'vinyl' ? 'LP' : 'CD'} opgeslagen met adviesprijs: €${advicePrice.toFixed(2)}`,
         variant: "default"
       });
+
+      // Handle return navigation based on returnTo parameter
+      if (returnTo === 'collection') {
+        setTimeout(() => {
+          navigate('/my-collection');
+        }, 2000);
+      } else if (returnTo === 'shop') {
+        setTimeout(() => {
+          navigate('/my-shop');
+        }, 2000);
+      }
     } catch (error) {
       toast({
         title: "Fout bij Opslaan",

@@ -77,8 +77,8 @@ Deno.serve(async (req) => {
     console.log(`📦 Found ${discogsData.results?.length || 0} releases`);
 
     // Process releases in parallel
-    const releases = await Promise.all(
-      (discogsData.results || []).slice(0, 15).map(async (release: any) => {
+    const rawReleases = await Promise.all(
+      (discogsData.results || []).slice(0, 20).map(async (release: any) => {
         try {
           // Get detailed release information for better artwork
           const detailResponse = await fetch(`https://api.discogs.com/releases/${release.id}`, {
@@ -179,11 +179,47 @@ Deno.serve(async (req) => {
       })
     );
 
+    // Deduplicate releases by artist + title combination
+    const deduplicatedReleases: DiscogsRelease[] = [];
+    const seenCombinations = new Set<string>();
+
+    for (const release of rawReleases) {
+      if (!release || !release.artist || !release.title) continue;
+      
+      // Create a normalized key for deduplication
+      const key = `${release.artist.toLowerCase().trim()}-${release.title.toLowerCase().trim()}`;
+      
+      if (!seenCombinations.has(key)) {
+        seenCombinations.add(key);
+        deduplicatedReleases.push(release);
+      } else {
+        // If we already have this combination, replace it if this one has better quality data
+        const existingIndex = deduplicatedReleases.findIndex(r => 
+          `${r.artist.toLowerCase().trim()}-${r.title.toLowerCase().trim()}` === key
+        );
+        
+        if (existingIndex !== -1) {
+          const existing = deduplicatedReleases[existingIndex];
+          // Prefer releases with stored images, then artwork, then more complete data
+          const haseBetterImage = release.stored_image && !existing.stored_image;
+          const hasBetterArtwork = !release.stored_image && release.artwork && !existing.artwork;
+          const hasMoreData = (release.genre?.length || 0) > (existing.genre?.length || 0);
+          
+          if (haseBetterImage || hasBetterArtwork || hasMoreData) {
+            deduplicatedReleases[existingIndex] = release;
+          }
+        }
+      }
+    }
+
+    // Limit to 12 unique releases for better performance
+    const releases = deduplicatedReleases.slice(0, 12);
+
     // Update cache
     cachedReleases = releases;
     cacheTime = now;
 
-    console.log(`✅ Successfully processed ${releases.length} releases`);
+    console.log(`✅ Successfully processed ${releases.length} unique releases (from ${rawReleases.length} total)`);
 
     return new Response(JSON.stringify({
       success: true,

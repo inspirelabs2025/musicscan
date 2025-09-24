@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Music, Package, Store, Eye, EyeOff, ShoppingCart, Sparkles, Download, ExternalLink, Globe, Users, AlertTriangle, RefreshCw, Scan } from "lucide-react";
-import { useUnifiedScans } from "@/hooks/useUnifiedScans";
+import { useInfiniteUnifiedScans } from "@/hooks/useInfiniteUnifiedScans";
 import { useUserShop } from "@/hooks/useUserShop";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +17,7 @@ import { CollectionGridSkeleton } from "@/components/ui/skeletons";
 import { ErrorBoundary, CollectionErrorFallback } from "@/components/ErrorBoundary";
 import { OfflineIndicator } from "@/components/ProgressiveEnhancement";
 import { useMobileOptimized, usePullToRefresh } from "@/hooks/useMobileOptimized";
-import { UnifiedScanResult } from "@/hooks/useUnifiedScans";
+import { UnifiedScanResult } from "@/hooks/useInfiniteUnifiedScans";
 
 // Enhanced collection item card for unified scans
 const UnifiedCollectionItemCard = ({ 
@@ -192,7 +192,7 @@ export default function MyCollection() {
     hasNextPage, 
     fetchNextPage, 
     isFetchingNextPage 
-  } = useUnifiedScans({
+  } = useInfiniteUnifiedScans({
     mediaTypeFilter: mediaTypeFilter === "all" ? undefined : mediaTypeFilter,
     statusFilter: statusFilter === "all" ? undefined : statusFilter,
   });

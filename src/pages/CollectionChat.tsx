@@ -224,16 +224,16 @@ const CollectionChat = () => {
     
     return (
       <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6 animate-fade-in`}>
-        <div className={`max-w-[80%] p-4 rounded-2xl shadow-lg ${
+        <div className={`max-w-[70%] md:max-w-[65%] p-4 rounded-2xl shadow-lg break-words ${
           isUser 
             ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border border-primary/20' 
             : 'bg-gradient-to-br from-card to-muted/50 border border-primary/10'
         }`}>
           {isUser ? (
-            <p className="whitespace-pre-wrap">{msg.message}</p>
+            <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{msg.message}</p>
           ) : (
             <div 
-              className="prose prose-sm max-w-none dark:prose-invert"
+              className="prose prose-sm max-w-none dark:prose-invert prose-p:break-words prose-p:overflow-wrap-anywhere prose-headings:break-words prose-li:break-words"
               dangerouslySetInnerHTML={{
                 __html: msg.message
                   .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')

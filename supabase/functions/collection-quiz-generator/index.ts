@@ -171,8 +171,8 @@ serve(async (req) => {
 
     console.log(`Generating quiz for user: ${user.id}`);
 
-    // Fetch user's collection from both tables AND Spotify data
-    const [cdResult, vinylResult, spotifyTracksResult, spotifyPlaylistsResult, spotifyStatsResult] = await Promise.all([
+    // Fetch user's collection from all tables AND Spotify data
+    const [cdResult, vinylResult, aiResult, spotifyTracksResult, spotifyPlaylistsResult, spotifyStatsResult] = await Promise.all([
       supabase
         .from('cd_scan')
         .select('artist, title, label, catalog_number, year, genre, style, country')
@@ -185,6 +185,14 @@ serve(async (req) => {
         .eq('user_id', user.id)
         .not('artist', 'is', null)
         .not('title', 'is', null),
+      supabase
+        .from('ai_scan_results')
+        .select('artist, title, label, catalog_number, year, genre, style, country, status, calculated_advice_price, media_type')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .not('artist', 'is', null)
+        .not('title', 'is', null)
+        .not('calculated_advice_price', 'is', null),
       supabase
         .from('spotify_tracks')
         .select('name, artist_name, album_name, playlist_id')
@@ -204,12 +212,16 @@ serve(async (req) => {
         .limit(50)
     ]);
 
-    if (cdResult.error || vinylResult.error) {
-      console.error('Database error:', cdResult.error || vinylResult.error);
+    if (cdResult.error || vinylResult.error || aiResult.error) {
+      console.error('Database error:', cdResult.error || vinylResult.error || aiResult.error);
       throw new Error('Failed to fetch collection data');
     }
 
-    const allAlbums = [...(cdResult.data || []), ...(vinylResult.data || [])];
+    const allAlbums = [
+      ...(cdResult.data || []).map(item => ({ ...item, source: 'cd_scan' })),
+      ...(vinylResult.data || []).map(item => ({ ...item, source: 'vinyl2_scan' })),
+      ...(aiResult.data || []).map(item => ({ ...item, source: 'ai_scan_results' }))
+    ];
     const spotifyTracks = spotifyTracksResult.data || [];
     const spotifyPlaylists = spotifyPlaylistsResult.data || [];
     const spotifyStats = spotifyStatsResult.data || [];
@@ -231,7 +243,7 @@ serve(async (req) => {
       }
     }
     
-    console.log(`Quiz mode: ${quizMode}, Physical: ${allAlbums.length}, Spotify tracks: ${spotifyTracks.length}, Spotify stats: ${spotifyStats.length}`);
+    console.log(`Quiz mode: ${quizMode}, Physical: ${allAlbums.length} (including AI scans), Spotify tracks: ${spotifyTracks.length}, Spotify stats: ${spotifyStats.length}`);
 
     // Prepare data summary for OpenAI based on quiz mode
     let collectionSummary: any = {};

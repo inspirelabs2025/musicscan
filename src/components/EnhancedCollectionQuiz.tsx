@@ -18,7 +18,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useSpotifyStats } from '@/hooks/useSpotifyData';
-import { useUserCollectionStats } from '@/hooks/useUserCollectionStats';
+import { useUnifiedCollectionStats } from '@/hooks/useUnifiedCollectionStats';
 import { CollectionQuiz } from './CollectionQuiz';
 import { toast } from 'sonner';
 
@@ -35,7 +35,7 @@ export function EnhancedCollectionQuiz() {
   const { user } = useAuth();
   const { data: profile } = useProfile(user?.id);
   const { data: spotifyStats } = useSpotifyStats();
-  const { data: collectionStats } = useUserCollectionStats(user?.id);
+  const { data: collectionStats } = useUnifiedCollectionStats();
   const [selectedSource, setSelectedSource] = useState<string>('');
   const [showQuiz, setShowQuiz] = useState(false);
 

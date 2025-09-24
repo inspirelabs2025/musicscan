@@ -318,25 +318,38 @@ serve(async (req) => {
       }
     }
 
-    // Fetch physical collection data
+    // Fetch all collection data including AI scan results
     const cdQuery = supabaseClient.from('cd_scan').select('*');
     const vinylQuery = supabaseClient.from('vinyl2_scan').select('*');
+    const aiQuery = supabaseClient.from('ai_scan_results').select('*');
     
     if (userId) {
       cdQuery.eq('user_id', userId);
       vinylQuery.eq('user_id', userId);
+      aiQuery.eq('user_id', userId);
     }
 
-    const [cdResult, vinylResult] = await Promise.all([
+    const [cdResult, vinylResult, aiResult] = await Promise.all([
       cdQuery,
-      vinylQuery
+      vinylQuery,
+      aiQuery
     ]);
 
     const { data: cdItems, error: cdError } = cdResult;
     const { data: vinylItems, error: vinylError } = vinylResult;
+    const { data: aiItems, error: aiError } = aiResult;
 
     if (cdError) console.error('CD Database error:', cdError);
     if (vinylError) console.error('Vinyl Database error:', vinylError);
+    if (aiError) console.error('AI Database error:', aiError);
+
+    // Filter AI scans to only include completed ones with valid data
+    const completedAiItems = (aiItems || []).filter(item => 
+      item.status === 'completed' && 
+      item.artist && 
+      item.title && 
+      item.calculated_advice_price !== null
+    );
 
     // Fetch Spotify data if user is available
     let spotifyTracks = [];
@@ -362,11 +375,12 @@ serve(async (req) => {
     }
 
     const allItems = [
-      ...(cdItems || []).map(item => ({ ...item, source: 'cd_scan' })),
-      ...(vinylItems || []).map(item => ({ ...item, source: 'vinyl2_scan' }))
+      ...(cdItems || []).map(item => ({ ...item, source: 'cd_scan', media_type: 'cd' })),
+      ...(vinylItems || []).map(item => ({ ...item, source: 'vinyl2_scan', media_type: 'vinyl' })),
+      ...completedAiItems.map(item => ({ ...item, source: 'ai_scan_results', media_type: item.media_type || 'unknown' }))
     ];
 
-    console.log(`📊 Analyzing ${allItems.length} physical items (${cdItems?.length || 0} CDs, ${vinylItems?.length || 0} vinyl) + ${spotifyTracks.length} Spotify tracks`);
+    console.log(`📊 Analyzing ${allItems.length} items (${cdItems?.length || 0} CDs, ${vinylItems?.length || 0} vinyl, ${completedAiItems.length} AI scans) + ${spotifyTracks.length} Spotify tracks`);
 
     // Check if we have any data to analyze
     const hasPhysicalCollection = allItems && allItems.length > 0;
@@ -498,7 +512,7 @@ COMPLETE MUZIEKPROFIEL:`;
 FYSIEKE COLLECTIE (${allItems.length} albums):
 - Tijdspanne: ${oldestItem} tot ${newestItem} (${newestItem - oldestItem} jaar muziekgeschiedenis)
 - ${uniqueLabels} verschillende platenlabels
-- Formats: ${cdItems?.length || 0} CDs en ${vinylItems?.length || 0} vinyl platen
+- Formats: ${cdItems?.length || 0} CDs, ${vinylItems?.length || 0} vinyl platen, ${completedAiItems.length} AI gescande items
 - Totale geschatte waarde: €${totalValue.toFixed(2)}
 
 TOP ARTIESTEN IN FYSIEKE COLLECTIE:
@@ -768,6 +782,7 @@ BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatt
         timeSpan: newestItem - oldestItem,
         cdCount: cdItems?.length || 0,
         vinylCount: vinylItems?.length || 0,
+        aiScanCount: completedAiItems.length,
         hasPhysicalCollection,
         hasSpotifyData,
         physicalArtistsCount: physicalArtistSet.size,

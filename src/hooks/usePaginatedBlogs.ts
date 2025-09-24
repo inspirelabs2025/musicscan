@@ -110,7 +110,57 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
       query = query.order('updated_at', { ascending: sortOrder === 'asc' });
     }
 
-    const { data, error, count } = await query;
+    // Build count query with same filters
+    let countQuery = supabase
+      .from("blog_posts")
+      .select("*", { count: 'exact', head: true });
+
+    // Apply same filters to count query
+    if (filters.status === 'published') {
+      countQuery = countQuery.eq("is_published", true);
+    } else if (filters.status === 'draft') {
+      countQuery = countQuery.eq("is_published", false);
+    }
+
+    if (filters.albumType && filters.albumType !== 'all') {
+      countQuery = countQuery.eq("album_type", filters.albumType);
+    }
+
+    if (filters.dateRange && filters.dateRange !== 'all') {
+      const now = new Date();
+      let dateFrom: Date;
+      
+      switch (filters.dateRange) {
+        case 'week':
+          dateFrom = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          dateFrom = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case 'year':
+          dateFrom = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          dateFrom = new Date(0);
+      }
+      
+      countQuery = countQuery.gte("created_at", dateFrom.toISOString());
+    }
+
+    if (filters.search) {
+      countQuery = countQuery.or(`
+        yaml_frontmatter->>title.ilike.%${filters.search}%,
+        yaml_frontmatter->>artist.ilike.%${filters.search}%,
+        yaml_frontmatter->>album.ilike.%${filters.search}%,
+        yaml_frontmatter->>genre.ilike.%${filters.search}%
+      `);
+    }
+
+    // Get total count for pagination
+    const { count } = await countQuery;
+
+    // Get the actual data
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching blogs:', error);
@@ -119,7 +169,7 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
 
     return {
       blogs: data as BlogPostListItem[],
-      nextPage: (data?.length === ITEMS_PER_PAGE) ? pageParam + 1 : undefined,
+      nextPage: count && (pageParam + 1) * ITEMS_PER_PAGE < count ? pageParam + 1 : undefined,
       totalCount: count
     };
   };

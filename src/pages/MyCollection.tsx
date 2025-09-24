@@ -18,6 +18,7 @@ import { ErrorBoundary, CollectionErrorFallback } from "@/components/ErrorBounda
 import { OfflineIndicator } from "@/components/ProgressiveEnhancement";
 import { useMobileOptimized, usePullToRefresh } from "@/hooks/useMobileOptimized";
 import { UnifiedScanResult } from "@/hooks/useInfiniteUnifiedScans";
+import { ItemStatusBadge, isItemReadyForShop } from "@/components/ItemStatusBadge";
 
 // Enhanced collection item card for unified scans
 const UnifiedCollectionItemCard = ({ 
@@ -80,52 +81,55 @@ const UnifiedCollectionItemCard = ({
           )}
         </div>
 
-        {/* Content */}
-        <div className="space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <h3 className="font-medium text-sm leading-tight truncate">
-                {item.title || 'Onbekende titel'}
-              </h3>
-              <p className="text-xs text-muted-foreground truncate">
-                {item.artist || 'Onbekende artiest'}
-              </p>
-            </div>
-            {getSourceBadge()}
-          </div>
-
-          {/* Media type and condition */}
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs capitalize">
-              {item.media_type}
-            </Badge>
-            {item.condition_grade && (
-              <Badge variant="secondary" className="text-xs">
-                {item.condition_grade}
+          {/* Content */}
+          <div className="space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-medium text-sm leading-tight truncate">
+                  {item.title || 'Onbekende titel'}
+                </h3>
+                <p className="text-xs text-muted-foreground truncate">
+                  {item.artist || 'Onbekende artiest'}
+                </p>
+              </div>
+              <Badge variant="outline" className="text-xs capitalize">
+                {item.media_type}
               </Badge>
-            )}
-          </div>
-
-          {/* Price */}
-          {item.calculated_advice_price && (
-            <div className="text-lg font-semibold text-primary">
-              €{item.calculated_advice_price.toFixed(2)}
             </div>
-          )}
 
-          {/* Status badges for collection items */}
-          {isCollectionItem && (
-            <div className="flex flex-wrap gap-1">
-              {item.is_public && (
-                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                  <Eye className="w-3 h-3 mr-1" />
-                  Publiek
+            {/* Status and condition */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <ItemStatusBadge item={item} />
+              {item.condition_grade && (
+                <Badge variant="secondary" className="text-xs">
+                  {item.condition_grade}
                 </Badge>
               )}
-              {item.is_for_sale && (
-                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                  <ShoppingCart className="w-3 h-3 mr-1" />
-                  Te koop
+            </div>
+
+            {/* Price */}
+            {item.calculated_advice_price && (
+              <div className="text-lg font-semibold text-primary">
+                €{item.calculated_advice_price.toFixed(2)}
+              </div>
+            )}
+
+          {/* Status indicator */}
+          {isCollectionItem && (
+            <div className="flex items-center gap-1">
+              {item.calculated_advice_price ? (
+                item.is_for_sale ? (
+                  <Badge variant="default" className="text-xs bg-green-500 hover:bg-green-600">
+                    Te koop
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                    Winkel-klaar
+                  </Badge>
+                )
+              ) : (
+                <Badge variant="secondary" className="text-xs">
+                  Onvolledig
                 </Badge>
               )}
             </div>
@@ -143,18 +147,49 @@ const UnifiedCollectionItemCard = ({
               >
                 {item.is_public ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleUpdate({ 
-                  is_for_sale: !item.is_for_sale,
-                  is_public: item.is_for_sale ? item.is_public : true 
-                })}
-                disabled={isUpdating}
-                className="text-xs"
-              >
-                {item.is_for_sale ? 'Niet te koop' : 'Te koop'}
-              </Button>
+              
+              {/* Quick shop action for ready items */}
+              {isItemReadyForShop(item) ? (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleUpdate({ 
+                    is_for_sale: true,
+                    is_public: true,
+                    marketplace_price: item.calculated_advice_price
+                  })}
+                  disabled={isUpdating}
+                  className="text-xs bg-green-600 hover:bg-green-700"
+                  title="Voeg direct toe aan winkel met gescande prijs"
+                >
+                  <ShoppingCart className="w-3 h-3 mr-1" />
+                  Naar winkel
+                </Button>
+              ) : item.is_for_sale ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleUpdate({ is_for_sale: false })}
+                  disabled={isUpdating}
+                  className="text-xs"
+                >
+                  Uit winkel
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleUpdate({ 
+                    is_for_sale: true,
+                    is_public: true 
+                  })}
+                  disabled={isUpdating}
+                  className="text-xs"
+                  title="Voeg toe aan winkel (prijs handmatig instellen)"
+                >
+                  Te koop
+                </Button>
+              )}
             </div>
           )}
 
@@ -183,7 +218,6 @@ export default function MyCollection() {
   const [mediaTypeFilter, setMediaTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [bulkAction, setBulkAction] = useState<string>("");
   const [isBatchFetching, setIsBatchFetching] = useState(false);
   
   const { 
@@ -224,27 +258,57 @@ export default function MyCollection() {
     });
   };
 
-  const handleBulkAction = async () => {
-    if (!bulkAction || selectedItems.size === 0) return;
+  const handleBulkAddToShop = async () => {
+    if (selectedItems.size === 0) return;
 
-    // Only work with collection items for bulk actions
-    const collectionItems = Array.from(selectedItems)
+    // Only work with collection items that are ready for shop
+    const readyItems = Array.from(selectedItems)
       .map(itemId => items.find(i => i.id === itemId))
-      .filter(item => item && (item.source_table === 'cd_scan' || item.source_table === 'vinyl2_scan'));
+      .filter(item => 
+        item && 
+        (item.source_table === 'cd_scan' || item.source_table === 'vinyl2_scan') &&
+        item.calculated_advice_price &&
+        !item.is_for_sale
+      );
 
-    if (collectionItems.length === 0) {
+    if (readyItems.length === 0) {
       toast({
-        title: "Geen collectie items geselecteerd",
-        description: "Bulk acties werken alleen op collectie items, niet op AI scans.",
+        title: "Geen winkel-klare items geselecteerd",
+        description: "Alleen items met pricing die nog niet te koop staan kunnen worden toegevoegd aan de winkel.",
         variant: "destructive",
       });
       return;
     }
 
-    toast({
-      title: "Bulk actie",
-      description: "Bulk acties voor unified scans worden binnenkort geïmplementeerd.",
-    });
+    setIsBatchFetching(true);
+    let successCount = 0;
+
+    try {
+      for (const item of readyItems) {
+        const mediaType = item.source_table === 'cd_scan' ? 'cd' : 'vinyl';
+        await handleItemUpdate(item.id, mediaType, {
+          is_for_sale: true,
+          is_public: true,
+          marketplace_price: item.calculated_advice_price
+        });
+        successCount++;
+      }
+
+      toast({
+        title: "Items toegevoegd aan winkel!",
+        description: `${successCount} item${successCount !== 1 ? 's' : ''} succesvol toegevoegd aan je winkel.`,
+      });
+      
+      setSelectedItems(new Set());
+    } catch (error) {
+      toast({
+        title: "Fout bij toevoegen",
+        description: "Er is een fout opgetreden bij het toevoegen van items aan de winkel.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBatchFetching(false);
+    }
   };
 
   const toggleItemSelection = (itemId: string) => {
@@ -295,6 +359,11 @@ export default function MyCollection() {
     total: items.length,
     aiScans: items.filter(item => item.source_table === "ai_scan_results").length,
     collectionItems: items.filter(item => item.source_table !== "ai_scan_results").length,
+    readyForShop: items.filter(item => 
+      item.calculated_advice_price && 
+      !item.is_for_sale && 
+      (item.source_table === "cd_scan" || item.source_table === "vinyl2_scan")
+    ).length,
     public: items.filter(item => item.is_public).length,
     forSale: items.filter(item => item.is_for_sale).length,
     totalScannedValue: items
@@ -425,7 +494,7 @@ export default function MyCollection() {
         </Card>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
             <div className="flex items-center justify-center mb-2">
               <Music className="w-5 h-5 text-primary" />
@@ -448,6 +517,14 @@ export default function MyCollection() {
             </div>
             <div className="text-2xl font-bold">{stats.collectionItems}</div>
             <div className="text-sm text-muted-foreground">Collectie</div>
+          </Card>
+          
+          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
+            <div className="flex items-center justify-center mb-2">
+              <ShoppingCart className="w-5 h-5 text-amber-500" />
+            </div>
+            <div className="text-2xl font-bold">{stats.readyForShop}</div>
+            <div className="text-sm text-muted-foreground">Winkel-klaar</div>
           </Card>
           
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
@@ -510,24 +587,31 @@ export default function MyCollection() {
           {/* Bulk actions */}
           {selectedItems.size > 0 && (
             <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-border/50">
-              <Select value={bulkAction} onValueChange={setBulkAction}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Kies bulk actie" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="make_public">Maak publiek</SelectItem>
-                  <SelectItem value="make_private">Maak privé</SelectItem>
-                  <SelectItem value="add_to_shop">Voeg toe aan winkel</SelectItem>
-                  <SelectItem value="remove_from_shop">Verwijder uit winkel</SelectItem>
-                </SelectContent>
-              </Select>
+              <Button 
+                onClick={handleBulkAddToShop}
+                disabled={isBatchFetching}
+                variant="default"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isBatchFetching ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Toevoegen...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart className="w-4 h-4" />
+                    Naar winkel ({selectedItems.size})
+                  </div>
+                )}
+              </Button>
               
-              <Button
-                onClick={handleBulkAction}
-                disabled={!bulkAction}
+              <Button 
+                variant="outline" 
+                onClick={() => setSelectedItems(new Set())}
                 size="sm"
               >
-                Uitvoeren
+                Deselecteren
               </Button>
             </div>
           )}

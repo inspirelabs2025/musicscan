@@ -100,7 +100,29 @@ export function useInfiniteUnifiedScans(options: UseInfiniteUnifiedScansOptions 
 
       // Apply status filter
       if (statusFilter && statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+        switch (statusFilter) {
+          case 'ready_for_shop':
+            // Items with pricing but not for sale (collection items only)
+            query = query
+              .not('calculated_advice_price', 'is', null)
+              .eq('is_for_sale', false)
+              .in('source_table', ['cd_scan', 'vinyl2_scan']);
+            break;
+          case 'for_sale':
+            query = query.eq('is_for_sale', true);
+            break;
+          case 'public':
+            query = query.eq('is_public', true);
+            break;
+          case 'ai_scan_results':
+          case 'cd_scan':
+          case 'vinyl2_scan':
+            query = query.eq('source_table', statusFilter);
+            break;
+          default:
+            // Regular status filtering for AI scans
+            query = query.eq('status', statusFilter);
+        }
       }
 
       // Apply sorting

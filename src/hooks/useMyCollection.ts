@@ -54,7 +54,18 @@ export interface CollectionItem {
   user_id?: string;
 }
 
-type FilterType = "all" | "public" | "for_sale" | "private";
+type FilterType = "all" | "public" | "for_sale" | "private" | "ready_for_shop";
+
+// Status logic helpers
+export const getItemStatus = (item: CollectionItem) => {
+  if (!item.calculated_advice_price) return "incomplete";
+  if (item.is_for_sale) return "for_sale";
+  return "ready_for_shop";
+};
+
+export const isReadyForShop = (item: CollectionItem) => {
+  return item.calculated_advice_price && !item.is_for_sale;
+};
 
 export const useMyCollection = (filter: FilterType = "all") => {
   const { user } = useAuth();
@@ -113,6 +124,8 @@ export const useMyCollection = (filter: FilterType = "all") => {
           return allItems.filter(item => item.is_for_sale);
         case "private":
           return allItems.filter(item => !item.is_public && !item.is_for_sale);
+        case "ready_for_shop":
+          return allItems.filter(item => isReadyForShop(item));
         default:
           return allItems;
       }

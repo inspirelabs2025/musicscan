@@ -43,6 +43,7 @@ export const useDiscogsSearch = () => {
   const [searchResults, setSearchResults] = useState<DiscogsSearchResult[]>([]);
   const [searchStrategies, setSearchStrategies] = useState<string[]>([]);
   const [isPricingRetrying, setIsPricingRetrying] = useState(false);
+  const [isPricingLoading, setIsPricingLoading] = useState(false);
   
   const lastSearchRef = useRef<string>('');
   const isCallInProgressRef = useRef(false);
@@ -101,6 +102,7 @@ export const useDiscogsSearch = () => {
     setSearchResults([]);
     setSearchStrategies([]);
     setIsPricingRetrying(false);
+    setIsPricingLoading(false);
     isCallInProgressRef.current = false;
     lastSearchRef.current = '';
     
@@ -200,6 +202,7 @@ export const useDiscogsSearch = () => {
         // Phase 2: Load pricing asynchronously if requested
         if (includePricing && quickData.results[0]) {
           console.log('💰 Loading pricing data asynchronously...');
+          setIsPricingLoading(true);
           
           setTimeout(async () => {
             try {
@@ -231,6 +234,8 @@ export const useDiscogsSearch = () => {
               }
             } catch (pricingError) {
               console.error('⚠️ Pricing load failed (non-critical):', pricingError);
+            } finally {
+              setIsPricingLoading(false);
             }
           }, 100);
         }
@@ -354,6 +359,7 @@ export const useDiscogsSearch = () => {
         });
         
         // Phase 2: Load pricing asynchronously
+        setIsPricingLoading(true);
         setTimeout(async () => {
           try {
             console.log('💰 Loading pricing for Discogs ID:', discogsId);
@@ -381,6 +387,8 @@ export const useDiscogsSearch = () => {
             }
           } catch (pricingError) {
             console.error('⚠️ Pricing load failed (non-critical):', pricingError);
+          } finally {
+            setIsPricingLoading(false);
           }
         }, 100);
       }
@@ -409,6 +417,7 @@ export const useDiscogsSearch = () => {
     setSearchResults,
     retryPricing,
     isPricingRetrying,
+    isPricingLoading,
     clearCache,
     resetSearchState
   };

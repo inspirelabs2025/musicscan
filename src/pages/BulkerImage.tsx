@@ -80,6 +80,7 @@ const BulkerImage = () => {
     setSearchResults,
     retryPricing,
     isPricingRetrying,
+    isPricingLoading,
     clearCache,
     resetSearchState
   } = useDiscogsSearch();
@@ -805,6 +806,7 @@ const BulkerImage = () => {
               onCopyToClipboard={copyToClipboard}
               onRetryPricing={retrySearchWithPricing}
               isPricingRetrying={isPricingRetrying}
+              isPricingLoading={isPricingLoading}
             />
           </div>
         )}

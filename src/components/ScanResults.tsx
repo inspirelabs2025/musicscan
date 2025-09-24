@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { ExternalLink, Copy, BarChart3, TrendingUp } from 'lucide-react';
+import { ExternalLink, Copy, BarChart3, TrendingUp, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ interface ScanResultsProps {
   onCopyToClipboard: (text: string) => void;
   onRetryPricing: () => void;
   isPricingRetrying: boolean;
+  isPricingLoading: boolean;
 }
 
 export const ScanResults = React.memo(({ 
@@ -23,7 +24,8 @@ export const ScanResults = React.memo(({
   mediaType,
   onCopyToClipboard,
   onRetryPricing,
-  isPricingRetrying
+  isPricingRetrying,
+  isPricingLoading
 }: ScanResultsProps) => {
   const getPriceBadgeColor = useMemo(() => (price: string | null) => {
     if (!price) return 'secondary';
@@ -221,6 +223,14 @@ export const ScanResults = React.memo(({
                         </CardContent>
                       </Card>
                     </div>
+                  </div>
+                ) : isPricingLoading ? (
+                  <div className="text-center py-8">
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <p className="text-muted-foreground">Prijzen worden geladen...</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Even geduld, we halen de actuele prijzen op van Discogs</p>
                   </div>
                 ) : (
                   <div className="text-center py-8">

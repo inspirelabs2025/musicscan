@@ -77,6 +77,7 @@ const Scanner = () => {
     setSearchResults,
     retryPricing,
     isPricingRetrying,
+    isPricingLoading,
     clearCache,
     resetSearchState
   } = useDiscogsSearch();
@@ -686,6 +687,7 @@ const Scanner = () => {
               onCopyToClipboard={copyToClipboard}
               onRetryPricing={() => retryPricing(searchResults[0]?.discogs_id)}
               isPricingRetrying={isPricingRetrying}
+              isPricingLoading={isPricingLoading}
             />
           )}
 

@@ -24,9 +24,20 @@ interface SpotifyAlbum {
   };
 }
 
+interface SpotifyArtist {
+  id: string;
+  name: string;
+  external_urls: {
+    spotify: string;
+  };
+}
+
 interface SpotifySearchResponse {
   albums: {
     items: SpotifyAlbum[];
+  };
+  artists: {
+    items: SpotifyArtist[];
   };
 }
 
@@ -102,6 +113,50 @@ async function searchSpotifyAlbum(artist: string, album: string, accessToken: st
   return firstResult.external_urls.spotify;
 }
 
+async function searchSpotifyArtist(artist: string, accessToken: string): Promise<string | null> {
+  // Clean up artist name for better matching
+  const cleanArtist = artist.replace(/[^\w\s]/g, '').trim();
+  
+  const query = `artist:"${cleanArtist}"`;
+  const searchUrl = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=artist&limit=10`;
+
+  console.log(`Searching Spotify for artist: ${query}`);
+
+  const response = await fetch(searchUrl, {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    console.error(`Spotify artist search failed: ${response.status}`);
+    return null;
+  }
+
+  const data: SpotifySearchResponse = await response.json();
+  
+  if (data.artists.items.length === 0) {
+    console.log('No artists found');
+    return null;
+  }
+
+  // Find the best match by comparing artist names
+  for (const spotifyArtist of data.artists.items) {
+    const spotifyArtistName = spotifyArtist.name.toLowerCase();
+    
+    // Check for exact or close matches
+    if (spotifyArtistName?.includes(cleanArtist.toLowerCase()) || cleanArtist.toLowerCase().includes(spotifyArtistName || '')) {
+      console.log(`Found artist match: ${spotifyArtist.name}`);
+      return spotifyArtist.external_urls.spotify;
+    }
+  }
+
+  // If no perfect match, return the first result as fallback
+  const firstResult = data.artists.items[0];
+  console.log(`Using first artist result as fallback: ${firstResult.name}`);
+  return firstResult.external_urls.spotify;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -126,13 +181,20 @@ serve(async (req) => {
     // Get Spotify access token
     const accessToken = await getSpotifyAccessToken();
     
-    // Search for the album
+    // Search for the album first
     const albumUrl = await searchSpotifyAlbum(artist, album, accessToken);
+    
+    // If no album found, search for artist as fallback
+    let artistUrl = null;
+    if (!albumUrl) {
+      artistUrl = await searchSpotifyArtist(artist, accessToken);
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         albumUrl: albumUrl,
+        artistUrl: artistUrl,
         artist,
         album 
       }),

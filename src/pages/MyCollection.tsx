@@ -12,7 +12,7 @@ import { useUserShop } from "@/hooks/useUserShop";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { CollectionGridSkeleton } from "@/components/ui/skeletons";
 import { ErrorBoundary, CollectionErrorFallback } from "@/components/ErrorBoundary";
 import { OfflineIndicator } from "@/components/ProgressiveEnhancement";
@@ -26,7 +26,8 @@ const UnifiedCollectionItemCard = ({
   isUpdating, 
   showControls = true,
   isSelected,
-  onToggleSelection 
+  onToggleSelection,
+  onAddToCollection
 }: {
   item: UnifiedScanResult;
   onUpdate?: (itemId: string, mediaType: "cd" | "vinyl", updates: any) => void;
@@ -34,6 +35,7 @@ const UnifiedCollectionItemCard = ({
   showControls?: boolean;
   isSelected?: boolean;
   onToggleSelection?: (itemId: string) => void;
+  onAddToCollection?: (item: UnifiedScanResult) => void;
 }) => {
   const isCollectionItem = item.source_table === 'cd_scan' || item.source_table === 'vinyl2_scan';
   const isAIScan = item.source_table === 'ai_scan_results';
@@ -157,17 +159,14 @@ const UnifiedCollectionItemCard = ({
           )}
 
           {/* AI Scan action */}
-          {showControls && isAIScan && (
+          {showControls && isAIScan && onAddToCollection && (
             <Button 
               variant="outline" 
               size="sm" 
               className="w-full text-xs"
-              onClick={() => {
-                toast({
-                  title: "AI Scan",
-                  description: "Deze functie wordt binnenkort toegevoegd om AI scans naar collectie te verplaatsen."
-                });
-              }}
+              onClick={() => onAddToCollection(item)}
+              disabled={!item.discogs_id}
+              title={item.discogs_id ? "Toevoegen aan collectie" : "Discogs ID vereist"}
             >
               Voeg toe aan collectie
             </Button>
@@ -180,6 +179,7 @@ const UnifiedCollectionItemCard = ({
 
 export default function MyCollection() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [mediaTypeFilter, setMediaTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -263,6 +263,32 @@ export default function MyCollection() {
     } else {
       setSelectedItems(new Set(items.map(item => item.id)));
     }
+  };
+
+  const handleAddToCollection = (item: UnifiedScanResult) => {
+    if (!item.discogs_id) {
+      toast({
+        title: "Geen Discogs ID",
+        description: "Er is een Discogs ID nodig om toe te voegen aan de collectie.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('🔗 Adding to collection with condition:', item.condition_grade);
+    const params = new URLSearchParams({
+      mediaType: item.media_type || 'vinyl',
+      discogsId: item.discogs_id.toString(),
+      artist: item.artist || '',
+      title: item.title || '',
+      label: item.label || '',
+      catalogNumber: item.catalog_number || '',
+      ...(item.year && { year: item.year.toString() }),
+      ...(item.condition_grade && { condition: item.condition_grade }),
+      fromAiScan: 'true'
+    });
+
+    navigate(`/scanner/discogs?${params.toString()}`);
   };
 
   const stats = {
@@ -530,6 +556,7 @@ export default function MyCollection() {
                   showControls={true}
                   isSelected={selectedItems.has(item.id)}
                   onToggleSelection={toggleItemSelection}
+                  onAddToCollection={handleAddToCollection}
                 />
               ))}
             </div>

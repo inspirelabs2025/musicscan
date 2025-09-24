@@ -169,56 +169,81 @@ export const useDiscogsSearch = () => {
     }, SEARCH_TIMEOUT);
     
     try {
-      const { data, error } = await supabase.functions.invoke('test-catalog-search', {
+      // Phase 1: Quick search without pricing for immediate results
+      const { data: quickData, error: quickError } = await supabase.functions.invoke('optimized-catalog-search', {
         body: {
           catalog_number: catalogNumber.trim(),
           artist: artist?.trim(),
           title: title?.trim(),
-          include_pricing: includePricing
+          include_pricing: false // Skip pricing for speed
         }
       });
 
-      if (error) throw error;
+      if (quickError) throw quickError;
 
-      setSearchResults(data.results || []);
-      setSearchStrategies(data.strategies_used || []);
+      console.log('⚡ Quick search completed:', quickData);
       
-      if (data.results?.length > 0) {
-        setCachedResult(searchKey, data.results, data.strategies_used || []);
-      }
-      
-      // Auto-retry pricing if missing
-      const hasPricingResults = data.results?.some((result: any) => result.pricing_stats?.lowest_price);
-      if (includePricing && data.results?.length > 0 && !hasPricingResults) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      if (quickData?.results?.length > 0) {
+        // Show results immediately without pricing
+        setSearchResults(quickData.results);
+        setSearchStrategies(quickData.search_strategies || []);
         
-        try {
-          const retryData = await supabase.functions.invoke('test-catalog-search', {
-            body: {
-              catalog_number: catalogNumber.trim(),
-              artist: artist?.trim(),
-              title: title?.trim(),
-              include_pricing: true,
-              retry_pricing: true
-            }
-          });
+        toast({
+          title: "Gevonden!",
+          description: `${quickData.results.length} resultaat${quickData.results.length > 1 ? 'en' : ''} gevonden${includePricing ? ' - prijzen worden geladen...' : ''}`,
+          variant: "default"
+        });
+        
+        // Cache quick results
+        setCachedResult(searchKey, quickData.results, quickData.search_strategies || []);
+        
+        // Phase 2: Load pricing asynchronously if requested
+        if (includePricing && quickData.results[0]) {
+          console.log('💰 Loading pricing data asynchronously...');
           
-          if (retryData.data?.results) {
-            setSearchResults(retryData.data.results);
-            setCachedResult(searchKey, retryData.data.results, data.strategies_used || []);
-          }
-        } catch {
-          // Silent fail for retry pricing
+          setTimeout(async () => {
+            try {
+              const { data: pricingData, error: pricingError } = await supabase.functions.invoke('test-catalog-search', {
+                body: { 
+                  direct_discogs_id: quickData.results[0].discogs_id || quickData.results[0].id,
+                  include_pricing: true
+                }
+              });
+              
+              if (!pricingError && pricingData?.results?.[0]?.pricing_stats) {
+                // Update results with pricing data
+                setSearchResults(prev => {
+                  const updated = [...prev];
+                  if (updated[0]) {
+                    updated[0] = {
+                      ...updated[0],
+                      pricing_stats: pricingData.results[0].pricing_stats
+                    };
+                  }
+                  return updated;
+                });
+                
+                // Update cache with pricing
+                const updatedResults = [{...quickData.results[0], pricing_stats: pricingData.results[0].pricing_stats}, ...quickData.results.slice(1)];
+                setCachedResult(searchKey, updatedResults, quickData.search_strategies || []);
+                
+                console.log('✅ Pricing data loaded and applied');
+              }
+            } catch (pricingError) {
+              console.error('⚠️ Pricing load failed (non-critical):', pricingError);
+            }
+          }, 100);
         }
+        
+        return { results: quickData.results, strategies_used: quickData.search_strategies };
+      } else {
+        toast({
+          title: "Geen resultaten",
+          description: "Geen matches gevonden voor deze zoekopdracht",
+          variant: "destructive"
+        });
+        return null;
       }
-      
-      toast({
-        title: "Discogs Zoeken Voltooid! 🎵",
-        description: `${data.results?.length || 0} resultaten gevonden`,
-        variant: "default"
-      });
-
-      return data;
     } catch (error: any) {
       clearCache();
       
@@ -236,7 +261,7 @@ export const useDiscogsSearch = () => {
       setIsSearching(false);
       isCallInProgressRef.current = false;
     }
-  }, []);
+  }, [getCachedResult, setCachedResult, clearCache, resetSearchState]);
 
   const retryPricing = useCallback(async (discogsId: number) => {
     if (!discogsId) return null;
@@ -287,18 +312,22 @@ export const useDiscogsSearch = () => {
     setSearchStrategies([]);
     
     try {
-      const { data, error } = await supabase.functions.invoke('test-catalog-search', {
+      console.log('🆔 Starting optimized Discogs ID search:', discogsId);
+      
+      // Phase 1: Get release data immediately (without pricing)
+      const { data: releaseData, error: releaseError } = await supabase.functions.invoke('optimized-catalog-search', {
         body: { 
           direct_discogs_id: discogsId,
-          include_pricing: true,
-          retry_pricing: true
+          include_pricing: false // Skip pricing for immediate results
         }
       });
 
-      if (error) throw error;
+      if (releaseError) throw releaseError;
+
+      console.log('⚡ Release data retrieved:', releaseData);
       
-      if (data.results && data.results.length > 0) {
-        const result = data.results[0];
+      if (releaseData?.results?.length > 0) {
+        const result = releaseData.results[0];
         const formattedResult: DiscogsSearchResult = {
           id: parseInt(result.discogs_id),
           discogs_id: parseInt(result.discogs_id),
@@ -314,13 +343,58 @@ export const useDiscogsSearch = () => {
           pricing_stats: result.pricing_stats
         };
         
+        // Show results immediately
         setSearchResults([formattedResult]);
         setSearchStrategies(['Direct Discogs ID']);
+        
+        toast({
+          title: "Gevonden!",
+          description: `Album gevonden - prijzen worden geladen...`,
+          variant: "default"
+        });
+        
+        // Phase 2: Load pricing asynchronously
+        setTimeout(async () => {
+          try {
+            console.log('💰 Loading pricing for Discogs ID:', discogsId);
+            
+            const { data: pricingData, error: pricingError } = await supabase.functions.invoke('test-catalog-search', {
+              body: { 
+                direct_discogs_id: discogsId,
+                include_pricing: true
+              }
+            });
+            
+            if (!pricingError && pricingData?.results?.[0]?.pricing_stats) {
+              setSearchResults(prev => {
+                const updated = [...prev];
+                if (updated[0]) {
+                  updated[0] = {
+                    ...updated[0],
+                    pricing_stats: pricingData.results[0].pricing_stats
+                  };
+                }
+                return updated;
+              });
+              
+              console.log('✅ Pricing data loaded for Discogs ID');
+            }
+          } catch (pricingError) {
+            console.error('⚠️ Pricing load failed (non-critical):', pricingError);
+          }
+        }, 100);
       }
 
-    } catch {
+    } catch (error) {
+      console.error('❌ Discogs ID search failed:', error);
       setSearchResults([]);
       setSearchStrategies([]);
+      
+      toast({
+        title: "Zoekfout",
+        description: "Kon geen verbinding maken met Discogs",
+        variant: "destructive"
+      });
     } finally {
       setIsSearching(false);
     }

@@ -33,5 +33,8 @@ verify_jwt = true
 [functions.spotify-auth]
 verify_jwt = false
 
+[functions.spotify-album-search]
+verify_jwt = false
+
 [functions.spotify-sync]
 verify_jwt = true

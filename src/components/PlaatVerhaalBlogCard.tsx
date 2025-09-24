@@ -180,6 +180,7 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
               <SpotifyAlbumLink 
                 artist={artist} 
                 album={album} 
+                audioLinks={frontmatter?.audio_links}
                 size="sm"
                 className="h-8 text-xs"
               />
@@ -297,6 +298,7 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
             <SpotifyAlbumLink 
               artist={artist} 
               album={album} 
+              audioLinks={frontmatter?.audio_links}
               className="flex-1"
             />
             {blog.is_published && (

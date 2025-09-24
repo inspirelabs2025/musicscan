@@ -128,7 +128,9 @@ serve(async (req) => {
             console.log('✅ Artwork stored at:', storedImageUrl);
 
             // Update database record with official artwork
-            if (item_type === 'ai_scan') {
+            console.log('🔄 Updating database for item_type:', item_type, 'item_id:', item_id);
+            
+            if (item_type === 'ai_scan_results') {
               // Update ai_scan_results table
               const { error: updateError } = await supabase
                 .from('ai_scan_results')
@@ -138,7 +140,7 @@ serve(async (req) => {
               if (updateError) {
                 console.log('❌ AI scan artwork update error:', updateError);
               } else {
-                console.log('✅ AI scan updated with official artwork');
+                console.log('✅ AI scan updated with official artwork for item:', item_id);
               }
             } else {
               // Update legacy cd_scan/vinyl2_scan tables

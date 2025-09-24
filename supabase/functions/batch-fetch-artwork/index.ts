@@ -19,19 +19,80 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.json();
-    const { user_id } = body;
+    const { user_id, process_ai_scans } = body;
 
-    if (!user_id) {
-      return new Response(JSON.stringify({ error: 'user_id is required' }), {
+    // For AI scan processing, user_id is optional
+    if (!process_ai_scans && !user_id) {
+      return new Response(JSON.stringify({ error: 'user_id is required when not processing AI scans' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log('🎨 Starting batch artwork fetch for user:', user_id);
+    console.log('🎨 Starting batch artwork fetch...', process_ai_scans ? 'Processing AI scans' : `for user: ${user_id}`);
 
     let totalProcessed = 0;
     let successCount = 0;
+
+    // Process AI scans if requested
+    if (process_ai_scans) {
+      console.log('🔍 Processing AI scans without artwork...');
+      
+      // Fetch AI scan results without artwork_url
+      const { data: aiItems, error: aiError } = await supabase
+        .from('ai_scan_results')
+        .select('id, artist, title, discogs_url, artwork_url')
+        .is('artwork_url', null)
+        .or('discogs_url.not.is.null,and(artist.not.is.null,title.not.is.null)')
+        .limit(10); // Process in batches
+
+      if (aiError) throw aiError;
+
+      // Process AI items
+      for (const item of aiItems || []) {
+        if (!item.discogs_url && (!item.artist || !item.title)) continue;
+
+        totalProcessed++;
+        console.log(`🔍 Processing AI scan: ${item.artist} - ${item.title}`);
+
+        try {
+          const { data: artworkData, error: artworkError } = await supabase.functions.invoke('fetch-album-artwork', {
+            body: {
+              discogs_url: item.discogs_url,
+              artist: item.artist,
+              title: item.title,
+              media_type: 'ai',
+              item_id: item.id,
+              item_type: 'ai_scan_results'
+            }
+          });
+
+          if (!artworkError && artworkData?.success) {
+            successCount++;
+            console.log(`✅ Found artwork for AI scan: ${item.artist} - ${item.title}`);
+          }
+
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.log(`❌ Failed to fetch artwork for AI scan: ${item.artist} - ${item.title}`, error);
+        }
+      }
+    }
+
+    // Skip user-specific processing if we're doing AI scans
+    if (process_ai_scans) {
+      console.log(`🎯 AI scan artwork fetch completed: ${successCount}/${totalProcessed} successful`);
+
+      return new Response(JSON.stringify({ 
+        success: true,
+        total_processed: totalProcessed,
+        success_count: successCount,
+        message: `Processed ${totalProcessed} AI scan items, found artwork for ${successCount}`
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Fetch CD items without front_image but with discogs_url or artist/title
     const { data: cdItems, error: cdError } = await supabase

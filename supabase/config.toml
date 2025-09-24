@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.spotify-sync]
 verify_jwt = true
+
+[functions.batch-fetch-artwork]
+verify_jwt = false

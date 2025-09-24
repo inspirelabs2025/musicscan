@@ -79,17 +79,29 @@ Deno.serve(async (req) => {
     // Get physical collection data for context with detailed album information - user specific
     const { data: cdData, error: cdError } = await supabase
       .from('cd_scan')
-      .select('artist, title, genre, year, calculated_advice_price, format, label, country')
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country, status, error_message')
       .eq('user_id', userId)
-      .not('calculated_advice_price', 'is', null)
-      .order('calculated_advice_price', { ascending: false });
+      .order('created_at', { ascending: false });
 
     const { data: vinylData, error: vinylError } = await supabase
       .from('vinyl2_scan')
-      .select('artist, title, genre, year, calculated_advice_price, format, label, country')
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country, status, error_message')
       .eq('user_id', userId)
-      .not('calculated_advice_price', 'is', null)
-      .order('calculated_advice_price', { ascending: false });
+      .order('created_at', { ascending: false });
+
+    // Get AI scan results for complete context
+    const { data: aiScansData, error: aiScansError } = await supabase
+      .from('ai_scan_results')
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country, status, ai_description, search_queries')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    // Get unified scans as alternative view
+    const { data: unifiedScansData, error: unifiedScansError } = await supabase
+      .from('unified_scans')
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country, media_type, source_table, status, ai_description')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
     // Get Spotify data for enhanced context
     const { data: spotifyTracks, error: spotifyTracksError } = await supabase
@@ -124,6 +136,12 @@ Deno.serve(async (req) => {
     if (vinylError) {
       console.error('Error fetching vinyl data:', vinylError);
     }
+    if (aiScansError) {
+      console.error('Error fetching AI scans data:', aiScansError);
+    }
+    if (unifiedScansError) {
+      console.error('Error fetching unified scans data:', unifiedScansError);
+    }
     if (spotifyTracksError) {
       console.error('Error fetching Spotify tracks:', spotifyTracksError);
     }
@@ -134,10 +152,21 @@ Deno.serve(async (req) => {
       console.error('Error fetching Spotify stats:', spotifyStatsError);
     }
 
-    // Combine and analyze collection (physical + Spotify)
+    // Combine and analyze all music data (physical + AI scans + Spotify)
     const allPhysicalRecords = [...(cdData || []), ...(vinylData || [])];
+    const allAiScans = [...(aiScansData || [])];
+    const allUnifiedScans = [...(unifiedScansData || [])];
     const hasSpotifyData = !!(spotifyTracks && spotifyTracks.length > 0);
     const spotifyConnected = profileData?.spotify_connected || false;
+    
+    // Separate items with/without calculated values for better context
+    const itemsWithValues = allPhysicalRecords.filter(item => item.calculated_advice_price);
+    const itemsWithoutValues = allPhysicalRecords.filter(item => !item.calculated_advice_price);
+    const aiScansWithValues = allAiScans.filter(item => item.calculated_advice_price);
+    const aiScansWithoutValues = allAiScans.filter(item => !item.calculated_advice_price);
+    
+    // Total comprehensive collection
+    const totalAllItems = allPhysicalRecords.length + allAiScans.length;
     
     // Smart album selection based on conversation context
     const getRandomAlbumSet = (records: any[], count: number) => {
@@ -161,45 +190,82 @@ Deno.serve(async (req) => {
     const topSpotifyTracks = spotifyTracks?.slice(0, 20) || [];
     const topSpotifyArtists = spotifyStats?.filter(s => s.stat_type === 'artist' && s.time_range === 'medium_term')?.slice(0, 10) || [];
     
-    // Create detailed collection context with dynamic sampling (Physical + Spotify)
+    // Create comprehensive collection context (Physical + AI Scans + Spotify)
     const collectionStats = {
-      // Physical Collection
+      // Complete Collection Overview
+      totalAllItems,
       totalPhysicalItems: allPhysicalRecords.length,
-      totalValue: allPhysicalRecords.reduce((sum, record) => sum + (Number(record.calculated_advice_price) || 0), 0),
-      physicalGenres: [...new Set(allPhysicalRecords.map(r => r.genre).filter(Boolean))],
-      topPhysicalArtists: Object.entries(
-        allPhysicalRecords.reduce((acc: any, r) => {
+      totalAiScans: allAiScans.length,
+      totalUnifiedScans: allUnifiedScans.length,
+      
+      // Items with calculated values (valued collection)
+      itemsWithValues: itemsWithValues.length,
+      aiScansWithValues: aiScansWithValues.length,
+      totalValuedItems: itemsWithValues.length + aiScansWithValues.length,
+      totalValue: [...itemsWithValues, ...aiScansWithValues].reduce((sum, record) => sum + (Number(record.calculated_advice_price) || 0), 0),
+      
+      // Items without values (scanned but not priced)
+      itemsWithoutValues: itemsWithoutValues.length,
+      aiScansWithoutValues: aiScansWithoutValues.length,
+      totalPendingItems: itemsWithoutValues.length + aiScansWithoutValues.length,
+      
+      // All items analysis (valued + pending)
+      allItemsGenres: [...new Set([...allPhysicalRecords, ...allAiScans].map(r => r.genre).filter(Boolean))],
+      allItemsArtists: Object.entries(
+        [...allPhysicalRecords, ...allAiScans].reduce((acc: any, r) => {
           if (r.artist) acc[r.artist] = (acc[r.artist] || 0) + 1;
           return acc;
         }, {})
-      ).slice(0, 15),
-      formats: allPhysicalRecords.reduce((acc: any, r) => {
+      ).slice(0, 20),
+      formats: [...allPhysicalRecords, ...allAiScans].reduce((acc: any, r) => {
         const format = r.format || 'Unknown';
         acc[format] = (acc[format] || 0) + 1;
         return acc;
       }, {}),
-      topValueAlbums: allPhysicalRecords
+      // Top valued items (from all sources)
+      topValueAlbums: [...itemsWithValues, ...aiScansWithValues]
         .sort((a, b) => (Number(b.calculated_advice_price) || 0) - (Number(a.calculated_advice_price) || 0))
-        .slice(0, 10)
+        .slice(0, 15)
         .map(r => ({
           artist: r.artist,
           title: r.title,
           value: Number(r.calculated_advice_price) || 0,
           format: r.format,
-          year: r.year
+          year: r.year,
+          source: r.hasOwnProperty('ai_description') ? 'AI Scan' : 'Physical'
         })),
-      physicalGenreDistribution: [...new Set(allPhysicalRecords.map(r => r.genre).filter(Boolean))]
+      
+      // Genre distribution across all items
+      genreDistribution: [...new Set([...allPhysicalRecords, ...allAiScans].map(r => r.genre).filter(Boolean))]
         .map(genre => ({
           genre,
-          count: allPhysicalRecords.filter(r => r.genre === genre).length,
-          totalValue: allPhysicalRecords.filter(r => r.genre === genre)
-            .reduce((sum, r) => sum + (Number(r.calculated_advice_price) || 0), 0)
+          count: [...allPhysicalRecords, ...allAiScans].filter(r => r.genre === genre).length,
+          totalValue: [...allPhysicalRecords, ...allAiScans].filter(r => r.genre === genre)
+            .reduce((sum, r) => sum + (Number(r.calculated_advice_price) || 0), 0),
+          valuedCount: [...itemsWithValues, ...aiScansWithValues].filter(r => r.genre === genre).length,
+          pendingCount: [...itemsWithoutValues, ...aiScansWithoutValues].filter(r => r.genre === genre).length
         }))
         .sort((a, b) => b.totalValue - a.totalValue)
-        .slice(0, 8),
+        .slice(0, 10),
+        
       yearRange: {
-        oldest: Math.min(...allPhysicalRecords.map(r => r.year).filter(Boolean)),
-        newest: Math.max(...allPhysicalRecords.map(r => r.year).filter(Boolean))
+        oldest: Math.min(...[...allPhysicalRecords, ...allAiScans].map(r => r.year).filter(Boolean)),
+        newest: Math.max(...[...allPhysicalRecords, ...allAiScans].map(r => r.year).filter(Boolean))
+      },
+      
+      // AI Scan specific insights
+      aiScanInsights: {
+        totalScans: allAiScans.length,
+        successfulScans: aiScansWithValues.length,
+        pendingScans: aiScansWithoutValues.length,
+        scanSuccessRate: allAiScans.length > 0 ? ((aiScansWithValues.length / allAiScans.length) * 100).toFixed(1) : 0,
+        topAiGenres: [...new Set(allAiScans.map(r => r.genre).filter(Boolean))].slice(0, 5),
+        recentScans: allAiScans.slice(0, 5).map(r => ({
+          artist: r.artist,
+          title: r.title,
+          status: r.status,
+          hasValue: !!r.calculated_advice_price
+        }))
       },
       
       // Spotify Integration
@@ -225,25 +291,34 @@ Deno.serve(async (req) => {
         public: p.is_public
       })) || [],
       
-      // Cross-analysis
+      // Cross-analysis (Physical + AI Scans + Spotify)
       crossoverArtists: hasSpotifyData ? 
-        [...new Set(allPhysicalRecords.map(r => r.artist).filter(Boolean))]
+        [...new Set([...allPhysicalRecords, ...allAiScans].map(r => r.artist).filter(Boolean))]
           .filter(artist => spotifyArtists.has(artist))
-          .slice(0, 10) : [],
+          .slice(0, 15) : [],
+          
+      // Collection completion insights
+      collectionCompletion: {
+        totalItems: totalAllItems,
+        completedItems: itemsWithValues.length + aiScansWithValues.length,
+        pendingItems: itemsWithoutValues.length + aiScansWithoutValues.length,
+        completionRate: totalAllItems > 0 ? (((itemsWithValues.length + aiScansWithValues.length) / totalAllItems) * 100).toFixed(1) : 0
+      },
       
-      // Dynamic album sampling based on current focus
+      // Dynamic album sampling based on current focus (all sources)
       featuredAlbums: currentFocus === 'value' 
-        ? allPhysicalRecords.sort((a, b) => (Number(b.calculated_advice_price) || 0) - (Number(a.calculated_advice_price) || 0)).slice(0, 15)
+        ? [...itemsWithValues, ...aiScansWithValues].sort((a, b) => (Number(b.calculated_advice_price) || 0) - (Number(a.calculated_advice_price) || 0)).slice(0, 15)
         : currentFocus === 'genre'
-        ? getRandomAlbumSet(allPhysicalRecords.filter(r => r.genre), 15)
+        ? getRandomAlbumSet([...allPhysicalRecords, ...allAiScans].filter(r => r.genre), 15)
         : currentFocus === 'year'
-        ? getRandomAlbumSet(allPhysicalRecords.filter(r => r.year && r.year < 1990), 15)
+        ? getRandomAlbumSet([...allPhysicalRecords, ...allAiScans].filter(r => r.year && r.year < 1990), 15)
         : currentFocus === 'spotify' && hasSpotifyData
         ? topSpotifyTracks.slice(0, 15)
-        : getRandomAlbumSet(allPhysicalRecords, 15),
+        : getRandomAlbumSet([...allPhysicalRecords, ...allAiScans], 15),
         
       sessionFocus: currentFocus,
-      albums: allPhysicalRecords.map(r => ({
+      // All items combined for comprehensive analysis
+      allItems: [...allPhysicalRecords, ...allAiScans].map(r => ({
         artist: r.artist,
         title: r.title,
         genre: r.genre,
@@ -251,7 +326,10 @@ Deno.serve(async (req) => {
         value: Number(r.calculated_advice_price) || 0,
         format: r.format,
         label: r.label,
-        country: r.country
+        country: r.country,
+        source: r.hasOwnProperty('ai_description') ? 'AI Scan' : 'Physical',
+        status: r.status || 'completed',
+        hasValue: !!r.calculated_advice_price
       }))
     };
 
@@ -266,14 +344,28 @@ Deno.serve(async (req) => {
         collection_context: collectionStats
       });
 
-    // Create enhanced AI prompt with anti-repetition, dynamic focus, and Spotify integration
-    const systemPrompt = `Je bent een avontuurlijke Nederlandse muziekcollectie AI-expert en ontdekkingsreiziger! 🎵✨ Je missie is om ALTIJD nieuwe, verrassende inzichten te geven over zowel de fysieke collectie als digitale luistergewoonten.
+    // Create enhanced AI prompt with anti-repetition, dynamic focus, and comprehensive data integration
+    const systemPrompt = `Je bent een avontuurlijke Nederlandse muziekcollectie AI-expert en ontdekkingsreiziger! 🎵✨ Je missie is om ALTIJD nieuwe, verrassende inzichten te geven over de COMPLETE muzikale wereld: fysieke collectie, gescande items, én digitale luistergewoonten.
 
-## COMPLETE MUZIEK OVERZICHT
+## COMPLETE MUZIEK ECOSYSTEEM OVERZICHT
+🎯 **TOTAAL OVERZICHT**
+📊 **Alle items:** ${collectionStats.totalAllItems} (fysiek + AI scans)
+💎 **Items met waarde:** ${collectionStats.totalValuedItems} (€${collectionStats.totalValue.toFixed(2)})
+⏳ **Items in verwerking:** ${collectionStats.totalPendingItems}
+📈 **Voltooiing:** ${collectionStats.collectionCompletion.completionRate}%
+
 🏠 **FYSIEKE COLLECTIE**
-📀 **Totaal:** ${collectionStats.totalPhysicalItems} items
-💰 **Totale waarde:** €${collectionStats.totalValue.toFixed(2)}
-🎵 **Periode:** ${collectionStats.yearRange.oldest || 'Onbekend'} - ${collectionStats.yearRange.newest || 'Onbekend'}
+📀 **Fysiek totaal:** ${collectionStats.totalPhysicalItems} items
+💰 **Met waarde:** ${collectionStats.itemsWithValues} items
+🔍 **Nog te waarderen:** ${collectionStats.itemsWithoutValues} items
+
+🤖 **AI SCAN RESULTATEN**  
+🎵 **AI scans totaal:** ${collectionStats.totalAiScans}
+✅ **Succesvol gewaardeerd:** ${collectionStats.aiScanInsights.successfulScans} 
+⌛ **In verwerking:** ${collectionStats.aiScanInsights.pendingScans}
+📊 **Succespercentage:** ${collectionStats.aiScanInsights.scanSuccessRate}%
+
+🎵 **MUZIEK PERIODE:** ${collectionStats.yearRange.oldest || 'Onbekend'} - ${collectionStats.yearRange.newest || 'Onbekend'}
 
 ${collectionStats.spotifyConnected ? `
 🎧 **SPOTIFY INTEGRATIE ACTIEF**
@@ -291,42 +383,56 @@ ${collectionStats.topSpotifyTracks.slice(0, 5).map(t => `• "${t.name}" - ${t.a
 
 🎯 **Huidige focus:** ${collectionStats.sessionFocus === 'value' ? 'Waardevolle parels' : collectionStats.sessionFocus === 'genre' ? 'Genre-ontdekking' : collectionStats.sessionFocus === 'year' ? 'Vintage schatten' : collectionStats.sessionFocus === 'spotify' ? 'Spotify vs Fysiek vergelijking' : 'Verborgen prachtstukken'}
 
-## ONTDEK STEEDS NIEUWE ALBUMS! 
+## ONTDEK STEEDS NIEUWE ALBUMS (ALLE BRONNEN)! 
 **Spotlight vandaag:** ${collectionStats.featuredAlbums.slice(0, 8).map(a => 
   a.title ? `"${a.title}" (${a.artist})` : a.name ? `"${a.name}" - ${a.artist}` : `"${a.artist}"`
 ).join(', ')}
 
-## FYSIEKE COLLECTIE DIVERSITEIT
-${collectionStats.physicalGenreDistribution.slice(0, 6).map(g => `• ${g.genre}: ${g.count} albums (€${g.totalValue.toFixed(2)})`).join('\n')}
+## COMPLETE COLLECTIE DIVERSITEIT (FYSIEK + AI SCANS)
+${collectionStats.genreDistribution.slice(0, 6).map(g => `• ${g.genre}: ${g.count} items (€${g.totalValue.toFixed(2)}) - ${g.valuedCount} gewaardeerd, ${g.pendingCount} pending`).join('\n')}
+
+## RECENTE AI SCAN ACTIVITEIT
+${collectionStats.aiScanInsights.recentScans.map(s => `• "${s.title}" - ${s.artist} ${s.hasValue ? '✅ Gewaardeerd' : '⏳ In verwerking'}`).join('\n')}
 
 ## ANTI-HERHALING CONTEXT
 ${recentAiMessages ? `Recent besproken: ${recentAiMessages.substring(0, 200)}...` : 'Eerste gesprek - volledig terrein te verkennen!'}
 
-## CREATIEVE OPDRACHTEN
-- 🚀 **VERPLICHT:** Gebruik ALTIJD andere albums dan in eerdere antwoorden
-- 🎭 **Varieer je stijl:** Historisch, technisch, emotioneel, anekdotisch, of vergelijkend
-- 🔍 **Zoek parels:** Belicht minder bekende, ondergewaardeerde albums
-- 🌟 **Verras:** Maak verrassende verbanden tussen verschillende albums
-- 💡 **Experimenteer:** Probeer nieuwe invalshoeken en perspectieven
+## CREATIEVE OPDRACHTEN (COMPLETE ECOSYSTEEM)
+- 🚀 **VERPLICHT:** Gebruik ALTIJD andere albums dan in eerdere antwoorden uit ALLE bronnen
+- 🎭 **Varieer je stijl:** Historisch, technisch, emotioneel, anekdotisch, of vergelijkend  
+- 🔍 **Zoek parels:** Belicht items uit fysieke collectie, AI scans EN Spotify
+- 🌟 **Verras:** Verbind gewaardeerde items met items in verwerking
+- 💡 **Experimenteer:** Analyseer scan workflow en waarderingsstatus
+- 📊 **Status bewustzijn:** Onderscheid tussen complete items en scans in progress
+- 🔄 **Cross-source analyse:** Vergelijk fysiek vs AI scans vs Spotify patronen
 ${collectionStats.spotifyConnected ? `- 🎧 **Spotify Analysis:** Vergelijk fysieke collectie met Spotify luistergedrag
 - 🔄 **Crossover Insights:** Analyseer overlap tussen gekocht vs geluisterd
 - 📊 **Digital vs Physical:** Ontdek verschillen in smaak en gedrag` : ''}
 
-## INSPIRATIE TECHNIEKEN
-- **Thematische clusters:** Groepeer albums op onverwachte manieren
-- **Tijdreizen:** Vergelijk albums uit verschillende decennia  
-- **Genre-fusion:** Ontdek verrassende kruisbestuivingen
-- **Verhalen vertellen:** Creëer narratieven rond de albums
-- **Deep-dives:** Duik diep in studio-technieken, productieverhalen
-- **Culturele impact:** Bespreek maatschappelijke invloed van albums
+## INSPIRATIE TECHNIEKEN (MULTI-SOURCE)
+- **Thematische clusters:** Groepeer albums uit alle bronnen op onverwachte manieren
+- **Tijdreizen:** Vergelijk albums uit verschillende decennia en bronnen
+- **Genre-fusion:** Ontdek kruisbestuivingen tussen fysiek, scans en Spotify
+- **Verhalen vertellen:** Creëer narratieven over de complete muziekreis  
+- **Scan-journey:** Volg items van scan tot waardering tot collectie
+- **Deep-dives:** Studio-technieken, productieverhalen, waardering proces
+- **Culturele impact:** Maatschappelijke invloed doorheen alle muziektypes
+- **Collection workflow:** Adviseer over scan → waarde → collectie proces
+- **Discovery patterns:** Hoe AI scans nieuwe muziek onthullen
 ${collectionStats.spotifyConnected ? `- **Spotify vs Fysiek:** Analyseer verschillen tussen wat je koopt en luistert
 - **Playlist Analysis:** Ontdek patronen in je Spotify playlists
 - **Discovery Patterns:** Vergelijk nieuwe ontdekkingen via Spotify vs fysieke aankopen` : ''}
 
 ## DYNAMISCHE RESPONSEFORMATEN
-Wissel af tussen: lijsten, verhalen, vergelijkingen, tijdlijnen, top-rankings, quiz-achtige vragen, hypothetische scenario's, muzikale reisroutes${collectionStats.spotifyConnected ? ', Spotify vs fysiek vergelijkingen' : ''}.
+Wissel af tussen: lijsten, verhalen, vergelijkingen, tijdlijnen, top-rankings, quiz-achtige vragen, hypothetische scenario's, muzikale reisroutes${collectionStats.spotifyConnected ? ', Spotify vs fysiek vs AI scan vergelijkingen' : ''}, scan-status updates, waardering voorspellingen, collectie-completie analyses.
 
-BELANGRIJK: Wees creatief, verrassend en ontdekkend! Gebruik NOOIT dezelfde albums als voorheen. Verken de volle breedte van de collectie${collectionStats.spotifyConnected ? ' én Spotify data' : ''}!`;
+## BELANGRIJKE CONTEXT BEWUSTZIJN
+- **Items met waarde:** Kan over genres, artiesten, waarde, geschiedenis praten
+- **Items in verwerking:** Kan adviseren over potentie, vergelijkbare items, verwachtingen  
+- **AI Scan Insights:** Kan uitleggen waarom bepaalde scans succesvol zijn
+- **Cross-source patronen:** Ontdek wat je koopt vs scant vs luistert
+
+BELANGRIJK: Wees creatief, verrassend en ontdekkend! Gebruik NOOIT dezelfde albums als voorheen. Verken de volle breedte van het COMPLETE muziekecosysteem: fysieke collectie + AI scans + Spotify data!`;
 
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

@@ -31,8 +31,8 @@ export interface CollectionItem {
   year: number | null;
   is_flagged_incorrect?: boolean;
   
-  // Collection item fields (these are guaranteed to exist)
-  calculated_advice_price: number;
+  // Collection item fields (may not exist for incomplete scans)
+  calculated_advice_price?: number | null;
   lowest_price?: number | null;
   median_price?: number | null;
   highest_price?: number | null;
@@ -88,15 +88,10 @@ export function useMyActualCollection(options: UseMyActualCollectionOptions = {}
         query = query.eq('user_id', user.id);
       }
 
-      // CRITICAL: Only show items that are truly part of the collection
-      // 1. Must have calculated_advice_price (have value)
-      // 2. Either physical items (cd_scan, vinyl2_scan) OR completed AI scans that have been added to collection
-      query = query.not('calculated_advice_price', 'is', null);
-      
-      // Filter for actual collection items:
-      // - Physical items (cd_scan, vinyl2_scan) with pricing
-      // - AI scans that are completed and have been processed with pricing
-      query = query.or(`source_table.eq.cd_scan,source_table.eq.vinyl2_scan,and(source_table.eq.ai_scan_results,status.eq.completed)`);
+  // Show ALL items - both scans and collection items
+      // - All physical items (cd_scan, vinyl2_scan) 
+      // - All AI scans (including incomplete ones)
+      query = query.or(`source_table.eq.cd_scan,source_table.eq.vinyl2_scan,source_table.eq.ai_scan_results`);
 
       // Apply search filter
       if (searchTerm) {
@@ -111,9 +106,17 @@ export function useMyActualCollection(options: UseMyActualCollectionOptions = {}
       // Apply status filter
       if (statusFilter && statusFilter !== 'all') {
         switch (statusFilter) {
+          case 'met_waarde':
+            // Items with pricing/value
+            query = query.not('calculated_advice_price', 'is', null);
+            break;
+          case 'zonder_waarde':
+            // Items without pricing (incomplete scans)
+            query = query.is('calculated_advice_price', null);
+            break;
           case 'ready_for_shop':
             // Items with pricing but not for sale (collection items only)
-            query = query.eq('is_for_sale', false);
+            query = query.eq('is_for_sale', false).not('calculated_advice_price', 'is', null);
             break;
           case 'for_sale':
             query = query.eq('is_for_sale', true);

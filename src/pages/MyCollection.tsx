@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Music, Package, Store, Eye, EyeOff, ShoppingCart, Sparkles, Download, ExternalLink, Globe, Users, AlertTriangle, RefreshCw, Scan } from "lucide-react";
+import { Music, RefreshCw, TrendingUp, Search, Filter, Settings, Disc3, Calendar, Star, Eye, EyeOff, ShoppingCart, Check, X, MoreHorizontal, Menu, Euro, Scan, Globe, ExternalLink, Store, Package, Sparkles } from "lucide-react";
 import { useMyActualCollection } from "@/hooks/useMyActualCollection";
 import { useUserShop } from "@/hooks/useUserShop";
 import { toast } from "@/hooks/use-toast";
@@ -372,14 +372,20 @@ export default function MyCollection() {
     navigate(`/scanner/discogs?${params.toString()}`);
   };
 
+  // Calculate statistics  
+  const totalItems = items.length;
+  const itemsWithValue = items.filter(item => item.calculated_advice_price && item.calculated_advice_price > 0);
+  const totalValue = itemsWithValue.reduce((sum, item) => sum + (item.calculated_advice_price || 0), 0);
+
   const stats = {
-    total: items.length,
+    total: totalItems,
+    itemsWithValue: itemsWithValue.length,
     physicalItems: items.filter(item => item.source_table === "cd_scan" || item.source_table === "vinyl2_scan").length,
     completedAIScans: items.filter(item => item.source_table === "ai_scan_results").length,
-    readyForShop: items.filter(item => !item.is_for_sale).length,
+    readyForShop: items.filter(item => !item.is_for_sale && item.calculated_advice_price).length,
     public: items.filter(item => item.is_public).length,
     forSale: items.filter(item => item.is_for_sale).length,
-    totalCollectionValue: items.reduce((total, item) => total + item.calculated_advice_price, 0),
+    totalCollectionValue: totalValue,
   };
 
   if (isLoading) {
@@ -469,7 +475,7 @@ export default function MyCollection() {
             </div>
             
             <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
-              Je volledige collectie met waardering - alleen items met waarde ({stats.total} items).
+              Hier vind je alle gescande items - zowel incomplete scans als volledige collectie items met waardering.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -516,6 +522,14 @@ export default function MyCollection() {
           
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
             <div className="flex items-center justify-center mb-2">
+              <Euro className="w-5 h-5 text-green-500" />
+            </div>
+            <div className="text-2xl font-bold">{stats.itemsWithValue}</div>
+            <div className="text-sm text-muted-foreground">Met waarde</div>
+          </Card>
+          
+          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
+            <div className="flex items-center justify-center mb-2">
               <Package className="w-5 h-5 text-purple-500" />
             </div>
             <div className="text-2xl font-bold">{stats.physicalItems}</div>
@@ -527,7 +541,7 @@ export default function MyCollection() {
               <Sparkles className="w-5 h-5 text-blue-500" />
             </div>
             <div className="text-2xl font-bold">{stats.completedAIScans}</div>
-            <div className="text-sm text-muted-foreground">AI Voltooid</div>
+            <div className="text-sm text-muted-foreground">AI Scans</div>
           </Card>
           
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
@@ -585,13 +599,15 @@ export default function MyCollection() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Alle items</SelectItem>
+                  <SelectItem value="met_waarde">Met waarde</SelectItem>
+                  <SelectItem value="zonder_waarde">Zonder waarde</SelectItem>
                   <SelectItem value="ready_for_shop">Winkel-klaar</SelectItem>
                   <SelectItem value="for_sale">Te koop</SelectItem>
                   <SelectItem value="public">Publiek</SelectItem>
                   <SelectItem value="private">Privé</SelectItem>
                   <SelectItem value="cd_scan">Fysieke CD's</SelectItem>
                   <SelectItem value="vinyl2_scan">Fysieke Vinyl</SelectItem>
-                  <SelectItem value="ai_scan_results">AI Voltooid</SelectItem>
+                  <SelectItem value="ai_scan_results">AI Scans</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -3,28 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Disc, Star, Calendar, Shuffle, ExternalLink, BookOpen } from 'lucide-react';
+import { Disc, Star, Calendar, Shuffle, ExternalLink, BookOpen, Music } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAlbumBlogPost } from '@/hooks/useAlbumBlogPost';
-
-interface Album {
-  id: string;
-  artist: string;
-  title: string;
-  year?: number;
-  genre?: string;
-  discogs_id?: number;
-  created_at: string;
-  condition_grade?: string;
-  estimated_value?: number;
-}
+import { SpotifyAlbumLink } from '@/components/SpotifyAlbumLink';
+import { UnifiedAlbum } from '@/hooks/useUnifiedAlbums';
 
 interface AlbumOfTheDayProps {
-  albums: Album[];
+  albums: UnifiedAlbum[];
 }
 
 export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
-  const [dailyAlbum, setDailyAlbum] = useState<Album | null>(null);
+  const [dailyAlbum, setDailyAlbum] = useState<UnifiedAlbum | null>(null);
   const [funFacts, setFunFacts] = useState<string[]>([]);
   
   const { data: blogPost, isLoading: blogLoading } = useAlbumBlogPost(dailyAlbum?.id || null);
@@ -47,8 +37,15 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
     generateFunFacts(selectedAlbum);
   }, [albums]);
 
-  const generateFunFacts = (album: Album) => {
+  const generateFunFacts = (album: UnifiedAlbum) => {
     const facts: string[] = [];
+    
+    // Source-specific facts
+    if (album.source === 'spotify') {
+      facts.push(`🎧 Uit je Spotify collectie`);
+    } else {
+      facts.push(`📀 Uit je gescande collectie`);
+    }
     
     if (album.year) {
       const age = new Date().getFullYear() - album.year;
@@ -92,7 +89,7 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
     ];
     facts.push(weekdayFacts[dayOfWeek]);
 
-    setFunFacts(facts.slice(0, 3)); // Keep max 3 facts
+    setFunFacts(facts.slice(0, 4)); // Keep max 4 facts for unified data
   };
 
   const shuffleAlbum = () => {
@@ -151,14 +148,33 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
       <CardContent className="space-y-4">
         {/* Album Info */}
         <div className="text-center space-y-2">
-          <div className="w-20 h-20 bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20 rounded-full flex items-center justify-center mx-auto">
-            <Disc className="w-10 h-10 text-vinyl-purple animate-spin-slow" />
-          </div>
+          {dailyAlbum.image_url ? (
+            <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden shadow-md">
+              <img 
+                src={dailyAlbum.image_url} 
+                alt={`${dailyAlbum.title} cover`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-20 h-20 bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20 rounded-full flex items-center justify-center mx-auto">
+              <Disc className="w-10 h-10 text-vinyl-purple animate-spin-slow" />
+            </div>
+          )}
           
           <div>
-            <h3 className="font-bold text-lg text-foreground">
-              {dailyAlbum.title}
-            </h3>
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <h3 className="font-bold text-lg text-foreground">
+                {dailyAlbum.title}
+              </h3>
+              <Badge variant={dailyAlbum.source === 'spotify' ? 'default' : 'secondary'} className="text-xs">
+                {dailyAlbum.source === 'spotify' ? (
+                  <><Music className="w-3 h-3 mr-1" />Spotify</>
+                ) : (
+                  <><Disc className="w-3 h-3 mr-1" />Gescand</>
+                )}
+              </Badge>
+            </div>
             <p className="text-vinyl-purple font-medium">
               {dailyAlbum.artist}
             </p>
@@ -234,7 +250,16 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
             </Link>
           </Button>
           
-          {dailyAlbum.discogs_id && (
+          {dailyAlbum.source === 'spotify' ? (
+            <SpotifyAlbumLink
+              artist={dailyAlbum.artist}
+              album={dailyAlbum.album_name || dailyAlbum.title}
+              audioLinks={{ spotify: dailyAlbum.spotify_url }}
+              variant="outline"
+              size="sm"
+              className="w-full"
+            />
+          ) : dailyAlbum.discogs_id ? (
             <Button
               asChild
               size="sm"
@@ -250,7 +275,7 @@ export const AlbumOfTheDay = ({ albums }: AlbumOfTheDayProps) => {
                 Discogs
               </a>
             </Button>
-          )}
+          ) : null}
         </div>
 
         {/* Inspirational Quote */}

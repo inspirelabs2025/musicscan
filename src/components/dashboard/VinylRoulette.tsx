@@ -5,23 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { Disc, Play, Shuffle, ExternalLink, Music } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface Album {
-  id: string;
-  artist: string;
-  title: string;
-  year?: number;
-  genre?: string;
-  discogs_id?: number;
-  estimated_value?: number;
-}
+import { SpotifyAlbumLink } from '@/components/SpotifyAlbumLink';
+import { UnifiedAlbum } from '@/hooks/useUnifiedAlbums';
 
 interface VinylRouletteProps {
-  albums: Album[];
+  albums: UnifiedAlbum[];
 }
 
 export const VinylRoulette = ({ albums }: VinylRouletteProps) => {
-  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [selectedAlbum, setSelectedAlbum] = useState<UnifiedAlbum | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinCount, setSpinCount] = useState(0);
 
@@ -54,8 +46,8 @@ export const VinylRoulette = ({ albums }: VinylRouletteProps) => {
     return messages[Math.floor(Math.random() * messages.length)];
   };
 
-  const getAlbumRecommendation = (album: Album) => {
-    const recommendations = [
+  const getAlbumRecommendation = (album: UnifiedAlbum) => {
+    const baseRecommendations = [
       `🌅 Perfect voor een ochtend luistersessie`,
       `🌙 Ideaal voor avondontspanning`,
       `☕ Geweldig bij een kopje koffie`,
@@ -65,7 +57,13 @@ export const VinylRoulette = ({ albums }: VinylRouletteProps) => {
       `🎨 Inspirerend voor creatieve momenten`,
       `🚗 Perfect voor je volgende roadtrip`
     ];
-    return recommendations[Math.floor(Math.random() * recommendations.length)];
+    
+    const sourceSpecific = album.source === 'spotify' 
+      ? [`🎧 Stream direct vanaf Spotify`, `🎵 Beluister nu via Spotify`]
+      : [`📀 Tijd om de fysieke versie op te zetten`, `💿 Een perfecte plaat voor je draaitafel`];
+    
+    const allRecommendations = [...baseRecommendations, ...sourceSpecific];
+    return allRecommendations[Math.floor(Math.random() * allRecommendations.length)];
   };
 
   if (!albums || albums.length === 0) {
@@ -161,7 +159,16 @@ export const VinylRoulette = ({ albums }: VinylRouletteProps) => {
               </div>
               
               <div>
-                <h4 className="font-bold text-lg">{selectedAlbum.title}</h4>
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <h4 className="font-bold text-lg">{selectedAlbum.title}</h4>
+                  <Badge variant={selectedAlbum.source === 'spotify' ? 'default' : 'secondary'} className="text-xs">
+                    {selectedAlbum.source === 'spotify' ? (
+                      <><Music className="w-3 h-3 mr-1" />Spotify</>
+                    ) : (
+                      <><Disc className="w-3 h-3 mr-1" />Gescand</>
+                    )}
+                  </Badge>
+                </div>
                 <p className="text-vinyl-purple font-medium">{selectedAlbum.artist}</p>
                 <div className="flex items-center justify-center gap-2 mt-2">
                   {selectedAlbum.year && (
@@ -191,7 +198,16 @@ export const VinylRoulette = ({ albums }: VinylRouletteProps) => {
                   </Link>
                 </Button>
                 
-                {selectedAlbum.discogs_id && (
+                {selectedAlbum.source === 'spotify' ? (
+                  <SpotifyAlbumLink
+                    artist={selectedAlbum.artist}
+                    album={selectedAlbum.album_name || selectedAlbum.title}
+                    audioLinks={{ spotify: selectedAlbum.spotify_url }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                  />
+                ) : selectedAlbum.discogs_id ? (
                   <Button
                     asChild
                     size="sm"
@@ -207,7 +223,7 @@ export const VinylRoulette = ({ albums }: VinylRouletteProps) => {
                       Discogs
                     </a>
                   </Button>
-                )}
+                ) : null}
               </div>
             </motion.div>
           )}

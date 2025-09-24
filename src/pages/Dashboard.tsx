@@ -23,7 +23,7 @@ import { StatCard } from '@/components/StatCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCollectionStats } from '@/hooks/useCollectionStats';
 import { useDirectScans } from '@/hooks/useDirectScans';
-import { useAlbumsWithBlogs } from '@/hooks/useAlbumsWithBlogs';
+import { useUnifiedAlbums } from '@/hooks/useUnifiedAlbums';
 import { useUnifiedScansStats } from '@/hooks/useUnifiedScansStats';
 import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
 import { ChatWidget } from '@/components/dashboard/ChatWidget';
@@ -45,7 +45,7 @@ const Dashboard = () => {
   const ADMIN_EMAIL = 'rogiervisser76@gmail.com';
   const { data: collectionStats, isLoading: collectionLoading } = useCollectionStats();
   const { data: recentScans, isLoading: scansLoading } = useDirectScans();
-  const { data: albumsWithBlogs, isLoading: blogsLoading } = useAlbumsWithBlogs();
+  const { data: unifiedAlbums, isLoading: albumsLoading } = useUnifiedAlbums();
   const { data: scanStats, isLoading: statsLoading } = useUnifiedScansStats();
 
   // Get recent scans (last 5)
@@ -187,8 +187,8 @@ const Dashboard = () => {
             🎰 Muziek & Fun
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <AlbumOfTheDay albums={albumsWithBlogs || []} />
-            <VinylRoulette albums={latestScans || []} />
+            <AlbumOfTheDay albums={unifiedAlbums || []} />
+            <VinylRoulette albums={unifiedAlbums || []} />
             <CollectionPersonality 
               genres={collectionStats?.genres || []}
               totalItems={collectionStats?.totalItems || 0}

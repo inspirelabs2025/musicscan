@@ -52,10 +52,7 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
       `)
       .range(pageParam * ITEMS_PER_PAGE, (pageParam + 1) * ITEMS_PER_PAGE - 1);
 
-    // Apply user filter
-    if (user) {
-      query = query.eq("user_id", user.id);
-    }
+    // Note: No user filter applied - show all published blogs to everyone
 
     // Apply status filter
     if (filters.status === 'published') {

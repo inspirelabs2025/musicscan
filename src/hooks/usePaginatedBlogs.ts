@@ -54,11 +54,17 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
 
     // Note: No user filter applied - show all published blogs to everyone
 
-    // Apply status filter
-    if (filters.status === 'published') {
+    // Apply status filter - always show published blogs to everyone
+    if (filters.status === 'draft') {
+      // Only show drafts if user is authenticated (admin/owner view)
+      if (!user) {
+        query = query.eq("is_published", true);
+      } else {
+        query = query.eq("is_published", false);
+      }
+    } else {
+      // Default to showing published blogs
       query = query.eq("is_published", true);
-    } else if (filters.status === 'draft') {
-      query = query.eq("is_published", false);
     }
 
     // Apply album type filter
@@ -115,11 +121,17 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
       .from("blog_posts")
       .select("*", { count: 'exact', head: true });
 
-    // Apply same filters to count query
-    if (filters.status === 'published') {
+    // Apply same filters to count query - always show published by default
+    if (filters.status === 'draft') {
+      // Only show drafts if user is authenticated (admin/owner view)
+      if (!user) {
+        countQuery = countQuery.eq("is_published", true);
+      } else {
+        countQuery = countQuery.eq("is_published", false);
+      }
+    } else {
+      // Default to showing published blogs
       countQuery = countQuery.eq("is_published", true);
-    } else if (filters.status === 'draft') {
-      countQuery = countQuery.eq("is_published", false);
     }
 
     if (filters.albumType && filters.albumType !== 'all') {
@@ -190,7 +202,7 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
     getNextPageParam: (lastPage) => lastPage.nextPage,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-    enabled: !!user || hasManuallyFetched,
+    enabled: true, // Always enabled - show published blogs to everyone
   });
 
   const blogs = data?.pages.flatMap(page => page.blogs) || [];

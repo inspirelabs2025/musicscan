@@ -39,6 +39,7 @@ import { VinylRoulette } from '@/components/dashboard/VinylRoulette';
 import { CollectionPersonality } from '@/components/dashboard/CollectionPersonality';
 import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { NextGoalWidget } from '@/components/dashboard/NextGoalWidget';
+import { BlogPreviewWidget } from '@/components/dashboard/BlogPreviewWidget';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -204,6 +205,7 @@ const Dashboard = () => {
             📚 Ontdek & Leer
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <BlogPreviewWidget />
             <EnhancedNewsWidget />
             
             {/* Recent Activity */}

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSEO, SEO_CONFIGS } from '@/hooks/useSEO';
+import { BlogPreviewWidget } from '@/components/dashboard/BlogPreviewWidget';
 import { AppStructuredData } from '@/components/SEO/StructuredData';
 
 const Home = () => {
@@ -133,6 +134,13 @@ const Home = () => {
 
       {/* News Section */}
       <NewsSection />
+      
+      {/* Blog/Verhalen Section */}
+      <section className="py-16 bg-gradient-to-br from-accent/5 to-background">
+        <div className="container mx-auto px-4">
+          <BlogPreviewWidget />
+        </div>
+      </section>
 
       {/* New Users Section */}
       <NewUsersSection />

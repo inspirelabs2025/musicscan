@@ -30,7 +30,7 @@ export function useUrlFilters(initialFilters: Partial<FilterState> = {}) {
     year: getFilterFromUrl('year', 'all'),
     sortBy: getFilterFromUrl('sortBy', 'date'),
     viewMode: getFilterFromUrl('view', 'grid'),
-    status: getFilterFromUrl('status', 'all'),
+    status: getFilterFromUrl('status', 'published'),
     albumType: getFilterFromUrl('albumType', 'all'),
     ...initialFilters
   });

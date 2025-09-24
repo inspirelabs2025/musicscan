@@ -55,7 +55,9 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Create confirmation URL using the correct token (not token_hash)
-    const confirmationUrl = `${site_url}/auth/v1/verify?token=${token}&type=${email_action_type}&redirect_to=${encodeURIComponent(redirect_to)}`;
+    // Use the full Supabase project URL to avoid double /auth/v1 paths
+    const supabaseUrl = 'https://ssxbpyqnjfiyubsuonar.supabase.co';
+    const confirmationUrl = `${supabaseUrl}/auth/v1/verify?token=${token}&type=${email_action_type}&redirect_to=${encodeURIComponent(redirect_to)}`;
     
     console.log('🔗 Generated confirmation URL:', confirmationUrl.replace(token, '***TOKEN***'));
     

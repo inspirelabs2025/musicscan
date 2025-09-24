@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Eye, Edit, Share2, FileText, Music, Disc3 } from 'lucide-react';
 import { usePlaatVerhaalGenerator } from '@/hooks/usePlaatVerhaalGenerator';
+import { SpotifyAlbumLink } from '@/components/SpotifyAlbumLink';
 
 interface BlogPost {
   id: string;
@@ -176,6 +177,12 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+              <SpotifyAlbumLink 
+                artist={artist} 
+                album={album} 
+                size="sm"
+                className="h-8 text-xs"
+              />
               {onView && (
                 <Button variant="outline" size="sm" onClick={() => onView(blog)} className="h-8 text-xs">
                   <Eye className="w-3 h-3 mr-1" />
@@ -285,50 +292,59 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {onView && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onView(blog)}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <SpotifyAlbumLink 
+              artist={artist} 
+              album={album} 
               className="flex-1"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Bekijk
-            </Button>
-          )}
+            />
+            {blog.is_published && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShare}
+              >
+                <Share2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
           
-          {onEdit && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEdit(blog)}
-              className="flex-1"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Bewerk
-            </Button>
-          )}
-          
-          {!blog.is_published && (
-            <Button
-              size="sm"
-              onClick={handlePublish}
-              className="flex-1"
-            >
-              Publiceer
-            </Button>
-          )}
-          
-          {blog.is_published && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {onView && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onView(blog)}
+                className="flex-1"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Bekijk
+              </Button>
+            )}
+            
+            {onEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(blog)}
+                className="flex-1"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Bewerk
+              </Button>
+            )}
+            
+            {!blog.is_published && (
+              <Button
+                size="sm"
+                onClick={handlePublish}
+                className="flex-1"
+              >
+                Publiceer
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -52,6 +52,7 @@ const Scanner = () => {
   const urlCondition = searchParams.get('condition');
   const returnTo = searchParams.get('returnTo') as 'collection' | 'shop' | null;
   const quickScanType = searchParams.get('type') as 'vinyl' | 'cd' | null;
+  const quickDiscogs = searchParams.get('discogs') === 'true';
 
   const { 
     isAnalyzing: isAnalyzingVinyl, 
@@ -183,6 +184,25 @@ const Scanner = () => {
       });
     }
   }, [quickScanType, returnTo, fromAiScan]);
+
+  // Handle quick Discogs ID from QuickScanOptions (new flow)
+  useEffect(() => {
+    if (quickDiscogs && !autoStartTriggered.current && !fromAiScan) {
+      console.log('🔗 Quick Discogs ID flow detected, returnTo:', returnTo);
+      
+      // Go directly to Discogs ID input mode
+      dispatch({ type: 'SET_DISCOGS_ID_MODE', payload: true });
+      dispatch({ type: 'SET_CURRENT_STEP', payload: 0 });
+      
+      autoStartTriggered.current = true;
+      
+      toast({
+        title: "Discogs ID mode",
+        description: "Voer je Discogs ID in voor een snelle prijscheck.",
+        variant: "default"
+      });
+    }
+  }, [quickDiscogs, returnTo, fromAiScan]);
 
   useEffect(() => {
     if (!state.mediaType || !analyzeImages) return;

@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ReviewsSection } from '@/components/blog/ReviewsSection';
 import { CommentsSection } from '@/components/blog/CommentsSection';
 import { RelatedArticles } from '@/components/SEO/RelatedArticles';
+import { SpotifyAlbumLink } from '@/components/SpotifyAlbumLink';
 
 
 
@@ -365,6 +366,16 @@ export const PlaatVerhaal: React.FC = () => {
                       <Share2 className="w-4 h-4 mr-1" />
                       Delen
                     </Button>
+                    {artist && album && (
+                      <SpotifyAlbumLink
+                        artist={artist}
+                        album={album}
+                        audioLinks={frontmatter.audio_links}
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto p-0 text-muted-foreground hover:text-primary transition-colors"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -513,6 +524,16 @@ export const PlaatVerhaal: React.FC = () => {
                       <Copy className="w-4 h-4 mr-2" />
                       Kopieer link
                     </Button>
+                    {artist && album && (
+                      <SpotifyAlbumLink
+                        artist={artist}
+                        album={album}
+                        audioLinks={frontmatter.audio_links}
+                        variant="outline"
+                        size="sm"
+                        className="hover:bg-green-50 border-green-200 dark:hover:bg-green-950 dark:border-green-800"
+                      />
+                    )}
                   </div>
                 </CardContent>
               </Card>

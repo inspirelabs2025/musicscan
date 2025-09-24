@@ -6,10 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings, Store, ExternalLink, Copy, AlertCircle, Package, Eye, Plus } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Settings, Store, ExternalLink, Copy, AlertCircle, Package, Eye, Plus, ShoppingCart } from "lucide-react";
 import { useShopItems } from "@/hooks/useShopItems";
 import { useUserShop } from "@/hooks/useUserShop";
+import { useMyCollection } from "@/hooks/useMyCollection";
 import { ShopItemCard } from "@/components/ShopItemCard";
+import { CollectionItemCard } from "@/components/CollectionItemCard";
 import { ShopSetupWizard } from "@/components/ShopSetupWizard";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
@@ -17,6 +20,7 @@ import { Link } from "react-router-dom";
 export default function MyShop() {
   const { shopItems, isLoading: itemsLoading } = useShopItems();
   const { shop, isLoading: shopLoading, updateShop, isUpdating } = useUserShop();
+  const { items: readyForShopItems, isLoading: readyItemsLoading, updateItem, isUpdating: isUpdatingItem } = useMyCollection("ready_for_shop");
   const { toast } = useToast();
   const [showWizard, setShowWizard] = useState(false);
   
@@ -80,7 +84,7 @@ export default function MyShop() {
     }
   };
 
-  if (itemsLoading || shopLoading) {
+  if (itemsLoading || shopLoading || readyItemsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
         <div className="container mx-auto px-4 py-8">
@@ -220,13 +224,21 @@ export default function MyShop() {
         </Card>
 
         {/* Shop Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
             <div className="flex items-center justify-center mb-2">
               <Store className="w-5 h-5 text-primary" />
             </div>
             <div className="text-2xl font-bold">{shopItems.length}</div>
             <div className="text-sm text-muted-foreground">Items te koop</div>
+          </Card>
+          
+          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
+            <div className="flex items-center justify-center mb-2">
+              <ShoppingCart className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="text-2xl font-bold">{readyForShopItems.length}</div>
+            <div className="text-sm text-muted-foreground">Klaar voor winkel</div>
           </Card>
           
           <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
@@ -242,41 +254,139 @@ export default function MyShop() {
           </Card>
         </div>
 
-        {/* Shop Items */}
+        {/* Shop Tabs */}
         <Card className="p-6 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold">Items in winkel</h2>
-            <Link to="/my-collection">
-              <Button variant="outline">
-                Items toevoegen
-              </Button>
-            </Link>
-          </div>
+          <Tabs defaultValue="in-shop" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="in-shop" className="flex items-center gap-2">
+                <Store className="w-4 h-4" />
+                Items in winkel
+                <Badge variant="secondary" className="ml-1">
+                  {shopItems.length}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger value="ready-for-shop" className="flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4" />
+                Klaar voor winkel
+                <Badge variant="secondary" className="ml-1">
+                  {readyForShopItems.length}
+                </Badge>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="in-shop" className="mt-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold">Items die momenteel te koop staan</h3>
+                <Link to="/my-collection">
+                  <Button variant="outline">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Items toevoegen
+                  </Button>
+                </Link>
+              </div>
 
-          {shopItems.length === 0 ? (
-            <div className="text-center py-12">
-              <Store className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Geen items in winkel</h3>
-              <p className="text-muted-foreground mb-4">
-                Je hebt nog geen items te koop gezet. Ga naar je collectie om items toe te voegen.
-              </p>
-              <Link to="/my-collection">
-                <Button>
-                  Ga naar collectie
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              {shopItems.map((item) => (
-                <ShopItemCard
-                  key={item.id}
-                  item={item}
-                  shopContactInfo={shop?.contact_info}
-                />
-              ))}
-            </div>
-          )}
+              {shopItems.length === 0 ? (
+                <div className="text-center py-12">
+                  <Store className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+                  <h4 className="text-lg font-semibold mb-2">Geen items in winkel</h4>
+                  <p className="text-muted-foreground mb-4">
+                    Je hebt nog geen items te koop gezet. Kijk in de "Klaar voor winkel" tab of ga naar je collectie.
+                  </p>
+                  <Link to="/my-collection">
+                    <Button>
+                      Ga naar collectie
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  {shopItems.map((item) => (
+                    <ShopItemCard
+                      key={item.id}
+                      item={item}
+                      shopContactInfo={shop?.contact_info}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="ready-for-shop" className="mt-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold">Items klaar om toe te voegen aan winkel</h3>
+                <p className="text-sm text-muted-foreground">
+                  Deze items hebben prijsinformatie maar staan nog niet te koop
+                </p>
+              </div>
+
+              {readyForShopItems.length === 0 ? (
+                <div className="text-center py-12">
+                  <Package className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+                  <h4 className="text-lg font-semibold mb-2">Geen items klaar voor winkel</h4>
+                  <p className="text-muted-foreground mb-4">
+                    Scan meer items met prijsinformatie om ze hier te zien verschijnen.
+                  </p>
+                  <Link to="/scan">
+                    <Button>
+                      Items scannen
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  {readyForShopItems.map((item) => (
+                    <div key={item.id} className="relative">
+                      <CollectionItemCard
+                        item={item}
+                        onUpdate={(updates) => {
+                          updateItem({
+                            id: item.id,
+                            media_type: item.media_type,
+                            updates
+                          });
+                          if (updates.is_for_sale) {
+                            toast({
+                              title: "Item toegevoegd aan winkel",
+                              description: `${item.artist} - ${item.title} staat nu te koop.`,
+                            });
+                          }
+                        }}
+                        isUpdating={isUpdatingItem}
+                        showControls={true}
+                      />
+                      {item.calculated_advice_price && (
+                        <div className="absolute top-2 right-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => {
+                              updateItem({
+                                id: item.id,
+                                media_type: item.media_type,
+                                updates: {
+                                  is_for_sale: true,
+                                  marketplace_price: item.calculated_advice_price
+                                }
+                              });
+                              toast({
+                                title: "Item toegevoegd aan winkel",
+                                description: `${item.artist} - ${item.title} staat nu te koop voor €${item.calculated_advice_price}.`,
+                              });
+                            }}
+                            disabled={isUpdatingItem}
+                            className="text-xs"
+                          >
+                            <ShoppingCart className="w-3 h-3 mr-1" />
+                            Naar winkel
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </Card>
       </div>
     </div>

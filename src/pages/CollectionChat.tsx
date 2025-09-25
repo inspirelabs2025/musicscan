@@ -223,27 +223,32 @@ const CollectionChat = () => {
     const isUser = msg.sender_type === 'user';
     
     return (
-      <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6 animate-fade-in`}>
-        <div className={`max-w-[70%] md:max-w-[65%] p-4 rounded-2xl shadow-lg break-words ${
+      <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4 animate-fade-in`}>
+        <div className={`max-w-[85%] sm:max-w-[75%] md:max-w-[70%] lg:max-w-[65%] p-4 rounded-2xl shadow-lg ${
           isUser 
             ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border border-primary/20' 
             : 'bg-gradient-to-br from-card to-muted/50 border border-primary/10'
         }`}>
           {isUser ? (
-            <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{msg.message}</p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words hyphens-auto">{msg.message}</p>
           ) : (
             <div 
-              className="prose prose-sm max-w-none dark:prose-invert prose-p:break-words prose-p:overflow-wrap-anywhere prose-headings:break-words prose-li:break-words"
+              className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 prose-p:leading-relaxed prose-headings:my-3 prose-headings:leading-tight prose-li:my-1 prose-ul:my-2 prose-ol:my-2 prose-strong:font-semibold text-sm"
+              style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}
               dangerouslySetInnerHTML={{
                 __html: msg.message
                   .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                   .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                  .replace(/\n\n/g, '</p><p>')
                   .replace(/\n/g, '<br>')
+                  .replace(/^/, '<p>')
+                  .replace(/$/, '</p>')
+                  .replace(/<p><\/p>/g, '')
               }}
             />
           )}
           {msg.tokens_used && (
-            <div className="text-xs opacity-60 mt-1">
+            <div className="text-xs opacity-60 mt-2 pt-2 border-t border-current/10">
               {msg.tokens_used} tokens • {msg.response_time_ms}ms
             </div>
           )}
@@ -548,11 +553,11 @@ const CollectionChat = () => {
                     </div>
                   </div>
                 ) : (
-                  <div>
+                  <div className="space-y-3">
                     {messages.map(renderMessage)}
                     {isLoading && (
                       <div className="flex justify-start mb-4 animate-fade-in">
-                        <div className="bg-gradient-to-br from-primary/10 to-secondary/10 p-4 rounded-2xl border border-primary/20 shadow-lg">
+                        <div className="max-w-[85%] sm:max-w-[75%] md:max-w-[70%] lg:max-w-[65%] bg-gradient-to-br from-primary/10 to-secondary/10 p-4 rounded-2xl border border-primary/20 shadow-lg">
                           <div className="flex items-center gap-2">
                             <Loader2 className="w-4 h-4 animate-spin text-primary" />
                             <span className="text-sm text-muted-foreground">AI denkt na... 🤔</span>

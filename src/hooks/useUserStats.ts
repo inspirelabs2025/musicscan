@@ -9,12 +9,12 @@ export interface UserStats {
 
 export const useUserStats = () => {
   return useQuery<UserStats>({
-    queryKey: ['user-stats'],
+    queryKey: ['user-stats', 'public'],
     queryFn: async () => {
       // Get total users count (only public profiles)
       const { count: totalUsers, error: totalError } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('is_public', true);
 
       if (totalError) throw totalError;
@@ -25,7 +25,7 @@ export const useUserStats = () => {
       
       const { count: newUsersLast7Days, error: last7Error } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('is_public', true)
         .gte('created_at', sevenDaysAgo.toISOString());
 
@@ -37,7 +37,7 @@ export const useUserStats = () => {
       
       const { count: newUsersLast30Days, error: last30Error } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('is_public', true)
         .gte('created_at', thirtyDaysAgo.toISOString());
 
@@ -49,7 +49,9 @@ export const useUserStats = () => {
         newUsersLast30Days: newUsersLast30Days || 0,
       };
     },
-    staleTime: 30000, // 30 seconds
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
 };

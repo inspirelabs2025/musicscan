@@ -11,42 +11,17 @@ export const useUserStats = () => {
   return useQuery<UserStats>({
     queryKey: ['user-stats', 'public'],
     queryFn: async () => {
-      // Get total users count (only public profiles)
-      const { count: totalUsers, error: totalError } = await supabase
-        .from('profiles')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_public', true);
+      // Use RPC function to get all public user statistics
+      const { data, error } = await supabase.rpc('get_public_user_stats');
 
-      if (totalError) throw totalError;
+      if (error) throw error;
 
-      // Get new users in last 7 days (only public profiles)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { count: newUsersLast7Days, error: last7Error } = await supabase
-        .from('profiles')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_public', true)
-        .gte('created_at', sevenDaysAgo.toISOString());
-
-      if (last7Error) throw last7Error;
-
-      // Get new users in last 30 days (only public profiles)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const { count: newUsersLast30Days, error: last30Error } = await supabase
-        .from('profiles')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_public', true)
-        .gte('created_at', thirtyDaysAgo.toISOString());
-
-      if (last30Error) throw last30Error;
+      const row = Array.isArray(data) ? data[0] : data;
 
       return {
-        totalUsers: totalUsers || 0,
-        newUsersLast7Days: newUsersLast7Days || 0,
-        newUsersLast30Days: newUsersLast30Days || 0,
+        totalUsers: row?.total_users ?? 0,
+        newUsersLast7Days: row?.new_users_last_7_days ?? 0,
+        newUsersLast30Days: row?.new_users_last_30_days ?? 0,
       };
     },
     staleTime: 0,

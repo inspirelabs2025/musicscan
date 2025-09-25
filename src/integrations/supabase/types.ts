@@ -3252,6 +3252,14 @@ export type Database = {
           period_start: string
         }[]
       }
+      get_public_user_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          new_users_last_30_days: number
+          new_users_last_7_days: number
+          total_users: number
+        }[]
+      }
       increment_shop_view_count: {
         Args: { shop_slug: string }
         Returns: undefined

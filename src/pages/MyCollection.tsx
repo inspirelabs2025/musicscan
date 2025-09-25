@@ -6,9 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import { Music, RefreshCw, TrendingUp, Search, Filter, Settings, Disc3, Calendar, Star, Eye, EyeOff, ShoppingCart, Check, X, MoreHorizontal, Menu, Euro, Scan, Globe, ExternalLink, Store, Package, Sparkles } from "lucide-react";
 import { useMyActualCollection } from "@/hooks/useMyActualCollection";
 import { useUserShop } from "@/hooks/useUserShop";
+import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -220,6 +222,8 @@ export default function MyCollection() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isBatchFetching, setIsBatchFetching] = useState(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const debouncedSearchTerm = useDebounceSearch(searchTerm, 300);
   
   const { 
     data, 
@@ -230,6 +234,7 @@ export default function MyCollection() {
   } = useMyActualCollection({
     mediaTypeFilter: mediaTypeFilter === "all" ? undefined : mediaTypeFilter,
     statusFilter: statusFilter === "all" ? undefined : statusFilter,
+    searchTerm: debouncedSearchTerm || undefined,
   });
   
   const { shop } = useUserShop();
@@ -572,6 +577,19 @@ export default function MyCollection() {
 
         {/* Filters and Controls */}
         <Card className="p-6 mb-6 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
+          {/* Search Bar */}
+          <div className="mb-4">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Zoek op artiest, titel, label of catalogusnummer..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-background/60 border-border/60 focus:bg-background focus:border-primary/50"
+              />
+            </div>
+          </div>
+          
           <div className="flex flex-col md:flex-row gap-4 items-center">
             {/* Filters */}
             <div className="flex flex-wrap gap-4 flex-1">

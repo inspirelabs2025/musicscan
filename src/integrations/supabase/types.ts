@@ -1061,6 +1061,175 @@ export type Database = {
         }
         Relationships: []
       }
+      forum_post_votes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_post_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_posts: {
+        Row: {
+          content: string
+          created_at: string
+          downvotes: number | null
+          edited_at: string | null
+          id: string
+          is_edited: boolean | null
+          parent_post_id: string | null
+          topic_id: string
+          updated_at: string
+          upvotes: number | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          downvotes?: number | null
+          edited_at?: string | null
+          id?: string
+          is_edited?: boolean | null
+          parent_post_id?: string | null
+          topic_id: string
+          updated_at?: string
+          upvotes?: number | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          downvotes?: number | null
+          edited_at?: string | null
+          id?: string
+          is_edited?: boolean | null
+          parent_post_id?: string | null
+          topic_id?: string
+          updated_at?: string
+          upvotes?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_posts_parent_post_id_fkey"
+            columns: ["parent_post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_posts_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "forum_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_topic_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          topic_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          topic_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          topic_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_topic_subscriptions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "forum_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_topics: {
+        Row: {
+          album_title: string | null
+          artist_name: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          is_pinned: boolean | null
+          reply_count: number | null
+          status: string
+          title: string
+          topic_type: string
+          updated_at: string
+          view_count: number | null
+        }
+        Insert: {
+          album_title?: string | null
+          artist_name?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_pinned?: boolean | null
+          reply_count?: number | null
+          status?: string
+          title: string
+          topic_type?: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Update: {
+          album_title?: string | null
+          artist_name?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_pinned?: boolean | null
+          reply_count?: number | null
+          status?: string
+          title?: string
+          topic_type?: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       market_prices: {
         Row: {
           condition_grade: string

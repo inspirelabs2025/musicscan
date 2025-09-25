@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Music, RefreshCw, TrendingUp, Search, Filter, Settings, Disc3, Calendar, Star, Eye, EyeOff, ShoppingCart, Check, X, MoreHorizontal, Menu, Euro, Scan, Globe, ExternalLink, Store, Package, Sparkles } from "lucide-react";
 import { useMyActualCollection } from "@/hooks/useMyActualCollection";
 import { useUserShop } from "@/hooks/useUserShop";
-import { useDebounceSearch } from "@/hooks/useDebounceSearch";
+
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -222,8 +222,8 @@ export default function MyCollection() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isBatchFetching, setIsBatchFetching] = useState(false);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const debouncedSearchTerm = useDebounceSearch(searchTerm, 300);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [activeSearchTerm, setActiveSearchTerm] = useState<string>("");
   
   const { 
     data, 
@@ -234,10 +234,22 @@ export default function MyCollection() {
   } = useMyActualCollection({
     mediaTypeFilter: mediaTypeFilter === "all" ? undefined : mediaTypeFilter,
     statusFilter: statusFilter === "all" ? undefined : statusFilter,
-    searchTerm: debouncedSearchTerm || undefined,
+    searchTerm: activeSearchTerm || undefined,
   });
   
-  const { shop } = useUserShop();
+  const handleSearch = () => {
+    setActiveSearchTerm(inputValue);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+    if (e.key === 'Escape') {
+      setInputValue("");
+      setActiveSearchTerm("");
+    }
+  };
   // Mobile and UX enhancements
   const { isMobile } = useMobileOptimized();
   const { 
@@ -582,12 +594,31 @@ export default function MyCollection() {
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Zoek op artiest, titel, label of catalogusnummer..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Zoek op artiest, titel, label of catalogusnummer... (druk Enter om te zoeken)"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="pl-10 bg-background/60 border-border/60 focus:bg-background focus:border-primary/50"
               />
+              {activeSearchTerm && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setInputValue("");
+                    setActiveSearchTerm("");
+                  }}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              )}
             </div>
+            {activeSearchTerm && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Zoekt naar: "{activeSearchTerm}"
+              </p>
+            )}
           </div>
           
           <div className="flex flex-col md:flex-row gap-4 items-center">

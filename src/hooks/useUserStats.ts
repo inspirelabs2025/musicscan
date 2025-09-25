@@ -11,31 +11,34 @@ export const useUserStats = () => {
   return useQuery<UserStats>({
     queryKey: ['user-stats'],
     queryFn: async () => {
-      // Get total users count
+      // Get total users count (only public profiles)
       const { count: totalUsers, error: totalError } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('is_public', true);
 
       if (totalError) throw totalError;
 
-      // Get new users in last 7 days
+      // Get new users in last 7 days (only public profiles)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
       const { count: newUsersLast7Days, error: last7Error } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
+        .eq('is_public', true)
         .gte('created_at', sevenDaysAgo.toISOString());
 
       if (last7Error) throw last7Error;
 
-      // Get new users in last 30 days
+      // Get new users in last 30 days (only public profiles)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
       const { count: newUsersLast30Days, error: last30Error } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
+        .eq('is_public', true)
         .gte('created_at', thirtyDaysAgo.toISOString());
 
       if (last30Error) throw last30Error;

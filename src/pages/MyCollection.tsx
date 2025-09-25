@@ -591,28 +591,40 @@ export default function MyCollection() {
         <Card className="p-6 mb-6 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
           {/* Search Bar */}
           <div className="mb-4">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Zoek op artiest, titel, label of catalogusnummer... (druk Enter om te zoeken)"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="pl-10 bg-background/60 border-border/60 focus:bg-background focus:border-primary/50"
-              />
-              {activeSearchTerm && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setInputValue("");
-                    setActiveSearchTerm("");
-                  }}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-              )}
+            <div className="flex gap-2 max-w-md">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Zoek op artiest, titel, label of catalogusnummer..."
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="pl-10 pr-8 bg-background/60 border-border/60 focus:bg-background focus:border-primary/50"
+                />
+                {activeSearchTerm && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setInputValue("");
+                      setActiveSearchTerm("");
+                    }}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                    aria-label="Wis zoekopdracht"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                )}
+              </div>
+              <Button
+                onClick={handleSearch}
+                variant="outline"
+                size="default"
+                className="px-3 bg-background/60 border-border/60 hover:bg-background hover:border-primary/50"
+                aria-label="Zoeken"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
             </div>
             {activeSearchTerm && (
               <p className="text-xs text-muted-foreground mt-1">

@@ -30,7 +30,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
 
   const handleCardClick = () => {
     if (isMarketplaceItem(item) && item.shop_slug) {
-      navigate(`/shop/${item.shop_slug}/item/${item.id}`);
+      navigate(`/shop/${item.shop_slug}`);
     }
   };
 
@@ -79,70 +79,9 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
     }
   };
 
-  const handleBuyNow = async () => {
-    // Check if user is authenticated
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    setIsLoading(true);
-    try {
-      if (user) {
-        // Authenticated user - use existing flow
-        const { data, error } = await supabase.functions.invoke('create-shop-payment', {
-          body: {
-            items: [{
-              id: item.id,
-              type: item.media_type === 'vinyl' ? 'vinyl' : item.media_type === 'cd' ? 'cd' : 'product'
-            }]
-          }
-        });
-
-        if (error) throw error;
-
-        if (data?.url) {
-          window.open(data.url, '_blank');
-          toast({
-            title: "Betalingslink geopend",
-            description: "Voltooi je betaling in het nieuwe venster.",
-          });
-        }
-      } else {
-        // Guest user - add to cart for guest checkout
-        const price = parseFloat(String(item.marketplace_price || item.calculated_advice_price || '0'));
-        
-        if (price <= 0) {
-          toast({
-            title: "Geen prijs beschikbaar",
-            description: "Neem contact op met de verkoper voor de prijs",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        const cartItem = {
-          id: item.id,
-          media_type: (item.media_type === 'vinyl' ? 'vinyl' : item.media_type === 'cd' ? 'cd' : 'product') as 'cd' | 'vinyl' | 'product',
-          artist: item.artist || '',
-          title: item.media_type === 'product' ? item.name || '' : item.title || '',
-          price,
-          condition_grade: item.condition_grade || '',
-          seller_id: item.user_id || '',
-          image: getImageUrl()
-        };
-        
-        addToCart(cartItem);
-        toast({
-          title: "Toegevoegd aan winkelwagen",
-          description: "Je kunt afrekenen als gast via de winkelwagen.",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Aankoop mislukt",
-        description: error instanceof Error ? error.message : "Er ging iets mis",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+  const handleBuyNow = () => {
+    if (isMarketplaceItem(item) && item.shop_slug) {
+      navigate(`/shop/${item.shop_slug}/item/${item.id}`);
     }
   };
 
@@ -367,10 +306,10 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
                   handleBuyNow();
                 }}
                 disabled={isLoading}
-                className="flex-1 text-xs font-semibold bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-green-400/20"
+                className="flex-1 text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-blue-400/20"
               >
-                <CreditCard className="w-3 h-3 mr-2" />
-                {isLoading ? 'Bezig...' : '💳 Koop Nu'}
+                <Eye className="w-3 h-3 mr-2" />
+                🔍 Bekijk Item
               </Button>
               
               <Button

@@ -1843,6 +1843,7 @@ export type Database = {
           auto_blog_generation: boolean | null
           avatar_url: string | null
           bio: string | null
+          collection_views: number
           created_at: string
           email_notifications: boolean | null
           first_name: string
@@ -1870,6 +1871,7 @@ export type Database = {
           auto_blog_generation?: boolean | null
           avatar_url?: string | null
           bio?: string | null
+          collection_views?: number
           created_at?: string
           email_notifications?: boolean | null
           first_name: string
@@ -1897,6 +1899,7 @@ export type Database = {
           auto_blog_generation?: boolean | null
           avatar_url?: string | null
           bio?: string | null
+          collection_views?: number
           created_at?: string
           email_notifications?: boolean | null
           first_name?: string

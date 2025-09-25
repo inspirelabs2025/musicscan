@@ -51,7 +51,8 @@ export const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
       'shop': 'Shop',
       'shops': 'Shops',
       'my-shop': 'My Shop',
-      'collection': 'Collection'
+      'collection': 'Collection',
+      'profile': 'Profiel'
     };
     
     let currentPath = '';

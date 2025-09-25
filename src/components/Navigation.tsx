@@ -20,12 +20,14 @@ import { ShoppingCartWidget } from "@/components/ShoppingCartWidget";
 const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Sociaal", url: "/social", icon: Users },
+  { title: "Forum", url: "/forum", icon: MessageCircle },
   { title: "Muzieknieuws", url: "/news", icon: Newspaper },
   { title: "Mijn Winkel", url: "/my-shop", icon: Store }
 ];
 
 // Public navigation items for non-logged-in users
 const publicNavigationItems = [
+  { title: "Forum", url: "/forum", icon: MessageCircle },
   { title: "Muzieknieuws", url: "/news", icon: Newspaper },
   { title: "Catalogus", url: "/catalog", icon: Library },
   { title: "Winkels", url: "/shops", icon: Store },

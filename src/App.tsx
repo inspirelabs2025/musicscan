@@ -58,6 +58,8 @@ import SpotifyProfile from "./pages/SpotifyProfile";
 import SpotifyCallback from "./pages/SpotifyCallback";
 import { TrackOrder } from "./pages/TrackOrder";
 import { OrderSuccess } from "./pages/OrderSuccess";
+import Forum from "./pages/Forum";
+import ForumTopic from "./pages/ForumTopic";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -172,6 +174,8 @@ const App = () => {
                 <Social />
               </ProtectedRoute>
             } />
+            <Route path="/forum" element={<Forum />} />
+            <Route path="/forum/topic/:topicId" element={<ForumTopic />} />
             <Route path="/community" element={<Community />} />
             <Route path="/profile/:userId" element={
               <ProtectedRoute>

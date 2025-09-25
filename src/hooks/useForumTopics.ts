@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export interface ForumTopic {
   id: string;
@@ -122,22 +122,18 @@ export const useCreateForumTopic = () => {
 export const useIncrementTopicViews = () => {
   return useMutation({
     mutationFn: async (topicId: string) => {
-      const { data, error } = await supabase.rpc('increment_topic_views', { topic_id: topicId });
-
-      if (error) {
-        // Fallback to manual increment
-        const { data: topic } = await supabase
+      // Simple increment without RPC for now
+      const { data: topic } = await supabase
+        .from('forum_topics')
+        .select('view_count')
+        .eq('id', topicId)
+        .single();
+      
+      if (topic) {
+        await supabase
           .from('forum_topics')
-          .select('view_count')
-          .eq('id', topicId)
-          .single();
-        
-        if (topic) {
-          await supabase
-            .from('forum_topics')
-            .update({ view_count: topic.view_count + 1 })
-            .eq('id', topicId);
-        }
+          .update({ view_count: topic.view_count + 1 })
+          .eq('id', topicId);
       }
     },
   });

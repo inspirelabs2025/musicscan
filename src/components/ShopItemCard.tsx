@@ -218,12 +218,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
           <div className="absolute bottom-3 right-3 bg-gradient-to-r from-vinyl-purple/90 to-primary/90 text-white px-4 py-2 rounded-full text-xs font-semibold shadow-xl border border-white/20 z-10 hover-scale">
             💎 {item.currency}{item.calculated_advice_price}
           </div>
-        ) : (
-          <div className="absolute bottom-3 right-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full text-xs font-semibold shadow-xl border border-red-300/30 z-10 flex items-center gap-1 hover-scale">
-            <AlertTriangle className="w-3 h-3" />
-            📧 Op aanvraag
-          </div>
-        )}
+        ) : null}
       </div>
 
       <div className="p-5 space-y-4 relative">
@@ -297,54 +292,36 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
 
         {/* Enhanced action buttons */}
         <div className="space-y-2 pt-2">
-          {(item.marketplace_price || item.calculated_advice_price) ? (
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleBuyNow();
-                }}
-                disabled={isLoading}
-                className="flex-1 text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-blue-400/20"
-              >
-                <Eye className="w-3 h-3 mr-2" />
-                🔍 Bekijk Item
-              </Button>
-              
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart();
-                }}
-                disabled={isInCart(item.id)}
-                className="text-xs font-semibold bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-vinyl-purple/50 transition-all duration-300 hover-scale"
-              >
-                <ShoppingCart className="w-3 h-3" />
-                <span className="hidden sm:inline ml-1">
-                  {isInCart(item.id) ? '✓ In winkelwagen' : '🛒 Toevoegen'}
-                </span>
-              </Button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              {shopContactInfo && (
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleContact();
-                  }}
-                  className="flex-1 text-xs font-semibold bg-gradient-to-r from-vinyl-purple to-primary hover:from-vinyl-purple/90 hover:to-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-white/20"
-                >
-                  <Mail className="w-3 h-3 mr-2" />
-                  💌 Contact voor prijs
-                </Button>
-              )}
-            </div>
-          )}
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleBuyNow();
+              }}
+              disabled={isLoading}
+              className="flex-1 text-xs font-semibold bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-green-400/20"
+            >
+              <CreditCard className="w-3 h-3 mr-2" />
+              💳 Koop
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCart();
+              }}
+              disabled={isInCart(item.id)}
+              className="text-xs font-semibold bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-vinyl-purple/50 transition-all duration-300 hover-scale"
+            >
+              <ShoppingCart className="w-3 h-3" />
+              <span className="hidden sm:inline ml-1">
+                {isInCart(item.id) ? '✓ In winkelwagen' : '🛒 Toevoegen'}
+              </span>
+            </Button>
+          </div>
           
             {item.media_type !== 'product' && item.discogs_url && (
               <Button

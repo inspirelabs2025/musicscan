@@ -43,7 +43,7 @@ export const CollectionMilestones = ({
     {
       id: 'first_10',
       title: 'Eerste Collectie',
-      description: '10 albums verzameld',
+      description: '10 albums gescand',
       target: 10,
       icon: Target,
       reward: '🎵 Muziek Ontdekker Badge',
@@ -52,7 +52,7 @@ export const CollectionMilestones = ({
     {
       id: 'quarter_century',
       title: 'Kwart Eeuw',
-      description: '25 albums in bezit',
+      description: '25 albums gescand',
       target: 25,
       icon: Trophy,
       reward: '🏆 Verzamelaar Badge',
@@ -61,37 +61,64 @@ export const CollectionMilestones = ({
     {
       id: 'half_century',
       title: 'Halve Eeuw',
-      description: '50 albums verzameld',
+      description: '50 albums gescand',
       target: 50,
       icon: Sparkles,
       reward: '⭐ Enthusiast Status',
-      rarity: 'silver'
+      rarity: 'bronze'
     },
     {
       id: 'century_club',
       title: 'Century Club',
-      description: '100 albums collectie',
+      description: '100 albums gescand',
       target: 100,
       icon: Crown,
       reward: '👑 Expert Status',
-      rarity: 'gold'
+      rarity: 'silver'
     },
     {
       id: 'double_century',
       title: 'Dubbele Eeuw',
-      description: '200 albums sterk',
+      description: '200 albums gescand',
       target: 200,
       icon: Gift,
       reward: '🎁 Master Collector Status',
-      rarity: 'gold'
+      rarity: 'silver'
     },
     {
       id: 'half_millennium',
       title: 'Halve Millennium',
-      description: '500 albums verzameld',
+      description: '500 albums gescand',
       target: 500,
       icon: Crown,
       reward: '💎 Legendary Status',
+      rarity: 'gold'
+    },
+    {
+      id: 'millennium',
+      title: 'Het Millennium',
+      description: '1000 albums gescand',
+      target: 1000,
+      icon: Crown,
+      reward: '🌟 Ultimate Collector',
+      rarity: 'gold'
+    },
+    {
+      id: 'double_millennium',
+      title: 'Dubbel Millennium',
+      description: '2000 albums gescand',
+      target: 2000,
+      icon: Crown,
+      reward: '🚀 Legendary Master',
+      rarity: 'platinum'
+    },
+    {
+      id: 'triple_millennium',
+      title: 'Tripel Millennium',
+      description: '3000 albums gescand',
+      target: 3000,
+      icon: Crown,
+      reward: '👑 Supreme Collector',
       rarity: 'platinum'
     }
   ];
@@ -102,7 +129,7 @@ export const CollectionMilestones = ({
     if (!isInitialized) return;
 
     const newlyReached = milestones.filter(milestone => 
-      totalItems >= milestone.target && !isMilestoneReached(milestone.id)
+      totalScans >= milestone.target && !isMilestoneReached(milestone.id)
     );
 
     if (newlyReached.length > 0) {
@@ -120,10 +147,10 @@ export const CollectionMilestones = ({
         setShowCelebration(null);
       }, 3000);
     }
-  }, [totalItems, isInitialized, isMilestoneReached, addMultipleMilestones, onMilestoneReached]);
+  }, [totalScans, isInitialized, isMilestoneReached, addMultipleMilestones, onMilestoneReached]);
 
   const getNextMilestone = () => {
-    return milestones.find(milestone => totalItems < milestone.target);
+    return milestones.find(milestone => totalScans < milestone.target);
   };
 
   const getRarityColor = (rarity: string) => {
@@ -137,8 +164,8 @@ export const CollectionMilestones = ({
   };
 
   const nextMilestone = getNextMilestone();
-  const progress = nextMilestone ? (totalItems / nextMilestone.target) * 100 : 100;
-  const remaining = nextMilestone ? nextMilestone.target - totalItems : 0;
+  const progress = nextMilestone ? (totalScans / nextMilestone.target) * 100 : 100;
+  const remaining = nextMilestone ? nextMilestone.target - totalScans : 0;
 
   return (
     <>
@@ -174,7 +201,7 @@ export const CollectionMilestones = ({
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>{totalItems} / {nextMilestone.target} albums</span>
+                    <span>{totalScans} / {nextMilestone.target} albums</span>
                     <span className="text-vinyl-purple font-medium">
                       {remaining} te gaan!
                     </span>

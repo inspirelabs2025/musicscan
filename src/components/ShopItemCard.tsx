@@ -1,15 +1,17 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Music, Heart, Mail, ExternalLink, AlertTriangle, Disc, Music2, Sparkles, ShoppingCart, CreditCard, Package } from "lucide-react";
+import { Music, Heart, Mail, ExternalLink, AlertTriangle, Disc, Music2, Sparkles, ShoppingCart, CreditCard, Package, Store, User, Eye } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { CollectionItem } from "@/hooks/useShopItems";
+import type { MarketplaceItem } from "@/hooks/usePublicMarketplace";
 import { useShoppingCart } from "@/hooks/useShoppingCart";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ShopItemCardProps {
-  item: CollectionItem;
+  item: CollectionItem | MarketplaceItem;
   shopContactInfo?: string;
 }
 
@@ -19,6 +21,19 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { addToCart, isInCart } = useShoppingCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Check if item is from marketplace (has shop info)
+  const isMarketplaceItem = (item: CollectionItem | MarketplaceItem): item is MarketplaceItem => {
+    return 'shop_slug' in item && Boolean(item.shop_slug);
+  };
+
+  const handleVisitShop = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isMarketplaceItem(item) && item.shop_slug) {
+      navigate(`/shop/${item.shop_slug}`);
+    }
+  };
 
   // Enhanced image fallback logic based on media type
   const getImageUrl = () => {
@@ -261,6 +276,35 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
       </div>
 
       <div className="p-5 space-y-4 relative">
+        {/* Shop information for marketplace items */}
+        {isMarketplaceItem(item) && item.shop_name && (
+          <div className="mb-3 p-3 bg-gradient-to-r from-vinyl-purple/10 to-primary/10 rounded-lg border border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Store className="w-4 h-4 text-vinyl-purple" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{item.shop_name}</p>
+                  {item.shop_owner_name && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      {item.shop_owner_name}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleVisitShop}
+                className="text-xs bg-white/10 backdrop-blur-sm border-white/20 hover:bg-vinyl-purple/20 hover:border-vinyl-purple/50 transition-all duration-300"
+              >
+                <Eye className="w-3 h-3 mr-1" />
+                Bezoek Shop
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Artist and title with enhanced typography */}
         <div className="space-y-2">
           {item.media_type === 'product' ? (

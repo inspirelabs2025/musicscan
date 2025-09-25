@@ -60,6 +60,7 @@ import { TrackOrder } from "./pages/TrackOrder";
 import { OrderSuccess } from "./pages/OrderSuccess";
 import Forum from "./pages/Forum";
 import ForumTopic from "./pages/ForumTopic";
+import Marketplace from "./pages/Marketplace";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -219,6 +220,7 @@ const App = () => {
         <Route path="/release/:releaseId" element={<ReleaseDetail />} />
         <Route path="/catalog" element={<PublicCatalog />} />
         <Route path="/shops" element={<PublicShopsOverview />} />
+        <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/user-scans" element={<UserScans />} />
             <Route path="/news" element={<MusicNews />} />
             <Route path="/nieuws/:slug" element={<NewsPost />} />

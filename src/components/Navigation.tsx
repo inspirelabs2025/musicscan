@@ -30,6 +30,7 @@ const publicNavigationItems = [
   { title: "Forum", url: "/forum", icon: MessageCircle },
   { title: "Muzieknieuws", url: "/news", icon: Newspaper },
   { title: "Catalogus", url: "/catalog", icon: Library },
+  { title: "Marktplaats", url: "/marketplace", icon: ShoppingCart },
   { title: "Winkels", url: "/shops", icon: Store },
 ];
 

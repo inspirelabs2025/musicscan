@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Settings, Store, ExternalLink, Copy, AlertCircle, Package, Eye, Plus, ShoppingCart } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Settings, Store, ExternalLink, Copy, AlertCircle, Package, Eye, Plus, ShoppingCart, ChevronDown } from "lucide-react";
 import { useShopItems } from "@/hooks/useShopItems";
 import { useUserShop } from "@/hooks/useUserShop";
 import { useMyCollection } from "@/hooks/useMyCollection";
@@ -24,6 +25,7 @@ export default function MyShop() {
   const { items: readyForShopItems, isLoading: readyItemsLoading, updateItem, isUpdating: isUpdatingItem } = useMyCollection("ready_for_shop");
   const { toast } = useToast();
   const [showWizard, setShowWizard] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   
   const [shopSettings, setShopSettings] = useState({
     shop_name: shop?.shop_name || "",
@@ -53,6 +55,7 @@ export default function MyShop() {
   useEffect(() => {
     if (needsSetup && !shopLoading) {
       setShowWizard(true);
+      setSettingsOpen(true); // Also open settings if setup is needed
     }
   }, [needsSetup, shopLoading]);
 
@@ -110,119 +113,137 @@ export default function MyShop() {
           </p>
         </div>
 
-        {/* Shop Settings */}
-        <Card className="p-6 mb-8 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-          <div className="flex items-center gap-2 mb-4">
-            <Settings className="w-5 h-5" />
-            <h2 className="text-xl font-semibold">Winkelinstellingen</h2>
-          </div>
+        {/* Shop Settings - Collapsible */}
+        <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen} className="mb-8">
+          <CollapsibleTrigger asChild>
+            <Card className="p-4 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50 cursor-pointer hover:bg-accent/20 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Settings className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold">Winkelinstellingen</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Beheer je winkelnaam, beschrijving en instellingen
+                    </p>
+                  </div>
+                </div>
+                <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </Card>
+          </CollapsibleTrigger>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <Label htmlFor="shop_name">Winkelnaam</Label>
-              <Input
-                id="shop_name"
-                value={shopSettings.shop_name}
-                onChange={(e) => setShopSettings(prev => ({
-                  ...prev,
-                  shop_name: e.target.value
-                }))}
-                placeholder="Mijn Muziekwinkel"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="shop_url_slug">Winkel URL</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="shop_url_slug"
-                  value={shopSettings.shop_url_slug}
+          <CollapsibleContent className="mt-2">
+            <Card className="p-6 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50 animate-accordion-down">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <Label htmlFor="shop_name">Winkelnaam</Label>
+                  <Input
+                    id="shop_name"
+                    value={shopSettings.shop_name}
+                    onChange={(e) => setShopSettings(prev => ({
+                      ...prev,
+                      shop_name: e.target.value
+                    }))}
+                    placeholder="Mijn Muziekwinkel"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="shop_url_slug">Winkel URL</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="shop_url_slug"
+                      value={shopSettings.shop_url_slug}
+                      onChange={(e) => setShopSettings(prev => ({
+                        ...prev,
+                        shop_url_slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+                      }))}
+                      placeholder="mijn-winkel"
+                    />
+                    {shop?.shop_url_slug && (
+                      <Button
+                        variant="outline"
+                        onClick={copyShopUrl}
+                        size="sm"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Je winkel wordt beschikbaar op: /shop/{shopSettings.shop_url_slug}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <Label htmlFor="shop_description">Winkelbeschrijving</Label>
+                <Textarea
+                  id="shop_description"
+                  value={shopSettings.shop_description}
                   onChange={(e) => setShopSettings(prev => ({
                     ...prev,
-                    shop_url_slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+                    shop_description: e.target.value
                   }))}
-                  placeholder="mijn-winkel"
+                  placeholder="Vertel bezoekers over je winkel..."
+                  className="min-h-[80px]"
                 />
-                {shop?.shop_url_slug && (
+              </div>
+
+              <div className="mb-4">
+                <Label htmlFor="contact_info">Contactinformatie</Label>
+                <Textarea
+                  id="contact_info"
+                  value={shopSettings.contact_info}
+                  onChange={(e) => setShopSettings(prev => ({
+                    ...prev,
+                    contact_info: e.target.value
+                  }))}
+                  placeholder="Email, telefoon, of andere contactgegevens..."
+                  className="min-h-[60px]"
+                />
+              </div>
+
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <Label htmlFor="is_public">Winkel publiek maken</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Maak je winkel zichtbaar voor anderen
+                  </p>
+                </div>
+                <Switch
+                  id="is_public"
+                  checked={shopSettings.is_public}
+                  onCheckedChange={(checked) => setShopSettings(prev => ({
+                    ...prev,
+                    is_public: checked
+                  }))}
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleShopUpdate}
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? "Opslaan..." : "Instellingen opslaan"}
+                </Button>
+                
+                {shop?.shop_url_slug && shop?.is_public && (
                   <Button
                     variant="outline"
-                    onClick={copyShopUrl}
-                    size="sm"
+                    onClick={() => window.open(`/shop/${shop.shop_url_slug}`, '_blank')}
                   >
-                    <Copy className="w-4 h-4" />
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Bekijk winkel
                   </Button>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Je winkel wordt beschikbaar op: /shop/{shopSettings.shop_url_slug}
-              </p>
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <Label htmlFor="shop_description">Winkelbeschrijving</Label>
-            <Textarea
-              id="shop_description"
-              value={shopSettings.shop_description}
-              onChange={(e) => setShopSettings(prev => ({
-                ...prev,
-                shop_description: e.target.value
-              }))}
-              placeholder="Vertel bezoekers over je winkel..."
-              className="min-h-[80px]"
-            />
-          </div>
-
-          <div className="mb-4">
-            <Label htmlFor="contact_info">Contactinformatie</Label>
-            <Textarea
-              id="contact_info"
-              value={shopSettings.contact_info}
-              onChange={(e) => setShopSettings(prev => ({
-                ...prev,
-                contact_info: e.target.value
-              }))}
-              placeholder="Email, telefoon, of andere contactgegevens..."
-              className="min-h-[60px]"
-            />
-          </div>
-
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <Label htmlFor="is_public">Winkel publiek maken</Label>
-              <p className="text-sm text-muted-foreground">
-                Maak je winkel zichtbaar voor anderen
-              </p>
-            </div>
-            <Switch
-              id="is_public"
-              checked={shopSettings.is_public}
-              onCheckedChange={(checked) => setShopSettings(prev => ({
-                ...prev,
-                is_public: checked
-              }))}
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              onClick={handleShopUpdate}
-              disabled={isUpdating}
-            >
-              {isUpdating ? "Opslaan..." : "Instellingen opslaan"}
-            </Button>
-            
-            {shop?.shop_url_slug && shop?.is_public && (
-              <Button
-                variant="outline"
-                onClick={() => window.open(`/shop/${shop.shop_url_slug}`, '_blank')}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Bekijk winkel
-              </Button>
-            )}
-          </div>
-        </Card>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* Shop Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">

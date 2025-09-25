@@ -472,8 +472,8 @@ async function sendDigestEmails(data: DailyDigestData, testUserId?: string, test
       console.log(`📧 Sending email to ${emailAddress}...`);
 
       const { data: emailResult, error: emailError } = await resend.emails.send({
-        // Using verified sender temporarily - switch to 'MusicScan <dagelijks@musicscan.ai>' when domain is verified
-        from: 'MusicScan <onboarding@resend.dev>',
+        // Using verified musicscan.app domain
+        from: 'MusicScan <dagelijks@musicscan.app>',
         to: [emailAddress],
         subject: `🎵 Je dagelijkse muziekupdate - ${new Date().toLocaleDateString('nl-NL')}`,
         html: emailHTML,

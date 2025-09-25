@@ -133,7 +133,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
               title="Totale Collectie"
-              value={collectionLoading ? "..." : `${collectionStats?.totalItems || 0}`}
+              value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`}
               subtitle="Albums ontdekt"
               icon={Disc}
             />

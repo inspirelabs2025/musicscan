@@ -70,7 +70,7 @@ export function FloatingNavigation({
                   
                   {/* Active indicator */}
                   {isActive && (
-                    <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 -z-10" />
+                    <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/20 to-vinyl-gold/20 -z-10" />
                   )}
                 </Button>
               );

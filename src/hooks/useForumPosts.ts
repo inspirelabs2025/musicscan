@@ -38,11 +38,7 @@ export const useForumPosts = (topicId: string | undefined) => {
       
       const { data, error } = await supabase
         .from('forum_posts')
-        .select(`
-          *,
-          profiles!user_id(first_name, avatar_url),
-          user_vote:forum_post_votes(vote_type)
-        `)
+        .select('*')
         .eq('topic_id', topicId)
         .order('created_at', { ascending: true });
       

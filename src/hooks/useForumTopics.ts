@@ -36,10 +36,7 @@ export const useForumTopics = (filter: 'all' | 'featured' | 'recent' = 'all') =>
     queryFn: async () => {
       let query = supabase
         .from('forum_topics')
-        .select(`
-          *,
-          profiles!created_by(first_name, avatar_url)
-        `)
+        .select('*')
         .eq('status', 'active');
 
       if (filter === 'featured') {
@@ -65,10 +62,7 @@ export const useForumTopic = (topicId: string | undefined) => {
       
       const { data, error } = await supabase
         .from('forum_topics')
-        .select(`
-          *,
-          profiles!created_by(first_name, avatar_url)
-        `)
+        .select('*')
         .eq('id', topicId)
         .single();
       

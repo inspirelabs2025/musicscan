@@ -116,6 +116,15 @@ const Dashboard = () => {
                     </div>
                   </Link>
                 </Button>
+                
+                <Button asChild size="lg" variant="outline" className="h-16 hover:bg-green-500/10 group">
+                  <Link to="/marketplace">
+                    <div className="flex flex-col items-center gap-2">
+                      <Shuffle className="w-6 h-6 group-hover:animate-pulse" />
+                      <span>🛒 Marketplace</span>
+                    </div>
+                  </Link>
+                </Button>
               </div>
             </CardContent>
           </Card>

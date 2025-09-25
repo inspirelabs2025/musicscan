@@ -81,13 +81,17 @@ serve(async (req) => {
       new Date(u.created_at) >= thirtyDaysAgo
     ).length || 0;
 
-    // Get all scan data
-    const [aiScansResult, cdScansResult, vinylScansResult, batchUploadsResult, profilesResult] = await Promise.all([
+    // Get all scan data and user activities
+    const [aiScansResult, cdScansResult, vinylScansResult, batchUploadsResult, profilesResult, blogPostsResult, quizResultsResult, followsResult, shopOrdersResult] = await Promise.all([
       serviceSupabase.from('ai_scan_results').select('*'),
       serviceSupabase.from('cd_scan').select('*'),
       serviceSupabase.from('vinyl2_scan').select('*'),
       serviceSupabase.from('batch_uploads').select('*'),
-      serviceSupabase.from('profiles').select('*')
+      serviceSupabase.from('profiles').select('*'),
+      serviceSupabase.from('blog_posts').select('*'),
+      serviceSupabase.from('quiz_results').select('*'),
+      serviceSupabase.from('user_follows').select('*'),
+      serviceSupabase.from('shop_orders').select('*')
     ]);
 
     if (aiScansResult.error) throw aiScansResult.error;
@@ -95,12 +99,20 @@ serve(async (req) => {
     if (vinylScansResult.error) throw vinylScansResult.error;
     if (batchUploadsResult.error) throw batchUploadsResult.error;
     if (profilesResult.error) throw profilesResult.error;
+    if (blogPostsResult.error) throw blogPostsResult.error;
+    if (quizResultsResult.error) throw quizResultsResult.error;
+    if (followsResult.error) throw followsResult.error;
+    if (shopOrdersResult.error) throw shopOrdersResult.error;
 
     const aiScans = aiScansResult.data || [];
     const cdScans = cdScansResult.data || [];
     const vinylScans = vinylScansResult.data || [];
     const batchUploads = batchUploadsResult.data || [];
     const profiles = profilesResult.data || [];
+    const blogPosts = blogPostsResult.data || [];
+    const quizResults = quizResultsResult.data || [];
+    const follows = followsResult.data || [];
+    const shopOrders = shopOrdersResult.data || [];
 
     console.log('📈 Data counts:', {
       totalUsers,
@@ -199,6 +211,153 @@ serve(async (req) => {
     ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 20);
 
+    // Comprehensive user activities (last 7 days)
+    const sevenDaysAgoActivity = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const userActivities = [
+      // AI Scans
+      ...aiScans.filter(scan => new Date(scan.created_at) >= sevenDaysAgoActivity)
+        .map(scan => {
+          const user = allUsers.users?.find(u => u.id === scan.user_id);
+          const profile = profiles.find(p => p.user_id === scan.user_id);
+          return {
+            activity_id: scan.id,
+            user_id: scan.user_id,
+            user_email: user?.email || 'Unknown',
+            user_name: profile?.first_name || 'Unknown',
+            type: 'ai_scan',
+            created_at: scan.created_at,
+            artist: scan.artist,
+            title: scan.title,
+            metadata: {
+              status: scan.status,
+              confidence_score: scan.confidence_score,
+              discogs_id: scan.discogs_id
+            }
+          };
+        }),
+      // CD Scans
+      ...cdScans.filter(scan => new Date(scan.created_at) >= sevenDaysAgoActivity)
+        .map(scan => {
+          const user = allUsers.users?.find(u => u.id === scan.user_id);
+          const profile = profiles.find(p => p.user_id === scan.user_id);
+          return {
+            activity_id: scan.id,
+            user_id: scan.user_id,
+            user_email: user?.email || 'Unknown',
+            user_name: profile?.first_name || 'Unknown',
+            type: 'cd_scan',
+            created_at: scan.created_at,
+            artist: scan.artist,
+            title: scan.title,
+            metadata: {
+              calculated_advice_price: scan.calculated_advice_price,
+              condition_grade: scan.condition_grade,
+              discogs_id: scan.discogs_id
+            }
+          };
+        }),
+      // Vinyl Scans
+      ...vinylScans.filter(scan => new Date(scan.created_at) >= sevenDaysAgoActivity)
+        .map(scan => {
+          const user = allUsers.users?.find(u => u.id === scan.user_id);
+          const profile = profiles.find(p => p.user_id === scan.user_id);
+          return {
+            activity_id: scan.id,
+            user_id: scan.user_id,
+            user_email: user?.email || 'Unknown',
+            user_name: profile?.first_name || 'Unknown',
+            type: 'vinyl_scan',
+            created_at: scan.created_at,
+            artist: scan.artist,
+            title: scan.title,
+            metadata: {
+              calculated_advice_price: scan.calculated_advice_price,
+              condition_grade: scan.condition_grade,
+              discogs_id: scan.discogs_id
+            }
+          };
+        }),
+      // Blog Posts
+      ...blogPosts.filter(post => new Date(post.created_at) >= sevenDaysAgoActivity)
+        .map(post => {
+          const user = allUsers.users?.find(u => u.id === post.user_id);
+          const profile = profiles.find(p => p.user_id === post.user_id);
+          return {
+            activity_id: post.id,
+            user_id: post.user_id,
+            user_email: user?.email || 'Unknown',
+            user_name: profile?.first_name || 'Unknown',
+            type: 'blog_post',
+            created_at: post.created_at,
+            title: post.title,
+            metadata: {
+              is_published: post.is_published,
+              auto_generated: post.auto_generated,
+              view_count: post.view_count
+            }
+          };
+        }),
+      // Quiz Results
+      ...quizResults.filter(quiz => new Date(quiz.created_at) >= sevenDaysAgoActivity)
+        .map(quiz => {
+          const user = allUsers.users?.find(u => u.id === quiz.user_id);
+          const profile = profiles.find(p => p.user_id === quiz.user_id);
+          return {
+            activity_id: quiz.id,
+            user_id: quiz.user_id,
+            user_email: user?.email || 'Unknown',
+            user_name: profile?.first_name || 'Unknown',
+            type: 'quiz_result',
+            created_at: quiz.created_at,
+            metadata: {
+              score_percentage: quiz.score_percentage,
+              questions_total: quiz.questions_total,
+              questions_correct: quiz.questions_correct,
+              quiz_type: quiz.quiz_type
+            }
+          };
+        }),
+      // Follows
+      ...follows.filter(follow => new Date(follow.created_at) >= sevenDaysAgoActivity)
+        .map(follow => {
+          const followerUser = allUsers.users?.find(u => u.id === follow.follower_id);
+          const followerProfile = profiles.find(p => p.user_id === follow.follower_id);
+          const followingUser = allUsers.users?.find(u => u.id === follow.following_id);
+          const followingProfile = profiles.find(p => p.user_id === follow.following_id);
+          return {
+            activity_id: follow.id,
+            user_id: follow.follower_id,
+            user_email: followerUser?.email || 'Unknown',
+            user_name: followerProfile?.first_name || 'Unknown',
+            type: 'follow',
+            created_at: follow.created_at,
+            metadata: {
+              following_user_email: followingUser?.email,
+              following_user_name: followingProfile?.first_name
+            }
+          };
+        }),
+      // Shop Orders
+      ...shopOrders.filter(order => new Date(order.created_at) >= sevenDaysAgoActivity)
+        .map(order => {
+          const user = allUsers.users?.find(u => u.id === order.buyer_id);
+          const profile = profiles.find(p => p.user_id === order.buyer_id);
+          return {
+            activity_id: order.id,
+            user_id: order.buyer_id,
+            user_email: user?.email || 'Unknown',
+            user_name: profile?.first_name || 'Unknown',
+            type: 'shop_order',
+            created_at: order.created_at,
+            metadata: {
+              status: order.status,
+              total_amount: order.total_amount,
+              currency: order.currency
+            }
+          };
+        })
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
     // Discogs matches and confidence
     const discogsMatches = 
       aiScans.filter(scan => scan.discogs_id).length +
@@ -233,6 +392,7 @@ serve(async (req) => {
       topArtists,
       topUsers,
       recentActivity,
+      userActivities,
       discogsMatches,
       avgConfidence: Math.round(avgConfidence * 100) / 100,
       totalErrors,

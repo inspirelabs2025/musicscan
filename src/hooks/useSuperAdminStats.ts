@@ -29,10 +29,22 @@ export interface SuperAdminStats {
   }>;
   recentActivity: Array<{
     type: string;
-    artist: string | null;
-    title: string | null;
+    artist?: string;
+    title?: string;
     created_at: string;
     user_id: string;
+  }>;
+  userActivities: Array<{
+    activity_id: string;
+    user_id: string;
+    user_email: string;
+    user_name: string;
+    type: string;
+    created_at: string;
+    artist?: string;
+    title?: string;
+    metadata?: any;
+    description?: string;
   }>;
   discogsMatches: number;
   avgConfidence: number;

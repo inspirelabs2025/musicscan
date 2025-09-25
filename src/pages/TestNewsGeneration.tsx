@@ -15,9 +15,9 @@ export const TestNewsGeneration = () => {
     setResult(null);
     
     try {
-      console.log("Calling music-news-perplexity function...");
+      console.log("Calling music-news-enhanced function...");
       
-      const { data, error } = await supabase.functions.invoke('music-news-perplexity');
+      const { data, error } = await supabase.functions.invoke('music-news-enhanced');
       
       if (error) {
         console.error("Function error:", error);
@@ -32,7 +32,7 @@ export const TestNewsGeneration = () => {
         setResult(data);
         toast({
           title: "Success",
-          description: `Generated ${data.blogPosts?.length || 0} blog posts`,
+          description: `Generated ${data.blogPosts?.length || 0} blog posts from ${data.rssItemsProcessed || 0} RSS items`,
         });
         
         // Refresh the page after a delay to show updated news
@@ -66,7 +66,7 @@ export const TestNewsGeneration = () => {
             className="w-full"
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Generate New Rewritten Blog Posts
+            Generate Enhanced News with Dutch RSS
           </Button>
           
           {result && (

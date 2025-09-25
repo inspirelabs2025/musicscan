@@ -41,3 +41,6 @@ verify_jwt = true
 
 [functions.batch-fetch-artwork]
 verify_jwt = false
+
+[functions.music-news-enhanced]
+verify_jwt = false

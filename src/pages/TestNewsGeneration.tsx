@@ -15,9 +15,9 @@ export const TestNewsGeneration = () => {
     setResult(null);
     
     try {
-      console.log("Calling music-news-enhanced function...");
+      console.log("Calling daily-news-update function...");
       
-      const { data, error } = await supabase.functions.invoke('music-news-enhanced');
+      const { data, error } = await supabase.functions.invoke('daily-news-update');
       
       if (error) {
         console.error("Function error:", error);
@@ -66,7 +66,7 @@ export const TestNewsGeneration = () => {
             className="w-full"
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Generate Enhanced News with Dutch RSS
+            🔄 Run Daily News Update (Manual Trigger)
           </Button>
           
           {result && (

@@ -40,7 +40,7 @@ export const useForumPosts = (topicId: string | undefined) => {
         .from('forum_posts')
         .select(`
           *,
-          profiles(first_name, avatar_url),
+          profiles!user_id(first_name, avatar_url),
           user_vote:forum_post_votes(vote_type)
         `)
         .eq('topic_id', topicId)

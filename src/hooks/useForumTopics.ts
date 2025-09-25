@@ -38,7 +38,7 @@ export const useForumTopics = (filter: 'all' | 'featured' | 'recent' = 'all') =>
         .from('forum_topics')
         .select(`
           *,
-          profiles(first_name, avatar_url)
+          profiles!created_by(first_name, avatar_url)
         `)
         .eq('status', 'active');
 
@@ -67,7 +67,7 @@ export const useForumTopic = (topicId: string | undefined) => {
         .from('forum_topics')
         .select(`
           *,
-          profiles(first_name, avatar_url)
+          profiles!created_by(first_name, avatar_url)
         `)
         .eq('id', topicId)
         .single();

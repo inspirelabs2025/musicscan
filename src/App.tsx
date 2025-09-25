@@ -61,6 +61,7 @@ import { OrderSuccess } from "./pages/OrderSuccess";
 import Forum from "./pages/Forum";
 import ForumTopic from "./pages/ForumTopic";
 import Marketplace from "./pages/Marketplace";
+import PublicShopItemDetail from "./pages/PublicShopItemDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -206,6 +207,7 @@ const App = () => {
             } />
             <Route path="/shop" element={<Navigate to="/shops" replace />} />
             <Route path="/shop/:shopSlug" element={<PublicShop />} />
+            <Route path="/shop/:shopSlug/item/:itemId" element={<PublicShopItemDetail />} />
             <Route path="/shop/order-success" element={<OrderSuccess />} />
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/track-order" element={<TrackOrder />} />

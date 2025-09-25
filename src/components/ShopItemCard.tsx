@@ -28,6 +28,12 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
     return 'shop_slug' in item && Boolean(item.shop_slug);
   };
 
+  const handleCardClick = () => {
+    if (isMarketplaceItem(item) && item.shop_slug) {
+      navigate(`/shop/${item.shop_slug}/item/${item.id}`);
+    }
+  };
+
   const handleVisitShop = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isMarketplaceItem(item) && item.shop_slug) {
@@ -197,7 +203,10 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
   const MediaIcon = getMediaTypeIcon();
 
   return (
-    <Card className="group relative overflow-hidden bg-gradient-to-br from-white/10 to-card/80 backdrop-blur-sm border border-white/20 hover:border-vinyl-purple/50 transition-all duration-500 hover:shadow-2xl hover:shadow-vinyl-purple/25 hover-scale animate-fade-in">
+    <Card 
+      className="group relative overflow-hidden bg-gradient-to-br from-white/10 to-card/80 backdrop-blur-sm border border-white/20 hover:border-vinyl-purple/50 transition-all duration-500 hover:shadow-2xl hover:shadow-vinyl-purple/25 hover-scale animate-fade-in cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Animated background glow */}
       <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/10 via-transparent to-vinyl-gold/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       
@@ -251,7 +260,10 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={toggleFavorite}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite();
+            }}
             className="h-9 w-9 p-0 bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/20 hover:border-red-400/50 transition-all duration-300 hover-scale"
           >
             <Heart className={`w-4 h-4 transition-all duration-300 ${isFavorite ? 'fill-red-500 text-red-500 scale-110' : 'text-white hover:text-red-400'}`} />
@@ -350,7 +362,10 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
             <div className="flex gap-2">
               <Button
                 size="sm"
-                onClick={handleBuyNow}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleBuyNow();
+                }}
                 disabled={isLoading}
                 className="flex-1 text-xs font-semibold bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-green-400/20"
               >
@@ -361,7 +376,10 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={handleAddToCart}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart();
+                }}
                 disabled={isInCart(item.id)}
                 className="text-xs font-semibold bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-vinyl-purple/50 transition-all duration-300 hover-scale"
               >
@@ -376,7 +394,10 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
               {shopContactInfo && (
                 <Button
                   size="sm"
-                  onClick={handleContact}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleContact();
+                  }}
                   className="flex-1 text-xs font-semibold bg-gradient-to-r from-vinyl-purple to-primary hover:from-vinyl-purple/90 hover:to-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover-scale border border-white/20"
                 >
                   <Mail className="w-3 h-3 mr-2" />
@@ -390,7 +411,10 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(item.discogs_url!, '_blank')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(item.discogs_url!, '_blank');
+                }}
                 className="w-full text-xs font-semibold bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-vinyl-gold/50 transition-all duration-300 hover-scale"
               >
                 <ExternalLink className="w-3 h-3 mr-2" />

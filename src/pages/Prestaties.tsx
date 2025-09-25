@@ -24,6 +24,59 @@ const Prestaties = () => {
   const { data: scanStats } = useUnifiedScansStats();
 
   const achievements: Achievement[] = [
+    // Scan-based achievements (based on total scans performed)
+    {
+      id: 'first_scan',
+      title: 'Eerste Scan',
+      description: 'Je eerste album gescand',
+      icon: Camera,
+      rarity: 'common',
+      condition: (stats) => (stats?.totalScans || 0) >= 1,
+      points: 10,
+      progressCondition: (stats) => ({ current: stats?.totalScans || 0, target: 1 })
+    },
+    {
+      id: 'scan_novice',
+      title: 'Scan Novice',
+      description: '10 scans uitgevoerd',
+      icon: Camera,
+      rarity: 'common',
+      condition: (stats) => (stats?.totalScans || 0) >= 10,
+      points: 25,
+      progressCondition: (stats) => ({ current: stats?.totalScans || 0, target: 10 })
+    },
+    {
+      id: 'scan_enthusiast',
+      title: 'Scan Enthusiast',
+      description: '50 albums gescand',
+      icon: Zap,
+      rarity: 'rare',
+      condition: (stats) => (stats?.totalScans || 0) >= 50,
+      points: 100,
+      progressCondition: (stats) => ({ current: stats?.totalScans || 0, target: 50 })
+    },
+    {
+      id: 'scan_expert',
+      title: 'Scan Expert',
+      description: '100 scans voltooid',
+      icon: Target,
+      rarity: 'epic',
+      condition: (stats) => (stats?.totalScans || 0) >= 100,
+      points: 250,
+      progressCondition: (stats) => ({ current: stats?.totalScans || 0, target: 100 })
+    },
+    {
+      id: 'scan_master',
+      title: 'Scan Master',
+      description: '500 albums gescand',
+      icon: Crown,
+      rarity: 'legendary',
+      condition: (stats) => (stats?.totalScans || 0) >= 500,
+      points: 1000,
+      progressCondition: (stats) => ({ current: stats?.totalScans || 0, target: 500 })
+    },
+    
+    // Collection-based achievements (based on items in collection)
     {
       id: 'first_album',
       title: 'Eerste Album',
@@ -74,16 +127,8 @@ const Prestaties = () => {
       points: 1000,
       progressCondition: (stats) => ({ current: stats?.totalItems || 0, target: 500 })
     },
-    {
-      id: 'scanner_streak',
-      title: 'Scan Specialist',
-      description: '20 succesvolle scans uitgevoerd',
-      icon: Camera,
-      rarity: 'rare',
-      condition: (stats) => (stats?.totalScans || 0) >= 20,
-      points: 75,
-      progressCondition: (stats) => ({ current: stats?.totalScans || 0, target: 20 })
-    },
+    
+    // Value-based achievements
     {
       id: 'valuable_collection',
       title: 'Waardevolle Collectie',
@@ -94,11 +139,13 @@ const Prestaties = () => {
       points: 300,
       progressCondition: (stats) => ({ current: stats?.totalValue || 0, target: 1000 })
     },
+    
+    // Performance-based achievements
     {
       id: 'scanner_pro',
       title: 'Scan Professional',
       description: '95%+ success rate behalen',
-      icon: Zap,
+      icon: Sparkles,
       rarity: 'epic',
       condition: (stats) => (stats?.successRate || 0) >= 95,
       points: 200,

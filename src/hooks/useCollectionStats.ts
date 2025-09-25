@@ -70,17 +70,23 @@ export const useCollectionStats = () => {
   return useQuery({
     queryKey: ["collection-stats"],
     queryFn: async (): Promise<CollectionStats> => {
-      // Fetch CD data
+      // Get user_id to filter data
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Fetch CD data for current user only
       const { data: cdData, error: cdError } = await supabase
         .from("cd_scan")
-        .select("*");
+        .select("*")
+        .eq("user_id", user.id);
 
       if (cdError) throw cdError;
 
-      // Fetch Vinyl data
+      // Fetch Vinyl data for current user only
       const { data: vinylData, error: vinylError } = await supabase
         .from("vinyl2_scan")
-        .select("*");
+        .select("*")
+        .eq("user_id", user.id);
 
       if (vinylError) throw vinylError;
 

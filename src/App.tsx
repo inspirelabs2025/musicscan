@@ -47,6 +47,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import { ShopProducts } from "./pages/admin/ShopProducts";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
+import Community from "./pages/Community";
 import Social from "./pages/Social";
 import Profile from "./pages/Profile";
 import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
@@ -171,6 +172,7 @@ const App = () => {
                 <Social />
               </ProtectedRoute>
             } />
+            <Route path="/community" element={<Community />} />
             <Route path="/profile/:userId" element={
               <ProtectedRoute>
                 <Profile />

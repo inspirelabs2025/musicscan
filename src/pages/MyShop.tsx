@@ -55,7 +55,6 @@ export default function MyShop() {
   useEffect(() => {
     if (needsSetup && !shopLoading) {
       setShowWizard(true);
-      setSettingsOpen(true); // Also open settings if setup is needed
     }
   }, [needsSetup, shopLoading]);
 

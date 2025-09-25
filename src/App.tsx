@@ -83,6 +83,7 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  // Force refresh to fix module resolution
   console.log('🎯 App.tsx: Rendering App component');
   
   return (

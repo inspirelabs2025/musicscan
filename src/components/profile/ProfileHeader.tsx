@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Users, MessageCircle, Share2, MapPin, Globe, Calendar } from "lucide-react";
+import { Users, MessageCircle, Share2, MapPin, Globe, Calendar, Music } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Profile } from "@/hooks/useProfile";
 import { useToggleFollow, useIsFollowing } from "@/hooks/useFollows";
 import { useAuth } from "@/contexts/AuthContext";
@@ -109,32 +110,48 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile, isOwnProf
 
           {/* Action Buttons */}
           {!isOwnProfile && user && (
-            <div className="flex gap-2">
-              <Button
-                variant={isFollowing ? "outline" : "default"}
-                onClick={handleFollow}
-                disabled={isFollowingLoading || toggleFollow.isPending}
-              >
-                {isFollowing ? "Ontvolgen" : "Volgen"}
-              </Button>
-
-              {profile.allow_messages && (
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
                 <Button
-                  variant="outline"
-                  onClick={handleMessage}
+                  variant={isFollowing ? "outline" : "default"}
+                  onClick={handleFollow}
+                  disabled={isFollowingLoading || toggleFollow.isPending}
                 >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Bericht
+                  {isFollowing ? "Ontvolgen" : "Volgen"}
+                </Button>
+
+                {profile.allow_messages && (
+                  <Button
+                    variant="outline"
+                    onClick={handleMessage}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Bericht
+                  </Button>
+                )}
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleShare}
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Collection Button */}
+              {profile.show_collection && (
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  asChild
+                >
+                  <Link to={`/collection/${profile.user_id}`}>
+                    <Music className="h-4 w-4 mr-2" />
+                    Bekijk Collectie
+                  </Link>
                 </Button>
               )}
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleShare}
-              >
-                <Share2 className="h-4 w-4" />
-              </Button>
             </div>
           )}
         </div>

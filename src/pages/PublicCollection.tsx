@@ -1,17 +1,33 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Music, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Music, Search, ArrowLeft, Share2, Eye, Heart, Disc3 } from "lucide-react";
 import { usePublicCollection } from "@/hooks/usePublicCollection";
+import { useProfile } from "@/hooks/useProfile";
+import { useCollectionViewTracker } from "@/hooks/useCollectionViewTracker";
 import { CollectionItemCard } from "@/components/CollectionItemCard";
-import { useState } from "react";
+import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PublicCollection() {
   const { userId } = useParams<{ userId: string }>();
   const { items, isLoading } = usePublicCollection(userId || "");
+  const { data: profile, isLoading: profileLoading } = useProfile(userId);
+  const { trackView } = useCollectionViewTracker();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [formatFilter, setFormatFilter] = useState<string>("all");
+
+  // Track collection view
+  useEffect(() => {
+    if (userId && !isLoading && items.length > 0) {
+      trackView(userId);
+    }
+  }, [userId, isLoading, items.length, trackView]);
 
   const filteredItems = items.filter(item => {
     const matchesSearch = !searchTerm || 
@@ -24,7 +40,15 @@ export default function PublicCollection() {
     return matchesSearch && matchesFormat;
   });
 
-  if (isLoading) {
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast({
+      title: "Link gekopieerd!",
+      description: "De collectie link is naar je klembord gekopieerd.",
+    });
+  };
+
+  if (isLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
         <div className="container mx-auto px-4 py-8">
@@ -36,30 +60,145 @@ export default function PublicCollection() {
     );
   }
 
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+        <div className="container mx-auto px-4 py-8">
+          <Card className="p-8 text-center">
+            <h1 className="text-2xl font-bold mb-2">Profiel niet gevonden</h1>
+            <p className="text-muted-foreground mb-4">
+              Het profiel dat je zoekt bestaat niet of is privé.
+            </p>
+            <Button asChild>
+              <Link to="/community">Terug naar Community</Link>
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile.show_collection) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+        <div className="container mx-auto px-4 py-8">
+          <BreadcrumbNavigation 
+            items={[
+              { name: 'Community', url: '/community' },
+              { name: profile.first_name || 'Gebruiker', url: `/profile/${userId}` },
+              { name: 'Collectie', url: `/collection/${userId}` }
+            ]}
+            className="mb-6"
+          />
+          
+          <Card className="p-8 text-center">
+            <h1 className="text-2xl font-bold mb-2">Collectie Privé</h1>
+            <p className="text-muted-foreground mb-4">
+              {profile.first_name || 'Deze gebruiker'} heeft ervoor gekozen om de collectie privé te houden.
+            </p>
+            <Button asChild>
+              <Link to={`/profile/${userId}`}>Terug naar Profiel</Link>
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
       <div className="container mx-auto px-4 py-8">
-        {/* Collection Header */}
+        {/* Breadcrumbs */}
+        <BreadcrumbNavigation 
+          items={[
+            { name: 'Community', url: '/community' },
+            { name: profile.first_name || 'Gebruiker', url: `/profile/${userId}` },
+            { name: 'Collectie', url: `/collection/${userId}` }
+          ]}
+          className="mb-6"
+        />
+
+        {/* Owner Header */}
+        <Card className="p-6 mb-6 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={profile.avatar_url || undefined} />
+              <AvatarFallback className="text-xl">
+                {profile.first_name?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-2xl font-bold">{profile.first_name || 'Gebruiker'}</h2>
+                {profile.is_public && (
+                  <Badge variant="secondary">Publiek Profiel</Badge>
+                )}
+              </div>
+              
+              {profile.bio && (
+                <p className="text-muted-foreground text-sm mb-2">{profile.bio}</p>
+              )}
+              
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  Collectie weergave
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  className="p-1 h-auto text-muted-foreground hover:text-primary"
+                >
+                  <Share2 className="h-4 w-4 mr-1" />
+                  Delen
+                </Button>
+              </div>
+            </div>
+            
+            <div className="text-right">
+              <Button asChild variant="outline">
+                <Link to={`/profile/${userId}`}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Terug naar Profiel
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </Card>
+
+        {/* Collection Stats Header */}
         <Card className="p-8 mb-8 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
           <div className="text-center">
             <div className="flex items-center justify-center mb-4">
               <Music className="w-8 h-8 text-primary mr-3" />
               <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-                Muziekcollectie
+                {profile.first_name}'s Collectie
               </h1>
             </div>
             
             <p className="text-muted-foreground max-w-2xl mx-auto mb-4">
-              Bekijk deze openbare muziekcollectie. Items zijn niet te koop maar tonen wat er verzameld is.
+              Bekijk deze openbare muziekcollectie van {profile.first_name || 'deze gebruiker'}. 
+              Items zijn niet te koop maar tonen wat er verzameld is.
             </p>
 
-            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-              <span>{items.length} publieke items</span>
-              <span>•</span>
-              <span>
-                {items.filter(item => item.media_type === "cd").length} CD's, {" "}
-                {items.filter(item => item.media_type === "vinyl").length} Vinyl
-              </span>
+            <div className="flex items-center justify-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="px-3 py-1">
+                  {items.length} publieke items
+                </Badge>
+              </div>
+              <div className="flex gap-4 text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Disc3 className="h-4 w-4" />
+                  {items.filter(item => item.media_type === "cd").length} CD's
+                </span>
+                <span className="flex items-center gap-1">
+                  <Music className="h-4 w-4" />
+                  {items.filter(item => item.media_type === "vinyl").length} Vinyl
+                </span>
+              </div>
             </div>
           </div>
         </Card>

@@ -13,6 +13,7 @@ import { ContentAnalyticsSection } from '@/components/admin/ContentAnalyticsSect
 import { SystemHealthSection } from '@/components/admin/SystemHealthSection';
 import { UserScansSection } from '@/components/admin/UserScansSection';
 import { UserActivitiesSection } from '@/components/admin/UserActivitiesSection';
+import { TestEmailTrigger } from '@/components/TestEmailTrigger';
 import { ArtworkStatusSection } from '@/components/admin/ArtworkStatusSection';
 
 const SUPERADMIN_EMAIL = 'rogiervisser76@gmail.com';
@@ -154,7 +155,7 @@ const SuperAdminDashboard: React.FC = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="users" key={refreshKey}>
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="users">Gebruikers</TabsTrigger>
             <TabsTrigger value="activities">User Activities</TabsTrigger>
             <TabsTrigger value="user-scans">User Scans</TabsTrigger>
@@ -162,6 +163,7 @@ const SuperAdminDashboard: React.FC = () => {
             <TabsTrigger value="content">Content Analytics</TabsTrigger>
             <TabsTrigger value="system">Systeem Status</TabsTrigger>
             <TabsTrigger value="artwork">Artwork Status</TabsTrigger>
+            <TabsTrigger value="email">Email Test</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="mt-6">
@@ -190,6 +192,10 @@ const SuperAdminDashboard: React.FC = () => {
 
           <TabsContent value="artwork" className="mt-6">
             <ArtworkStatusSection stats={stats} />
+          </TabsContent>
+
+          <TabsContent value="email" className="mt-6">
+            <TestEmailTrigger />
           </TabsContent>
         </Tabs>
       </div>

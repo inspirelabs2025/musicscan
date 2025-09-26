@@ -25,21 +25,36 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { topicId, topicTitle, topicDescription, artistName, albumTitle } = await req.json();
+    const requestData = await req.json();
+    const { topicId, topicTitle, topicDescription, artistName, albumTitle, testEmail } = requestData;
     
     console.log('📧 Starting weekly discussion email notification');
     console.log('📝 Topic details:', { topicId, topicTitle, artistName, albumTitle });
+    
+    // Check if this is a test email request
+    let users;
+    if (testEmail) {
+      // Test mode - send only to specified email
+      console.log('🧪 Test mode: sending to', testEmail);
+      users = [{ 
+        user_id: 'test-user-id',
+        first_name: 'Test User'
+      }];
+    } else {
+      // Normal mode - get all users with public profiles
+      const { data: fetchedUsers, error: usersError } = await supabase
+        .from('profiles')
+        .select('user_id, first_name')
+        .eq('is_public', true);
 
-    // Get all users who want to receive notifications
-    const { data: users, error: usersError } = await supabase
-      .from('profiles')
-      .select('user_id, first_name')
-      .eq('is_public', true); // Only send to public profiles
-
-    if (usersError) {
-      console.error('❌ Error fetching users:', usersError);
-      throw usersError;
+      if (usersError) {
+        console.error('❌ Error fetching users:', usersError);
+        throw usersError;
+      }
+      
+      users = fetchedUsers;
     }
+
 
     if (!users || users.length === 0) {
       console.log('⚠️ No users found to send notifications to');
@@ -51,22 +66,32 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`👥 Found ${users.length} users to notify`);
 
-    // Get user emails from auth.users (we need service role for this)
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-    
-    if (authError) {
-      console.error('❌ Error fetching auth users:', authError);
-      throw authError;
-    }
+    // Create email list
+    let emailList;
+    if (testEmail) {
+      // Test mode - use provided email directly
+      emailList = [{
+        email: testEmail,
+        firstName: 'Test User'
+      }];
+    } else {
+      // Normal mode - get user emails from auth.users (we need service role for this)
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (authError) {
+        console.error('❌ Error fetching auth users:', authError);
+        throw authError;
+      }
 
-    // Create email list by matching user_ids
-    const emailList = users.map(profile => {
-      const authUser = authUsers.users.find(u => u.id === profile.user_id);
-      return {
-        email: authUser?.email,
-        firstName: profile.first_name || 'Muziekliefhebber'
-      };
-    }).filter(user => user.email); // Only include users with email addresses
+      // Create email list by matching user_ids
+      emailList = users.map(profile => {
+        const authUser = authUsers.users.find(u => u.id === profile.user_id);
+        return {
+          email: authUser?.email,
+          firstName: profile.first_name || 'Muziekliefhebber'
+        };
+      }).filter(user => user.email); // Only include users with email addresses
+    }
 
     console.log(`📮 Sending emails to ${emailList.length} users`);
 

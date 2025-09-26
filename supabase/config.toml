@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.send-weekly-discussion-notification]
 verify_jwt = false
+
+[functions.test-email-notification]
+verify_jwt = false

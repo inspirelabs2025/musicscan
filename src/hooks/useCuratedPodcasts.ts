@@ -201,19 +201,23 @@ export const useAddCuratedShowByUrl = () => {
 export const useSyncEpisodes = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (showId: string) => {
-      const { data, error } = await supabase.functions.invoke('spotify-podcast-manager', {
-        body: { action: 'sync_episodes', show_id: showId }
-      });
+return useMutation({
+  mutationFn: async (showId: string) => {
+    const { data, error } = await supabase.functions.invoke('spotify-podcast-manager', {
+      body: { action: 'sync_episodes', show_id: showId }
+    });
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (_, showId) => {
-      queryClient.invalidateQueries({ queryKey: ['podcast-episodes', showId] });
-    },
-  });
+    if (error) {
+      // Prefer server-provided error message when available
+      const serverMsg = (data as any)?.error;
+      throw new Error(serverMsg || error.message);
+    }
+    return data;
+  },
+  onSuccess: (_, showId) => {
+    queryClient.invalidateQueries({ queryKey: ['podcast-episodes', showId] });
+  },
+});
 };
 
 export const useToggleFeaturedEpisode = () => {

@@ -118,13 +118,14 @@ export const PodcastManagementSection = () => {
         title: "Episodes gesynchroniseerd",
         description: `${result.episodes_synced} afleveringen bijgewerkt.`,
       });
-    } catch (error) {
-      toast({
-        title: "Synchronisatiefout",
-        description: "Er ging iets mis bij het synchroniseren van afleveringen.",
-        variant: "destructive",
-      });
-    }
+} catch (error: any) {
+  const message = error?.message || (typeof error === 'string' ? error : 'Er ging iets mis bij het synchroniseren van afleveringen.');
+  toast({
+    title: "Synchronisatiefout",
+    description: message,
+    variant: "destructive",
+  });
+}
   };
 
   const handleToggleFeatured = async (episodeId: string, isFeatured: boolean) => {

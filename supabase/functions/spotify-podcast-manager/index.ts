@@ -37,6 +37,11 @@ interface SpotifyEpisode {
 }
 
 async function getSpotifyAccessToken(): Promise<string> {
+  if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
+    throw new Error('Missing Spotify credentials: SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET');
+  }
+
+  console.log('🔑 Requesting Spotify access token...');
   const response = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {
@@ -46,7 +51,19 @@ async function getSpotifyAccessToken(): Promise<string> {
     body: 'grant_type=client_credentials'
   });
 
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    console.error('❌ Spotify token fetch failed:', response.status, text);
+    throw new Error(`Spotify auth failed: ${response.status}`);
+  }
+
   const data = await response.json();
+  if (!data?.access_token) {
+    console.error('❌ No access token in Spotify response:', data);
+    throw new Error('Spotify auth failed: no access token');
+  }
+
+  console.log('✅ Spotify access token acquired');
   return data.access_token;
 }
 
@@ -59,6 +76,12 @@ async function searchSpotifyShows(query: string, accessToken: string): Promise<S
       }
     }
   );
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    console.error('❌ Spotify search failed:', response.status, text);
+    throw new Error(`Spotify search failed: ${response.status}`);
+  }
 
   const data: SpotifyShowSearchResponse = await response.json();
   return data.shows?.items || [];
@@ -95,8 +118,15 @@ async function getShowEpisodes(showId: string, accessToken: string): Promise<Spo
     }
   );
 
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    console.error('❌ Spotify episodes fetch failed:', response.status, text);
+    throw new Error(`Spotify episodes fetch failed: ${response.status}`);
+  }
+
   const data = await response.json();
-  return data.items || [];
+  const items = Array.isArray(data?.items) ? data.items : [];
+  return items;
 }
 
 serve(async (req) => {
@@ -128,15 +158,24 @@ serve(async (req) => {
       case 'add_curated_show': {
         const { spotify_show_id, category, curator_notes } = params;
         
-        // Get show details from Spotify
-        const showResponse = await fetch(
-          `https://api.spotify.com/v1/shows/${spotify_show_id}?market=NL`,
-          {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-          }
-        );
-        
-        const show = await showResponse.json();
+// Get show details from Spotify
+const showResponse = await fetch(
+  `https://api.spotify.com/v1/shows/${spotify_show_id}?market=NL`,
+  {
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  }
+);
+
+if (!showResponse.ok) {
+  const text = await showResponse.text().catch(() => '');
+  console.error('❌ Spotify show fetch failed:', showResponse.status, text);
+  return new Response(JSON.stringify({ error: `Spotify show fetch failed: ${showResponse.status}` }), {
+    status: showResponse.status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}
+
+const show = await showResponse.json();
         
         // Add to curated shows
         const { data: curatedShow, error } = await supabase
@@ -258,23 +297,32 @@ serve(async (req) => {
           });
         }
 
-        // Fetch episodes from Spotify
-        const episodes = await getShowEpisodes(show.spotify_show_id, accessToken);
-        console.log(`📡 Found ${episodes.length} episodes for show ${show.spotify_show_id}`);
-        
-        // Filter out null episodes before processing
-        const validEpisodes = episodes.filter(episode => episode !== null && episode !== undefined && episode.id);
-        console.log(`✅ Valid episodes after filtering: ${validEpisodes.length}`);
-        
-        if (validEpisodes.length === 0) {
-          return new Response(JSON.stringify({ 
-            error: 'No valid episodes found for this show',
-            episodes_synced: 0 
-          }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
+// Fetch and validate episodes from Spotify
+let validEpisodes: SpotifyEpisode[] = [];
+try {
+  const episodes = await getShowEpisodes(show.spotify_show_id, accessToken);
+  console.log(`📡 Found ${episodes.length} episodes for show ${show.spotify_show_id}`);
+  validEpisodes = episodes.filter((episode) => episode && (episode as any).id);
+  console.log(`✅ Valid episodes after filtering: ${validEpisodes.length}`);
+} catch (err: any) {
+  console.error('❌ Error fetching episodes:', err?.message || err);
+  return new Response(JSON.stringify({ 
+    error: `Spotify episodes fetch failed: ${err?.message || 'unknown error'}`
+  }), {
+    status: 502,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}
+
+if (validEpisodes.length === 0) {
+  return new Response(JSON.stringify({ 
+    error: 'Geen geldige episodes opgehaald. Controleer Spotify-credentials of market-parameter.',
+    episodes_synced: 0 
+  }), {
+    status: 400,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}
         
         // Insert episodes into database
         const episodeData = validEpisodes.map(episode => ({

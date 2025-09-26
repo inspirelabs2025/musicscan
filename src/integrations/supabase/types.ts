@@ -2342,6 +2342,54 @@ export type Database = {
           },
         ]
       }
+      spotify_curated_shows: {
+        Row: {
+          category: string | null
+          created_at: string
+          curator_notes: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          publisher: string | null
+          spotify_show_id: string
+          spotify_url: string | null
+          total_episodes: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          curator_notes?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          publisher?: string | null
+          spotify_show_id: string
+          spotify_url?: string | null
+          total_episodes?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          curator_notes?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          publisher?: string | null
+          spotify_show_id?: string
+          spotify_url?: string | null
+          total_episodes?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       spotify_playlists: {
         Row: {
           created_at: string
@@ -2392,6 +2440,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      spotify_show_episodes: {
+        Row: {
+          audio_preview_url: string | null
+          created_at: string
+          description: string | null
+          duration_ms: number | null
+          id: string
+          is_featured: boolean | null
+          name: string
+          release_date: string | null
+          show_id: string
+          spotify_episode_id: string
+          spotify_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          audio_preview_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_ms?: number | null
+          id?: string
+          is_featured?: boolean | null
+          name: string
+          release_date?: string | null
+          show_id: string
+          spotify_episode_id: string
+          spotify_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audio_preview_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_ms?: number | null
+          id?: string
+          is_featured?: boolean | null
+          name?: string
+          release_date?: string | null
+          show_id?: string
+          spotify_episode_id?: string
+          spotify_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spotify_show_episodes_show_id_fkey"
+            columns: ["show_id"]
+            isOneToOne: false
+            referencedRelation: "spotify_curated_shows"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       spotify_tracks: {
         Row: {

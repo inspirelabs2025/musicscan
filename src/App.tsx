@@ -44,6 +44,7 @@ import TestNewsGeneration from "./pages/TestNewsGeneration";
 import TestBlogRegeneration from "./pages/TestBlogRegeneration";
 import TestAlbumCoverBackfill from "./pages/TestAlbumCoverBackfill";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import Podcasts from "./pages/Podcasts";
 import { ShopProducts } from "./pages/admin/ShopProducts";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
@@ -254,6 +255,11 @@ const App = () => {
             } />
             <Route path="/superadmin" element={<SuperAdminDashboard />} />
             <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
+            <Route path="/podcasts" element={
+              <ProtectedRoute>
+                <Podcasts />
+              </ProtectedRoute>
+            } />
             <Route path="/admin/price-history" element={
               <ProtectedRoute>
                 <PriceHistoryAdmin />

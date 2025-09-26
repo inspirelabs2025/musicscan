@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.test-email-notification]
 verify_jwt = false
+
+[functions.spotify-podcast-manager]
+verify_jwt = true

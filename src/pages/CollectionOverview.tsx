@@ -502,15 +502,15 @@ function TypeTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        {/* CD Collection */}
-        <Card variant="purple">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
-              <Disc className="h-5 w-5" />
-              CD Collectie
-            </CardTitle>
-            <CardDescription className="text-card-purple-foreground/70">Analyse van je CD collectie</CardDescription>
-          </CardHeader>
+      {/* CD Collection */}
+      <Card className="bg-gradient-to-br from-violet-500/20 to-purple-600/20 backdrop-blur-sm border border-violet-500/30 shadow-lg hover:shadow-xl transition-all duration-300">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">
+            <Disc className="h-5 w-5 text-violet-500" />
+            CD Collectie
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">Analyse van je CD collectie</CardDescription>
+        </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 bg-muted/50 rounded-lg">
@@ -541,13 +541,13 @@ function TypeTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value
         </Card>
 
         {/* Vinyl Collection */}
-        <Card variant="purple">
+        <Card className="bg-gradient-to-br from-violet-500/20 to-purple-600/20 backdrop-blur-sm border border-violet-500/30 shadow-lg hover:shadow-xl transition-all duration-300">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
-              <Disc3 className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">
+              <Disc3 className="h-5 w-5 text-violet-500" />
               Vinyl Collectie
             </CardTitle>
-            <CardDescription className="text-card-purple-foreground/70">Analyse van je LP collectie</CardDescription>
+            <CardDescription className="text-muted-foreground">Analyse van je LP collectie</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -581,10 +581,10 @@ function TypeTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value
 
       {/* Comparison Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card variant="purple">
+        <Card className="bg-gradient-to-br from-violet-500/20 to-purple-600/20 backdrop-blur-sm border border-violet-500/30 shadow-lg hover:shadow-xl transition-all duration-300">
           <CardHeader>
-            <CardTitle className="text-card-purple-foreground">Waarde Vergelijking</CardTitle>
-            <CardDescription className="text-card-purple-foreground/70">CD vs Vinyl waarde verdeling</CardDescription>
+            <CardTitle className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">Waarde Vergelijking</CardTitle>
+            <CardDescription className="text-muted-foreground">CD vs Vinyl waarde verdeling</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -602,10 +602,10 @@ function TypeTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value
           </CardContent>
         </Card>
 
-        <Card variant="purple">
+        <Card className="bg-gradient-to-br from-violet-500/20 to-purple-600/20 backdrop-blur-sm border border-violet-500/30 shadow-lg hover:shadow-xl transition-all duration-300">
           <CardHeader>
-            <CardTitle className="text-card-purple-foreground">Prijsklasse Vergelijking</CardTitle>
-            <CardDescription className="text-card-purple-foreground/70">Prijsverdeling per format</CardDescription>
+            <CardTitle className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">Prijsklasse Vergelijking</CardTitle>
+            <CardDescription className="text-muted-foreground">Prijsverdeling per format</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -647,13 +647,13 @@ function GenreTab({ stats, formatCurrency }: { stats: any; formatCurrency: (valu
         {stats.genres.slice(0, 6).map((genre, index) => {
           const details = stats.genreDetails[genre.genre];
           return (
-            <Card key={genre.genre} variant="purple">
+            <Card key={genre.genre} className="bg-gradient-to-br from-blue-500/20 to-indigo-600/20 backdrop-blur-sm border border-blue-500/30 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
-                  <Music2 className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">
+                  <Music2 className="h-5 w-5 text-blue-500" />
                   {genre.genre}
                 </CardTitle>
-                <CardDescription className="text-card-purple-foreground/70">
+                <CardDescription className="text-muted-foreground">
                   {genre.count} albums • {formatCurrency(genre.value)}
                 </CardDescription>
               </CardHeader>
@@ -695,10 +695,10 @@ function GenreTab({ stats, formatCurrency }: { stats: any; formatCurrency: (valu
         })}
       </div>
 
-      <Card variant="purple">
+      <Card className="bg-gradient-to-br from-blue-500/20 to-indigo-600/20 backdrop-blur-sm border border-blue-500/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <CardHeader>
-          <CardTitle className="text-card-purple-foreground">Genre Waarde Verdeling</CardTitle>
-          <CardDescription className="text-card-purple-foreground/70">Totale waarde per genre</CardDescription>
+          <CardTitle className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">Genre Waarde Verdeling</CardTitle>
+          <CardDescription className="text-muted-foreground">Totale waarde per genre</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
@@ -724,13 +724,13 @@ function YearTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {decades.map(([decade, data]: [string, any], index) => (
-          <Card key={decade} variant="purple">
+          <Card key={decade} className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-sm border border-orange-500/30 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
-                <Calendar className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                <Calendar className="h-5 w-5 text-orange-500" />
                 {decade}
               </CardTitle>
-              <CardDescription className="text-card-purple-foreground/70">
+              <CardDescription className="text-muted-foreground">
                 {data.count} albums • {formatCurrency(data.value)}
               </CardDescription>
             </CardHeader>
@@ -765,10 +765,10 @@ function YearTab({ stats, formatCurrency }: { stats: any; formatCurrency: (value
         ))}
       </div>
 
-      <Card variant="purple">
+      <Card className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-sm border border-orange-500/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <CardHeader>
-          <CardTitle className="text-card-purple-foreground">Tijdlijn Overzicht</CardTitle>
-          <CardDescription className="text-card-purple-foreground/70">Album releases door de jaren heen</CardDescription>
+          <CardTitle className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">Tijdlijn Overzicht</CardTitle>
+          <CardDescription className="text-muted-foreground">Album releases door de jaren heen</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
@@ -799,13 +799,13 @@ function PriceTab({ stats, formatCurrency }: { stats: any; formatCurrency: (valu
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {segments.map((segment, index) => (
-          <Card key={segment.key} variant="purple">
+          <Card key={segment.key} className="bg-gradient-to-br from-yellow-500/20 to-amber-600/20 backdrop-blur-sm border border-yellow-500/30 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-purple-foreground">
-                <DollarSign className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-amber-600 bg-clip-text text-transparent">
+                <DollarSign className="h-5 w-5 text-yellow-500" />
                 {segment.name}
               </CardTitle>
-              <CardDescription className="text-card-purple-foreground/70">
+              <CardDescription className="text-muted-foreground">
                 {segment.data.count} albums
               </CardDescription>
             </CardHeader>
@@ -833,10 +833,10 @@ function PriceTab({ stats, formatCurrency }: { stats: any; formatCurrency: (valu
         ))}
       </div>
 
-      <Card variant="purple">
+      <Card className="bg-gradient-to-br from-yellow-500/20 to-amber-600/20 backdrop-blur-sm border border-yellow-500/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <CardHeader>
-          <CardTitle className="text-card-purple-foreground">Waarde Verdeling</CardTitle>
-          <CardDescription className="text-card-purple-foreground/70">Overzicht van prijsklassen in je collectie</CardDescription>
+          <CardTitle className="bg-gradient-to-r from-yellow-500 to-amber-600 bg-clip-text text-transparent">Waarde Verdeling</CardTitle>
+          <CardDescription className="text-muted-foreground">Overzicht van prijsklassen in je collectie</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
@@ -851,10 +851,10 @@ function PriceTab({ stats, formatCurrency }: { stats: any; formatCurrency: (valu
         </CardContent>
       </Card>
 
-      <Card variant="purple">
+      <Card className="bg-gradient-to-br from-yellow-500/20 to-amber-600/20 backdrop-blur-sm border border-yellow-500/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <CardHeader>
-          <CardTitle className="text-card-purple-foreground">Investment Insights</CardTitle>
-          <CardDescription className="text-card-purple-foreground/70">Waardevolle items in je collectie</CardDescription>
+          <CardTitle className="bg-gradient-to-r from-yellow-500 to-amber-600 bg-clip-text text-transparent">Investment Insights</CardTitle>
+          <CardDescription className="text-muted-foreground">Waardevolle items in je collectie</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>

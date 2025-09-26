@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Shield, Users, Activity, Database, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Shield, Users, Activity, Database, AlertTriangle, RefreshCw, Headphones } from 'lucide-react';
 import { useSuperAdminStats } from '@/hooks/useSuperAdminStats';
 import { UserOverviewSection } from '@/components/admin/UserOverviewSection';
 import { ScanActivitySection } from '@/components/admin/ScanActivitySection';
@@ -15,6 +15,7 @@ import { UserScansSection } from '@/components/admin/UserScansSection';
 import { UserActivitiesSection } from '@/components/admin/UserActivitiesSection';
 import { TestEmailTrigger } from '@/components/TestEmailTrigger';
 import { ArtworkStatusSection } from '@/components/admin/ArtworkStatusSection';
+import { PodcastManagementSection } from '@/components/admin/PodcastManagementSection';
 
 const SUPERADMIN_EMAIL = 'rogiervisser76@gmail.com';
 const SECRET_KEY = 'superadmin_secret_2024';
@@ -155,7 +156,7 @@ const SuperAdminDashboard: React.FC = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="users" key={refreshKey}>
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="users">Gebruikers</TabsTrigger>
             <TabsTrigger value="activities">User Activities</TabsTrigger>
             <TabsTrigger value="user-scans">User Scans</TabsTrigger>
@@ -163,6 +164,7 @@ const SuperAdminDashboard: React.FC = () => {
             <TabsTrigger value="content">Content Analytics</TabsTrigger>
             <TabsTrigger value="system">Systeem Status</TabsTrigger>
             <TabsTrigger value="artwork">Artwork Status</TabsTrigger>
+            <TabsTrigger value="podcasts">Podcasts</TabsTrigger>
             <TabsTrigger value="email">Email Test</TabsTrigger>
           </TabsList>
 
@@ -192,6 +194,10 @@ const SuperAdminDashboard: React.FC = () => {
 
           <TabsContent value="artwork" className="mt-6">
             <ArtworkStatusSection stats={stats} />
+          </TabsContent>
+
+          <TabsContent value="podcasts" className="mt-6">
+            <PodcastManagementSection />
           </TabsContent>
 
           <TabsContent value="email" className="mt-6">

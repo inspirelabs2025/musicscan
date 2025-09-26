@@ -141,7 +141,7 @@ const Dashboard = () => {
             <BarChart3 className="w-6 h-6 text-vinyl-purple" />
             📊 Jouw Muziek DNA
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
               title="Totale Collectie"
               value={statsLoading ? "..." : `${scanStats?.totalScans || 0}`}
@@ -166,14 +166,6 @@ const Dashboard = () => {
               subtitle="Geslaagde scans"
               icon={Star}
             />
-            <Link to="/community" className="block">
-              <StatCard
-                title="Community"
-                value={userStatsLoading ? "..." : `${userStats?.totalUsers || 0}`}
-                subtitle="Leden • Meer"
-                icon={Users}
-              />
-            </Link>
           </div>
         </section>
 

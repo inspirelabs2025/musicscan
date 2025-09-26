@@ -260,9 +260,24 @@ serve(async (req) => {
 
         // Fetch episodes from Spotify
         const episodes = await getShowEpisodes(show.spotify_show_id, accessToken);
+        console.log(`📡 Found ${episodes.length} episodes for show ${show.spotify_show_id}`);
+        
+        // Filter out null episodes before processing
+        const validEpisodes = episodes.filter(episode => episode !== null && episode !== undefined && episode.id);
+        console.log(`✅ Valid episodes after filtering: ${validEpisodes.length}`);
+        
+        if (validEpisodes.length === 0) {
+          return new Response(JSON.stringify({ 
+            error: 'No valid episodes found for this show',
+            episodes_synced: 0 
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
         
         // Insert episodes into database
-        const episodeData = episodes.map(episode => ({
+        const episodeData = validEpisodes.map(episode => ({
           show_id: show.id,
           spotify_episode_id: episode.id,
           name: episode.name,

@@ -229,6 +229,38 @@ BELANGRIJK: Retourneer ALLEEN geldige JSON zonder markdown formatting, geen code
       // Don't throw here, it's not critical
     }
 
+    // Trigger email notifications (don't wait for completion to avoid blocking)
+    try {
+      console.log('📧 Triggering email notifications...');
+      
+      // Call email notification function without awaiting to avoid blocking
+      fetch(`${supabaseUrl}/functions/v1/send-weekly-discussion-notification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({
+          topicId: newTopic.id,
+          topicTitle: discussionContent.title,
+          topicDescription: discussionContent.description,
+          artistName: album.artist,
+          albumTitle: album.title
+        })
+      }).then(response => {
+        console.log('📧 Email notification response status:', response.status);
+        return response.json();
+      }).then(data => {
+        console.log('📧 Email notification result:', data);
+      }).catch(error => {
+        console.error('❌ Failed to trigger email notifications:', error);
+      });
+      
+    } catch (emailError) {
+      console.error('❌ Error triggering email notifications:', emailError);
+      // Don't fail the main function if email fails
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

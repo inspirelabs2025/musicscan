@@ -33,6 +33,11 @@ export const PodcastManagementSection = () => {
   const [spotifyUrl, setSpotifyUrl] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('General');
   const [curatorNotes, setCuratorNotes] = useState('');
+  
+  // Individual episode states
+  const [episodeUrl, setEpisodeUrl] = useState('');
+  const [episodeCategory, setEpisodeCategory] = useState('General');
+  const [episodeNotes, setEpisodeNotes] = useState('');
   const [selectedShow, setSelectedShow] = useState<CuratedShow | null>(null);
 
   const { data: curatedShows = [] } = useCuratedPodcasts();

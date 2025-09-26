@@ -2390,6 +2390,57 @@ export type Database = {
         }
         Relationships: []
       }
+      spotify_individual_episodes: {
+        Row: {
+          audio_preview_url: string | null
+          category: string | null
+          created_at: string
+          curator_notes: string | null
+          description: string | null
+          duration_ms: number | null
+          id: string
+          is_featured: boolean | null
+          name: string
+          release_date: string | null
+          show_name: string
+          spotify_episode_id: string
+          spotify_url: string
+          updated_at: string
+        }
+        Insert: {
+          audio_preview_url?: string | null
+          category?: string | null
+          created_at?: string
+          curator_notes?: string | null
+          description?: string | null
+          duration_ms?: number | null
+          id?: string
+          is_featured?: boolean | null
+          name: string
+          release_date?: string | null
+          show_name: string
+          spotify_episode_id: string
+          spotify_url: string
+          updated_at?: string
+        }
+        Update: {
+          audio_preview_url?: string | null
+          category?: string | null
+          created_at?: string
+          curator_notes?: string | null
+          description?: string | null
+          duration_ms?: number | null
+          id?: string
+          is_featured?: boolean | null
+          name?: string
+          release_date?: string | null
+          show_name?: string
+          spotify_episode_id?: string
+          spotify_url?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       spotify_playlists: {
         Row: {
           created_at: string

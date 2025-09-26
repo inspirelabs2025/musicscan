@@ -2,21 +2,21 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Headphones, Search } from "lucide-react";
-import { PodcastCard } from "@/components/podcast/PodcastCard";
-import { PodcastCategoryFilter } from "@/components/podcast/PodcastCategoryFilter";
-import { EpisodeCard } from "@/components/podcast/EpisodeCard";
-import { useCuratedPodcasts, usePodcastEpisodes, CuratedShow } from "@/hooks/useCuratedPodcasts";
+import { useCuratedPodcasts, usePodcastEpisodes, useFeaturedEpisodes } from '@/hooks/useCuratedPodcasts';
+import { useIndividualEpisodes } from '@/hooks/useIndividualEpisodes';
+import { PodcastCard } from '@/components/podcast/PodcastCard';
+import { PodcastCategoryFilter } from '@/components/podcast/PodcastCategoryFilter';
+import { EpisodeCard } from '@/components/podcast/EpisodeCard';
+import { IndividualEpisodeCard } from '@/components/podcast/IndividualEpisodeCard';
 
 export default function Podcasts() {
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedShow, setSelectedShow] = useState<CuratedShow | null>(null);
+  const [selectedShow, setSelectedShow] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: shows = [], isLoading: showsLoading } = useCuratedPodcasts(selectedCategory);
-  const { data: episodes = [], isLoading: episodesLoading } = usePodcastEpisodes(
-    selectedShow?.id || '',
-    false
-  );
+  const { data: shows = [], isLoading: showsLoading } = useCuratedPodcasts(selectedCategory === 'all' ? undefined : selectedCategory);
+  const { data: episodes = [], isLoading: episodesLoading } = usePodcastEpisodes(selectedShow?.id || '');
+  const { data: individualEpisodes } = useIndividualEpisodes();
 
   const filteredShows = shows.filter(show =>
     searchQuery === '' ||
@@ -81,9 +81,25 @@ export default function Podcasts() {
                 <EpisodeCard
                   key={episode.id}
                   episode={episode}
-                  compact={false}
+                  showName={selectedShow.name}
                 />
               ))}
+            </div>
+          )}
+
+          {/* Individual Episodes for selected show */}
+          {individualEpisodes && individualEpisodes.length > 0 && (
+            <div className="space-y-4 mt-8">
+              <h2 className="text-2xl font-bold">Uitgelichte Episodes</h2>
+              <div className="grid gap-4">
+                {individualEpisodes.filter(ep => ep.is_featured).map((episode) => (
+                  <IndividualEpisodeCard
+                    key={episode.id}
+                    episode={episode}
+                    compact={true}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -96,11 +112,27 @@ export default function Podcasts() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
           <Headphones className="w-8 h-8" />
-          <h1 className="text-3xl font-bold">Muziek Podcasts</h1>
+          <h1 className="text-4xl font-bold mb-2">Podcast Ontdekking</h1>
         </div>
-        <p className="text-muted-foreground">
-          Ontdek gecureerde muziekpodcasts met interviews, muziekgeschiedenis en industrie-inzichten.
+        <p className="text-muted-foreground mb-8">
+          Ontdek gecureerde podcasts en episodes over muziek, vinyl en alles wat daarbij komt kijken.
         </p>
+
+        {/* Featured Individual Episodes */}
+        {individualEpisodes && individualEpisodes.filter(ep => ep.is_featured).length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Uitgelichte Episodes</h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {individualEpisodes.filter(ep => ep.is_featured).slice(0, 6).map((episode) => (
+                <IndividualEpisodeCard
+                  key={episode.id}
+                  episode={episode}
+                  compact={true}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="space-y-6 mb-8">

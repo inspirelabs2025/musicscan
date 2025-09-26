@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.music-news-enhanced]
 verify_jwt = false
+
+[functions.weekly-forum-discussions]
+verify_jwt = false

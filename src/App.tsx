@@ -254,6 +254,7 @@ const App = () => {
               </ProtectedRoute>
             } />
             <Route path="/superadmin" element={<SuperAdminDashboard />} />
+            <Route path="/superadmin-dashboard" element={<SuperAdminDashboard />} />
             <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
             <Route path="/podcasts" element={
               <ProtectedRoute>

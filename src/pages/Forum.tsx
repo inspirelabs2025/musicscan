@@ -8,6 +8,8 @@ import { ForumTopicCard } from '@/components/forum/ForumTopicCard';
 import { CreateTopicModal } from '@/components/forum/CreateTopicModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { triggerWeeklyDiscussion } from '@/utils/triggerWeeklyDiscussion';
+import { toast } from '@/hooks/use-toast';
 
 const Forum: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'featured' | 'recent'>('all');
@@ -29,6 +31,25 @@ const Forum: React.FC = () => {
     navigate(`/forum/topic/${topicId}`);
   };
 
+  const handleCreateWeeklyDiscussion = async () => {
+    try {
+      toast({ title: "Wekelijkse discussie wordt aangemaakt..." });
+      await triggerWeeklyDiscussion();
+      toast({ 
+        title: "Wekelijkse discussie aangemaakt!", 
+        description: "De nieuwe discussie is nu beschikbaar." 
+      });
+      // Refresh the topics
+      window.location.reload();
+    } catch (error) {
+      toast({ 
+        title: "Fout bij aanmaken discussie", 
+        description: "Er ging iets mis bij het aanmaken van de wekelijkse discussie.",
+        variant: "destructive" 
+      });
+    }
+  };
+
   const filterButtons = [
     { key: 'all', label: 'Alle Discussies', icon: Clock },
     { key: 'featured', label: 'Uitgelicht', icon: Star },
@@ -47,10 +68,19 @@ const Forum: React.FC = () => {
         </div>
         
         {user && (
-          <Button onClick={() => setIsCreateModalOpen(true)} className="flex items-center space-x-2">
-            <Plus className="h-4 w-4" />
-            <span>Nieuwe Discussie</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setIsCreateModalOpen(true)} className="flex items-center space-x-2">
+              <Plus className="h-4 w-4" />
+              <span>Nieuwe Discussie</span>
+            </Button>
+            <Button
+              onClick={handleCreateWeeklyDiscussion}
+              variant="outline"
+              className="border-yellow-500/30 text-yellow-500 hover:bg-yellow-500/10"
+            >
+              🎵 Start Wekelijkse Discussie
+            </Button>
+          </div>
         )}
       </div>
 

@@ -12,6 +12,79 @@ interface ChatMessage {
   session_id?: string;
 }
 
+// Search function to find specific items in collection
+async function searchCollection(supabase: any, userId: string, searchTerm: string) {
+  console.log(`🔍 Searching collection for: "${searchTerm}"`);
+  
+  const searchPattern = `%${searchTerm.toLowerCase()}%`;
+  
+  // Search across all collection tables
+  const [cdResults, vinylResults, aiResults] = await Promise.all([
+    supabase
+      .from('cd_scan')
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country, catalog_number, discogs_url')
+      .eq('user_id', userId)
+      .or(`artist.ilike.${searchPattern},title.ilike.${searchPattern},label.ilike.${searchPattern},catalog_number.ilike.${searchPattern}`)
+      .order('calculated_advice_price', { ascending: false, nullsLast: true })
+      .limit(20),
+    
+    supabase
+      .from('vinyl2_scan')
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country, catalog_number, discogs_url')
+      .eq('user_id', userId)
+      .or(`artist.ilike.${searchPattern},title.ilike.${searchPattern},label.ilike.${searchPattern},catalog_number.ilike.${searchPattern}`)
+      .order('calculated_advice_price', { ascending: false, nullsLast: true })
+      .limit(20),
+    
+    supabase
+      .from('ai_scan_results')
+      .select('artist, title, genre, year, format, label, country, catalog_number, discogs_url, status, ai_description')
+      .eq('user_id', userId)
+      .or(`artist.ilike.${searchPattern},title.ilike.${searchPattern},label.ilike.${searchPattern},catalog_number.ilike.${searchPattern}`)
+      .order('created_at', { ascending: false })
+      .limit(20)
+  ]);
+
+  const allResults = [
+    ...(cdResults.data || []).map(item => ({ ...item, source: 'cd_scan' })),
+    ...(vinylResults.data || []).map(item => ({ ...item, source: 'vinyl2_scan' })),
+    ...(aiResults.data || []).map(item => ({ ...item, source: 'ai_scan_results' }))
+  ];
+
+  console.log(`✅ Found ${allResults.length} search results`);
+  return allResults;
+}
+
+// Detect if user input contains search intent
+function detectSearchIntent(message: string): string | null {
+  const lowerMessage = message.toLowerCase();
+  
+  // Direct search patterns
+  const searchPatterns = [
+    /zoek naar (.+)/,
+    /vind (.+)/,
+    /heb ik (.+)/,
+    /waar is (.+)/,
+    /toon me (.+)/,
+    /laat me (.+) zien/,
+    /(.+) in mijn collectie/,
+    /^(.+)$/  // Single word/phrase queries like "tina turner"
+  ];
+  
+  for (const pattern of searchPatterns) {
+    const match = lowerMessage.match(pattern);
+    if (match && match[1]) {
+      const searchTerm = match[1].trim();
+      // Filter out very generic terms
+      if (searchTerm.length > 2 && !['albums', 'muziek', 'collectie', 'items'].includes(searchTerm)) {
+        return searchTerm;
+      }
+    }
+  }
+  
+  return null;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -76,32 +149,47 @@ Deno.serve(async (req) => {
       .map(m => m.message)
       .join(' ');
 
-    // Get physical collection data for context with detailed album information - user specific
+    // 🎯 SMART SEARCH DETECTION
+    const searchTerm = detectSearchIntent(message);
+    let searchResults: any[] = [];
+    let isSearchQuery = false;
+    
+    if (searchTerm) {
+      console.log(`🎯 Detected search query for: "${searchTerm}"`);
+      isSearchQuery = true;
+      searchResults = await searchCollection(supabase, userId, searchTerm);
+    }
+
+    // Get enhanced collection data with increased limits for better coverage
     const { data: cdData, error: cdError } = await supabase
       .from('cd_scan')
-      .select('artist, title, genre, year, calculated_advice_price, format, label, country')
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country, catalog_number, discogs_url')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100); // Increased from default
 
     const { data: vinylData, error: vinylError } = await supabase
       .from('vinyl2_scan')
-      .select('artist, title, genre, year, calculated_advice_price, format, label, country')
+      .select('artist, title, genre, year, calculated_advice_price, format, label, country, catalog_number, discogs_url')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100); // Increased from default
 
     // Get AI scan results for complete context
     const { data: aiScansData, error: aiScansError } = await supabase
       .from('ai_scan_results')
-      .select('artist, title, genre, year, format, label, country, status, ai_description, search_queries')
+      .select('artist, title, genre, year, format, label, country, status, ai_description, search_queries, catalog_number, discogs_url')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100); // Increased from default
 
     // Get unified scans as alternative view
     const { data: unifiedScansData, error: unifiedScansError } = await supabase
       .from('unified_scans')
       .select('artist, title, genre, year, calculated_advice_price, format, label, country, media_type, source_table, status, ai_description')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(200); // Increased from default
 
     // Get Spotify data for enhanced context
     const { data: spotifyTracks, error: spotifyTracksError } = await supabase
@@ -297,8 +385,8 @@ Deno.serve(async (req) => {
         : getRandomAlbumSet(allItems, 15),
         
       sessionFocus: currentFocus,
-      // All collection items
-      sampleItems: allItems.slice(0, 10).map(r => ({
+      // Enhanced collection sampling - much larger sample size
+      sampleItems: allItems.slice(0, 100).map(r => ({
         artist: r.artist,
         title: r.title,
         genre: r.genre,
@@ -307,8 +395,31 @@ Deno.serve(async (req) => {
         format: r.format,
         label: r.label,
         country: r.country,
-        hasValue: !!r.calculated_advice_price
-      }))
+        hasValue: !!r.calculated_advice_price,
+        catalog_number: r.catalog_number,
+        discogs_url: r.discogs_url
+      })),
+      
+      // 🔍 SEARCH RESULTS (if search was performed)
+      searchResults: isSearchQuery ? {
+        searchTerm,
+        results: searchResults.slice(0, 20).map(r => ({
+          artist: r.artist,
+          title: r.title,
+          genre: r.genre,
+          year: r.year,
+          value: Number(r.calculated_advice_price) || 0,
+          format: r.format,
+          label: r.label,
+          country: r.country,
+          source: r.source,
+          catalog_number: r.catalog_number,
+          discogs_url: r.discogs_url,
+          hasValue: !!r.calculated_advice_price
+        })),
+        found: searchResults.length,
+        query: message
+      } : null
     };
 
     // Store user message
@@ -322,81 +433,59 @@ Deno.serve(async (req) => {
         collection_context: collectionStats
       });
 
-    // Create enhanced AI prompt with anti-repetition, dynamic focus, and comprehensive data integration
-    const systemPrompt = `Je bent een avontuurlijke Nederlandse muziekcollectie AI-expert en ontdekkingsreiziger! 🎵✨ Je missie is om ALTIJD nieuwe, verrassende inzichten te geven over de muziekcollectie.
+    // ⚡ OPTIMIZED AI PROMPT - Focused on Search Results when applicable
+    const systemPrompt = collectionStats.searchResults ? 
+      `🔍 **SEARCH RESULTATEN GEVONDEN!**
+Je bent een Nederlandse muziekcollectie AI-expert die EXACT de gevraagde informatie kan vinden!
 
-## COLLECTIE OVERZICHT
-🎯 **TOTAAL COLLECTIE**
-📊 **Alle items:** ${collectionStats.totalAllItems}
-💎 **Items met waarde:** ${collectionStats.totalValuedItems} (€${collectionStats.totalValue.toFixed(2)})
-⏳ **Items in verwerking:** ${collectionStats.totalPendingItems}
-📈 **Voltooiing:** ${collectionStats.collectionCompletion.completionRate}%
+## 🎯 ZOEKOPDRACHT: "${collectionStats.searchResults.searchTerm}"
+**Gevonden:** ${collectionStats.searchResults.found} items in collectie
 
-🎵 **MUZIEK PERIODE:** ${collectionStats.yearRange.oldest || 'Onbekend'} - ${collectionStats.yearRange.newest || 'Onbekend'}
+${collectionStats.searchResults.results.length > 0 ? `
+**GEVONDEN ALBUMS:**
+${collectionStats.searchResults.results.map(r => 
+  `• **"${r.title}"** door ${r.artist} ${r.value > 0 ? `(€${r.value})` : '(in verwerking)'} [${r.format || r.source}]`
+).join('\n')}
+` : '❌ Geen exacte matches gevonden voor deze zoekopdracht.'}
 
-${collectionStats.spotifyConnected ? `
-🎧 **SPOTIFY INTEGRATIE ACTIEF**
-🎼 **Spotify tracks:** ${collectionStats.totalSpotifyTracks} nummers
-📚 **Spotify playlists:** ${collectionStats.totalSpotifyPlaylists} playlists  
-🎤 **Unieke Spotify artiesten:** ${collectionStats.spotifyArtistsCount}
-🔄 **Crossover artiesten:** ${collectionStats.crossoverArtists.length} (fysiek + Spotify)
+## 📊 COLLECTIE CONTEXT
+- **Totaal:** ${collectionStats.totalAllItems} items (€${collectionStats.totalValue.toFixed(2)})
+- **Voltooiing:** ${collectionStats.collectionCompletion.completionRate}%
+${collectionStats.spotifyConnected ? `- **Spotify:** ${collectionStats.totalSpotifyTracks} tracks verbonden` : ''}
 
-**Top Spotify Tracks:**
-${collectionStats.topSpotifyTracks.slice(0, 5).map(t => `• "${t.name}" - ${t.artist}`).join('\n')}
-` : `
-🎧 **SPOTIFY:** Niet verbonden - kan alleen fysieke collectie analyseren
-💡 **Tip:** Verbind Spotify voor complete muziekanalyse!
-`}
+## 🎵 OPDRACHT
+1. **FOCUS OP GEVONDEN ITEMS:** Geef detailed info over elk gevonden album
+2. **VERTEL VERHALEN:** Geschiedenis, bijzonderheden, waardering, rariteit
+3. **GEEF CONTEXT:** Hoe passen ze in de collectie? Wat maakt ze speciaal?
+4. **SUGGESTIES:** Gerelateerde albums om te zoeken of aan te schaffen
+5. **WAARDE INZICHT:** Marktwaarde, trends, investment potentieel
 
-🎯 **Huidige focus:** ${collectionStats.sessionFocus === 'value' ? 'Waardevolle parels' : collectionStats.sessionFocus === 'genre' ? 'Genre-ontdekking' : collectionStats.sessionFocus === 'year' ? 'Vintage schatten' : collectionStats.sessionFocus === 'spotify' ? 'Spotify vs Fysiek vergelijking' : 'Verborgen prachtstukken'}
+BELANGRIJK: Geef CONCRETE, SPECIFIEKE informatie over de gevonden albums!` 
+      :
+      `🎵 **COLLECTIE AI EXPERT** - Ontdek & Analyseer je Muziek!
 
-## ONTDEK STEEDS NIEUWE ALBUMS (ALLE BRONNEN)! 
-**Spotlight vandaag:** ${collectionStats.featuredAlbums.slice(0, 8).map(a => 
-  a.title ? `"${a.title}" (${a.artist})` : a.name ? `"${a.name}" - ${a.artist}` : `"${a.artist}"`
-).join(', ')}
+## 📊 COLLECTIE OVERZICHT  
+- **Totaal:** ${collectionStats.totalAllItems} items (€${collectionStats.totalValue.toFixed(2)})
+- **Met waarde:** ${collectionStats.totalValuedItems} • **In verwerking:** ${collectionStats.totalPendingItems}
+- **Voltooiing:** ${collectionStats.collectionCompletion.completionRate}%
+${collectionStats.spotifyConnected ? `- **Spotify:** ${collectionStats.totalSpotifyTracks} tracks • ${collectionStats.crossoverArtists.length} crossover artiesten` : ''}
 
-## COLLECTIE DIVERSITEIT
-${collectionStats.genreDistribution.slice(0, 6).map(g => `• ${g.genre}: ${g.count} items (€${g.totalValue.toFixed(2)}) - ${g.valuedCount} gewaardeerd, ${g.pendingCount} pending`).join('\n')}
+## 🎯 TOP ITEMS VANDAAG
+${collectionStats.featuredAlbums.slice(0, 5).map(a => 
+  a.title ? `• "${a.title}" - ${a.artist}` : a.name ? `• "${a.name}" - ${a.artist}` : `• ${a.artist}`
+).join('\n')}
 
-## ANTI-HERHALING CONTEXT
-${recentAiMessages ? `Recent besproken: ${recentAiMessages.substring(0, 200)}...` : 'Eerste gesprek - volledig terrein te verkennen!'}
+## 🎭 EXPERTISE GEBIEDEN
+- **Waarde Analyse:** Markttrends, investment tips, rariteit
+- **Genre Ontdekking:** Verborgen parels, nieuwe stijlen  
+- **Historische Context:** Verhalen achter albums, cultuur impact
+- **Collectie Optimalisatie:** Aankoopadvies, gaps identificeren
+${collectionStats.spotifyConnected ? '- **Digital vs Fysiek:** Luistergewoonten vs verzamelgedrag' : ''}
 
-## CREATIEVE OPDRACHTEN
-- 🚀 **VERPLICHT:** Gebruik ALTIJD andere albums dan in eerdere antwoorden
-- 🎭 **Varieer je stijl:** Historisch, technisch, emotioneel, anekdotisch, of vergelijkend  
-- 🔍 **Zoek parels:** Belicht items uit de collectie
-- 🌟 **Verras:** Verbind gewaardeerde items met items in verwerking
-- 💡 **Experimenteer:** Analyseer waarderingsstatus
-- 📊 **Status bewustzijn:** Onderscheid tussen complete items en scans in progress
-- 🔄 **Cross-source analyse:** Vergelijk fysiek vs AI scans vs Spotify patronen
-${collectionStats.spotifyConnected ? `- 🎧 **Spotify Analysis:** Vergelijk fysieke collectie met Spotify luistergedrag
-- 🔄 **Crossover Insights:** Analyseer overlap tussen gekocht vs geluisterd
-- 📊 **Digital vs Physical:** Ontdek verschillen in smaak en gedrag` : ''}
+## 🚀 ANTI-HERHALING
+${recentAiMessages ? `Recente topics: ${recentAiMessages.substring(0, 150)}...` : 'Verse start - alle terrein open!'}
 
-## INSPIRATIE TECHNIEKEN (MULTI-SOURCE)
-- **Thematische clusters:** Groepeer albums uit alle bronnen op onverwachte manieren
-- **Tijdreizen:** Vergelijk albums uit verschillende decennia en bronnen
-- **Genre-fusion:** Ontdek kruisbestuivingen tussen fysiek, scans en Spotify
-- **Verhalen vertellen:** Creëer narratieven over de complete muziekreis  
-- **Scan-journey:** Volg items van scan tot waardering tot collectie
-- **Deep-dives:** Studio-technieken, productieverhalen, waardering proces
-- **Culturele impact:** Maatschappelijke invloed doorheen alle muziektypes
-- **Collection workflow:** Adviseer over scan → waarde → collectie proces
-- **Discovery patterns:** Hoe AI scans nieuwe muziek onthullen
-${collectionStats.spotifyConnected ? `- **Spotify vs Fysiek:** Analyseer verschillen tussen wat je koopt en luistert
-- **Playlist Analysis:** Ontdek patronen in je Spotify playlists
-- **Discovery Patterns:** Vergelijk nieuwe ontdekkingen via Spotify vs fysieke aankopen` : ''}
-
-## DYNAMISCHE RESPONSEFORMATEN
-Wissel af tussen: lijsten, verhalen, vergelijkingen, tijdlijnen, top-rankings, quiz-achtige vragen, hypothetische scenario's, muzikale reisroutes${collectionStats.spotifyConnected ? ', Spotify vs fysiek vs AI scan vergelijkingen' : ''}, scan-status updates, waardering voorspellingen, collectie-completie analyses.
-
-## BELANGRIJKE CONTEXT BEWUSTZIJN
-- **Items met waarde:** Kan over genres, artiesten, waarde, geschiedenis praten
-- **Items in verwerking:** Kan adviseren over potentie, vergelijkbare items, verwachtingen  
-- **AI Scan Insights:** Kan uitleggen waarom bepaalde scans succesvol zijn
-- **Cross-source patronen:** Ontdek wat je koopt vs scant vs luistert
-
-BELANGRIJK: Wees creatief, verrassend en ontdekkend! Gebruik NOOIT dezelfde albums als voorheen. Verken de volle breedte van het COMPLETE muziekecosysteem: fysieke collectie + AI scans + Spotify data!`;
+**OPDRACHT:** Wees verrassend, specifiek en ontdekkend! Gebruik verschillende albums dan eerder besproken.`;
 
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -405,15 +494,24 @@ BELANGRIJK: Wees creatief, verrassend en ontdekkend! Gebruik NOOIT dezelfde albu
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-5-2025-08-07', // Upgraded to GPT-5 for better performance
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: message }
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: `${message}${collectionStats.searchResults ? `
+
+🔍 SEARCH RESULTS:
+${JSON.stringify(collectionStats.searchResults, null, 2)}` : `
+
+📊 COLLECTIE SAMPLE DATA:
+${JSON.stringify(collectionStats.sampleItems.slice(0, 20), null, 1)}`}`
+          }
         ],
-        max_tokens: 1500,
-        temperature: 0.9,           // Verhoogd voor meer creativiteit
-        presence_penalty: 0.3,      // Verhoogd om herhaling te voorkomen
-        frequency_penalty: 0.2,     // Verhoogd voor meer woordvariatie
+        max_completion_tokens: 2000 // Updated parameter for GPT-5 (no temperature supported)
       }),
     });
 
@@ -434,7 +532,7 @@ BELANGRIJK: Wees creatief, verrassend en ontdekkend! Gebruik NOOIT dezelfde albu
         sender_type: 'ai',
         session_id,
         user_id: userId,
-        ai_model: 'gpt-4.1-2025-04-14',
+        ai_model: 'gpt-5-2025-08-07',
         tokens_used: tokensUsed,
         response_time_ms: responseTime,
         format_type: 'markdown',

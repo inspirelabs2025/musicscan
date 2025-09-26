@@ -166,6 +166,38 @@ export const useAddCuratedShow = () => {
   });
 };
 
+export const useAddCuratedShowByUrl = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      spotify_url, 
+      category, 
+      curator_notes 
+    }: { 
+      spotify_url: string; 
+      category?: string; 
+      curator_notes?: string; 
+    }) => {
+      const { data, error } = await supabase.functions.invoke('spotify-podcast-manager', {
+        body: { 
+          action: 'add_curated_show_by_url', 
+          spotify_url, 
+          category, 
+          curator_notes 
+        }
+      });
+
+      if (error) throw error;
+      return data.show;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['curated-podcasts'] });
+      queryClient.invalidateQueries({ queryKey: ['podcast-categories'] });
+    },
+  });
+};
+
 export const useSyncEpisodes = () => {
   const queryClient = useQueryClient();
 

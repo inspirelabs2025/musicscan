@@ -64,6 +64,27 @@ async function searchSpotifyShows(query: string, accessToken: string): Promise<S
   return data.shows?.items || [];
 }
 
+function extractSpotifyShowId(url: string): string | null {
+  // Handle different Spotify URL formats:
+  // https://open.spotify.com/show/5RlxiX9XmGLkYvmORLUcIo
+  // https://open.spotify.com/show/5RlxiX9XmGLkYvmORLUcIo?utm_source=chatgpt.com
+  // spotify:show:5RlxiX9XmGLkYvmORLUcIo
+  
+  const patterns = [
+    /open\.spotify\.com\/show\/([a-zA-Z0-9]+)/,
+    /spotify:show:([a-zA-Z0-9]+)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) {
+      return match[1];
+    }
+  }
+  
+  return null;
+}
+
 async function getShowEpisodes(showId: string, accessToken: string): Promise<SpotifyEpisode[]> {
   const response = await fetch(
     `https://api.spotify.com/v1/shows/${showId}/episodes?market=NL&limit=50`,
@@ -136,6 +157,79 @@ serve(async (req) => {
 
         if (error) {
           console.error('Error adding curated show:', error);
+          return new Response(JSON.stringify({ error: error.message }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        return new Response(JSON.stringify({ show: curatedShow }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      case 'add_curated_show_by_url': {
+        const { spotify_url, category, curator_notes } = params;
+        
+        // Extract show ID from URL
+        const showId = extractSpotifyShowId(spotify_url);
+        if (!showId) {
+          return new Response(JSON.stringify({ error: 'Ongeldige Spotify URL. Gebruik een URL zoals: https://open.spotify.com/show/...' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        
+        // Get show details from Spotify
+        const showResponse = await fetch(
+          `https://api.spotify.com/v1/shows/${showId}?market=NL`,
+          {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          }
+        );
+        
+        if (!showResponse.ok) {
+          return new Response(JSON.stringify({ error: 'Podcast niet gevonden op Spotify. Controleer de URL.' }), {
+            status: 404,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        
+        const show = await showResponse.json();
+        
+        // Check if show already exists
+        const { data: existingShow } = await supabase
+          .from('spotify_curated_shows')
+          .select('id')
+          .eq('spotify_show_id', show.id)
+          .single();
+          
+        if (existingShow) {
+          return new Response(JSON.stringify({ error: 'Deze podcast is al toegevoegd aan de gecureerde lijst.' }), {
+            status: 409,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        
+        // Add to curated shows
+        const { data: curatedShow, error } = await supabase
+          .from('spotify_curated_shows')
+          .insert({
+            spotify_show_id: show.id,
+            name: show.name,
+            description: show.description,
+            publisher: show.publisher,
+            image_url: show.images?.[0]?.url,
+            spotify_url: show.external_urls?.spotify,
+            total_episodes: show.total_episodes,
+            category: category || 'General',
+            curator_notes: curator_notes || null
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error adding curated show by URL:', error);
           return new Response(JSON.stringify({ error: error.message }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }

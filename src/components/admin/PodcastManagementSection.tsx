@@ -12,6 +12,7 @@ import {
   usePodcastEpisodes,
   useSearchPodcasts,
   useAddCuratedShow,
+  useAddCuratedShowByUrl,
   useSyncEpisodes,
   useToggleFeaturedEpisode,
   CuratedShow 
@@ -29,6 +30,7 @@ const CATEGORIES = [
 export const PodcastManagementSection = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
+  const [spotifyUrl, setSpotifyUrl] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('General');
   const [curatorNotes, setCuratorNotes] = useState('');
   const [selectedShow, setSelectedShow] = useState<CuratedShow | null>(null);
@@ -38,6 +40,7 @@ export const PodcastManagementSection = () => {
   
   const searchMutation = useSearchPodcasts();
   const addShowMutation = useAddCuratedShow();
+  const addShowByUrlMutation = useAddCuratedShowByUrl();
   const syncEpisodesMutation = useSyncEpisodes();
   const toggleFeaturedMutation = useToggleFeaturedEpisode();
 
@@ -77,6 +80,32 @@ export const PodcastManagementSection = () => {
       toast({
         title: "Fout bij toevoegen",
         description: "Er ging iets mis bij het toevoegen van de podcast.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddShowByUrl = async () => {
+    if (!spotifyUrl.trim()) return;
+    
+    try {
+      await addShowByUrlMutation.mutateAsync({
+        spotify_url: spotifyUrl,
+        category: selectedCategory,
+        curator_notes: curatorNotes.trim() || undefined,
+      });
+      
+      toast({
+        title: "Podcast toegevoegd via URL",
+        description: "De podcast is succesvol toegevoegd aan de gecureerde lijst.",
+      });
+      
+      setSpotifyUrl('');
+      setCuratorNotes('');
+    } catch (error: any) {
+      toast({
+        title: "Fout bij toevoegen",
+        description: error?.message || "Er ging iets mis bij het toevoegen van de podcast via URL.",
         variant: "destructive",
       });
     }
@@ -124,9 +153,30 @@ export const PodcastManagementSection = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Add by URL */}
+          <div className="space-y-4">
+            <h3 className="font-semibold">Toevoegen via Spotify URL</h3>
+            <div className="flex gap-2">
+              <Input
+                placeholder="https://open.spotify.com/show/..."
+                value={spotifyUrl}
+                onChange={(e) => setSpotifyUrl(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddShowByUrl()}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleAddShowByUrl}
+                disabled={addShowByUrlMutation.isPending || !spotifyUrl.trim()}
+              >
+                <Plus className="w-4 h-4" />
+                Toevoegen
+              </Button>
+            </div>
+          </div>
+
           {/* Search New Podcasts */}
           <div className="space-y-4">
-            <h3 className="font-semibold">Nieuwe Podcasts Zoeken</h3>
+            <h3 className="font-semibold">Of Zoeken naar Nieuwe Podcasts</h3>
             <div className="flex gap-2">
               <Input
                 placeholder="Zoek Spotify podcasts..."

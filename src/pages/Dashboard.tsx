@@ -15,7 +15,8 @@ import {
   Shuffle,
   Sparkles,
   Users,
-  Newspaper
+  Newspaper,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -386,7 +387,47 @@ const Dashboard = () => {
               <Sparkles className="w-6 h-6 text-vinyl-purple" />
               ⚡ Admin Tools
             </h2>
-            <BatchBlogGenerator />
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* SuperAdmin Dashboard Card */}
+              <Card className="border-2 hover:border-red-500/50 transition-all duration-300 hover:shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-red-500" />
+                    🛡️ SuperAdmin Dashboard
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">
+                    Toegang tot volledige system administratie, gebruikersbeheer en podcast management.
+                  </p>
+                  <Button asChild className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700">
+                    <Link to="/superadmin-dashboard?key=superadmin_secret_2024">
+                      <Shield className="w-4 h-4 mr-2" />
+                      Open SuperAdmin Dashboard
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Batch Blog Generator Card */}
+              <Card className="border-2 hover:border-vinyl-purple/50 transition-all duration-300">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-vinyl-purple" />
+                    📝 Blog Generator
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">
+                    Automatisch blog posts genereren voor albums in de collectie.
+                  </p>
+                  <div className="max-w-full">
+                    <BatchBlogGenerator />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </section>
         )}
 

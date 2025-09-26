@@ -180,42 +180,42 @@ export default function CollectionOverview() {
               <TabsList className="grid w-full grid-cols-6 min-w-max sm:min-w-0 bg-white/10 backdrop-blur-md border border-white/20 p-1 rounded-xl">
                 <TabsTrigger 
                   value="overview" 
-                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/80 data-[state=active]:to-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-primary/10"
                 >
                   <Package className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="text-xs sm:text-sm hidden sm:inline">📦 Overzicht</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="ai-analysis" 
-                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-emerald-500/10"
                 >
                   <Brain className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="text-xs sm:text-sm hidden sm:inline">🤖 AI</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="type" 
-                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-violet-500/10"
                 >
                   <Disc className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="text-xs sm:text-sm hidden sm:inline">💿 Type</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="genre" 
-                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-blue-500/10"
                 >
                   <Music className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="text-xs sm:text-sm hidden sm:inline">🎵 Genre</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="year" 
-                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-orange-500/10"
                 >
                   <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="text-xs sm:text-sm hidden sm:inline">📅 Jaar</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="price" 
-                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 hover-scale rounded-lg"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover-scale rounded-lg hover:bg-yellow-500/10"
                 >
                   <Euro className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="text-xs sm:text-sm hidden sm:inline">💰 Prijs</span>

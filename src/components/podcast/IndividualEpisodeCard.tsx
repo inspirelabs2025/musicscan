@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Play, Star, StarOff } from "lucide-react";
 import { IndividualEpisode } from "@/hooks/useIndividualEpisodes";
+import { useAudio } from "@/contexts/AudioContext";
 
 interface IndividualEpisodeCardProps {
   episode: IndividualEpisode;
@@ -19,6 +20,7 @@ export const IndividualEpisodeCard = ({
   showActions = false,
   compact = false 
 }: IndividualEpisodeCardProps) => {
+  const { playTrack, currentTrack, isPlaying } = useAudio();
   const formatDuration = (ms?: number) => {
     if (!ms) return '';
     const minutes = Math.floor(ms / 60000);
@@ -106,14 +108,19 @@ export const IndividualEpisodeCard = ({
             {episode.audio_preview_url && (
               <Button
                 size="sm"
-                variant="outline"
+                variant={currentTrack?.id === episode.id && isPlaying ? "default" : "outline"}
                 onClick={() => {
-                  const audio = new Audio(episode.audio_preview_url);
-                  audio.play();
+                  playTrack({
+                    id: episode.id,
+                    title: episode.name,
+                    artist: episode.show_name,
+                    url: episode.audio_preview_url!,
+                    duration: episode.duration_ms ? episode.duration_ms / 1000 : undefined,
+                  });
                 }}
               >
                 <Play className="w-4 h-4 mr-1" />
-                Preview
+                {currentTrack?.id === episode.id && isPlaying ? 'Playing' : 'Play'}
               </Button>
             )}
 

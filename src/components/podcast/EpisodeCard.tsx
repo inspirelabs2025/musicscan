@@ -5,6 +5,7 @@ import { PlayCircle, Clock, Calendar, Star } from "lucide-react";
 import { ShowEpisode } from "@/hooks/useCuratedPodcasts";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
+import { useAudio } from "@/contexts/AudioContext";
 
 interface EpisodeCardProps {
   episode: ShowEpisode;
@@ -13,6 +14,7 @@ interface EpisodeCardProps {
 }
 
 export const EpisodeCard = ({ episode, showName, compact = false }: EpisodeCardProps) => {
+  const { playTrack, currentTrack, isPlaying } = useAudio();
   const formatDuration = (ms: number | null) => {
     if (!ms) return null;
     const minutes = Math.floor(ms / 60000);
@@ -89,15 +91,20 @@ export const EpisodeCard = ({ episode, showName, compact = false }: EpisodeCardP
             {episode.audio_preview_url && (
               <Button
                 size="sm"
-                variant="secondary"
+                variant={currentTrack?.id === episode.spotify_episode_id && isPlaying ? "default" : "secondary"}
                 className="text-xs"
                 onClick={() => {
-                  const audio = new Audio(episode.audio_preview_url!);
-                  audio.play();
+                  playTrack({
+                    id: episode.spotify_episode_id,
+                    title: episode.name,
+                    artist: showName || 'Podcast',
+                    url: episode.audio_preview_url!,
+                    duration: episode.duration_ms ? episode.duration_ms / 1000 : undefined,
+                  });
                 }}
               >
                 <PlayCircle className="w-3 h-3 mr-1" />
-                Preview
+                {currentTrack?.id === episode.spotify_episode_id && isPlaying ? 'Playing' : 'Preview'}
               </Button>
             )}
           </div>

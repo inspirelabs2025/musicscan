@@ -5,10 +5,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AudioProvider } from "@/contexts/AudioContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Navigation } from "@/components/Navigation";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
+import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import Home from "./pages/Home";
 import Scanner from "./pages/Scanner";
 import Scan from "./pages/Scan";
@@ -92,12 +94,13 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <ErrorBoundary showDetails={true}>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Navigation />
+        <AudioProvider>
+          <TooltipProvider>
+            <ErrorBoundary showDetails={true}>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Navigation />
             <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Home />} />
@@ -274,10 +277,12 @@ const App = () => {
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>
-              <ConditionalFooter />
-           </BrowserRouter>
-        </ErrorBoundary>
-      </TooltipProvider>
+                <ConditionalFooter />
+                <AudioPlayer />
+             </BrowserRouter>
+          </ErrorBoundary>
+        </TooltipProvider>
+      </AudioProvider>
     </AuthProvider>
   </QueryClientProvider>
   );

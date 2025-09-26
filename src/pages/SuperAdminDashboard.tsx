@@ -13,6 +13,7 @@ import { ContentAnalyticsSection } from '@/components/admin/ContentAnalyticsSect
 import { SystemHealthSection } from '@/components/admin/SystemHealthSection';
 import { UserScansSection } from '@/components/admin/UserScansSection';
 import { UserActivitiesSection } from '@/components/admin/UserActivitiesSection';
+import { ArtworkStatusSection } from '@/components/admin/ArtworkStatusSection';
 
 const SUPERADMIN_EMAIL = 'rogiervisser76@gmail.com';
 const SECRET_KEY = 'superadmin_secret_2024';
@@ -153,13 +154,14 @@ const SuperAdminDashboard: React.FC = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="users" key={refreshKey}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="users">Gebruikers</TabsTrigger>
             <TabsTrigger value="activities">User Activities</TabsTrigger>
             <TabsTrigger value="user-scans">User Scans</TabsTrigger>
             <TabsTrigger value="scans">Scan Activiteit</TabsTrigger>
             <TabsTrigger value="content">Content Analytics</TabsTrigger>
             <TabsTrigger value="system">Systeem Status</TabsTrigger>
+            <TabsTrigger value="artwork">Artwork Status</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="mt-6">
@@ -184,6 +186,10 @@ const SuperAdminDashboard: React.FC = () => {
 
           <TabsContent value="system" className="mt-6">
             <SystemHealthSection stats={stats} />
+          </TabsContent>
+
+          <TabsContent value="artwork" className="mt-6">
+            <ArtworkStatusSection stats={stats} />
           </TabsContent>
         </Tabs>
       </div>

@@ -50,6 +50,16 @@ export interface SuperAdminStats {
   avgConfidence: number;
   totalErrors: number;
   uniqueArtists: number;
+  artworkStats?: {
+    aiScansWithoutArtwork: number;
+    cdScansWithoutArtwork: number;
+    vinylScansWithoutArtwork: number;
+    totalScansWithArtwork: number;
+    totalScans: number;
+    lastBatchRun: string | null;
+    batchSuccessRate: number;
+    cronjobStatus: 'active' | 'inactive' | 'unknown';
+  };
 }
 
 export const useSuperAdminStats = () => {

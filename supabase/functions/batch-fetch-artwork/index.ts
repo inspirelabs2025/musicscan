@@ -44,7 +44,7 @@ serve(async (req) => {
         .select('id, artist, title, discogs_url, artwork_url')
         .is('artwork_url', null)
         .or('discogs_url.not.is.null,and(artist.not.is.null,title.not.is.null)')
-        .limit(10); // Process in batches
+        .limit(25); // Increased batch size for better efficiency
 
       if (aiError) throw aiError;
 
@@ -101,7 +101,7 @@ serve(async (req) => {
       .eq('user_id', user_id)
       .is('front_image', null)
       .or('discogs_url.not.is.null,and(artist.not.is.null,title.not.is.null)')
-      .limit(10); // Process in batches
+      .limit(20); // Increased batch size
 
     if (cdError) throw cdError;
 
@@ -142,7 +142,7 @@ serve(async (req) => {
       .eq('user_id', user_id)
       .is('catalog_image', null)
       .or('discogs_url.not.is.null,and(artist.not.is.null,title.not.is.null)')
-      .limit(10); // Process in batches
+      .limit(20); // Increased batch size
 
     if (vinylError) throw vinylError;
 

@@ -60,21 +60,38 @@ export const useAddIndividualEpisode = () => {
       category?: string; 
       curator_notes?: string; 
     }) => {
-      const { data, error } = await supabase.functions.invoke('spotify-podcast-manager', {
-        body: {
-          action: 'add_individual_episode',
-          params: {
-            spotify_url,
-            category,
-            curator_notes
+      console.log('🚀 Adding individual episode:', { spotify_url, category, curator_notes });
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('spotify-podcast-manager', {
+          body: {
+            action: 'add_individual_episode',
+            params: {
+              spotify_url,
+              category,
+              curator_notes
+            }
           }
+        });
+
+        console.log('📡 Edge function response:', { data, error });
+
+        if (error) {
+          console.error('❌ Edge function error:', error);
+          throw error;
         }
-      });
+        
+        if (data?.error) {
+          console.error('❌ Application error:', data.error);
+          throw new Error(data.error);
+        }
 
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-
-      return data;
+        console.log('✅ Episode added successfully:', data);
+        return data;
+      } catch (networkError) {
+        console.error('❌ Network/request error:', networkError);
+        throw networkError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['individualEpisodes'] });

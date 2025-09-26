@@ -165,6 +165,7 @@ async function getShowEpisodes(showId: string, accessToken: string): Promise<Spo
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -175,7 +176,40 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, ...params } = await req.json();
+    console.log(`📥 Request method: ${req.method}`);
+    console.log(`📥 Request headers:`, Object.fromEntries(req.headers.entries()));
+
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log(`📥 Request body:`, requestBody);
+    } catch (jsonError) {
+      console.error('❌ JSON parsing error:', jsonError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid JSON in request body',
+          details: jsonError.message 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const { action, params } = requestBody;
+
+    if (!action) {
+      console.error('❌ Missing action parameter');
+      return new Response(
+        JSON.stringify({ error: 'Missing required parameter: action' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     console.log('Podcast manager action:', action, 'params:', params);
 
     const accessToken = await getSpotifyAccessToken();
@@ -438,76 +472,109 @@ if (validEpisodes.length === 0) {
       }
 
       case 'add_individual_episode': {
-        const { spotify_url: episodeUrl, category: episodeCategory = 'General', curator_notes: episodeNotes } = params;
-        if (!episodeUrl) {
-          return new Response(
-            JSON.stringify({ error: 'Missing spotify_url parameter' }),
-            { status: 400, headers: corsHeaders }
-          );
+        console.log('🎵 Processing add_individual_episode action');
+        const { spotify_url, category = 'General', curator_notes } = params;
+        
+        console.log(`📝 Parameters: spotify_url=${spotify_url}, category=${category}, curator_notes=${curator_notes}`);
+        
+        if (!spotify_url) {
+          console.error('❌ Missing spotify_url parameter');
+          return new Response(JSON.stringify({ error: 'Missing spotify_url parameter' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
 
-        const episodeId = extractSpotifyEpisodeId(episodeUrl);
+        console.log('🔍 Extracting episode ID from URL...');
+        const episodeId = extractSpotifyEpisodeId(spotify_url);
         if (!episodeId) {
-          return new Response(
-            JSON.stringify({ error: 'Invalid Spotify episode URL' }),
-            { status: 400, headers: corsHeaders }
-          );
+          console.error('❌ Invalid Spotify episode URL:', spotify_url);
+          return new Response(JSON.stringify({ error: 'Invalid Spotify episode URL' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
+        console.log(`✅ Episode ID extracted: ${episodeId}`);
 
-        // Get episode details from Spotify
-        const episodeDetails = await getEpisodeDetails(episodeId, accessToken);
-        if (!episodeDetails) {
+        try {
+          console.log(`📡 Fetching episode details for ${episodeId}...`);
+          const episodeDetails = await getEpisodeDetails(episodeId, accessToken);
+          
+          if (!episodeDetails) {
+            console.error('❌ Could not fetch episode details from Spotify');
+            return new Response(JSON.stringify({ error: 'Could not fetch episode details from Spotify' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+          console.log(`✅ Episode details fetched: ${episodeDetails.name} by ${episodeDetails.show.name}`);
+
+          // Check if episode already exists
+          console.log('🔍 Checking for existing episode...');
+          const { data: existingEpisode } = await supabase
+            .from('spotify_individual_episodes')
+            .select('id')
+            .eq('spotify_episode_id', episodeId)
+            .single();
+
+          if (existingEpisode) {
+            console.log('⚠️ Episode already exists');
+            return new Response(JSON.stringify({ error: 'Episode already exists in the database' }), {
+              status: 409,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          console.log('💾 Inserting episode into database...');
+          const { data: insertedEpisode, error: insertError } = await supabase
+            .from('spotify_individual_episodes')
+            .insert({
+              spotify_episode_id: episodeId,
+              name: episodeDetails.name,
+              description: episodeDetails.description,
+              show_name: episodeDetails.show.name,
+              audio_preview_url: episodeDetails.audio_preview_url,
+              spotify_url: episodeDetails.external_urls.spotify,
+              release_date: episodeDetails.release_date,
+              duration_ms: episodeDetails.duration_ms,
+              category,
+              curator_notes: curator_notes || null,
+              is_featured: false,
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('❌ Database insert error:', insertError);
+            return new Response(
+              JSON.stringify({ error: 'Failed to save episode', details: insertError.message }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          console.log('✅ Episode successfully added to database');
           return new Response(
-            JSON.stringify({ error: 'Failed to fetch episode from Spotify' }),
-            { status: 500, headers: corsHeaders }
+            JSON.stringify({ 
+              success: true, 
+              message: 'Individual episode added successfully',
+              episode: {
+                id: episodeId,
+                name: episodeDetails.name,
+                show_name: episodeDetails.show.name
+              }
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
+        } catch (spotifyError) {
+          console.error('❌ Spotify API error:', spotifyError);
+          return new Response(JSON.stringify({ 
+            error: 'Spotify API error', 
+            details: spotifyError.message 
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
-
-        // Check if episode already exists
-        const { data: existingEpisode } = await supabase
-          .from('spotify_individual_episodes')
-          .select('id')
-          .eq('spotify_episode_id', episodeId)
-          .single();
-
-        if (existingEpisode) {
-          return new Response(
-            JSON.stringify({ error: 'Episode already exists in the database' }),
-            { status: 409, headers: corsHeaders }
-          );
-        }
-
-        // Insert individual episode
-        const { data: insertedEpisode, error: insertError } = await supabase
-          .from('spotify_individual_episodes')
-          .insert({
-            spotify_episode_id: episodeId,
-            name: episodeDetails.name,
-            description: episodeDetails.description,
-            show_name: episodeDetails.show.name,
-            audio_preview_url: episodeDetails.audio_preview_url,
-            spotify_url: episodeDetails.external_urls.spotify,
-            release_date: episodeDetails.release_date,
-            duration_ms: episodeDetails.duration_ms,
-            category: episodeCategory,
-            curator_notes: episodeNotes,
-            is_featured: false
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error('Error inserting individual episode:', insertError);
-          return new Response(
-            JSON.stringify({ error: insertError.message }),
-            { status: 500, headers: corsHeaders }
-          );
-        }
-
-        return new Response(
-          JSON.stringify({ success: true, episode: insertedEpisode }),
-          { status: 200, headers: corsHeaders }
-        );
       }
 
       case 'toggle_featured_individual_episode': {

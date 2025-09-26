@@ -252,6 +252,7 @@ const App = () => {
                 <TestAlbumCoverBackfill />
               </ProtectedRoute>
             } />
+            <Route path="/superadmin" element={<SuperAdminDashboard />} />
             <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
             <Route path="/admin/price-history" element={
               <ProtectedRoute>

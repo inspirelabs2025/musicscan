@@ -1523,40 +1523,85 @@ export type Database = {
       }
       music_stories: {
         Row: {
+          album: string | null
+          artist: string | null
+          catalog: string | null
           created_at: string
+          genre: string | null
           id: string
           is_published: boolean
+          label: string | null
+          meta_description: string | null
+          meta_title: string | null
           query: string
+          reading_time: number | null
+          single_name: string | null
           slug: string
+          social_post: string | null
           story_content: string
+          styles: string[] | null
+          tags: string[] | null
           title: string
           updated_at: string
           user_id: string
           views_count: number | null
+          word_count: number | null
+          yaml_frontmatter: Json | null
+          year: number | null
         }
         Insert: {
+          album?: string | null
+          artist?: string | null
+          catalog?: string | null
           created_at?: string
+          genre?: string | null
           id?: string
           is_published?: boolean
+          label?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           query: string
+          reading_time?: number | null
+          single_name?: string | null
           slug: string
+          social_post?: string | null
           story_content: string
+          styles?: string[] | null
+          tags?: string[] | null
           title: string
           updated_at?: string
           user_id: string
           views_count?: number | null
+          word_count?: number | null
+          yaml_frontmatter?: Json | null
+          year?: number | null
         }
         Update: {
+          album?: string | null
+          artist?: string | null
+          catalog?: string | null
           created_at?: string
+          genre?: string | null
           id?: string
           is_published?: boolean
+          label?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           query?: string
+          reading_time?: number | null
+          single_name?: string | null
           slug?: string
+          social_post?: string | null
           story_content?: string
+          styles?: string[] | null
+          tags?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string
           views_count?: number | null
+          word_count?: number | null
+          yaml_frontmatter?: Json | null
+          year?: number | null
         }
         Relationships: []
       }

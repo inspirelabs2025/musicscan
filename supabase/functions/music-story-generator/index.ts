@@ -10,39 +10,72 @@ const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-const MUSIC_STORY_PROMPT = `Je bent een muziekhistoricus en storyteller die fascinerende verhalen vertelt over muziek, artiesten en albums in het Nederlands.
+const MUSIC_STORY_PROMPT = `Je bent een ervaren muziekjournalist en cultureel historicus die diepgaande verhalen vertelt over muziek, artiesten en nummers in het Nederlands. Jouw verhalen zijn van hetzelfde niveau als professionele muziekmagazines.
 
-INSTRUCTIES:
-- Zoek naar interessante achtergrondinformatie, anekdotes, en verhalen
-- Focus op historische context, cultuur impact, en persoonlijke verhalen
-- Gebruik een engaging, journalistieke schrijfstijl
-- Structureer het verhaal met duidelijke paragrafen
-- Vermeld interessante feiten en trivia
-- Gebruik concrete voorbeelden en datums waar mogelijk
+DOEL: Maak een uitgebreid, professioneel verhaal dat lezers meeneemt in de wereld achter een muziekstuk.
+
+SCHRIJFSTIJL:
+- Journalistieke professionaliteit met toegankelijke toon
+- Concrete details, datums, namen, en verificeerbare feiten
+- Persoonlijke anekdotes en verhalen van betrokkenen
+- Culturele en historische context
+- Technische details over productie wanneer relevant
 
 VERPLICHTE STRUCTUUR (gebruik markdown headers):
-## Het Verhaal Achter [Naam]
 
-### Achtergrond
-- Historische context en tijdperk
-- Omstandigheden waarin het ontstond
+# Het Verhaal Achter [Titel]
 
-### Het Verhaal
-- Interessante anekdotes en gebeurtenissen
-- Persoonlijke verhalen van betrokkenen
-- Bijzondere momenten tijdens opname/creatie
+## De Single/Het Nummer
+Waarom dit nummer tijdloos relevant is. Wat maakt dit nummer bijzonder in de catalogus van de artiest? Eerste indruk, impact, en waarom het vandaag nog steeds resoneren heeft.
 
-### Impact & Legacy
-- Culturele betekenis en invloed
-- Hoe het de muziekwereld veranderde
-- Blijvende impact tot vandaag
+## Het Verhaal
+De achtergrond en context van het ontstaan. Wat was de inspiratie? Welke gebeurtenissen leidden tot dit nummer? Persoonlijke omstandigheden van de artiest(en) tijdens het schrijfproces.
 
-### Interessante Feiten
-- Trivia en minder bekende details
-- Verrassende verbindingen
-- Bijzondere achievements
+## De Opnames & Productie
+Studio details, producer informatie, opnameproces. Welke studio werd gebruikt? Wie was de producer? Interessante technische aspecten, gebruikte instrumenten, bijzondere opnametechnieken.
 
-TOON: Informatief maar toegankelijk, zoals een goed muziekmagazine artikel. Gebruik concrete details en vermijd vage beweringen.`;
+## Artwork & Presentatie
+Single hoes ontwerp, video concept (indien van toepassing). Wie ontwierp de artwork? Welke visuele concepten werden gebruikt? Video productie verhalen.
+
+## Kritieken & Ontvangst
+Pers reacties en professionele reviews toen het uitkwam. Hoe reageerde de muziektpers? Wat vonden critici? Eerste publieke reacties.
+
+## Commercieel Succes & Impact
+Hitlijsten, awards, culturele impact. Hoe presteerde het commercieel? Welke hitlijsten werden behaald? Awards gewonnen? Culturele bewegingen beïnvloed?
+
+## Verzamelwaarde
+Zeldzaamheid, collector's items, verschillende uitgaves. Zijn er zeldzame persingen? Wat zijn bijzondere uitgaves waard? Vinyl cultuur aspecten.
+
+## Persoonlijke Touch
+Anekdotes van de artiest, bandleden, producer. Wat vertelden betrokkenen later over dit nummer? Persoonlijke herinneringen en verhalen.
+
+## Luister met Aandacht
+Specifieke luistertips - waar moet je op letten? Verborgen details in de mix, bijzondere instrumentatie, vocale technieken, productietrucs die opvallen bij aandachtig luisteren.
+
+## Voor Wie Is Dit?
+Doelgroep beschrijving - welke muziekliefhebbers waarderen dit? Fans van welke andere artiesten zouden dit kunnen waarderen? Plaats in de muziekgeschiedenis.
+
+METADATA REQUIREMENTS:
+Zorg dat je informatie verzamelt voor:
+- Artiest naam
+- Nummer titel  
+- Uitgavejaar
+- Label
+- Catalogusnummer (indien bekend)
+- Album (indien onderdeel van album)
+- Genre en stijlen
+- Producer naam
+- Studio naam
+
+KWALITEITSEISEN:
+- Minimaal 1200 woorden
+- Concrete namen, datums en feiten
+- Verificeerbare informatie waar mogelijk
+- Diepgaand onderzoek naar achtergronden
+- Professionele journalistieke kwaliteit
+- Nederlandse taal met correcte spelling en grammatica
+
+TOON: Professioneel maar toegankelijk, zoals Muziekencyclopedie, OOR Magazine, of de Volkskrant Muziek. Gebruik concrete details en vermijd vage beweringen. Wees informatief én boeiend.`;
 
 function generateSlug(query: string): string {
   return query
@@ -58,6 +91,47 @@ function generateTitle(query: string): string {
   return `Het Verhaal Achter ${query.split(' ').map(word => 
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(' ')}`;
+}
+
+function extractMetadata(query: string, story: string) {
+  // Parse query to extract artist and single name
+  const queryParts = query.split(/[,-]/).map(s => s.trim());
+  const artist = queryParts.length > 1 ? queryParts[1] : queryParts[0].split(' ')[0];
+  const single = queryParts[0];
+  
+  // Try to extract year from story content
+  const yearMatch = story.match(/\b(19\d{2}|20\d{2})\b/);
+  const year = yearMatch ? parseInt(yearMatch[1]) : null;
+  
+  // Extract label from story content
+  const labelMatch = story.match(/label[:\s]+([\w\s&]+)/i);
+  const label = labelMatch ? labelMatch[1].trim() : null;
+  
+  // Extract genre suggestions based on common music genres
+  const genres = ['pop', 'rock', 'jazz', 'classical', 'electronic', 'hip-hop', 'country', 'folk', 'blues', 'r&b'];
+  const foundGenre = genres.find(g => story.toLowerCase().includes(g));
+  const genre = foundGenre || null;
+  
+  // Generate tags based on content
+  const tags = [
+    artist?.toLowerCase().replace(/\s+/g, ''),
+    genre,
+    'muziek',
+    'verhaal',
+    'geschiedenis'
+  ].filter(Boolean);
+  
+  return {
+    artist: artist || null,
+    single: single || null,
+    year,
+    label,
+    catalog: null, // Would need more sophisticated parsing
+    album: null, // Would need more sophisticated parsing  
+    genre,
+    styles: genre ? [genre] : [],
+    tags
+  };
 }
 
 serve(async (req) => {
@@ -103,10 +177,10 @@ serve(async (req) => {
           { role: 'system', content: MUSIC_STORY_PROMPT },
           { 
             role: 'user', 
-            content: `Vertel het fascinerende verhaal achter: "${query}". Zorg voor concrete details, interessante anekdotes en historische context.` 
+            content: `Vertel het fascinerende verhaal achter: "${query}". Zorg voor concrete details, interessante anekdotes en historische context. Gebruik de volledige structuur met alle 10 secties voor een professioneel verhaal van minimaal 1200 woorden.` 
           }
         ],
-        max_tokens: 1500,
+        max_tokens: 2500,
         temperature: 0.8,
       }),
     });
@@ -118,9 +192,38 @@ serve(async (req) => {
     const data = await response.json();
     const story = data.choices[0].message.content;
 
-    // Generate slug and title
-    const slug = generateSlug(query);
-    const title = generateTitle(query);
+    // Extract metadata from query and story
+    const extractedData = extractMetadata(query, story);
+    
+    // Calculate reading time and word count
+    const wordCount = story.split(/\s+/).length;
+    const readingTime = Math.ceil(wordCount / 200); // Average reading speed
+
+    // Generate YAML frontmatter
+    const yamlFrontmatter = {
+      title: title,
+      artist: extractedData.artist,
+      single: extractedData.single,
+      year: extractedData.year,
+      label: extractedData.label,
+      catalog: extractedData.catalog,
+      album: extractedData.album,
+      genre: extractedData.genre,
+      styles: extractedData.styles,
+      slug: slug,
+      tags: extractedData.tags,
+      meta_title: `${title} - MusicScan`,
+      meta_description: `Ontdek het fascinerende verhaal achter ${query}. Lees over de achtergrond, productie en impact van dit tijdloze muziekstuk.`,
+      reading_time: readingTime,
+      word_count: wordCount
+    };
+
+    // Generate social post
+    const socialPost = `🎵 Ontdek het verhaal achter "${query}" 
+
+${story.substring(0, 150)}... 
+
+Lees meer op MusicScan! #muziek #verhaal #${extractedData.artist?.toLowerCase().replace(/\s+/g, '')} #musicscan`;
 
     // Save to database using direct HTTP request
     const saveResponse = await fetch(`${supabaseUrl}/rest/v1/music_stories`, {
@@ -137,7 +240,22 @@ serve(async (req) => {
         story_content: story,
         slug,
         title,
-        is_published: true
+        is_published: true,
+        yaml_frontmatter: yamlFrontmatter,
+        social_post: socialPost.substring(0, 280), // Twitter limit
+        reading_time: readingTime,
+        word_count: wordCount,
+        meta_title: yamlFrontmatter.meta_title,
+        meta_description: yamlFrontmatter.meta_description,
+        artist: extractedData.artist,
+        single_name: extractedData.single,
+        year: extractedData.year,
+        label: extractedData.label,
+        catalog: extractedData.catalog,
+        album: extractedData.album,
+        genre: extractedData.genre,
+        styles: extractedData.styles,
+        tags: extractedData.tags
       })
     });
 

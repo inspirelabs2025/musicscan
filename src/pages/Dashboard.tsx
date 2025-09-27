@@ -42,6 +42,7 @@ import { CollectionPersonality } from '@/components/dashboard/CollectionPersonal
 import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { NextGoalWidget } from '@/components/dashboard/NextGoalWidget';
 import { BlogPreviewWidget } from '@/components/dashboard/BlogPreviewWidget';
+import { MusicStoryWidget } from '@/components/dashboard/MusicStoryWidget';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -216,12 +217,13 @@ const Dashboard = () => {
             <Newspaper className="w-6 h-6 text-vinyl-gold" />
             📚 Ontdek & Leer
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <BlogPreviewWidget />
+            <MusicStoryWidget />
             <EnhancedNewsWidget />
             
             {/* Recent Activity */}
-            <Card className="border-2 hover:border-accent/50 transition-all duration-300">
+            <Card className="border-2 hover:border-accent/50 transition-all duration-300 lg:col-span-3">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5 text-accent" />

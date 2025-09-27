@@ -7,14 +7,31 @@ const corsHeaders = {
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
-const RANDOM_QUERY_PROMPT = `Je bent een muziekexpert die interessante en diverse muziekquery's genereert voor verhalen. Je doel is om fascinerende, minder bekende verhalen uit de muziekgeschiedenis te ontdekken.
+const generateRandomQueryPrompt = (genre?: string, period?: string) => {
+  let prompt = `Je bent een muziekexpert die interessante en diverse muziekquery's genereert voor verhalen. Je doel is om fascinerende, minder bekende verhalen uit de muziekgeschiedenis te ontdekken.
 
 INSTRUCTIES:
-- Genereer 1 specifieke muziekquery
-- Kies uit verschillende tijdperken (1950s-2020s) 
+- Genereer 1 specifieke muziekquery`;
+
+  if (genre && genre !== 'alle') {
+    prompt += `
+- FOCUS OP ${genre.toUpperCase()} GENRE`;
+  } else {
+    prompt += `
+- Kies uit verschillende genres (rock, pop, jazz, electronic, hip-hop, folk, classical, world music, etc.)`;
+  }
+
+  if (period && period !== 'alle') {
+    prompt += `
+- FOCUS OP DE ${period.toUpperCase()}`;
+  } else {
+    prompt += `
+- Kies uit verschillende tijdperken (1950s-2020s)`;
+  }
+
+  prompt += `
 - Mix bekende en minder bekende artiesten/nummers
 - Varieer tussen solo artiesten, bands, albums en singles
-- Zorg voor diversiteit in genres (rock, pop, jazz, electronic, hip-hop, folk, etc.)
 - Focus op verhalen die interessant en verrassend kunnen zijn
 - Vermijd de meest voor de hand liggende keuzes
 
@@ -23,17 +40,37 @@ FORMATEN (kies 1):
 - "[Album] - [Artiest]"
 - "[Artiest]"
 
-VOORBEELDEN van goede keuzes:
-- "Avalon - Roxy Music"
-- "Autobahn - Kraftwerk" 
-- "Caravan - Duke Ellington"
+VOORBEELDEN van goede keuzes${genre ? ` in ${genre}` : ''}${period ? ` uit de ${period}` : ''}:`;
+
+  if (genre === 'rock' || !genre) {
+    prompt += `
 - "Heroes - David Bowie"
-- "Gimme Shelter - The Rolling Stones"
-- "What's Going On - Marvin Gaye"
-- "Blue Monday - New Order"
+- "Gimme Shelter - The Rolling Stones"`;
+  }
+  if (genre === 'electronic' || !genre) {
+    prompt += `
+- "Autobahn - Kraftwerk"
+- "Blue Monday - New Order"`;
+  }
+  if (genre === 'jazz' || !genre) {
+    prompt += `
+- "Caravan - Duke Ellington"`;
+  }
+  if (genre === 'hip-hop' || !genre) {
+    prompt += `
 - "Rappers Delight - Sugarhill Gang"
-- "The Low End Theory - A Tribe Called Quest"
-- "Disintegration - The Cure"
+- "The Low End Theory - A Tribe Called Quest"`;
+  }
+  if (genre === 'pop' || !genre) {
+    prompt += `
+- "Avalon - Roxy Music"`;
+  }
+  if (genre === 'alternative' || !genre) {
+    prompt += `
+- "Disintegration - The Cure"`;
+  }
+
+  prompt += `
 
 VERMIJD:
 - Te voor de hand liggende keuzes zoals "Hotel California"
@@ -43,13 +80,20 @@ VERMIJD:
 
 Geef alleen de query terug, geen extra tekst.`;
 
+  return prompt;
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('🎲 Generating random music query...');
+    const { genre, period } = await req.json().catch(() => ({ genre: null, period: null }));
+    
+    console.log('🎲 Generating random music query...', { genre, period });
+
+    const prompt = generateRandomQueryPrompt(genre, period);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -60,10 +104,10 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4.1-2025-04-14',
         messages: [
-          { role: 'system', content: RANDOM_QUERY_PROMPT },
+          { role: 'system', content: prompt },
           { 
             role: 'user', 
-            content: 'Genereer een interessante, diverse muziekquery voor een verrassend verhaal. Zorg dat het niet te voor de hand ligt maar wel boeiend is.' 
+            content: `Genereer een interessante muziekquery${genre && genre !== 'alle' ? ` in het ${genre} genre` : ''}${period && period !== 'alle' ? ` uit de ${period}` : ''}. Zorg dat het verrassend maar boeiend is.` 
           }
         ],
         max_completion_tokens: 50,

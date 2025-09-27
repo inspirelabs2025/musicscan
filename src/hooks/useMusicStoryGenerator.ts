@@ -14,6 +14,8 @@ interface MusicStoryResult {
 export const useMusicStoryGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStory, setCurrentStory] = useState<MusicStoryResult | null>(null);
+  const [selectedGenre, setSelectedGenre] = useState<string>('alle');
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('alle');
   const { toast } = useToast();
 
   const generateStory = async (query: string): Promise<MusicStoryResult | null> => {
@@ -85,11 +87,14 @@ export const useMusicStoryGenerator = () => {
     setIsGenerating(true);
     
     try {
-      console.log('Generating random music query...');
+      console.log('Generating random music query...', { selectedGenre, selectedPeriod });
       
-      // First get a random query from OpenAI
+      // First get a random query from OpenAI with filters
       const { data: randomData, error: randomError } = await supabase.functions.invoke('random-music-query', {
-        body: {}
+        body: { 
+          genre: selectedGenre === 'alle' ? null : selectedGenre,
+          period: selectedPeriod === 'alle' ? null : selectedPeriod
+        }
       });
 
       if (randomError) {
@@ -169,6 +174,10 @@ export const useMusicStoryGenerator = () => {
     generateRandomStory,
     clearStory,
     isGenerating,
-    currentStory
+    currentStory,
+    selectedGenre,
+    setSelectedGenre,
+    selectedPeriod,
+    setSelectedPeriod,
   };
 };

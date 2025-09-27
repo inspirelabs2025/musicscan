@@ -3,13 +3,50 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMusicStoryGenerator } from '@/hooks/useMusicStoryGenerator';
 import { Music, Search, BookOpen, Share2, X, Shuffle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
+const GENRES = [
+  { value: 'alle', label: 'Alle genres' },
+  { value: 'rock', label: 'Rock' },
+  { value: 'pop', label: 'Pop' },
+  { value: 'jazz', label: 'Jazz' },
+  { value: 'electronic', label: 'Electronic' },
+  { value: 'hip-hop', label: 'Hip-Hop' },
+  { value: 'folk', label: 'Folk' },
+  { value: 'classical', label: 'Classical' },
+  { value: 'alternative', label: 'Alternative' },
+  { value: 'punk', label: 'Punk' },
+  { value: 'reggae', label: 'Reggae' },
+];
+
+const PERIODS = [
+  { value: 'alle', label: 'Alle periodes' },
+  { value: '1950s', label: 'Jaren 50' },
+  { value: '1960s', label: 'Jaren 60' },
+  { value: '1970s', label: 'Jaren 70' },
+  { value: '1980s', label: 'Jaren 80' },
+  { value: '1990s', label: 'Jaren 90' },
+  { value: '2000s', label: 'Jaren 2000' },
+  { value: '2010s', label: 'Jaren 2010' },
+  { value: '2020s', label: 'Jaren 2020' },
+];
+
 export const MusicStoryWidget = () => {
   const [query, setQuery] = useState('');
-  const { generateStory, generateRandomStory, clearStory, isGenerating, currentStory } = useMusicStoryGenerator();
+  const { 
+    generateStory, 
+    generateRandomStory, 
+    clearStory, 
+    isGenerating, 
+    currentStory,
+    selectedGenre,
+    setSelectedGenre,
+    selectedPeriod,
+    setSelectedPeriod
+  } = useMusicStoryGenerator();
 
   const handleSearch = () => {
     if (query.trim()) {
@@ -54,53 +91,84 @@ export const MusicStoryWidget = () => {
       <CardContent className="space-y-4">
         {!currentStory ? (
           <>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  placeholder="Voer een song, artiest of album in..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pr-10"
-                />
-                <Music className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    placeholder="Voer een song, artiest of album in..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    className="pr-10"
+                  />
+                  <Music className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+                <Button 
+                  onClick={handleSearch} 
+                  disabled={isGenerating || !query.trim()}
+                  size="sm"
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                      Zoeken...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Zoek
+                    </>
+                  )}
+                </Button>
               </div>
-              <Button 
-                onClick={handleSearch} 
-                disabled={isGenerating || !query.trim()}
-                size="sm"
-              >
-                {isGenerating ? (
-                  <>
-                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                    Zoeken...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4 mr-2" />
-                    Zoek
-                  </>
-                )}
-              </Button>
-              <Button 
-                onClick={handleRandomSearch} 
-                disabled={isGenerating}
-                size="sm"
-                variant="outline"
-                className="whitespace-nowrap"
-              >
-                {isGenerating ? (
-                  <>
-                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                    AI kiest...
-                  </>
-                ) : (
-                  <>
-                    <Shuffle className="h-4 w-4 mr-2" />
-                    Verras Me!
-                  </>
-                )}
-              </Button>
+              
+              <div className="flex gap-2 items-center">
+                <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GENRES.map((genre) => (
+                      <SelectItem key={genre.value} value={genre.value}>
+                        {genre.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PERIODS.map((period) => (
+                      <SelectItem key={period.value} value={period.value}>
+                        {period.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Button 
+                  onClick={handleRandomSearch} 
+                  disabled={isGenerating}
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto whitespace-nowrap"
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                      AI kiest...
+                    </>
+                  ) : (
+                    <>
+                      <Shuffle className="h-4 w-4 mr-2" />
+                      Verras Me!
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">

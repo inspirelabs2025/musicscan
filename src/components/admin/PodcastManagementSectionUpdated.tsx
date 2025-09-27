@@ -98,7 +98,7 @@ export const PodcastManagementSectionUpdated = () => {
 
     try {
       await addShowByUrlMutation.mutateAsync({
-        spotify_url: spotifyUrl,
+        url: spotifyUrl,
         category: selectedCategory,
         curator_notes: curatorNotes
       });

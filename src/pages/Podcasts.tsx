@@ -8,6 +8,7 @@ import { PodcastCard } from '@/components/podcast/PodcastCard';
 import { PodcastCategoryFilter } from '@/components/podcast/PodcastCategoryFilter';
 import { EpisodeCard } from '@/components/podcast/EpisodeCard';
 import { IndividualEpisodeCard } from '@/components/podcast/IndividualEpisodeCard';
+import { RSSEpisodeCard } from '@/components/podcast/RSSEpisodeCard';
 
 export default function Podcasts() {
   const [selectedCategory, setSelectedCategory] = useState('all');

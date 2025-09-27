@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface CuratedShow {
   id: string;
-  spotify_show_id: string;
+  spotify_show_id: string | null;
   name: string;
   description: string | null;
   publisher: string | null;
@@ -13,6 +13,8 @@ export interface CuratedShow {
   is_active: boolean;
   category: string;
   curator_notes: string | null;
+  feed_type?: string;
+  rss_feed_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -30,6 +32,24 @@ export interface ShowEpisode {
   is_featured: boolean;
   created_at: string;
   updated_at: string;
+  type?: 'spotify' | 'rss';
+}
+
+export interface RSSEpisode {
+  id: string;
+  title: string;
+  description?: string;
+  audio_url: string;
+  duration_seconds?: number;
+  published_date?: string;
+  episode_number?: number;
+  season_number?: number;
+  is_featured: boolean;
+  show_name?: string;
+  show_id: string;
+  created_at: string;
+  updated_at: string;
+  type?: 'rss';
 }
 
 export const useCuratedPodcasts = (category?: string) => {
@@ -59,20 +79,47 @@ export const usePodcastEpisodes = (showId: string, featured?: boolean) => {
   return useQuery({
     queryKey: ['podcast-episodes', showId, featured],
     queryFn: async () => {
-      let query = supabase
-        .from('spotify_show_episodes')
-        .select('*')
-        .eq('show_id', showId)
-        .order('release_date', { ascending: false });
+      // Fetch both Spotify and RSS episodes
+      const [spotifyResult, rssResult] = await Promise.all([
+        // Spotify episodes
+        supabase
+          .from('spotify_show_episodes')
+          .select('*')
+          .eq('show_id', showId)
+          .eq('is_featured', featured !== undefined ? featured : true)
+          .order('release_date', { ascending: false }),
+        
+        // RSS episodes
+        supabase
+          .from('rss_feed_episodes')
+          .select('*')
+          .eq('show_id', showId)
+          .eq('is_featured', featured !== undefined ? featured : true)
+          .order('published_date', { ascending: false })
+      ]);
 
-      if (featured) {
-        query = query.eq('is_featured', true);
-      }
+      const spotifyEpisodes = (spotifyResult.data || []).map(episode => ({
+        ...episode,
+        type: 'spotify' as const
+      }));
 
-      const { data, error } = await query;
+      const rssEpisodes = (rssResult.data || []).map(episode => ({
+        ...episode,
+        name: episode.title,
+        release_date: episode.published_date,
+        duration_ms: episode.duration_seconds ? episode.duration_seconds * 1000 : undefined,
+        type: 'rss' as const
+      }));
 
-      if (error) throw error;
-      return data as ShowEpisode[];
+      // Combine and sort all episodes by date
+      const allEpisodes = [...spotifyEpisodes, ...rssEpisodes];
+      allEpisodes.sort((a, b) => {
+        const dateA = new Date(a.release_date || (a as any).published_date || 0);
+        const dateB = new Date(b.release_date || (b as any).published_date || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      return allEpisodes;
     },
     enabled: !!showId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -171,25 +218,45 @@ export const useAddCuratedShowByUrl = () => {
 
   return useMutation({
     mutationFn: async ({ 
-      spotify_url, 
+      url, 
       category, 
       curator_notes 
     }: { 
-      spotify_url: string; 
+      url: string; 
       category?: string; 
       curator_notes?: string; 
     }) => {
-      const { data, error } = await supabase.functions.invoke('spotify-podcast-manager', {
-        body: { 
-          action: 'add_curated_show_by_url', 
-          spotify_url, 
-          category, 
-          curator_notes 
-        }
-      });
+      // Check if it's an RSS feed URL
+      if (url.includes('.xml') || url.includes('rss') || url.includes('feed')) {
+        // Handle RSS feed
+        const { data, error } = await supabase.functions.invoke('rss-feed-parser', {
+          body: {
+            action: 'add_rss_show',
+            params: { 
+              rssUrl: url,
+              name: 'RSS Podcast',
+              description: 'Added from RSS feed',
+              category: category || 'Algemeen'
+            }
+          }
+        });
 
-      if (error) throw error;
-      return data.show;
+        if (error) throw error;
+        return data;
+      } else {
+        // Handle Spotify URL
+        const { data, error } = await supabase.functions.invoke('spotify-podcast-manager', {
+          body: { 
+            action: 'add_curated_show_by_url', 
+            spotify_url: url, 
+            category, 
+            curator_notes 
+          }
+        });
+
+        if (error) throw error;
+        return data.show;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['curated-podcasts'] });

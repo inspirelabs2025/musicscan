@@ -2146,6 +2146,68 @@ export type Database = {
         }
         Relationships: []
       }
+      rss_feed_episodes: {
+        Row: {
+          audio_url: string
+          created_at: string | null
+          description: string | null
+          duration_seconds: number | null
+          episode_number: number | null
+          file_size: number | null
+          guid: string | null
+          id: string
+          is_featured: boolean | null
+          mime_type: string | null
+          published_date: string | null
+          season_number: number | null
+          show_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          episode_number?: number | null
+          file_size?: number | null
+          guid?: string | null
+          id?: string
+          is_featured?: boolean | null
+          mime_type?: string | null
+          published_date?: string | null
+          season_number?: number | null
+          show_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          episode_number?: number | null
+          file_size?: number | null
+          guid?: string | null
+          id?: string
+          is_featured?: boolean | null
+          mime_type?: string | null
+          published_date?: string | null
+          season_number?: number | null
+          show_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rss_feed_episodes_show_id_fkey"
+            columns: ["show_id"]
+            isOneToOne: false
+            referencedRelation: "spotify_curated_shows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_order_items: {
         Row: {
           created_at: string
@@ -2348,11 +2410,14 @@ export type Database = {
           created_at: string
           curator_notes: string | null
           description: string | null
+          feed_type: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
+          last_rss_sync: string | null
           name: string
           publisher: string | null
+          rss_feed_url: string | null
           spotify_show_id: string
           spotify_url: string | null
           total_episodes: number | null
@@ -2363,11 +2428,14 @@ export type Database = {
           created_at?: string
           curator_notes?: string | null
           description?: string | null
+          feed_type?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          last_rss_sync?: string | null
           name: string
           publisher?: string | null
+          rss_feed_url?: string | null
           spotify_show_id: string
           spotify_url?: string | null
           total_episodes?: number | null
@@ -2378,11 +2446,14 @@ export type Database = {
           created_at?: string
           curator_notes?: string | null
           description?: string | null
+          feed_type?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          last_rss_sync?: string | null
           name?: string
           publisher?: string | null
+          rss_feed_url?: string | null
           spotify_show_id?: string
           spotify_url?: string | null
           total_episodes?: number | null

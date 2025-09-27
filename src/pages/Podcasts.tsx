@@ -119,7 +119,7 @@ export default function Podcasts() {
           Ontdek gecureerde podcasts en episodes over muziek, vinyl en alles wat daarbij komt kijken.
         </p>
 
-        {/* Featured Individual Episodes */}
+        {/* Featured Individual Episodes - only show if there are featured episodes */}
         {individualEpisodes && individualEpisodes.filter(ep => ep.is_featured).length > 0 && (
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-4">Uitgelichte Episodes</h2>

@@ -269,6 +269,39 @@ Lees meer op MusicScan! #muziek #verhaal #${extractedData.artist?.toLowerCase().
 
     console.log('Successfully generated and saved music story');
 
+    // Fetch album artwork after creating the story
+    let artworkUrl = null;
+    if (extractedData.artist && (extractedData.single || extractedData.album)) {
+      try {
+        console.log('🎨 Starting artwork fetch for music story...');
+        const artworkResponse = await fetch(`${supabaseUrl}/functions/v1/fetch-album-artwork`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            artist: extractedData.artist,
+            title: extractedData.single || extractedData.album || query,
+            media_type: 'single',
+            item_id: musicStory.id,
+            item_type: 'music_stories'
+          })
+        });
+
+        if (artworkResponse.ok) {
+          const artworkData = await artworkResponse.json();
+          if (artworkData.success && artworkData.artwork_url) {
+            artworkUrl = artworkData.artwork_url;
+            console.log('✅ Artwork fetched successfully:', artworkUrl);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error fetching artwork:', error);
+        // Don't fail the whole request for artwork errors
+      }
+    }
+
     const blogUrl = `/muziek-verhaal/${slug}`;
 
     return new Response(
@@ -278,7 +311,8 @@ Lees meer op MusicScan! #muziek #verhaal #${extractedData.artist?.toLowerCase().
         blogUrl,
         slug,
         title,
-        id: musicStory.id
+        id: musicStory.id,
+        artwork_url: artworkUrl
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

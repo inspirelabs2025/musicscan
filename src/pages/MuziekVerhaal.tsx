@@ -40,6 +40,7 @@ interface MusicStory {
   tags?: string[];
   is_published: boolean;
   user_id: string;
+  artwork_url?: string;
 }
 
 export const MuziekVerhaal: React.FC = () => {
@@ -248,8 +249,24 @@ export const MuziekVerhaal: React.FC = () => {
           <div className="relative mb-12">
             <div className="absolute inset-0 bg-gradient-vinyl opacity-20 rounded-3xl blur-xl"></div>
             <div className="relative bg-card/80 backdrop-blur-sm rounded-3xl border border-border/50 p-8 md:p-12">
-              <div className="grid grid-cols-1 gap-8 items-start">
-                <div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                {/* Album Cover */}
+                {story.artwork_url && (
+                  <div className="lg:col-span-1">
+                    <div className="aspect-square bg-gradient-to-br from-muted/30 to-muted/60 rounded-2xl overflow-hidden">
+                      <img
+                        src={story.artwork_url}
+                        alt={`${story.artist || story.query} artwork`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                <div className={story.artwork_url ? "lg:col-span-2" : "lg:col-span-3"}>
                   {/* Header Badges */}
                   <div className="flex flex-wrap items-center gap-3 mb-6">
                     <Badge 
@@ -269,7 +286,7 @@ export const MuziekVerhaal: React.FC = () => {
                     </Badge>
                     <Badge variant="outline" className="border-muted-foreground/30">
                       <Clock className="w-3 h-3 mr-1" />
-                      {readingTime} min leestijd
+                      {story.reading_time || readingTime} min leestijd
                     </Badge>
                     <Badge variant="outline" className="border-muted-foreground/30">
                       <Eye className="w-3 h-3 mr-1" />
@@ -286,7 +303,7 @@ export const MuziekVerhaal: React.FC = () => {
                   <div className="text-xl md:text-2xl text-muted-foreground mb-8 font-medium">
                     <span className="text-primary">Onderwerp:</span>
                     <span className="mx-3 text-vinyl-gold">•</span>
-                    <span>{story.query}</span>
+                    <span>{story.artist && story.single_name ? `${story.artist} - ${story.single_name}` : story.query}</span>
                   </div>
 
                   {/* Meta Info */}

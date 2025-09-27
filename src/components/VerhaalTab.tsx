@@ -15,7 +15,8 @@ import {
   RotateCcw,
   Lightbulb,
   Loader2,
-  ChevronDown
+  ChevronDown,
+  Music
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -434,25 +435,45 @@ export const VerhaalTab: React.FC = () => {
           {musicStories.map((story) => (
             <Card 
               key={story.id} 
-              className="group hover:shadow-lg transition-all duration-300 cursor-pointer"
+              className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
               onClick={() => handleViewStory(story)}
             >
+              {/* Album Cover */}
+              <div className="relative">
+                <div className="aspect-square bg-gradient-to-br from-muted/30 to-muted/60">
+                  {story.artwork_url ? (
+                    <img
+                      src={story.artwork_url}
+                      alt={`${story.artist || story.query} artwork`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div className="w-full h-full bg-gradient-to-br from-vinyl-gold/20 to-primary/20 flex items-center justify-center" style={{ display: story.artwork_url ? 'none' : 'flex' }}>
+                    <Music className="w-16 h-16 text-muted-foreground/60" />
+                  </div>
+                </div>
+                
+                {/* Overlay Badges */}
+                <div className="absolute top-3 right-3 flex gap-2">
+                  <Badge variant="outline" className="text-xs shadow-sm backdrop-blur-sm bg-primary/10 border-primary/30">
+                    Single
+                  </Badge>
+                </div>
+              </div>
+
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <Badge variant="outline">Single</Badge>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Eye className="w-3 h-3" />
-                      {story.views_count || 0}
-                    </div>
-                  </div>
-                  
                   <div>
                     <h3 className="font-semibold line-clamp-2 mb-2">
                       {story.title}
                     </h3>
                     <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
-                      {story.query}
+                      {story.artist && story.single_name ? `${story.artist} - ${story.single_name}` : story.query}
                     </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="w-3 h-3" />
@@ -464,6 +485,9 @@ export const VerhaalTab: React.FC = () => {
                           {story.reading_time} min
                         </>
                       )}
+                      <span>•</span>
+                      <Eye className="w-3 h-3" />
+                      {story.views_count || 0}
                     </div>
                   </div>
                 </div>

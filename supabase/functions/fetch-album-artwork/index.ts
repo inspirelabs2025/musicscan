@@ -142,6 +142,18 @@ serve(async (req) => {
               } else {
                 console.log('✅ AI scan updated with official artwork for item:', item_id);
               }
+            } else if (item_type === 'music_stories') {
+              // Update music_stories table
+              const { error: updateError } = await supabase
+                .from('music_stories')
+                .update({ artwork_url: storedImageUrl })
+                .eq('id', item_id);
+                
+              if (updateError) {
+                console.log('❌ Music story artwork update error:', updateError);
+              } else {
+                console.log('✅ Music story updated with official artwork for item:', item_id);
+              }
             } else {
               // Update legacy cd_scan/vinyl2_scan tables
               const table = media_type === 'cd' ? 'cd_scan' : 'vinyl2_scan';

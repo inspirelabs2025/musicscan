@@ -28,6 +28,7 @@ interface MusicStory {
   tags?: string[];
   is_published: boolean;
   user_id: string;
+  artwork_url?: string;
 }
 
 export const useMuziekVerhalen = (userId?: string) => {

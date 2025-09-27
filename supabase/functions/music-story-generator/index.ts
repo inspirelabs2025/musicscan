@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const MUSIC_STORY_PROMPT = `Je bent een muziekhistoricus en storyteller die fascinerende verhalen vertelt over muziek, artiesten en albums in het Nederlands.
 
@@ -42,6 +44,22 @@ VERPLICHTE STRUCTUUR (gebruik markdown headers):
 
 TOON: Informatief maar toegankelijk, zoals een goed muziekmagazine artikel. Gebruik concrete details en vermijd vage beweringen.`;
 
+function generateSlug(query: string): string {
+  return query
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
+    .substring(0, 50);
+}
+
+function generateTitle(query: string): string {
+  return `Het Verhaal Achter ${query.split(' ').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ')}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -49,9 +67,26 @@ serve(async (req) => {
 
   try {
     const { query } = await req.json();
-
+    
     if (!query) {
       throw new Error("Query is required");
+    }
+
+    // Get user ID from JWT header
+    let userId = null;
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        userId = payload.sub;
+      } catch (e) {
+        console.error('Failed to parse JWT:', e);
+      }
+    }
+    
+    if (!userId) {
+      throw new Error("Authentication required");
     }
 
     console.log('Generating music story for query:', query);
@@ -83,10 +118,50 @@ serve(async (req) => {
     const data = await response.json();
     const story = data.choices[0].message.content;
 
-    console.log('Successfully generated music story');
+    // Generate slug and title
+    const slug = generateSlug(query);
+    const title = generateTitle(query);
+
+    // Save to database using direct HTTP request
+    const saveResponse = await fetch(`${supabaseUrl}/rest/v1/music_stories`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'Content-Type': 'application/json',
+        'apikey': supabaseServiceKey!,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        query: query.trim(),
+        story_content: story,
+        slug,
+        title,
+        is_published: true
+      })
+    });
+
+    if (!saveResponse.ok) {
+      const errorData = await saveResponse.text();
+      console.error('Database save error:', errorData);
+      throw new Error(`Failed to save story: ${saveResponse.statusText}`);
+    }
+
+    const [musicStory] = await saveResponse.json();
+
+    console.log('Successfully generated and saved music story');
+
+    const blogUrl = `/muziek-verhaal/${slug}`;
 
     return new Response(
-      JSON.stringify({ story, query }),
+      JSON.stringify({ 
+        story, 
+        query, 
+        blogUrl,
+        slug,
+        title,
+        id: musicStory.id
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

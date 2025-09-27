@@ -63,6 +63,7 @@ import { TrackOrder } from "./pages/TrackOrder";
 import { OrderSuccess } from "./pages/OrderSuccess";
 import Forum from "./pages/Forum";
 import ForumTopic from "./pages/ForumTopic";
+import MuziekVerhaal from "./pages/MuziekVerhaal";
 import Marketplace from "./pages/Marketplace";
 import PublicShopItemDetail from "./pages/PublicShopItemDetail";
 
@@ -274,6 +275,7 @@ const App = () => {
                 <ShopProducts />
               </ProtectedRoute>
             } />
+            <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>

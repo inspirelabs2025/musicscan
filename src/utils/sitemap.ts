@@ -166,3 +166,7 @@ export const generateUserCollectionUrl = (username: string): string => {
   const userSlug = generateSEOFriendlySlug(username);
   return `/collection/${userSlug}`;
 };
+
+export const generateMusicStoryUrl = (slug: string): string => {
+  return `/muziek-verhaal/${slug}`;
+};

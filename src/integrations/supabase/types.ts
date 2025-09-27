@@ -1521,6 +1521,45 @@ export type Database = {
           },
         ]
       }
+      music_stories: {
+        Row: {
+          created_at: string
+          id: string
+          is_published: boolean
+          query: string
+          slug: string
+          story_content: string
+          title: string
+          updated_at: string
+          user_id: string
+          views_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          query: string
+          slug: string
+          story_content: string
+          title: string
+          updated_at?: string
+          user_id: string
+          views_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          query?: string
+          slug?: string
+          story_content?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       news_blog_posts: {
         Row: {
           author: string

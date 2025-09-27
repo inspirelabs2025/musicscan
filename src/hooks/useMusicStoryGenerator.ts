@@ -5,6 +5,10 @@ import { useToast } from '@/hooks/use-toast';
 interface MusicStoryResult {
   story: string;
   query: string;
+  blogUrl?: string;
+  slug?: string;
+  title?: string;
+  id?: string;
 }
 
 export const useMusicStoryGenerator = () => {
@@ -42,15 +46,26 @@ export const useMusicStoryGenerator = () => {
 
       const result: MusicStoryResult = {
         story: data.story,
-        query: data.query || query
+        query: data.query || query,
+        blogUrl: data.blogUrl,
+        slug: data.slug,
+        title: data.title,
+        id: data.id
       };
 
       setCurrentStory(result);
       
       toast({
         title: "Verhaal gegenereerd!",
-        description: `Het verhaal achter "${query}" is gevonden.`,
+        description: `Het verhaal achter "${query}" is gevonden en opgeslagen als blog post.`,
       });
+
+      // Navigate to blog post if blogUrl is available
+      if (result.blogUrl) {
+        setTimeout(() => {
+          window.location.href = result.blogUrl;
+        }, 1500);
+      }
 
       return result;
     } catch (error) {

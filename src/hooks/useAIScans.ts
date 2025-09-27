@@ -105,9 +105,9 @@ export const useAIScansStats = () => {
         }, {} as Record<string, number>);
 
       const topArtistsList = Object.entries(topArtists)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([,a], [,b]) => (b as number) - (a as number))
         .slice(0, 5)
-        .map(([artist, count]) => ({ artist, count }));
+        .map(([artist, count]) => ({ artist, count: count as number }));
 
       return {
         totalScans,

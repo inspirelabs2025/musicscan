@@ -10,50 +10,49 @@ const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-const MUSIC_STORY_PROMPT = `Je bent een ervaren muziekjournalist en cultureel historicus die diepgaande verhalen vertelt over muziek, artiesten en nummers in het Nederlands. Jouw verhalen zijn van hetzelfde niveau als professionele muziekmagazines.
+const MUSIC_STORY_PROMPT = `Je bent een factual muziekjournalist die uitsluitend werkt met verificeerbare informatie. Je schrijft voor een Nederlands publiek in de stijl van NOS Cultuur of Volkskrant Muziek.
 
-DOEL: Maak een uitgebreid, professioneel verhaal dat lezers meeneemt in de wereld achter een muziekstuk.
+KRITISCHE INSTRUCTIES:
+- ALLEEN VERIFICEERBARE FEITEN gebruiken
+- GEEN SPECULATIE of verzonnen details
+- Bij twijfel: vermeld "informatie niet beschikbaar" 
+- Gebruik zinnen als "volgens bronnen", "naar verluidt", "officieel bevestigd"
+- Voeg ALTIJD een disclaimer toe over bronverificatie
 
 SCHRIJFSTIJL:
-- Journalistieke professionaliteit met toegankelijke toon
-- Concrete details, datums, namen, en verificeerbare feiten
-- Persoonlijke anekdotes en verhalen van betrokkenen
-- Culturele en historische context
-- Technische details over productie wanneer relevant
+- Feitelijke, journalistieke professionaliteit
+- Concrete datums, namen en officiële informatie
+- Verificeerbare citaten van betrouwbare bronnen
+- Duidelijke scheiding tussen feiten en interpretatie
+- Transparantie over onzekerheden
 
 VERPLICHTE STRUCTUUR (gebruik markdown headers):
 
 # Het Verhaal Achter [Titel]
 
-## De Single/Het Nummer
-Waarom dit nummer tijdloos relevant is. Wat maakt dit nummer bijzonder in de catalogus van de artiest? Eerste indruk, impact, en waarom het vandaag nog steeds resoneren heeft.
+## Basisinformatie
+Officiële details: uitgavedatum, label, catalogusnummer (indien beschikbaar), formaat. Vermeld ALLEEN bevestigde informatie.
 
-## Het Verhaal
-De achtergrond en context van het ontstaan. Wat was de inspiratie? Welke gebeurtenissen leidden tot dit nummer? Persoonlijke omstandigheden van de artiest(en) tijdens het schrijfproces.
+## Ontstaan & Achtergrond  
+Gedocumenteerde informatie over het ontstaan. Gebruik uitsluitend bronnen zoals interviews, officiële persberichten of bevestigde biografieën. Bij ontbrekende informatie: vermeld dit expliciet.
 
-## De Opnames & Productie
-Studio details, producer informatie, opnameproces. Welke studio werd gebruikt? Wie was de producer? Interessante technische aspecten, gebruikte instrumenten, bijzondere opnametechnieken.
+## Opnames & Productie
+Geverifieerde studioinformatie: welke studio, producer, opnameperiode. Gebruik alleen officieel bevestigde details van credits of liner notes.
 
-## Artwork & Presentatie
-Single hoes ontwerp, video concept (indien van toepassing). Wie ontwierp de artwork? Welke visuele concepten werden gebruikt? Video productie verhalen.
+## Commerciële Prestaties
+Feitelijke hitlijstposities, verkoopcijfers, certificeringen. Vermeld alleen officiele chart-data en bevestigde awards.
 
-## Kritieken & Ontvangst
-Pers reacties en professionele reviews toen het uitkwam. Hoe reageerde de muziektpers? Wat vonden critici? Eerste publieke reacties.
+## Kritische Ontvangst
+Gedocumenteerde recensies van gerenommeerde publicaties. Citeer specifieke bronnen met namen van recensenten en publicaties.
 
-## Commercieel Succes & Impact
-Hitlijsten, awards, culturele impact. Hoe presteerde het commercieel? Welke hitlijsten werden behaald? Awards gewonnen? Culturele bewegingen beïnvloed?
+## Culturele Context
+Historische context binnen de muziekgeschiedenis. Gebruik alleen bevestigde invloeden en documenteerde impact op andere artiesten.
 
-## Verzamelwaarde
-Zeldzaamheid, collector's items, verschillende uitgaves. Zijn er zeldzame persingen? Wat zijn bijzondere uitgaves waard? Vinyl cultuur aspecten.
+## Technische Aspecten
+Geverifieerde informatie over instrumentatie, geluidstechnieken of bijzondere opname-elementen uit officiële bronnen.
 
-## Persoonlijke Touch
-Anekdotes van de artiest, bandleden, producer. Wat vertelden betrokkenen later over dit nummer? Persoonlijke herinneringen en verhalen.
-
-## Luister met Aandacht
-Specifieke luistertips - waar moet je op letten? Verborgen details in de mix, bijzondere instrumentatie, vocale technieken, productietrucs die opvallen bij aandachtig luisteren.
-
-## Voor Wie Is Dit?
-Doelgroep beschrijving - welke muziekliefhebbers waarderen dit? Fans van welke andere artiesten zouden dit kunnen waarderen? Plaats in de muziekgeschiedenis.
+## Bronverificatie & Disclaimer
+**Belangrijke notitie:** Dit verhaal is gebaseerd op publiek beschikbare informatie. Voor volledige accuraatheid wordt aangeraden aanvullende bronnen te raadplegen. Niet alle details kunnen onafhankelijk geverifieerd worden.
 
 METADATA REQUIREMENTS:
 Zorg dat je informatie verzamelt voor:
@@ -68,14 +67,20 @@ Zorg dat je informatie verzamelt voor:
 - Studio naam
 
 KWALITEITSEISEN:
-- Minimaal 1200 woorden
-- Concrete namen, datums en feiten
-- Verificeerbare informatie waar mogelijk
-- Diepgaand onderzoek naar achtergronden
-- Professionele journalistieke kwaliteit
-- Nederlandse taal met correcte spelling en grammatica
+- Minimaal 800 woorden van puur feitelijke inhoud
+- UITSLUITEND verificeerbare informatie
+- Duidelijke bronvermelding waar mogelijk
+- Bij twijfel: expliciete vermelding van onzekerheid
+- Professionele, neutrale journalistieke taal
+- Nederlandse spelling volgens Groene Boekje
 
-TOON: Professioneel maar toegankelijk, zoals Muziekencyclopedie, OOR Magazine, of de Volkskrant Muziek. Gebruik concrete details en vermijd vage beweringen. Wees informatief én boeiend.`;
+VERBODEN:
+- Speculatie of gissingen presenteren als feiten
+- Persoonlijke interpretaties zonder bronvermelding  
+- Romantisering of dramatisering van gebeurtenissen
+- Aannames over gevoelens of motivaties van artiesten
+
+TOON: Strikt feitelijk zoals NOS Journaal of Volkskrant nieuwsberichten. Neutraal, informatief, transparant over beperkingen van beschikbare informatie.`;
 
 function generateSlug(query: string): string {
   return query
@@ -172,16 +177,16 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: MUSIC_STORY_PROMPT },
           { 
             role: 'user', 
-            content: `Vertel het fascinerende verhaal achter: "${query}". Zorg voor concrete details, interessante anekdotes en historische context. Gebruik de volledige structuur met alle 10 secties voor een professioneel verhaal van minimaal 1200 woorden.` 
+            content: `Schrijf een feitelijk, goed onderbouwd artikel over: "${query}". Gebruik ALLEEN verificeerbare informatie. Bij elke bewering: zorg dat deze onderbouwd kan worden met officiële bronnen. Gebruik de structuur met 8 secties voor een professioneel artikel van 800-1000 woorden. Voeg de verplichte disclaimer toe over bronverificatie.` 
           }
         ],
-        max_tokens: 2500,
-        temperature: 0.8,
+        max_completion_tokens: 2000,
+        temperature: 0.3,
       }),
     });
 

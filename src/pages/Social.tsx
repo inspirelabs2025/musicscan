@@ -75,7 +75,7 @@ const Social: React.FC = () => {
         .eq("follower_id", user.id);
 
       if (error) throw error;
-      return data.map(f => f.following).filter(Boolean) as Profile[];
+      return (data || []).map((item: any) => item.following).filter(Boolean) as Profile[];
     },
     enabled: !!user?.id && activeTab === "following",
   });

@@ -82,20 +82,34 @@ export const usePodcastEpisodes = (showId: string, featured?: boolean) => {
       // Fetch both Spotify and RSS episodes
       const [spotifyResult, rssResult] = await Promise.all([
         // Spotify episodes
-        supabase
-          .from('spotify_show_episodes')
-          .select('*')
-          .eq('show_id', showId)
-          .eq('is_featured', featured !== undefined ? featured : true)
-          .order('release_date', { ascending: false }),
+        (() => {
+          let query = supabase
+            .from('spotify_show_episodes')
+            .select('*')
+            .eq('show_id', showId);
+          
+          // Only filter by is_featured when explicitly requested
+          if (featured !== undefined) {
+            query = query.eq('is_featured', featured);
+          }
+          
+          return query.order('release_date', { ascending: false });
+        })(),
         
         // RSS episodes
-        supabase
-          .from('rss_feed_episodes')
-          .select('*')
-          .eq('show_id', showId)
-          .eq('is_featured', featured !== undefined ? featured : true)
-          .order('published_date', { ascending: false })
+        (() => {
+          let query = supabase
+            .from('rss_feed_episodes')
+            .select('*')
+            .eq('show_id', showId);
+          
+          // Only filter by is_featured when explicitly requested
+          if (featured !== undefined) {
+            query = query.eq('is_featured', featured);
+          }
+          
+          return query.order('published_date', { ascending: false });
+        })()
       ]);
 
       const spotifyEpisodes = (spotifyResult.data || []).map(episode => ({

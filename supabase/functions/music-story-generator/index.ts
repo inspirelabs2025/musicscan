@@ -199,6 +199,10 @@ serve(async (req) => {
     const wordCount = story.split(/\s+/).length;
     const readingTime = Math.ceil(wordCount / 200); // Average reading speed
 
+    // Generate title and slug
+    const title = generateTitle(query);
+    const slug = generateSlug(query);
+
     // Generate YAML frontmatter
     const yamlFrontmatter = {
       title: title,

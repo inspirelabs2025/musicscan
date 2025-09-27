@@ -109,7 +109,7 @@ export const MuziekVerhaal: React.FC = () => {
     fetchStory();
   }, [slug]);
 
-  // Increment view count
+  // Increment view count and fetch artwork if missing
   useEffect(() => {
     if (story && !hasIncrementedView) {
       const incrementView = async () => {
@@ -120,6 +120,30 @@ export const MuziekVerhaal: React.FC = () => {
         setHasIncrementedView(true);
       };
       incrementView();
+      
+      // Fetch artwork if missing
+      if (!story.artwork_url && (story.artist || story.query)) {
+        const fetchArtwork = async () => {
+          try {
+            const response = await supabase.functions.invoke('fetch-album-artwork', {
+              body: {
+                artist: story.artist || story.query.split(',')[1]?.trim() || story.query.split(' ')[0],
+                title: story.single_name || story.query.split(',')[0]?.trim() || story.query,
+                media_type: 'single',
+                item_id: story.id,
+                item_type: 'music_stories'
+              }
+            });
+            
+            if (response.data?.success && response.data?.artwork_url) {
+              setStory(prev => prev ? { ...prev, artwork_url: response.data.artwork_url } : null);
+            }
+          } catch (error) {
+            console.log('Error fetching artwork:', error);
+          }
+        };
+        fetchArtwork();
+      }
     }
   }, [story, hasIncrementedView]);
 

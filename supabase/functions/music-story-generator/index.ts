@@ -163,7 +163,7 @@ serve(async (req) => {
       throw new Error("Authentication required");
     }
 
-    console.log('Generating music story for query:', query);
+    console.log('🎵 Generating music story for query:', query);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

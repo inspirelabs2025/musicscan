@@ -4,17 +4,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useMusicStoryGenerator } from '@/hooks/useMusicStoryGenerator';
-import { Music, Search, BookOpen, Share2, X } from 'lucide-react';
+import { Music, Search, BookOpen, Share2, X, Shuffle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 export const MusicStoryWidget = () => {
   const [query, setQuery] = useState('');
-  const { generateStory, clearStory, isGenerating, currentStory } = useMusicStoryGenerator();
+  const { generateStory, generateRandomStory, clearStory, isGenerating, currentStory } = useMusicStoryGenerator();
 
   const handleSearch = () => {
     if (query.trim()) {
       generateStory(query);
     }
+  };
+
+  const handleRandomSearch = () => {
+    generateRandomStory();
   };
 
   const handleShare = () => {
@@ -74,7 +78,26 @@ export const MusicStoryWidget = () => {
                 ) : (
                   <>
                     <Search className="h-4 w-4 mr-2" />
-                    Zoek Verhaal
+                    Zoek
+                  </>
+                )}
+              </Button>
+              <Button 
+                onClick={handleRandomSearch} 
+                disabled={isGenerating}
+                size="sm"
+                variant="outline"
+                className="whitespace-nowrap"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                    AI kiest...
+                  </>
+                ) : (
+                  <>
+                    <Shuffle className="h-4 w-4 mr-2" />
+                    Verras Me!
                   </>
                 )}
               </Button>

@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.music-story-generator]
+verify_jwt = true
+
 [functions.send-email]
 verify_jwt = false
 

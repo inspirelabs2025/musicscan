@@ -65,31 +65,81 @@ serve(async (req) => {
       try {
         console.log('🔍 Searching MusicBrainz for:', artist, '-', title);
         
-        const searchQuery = encodeURIComponent(`${artist} ${title}`);
-        const mbSearchUrl = `https://musicbrainz.org/ws/2/release?query=${searchQuery}&fmt=json&limit=1`;
+        // Use more precise search with artist and recording filters
+        const normalizedArtist = artist.toLowerCase().trim();
+        const normalizedTitle = title.toLowerCase().trim();
         
-        const mbResponse = await fetch(mbSearchUrl, {
-          headers: {
-            'User-Agent': 'VinylScanner/1.0 (contact@example.com)'
-          }
-        });
+        // Try multiple search strategies for better precision
+        const searchStrategies = [
+          // Strategy 1: Exact artist and title match
+          `artist:"${artist}" AND recording:"${title}"`,
+          // Strategy 2: Artist with title in release
+          `artist:"${artist}" AND release:"${title}"`,
+          // Strategy 3: Fallback to basic search but with more results for validation
+          `${artist} ${title}`
+        ];
         
-        if (mbResponse.ok) {
-          const mbData = await mbResponse.json();
+        let foundRelease = null;
+        let selectedStrategy = null;
+        
+        for (const [index, query] of searchStrategies.entries()) {
+          console.log(`🎯 Trying search strategy ${index + 1}:`, query);
           
-          if (mbData.releases && mbData.releases.length > 0) {
-            const releaseId = mbData.releases[0].id;
-            console.log('📀 Found MusicBrainz release:', releaseId);
+          const searchQuery = encodeURIComponent(query);
+          const limit = index === 2 ? 5 : 3; // More results for fallback strategy
+          const mbSearchUrl = `https://musicbrainz.org/ws/2/release?query=${searchQuery}&fmt=json&limit=${limit}&inc=artist-credits`;
+          
+          const mbResponse = await fetch(mbSearchUrl, {
+            headers: {
+              'User-Agent': 'VinylScanner/1.0 (contact@example.com)'
+            }
+          });
+          
+          if (mbResponse.ok) {
+            const mbData = await mbResponse.json();
             
-            // Try Cover Art Archive
-            const coverArtUrl = `https://coverartarchive.org/release/${releaseId}/front`;
-            
-            const coverResponse = await fetch(coverArtUrl, { method: 'HEAD' });
-            if (coverResponse.ok) {
-              artworkUrl = coverArtUrl;
-              console.log('✅ Found Cover Art Archive artwork:', artworkUrl);
+            if (mbData.releases && mbData.releases.length > 0) {
+              // Validate artist match for each release
+              for (const release of mbData.releases) {
+                const releaseArtists = release['artist-credit'] || [];
+                const matchingArtist = releaseArtists.find((ac: any) => {
+                  const creditName = ac.artist?.name?.toLowerCase() || ac.name?.toLowerCase() || '';
+                  return creditName.includes(normalizedArtist) || normalizedArtist.includes(creditName);
+                });
+                
+                if (matchingArtist) {
+                  foundRelease = release;
+                  selectedStrategy = `Strategy ${index + 1}`;
+                  console.log('✅ Artist validation passed for:', matchingArtist.artist?.name || matchingArtist.name);
+                  console.log('📀 Selected MusicBrainz release:', foundRelease.id, 'using', selectedStrategy);
+                  break;
+                }
+              }
+              
+              if (foundRelease) break;
             }
           }
+          
+          // Add delay between requests to be respectful
+          if (index < searchStrategies.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+        
+        // Try Cover Art Archive with validated release
+        if (foundRelease) {
+          const coverArtUrl = `https://coverartarchive.org/release/${foundRelease.id}/front`;
+          
+          const coverResponse = await fetch(coverArtUrl, { method: 'HEAD' });
+          if (coverResponse.ok) {
+            artworkUrl = coverArtUrl;
+            console.log('✅ Found Cover Art Archive artwork:', artworkUrl);
+            console.log('🎯 Match validation: Used', selectedStrategy, 'for', artist, '-', title);
+          } else {
+            console.log('❌ No Cover Art Archive artwork for validated release:', foundRelease.id);
+          }
+        } else {
+          console.log('⚠️ No artist-validated releases found for:', artist, '-', title);
         }
       } catch (error) {
         console.log('❌ Error searching MusicBrainz:', error);

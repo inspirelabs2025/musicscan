@@ -35,10 +35,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 import { usePaginatedBlogs } from "@/hooks/usePaginatedBlogs";
+import { useMuziekVerhalen } from "@/hooks/useMuziekVerhalen";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const VerhaalTab: React.FC = () => {
   const navigate = useNavigate();
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState<'albums' | 'singles'>('albums');
   
   const {
     filters,
@@ -48,15 +51,16 @@ export const VerhaalTab: React.FC = () => {
 
   const debouncedSearch = useDebounceSearch(filters.search || '', 300);
   
+  // Album stories (existing blog posts)
   const {
     blogs,
     totalCount,
-    isLoading,
-    isFetching,
+    isLoading: isLoadingBlogs,
+    isFetching: isFetchingBlogs,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-    refetch
+    refetch: refetchBlogs
   } = usePaginatedBlogs({
     search: debouncedSearch,
     status: filters.status as 'all' | 'published' | 'draft',
@@ -66,6 +70,13 @@ export const VerhaalTab: React.FC = () => {
     sortOrder: 'desc'
   });
 
+  // Single stories (music stories)
+  const { 
+    data: musicStories = [], 
+    isLoading: isLoadingStories, 
+    refetch: refetchStories 
+  } = useMuziekVerhalen();
+
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -73,15 +84,19 @@ export const VerhaalTab: React.FC = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleRefresh = useCallback(() => {
-    refetch();
-  }, [refetch]);
-
-  const handleView = (blog: any) => {
-    if (blog.is_published) {
-      navigate(`/plaat-verhaal/${blog.slug}`);
+    if (activeTab === 'albums') {
+      refetchBlogs();
     } else {
-      navigate(`/plaat-verhaal/${blog.slug}`);
+      refetchStories();
     }
+  }, [activeTab, refetchBlogs, refetchStories]);
+
+  const handleViewBlog = (blog: any) => {
+    navigate(`/plaat-verhaal/${blog.slug}`);
+  };
+
+  const handleViewStory = (story: any) => {
+    navigate(`/muziek-verhaal/${story.slug}`);
   };
 
   const handleEdit = (blog: any) => {
@@ -124,6 +139,9 @@ export const VerhaalTab: React.FC = () => {
     </div>
   );
 
+  const isLoading = activeTab === 'albums' ? isLoadingBlogs : isLoadingStories;
+  const isFetching = activeTab === 'albums' ? isFetchingBlogs : false;
+
   if (isLoading) {
     return <LoadingSkeleton />;
   }
@@ -133,9 +151,9 @@ export const VerhaalTab: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold mb-2">📚 Plaat & Verhaal</h2>
+          <h2 className="text-2xl font-semibold mb-2">📚 Muziekverhalen</h2>
           <p className="text-muted-foreground">
-            Overzicht van alle gegenereerde verhalen over je albums
+            Ontdek verhalen over albums en singles
           </p>
         </div>
         <Button 
@@ -153,6 +171,19 @@ export const VerhaalTab: React.FC = () => {
           Vernieuwen
         </Button>
       </div>
+
+      {/* Tabs for Albums vs Singles */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'albums' | 'singles')}>
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="albums" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Albums
+          </TabsTrigger>
+          <TabsTrigger value="singles" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Singles
+          </TabsTrigger>
+        </TabsList>
 
       {/* Search and Filter Controls */}
       <div className="bg-card p-6 rounded-lg border">
@@ -303,106 +334,160 @@ export const VerhaalTab: React.FC = () => {
         </Collapsible>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Badge variant="secondary" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            {blogs.length} verhalen {totalCount > 0 && `(${totalCount} totaal)`}
-          </Badge>
-          {isFetching && !isLoading && (
-            <Badge variant="outline" className="flex items-center gap-2">
-              <Loader2 className="w-3 h-3 animate-spin" />
-              Laden...
+      <TabsContent value="albums" className="space-y-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Badge variant="secondary" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              {blogs.length} album verhalen {totalCount > 0 && `(${totalCount} totaal)`}
             </Badge>
-          )}
-        </div>
-      </div>
-
-      <div className={`grid gap-6 ${
-        filters.viewMode === 'grid' 
-          ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-          : 'grid-cols-1'
-      }`}>
-        {blogs.map((blog) => (
-          <PlaatVerhaalBlogCard
-            key={blog.id}
-            blog={{
-              ...blog,
-              markdown_content: '', // Not needed for card display
-              published_at: blog.published_at || blog.created_at,
-              album_type: (blog.album_type as 'cd' | 'vinyl') || 'cd'
-            }}
-            onView={handleView}
-            onEdit={handleEdit}
-            viewMode={filters.viewMode as 'grid' | 'list'}
-          />
-        ))}
-      </div>
-
-      {hasNextPage && (
-        <div className="flex justify-center mt-8">
-          <Button
-            onClick={handleLoadMore}
-            variant="outline"
-            size="lg"
-            disabled={isFetchingNextPage}
-            className="flex items-center gap-2"
-          >
-            {isFetchingNextPage ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+            {isFetchingBlogs && !isLoadingBlogs && (
+              <Badge variant="outline" className="flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin" />
                 Laden...
-              </>
-            ) : (
-              <>
-                <Eye className="w-4 h-4" />
-                Meer verhalen laden
-              </>
+              </Badge>
             )}
-          </Button>
-        </div>
-      )}
-
-      {blogs.length === 0 && !isLoading && (
-        <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700">
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <FileText className="w-12 h-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Nog geen verhalen gevonden
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
-              Het lijkt erop dat je nog geen verhalen hebt gegenereerd. Scan een paar albums om te beginnen!
-            </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 max-w-md">
-              <div className="flex items-start gap-3">
-                <Lightbulb className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                <div className="text-sm">
-                  <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-                    💡 Tip: Genereer meer verhalen
-                  </p>
-                  <p className="text-blue-700 dark:text-blue-300">
-                    Ga naar je collectie en genereer verhalen voor je albums. Elk verhaal krijgt een unieke plaat & verhaal pagina!
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {blogs.length > 0 && (
-        <Card className="p-6 bg-muted/50">
-          <div className="text-center">
-            <h4 className="font-medium text-muted-foreground mb-2">
-              💡 Tip: Genereer meer verhalen
-            </h4>
-            <p className="text-sm text-muted-foreground">
-              Je kunt nieuwe Plaat & Verhaal artikelen genereren door naar je collectie te gaan 
-              en op de "Plaat & Verhaal" knop te klikken bij albums.
-            </p>
           </div>
-        </Card>
-      )}
+        </div>
+
+        <div className={`grid gap-6 ${
+          filters.viewMode === 'grid' 
+            ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
+            : 'grid-cols-1'
+        }`}>
+          {blogs.map((blog) => (
+            <PlaatVerhaalBlogCard
+              key={blog.id}
+              blog={{
+                ...blog,
+                markdown_content: '', // Not needed for card display
+                published_at: blog.published_at || blog.created_at,
+                album_type: (blog.album_type as 'cd' | 'vinyl') || 'cd'
+              }}
+              onView={handleViewBlog}
+              onEdit={handleEdit}
+              viewMode={filters.viewMode as 'grid' | 'list'}
+            />
+          ))}
+        </div>
+
+        {hasNextPage && (
+          <div className="flex justify-center mt-8">
+            <Button
+              onClick={handleLoadMore}
+              variant="outline"
+              size="lg"
+              disabled={isFetchingNextPage}
+              className="flex items-center gap-2"
+            >
+              {isFetchingNextPage ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Laden...
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4" />
+                  Meer verhalen laden
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+
+        {blogs.length === 0 && !isLoadingBlogs && (
+          <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <FileText className="w-12 h-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Nog geen album verhalen gevonden
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
+                Het lijkt erop dat je nog geen album verhalen hebt gegenereerd. Scan een paar albums om te beginnen!
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
+
+      <TabsContent value="singles" className="space-y-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Badge variant="secondary" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              {musicStories.length} single verhalen
+            </Badge>
+            {isLoadingStories && (
+              <Badge variant="outline" className="flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Laden...
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        <div className={`grid gap-6 ${
+          filters.viewMode === 'grid' 
+            ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
+            : 'grid-cols-1'
+        }`}>
+          {musicStories.map((story) => (
+            <Card 
+              key={story.id} 
+              className="group hover:shadow-lg transition-all duration-300 cursor-pointer"
+              onClick={() => handleViewStory(story)}
+            >
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <Badge variant="outline">Single</Badge>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Eye className="w-3 h-3" />
+                      {story.views_count || 0}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold line-clamp-2 mb-2">
+                      {story.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
+                      {story.query}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(story.created_at).toLocaleDateString('nl-NL')}
+                      {story.reading_time && (
+                        <>
+                          <span>•</span>
+                          <Clock className="w-3 h-3" />
+                          {story.reading_time} min
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {musicStories.length === 0 && !isLoadingStories && (
+          <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <FileText className="w-12 h-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Nog geen single verhalen gevonden
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
+                Het lijkt erop dat je nog geen single verhalen hebt gegenereerd. Ga naar het dashboard om je eerste verhaal te maken!
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
+      </Tabs>
+
     </div>
   );
 };

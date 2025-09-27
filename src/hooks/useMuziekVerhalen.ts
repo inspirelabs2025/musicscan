@@ -10,6 +10,24 @@ interface MusicStory {
   views_count: number;
   created_at: string;
   updated_at: string;
+  // New fields from database update
+  yaml_frontmatter?: any;
+  social_post?: string;
+  reading_time?: number;
+  word_count?: number;
+  meta_title?: string;
+  meta_description?: string;
+  artist?: string;
+  single_name?: string;
+  year?: number;
+  label?: string;
+  catalog?: string;
+  album?: string;
+  genre?: string;
+  styles?: string[];
+  tags?: string[];
+  is_published: boolean;
+  user_id: string;
 }
 
 export const useMuziekVerhalen = (userId?: string) => {

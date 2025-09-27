@@ -101,6 +101,36 @@ export const getBlogPostRoutes = async (): Promise<SitemapEntry[]> => {
   }
 };
 
+// Get music stories for sitemap
+export const getMusicStoryRoutes = async (): Promise<SitemapEntry[]> => {
+  const { supabase } = await import('@/integrations/supabase/client');
+  
+  try {
+    const { data: musicStories, error } = await supabase
+      .from('music_stories')
+      .select('slug, created_at, updated_at')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching music stories for sitemap:', error);
+      return [];
+    }
+
+    const baseUrl = 'https://www.musicscan.app';
+    
+    return musicStories.map((story) => ({
+      url: `${baseUrl}/muziek-verhaal/${story.slug}`,
+      lastmod: story.updated_at || story.created_at || new Date().toISOString().split('T')[0],
+      changefreq: 'weekly' as const,
+      priority: 0.7
+    }));
+  } catch (error) {
+    console.error('Error generating music story sitemap entries:', error);
+    return [];
+  }
+};
+
 // Generate robots.txt content
 export const generateRobotsTxt = (): string => {
   return `User-agent: Googlebot
@@ -123,7 +153,8 @@ Crawl-delay: 2
 
 # Sitemaps
 Sitemap: https://www.musicscan.app/sitemap.xml
-Sitemap: https://www.musicscan.app/sitemap-releases.xml
+Sitemap: https://www.musicscan.app/sitemap-blog.xml
+Sitemap: https://www.musicscan.app/sitemap-music-stories.xml
 
 # Disallow admin and internal paths
 Disallow: /admin/

@@ -92,14 +92,14 @@ export const MusicStoryWidget = () => {
         {!currentStory ? (
           <>
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <Input
                     placeholder="Voer een song, artiest of album in..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    className="pr-10"
+                    className="pr-10 w-full"
                   />
                   <Music className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
@@ -107,6 +107,7 @@ export const MusicStoryWidget = () => {
                   onClick={handleSearch} 
                   disabled={isGenerating || !query.trim()}
                   size="sm"
+                  className="w-full sm:w-auto"
                 >
                   {isGenerating ? (
                     <>
@@ -122,9 +123,9 @@ export const MusicStoryWidget = () => {
                 </Button>
               </div>
               
-              <div className="flex gap-2 items-center">
+              <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
                 <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-full sm:w-[140px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -137,7 +138,7 @@ export const MusicStoryWidget = () => {
                 </Select>
                 
                 <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-full sm:w-[140px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -154,7 +155,7 @@ export const MusicStoryWidget = () => {
                   disabled={isGenerating}
                   size="sm"
                   variant="outline"
-                  className="ml-auto whitespace-nowrap"
+                  className="w-full sm:w-auto sm:ml-auto whitespace-nowrap"
                 >
                   {isGenerating ? (
                     <>

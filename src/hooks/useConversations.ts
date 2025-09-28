@@ -73,15 +73,35 @@ export const useConversations = () => {
             .from("conversation_participants")
             .select(`
               user_id,
-              profiles(user_id, first_name, avatar_url)
+              profiles!inner(user_id, first_name, avatar_url)
             `)
             .eq("conversation_id", conversation.id);
 
-          const participantProfiles = participants?.map(p => p.profiles).filter(Boolean) || [];
+          const participantProfiles = participants?.map(p => ({
+            user_id: p.user_id,
+            first_name: (p.profiles as any)?.first_name || null,
+            avatar_url: (p.profiles as any)?.avatar_url || null
+          })) || [];
+
+          // Get last message if it exists
+          let lastMessage = null;
+          if (conversation.last_message_id) {
+            const { data: messageData } = await supabase
+              .from("messages")
+              .select(`
+                *,
+                sender:profiles(user_id, first_name, avatar_url)
+              `)
+              .eq("id", conversation.last_message_id)
+              .single();
+            
+            lastMessage = messageData;
+          }
 
           return {
             ...conversation,
-            participants: participantProfiles
+            participants: participantProfiles,
+            last_message: lastMessage
           };
         })
       );

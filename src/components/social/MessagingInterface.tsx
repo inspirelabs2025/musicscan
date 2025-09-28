@@ -1,14 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, ArrowLeft } from 'lucide-react';
 import MessagesList from './MessagesList';
 import ChatWindow from './ChatWindow';
-import { Conversation } from '@/hooks/useConversations';
+import { Conversation, useConversations } from '@/hooks/useConversations';
 
-const MessagingInterface: React.FC = () => {
+interface MessagingInterfaceProps {
+  selectedConversationId?: string;
+}
+
+const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ selectedConversationId }) => {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [showConversationList, setShowConversationList] = useState(true);
+  const { data: conversations } = useConversations();
+
+  // Auto-select conversation when selectedConversationId prop changes
+  useEffect(() => {
+    if (selectedConversationId && conversations) {
+      const conversation = conversations.find(c => c.id === selectedConversationId);
+      if (conversation) {
+        setSelectedConversation(conversation);
+        setShowConversationList(false);
+      }
+    }
+  }, [selectedConversationId, conversations]);
 
   const handleConversationSelect = (conversation: Conversation) => {
     setSelectedConversation(conversation);

@@ -14,13 +14,15 @@ interface UserCardProps {
   onMessage?: (userId: string) => void;
   onViewProfile?: (userId: string) => void;
   showActions?: boolean;
+  isMessaging?: boolean;
 }
 
 const UserCard: React.FC<UserCardProps> = ({ 
   profile, 
   onMessage, 
   onViewProfile,
-  showActions = true 
+  showActions = true,
+  isMessaging = false
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -105,17 +107,16 @@ const UserCard: React.FC<UserCardProps> = ({
                 {isFollowing ? "Ontvolgen" : "Volgen"}
               </Button>
 
-              {profile.allow_messages && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleMessage}
-                  className="min-w-20"
-                >
-                  <MessageCircle className="h-3 w-3 mr-1" />
-                  Bericht
-                </Button>
-              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleMessage}
+                disabled={isMessaging}
+                className="min-w-20"
+              >
+                <MessageCircle className="h-3 w-3 mr-1" />
+                Bericht
+              </Button>
 
               <Button
                 size="sm"

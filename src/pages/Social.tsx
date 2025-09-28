@@ -24,6 +24,8 @@ const Social: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"discover" | "following" | "messages" | "settings">("discover");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>();
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const createConversation = useCreateConversation();
 
   // Get all public users
@@ -85,19 +87,32 @@ const Social: React.FC = () => {
   });
 
   const handleMessage = async (userId: string) => {
+    if (isCreatingConversation) return;
+    
     try {
+      setIsCreatingConversation(true);
       const conversation = await createConversation.mutateAsync({
         participantIds: [userId],
         isGroup: false,
       });
       
-      // In a real app, you'd navigate to the conversation
+      // Switch to messages tab and select the conversation
+      setActiveTab("messages");
+      setSelectedConversationId(conversation.id);
+      
       toast({
         title: "Gesprek gestart",
         description: "Je kunt nu berichten uitwisselen.",
       });
     } catch (error) {
       console.error("Error creating conversation:", error);
+      toast({
+        title: "Fout bij gesprek starten",
+        description: "Er ging iets mis. Probeer het opnieuw.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingConversation(false);
     }
   };
 
@@ -175,11 +190,12 @@ const Social: React.FC = () => {
             <div className="grid gap-6">
               {usersToShow.map((profile) => (
                 <div key={profile.user_id} className="transform hover:scale-[1.02] transition-transform duration-200">
-                  <UserCard
-                    profile={profile}
-                    onMessage={handleMessage}
-                    onViewProfile={handleViewProfile}
-                  />
+                   <UserCard
+                     profile={profile}
+                     onMessage={handleMessage}
+                     onViewProfile={handleViewProfile}
+                     isMessaging={isCreatingConversation}
+                   />
                 </div>
               ))}
             </div>
@@ -225,6 +241,7 @@ const Social: React.FC = () => {
               profile={profile}
               onMessage={handleMessage}
               onViewProfile={handleViewProfile}
+              isMessaging={isCreatingConversation}
             />
           ))}
         </div>
@@ -247,7 +264,7 @@ const Social: React.FC = () => {
   );
 
   const renderMessagesTab = () => (
-    <MessagingInterface />
+    <MessagingInterface selectedConversationId={selectedConversationId} />
   );
 
   const renderSettingsTab = () => (

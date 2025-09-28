@@ -45,6 +45,8 @@ import TestNewsUpdate from "./pages/TestNewsUpdate";
 import TestNewsGeneration from "./pages/TestNewsGeneration";
 import TestBlogRegeneration from "./pages/TestBlogRegeneration";
 import TestAlbumCoverBackfill from "./pages/TestAlbumCoverBackfill";
+import TestDiscogsFlow from "./pages/TestDiscogsFlow";
+import TestDiscogsBlogGeneration from "./pages/TestDiscogsBlogGeneration";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Podcasts from "./pages/Podcasts";
 import { ShopProducts } from "./pages/admin/ShopProducts";
@@ -255,6 +257,16 @@ const App = () => {
             <Route path="/test-album-cover-backfill" element={
               <ProtectedRoute>
                 <TestAlbumCoverBackfill />
+              </ProtectedRoute>
+            } />
+            <Route path="/test-discogs-flow" element={
+              <ProtectedRoute>
+                <TestDiscogsFlow />
+              </ProtectedRoute>
+            } />
+            <Route path="/test-discogs-blog-generation" element={
+              <ProtectedRoute>
+                <TestDiscogsBlogGeneration />
               </ProtectedRoute>
             } />
             <Route path="/superadmin" element={<SuperAdminDashboard />} />

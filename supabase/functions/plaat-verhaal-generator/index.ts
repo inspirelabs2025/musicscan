@@ -190,6 +190,16 @@ serve(async (req) => {
       if (error) throw error;
       albumData = data;
       actualTableUsed = 'ai_scan_results';
+    } else if (albumType === 'release') {
+      // Direct releases table query for Discogs releases
+      const { data, error } = await supabase
+        .from('releases')
+        .select('*')
+        .eq('id', albumId)
+        .maybeSingle();
+      if (error) throw error;
+      albumData = data;
+      actualTableUsed = 'releases';
     } else {
       throw new Error("Ongeldig album type: " + albumType);
     }
@@ -241,6 +251,14 @@ serve(async (req) => {
     }
 
     // Prepare album data for prompt - focus on general album information only
+    // Handle user_id - for releases table, we need to provide a fallback
+    let userId = albumData.user_id;
+    if (!userId && actualTableUsed === 'releases') {
+      // For public releases, we need a system user or get from request context
+      // For now, we'll use a placeholder - in practice you might want to track who triggered the generation
+      userId = '00000000-0000-0000-0000-000000000000'; // System user placeholder
+    }
+
     const albumInfo = `
 ALBUM_DATA (gebruik als inspiratie voor algemeen verhaal over dit album):
 - artist: ${albumData.artist || '—'}
@@ -449,7 +467,7 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
       .insert({
         album_id: albumId,
         album_type: albumType,
-        user_id: albumData.user_id,
+        user_id: userId,
         yaml_frontmatter: yamlFrontmatter,
         markdown_content: markdownBody,
         social_post: socialPost,

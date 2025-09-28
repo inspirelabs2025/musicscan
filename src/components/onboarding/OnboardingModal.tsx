@@ -48,9 +48,24 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleNext();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (!isFirstStep) {
+        previousStep();
+      }
+    }
+  };
+
   return (
     <Dialog open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 z-50">
+      <DialogContent 
+        className="max-w-4xl h-[85vh] max-h-[85vh] p-0 grid grid-rows-[auto,1fr,auto] overflow-hidden z-50"
+        onKeyDown={handleKeyDown}
+      >
         <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-primary/10 to-primary/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -87,7 +102,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           </div>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0">
+        <div className="min-h-0 overflow-y-auto">
           <OnboardingStepComponent
             step={currentStepData}
             stepIndex={currentStepIndex}

@@ -3793,6 +3793,10 @@ export type Database = {
         Args: { p_increment?: number; p_usage_type: string; p_user_id: string }
         Returns: boolean
       }
+      is_conversation_participant: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
       update_cd_discogs_ids: {
         Args: Record<PropertyKey, never>
         Returns: number

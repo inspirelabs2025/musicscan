@@ -53,7 +53,7 @@ const SocialNavigation: React.FC<SocialNavigationProps> = ({
   ];
 
   return (
-    <nav className="flex flex-wrap gap-2 p-4 bg-card rounded-lg border">
+    <nav className="flex flex-wrap gap-3 p-6 bg-gradient-to-r from-card via-card to-vinyl-purple/5 rounded-xl border-2 border-vinyl-purple/20 hover:border-vinyl-purple/40 transition-all duration-300">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = activeTab === item.id;
@@ -62,16 +62,22 @@ const SocialNavigation: React.FC<SocialNavigationProps> = ({
           <Button
             key={item.id}
             variant={isActive ? "default" : "outline"}
-            size="sm"
+            size="lg"
             onClick={() => onTabChange(item.id)}
-            className="relative"
+            className={`relative h-14 px-6 transition-all duration-300 group ${
+              isActive 
+                ? "bg-gradient-to-r from-vinyl-purple to-vinyl-purple/80 shadow-lg" 
+                : "hover:bg-vinyl-purple/10 hover:border-vinyl-purple/50"
+            }`}
           >
-            <Icon className="h-4 w-4 mr-2" />
-            {item.label}
+            <Icon className={`h-5 w-5 mr-3 ${isActive ? "animate-pulse" : "group-hover:animate-pulse"}`} />
+            <span className="font-medium">{item.label}</span>
             {item.badge !== null && item.badge > 0 && (
               <Badge 
                 variant="secondary" 
-                className="ml-2 px-1.5 py-0.5 text-xs min-w-5 h-5"
+                className={`ml-3 px-2 py-1 text-xs min-w-6 h-6 ${
+                  isActive ? "bg-white/20 text-white" : "bg-vinyl-purple/20 text-vinyl-purple"
+                }`}
               >
                 {item.badge > 99 ? "99+" : item.badge}
               </Badge>

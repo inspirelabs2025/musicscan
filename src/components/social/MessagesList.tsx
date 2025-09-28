@@ -91,14 +91,22 @@ const MessagesList: React.FC<MessagesListProps> = ({
               <Avatar className="h-12 w-12">
                 <AvatarImage src={otherParticipant?.avatar_url || undefined} />
                 <AvatarFallback>
-                  {(otherParticipant?.first_name || (otherParticipant as any)?.display_name || 'U').charAt(0)}
+                  {(otherParticipant?.first_name?.trim() 
+                    || (otherParticipant as any)?.display_name?.trim()
+                    || conversation.last_message?.sender?.first_name?.trim()
+                    || (conversation.last_message?.sender as any)?.spotify_display_name?.trim()
+                    || 'U').charAt(0)}
                 </AvatarFallback>
               </Avatar>
               
               <div className="flex-1 text-left min-w-0">
                 <div className="flex items-center justify-between mb-1">
                   <h4 className="font-medium truncate">
-                    {otherParticipant?.first_name || (otherParticipant as any)?.display_name || 'Onbekende gebruiker'}
+                    {otherParticipant?.first_name?.trim() 
+                      || (otherParticipant as any)?.display_name?.trim()
+                      || conversation.last_message?.sender?.first_name?.trim()
+                      || (conversation.last_message?.sender as any)?.spotify_display_name?.trim()
+                      || 'Onbekende gebruiker'}
                   </h4>
                   {conversation.last_message && (
                     <span className="text-xs text-muted-foreground">

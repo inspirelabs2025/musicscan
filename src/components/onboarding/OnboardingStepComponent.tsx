@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -397,30 +398,30 @@ export const OnboardingStepComponent: React.FC<OnboardingStepProps> = ({
               </p>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 max-w-xs md:max-w-2xl mx-auto mb-8 px-4 md:px-0">
               <Button
                 variant="ghost"
                 onClick={handleNavigateToScanner}
-                className="h-auto p-0"
+                className="h-auto p-0 w-full"
               >
                 <Card className="border-primary/20 hover:border-primary/40 transition-all duration-200 hover:shadow-md cursor-pointer w-full">
-                  <CardContent className="p-4 text-center">
-                    <Camera className="h-8 w-8 mx-auto mb-2 text-primary" />
-                    <h3 className="font-semibold text-sm">Begin met Scannen</h3>
-                    <p className="text-xs text-muted-foreground">Ga naar de Scanner en maak je eerste foto</p>
+                  <CardContent className="p-6 md:p-4 text-center">
+                    <Camera className="h-10 w-10 md:h-8 md:w-8 mx-auto mb-3 md:mb-2 text-primary" />
+                    <h3 className="font-semibold text-base md:text-sm mb-1">Begin met Scannen</h3>
+                    <p className="text-sm md:text-xs text-muted-foreground">Ga naar de Scanner en maak je eerste foto</p>
                   </CardContent>
                 </Card>
               </Button>
               <Button
                 variant="ghost"
                 onClick={handleNavigateToCommunity}
-                className="h-auto p-0"
+                className="h-auto p-0 w-full"
               >
                 <Card className="border-primary/20 hover:border-primary/40 transition-all duration-200 hover:shadow-md cursor-pointer w-full">
-                  <CardContent className="p-4 text-center">
-                    <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
-                    <h3 className="font-semibold text-sm">Ontdek de Community</h3>
-                    <p className="text-xs text-muted-foreground">Zie wat anderen aan het verzamelen zijn</p>
+                  <CardContent className="p-6 md:p-4 text-center">
+                    <Users className="h-10 w-10 md:h-8 md:w-8 mx-auto mb-3 md:mb-2 text-primary" />
+                    <h3 className="font-semibold text-base md:text-sm mb-1">Ontdek de Community</h3>
+                    <p className="text-sm md:text-xs text-muted-foreground">Zie wat anderen aan het verzamelen zijn</p>
                   </CardContent>
                 </Card>
               </Button>

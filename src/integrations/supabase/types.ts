@@ -1976,7 +1976,11 @@ export type Database = {
           id: string
           is_public: boolean | null
           last_active_at: string | null
+          last_onboarding_at: string | null
           location: string | null
+          onboarding_completed: boolean | null
+          onboarding_skipped: boolean | null
+          onboarding_step: number | null
           show_activity: boolean | null
           show_collection: boolean | null
           spotify_connected: boolean | null
@@ -2004,7 +2008,11 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           last_active_at?: string | null
+          last_onboarding_at?: string | null
           location?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_skipped?: boolean | null
+          onboarding_step?: number | null
           show_activity?: boolean | null
           show_collection?: boolean | null
           spotify_connected?: boolean | null
@@ -2032,7 +2040,11 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           last_active_at?: string | null
+          last_onboarding_at?: string | null
           location?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_skipped?: boolean | null
+          onboarding_step?: number | null
           show_activity?: boolean | null
           show_collection?: boolean | null
           spotify_connected?: boolean | null

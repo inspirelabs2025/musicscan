@@ -27,6 +27,11 @@ export interface Profile {
   spotify_refresh_token: string | null;
   spotify_last_sync: string | null;
   spotify_sync_enabled: boolean | null;
+  // Onboarding fields
+  onboarding_completed: boolean | null;
+  onboarding_step: number | null;
+  onboarding_skipped: boolean | null;
+  last_onboarding_at: string | null;
 }
 
 export const useProfile = (userId?: string) => {

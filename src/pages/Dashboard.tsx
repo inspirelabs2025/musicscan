@@ -31,7 +31,7 @@ import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
 import { ChatWidget } from '@/components/dashboard/ChatWidget';
 import { QuizWidget } from '@/components/dashboard/QuizWidget';
 import { SpotifyWidget } from '@/components/dashboard/SpotifyWidget';
-import { EnhancedNewsWidget } from '@/components/dashboard/EnhancedNewsWidget';
+import { UnifiedContentWidget } from '@/components/dashboard/UnifiedContentWidget';
 import { BatchBlogGenerator } from '@/components/admin/BatchBlogGenerator';
 import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
 import { NewUsersSection } from '@/components/NewUsersSection';
@@ -40,7 +40,6 @@ import { AlbumOfTheDay } from '@/components/dashboard/AlbumOfTheDay';
 import { CollectionPersonality } from '@/components/dashboard/CollectionPersonality';
 import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { NextGoalWidget } from '@/components/dashboard/NextGoalWidget';
-import { BlogPreviewWidget } from '@/components/dashboard/BlogPreviewWidget';
 import { MusicStoryWidget } from '@/components/dashboard/MusicStoryWidget';
 
 const Dashboard = () => {
@@ -216,9 +215,8 @@ const Dashboard = () => {
             <Newspaper className="w-6 h-6 text-vinyl-gold" />
             📚 Ontdek & Leer
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <BlogPreviewWidget />
-            <EnhancedNewsWidget />
+          <div className="grid grid-cols-1 gap-6">
+            <UnifiedContentWidget />
             
             {/* Recent Activity */}
             <Card className="border-2 hover:border-accent/50 transition-all duration-300 lg:col-span-3">

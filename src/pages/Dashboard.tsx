@@ -37,7 +37,6 @@ import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
 import { NewUsersSection } from '@/components/NewUsersSection';
 import { IntegratedAchievementSystem } from '@/components/dashboard/IntegratedAchievementSystem';
 import { AlbumOfTheDay } from '@/components/dashboard/AlbumOfTheDay';
-import { VinylRoulette } from '@/components/dashboard/VinylRoulette';
 import { CollectionPersonality } from '@/components/dashboard/CollectionPersonality';
 import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { NextGoalWidget } from '@/components/dashboard/NextGoalWidget';
@@ -200,9 +199,8 @@ const Dashboard = () => {
             <Disc className="w-6 h-6 text-vinyl-purple" />
             🎰 Muziek & Fun
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <AlbumOfTheDay albums={unifiedAlbums || []} />
-            <VinylRoulette albums={unifiedAlbums || []} />
             <CollectionPersonality 
               genres={collectionStats?.genres || []}
               totalItems={collectionStats?.totalItems || 0}

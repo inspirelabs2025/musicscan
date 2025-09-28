@@ -4,21 +4,31 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { X, ChevronLeft, ChevronRight, SkipForward } from 'lucide-react';
-import { useOnboarding } from '@/hooks/useOnboarding';
 import { OnboardingStepComponent } from './OnboardingStepComponent';
 
-export const OnboardingModal: React.FC = () => {
-  const {
-    isOnboardingOpen,
-    setIsOnboardingOpen,
-    currentStepIndex,
-    currentStepData,
-    totalSteps,
-    nextStep,
-    previousStep,
-    completeOnboarding,
-    skipOnboarding
-  } = useOnboarding();
+export interface OnboardingModalProps {
+  isOnboardingOpen: boolean;
+  setIsOnboardingOpen: (open: boolean) => void;
+  currentStepIndex: number;
+  currentStepData: any;
+  totalSteps: number;
+  nextStep: () => void;
+  previousStep: () => void;
+  completeOnboarding: () => void;
+  skipOnboarding: () => void;
+}
+
+export const OnboardingModal: React.FC<OnboardingModalProps> = ({
+  isOnboardingOpen,
+  setIsOnboardingOpen,
+  currentStepIndex,
+  currentStepData,
+  totalSteps,
+  nextStep,
+  previousStep,
+  completeOnboarding,
+  skipOnboarding
+}) => {
 
   console.log('🎯 OnboardingModal render:', { 
     isOnboardingOpen, 

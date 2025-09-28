@@ -59,7 +59,16 @@ const Dashboard = () => {
   const { data: userStats, isLoading: userStatsLoading } = useUserStats();
   const subscription = useSubscription();
   const { 
+    isOnboardingOpen,
+    setIsOnboardingOpen,
     shouldShowOnboarding, 
+    currentStepIndex,
+    currentStepData,
+    totalSteps,
+    nextStep,
+    previousStep,
+    completeOnboarding,
+    skipOnboarding,
     startOnboarding, 
     restartOnboarding 
   } = useOnboarding();
@@ -88,7 +97,17 @@ const Dashboard = () => {
 
   return (
     <>
-      <OnboardingModal />
+      <OnboardingModal 
+        isOnboardingOpen={isOnboardingOpen}
+        setIsOnboardingOpen={setIsOnboardingOpen}
+        currentStepIndex={currentStepIndex}
+        currentStepData={currentStepData}
+        totalSteps={totalSteps}
+        nextStep={nextStep}
+        previousStep={previousStep}
+        completeOnboarding={completeOnboarding}
+        skipOnboarding={skipOnboarding}
+      />
       <div className="min-h-screen bg-gradient-to-br from-background via-accent/3 to-background">
         {/* Musical Background Elements */}
         <div className="fixed inset-0 opacity-5 pointer-events-none">
@@ -451,8 +470,6 @@ const Dashboard = () => {
         </div>
       </div>
       
-      {/* Onboarding Modal */}
-      <OnboardingModal />
     </>
   );
 };

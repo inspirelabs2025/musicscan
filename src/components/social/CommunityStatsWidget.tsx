@@ -3,9 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/StatCard';
 import { Users, MessageSquare, Heart, TrendingUp } from 'lucide-react';
 import { useUserStats } from '@/hooks/useUserStats';
+import { useConversationStats } from '@/hooks/useConversationStats';
 
 export const CommunityStatsWidget = () => {
-  const { data: userStats, isLoading } = useUserStats();
+  const { data: userStats, isLoading: userStatsLoading } = useUserStats();
+  const { data: conversationStats, isLoading: conversationStatsLoading } = useConversationStats();
+
+  const isLoading = userStatsLoading || conversationStatsLoading;
 
   if (isLoading) {
     return (
@@ -31,20 +35,20 @@ export const CommunityStatsWidget = () => {
       />
       <StatCard
         title="Nieuwe Leden"
-        value={userStats?.totalUsers || 0}
-        subtitle="Nieuwe leden"
+        value={userStats?.newUsersLast7Days || 0}
+        subtitle="Afgelopen 7 dagen"
         icon={TrendingUp}
       />
       <StatCard
         title="Actieve Gesprekken"
-        value="12"
+        value={conversationStats?.todayCount || 0}
         subtitle="Vandaag gestart"
         icon={MessageSquare}
       />
       <StatCard
         title="Community Love"
-        value="2.3k"
-        subtitle="Likes deze week"
+        value={conversationStats?.weeklyMessages || 0}
+        subtitle="Berichten deze week"
         icon={Heart}
       />
     </div>

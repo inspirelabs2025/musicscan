@@ -7,11 +7,12 @@ import { Crown, MessageCircle, Eye } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserAlbumCounts } from '@/hooks/useUserAlbumCounts';
 
 export const FeaturedUsersWidget = () => {
   const { user } = useAuth();
 
-  const { data: featuredUsers, isLoading } = useQuery({
+  const { data: featuredUsers, isLoading: usersLoading } = useQuery({
     queryKey: ['featuredUsers'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -26,6 +27,11 @@ export const FeaturedUsersWidget = () => {
     },
     enabled: !!user?.id
   });
+
+  const userIds = featuredUsers?.map(u => u.user_id) || [];
+  const { data: albumCounts, isLoading: albumCountsLoading } = useUserAlbumCounts(userIds);
+
+  const isLoading = usersLoading || albumCountsLoading;
 
   if (isLoading) {
     return (
@@ -79,7 +85,7 @@ export const FeaturedUsersWidget = () => {
               <div className="flex items-center gap-2">
                 <p className="font-medium truncate">{profile.first_name || 'Muziekliefhebber'}</p>
                 <Badge variant="outline" className="text-xs">
-                  🎵 {Math.floor(Math.random() * 500) + 50} albums
+                  🎵 {albumCounts?.find(ac => ac.user_id === profile.user_id)?.album_count || 0} albums
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground truncate">

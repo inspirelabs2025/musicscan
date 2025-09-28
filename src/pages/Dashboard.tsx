@@ -77,7 +77,7 @@ const Dashboard = () => {
             <Sparkles className="w-8 h-8 text-vinyl-gold animate-pulse delay-300" />
           </div>
           <p className="text-muted-foreground text-lg">
-            ✨ Je persoonlijke muziekhub wacht op je
+            ✨ Je persoonlijke muziek ervaring wacht op je
           </p>
         </div>
 

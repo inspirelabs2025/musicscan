@@ -45,26 +45,48 @@ export const useConversations = () => {
     queryFn: async () => {
       if (!user?.id) return [];
 
-      const { data, error } = await supabase
+      // First get conversations the user participates in
+      const { data: participantData, error: participantError } = await supabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("user_id", user.id);
+
+      if (participantError) throw participantError;
+      
+      const conversationIds = participantData?.map(p => p.conversation_id) || [];
+      
+      if (conversationIds.length === 0) return [];
+
+      // Get conversations with details
+      const { data: conversations, error: conversationError } = await supabase
         .from("conversations")
-        .select(`
-          *,
-          conversation_participants(
-            user_id,
-            profiles(user_id, first_name, avatar_url)
-          ),
-          messages:last_message_id(
-            id,
-            content,
-            created_at,
-            sender_id,
-            sender:profiles(user_id, first_name, avatar_url)
-          )
-        `)
+        .select("*")
+        .in("id", conversationIds)
         .order("updated_at", { ascending: false });
 
-      if (error) throw error;
-      return data as Conversation[];
+      if (conversationError) throw conversationError;
+
+      // Get participants for each conversation
+      const enrichedConversations = await Promise.all(
+        conversations.map(async (conversation) => {
+          const { data: participants } = await supabase
+            .from("conversation_participants")
+            .select(`
+              user_id,
+              profiles(user_id, first_name, avatar_url)
+            `)
+            .eq("conversation_id", conversation.id);
+
+          const participantProfiles = participants?.map(p => p.profiles).filter(Boolean) || [];
+
+          return {
+            ...conversation,
+            participants: participantProfiles
+          };
+        })
+      );
+
+      return enrichedConversations as Conversation[];
     },
     enabled: !!user?.id,
   });

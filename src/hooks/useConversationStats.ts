@@ -16,26 +16,30 @@ export const useConversationStats = () => {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
 
-      // Get conversations started today
-      const { data: todayConversations, error: todayError } = await supabase
-        .from('conversations')
-        .select('id')
-        .gte('created_at', today.toISOString());
+      try {
+        // Get conversations started today - use basic query to avoid recursion
+        const { count: todayCount } = await supabase
+          .from('conversations')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', today.toISOString());
 
-      if (todayError) throw todayError;
+        // Get messages from this week
+        const { count: weeklyMessages } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', weekAgo.toISOString());
 
-      // Get messages from this week
-      const { data: weeklyMessages, error: weeklyError } = await supabase
-        .from('messages')
-        .select('id')
-        .gte('created_at', weekAgo.toISOString());
-
-      if (weeklyError) throw weeklyError;
-
-      return {
-        todayCount: todayConversations?.length || 0,
-        weeklyMessages: weeklyMessages?.length || 0,
-      };
+        return {
+          todayCount: todayCount || 0,
+          weeklyMessages: weeklyMessages || 0,
+        };
+      } catch (error) {
+        console.error('Error fetching conversation stats:', error);
+        return {
+          todayCount: 0,
+          weeklyMessages: 0,
+        };
+      }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnMount: 'always',

@@ -20,6 +20,12 @@ export const OnboardingModal: React.FC = () => {
     skipOnboarding
   } = useOnboarding();
 
+  console.log('🎯 OnboardingModal render:', { 
+    isOnboardingOpen, 
+    currentStepIndex, 
+    currentStepData: currentStepData?.title 
+  });
+
   const progressPercentage = ((currentStepIndex + 1) / totalSteps) * 100;
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === totalSteps - 1;
@@ -34,7 +40,7 @@ export const OnboardingModal: React.FC = () => {
 
   return (
     <Dialog open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 z-50">
         <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-primary/10 to-primary/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

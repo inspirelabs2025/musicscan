@@ -132,14 +132,23 @@ export const useOnboarding = () => {
   }, [updateProfile, toast]);
 
   const restartOnboarding = useCallback(() => {
+    console.log('🚀 restartOnboarding called');
     updateProfile.mutate({
       onboarding_completed: false,
       onboarding_skipped: false,
       onboarding_step: 0,
       last_onboarding_at: new Date().toISOString()
+    }, {
+      onSuccess: () => {
+        console.log('✅ Profile updated successfully');
+        setCurrentStepIndex(0);
+        setIsOnboardingOpen(true);
+        console.log('✅ Onboarding modal should be open now');
+      },
+      onError: (error) => {
+        console.error('❌ Failed to update profile:', error);
+      }
     });
-    setCurrentStepIndex(0);
-    setIsOnboardingOpen(true);
   }, [updateProfile]);
 
   return {

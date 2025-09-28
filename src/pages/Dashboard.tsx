@@ -450,6 +450,9 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+      
+      {/* Onboarding Modal */}
+      <OnboardingModal />
     </>
   );
 };

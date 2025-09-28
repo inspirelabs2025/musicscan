@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +37,16 @@ export const OnboardingStepComponent: React.FC<OnboardingStepProps> = ({
   stepIndex,
   totalSteps
 }) => {
+  const navigate = useNavigate();
   const IconComponent = iconMap[step.icon as keyof typeof iconMap] || Music;
+
+  const handleNavigateToScanner = () => {
+    navigate('/scanner');
+  };
+
+  const handleNavigateToCommunity = () => {
+    navigate('/community');
+  };
 
   const renderStepContent = () => {
     switch (step.component) {
@@ -388,20 +398,32 @@ export const OnboardingStepComponent: React.FC<OnboardingStepProps> = ({
             </div>
             
             <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-8">
-              <Card className="border-primary/20">
-                <CardContent className="p-4 text-center">
-                  <Camera className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <h3 className="font-semibold text-sm">Begin met Scannen</h3>
-                  <p className="text-xs text-muted-foreground">Ga naar de Scanner en maak je eerste foto</p>
-                </CardContent>
-              </Card>
-              <Card className="border-primary/20">
-                <CardContent className="p-4 text-center">
-                  <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <h3 className="font-semibold text-sm">Ontdek de Community</h3>
-                  <p className="text-xs text-muted-foreground">Zie wat anderen aan het verzamelen zijn</p>
-                </CardContent>
-              </Card>
+              <Button
+                variant="ghost"
+                onClick={handleNavigateToScanner}
+                className="h-auto p-0"
+              >
+                <Card className="border-primary/20 hover:border-primary/40 transition-all duration-200 hover:shadow-md cursor-pointer w-full">
+                  <CardContent className="p-4 text-center">
+                    <Camera className="h-8 w-8 mx-auto mb-2 text-primary" />
+                    <h3 className="font-semibold text-sm">Begin met Scannen</h3>
+                    <p className="text-xs text-muted-foreground">Ga naar de Scanner en maak je eerste foto</p>
+                  </CardContent>
+                </Card>
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleNavigateToCommunity}
+                className="h-auto p-0"
+              >
+                <Card className="border-primary/20 hover:border-primary/40 transition-all duration-200 hover:shadow-md cursor-pointer w-full">
+                  <CardContent className="p-4 text-center">
+                    <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
+                    <h3 className="font-semibold text-sm">Ontdek de Community</h3>
+                    <p className="text-xs text-muted-foreground">Zie wat anderen aan het verzamelen zijn</p>
+                  </CardContent>
+                </Card>
+              </Button>
             </div>
 
             <div className="text-sm text-muted-foreground">

@@ -74,8 +74,8 @@ export const useDiscogsNews = () => {
   return useQuery({
     queryKey: ["discogs-news"],
     queryFn: () => fetchNewsFromCache('discogs'),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 60 * 60 * 1000, // 1 hour (longer since edge function has better deduplication)
+    gcTime: 6 * 60 * 60 * 1000, // 6 hours
   });
 };
 

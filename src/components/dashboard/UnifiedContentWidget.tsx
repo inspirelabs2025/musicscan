@@ -121,14 +121,17 @@ const transformToUnifiedItems = (
 ): UnifiedContentItem[] => {
   const items: UnifiedContentItem[] = [];
 
-  // Add Discogs releases
+  // Add Discogs releases - show as recent (they are filtered for newness in the edge function)
   discogsReleases.slice(0, 3).forEach((release) => {
+    // Use a recent date since edge function already filters for truly new releases
+    const releaseDate = new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000); // Random within last 2 days
+    
     items.push({
       id: `release-${release.id}`,
       type: 'release',
       title: release.title,
       subtitle: release.artist,
-      date: new Date().toISOString(), // Current date for new releases
+      date: releaseDate.toISOString(), // Use synthetic recent date 
       image: release.stored_image || release.thumb || release.artwork,
       link: `/catalog?search=${encodeURIComponent(release.title)}`,
       badge: {

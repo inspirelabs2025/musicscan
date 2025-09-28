@@ -23,10 +23,10 @@ interface DiscogsRelease {
   release_id?: string;
 }
 
-// Cache for releases (6 hours)
+// Cache for releases (7 days)
 let cachedReleases: DiscogsRelease[] = [];
 let cacheTime = 0;
-const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -179,12 +179,31 @@ Deno.serve(async (req) => {
       })
     );
 
-    // Deduplicate releases by artist + title combination
+    // Check against tracking table and deduplicate
+    console.log('🔍 Checking releases against tracking table...');
+    
+    // Get releases already shown in the last 7 days
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentlyShown } = await supabase
+      .from('discogs_releases_shown')
+      .select('discogs_id, first_shown_at')
+      .gte('first_shown_at', sevenDaysAgo);
+
+    const recentlyShownIds = new Set(recentlyShown?.map(r => r.discogs_id) || []);
+
+    // Filter out releases already shown recently and deduplicate
     const deduplicatedReleases: DiscogsRelease[] = [];
     const seenCombinations = new Set<string>();
+    const newReleasesToTrack: any[] = [];
 
     for (const release of rawReleases) {
       if (!release || !release.artist || !release.title) continue;
+      
+      // Skip if already shown recently
+      if (recentlyShownIds.has(release.id)) {
+        console.log(`⏭️ Skipping recently shown: ${release.artist} - ${release.title}`);
+        continue;
+      }
       
       // Create a normalized key for deduplication
       const key = `${release.artist.toLowerCase().trim()}-${release.title.toLowerCase().trim()}`;
@@ -192,6 +211,13 @@ Deno.serve(async (req) => {
       if (!seenCombinations.has(key)) {
         seenCombinations.add(key);
         deduplicatedReleases.push(release);
+        
+        // Track this release for database insertion
+        newReleasesToTrack.push({
+          discogs_id: release.id,
+          artist: release.artist,
+          title: release.title
+        });
       } else {
         // If we already have this combination, replace it if this one has better quality data
         const existingIndex = deduplicatedReleases.findIndex(r => 
@@ -207,8 +233,28 @@ Deno.serve(async (req) => {
           
           if (haseBetterImage || hasBetterArtwork || hasMoreData) {
             deduplicatedReleases[existingIndex] = release;
+            // Update tracking info
+            newReleasesToTrack[existingIndex] = {
+              discogs_id: release.id,
+              artist: release.artist,
+              title: release.title
+            };
           }
         }
+      }
+    }
+
+    // Insert new releases into tracking table
+    if (newReleasesToTrack.length > 0) {
+      console.log(`📝 Tracking ${newReleasesToTrack.length} new releases...`);
+      const { error: trackingError } = await supabase
+        .from('discogs_releases_shown')
+        .insert(newReleasesToTrack);
+      
+      if (trackingError) {
+        console.warn('⚠️ Failed to track releases:', trackingError);
+      } else {
+        console.log('✅ Successfully tracked new releases');
       }
     }
 

@@ -1061,6 +1061,45 @@ export type Database = {
         }
         Relationships: []
       }
+      discogs_releases_shown: {
+        Row: {
+          artist: string
+          created_at: string | null
+          discogs_id: number
+          first_shown_at: string | null
+          id: string
+          is_hidden: boolean | null
+          last_seen_at: string | null
+          times_shown: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          artist: string
+          created_at?: string | null
+          discogs_id: number
+          first_shown_at?: string | null
+          id?: string
+          is_hidden?: boolean | null
+          last_seen_at?: string | null
+          times_shown?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          artist?: string
+          created_at?: string | null
+          discogs_id?: number
+          first_shown_at?: string | null
+          id?: string
+          is_hidden?: boolean | null
+          last_seen_at?: string | null
+          times_shown?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       forum_post_votes: {
         Row: {
           created_at: string

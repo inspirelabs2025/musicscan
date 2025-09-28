@@ -199,8 +199,9 @@ const Dashboard = () => {
             <Disc className="w-6 h-6 text-vinyl-purple" />
             🎰 Muziek & Fun
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <AlbumOfTheDay albums={unifiedAlbums || []} />
+            <MusicStoryWidget />
             <CollectionPersonality 
               genres={collectionStats?.genres || []}
               totalItems={collectionStats?.totalItems || 0}
@@ -215,9 +216,8 @@ const Dashboard = () => {
             <Newspaper className="w-6 h-6 text-vinyl-gold" />
             📚 Ontdek & Leer
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <BlogPreviewWidget />
-            <MusicStoryWidget />
             <EnhancedNewsWidget />
             
             {/* Recent Activity */}

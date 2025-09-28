@@ -18,6 +18,7 @@ export interface Message {
     user_id: string;
     first_name: string | null;
     avatar_url: string | null;
+    display_name?: string | null;
   };
 }
 
@@ -33,6 +34,7 @@ export interface Conversation {
     user_id: string;
     first_name: string | null;
     avatar_url: string | null;
+    display_name?: string | null;
   }[];
   last_message?: Message;
 }
@@ -73,14 +75,15 @@ export const useConversations = () => {
             .from("conversation_participants")
             .select(`
               user_id,
-              profiles!inner(user_id, first_name, avatar_url)
+              profiles!inner(user_id, first_name, avatar_url, spotify_display_name)
             `)
             .eq("conversation_id", conversation.id);
 
           const participantProfiles = participants?.map(p => ({
             user_id: p.user_id,
             first_name: (p.profiles as any)?.first_name || null,
-            avatar_url: (p.profiles as any)?.avatar_url || null
+            avatar_url: (p.profiles as any)?.avatar_url || null,
+            display_name: (p.profiles as any)?.spotify_display_name || null
           })) || [];
 
           // Get last message if it exists
@@ -90,7 +93,7 @@ export const useConversations = () => {
               .from("messages")
               .select(`
                 *,
-                sender:profiles(user_id, first_name, avatar_url)
+                sender:profiles(user_id, first_name, avatar_url, spotify_display_name)
               `)
               .eq("id", conversation.last_message_id)
               .single();
@@ -120,7 +123,7 @@ export const useConversationMessages = (conversationId: string) => {
         .from("messages")
         .select(`
           *,
-          sender:profiles(user_id, first_name, avatar_url)
+          sender:profiles(user_id, first_name, avatar_url, spotify_display_name)
         `)
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true });

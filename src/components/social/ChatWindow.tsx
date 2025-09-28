@@ -70,12 +70,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
             <Avatar>
               <AvatarImage src={otherParticipant.avatar_url || undefined} />
               <AvatarFallback>
-                {otherParticipant.first_name?.charAt(0) || 'U'}
+                {(otherParticipant.first_name || (otherParticipant as any)?.display_name || 'U').charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div>
               <h3 className="font-medium">
-                {otherParticipant.first_name || 'Onbekende gebruiker'}
+                {otherParticipant.first_name || (otherParticipant as any)?.display_name || 'Onbekende gebruiker'}
               </h3>
               <p className="text-sm text-muted-foreground">Online</p>
             </div>

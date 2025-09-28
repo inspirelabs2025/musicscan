@@ -24,7 +24,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         <Avatar className="h-8 w-8 flex-shrink-0">
           <AvatarImage src={message.sender?.avatar_url || undefined} />
           <AvatarFallback>
-            {message.sender?.first_name?.charAt(0) || 'U'}
+            {(message.sender?.first_name || (message.sender as any)?.display_name || 'U').charAt(0)}
           </AvatarFallback>
         </Avatar>
       )}

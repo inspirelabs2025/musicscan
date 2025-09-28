@@ -30,6 +30,7 @@ export interface CollectionItem {
   comments: string | null;
   year: number | null;
   is_flagged_incorrect?: boolean;
+  artwork_url?: string | null;
   
   // Collection item fields (may not exist for incomplete scans)
   calculated_advice_price?: number | null;

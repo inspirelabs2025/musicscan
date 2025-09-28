@@ -73,15 +73,22 @@ const CollectionItemCard = ({
       <div className="p-4 space-y-3">
         {/* Image placeholder */}
         <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
-          {item.photo_urls && item.photo_urls.length > 0 ? (
-            <img 
-              src={item.photo_urls[0]} 
-              alt={`${item.artist} - ${item.title}`}
-              className="w-full h-full object-cover rounded-lg"
-            />
-          ) : (
-            <Music className="w-12 h-12 text-muted-foreground" />
-          )}
+          {/* Prioritize artwork_url for AI scans, fallback to photo_urls */}
+          {(() => {
+            const imageUrl = isAIScan && item.artwork_url 
+              ? item.artwork_url 
+              : (item.photo_urls && item.photo_urls.length > 0 ? item.photo_urls[0] : null);
+            
+            return imageUrl ? (
+              <img 
+                src={imageUrl} 
+                alt={`${item.artist} - ${item.title}`}
+                className="w-full h-full object-cover rounded-lg"
+              />
+            ) : (
+              <Music className="w-12 h-12 text-muted-foreground" />
+            );
+          })()}
         </div>
 
           {/* Content */}

@@ -3675,6 +3675,7 @@ export type Database = {
         Row: {
           ai_description: string | null
           artist: string | null
+          artwork_url: string | null
           barcode: string | null
           calculated_advice_price: number | null
           catalog_number: string | null

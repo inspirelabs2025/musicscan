@@ -208,7 +208,7 @@ export const VerhaalTab: React.FC = () => {
             <SelectContent>
               <SelectItem value="created_at">Nieuwste eerst</SelectItem>
               <SelectItem value="views_count">Meest bekeken</SelectItem>
-              <SelectItem value="update_at">Laatst bewerkt</SelectItem>
+              <SelectItem value="updated_at">Laatst bewerkt</SelectItem>
             </SelectContent>
           </Select>
 

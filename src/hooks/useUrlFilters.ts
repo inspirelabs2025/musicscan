@@ -28,7 +28,7 @@ export function useUrlFilters(initialFilters: Partial<FilterState> = {}) {
     source: getFilterFromUrl('source', 'all'),
     genre: getFilterFromUrl('genre', 'all'),
     year: getFilterFromUrl('year', 'all'),
-    sortBy: getFilterFromUrl('sortBy', 'date'),
+    sortBy: getFilterFromUrl('sortBy', 'created_at'),
     viewMode: getFilterFromUrl('view', 'grid'),
     status: getFilterFromUrl('status', 'published'),
     albumType: getFilterFromUrl('albumType', 'all'),
@@ -55,7 +55,7 @@ export function useUrlFilters(initialFilters: Partial<FilterState> = {}) {
       source: 'all',
       genre: 'all',
       year: 'all',
-      sortBy: 'date',
+      sortBy: 'created_at',
       viewMode: 'grid',
       status: 'all',
       albumType: 'all'

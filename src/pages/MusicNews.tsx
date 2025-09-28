@@ -204,7 +204,7 @@ function ReleasesContent({
     // Sort releases
     if (filters.sortBy === 'title') {
       filtered = filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-    } else if (filters.sortBy === 'date') {
+    } else if (filters.sortBy === 'created_at' || filters.sortBy === 'date') {
       filtered = filtered.sort((a, b) => (b.year || 0) - (a.year || 0));
     }
     return filtered;
@@ -251,7 +251,7 @@ function ReleasesContent({
               <SelectValue placeholder="Sorteren" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="date">Nieuwste eerst</SelectItem>
+              <SelectItem value="created_at">Nieuwste eerst</SelectItem>
               <SelectItem value="title">Alfabetisch</SelectItem>
               <SelectItem value="relevance">Relevantie</SelectItem>
             </SelectContent>

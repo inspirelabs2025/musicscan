@@ -142,12 +142,21 @@ const Dashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                   <Button asChild size="lg" className="h-16 bg-gradient-to-r from-vinyl-purple to-vinyl-purple/80 hover:shadow-lg group">
                     <Link to="/scanner">
                       <div className="flex flex-col items-center gap-2">
                         <Camera className="w-6 h-6 group-hover:animate-pulse" />
                         <span>📸 Scan Nu</span>
+                      </div>
+                    </Link>
+                  </Button>
+                  
+                  <Button asChild size="lg" variant="outline" className="h-16 bg-gradient-to-r from-blue-500/20 to-violet-500/20 hover:from-blue-500/30 hover:to-violet-500/30 border-blue-500/30 group">
+                    <Link to="/ai-scan">
+                      <div className="flex flex-col items-center gap-2">
+                        <Sparkles className="w-6 h-6 group-hover:animate-pulse text-blue-400" />
+                        <span>⚡ Quick Scan</span>
                       </div>
                     </Link>
                   </Button>

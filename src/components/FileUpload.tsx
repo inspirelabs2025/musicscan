@@ -3,6 +3,8 @@ import { Camera, Upload, X, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { useMobileFileUpload } from '@/hooks/useMobileOptimized';
+import { toast } from '@/hooks/use-toast';
 
 interface FileUploadProps {
   step: number;
@@ -26,6 +28,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   
   const { uploading, uploadFile, addFile } = useFileUpload();
+  const { isMobile, platform, recommendedSettings } = useMobileFileUpload();
 
   // Reset uploadedUrl when step changes or component mounts
   useEffect(() => {
@@ -42,15 +45,33 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     
     const file = files[0];
     
+    // Check for HEIC format on iOS
+    if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
+      toast({
+        title: "HEIC formaat niet ondersteund",
+        description: "Converteer je foto naar JPG of PNG in je foto's app",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Alleen afbeeldingen zijn toegestaan');
+      toast({
+        title: "Ongeldig bestand",
+        description: "Selecteer een afbeelding (JPG, PNG)",
+        variant: "destructive"
+      });
       return;
     }
     
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      alert('Bestand is te groot. Maximum 10MB toegestaan.');
+      toast({
+        title: "Bestand te groot",
+        description: "Maximum bestandsgrootte is 10MB",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -58,10 +79,19 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     addFile(file);
     
     // Upload file
-    const url = await uploadFile(file, step);
-    if (url) {
-      setUploadedUrl(url);
-      onFileUploaded?.(url);
+    try {
+      const url = await uploadFile(file, step);
+      if (url) {
+        setUploadedUrl(url);
+        onFileUploaded?.(url);
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload mislukt",
+        description: "Controleer je internetverbinding en probeer opnieuw",
+        variant: "destructive"
+      });
     }
   };
 
@@ -90,6 +120,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   };
 
   const openFileDialog = () => {
+    // Request permissions on mobile before opening
+    if (isMobile && navigator.permissions) {
+      navigator.permissions.query({ name: 'camera' as PermissionName })
+        .catch(() => {
+          // Permissions API not supported, continue anyway
+        });
+    }
     fileInputRef.current?.click();
   };
 
@@ -188,21 +225,27 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                   onClick={openFileDialog}
                   disabled={uploading}
                 >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Kies Foto
+                  {isMobile ? (
+                    <Camera className="w-4 h-4 mr-2" />
+                  ) : (
+                    <Upload className="w-4 h-4 mr-2" />
+                  )}
+                  {isMobile ? 'Maak Foto' : 'Kies Foto'}
                 </Button>
               </div>
             )}
           </div>
         )}
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={accept}
-          onChange={handleInputChange}
-          className="hidden"
-        />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={isMobile ? recommendedSettings.accept : accept}
+            capture={isMobile ? recommendedSettings.capture : undefined}
+            onChange={handleInputChange}
+            className="hidden"
+            style={{ fontSize: '16px' }}
+          />
       </CardContent>
     </Card>
   );

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Shield, Users, Activity, Database, AlertTriangle, RefreshCw, Headphones } from 'lucide-react';
+import { Shield, Users, Activity, Database, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useSuperAdminStats } from '@/hooks/useSuperAdminStats';
 import { UserOverviewSection } from '@/components/admin/UserOverviewSection';
 import { ScanActivitySection } from '@/components/admin/ScanActivitySection';
@@ -17,42 +17,73 @@ import { TestEmailTrigger } from '@/components/TestEmailTrigger';
 import { ArtworkStatusSection } from '@/components/admin/ArtworkStatusSection';
 import { PodcastManagementSection } from '@/components/admin/PodcastManagementSection';
 
-const SUPERADMIN_EMAIL = 'rogiervisser76@gmail.com';
-const SECRET_KEY = 'superadmin_secret_2024';
-
 const SuperAdminDashboard: React.FC = () => {
   console.log('🔐 SuperAdminDashboard: Component loading...');
   
-  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  console.log('🔐 SuperAdminDashboard: User state:', { 
-    email: user?.email, 
-    searchKey: searchParams.get('key') 
-  });
 
   const { data: stats, isLoading, refetch } = useSuperAdminStats();
 
-  // Check authorization
+  // Check authorization via database role
   useEffect(() => {
-    const key = searchParams.get('key');
-    const authorized = key === SECRET_KEY && user?.email === SUPERADMIN_EMAIL;
-    console.log('🔐 SuperAdminDashboard: Authorization check:', {
-      key,
-      userEmail: user?.email,
-      expectedEmail: SUPERADMIN_EMAIL,
-      expectedKey: SECRET_KEY,
-      authorized
-    });
-    setIsAuthorized(authorized);
-  }, [searchParams, user]);
+    const checkAdminRole = async () => {
+      if (!user?.id) {
+        console.log('🔐 SuperAdminDashboard: No user logged in');
+        setIsAuthorized(false);
+        setIsCheckingAuth(false);
+        return;
+      }
+
+      try {
+        console.log('🔐 SuperAdminDashboard: Checking admin role for user:', user.email);
+        
+        const { data, error } = await supabase.rpc('has_role', {
+          _user_id: user.id,
+          _role: 'admin'
+        });
+
+        if (error) {
+          console.error('🔐 SuperAdminDashboard: Role check error:', error);
+          setIsAuthorized(false);
+        } else {
+          console.log('🔐 SuperAdminDashboard: Admin role check result:', data);
+          setIsAuthorized(data === true);
+        }
+      } catch (error) {
+        console.error('🔐 SuperAdminDashboard: Exception during role check:', error);
+        setIsAuthorized(false);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAdminRole();
+  }, [user]);
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
     refetch();
   };
+
+  // Show loading state while checking authorization
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="max-w-md">
+          <CardHeader className="text-center">
+            <Shield className="mx-auto h-12 w-12 text-primary mb-4 animate-pulse" />
+            <CardTitle>Authorisatie Controleren...</CardTitle>
+            <CardDescription>
+              Even geduld, we verifiëren je toegangsrechten.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
 
   // Unauthorized access
   if (!isAuthorized) {

@@ -40,21 +40,35 @@ serve(async (req) => {
       });
     }
 
-    // Check if user is authorized superadmin
-    if (user.email !== 'rogiervisser76@gmail.com') {
-      console.error('❌ Unauthorized email:', user.email);
-      return new Response(JSON.stringify({ error: 'Access denied' }), {
+    // Create service role client to bypass RLS
+    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
+    // Check if user has admin role via database
+    console.log('🔍 Checking admin role for user:', user.id);
+    const { data: isAdmin, error: roleError } = await serviceSupabase.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin'
+    });
+
+    if (roleError) {
+      console.error('❌ Role check error:', roleError);
+      return new Response(JSON.stringify({ error: 'Authorization check failed' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (!isAdmin) {
+      console.error('❌ User does not have admin role:', user.email);
+      return new Response(JSON.stringify({ error: 'Access denied - admin role required' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    console.log('✅ Authorized superadmin access for:', user.email);
-
-    // Create service role client to bypass RLS
-    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    });
+    console.log('✅ Authorized admin access for:', user.email);
 
     // Fetch all statistics using service role
     console.log('📊 Fetching comprehensive statistics...');

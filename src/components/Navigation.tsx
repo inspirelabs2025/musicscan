@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users } from "lucide-react";
+import { Home, ShoppingCart, Archive, Menu, X, Images, Brain, Database, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -21,6 +21,7 @@ const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Sociaal", url: "/social", icon: Users },
   { title: "Forum", url: "/forum", icon: MessageCircle },
+  { title: "Prijscheck", url: "/quick-price-check", icon: DollarSign },
   { title: "Muzieknieuws", url: "/news", icon: Newspaper },
   { title: "Mijn Winkel", url: "/my-shop", icon: Store }
 ];
@@ -28,6 +29,7 @@ const navigationItems = [
 // Public navigation items for non-logged-in users
 const publicNavigationItems = [
   { title: "Forum", url: "/forum", icon: MessageCircle },
+  { title: "Prijscheck", url: "/quick-price-check", icon: DollarSign },
   { title: "Muzieknieuws", url: "/news", icon: Newspaper },
   { title: "Catalogus", url: "/catalog", icon: Library },
   { title: "Marktplaats", url: "/marketplace", icon: ShoppingCart },

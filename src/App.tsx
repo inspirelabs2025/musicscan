@@ -14,6 +14,7 @@ import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import Home from "./pages/Home";
 import Scanner from "./pages/Scanner";
 import Scan from "./pages/Scan";
+import QuickPriceCheck from "./pages/QuickPriceCheck";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import { NewsPost } from "./pages/NewsPost";
@@ -118,6 +119,7 @@ const App = () => {
                 <Scanner />
               </ProtectedRoute>
             } />
+            <Route path="/quick-price-check" element={<QuickPriceCheck />} />
             <Route path="/scanner/discogs" element={
               <ProtectedRoute>
                 <BulkerImage />

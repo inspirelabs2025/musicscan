@@ -147,10 +147,10 @@ export default function QuickPriceCheck() {
           <DiscogsIdInput onSubmit={handleDiscogsIdSubmit} />
         )}
 
-        {state.currentStep === 1 && (
+        {state.currentStep === 1 && state.mediaType && (
           <>
             <UploadSection
-              mediaType={state.mediaType!}
+              mediaType={state.mediaType}
               uploadedFiles={state.uploadedFiles}
               onFileUploaded={handleFileUploaded}
               isAnalyzing={isAnalyzing}
@@ -158,7 +158,7 @@ export default function QuickPriceCheck() {
             <ManualSearch
               analysisResult={analysisResult}
               onResultsFound={handleResultsFound}
-              mediaType={state.mediaType!}
+              mediaType={state.mediaType}
             />
           </>
         )}
@@ -171,13 +171,13 @@ export default function QuickPriceCheck() {
           <SearchingLoadingCard stage="pricing" />
         )}
 
-        {state.currentStep === 4 && (
+        {state.currentStep === 4 && state.mediaType && (
           <div className="space-y-6">
             <ScanResults
               analysisResult={analysisResult}
               searchResults={searchResults}
               searchStrategies={searchStrategies}
-              mediaType={state.mediaType!}
+              mediaType={state.mediaType}
               onCopyToClipboard={handleCopyToClipboard}
               onRetryPricing={() => searchResults[0]?.discogs_id && retryPricing(searchResults[0].discogs_id)}
               isPricingRetrying={isPricingLoading}
@@ -186,7 +186,7 @@ export default function QuickPriceCheck() {
 
             {searchResults && searchResults.length > 0 && (
               <ConditionSelector
-                mediaType={state.mediaType!}
+                mediaType={state.mediaType}
                 selectedCondition={state.selectedCondition}
                 onConditionChange={(condition) => dispatch({ type: 'SET_SELECTED_CONDITION', payload: condition })}
                 lowestPrice={searchResults[0]?.pricing_stats?.lowest_price || null}

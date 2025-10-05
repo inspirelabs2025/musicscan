@@ -17,29 +17,36 @@ export const UploadSection = React.memo(({
   onFileUploaded, 
   isAnalyzing 
 }: UploadSectionProps) => {
-  const requiredPhotos = mediaType === 'vinyl' ? 3 : 4;
-  const isComplete = uploadedFiles.length >= requiredPhotos;
+  const requiredPhotos = mediaType === 'vinyl' ? 3 : mediaType === 'cd' ? 4 : 0;
+  const isComplete = requiredPhotos > 0 && uploadedFiles.length >= requiredPhotos;
 
   const getPhotoLabels = () => {
     if (mediaType === 'vinyl') {
       return ['Cover foto', 'Achterkant foto', 'Matrix/Label foto'];
     }
-    return ['Voor foto', 'Achterkant foto', 'Barcode foto', 'Matrix foto'];
+    if (mediaType === 'cd') {
+      return ['Voor foto', 'Achterkant foto', 'Barcode foto', 'Matrix foto'];
+    }
+    return [];
   };
 
   const steps = getPhotoLabels();
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
-      <Card variant="dark">
+      <Card variant="dark" aria-live="polite" aria-busy={isAnalyzing}>
         <CardHeader className="text-center">
           <CardTitle className="flex items-center gap-2 justify-center text-card-dark-foreground">
             <Camera className="h-6 w-6" />
-            Upload {mediaType.toUpperCase()} foto's
+            Upload {(mediaType ? mediaType.toUpperCase() : '')} foto's
             {isComplete && <CheckCircle className="h-5 w-5 text-success ml-2" />}
           </CardTitle>
           <CardDescription className="text-card-dark-foreground/70">
-            Upload {requiredPhotos} foto's voor analyse: {getPhotoLabels().join(', ')}
+            {requiredPhotos > 0 ? (
+              <>Upload {requiredPhotos} foto's voor analyse: {getPhotoLabels().join(', ')}</>
+            ) : (
+              <>Selecteer eerst een mediatype</>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -55,17 +62,19 @@ export const UploadSection = React.memo(({
               />
             ))}
           </div>
-          <div className="mt-6">
-            <div className="text-sm text-card-dark-foreground/70 mb-2">
-              Voortgang: {uploadedFiles.length}/{requiredPhotos} foto's geüpload
+          {requiredPhotos > 0 && (
+            <div className="mt-6">
+              <div className="text-sm text-card-dark-foreground/70 mb-2">
+                Voortgang: {uploadedFiles.length}/{requiredPhotos} foto's geüpload
+              </div>
+              <div className="w-full bg-muted/20 rounded-full h-2 border border-muted/30">
+                <div 
+                  className="bg-primary h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${(uploadedFiles.length / requiredPhotos) * 100}%` }}
+                />
+              </div>
             </div>
-            <div className="w-full bg-muted/20 rounded-full h-2 border border-muted/30">
-              <div 
-                className="bg-primary h-2 rounded-full transition-all duration-300" 
-                style={{ width: `${(uploadedFiles.length / requiredPhotos) * 100}%` }}
-              />
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

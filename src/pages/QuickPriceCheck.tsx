@@ -144,7 +144,10 @@ export default function QuickPriceCheck() {
         )}
 
         {state.currentStep === 5 && (
-          <DiscogsIdInput onSubmit={handleDiscogsIdSubmit} />
+          <DiscogsIdInput 
+            onSubmit={handleDiscogsIdSubmit}
+            onBack={() => dispatch({ type: 'SET_CURRENT_STEP', payload: 0 })}
+          />
         )}
 
         {state.currentStep === 1 && state.mediaType && (
@@ -154,21 +157,50 @@ export default function QuickPriceCheck() {
               uploadedFiles={state.uploadedFiles}
               onFileUploaded={handleFileUploaded}
               isAnalyzing={isAnalyzing}
+              onBack={() => dispatch({ type: 'SET_CURRENT_STEP', payload: 0 })}
+              onReset={() => dispatch({ type: 'SET_UPLOADED_FILES', payload: [] })}
             />
             <ManualSearch
               analysisResult={analysisResult}
               onResultsFound={handleResultsFound}
               mediaType={state.mediaType}
+              onBack={() => dispatch({ type: 'SET_CURRENT_STEP', payload: 0 })}
             />
           </>
         )}
 
         {state.currentStep === 2 && (
-          <SearchingLoadingCard stage="searching" />
+          <div className="space-y-4">
+            <SearchingLoadingCard stage="searching" />
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  dispatch({ type: 'SET_CURRENT_STEP', payload: 1 });
+                  dispatch({ type: 'SET_UPLOADED_FILES', payload: [] });
+                }}
+              >
+                Annuleer analyse
+              </Button>
+            </div>
+          </div>
         )}
 
         {state.currentStep === 3 && (
-          <SearchingLoadingCard stage="pricing" />
+          <div className="space-y-4">
+            <SearchingLoadingCard stage="pricing" />
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  dispatch({ type: 'SET_CURRENT_STEP', payload: 1 });
+                  dispatch({ type: 'SET_UPLOADED_FILES', payload: [] });
+                }}
+              >
+                Annuleer analyse
+              </Button>
+            </div>
+          </div>
         )}
 
         {state.currentStep === 4 && state.mediaType && (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, AlertTriangle, CheckCircle, RefreshCcw } from 'lucide-react';
+import { Search, AlertTriangle, CheckCircle, RefreshCcw, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,14 @@ interface ManualSearchProps {
   analysisResult: any;
   onResultsFound: (results: any[]) => void;
   mediaType: 'vinyl' | 'cd';
+  onBack?: () => void;
 }
 
 export const ManualSearch: React.FC<ManualSearchProps> = ({
   analysisResult,
   onResultsFound,
-  mediaType
+  mediaType,
+  onBack
 }) => {
   const [searchQuery, setSearchQuery] = useState({
     artist: analysisResult?.analysis?.artist || '',
@@ -171,18 +173,31 @@ export const ManualSearch: React.FC<ManualSearchProps> = ({
         )}
 
         {/* Search button */}
-        <Button
-          onClick={handleSearch}
-          disabled={isSearching || (!searchQuery.artist.trim() && !searchQuery.title.trim() && !searchQuery.catalog.trim())}
-          className="w-full"
-        >
-          {isSearching ? (
-            <RefreshCcw className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Search className="h-4 w-4 mr-2" />
+        <div className="flex gap-3">
+          {onBack && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onBack}
+              disabled={isSearching}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Terug
+            </Button>
           )}
-          Search Discogs
-        </Button>
+          <Button
+            onClick={handleSearch}
+            disabled={isSearching || (!searchQuery.artist.trim() && !searchQuery.title.trim() && !searchQuery.catalog.trim())}
+            className="flex-1"
+          >
+            {isSearching ? (
+              <RefreshCcw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4 mr-2" />
+            )}
+            Search Discogs
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

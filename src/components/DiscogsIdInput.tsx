@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Link, Disc, Circle } from 'lucide-react';
+import { ArrowRight, Link, Disc, Circle, ArrowLeft } from 'lucide-react';
 import { extractDiscogsIdFromUrl, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +12,10 @@ interface DiscogsIdInputProps {
   isSearching?: boolean;
   prefilledDiscogsId?: string;
   prefilledMediaType?: 'vinyl' | 'cd';
+  onBack?: () => void;
 }
 
-export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false, prefilledDiscogsId, prefilledMediaType }: DiscogsIdInputProps) => {
+export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false, prefilledDiscogsId, prefilledMediaType, onBack }: DiscogsIdInputProps) => {
   const [discogsId, setDiscogsId] = useState(prefilledDiscogsId || '');
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | null>(prefilledMediaType || null);
   const [error, setError] = useState('');
@@ -172,23 +173,36 @@ export const DiscogsIdInput = React.memo(({ onSubmit, isSearching = false, prefi
               </p>
             </div>
             
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isSearching || !discogsId.trim() || !mediaType}
-            >
-            {isSearching ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                  Prijzen ophalen...
-                </div>
-              ) : (
-                <>
-                  <ArrowRight className="h-4 w-4 mr-2" />
-                  Ga naar prijscheck
-                </>
+            <div className="flex gap-3">
+              {onBack && (
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={onBack}
+                  disabled={isSearching}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Terug
+                </Button>
               )}
-            </Button>
+              <Button 
+                type="submit" 
+                className="flex-1" 
+                disabled={isSearching || !discogsId.trim() || !mediaType}
+              >
+              {isSearching ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Prijzen ophalen...
+                  </div>
+                ) : (
+                  <>
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Ga naar prijscheck
+                  </>
+                )}
+              </Button>
+            </div>
           </form>
 
           <div className="mt-6 p-4 bg-muted/50 rounded-lg">

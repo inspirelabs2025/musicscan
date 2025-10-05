@@ -1,21 +1,26 @@
 
 import React, { useCallback } from 'react';
-import { Camera, CheckCircle } from 'lucide-react';
+import { Camera, CheckCircle, ArrowLeft, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileUpload } from '@/components/FileUpload';
+import { Button } from '@/components/ui/button';
 
 interface UploadSectionProps {
   mediaType: 'vinyl' | 'cd';
   uploadedFiles: string[];
   onFileUploaded: (file: string) => void;
   isAnalyzing: boolean;
+  onBack?: () => void;
+  onReset?: () => void;
 }
 
 export const UploadSection = React.memo(({ 
   mediaType, 
   uploadedFiles, 
   onFileUploaded, 
-  isAnalyzing 
+  isAnalyzing,
+  onBack,
+  onReset
 }: UploadSectionProps) => {
   const requiredPhotos = mediaType === 'vinyl' ? 3 : mediaType === 'cd' ? 4 : 0;
   const isComplete = requiredPhotos > 0 && uploadedFiles.length >= requiredPhotos;
@@ -77,6 +82,30 @@ export const UploadSection = React.memo(({
           )}
         </CardContent>
       </Card>
+      
+      {/* Action buttons */}
+      <div className="flex justify-center gap-4">
+        {onBack && (
+          <Button 
+            variant="outline" 
+            onClick={onBack}
+            disabled={isAnalyzing}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Terug naar keuze
+          </Button>
+        )}
+        {onReset && uploadedFiles.length > 0 && (
+          <Button 
+            variant="destructive" 
+            onClick={onReset}
+            disabled={isAnalyzing}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Reset foto's
+          </Button>
+        )}
+      </div>
     </div>
   );
 });

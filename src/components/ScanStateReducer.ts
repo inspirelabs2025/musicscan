@@ -34,7 +34,7 @@ export type ScanAction =
 
 export const initialScanState: ScanState = {
   mediaType: null,
-  currentStep: 1,
+  currentStep: 0,
   uploadedFiles: [],
   selectedCondition: '',
   calculatedAdvicePrice: null,

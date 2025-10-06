@@ -6,6 +6,7 @@ import { NewUsersSection } from '@/components/NewUsersSection';
 import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
 import { NewsSection } from '@/components/NewsSection';
 import { MusicScanningSection } from '@/components/MusicScanningSection';
+import { QuickPriceCheckSection } from '@/components/QuickPriceCheckSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,6 +48,8 @@ const Home = () => {
       {/* Music Scanning Section */}
       <MusicScanningSection />
 
+      {/* Quick Price Check Section */}
+      <QuickPriceCheckSection />
 
       {/* AI Features Section */}
       <section className="py-16 bg-gradient-to-br from-background via-accent/5 to-background relative overflow-hidden">

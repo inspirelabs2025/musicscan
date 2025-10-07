@@ -1725,6 +1725,39 @@ export type Database = {
         }
         Relationships: []
       }
+      news_generation_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          execution_time_ms: number | null
+          id: string
+          items_failed: number | null
+          items_processed: number | null
+          source: string
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          items_failed?: number | null
+          items_processed?: number | null
+          source: string
+          status: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          items_failed?: number | null
+          items_processed?: number | null
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
       oem_numbers: {
         Row: {
           alternative_numbers: string[] | null

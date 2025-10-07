@@ -51,70 +51,32 @@ function createSlug(title: string): string {
     .substring(0, 100);
 }
 
-// Check if a date is within the last 2 days
+// Check if a date is within the last 3 days (less strict)
 function isRecentDate(dateString: string): boolean {
   try {
     const itemDate = new Date(dateString);
-    const twoDaysAgo = new Date();
-    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     
-    return itemDate >= twoDaysAgo && itemDate <= new Date();
+    return itemDate >= threeDaysAgo && itemDate <= new Date();
   } catch {
     return false;
   }
 }
 
-// Extract date from text content
-function extractDateFromText(text: string): Date | null {
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  
-  // Check for Dutch date keywords
-  if (text.toLowerCase().includes('vandaag') || text.toLowerCase().includes('today')) {
-    return today;
-  }
-  if (text.toLowerCase().includes('gisteren') || text.toLowerCase().includes('yesterday')) {
-    return yesterday;
-  }
-  
-  // Look for date patterns
-  const datePatterns = [
-    /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/,
-    /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/,
-    /(\d{1,2})\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s+(\d{4})/i
-  ];
-  
-  for (const pattern of datePatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      try {
-        const date = new Date(match[0]);
-        if (isRecentDate(date.toISOString())) {
-          return date;
-        }
-      } catch {
-        continue;
-      }
-    }
-  }
-  
-  return null;
-}
-
 // Parse RSS feed with improved error handling
 async function parseRSSFeed(feedUrl: string, source: string, category: string): Promise<RSSItem[]> {
   try {
-    console.log(`Fetching RSS feed: ${feedUrl}`);
+    console.log(`📡 Fetching RSS feed: ${source}`);
     const response = await fetch(feedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; MuziekNieuwsBot/1.0)',
       },
-      timeout: 10000
+      signal: AbortSignal.timeout(10000)
     });
     
     if (!response.ok) {
-      console.error(`Failed to fetch RSS feed ${feedUrl}: ${response.status}`);
+      console.error(`❌ Failed to fetch RSS feed ${source}: ${response.status}`);
       return [];
     }
     
@@ -125,7 +87,7 @@ async function parseRSSFeed(feedUrl: string, source: string, category: string): 
     const itemMatches = xmlText.match(/<item[^>]*>[\s\S]*?<\/item>/gi);
     
     if (itemMatches) {
-      for (const itemXml of itemMatches.slice(0, 15)) {
+      for (const itemXml of itemMatches.slice(0, 10)) {
         try {
           const titleMatch = itemXml.match(/<title[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/i);
           const linkMatch = itemXml.match(/<link[^>]*>(.*?)<\/link>/i);
@@ -137,8 +99,7 @@ async function parseRSSFeed(feedUrl: string, source: string, category: string): 
             const pubDate = pubDateMatch[1].trim();
             const description = (descMatch?.[1] || '').replace(/<[^>]+>/g, '').trim();
             
-            // Enhanced date validation
-            if (isRecentDate(pubDate) || extractDateFromText(title + ' ' + description)) {
+            if (isRecentDate(pubDate)) {
               items.push({
                 title,
                 link: linkMatch[1].trim(),
@@ -155,11 +116,11 @@ async function parseRSSFeed(feedUrl: string, source: string, category: string): 
       }
     }
     
-    console.log(`Found ${items.length} recent items from ${source}`);
+    console.log(`✅ Found ${items.length} recent items from ${source}`);
     return items;
     
   } catch (error) {
-    console.error(`Error parsing RSS feed ${feedUrl}:`, error);
+    console.error(`❌ Error parsing RSS feed ${source}:`, error);
     return [];
   }
 }
@@ -181,12 +142,11 @@ async function isDuplicatePost(supabase: any, title: string, slug: string): Prom
       return false;
     }
     
-    // Additional similarity check
     if (data && data.length > 0) {
       for (const existing of data) {
         const similarity = calculateSimilarity(title.toLowerCase(), existing.title.toLowerCase());
         if (similarity > 0.7) {
-          console.log(`High similarity detected: ${similarity.toFixed(2)} - ${title}`);
+          console.log(`Skipping duplicate: ${title}`);
           return true;
         }
       }
@@ -207,7 +167,7 @@ function calculateSimilarity(str1: string, str2: string): number {
   return intersection.length / Math.max(words1.length, words2.length);
 }
 
-// Enhanced content generation with strict validation
+// Enhanced content generation (limited calls)
 async function generateEnhancedContent(topic: string, description: string, source: string, perplexityApiKey: string): Promise<string | null> {
   try {
     const currentDate = new Date().toLocaleDateString('nl-NL', { 
@@ -228,40 +188,16 @@ async function generateEnhancedContent(topic: string, description: string, sourc
         messages: [
           {
             role: 'system',
-            content: `Je bent een Nederlandse muziekjournalist die schrijft voor een moderne muziekblog. Vandaag is ${currentDate}.
-
-KRITIEKE INSTRUCTIES:
-- Schrijf ALLEEN over recent muzieknieuws (laatste 48 uur)
-- Als informatie ouder is dan 2 dagen, antwoord met "OUTDATED_CONTENT"
-- Gebruik GEEN externe referenties of bronverwijzingen 
-- Schrijf 300-500 woorden in vloeiend Nederlands
-- Gebruik Markdown met ## voor hoofdingen, ### voor subheadings
-- Voeg context, achtergrond en eigen journalistieke analyse toe
-- Maak het verhaal interessant en informatief
-- Controleer actualiteit van de informatie`
+            content: `Je bent een Nederlandse muziekjournalist. Vandaag is ${currentDate}. Schrijf 300-500 woorden in vloeiend Nederlands met Markdown formatting.`
           },
           {
             role: 'user',
-            content: `Schrijf een origineel nieuwsartikel over: "${topic}"
-            
-Context: ${description}
-Bron: ${source}
-
-CONTROLEER EERST: Is dit nieuws van de laatste 2 dagen? Zo niet, antwoord met "OUTDATED_CONTENT".
-
-Als het wel recent is, schrijf dan een volledig artikel met:
-- Nieuws samenvatting en belangrijkste punten
-- Relevante achtergrond en context  
-- Analyse van betekenis voor de muziekwereld
-- Eigen journalistieke inzichten
-- Geen citaten of externe bronnen`
+            content: `Schrijf een origineel nieuwsartikel over: "${topic}"\n\nContext: ${description}\nBron: ${source}`
           }
         ],
         temperature: 0.5,
-        max_tokens: 1200,
-        search_recency_filter: 'day',
-        return_images: false,
-        return_related_questions: false
+        max_tokens: 1000,
+        search_recency_filter: 'day'
       }),
     });
 
@@ -273,16 +209,6 @@ Als het wel recent is, schrijf dan een volledig artikel met:
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    // Strict content validation
-    if (content.includes('OUTDATED_CONTENT') || 
-        content.includes('oude nieuws') || 
-        content.includes('niet recent') ||
-        content.includes('meer dan') && content.includes('dagen geleden')) {
-      console.log(`Filtering outdated content: ${topic}`);
-      return null;
-    }
-    
-    // Additional validation for content quality
     if (content.length < 200) {
       console.log(`Content too short for: ${topic}`);
       return null;
@@ -296,7 +222,25 @@ Als het wel recent is, schrijf dan een volledig artikel met:
   }
 }
 
+// Log to database
+async function logToDatabase(supabase: any, source: string, status: string, itemsProcessed: number, itemsFailed: number, errorMessage: string | null, executionTime: number) {
+  try {
+    await supabase.from('news_generation_logs').insert({
+      source,
+      status,
+      items_processed: itemsProcessed,
+      items_failed: itemsFailed,
+      error_message: errorMessage,
+      execution_time_ms: executionTime
+    });
+  } catch (error) {
+    console.error('Failed to log to database:', error);
+  }
+}
+
 serve(async (req) => {
+  const startTime = Date.now();
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -310,57 +254,63 @@ serve(async (req) => {
     
     console.log('🎵 Starting enhanced Dutch music news generation...');
     
-    // Step 1: Fetch from multiple Dutch RSS feeds
-    console.log('📡 Fetching Dutch music RSS feeds...');
-    const allRSSItems: RSSItem[] = [];
+    // Step 1: Fetch from multiple Dutch RSS feeds IN PARALLEL
+    console.log('📡 Fetching Dutch music RSS feeds in parallel...');
+    const rssPromises = RSS_FEEDS.map(feed => 
+      parseRSSFeed(feed.url, feed.source, feed.category)
+        .catch(error => {
+          console.error(`Failed to fetch ${feed.source}:`, error);
+          return [];
+        })
+    );
     
-    for (const feed of RSS_FEEDS) {
-      try {
-        const items = await parseRSSFeed(feed.url, feed.source, feed.category);
-        allRSSItems.push(...items);
-        
-        // Small delay to be respectful
-        await new Promise(resolve => setTimeout(resolve, 500));
-      } catch (error) {
-        console.error(`Failed to fetch ${feed.source}:`, error);
-      }
-    }
+    const rssResults = await Promise.all(rssPromises);
+    const allRSSItems = rssResults.flat();
     
     console.log(`📰 Found ${allRSSItems.length} total recent RSS items`);
     
-    // Step 2: Sort by recency and relevance
+    // Log RSS fetch result
+    await logToDatabase(
+      supabase,
+      'rss-feeds',
+      allRSSItems.length > 0 ? 'success' : 'no_items',
+      allRSSItems.length,
+      RSS_FEEDS.length - rssResults.filter(r => r.length > 0).length,
+      null,
+      Date.now() - startTime
+    );
+    
+    // Step 2: Sort by recency
     const sortedItems = allRSSItems
       .filter(item => item.title.length > 10)
       .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
-      .slice(0, 8); // Take top 8 most recent
+      .slice(0, 6);
     
-    // Step 3: Process and generate enhanced blog posts
+    // Step 3: Process items (limit to 3 Perplexity calls)
     const blogPosts: BlogPost[] = [];
     const processedTitles = new Set<string>();
+    let perplexityCallsUsed = 0;
+    const MAX_PERPLEXITY_CALLS = 3;
     
     for (const item of sortedItems) {
       try {
         const slug = createSlug(item.title);
         const titleKey = item.title.toLowerCase().substring(0, 40);
         
-        // Skip if already processed similar title
         if (processedTitles.has(titleKey)) {
-          console.log(`Skipping similar title: ${item.title}`);
           continue;
         }
         processedTitles.add(titleKey);
         
-        // Check for duplicates in database
         const isDuplicate = await isDuplicatePost(supabase, item.title, slug);
         if (isDuplicate) {
-          console.log(`Skipping duplicate: ${item.title}`);
           continue;
         }
         
-        // Generate enhanced content
+        // Generate enhanced content (limited)
         let content = `## ${item.title}\n\n${item.description}`;
         
-        if (perplexityApiKey) {
+        if (perplexityApiKey && perplexityCallsUsed < MAX_PERPLEXITY_CALLS) {
           const enhancedContent = await generateEnhancedContent(
             item.title, 
             item.description, 
@@ -370,9 +320,7 @@ serve(async (req) => {
           
           if (enhancedContent) {
             content = enhancedContent;
-          } else {
-            console.log(`Skipping due to content validation: ${item.title}`);
-            continue;
+            perplexityCallsUsed++;
           }
         }
         
@@ -409,13 +357,9 @@ serve(async (req) => {
           console.error('Error saving blog post:', error);
         } else {
           blogPosts.push(blogPost);
-          console.log(`✅ Saved: ${blogPost.title} (${blogPost.source})`);
+          console.log(`✅ Saved: ${blogPost.title}`);
         }
         
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Stop after 4 successful posts
         if (blogPosts.length >= 4) break;
         
       } catch (error) {
@@ -424,27 +368,61 @@ serve(async (req) => {
       }
     }
     
-    console.log(`🎉 Enhanced music news generation completed: ${blogPosts.length} posts created`);
+    const executionTime = Date.now() - startTime;
+    
+    // Log final result
+    await logToDatabase(
+      supabase,
+      'music-news-enhanced',
+      blogPosts.length > 0 ? 'success' : 'no_posts_created',
+      blogPosts.length,
+      sortedItems.length - blogPosts.length,
+      null,
+      executionTime
+    );
+    
+    console.log(`🎉 Completed: ${blogPosts.length} posts created in ${executionTime}ms`);
 
     return new Response(JSON.stringify({
       success: true,
       blogPosts: blogPosts,
       rssItemsProcessed: sortedItems.length,
       totalRssItemsFound: allRSSItems.length,
-      lastUpdated: new Date().toISOString(),
-      message: `Generated ${blogPosts.length} enhanced Dutch music news posts`
+      perplexityCallsUsed,
+      executionTimeMs: executionTime,
+      lastUpdated: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
+    const executionTime = Date.now() - startTime;
     console.error('💥 Error in enhanced music news generation:', error);
+    
+    // Log error to database
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      await logToDatabase(
+        supabase,
+        'music-news-enhanced',
+        'error',
+        0,
+        0,
+        error.message,
+        executionTime
+      );
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
     
     return new Response(JSON.stringify({
       success: false,
       error: error.message,
-      lastUpdated: new Date().toISOString(),
-      message: 'Enhanced music news generation failed'
+      executionTimeMs: executionTime,
+      lastUpdated: new Date().toISOString()
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

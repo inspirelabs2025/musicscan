@@ -54,6 +54,7 @@ import Podcasts from "./pages/Podcasts";
 import { ShopProducts } from "./pages/admin/ShopProducts";
 import PlatformProducts from "./pages/admin/PlatformProducts";
 import ArtGenerator from "./pages/admin/ArtGenerator";
+import BulkArtGenerator from "./pages/admin/BulkArtGenerator";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 import Community from "./pages/Community";
@@ -305,6 +306,11 @@ const App = () => {
             <Route path="/admin/art-generator" element={
               <ProtectedRoute>
                 <ArtGenerator />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/bulk-art-generator" element={
+              <ProtectedRoute>
+                <BulkArtGenerator />
               </ProtectedRoute>
             } />
             <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />

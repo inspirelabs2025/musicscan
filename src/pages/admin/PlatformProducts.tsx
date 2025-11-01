@@ -9,6 +9,7 @@ import { ProductFormModal } from "@/components/admin/ProductFormModal";
 import { Badge } from "@/components/ui/badge";
 import type { PlatformProduct } from "@/hooks/usePlatformProducts";
 import { useNavigate } from "react-router-dom";
+import { Upload } from "lucide-react";
 
 export default function PlatformProducts() {
   const { user } = useAuth();
@@ -45,6 +46,14 @@ export default function PlatformProducts() {
             size="sm"
           >
             🧪 Test Discogs ID
+          </Button>
+          <Button 
+            onClick={() => navigate('/admin/bulk-art-generator')} 
+            variant="outline"
+            size="lg"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Bulk Import
           </Button>
           <Button 
             onClick={() => navigate('/admin/art-generator')} 

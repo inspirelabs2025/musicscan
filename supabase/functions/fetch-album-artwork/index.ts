@@ -59,8 +59,8 @@ serve(async (req) => {
       }
     }
 
-    // Try to fetch artwork from Discogs
-    if (discogs_url) {
+  // Try to fetch artwork from Discogs (only if iTunes didn't find anything)
+  if (!artworkUrl && discogs_url) {
       try {
         console.log('🔍 Fetching from Discogs:', discogs_url);
         

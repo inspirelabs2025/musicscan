@@ -7,97 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Ben Dodson's iTunes Artwork Finder technique
-async function fetchItunesArtwork(artist: string, title: string): Promise<{
-  url: string | null;
-  resolution: string | null;
-}> {
-  try {
-    const searchQuery = `${artist} ${title}`.trim();
-    const encodedQuery = encodeURIComponent(searchQuery);
-    
-    console.log('🍎 Searching iTunes API:', searchQuery);
-    
-    const itunesUrl = `https://itunes.apple.com/search?term=${encodedQuery}&entity=album&limit=5&country=NL`;
-    
-    const response = await fetch(itunesUrl, {
-      headers: { 'User-Agent': 'VinylScanner/1.0' }
-    });
-    
-    if (!response.ok) {
-      console.log('❌ iTunes API error:', response.status);
-      return { url: null, resolution: null };
-    }
-    
-    const data = await response.json();
-    
-    if (!data.results || data.results.length === 0) {
-      console.log('⚠️ No iTunes results for:', searchQuery);
-      return { url: null, resolution: null };
-    }
-    
-    // Find best match with artist + title validation
-    const normalizedArtist = artist.toLowerCase().trim();
-    const normalizedTitle = title.toLowerCase().trim();
-    
-    const bestMatch = data.results.find((result: any) => {
-      const resultArtist = (result.artistName || '').toLowerCase();
-      const resultTitle = (result.collectionName || '').toLowerCase();
-      
-      const artistMatch = resultArtist.includes(normalizedArtist) || 
-                          normalizedArtist.includes(resultArtist);
-      const titleMatch = resultTitle.includes(normalizedTitle) || 
-                         normalizedTitle.includes(resultTitle);
-      
-      return artistMatch && titleMatch;
-    }) || data.results[0];
-    
-    if (!bestMatch?.artworkUrl100) {
-      console.log('⚠️ No artwork URL in iTunes result');
-      return { url: null, resolution: null };
-    }
-    
-    // Ben Dodson's trick: transform URL for higher resolutions
-    const baseUrl = bestMatch.artworkUrl100;
-    
-    const resolutions = [
-      { size: '3000x3000', label: '3000x3000' },
-      { size: '1400x1400', label: '1400x1400' },
-      { size: '1200x1200', label: '1200x1200' },
-      { size: '600x600', label: '600x600' }
-    ];
-    
-    console.log('🔍 Checking available iTunes resolutions...');
-    
-    for (const res of resolutions) {
-      const highResUrl = baseUrl.replace('100x100bb.jpg', `${res.size}bb.jpg`);
-      
-      try {
-        const checkResponse = await fetch(highResUrl, { 
-          method: 'HEAD',
-          signal: AbortSignal.timeout(2000)
-        });
-        
-        if (checkResponse.ok) {
-          console.log(`✅ Found iTunes ${res.label} artwork`);
-          return { url: highResUrl, resolution: res.label };
-        }
-      } catch {
-        continue;
-      }
-    }
-    
-    // Fallback: 600x600 always works
-    const fallbackUrl = baseUrl.replace('100x100bb.jpg', '600x600bb.jpg');
-    console.log('✅ Using iTunes 600x600 fallback');
-    return { url: fallbackUrl, resolution: '600x600' };
-    
-  } catch (error) {
-    console.log('❌ iTunes fetch error:', error);
-    return { url: null, resolution: null };
-  }
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -114,26 +23,11 @@ serve(async (req) => {
     console.log('🎨 Starting artwork fetch for:', { artist, title, media_type, discogs_url });
 
     let artworkUrl = null;
-    let artworkSource = null;
-    let artworkResolution = null;
 
-    // PRIORITY 1: iTunes API (Ben Dodson technique)
-    if (artist && title) {
-      const itunesResult = await fetchItunesArtwork(artist, title);
-      
-      if (itunesResult.url) {
-        artworkUrl = itunesResult.url;
-        artworkSource = 'itunes';
-        artworkResolution = itunesResult.resolution;
-        
-        console.log(`✅ Using iTunes ${artworkResolution} artwork`);
-      }
-    }
-
-    // PRIORITY 2: Discogs (fallback if iTunes fails)
-    if (!artworkUrl && discogs_url) {
+    // Try to fetch artwork from Discogs
+    if (discogs_url) {
       try {
-        console.log('🔍 Fallback to Discogs:', discogs_url);
+        console.log('🔍 Fetching from Discogs:', discogs_url);
         
         // Extract discogs ID from URL
         const discogsIdMatch = discogs_url.match(/\/release\/(\d+)/);
@@ -155,8 +49,7 @@ serve(async (req) => {
             if (data.images && data.images.length > 0) {
               const primaryImage = data.images.find((img: any) => img.type === 'primary') || data.images[0];
               artworkUrl = primaryImage.resource_url;
-              artworkSource = 'discogs';
-              console.log('✅ Using Discogs artwork (fallback)');
+              console.log('✅ Found Discogs artwork:', artworkUrl);
             }
           } else {
             console.log('❌ Discogs API error:', response.status);
@@ -167,10 +60,10 @@ serve(async (req) => {
       }
     }
 
-    // PRIORITY 3: MusicBrainz (last resort fallback)
+    // Fallback: Search MusicBrainz + Cover Art Archive
     if (!artworkUrl && artist && title) {
       try {
-        console.log('🔍 Last resort: MusicBrainz/Cover Art Archive');
+        console.log('🔍 Searching MusicBrainz for:', artist, '-', title);
         
         // Use more precise search with artist and recording filters
         const normalizedArtist = artist.toLowerCase().trim();
@@ -240,8 +133,7 @@ serve(async (req) => {
           const coverResponse = await fetch(coverArtUrl, { method: 'HEAD' });
           if (coverResponse.ok) {
             artworkUrl = coverArtUrl;
-            artworkSource = 'musicbrainz';
-            console.log('✅ Using MusicBrainz artwork (last resort)');
+            console.log('✅ Found Cover Art Archive artwork:', artworkUrl);
             console.log('🎯 Match validation: Used', selectedStrategy, 'for', artist, '-', title);
           } else {
             console.log('❌ No Cover Art Archive artwork for validated release:', foundRelease.id);
@@ -335,8 +227,7 @@ serve(async (req) => {
             return new Response(JSON.stringify({ 
               success: true, 
               artwork_url: storedImageUrl,
-              source: artworkSource,
-              resolution: artworkResolution
+              source: artworkUrl.includes('discogs') ? 'discogs' : 'musicbrainz'
             }), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
@@ -351,8 +242,6 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: !!artworkUrl,
       artwork_url: artworkUrl,
-      source: artworkSource,
-      resolution: artworkResolution,
       message: artworkUrl ? 'Artwork found' : 'No artwork found'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

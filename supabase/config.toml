@@ -62,6 +62,3 @@ verify_jwt = true
 
 [functions.create-art-product]
 verify_jwt = false
-
-[functions.clear-artwork]
-verify_jwt = false

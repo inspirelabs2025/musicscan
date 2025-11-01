@@ -123,11 +123,36 @@ export default function BulkArtGenerator() {
               }
             });
             
-            // Check if we got a successful response first
-            // Note: Supabase functions.invoke does NOT throw for non-2xx status codes!
-            // So we need to check the response data structure
-            if (data && data.success === true) {
-              // Success case
+            if (error) {
+              const errorMessage = error.message || '';
+              const status = error.status || error?.context?.response?.status;
+              
+              // Handle "already exists" as warning, not error
+              if (status === 409 || errorMessage.includes('already exists')) {
+                setResults(prev => {
+                  const updated = [...prev];
+                  updated[resultIndex] = {
+                    ...updated[resultIndex],
+                    status: 'exists',
+                    error: 'Product bestaat al'
+                  };
+                  return updated;
+                });
+              } else if (errorMessage.includes('No results found')) {
+                setResults(prev => {
+                  const updated = [...prev];
+                  updated[resultIndex] = {
+                    ...updated[resultIndex],
+                    status: 'error',
+                    error: 'Niet gevonden op Discogs'
+                  };
+                  return updated;
+                });
+              } else {
+                throw error;
+              }
+            } else {
+              // Success
               setResults(prev => {
                 const updated = [...prev];
                 updated[resultIndex] = {
@@ -139,77 +164,14 @@ export default function BulkArtGenerator() {
                 };
                 return updated;
               });
-            } else if (data && data.error) {
-              // Error in response body (409, 404, 500, etc.)
-              const errorMessage = data.error;
-              const details = data.details || '';
-              
-              // Check if product already exists (409)
-              if (errorMessage.includes('already exists') || errorMessage.includes('Product already exists')) {
-                setResults(prev => {
-                  const updated = [...prev];
-                  updated[resultIndex] = {
-                    ...updated[resultIndex],
-                    status: 'exists',
-                    productId: data.product_id,
-                    error: 'Product bestaat al'
-                  };
-                  return updated;
-                });
-              } else if (errorMessage.includes('No results found') || details.includes('No results found')) {
-                // 404 - Not found on Discogs (expected for some albums)
-                setResults(prev => {
-                  const updated = [...prev];
-                  updated[resultIndex] = {
-                    ...updated[resultIndex],
-                    status: 'error',
-                    error: 'Niet gevonden op Discogs'
-                  };
-                  return updated;
-                });
-              } else {
-                // Other error (500, etc.)
-                setResults(prev => {
-                  const updated = [...prev];
-                  updated[resultIndex] = {
-                    ...updated[resultIndex],
-                    status: 'error',
-                    error: errorMessage || 'Onbekende fout'
-                  };
-                  return updated;
-                });
-              }
-            } else if (error) {
-              // Network/transport error
-              setResults(prev => {
-                const updated = [...prev];
-                updated[resultIndex] = {
-                  ...updated[resultIndex],
-                  status: 'error',
-                  error: error.message || 'Netwerk fout'
-                };
-                return updated;
-              });
-            } else {
-              // Unexpected response format
-              setResults(prev => {
-                const updated = [...prev];
-                updated[resultIndex] = {
-                  ...updated[resultIndex],
-                  status: 'error',
-                  error: 'Onverwachte response'
-                };
-                return updated;
-              });
             }
           } catch (error: any) {
-            console.error('Error processing album:', album, error);
             setResults(prev => {
               const updated = [...prev];
               updated[resultIndex] = {
                 ...updated[resultIndex],
                 status: 'error',
-                error: error.message || error.toString() || 'Onbekende fout'
+                error: error.message || 'Onbekende fout'
               };
               return updated;
             });

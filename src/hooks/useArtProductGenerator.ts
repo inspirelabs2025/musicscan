@@ -46,14 +46,16 @@ export const useArtProductGenerator = () => {
     },
     onError: (error: any) => {
       console.error('Error creating ART product:', error);
-      
-      if (error.message?.includes('already exists')) {
+      const status = error?.status || error?.context?.response?.status;
+      const message = error?.message || '';
+
+      if (status === 409 || message.includes('already exists')) {
         toast({
           title: "⚠️ Product Bestaat Al",
           description: "Dit album is al als ART product toegevoegd",
           variant: "destructive"
         });
-      } else if (error.message?.includes('No results found')) {
+      } else if (message.includes('No results found')) {
         toast({
           title: "❌ Niet Gevonden",
           description: "Album niet gevonden op Discogs. Controleer je zoekgegevens.",
@@ -62,7 +64,7 @@ export const useArtProductGenerator = () => {
       } else {
         toast({
           title: "❌ Fout bij Aanmaken",
-          description: error.message || "Er is een fout opgetreden bij het aanmaken van het product",
+          description: message || "Er is een fout opgetreden bij het aanmaken van het product",
           variant: "destructive"
         });
       }

@@ -69,16 +69,35 @@ serve(async (req) => {
       artistValue = releaseData.title.split(' - ')[0].trim();
     }
 
-    const { data: releaseId, error: releaseError } = await supabase.functions.invoke('find-or-create-release', {
+    // Normalize genre, label, format to strings (not arrays)
+    const genreValue = Array.isArray(releaseData.genre) 
+      ? releaseData.genre.join(', ') 
+      : (releaseData.genre || null);
+    const labelValue = Array.isArray(releaseData.label) 
+      ? releaseData.label[0] 
+      : (releaseData.label || null);
+    const formatValue = Array.isArray(releaseData.format) 
+      ? releaseData.format.join(', ') 
+      : (releaseData.format || null);
+
+    console.log('📦 RPC payload:', {
+      discogs_id: releaseData.discogs_id,
+      artist: artistValue,
+      year: yearValue,
+      genre: genreValue,
+      style: styleValue ? `[${styleValue.length} items]` : null
+    });
+
+    const { data: releaseResp, error: releaseError } = await supabase.functions.invoke('find-or-create-release', {
       body: {
         discogs_id: parseInt(releaseData.discogs_id),
         artist: artistValue,
         title: releaseData.title,
-        label: releaseData.label,
+        label: labelValue,
         catalog_number: releaseData.catalog_number,
         year: yearValue,
-        format: releaseData.format,
-        genre: releaseData.genre,
+        format: formatValue,
+        genre: genreValue,
         country: releaseData.country,
         style: styleValue,
         discogs_url: releaseData.discogs_url,
@@ -87,7 +106,9 @@ serve(async (req) => {
     });
 
     if (releaseError) throw new Error(`Failed to create release: ${releaseError.message}`);
-    console.log('💾 Release saved:', releaseId);
+    const release_id = releaseResp?.release_id;
+    if (!release_id) throw new Error('No release_id returned from find-or-create-release');
+    console.log('💾 Release saved with ID:', release_id);
 
     // Step 3: Fetch artwork
     console.log('🖼️ Fetching artwork...');
@@ -161,36 +182,61 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
     // Step 6: Create ART product
     console.log('🎨 Creating ART product...');
     
-    const productTitle = `${releaseData.artist} - ${releaseData.title} [Metaalprint]`;
-    const slug = `${releaseData.artist}-${releaseData.title}-metaalprint`
+    const productTitle = `${artistValue} - ${releaseData.title} [Metaalprint]`;
+    const slug = `${artistValue}-${releaseData.title}-metaalprint`
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .substring(0, 80);
 
+    // Defensive normalization for categories and tags
+    const genreStr = genreValue || 'music';
+    const firstGenre = genreStr.split(',')[0].trim().toLowerCase();
+    const categories = ['album-art', 'metaalprint', firstGenre];
+    
+    const tags = [
+      artistValue.toLowerCase(),
+      ...(genreStr ? genreStr.split(',').map((g: string) => g.trim().toLowerCase()) : []),
+      'wall-art',
+      'metal-print',
+      'music-art'
+    ].filter(Boolean);
+
+    const images = artworkUrl ? [artworkUrl] : [];
+
+    console.log('📝 Product payload keys:', {
+      title: productTitle.substring(0, 40),
+      release_id,
+      discogs_id: releaseData.discogs_id,
+      images_count: images.length,
+      categories_count: categories.length,
+      tags_count: tags.length
+    });
+
     const { data: product, error: productError } = await supabase
       .from('platform_products')
       .insert({
         title: productTitle,
-        artist: releaseData.artist,
+        artist: artistValue,
         slug: slug,
         description: enrichedDescription,
-        long_description: `# ${productTitle}\n\n${enrichedDescription}\n\n## Specificaties\n- **Materiaal**: Hoogwaardig aluminium\n- **Afmeting**: 30x30cm (standaard)\n- **Print kwaliteit**: HD, UV-bestendig\n- **Montage**: Klaar om op te hangen\n\n## Over dit album\n- **Artist**: ${releaseData.artist}\n- **Titel**: ${releaseData.title}\n- **Jaar**: ${releaseData.year || 'Onbekend'}\n- **Genre**: ${releaseData.genre || 'Onbekend'}\n- **Label**: ${releaseData.label || 'Onbekend'}`,
+        long_description: `# ${productTitle}\n\n${enrichedDescription}\n\n## Specificaties\n- **Materiaal**: Hoogwaardig aluminium\n- **Afmeting**: 30x30cm (standaard)\n- **Print kwaliteit**: HD, UV-bestendig\n- **Montage**: Klaar om op te hangen\n\n## Over dit album\n- **Artist**: ${artistValue}\n- **Titel**: ${releaseData.title}\n- **Jaar**: ${yearValue || 'Onbekend'}\n- **Genre**: ${genreStr}\n- **Label**: ${labelValue || 'Onbekend'}`,
         media_type: 'art',
         format: 'Metal Print - 30x30cm',
         condition_grade: 'New',
         price: price,
         stock_quantity: 999,
         primary_image: artworkUrl,
-        additional_images: artworkUrl ? [artworkUrl] : [],
-        categories: ['album-art', 'metaalprint', releaseData.genre?.toLowerCase() || 'music'],
-        tags: [releaseData.artist?.toLowerCase(), releaseData.genre?.toLowerCase(), 'wall-art', 'metal-print', 'music-art'],
+        images: images,
+        categories: categories,
+        tags: tags,
         discogs_id: parseInt(releaseData.discogs_id),
         discogs_url: releaseData.discogs_url,
+        release_id: release_id,
         status: 'active',
         published_at: new Date().toISOString(),
         is_featured: false,
-        on_sale: false
+        is_on_sale: false
       })
       .select()
       .single();

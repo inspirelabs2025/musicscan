@@ -42,7 +42,13 @@ serve(async (req) => {
       if (error) throw new Error(`Discogs search failed: ${error.message}`);
       
       if (!data?.results || data.results.length === 0) {
-        throw new Error('No results found on Discogs');
+        return new Response(
+          JSON.stringify({ 
+            error: 'No results found on Discogs',
+            search_params: { catalog_number, artist, title }
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+        );
       }
       releaseData = data.results[0];
     } else {
@@ -202,7 +208,20 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
     console.log('🎨 Creating ART product...');
 
     const productTitle = `${artistValue} - ${albumTitle} [Metaalprint]`;
-    const slug = `${artistValue}-${albumTitle}-metaalprint`
+    
+    // Use database function to generate unique slug
+    const { data: slugData, error: slugError } = await supabase
+      .rpc('generate_product_slug', {
+        p_title: `${albumTitle} [Metaalprint]`,
+        p_artist: artistValue
+      });
+    
+    if (slugError) {
+      console.error('❌ Failed to generate slug:', slugError);
+      throw new Error(`Slug generation failed: ${slugError.message}`);
+    }
+    
+    const slug = slugData || `${artistValue}-${albumTitle}-metaalprint`
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')

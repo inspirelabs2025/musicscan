@@ -140,11 +140,11 @@ export default function BulkArtGenerator() {
                 return updated;
               });
             } else if (data && data.error) {
-              // Error in response body (409, 500, etc.)
+              // Error in response body (409, 404, 500, etc.)
               const errorMessage = data.error;
               const details = data.details || '';
               
-              // Check if product already exists
+              // Check if product already exists (409)
               if (errorMessage.includes('already exists') || errorMessage.includes('Product already exists')) {
                 setResults(prev => {
                   const updated = [...prev];
@@ -157,6 +157,7 @@ export default function BulkArtGenerator() {
                   return updated;
                 });
               } else if (errorMessage.includes('No results found') || details.includes('No results found')) {
+                // 404 - Not found on Discogs (expected for some albums)
                 setResults(prev => {
                   const updated = [...prev];
                   updated[resultIndex] = {
@@ -167,7 +168,7 @@ export default function BulkArtGenerator() {
                   return updated;
                 });
               } else {
-                // Other error
+                // Other error (500, etc.)
                 setResults(prev => {
                   const updated = [...prev];
                   updated[resultIndex] = {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,14 +6,25 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useArtProductGenerator } from "@/hooks/useArtProductGenerator";
 import { Loader2, Sparkles, Search, Link as LinkIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function ArtGenerator() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { mutate: createArtProduct, isPending } = useArtProductGenerator();
 
   // Discogs ID search
   const [discogsId, setDiscogsId] = useState("");
+  const [activeTab, setActiveTab] = useState("discogs-id");
+
+  // Pre-fill from URL parameter
+  useEffect(() => {
+    const urlDiscogsId = searchParams.get('discogsId');
+    if (urlDiscogsId) {
+      setDiscogsId(urlDiscogsId);
+      setActiveTab("discogs-id");
+    }
+  }, [searchParams]);
   
   // Catalog search
   const [catalogNumber, setCatalogNumber] = useState("");
@@ -84,7 +95,7 @@ export default function ArtGenerator() {
         </div>
       </Card>
 
-      <Tabs defaultValue="discogs-id" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="discogs-id">
             <LinkIcon className="h-4 w-4 mr-2" />

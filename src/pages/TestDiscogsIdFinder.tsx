@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { AlertCircle, ExternalLink, Copy, ArrowLeft } from 'lucide-react';
+import { AlertCircle, ExternalLink, Copy, ArrowLeft, Sparkles } from 'lucide-react';
 
 interface DiscogsResult {
   discogs_id: number;
@@ -246,6 +246,15 @@ const TestDiscogsIdFinder = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4 border-t">
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => navigate(`/admin/art-generator?discogsId=${result.discogs_id}`)}
+                  className="flex-1"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Maak ART Product
+                </Button>
                 {result.discogs_url && (
                   <Button 
                     variant="outline" 

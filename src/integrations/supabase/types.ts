@@ -1996,6 +1996,290 @@ export type Database = {
           },
         ]
       }
+      platform_order_items: {
+        Row: {
+          artist: string | null
+          created_at: string | null
+          id: string
+          order_id: string | null
+          price: number
+          product_id: string | null
+          product_snapshot: Json | null
+          quantity: number
+          title: string
+        }
+        Insert: {
+          artist?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          price: number
+          product_id?: string | null
+          product_snapshot?: Json | null
+          quantity?: number
+          title: string
+        }
+        Update: {
+          artist?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          price?: number
+          product_id?: string | null
+          product_snapshot?: Json | null
+          quantity?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "platform_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "platform_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_orders: {
+        Row: {
+          admin_note: string | null
+          billing_address: Json | null
+          carrier: string | null
+          created_at: string | null
+          currency: string | null
+          customer_email: string
+          customer_id: string | null
+          customer_name: string | null
+          customer_note: string | null
+          delivered_at: string | null
+          id: string
+          order_number: string
+          paid_at: string | null
+          payment_status: string | null
+          shipped_at: string | null
+          shipping_address: Json
+          shipping_cost: number | null
+          status: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          subtotal: number
+          tax: number | null
+          total: number
+          tracking_number: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          billing_address?: Json | null
+          carrier?: string | null
+          created_at?: string | null
+          currency?: string | null
+          customer_email: string
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_note?: string | null
+          delivered_at?: string | null
+          id?: string
+          order_number: string
+          paid_at?: string | null
+          payment_status?: string | null
+          shipped_at?: string | null
+          shipping_address: Json
+          shipping_cost?: number | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          subtotal: number
+          tax?: number | null
+          total: number
+          tracking_number?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          billing_address?: Json | null
+          carrier?: string | null
+          created_at?: string | null
+          currency?: string | null
+          customer_email?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_note?: string | null
+          delivered_at?: string | null
+          id?: string
+          order_number?: string
+          paid_at?: string | null
+          payment_status?: string | null
+          shipped_at?: string | null
+          shipping_address?: Json
+          shipping_cost?: number | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          subtotal?: number
+          tax?: number | null
+          total?: number
+          tracking_number?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      platform_products: {
+        Row: {
+          allow_backorder: boolean | null
+          artist: string | null
+          catalog_number: string | null
+          categories: string[] | null
+          compare_at_price: number | null
+          condition_grade: string | null
+          cost_price: number | null
+          country: string | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          description: string | null
+          discogs_id: number | null
+          discogs_url: string | null
+          featured_until: string | null
+          format: string | null
+          genre: string | null
+          id: string
+          images: string[] | null
+          is_featured: boolean | null
+          is_new: boolean | null
+          is_on_sale: boolean | null
+          label: string | null
+          last_purchased_at: string | null
+          last_viewed_at: string | null
+          long_description: string | null
+          low_stock_threshold: number | null
+          media_type: string
+          meta_description: string | null
+          meta_title: string | null
+          price: number
+          primary_image: string | null
+          published_at: string | null
+          purchase_count: number | null
+          release_id: string | null
+          sku: string | null
+          slug: string
+          status: string | null
+          stock_quantity: number
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          view_count: number | null
+          year: number | null
+        }
+        Insert: {
+          allow_backorder?: boolean | null
+          artist?: string | null
+          catalog_number?: string | null
+          categories?: string[] | null
+          compare_at_price?: number | null
+          condition_grade?: string | null
+          cost_price?: number | null
+          country?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          description?: string | null
+          discogs_id?: number | null
+          discogs_url?: string | null
+          featured_until?: string | null
+          format?: string | null
+          genre?: string | null
+          id?: string
+          images?: string[] | null
+          is_featured?: boolean | null
+          is_new?: boolean | null
+          is_on_sale?: boolean | null
+          label?: string | null
+          last_purchased_at?: string | null
+          last_viewed_at?: string | null
+          long_description?: string | null
+          low_stock_threshold?: number | null
+          media_type: string
+          meta_description?: string | null
+          meta_title?: string | null
+          price: number
+          primary_image?: string | null
+          published_at?: string | null
+          purchase_count?: number | null
+          release_id?: string | null
+          sku?: string | null
+          slug: string
+          status?: string | null
+          stock_quantity?: number
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          view_count?: number | null
+          year?: number | null
+        }
+        Update: {
+          allow_backorder?: boolean | null
+          artist?: string | null
+          catalog_number?: string | null
+          categories?: string[] | null
+          compare_at_price?: number | null
+          condition_grade?: string | null
+          cost_price?: number | null
+          country?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          description?: string | null
+          discogs_id?: number | null
+          discogs_url?: string | null
+          featured_until?: string | null
+          format?: string | null
+          genre?: string | null
+          id?: string
+          images?: string[] | null
+          is_featured?: boolean | null
+          is_new?: boolean | null
+          is_on_sale?: boolean | null
+          label?: string | null
+          last_purchased_at?: string | null
+          last_viewed_at?: string | null
+          long_description?: string | null
+          low_stock_threshold?: number | null
+          media_type?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          price?: number
+          primary_image?: string | null
+          published_at?: string | null
+          purchase_count?: number | null
+          release_id?: string | null
+          sku?: string | null
+          slug?: string
+          status?: string | null
+          stock_quantity?: number
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          view_count?: number | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_products_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           allow_messages: boolean | null
@@ -3792,22 +4076,14 @@ export type Database = {
           plan_name: string
         }[]
       }
-      cleanup_duplicate_cd_scans: {
-        Args: Record<PropertyKey, never>
-        Returns: number
+      cleanup_duplicate_cd_scans: { Args: never; Returns: number }
+      cleanup_duplicate_vinyl_scans: { Args: never; Returns: number }
+      cleanup_stuck_batch_processes: { Args: never; Returns: undefined }
+      decrement_product_stock: {
+        Args: { p_product_id: string; p_quantity?: number }
+        Returns: boolean
       }
-      cleanup_duplicate_vinyl_scans: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_stuck_batch_processes: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      extract_and_update_discogs_ids: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      extract_and_update_discogs_ids: { Args: never; Returns: number }
       extract_discogs_id_from_url: {
         Args: { url_text: string }
         Returns: number
@@ -3829,10 +4105,12 @@ export type Database = {
         }
         Returns: string
       }
-      generate_shop_slug: {
-        Args: { shop_name: string }
+      generate_order_number: { Args: never; Returns: string }
+      generate_product_slug: {
+        Args: { p_artist: string; p_title: string }
         Returns: string
       }
+      generate_shop_slug: { Args: { shop_name: string }; Returns: string }
       get_current_usage: {
         Args: { p_user_id: string }
         Returns: {
@@ -3844,7 +4122,7 @@ export type Database = {
         }[]
       }
       get_public_user_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           new_users_last_30_days: number
           new_users_last_7_days: number
@@ -3858,14 +4136,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_product_view: {
+        Args: { p_product_id: string }
+        Returns: undefined
+      }
       increment_shop_view_count: {
         Args: { shop_slug: string }
         Returns: undefined
       }
-      increment_topic_views: {
-        Args: { topic_id: string }
-        Returns: undefined
-      }
+      increment_topic_views: { Args: { topic_id: string }; Returns: undefined }
       increment_usage: {
         Args: { p_increment?: number; p_usage_type: string; p_user_id: string }
         Returns: boolean
@@ -3874,10 +4153,27 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
-      update_cd_discogs_ids: {
-        Args: Record<PropertyKey, never>
-        Returns: number
+      search_platform_products: {
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_max_price?: number
+          p_media_type?: string
+          p_min_price?: number
+          p_offset?: number
+          search_query: string
+        }
+        Returns: {
+          artist: string
+          id: string
+          price: number
+          primary_image: string
+          rank: number
+          slug: string
+          title: string
+        }[]
       }
+      update_cd_discogs_ids: { Args: never; Returns: number }
       update_release_aggregated_data: {
         Args: { release_uuid: string }
         Returns: undefined

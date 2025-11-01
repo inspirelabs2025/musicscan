@@ -124,21 +124,49 @@ export default function BulkArtGenerator() {
             });
             
             if (error) {
-              const errorMessage = error.message || '';
-              const status = error.status || error?.context?.response?.status;
+              // Parse error details - Supabase functions can return errors in different formats
+              let errorData: any = null;
+              let errorMessage = '';
               
-              // Handle "already exists" as warning, not error
-              if (status === 409 || errorMessage.includes('already exists')) {
+              // Try to parse error message as JSON if it contains structured data
+              if (typeof error === 'string') {
+                try {
+                  errorData = JSON.parse(error);
+                } catch {
+                  errorMessage = error;
+                }
+              } else if (error.message) {
+                errorMessage = error.message;
+                // Try to extract JSON from error message
+                try {
+                  const jsonMatch = error.message.match(/\{.*\}/);
+                  if (jsonMatch) {
+                    errorData = JSON.parse(jsonMatch[0]);
+                  }
+                } catch {
+                  // Not JSON, continue
+                }
+              }
+              
+              // Check if product already exists (409 or "already exists" in message or data)
+              const isAlreadyExists = 
+                errorData?.error?.includes('already exists') ||
+                errorMessage.includes('already exists') ||
+                errorMessage.includes('Product already exists') ||
+                error.status === 409;
+              
+              if (isAlreadyExists) {
                 setResults(prev => {
                   const updated = [...prev];
                   updated[resultIndex] = {
                     ...updated[resultIndex],
                     status: 'exists',
+                    productId: errorData?.product_id,
                     error: 'Product bestaat al'
                   };
                   return updated;
                 });
-              } else if (errorMessage.includes('No results found')) {
+              } else if (errorMessage.includes('No results found') || errorData?.error?.includes('No results found')) {
                 setResults(prev => {
                   const updated = [...prev];
                   updated[resultIndex] = {
@@ -166,12 +194,13 @@ export default function BulkArtGenerator() {
               });
             }
           } catch (error: any) {
+            console.error('Error processing album:', album, error);
             setResults(prev => {
               const updated = [...prev];
               updated[resultIndex] = {
                 ...updated[resultIndex],
                 status: 'error',
-                error: error.message || 'Onbekende fout'
+                error: error.message || error.toString() || 'Onbekende fout'
               };
               return updated;
             });

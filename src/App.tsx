@@ -51,6 +51,7 @@ import TestDiscogsBlogGeneration from "./pages/TestDiscogsBlogGeneration";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Podcasts from "./pages/Podcasts";
 import { ShopProducts } from "./pages/admin/ShopProducts";
+import PlatformProducts from "./pages/admin/PlatformProducts";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 import Community from "./pages/Community";
@@ -287,6 +288,11 @@ const App = () => {
             <Route path="/admin/shop-products" element={
               <ProtectedRoute>
                 <ShopProducts />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/platform-products" element={
+              <ProtectedRoute>
+                <PlatformProducts />
               </ProtectedRoute>
             } />
             <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />

@@ -28,7 +28,7 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
     artist: string;
     description: string;
     long_description: string;
-    media_type: 'cd' | 'vinyl' | 'merchandise' | 'book' | 'accessory' | 'boxset';
+    media_type: 'cd' | 'vinyl' | 'merchandise' | 'book' | 'accessory' | 'boxset' | 'art';
     format: string;
     condition_grade: string;
     price: string;
@@ -292,6 +292,7 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
                       <SelectItem value="merchandise">Merchandise</SelectItem>
                       <SelectItem value="book">Boek</SelectItem>
                       <SelectItem value="accessory">Accessoire</SelectItem>
+                      <SelectItem value="art">Art</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

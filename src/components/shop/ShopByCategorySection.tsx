@@ -26,6 +26,12 @@ const categories = [
     slug: "merchandise",
     description: "Posters & meer"
   },
+  { 
+    name: "Art", 
+    emoji: "🎨", 
+    slug: "art",
+    description: "Kunstwerken"
+  },
 ];
 
 export function ShopByCategorySection() {

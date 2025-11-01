@@ -7,7 +7,7 @@ export interface PlatformProduct {
   artist: string | null;
   description: string | null;
   long_description: string | null;
-  media_type: 'cd' | 'vinyl' | 'merchandise' | 'book' | 'accessory' | 'boxset';
+  media_type: 'cd' | 'vinyl' | 'merchandise' | 'book' | 'accessory' | 'boxset' | 'art';
   format: string | null;
   condition_grade: string | null;
   price: number;

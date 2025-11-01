@@ -31,7 +31,9 @@ serve(async (req) => {
         body: { direct_discogs_id: discogs_id.toString() }
       });
       if (error) throw new Error(`Discogs search failed: ${error.message}`);
-      releaseData = data;
+      const first = data?.results?.[0];
+      if (!first) throw new Error('No results found on Discogs');
+      releaseData = first;
     } else if (catalog_number || (artist && title)) {
       console.log('🔍 Searching by catalog/artist/title');
       const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
@@ -50,18 +52,35 @@ serve(async (req) => {
     console.log('✅ Found release:', releaseData.title);
 
     // Step 2: Create or find release in database
+    // Normalize fields for DB function types
+    const parsedYear = typeof releaseData.year === 'number'
+      ? releaseData.year
+      : parseInt(String(releaseData.year || ''), 10);
+    const yearValue = Number.isFinite(parsedYear) ? parsedYear : null;
+
+    const styleValue = Array.isArray(releaseData.style)
+      ? releaseData.style
+      : (typeof releaseData.style === 'string' && releaseData.style.length
+          ? releaseData.style.split(',').map((s: string) => s.trim()).filter(Boolean)
+          : null);
+
+    let artistValue: string = releaseData.artist || '';
+    if (!artistValue && typeof releaseData.title === 'string' && releaseData.title.includes(' - ')) {
+      artistValue = releaseData.title.split(' - ')[0].trim();
+    }
+
     const { data: releaseId, error: releaseError } = await supabase.functions.invoke('find-or-create-release', {
       body: {
         discogs_id: parseInt(releaseData.discogs_id),
-        artist: releaseData.artist,
+        artist: artistValue,
         title: releaseData.title,
         label: releaseData.label,
         catalog_number: releaseData.catalog_number,
-        year: releaseData.year,
+        year: yearValue,
         format: releaseData.format,
         genre: releaseData.genre,
         country: releaseData.country,
-        style: releaseData.style,
+        style: styleValue,
         discogs_url: releaseData.discogs_url,
         master_id: releaseData.master_id
       }

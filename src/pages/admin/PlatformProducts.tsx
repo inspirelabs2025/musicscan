@@ -4,13 +4,15 @@ import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Archive, Copy } from "lucide-react";
+import { Plus, Edit, Archive, Copy, Sparkles } from "lucide-react";
 import { ProductFormModal } from "@/components/admin/ProductFormModal";
 import { Badge } from "@/components/ui/badge";
 import type { PlatformProduct } from "@/hooks/usePlatformProducts";
+import { useNavigate } from "react-router-dom";
 
 export default function PlatformProducts() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<PlatformProduct | null>(null);
   
@@ -36,10 +38,20 @@ export default function PlatformProducts() {
           <h1 className="text-3xl font-bold">Platform Producten</h1>
           <p className="text-muted-foreground">Beheer de producten in je webshop</p>
         </div>
-        <Button onClick={() => setShowAddModal(true)} size="lg">
-          <Plus className="h-4 w-4 mr-2" />
-          Nieuw Product
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => navigate('/admin/art-generator')} 
+            variant="secondary"
+            size="lg"
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            ART Generator
+          </Button>
+          <Button onClick={() => setShowAddModal(true)} size="lg">
+            <Plus className="h-4 w-4 mr-2" />
+            Nieuw Product
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="all" className="w-full">

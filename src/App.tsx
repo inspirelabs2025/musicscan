@@ -52,6 +52,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Podcasts from "./pages/Podcasts";
 import { ShopProducts } from "./pages/admin/ShopProducts";
 import PlatformProducts from "./pages/admin/PlatformProducts";
+import ArtGenerator from "./pages/admin/ArtGenerator";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 import Community from "./pages/Community";
@@ -293,6 +294,11 @@ const App = () => {
             <Route path="/admin/platform-products" element={
               <ProtectedRoute>
                 <PlatformProducts />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/art-generator" element={
+              <ProtectedRoute>
+                <ArtGenerator />
               </ProtectedRoute>
             } />
             <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />

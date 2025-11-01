@@ -59,3 +59,6 @@ verify_jwt = false
 
 [functions.spotify-podcast-manager]
 verify_jwt = true
+
+[functions.create-art-product]
+verify_jwt = true

@@ -182,8 +182,14 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
     // Step 6: Create ART product
     console.log('🎨 Creating ART product...');
     
-    const productTitle = `${artistValue} - ${releaseData.title} [Metaalprint]`;
-    const slug = `${artistValue}-${releaseData.title}-metaalprint`
+    const albumTitle = typeof releaseData.title === 'string'
+      ? (releaseData.title.includes(' - ')
+          ? releaseData.title.split(' - ').slice(1).join(' - ').trim()
+          : releaseData.title)
+      : '';
+
+    const productTitle = `${artistValue} - ${albumTitle} [Metaalprint]`;
+    const slug = `${artistValue}-${albumTitle}-metaalprint`
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
@@ -220,10 +226,10 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
         artist: artistValue,
         slug: slug,
         description: enrichedDescription,
-        long_description: `# ${productTitle}\n\n${enrichedDescription}\n\n## Specificaties\n- **Materiaal**: Hoogwaardig aluminium\n- **Afmeting**: 30x30cm (standaard)\n- **Print kwaliteit**: HD, UV-bestendig\n- **Montage**: Klaar om op te hangen\n\n## Over dit album\n- **Artist**: ${artistValue}\n- **Titel**: ${releaseData.title}\n- **Jaar**: ${yearValue || 'Onbekend'}\n- **Genre**: ${genreStr}\n- **Label**: ${labelValue || 'Onbekend'}`,
+        long_description: `# ${productTitle}\n\n${enrichedDescription}\n\n## Specificaties\n- **Materiaal**: Hoogwaardig aluminium\n- **Afmeting**: 30x30cm (standaard)\n- **Print kwaliteit**: HD, UV-bestendig\n- **Montage**: Klaar om op te hangen\n\n## Over dit album\n- **Artist**: ${artistValue}\n- **Titel**: ${albumTitle}\n- **Jaar**: ${yearValue || 'Onbekend'}\n- **Genre**: ${genreStr}\n- **Label**: ${labelValue || 'Onbekend'}`,
         media_type: 'art',
         format: 'Metal Print - 30x30cm',
-        condition_grade: 'New',
+        condition_grade: null,
         price: price,
         stock_quantity: 999,
         primary_image: artworkUrl,

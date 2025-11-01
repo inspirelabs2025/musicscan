@@ -115,7 +115,7 @@ serve(async (req) => {
     const { data: artworkData, error: artworkError } = await supabase.functions.invoke('fetch-album-artwork', {
       body: {
         discogs_url: releaseData.discogs_url,
-        artist: releaseData.artist,
+        artist: artistValue,
         title: releaseData.title,
         item_id: null // We'll update the product later
       }
@@ -127,6 +127,13 @@ serve(async (req) => {
 
     const artworkUrl = artworkData?.artwork_url || releaseData.cover_image;
     console.log('🖼️ Artwork URL:', artworkUrl);
+
+    // Extract clean album title (before using it in Step 4)
+    const albumTitle = typeof releaseData.title === 'string'
+      ? (releaseData.title.includes(' - ')
+          ? releaseData.title.split(' - ').slice(1).join(' - ').trim()
+          : releaseData.title)
+      : '';
 
     // Step 4: Generate rich description with Perplexity
     console.log('🤖 Generating description with Perplexity...');
@@ -193,12 +200,6 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
 
     // Step 6: Create ART product
     console.log('🎨 Creating ART product...');
-    
-    const albumTitle = typeof releaseData.title === 'string'
-      ? (releaseData.title.includes(' - ')
-          ? releaseData.title.split(' - ').slice(1).join(' - ').trim()
-          : releaseData.title)
-      : '';
 
     const productTitle = `${artistValue} - ${albumTitle} [Metaalprint]`;
     const slug = `${artistValue}-${albumTitle}-metaalprint`

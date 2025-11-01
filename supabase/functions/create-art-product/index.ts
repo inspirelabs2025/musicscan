@@ -130,35 +130,47 @@ serve(async (req) => {
 
     // Step 4: Generate rich description with Perplexity
     console.log('🤖 Generating description with Perplexity...');
-    const perplexityPrompt = `Write a compelling 150-word product description for a metal print of the album cover "${releaseData.title}" by ${releaseData.artist}. Include:
+    const perplexityPrompt = `Write a compelling 150-word product description for a metal print of the album cover "${releaseData.title}" by ${artistValue}. Include:
 - Why this album cover is iconic and culturally significant
 - The visual elements that make it perfect for wall art
 - How it would look as a high-quality metal print
 - Perfect for collectors and music lovers
 Keep it engaging, focus on the art and design, and make it SEO-friendly. Use professional but enthusiastic tone.`;
 
-    const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${perplexityKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
-        messages: [
-          { role: 'system', content: 'You are an expert in music history and art descriptions for e-commerce.' },
-          { role: 'user', content: perplexityPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 300
-      }),
-    });
+    let enrichedDescription = `Hoogwaardige metaalprint van de iconische albumhoes van ${albumTitle || releaseData.title} door ${artistValue || releaseData.artist}. Perfect voor aan de muur en een must-have voor elke muziekliefhebber.`;
 
-    const perplexityData = await perplexityResponse.json();
-    const enrichedDescription = perplexityData.choices?.[0]?.message?.content || 
-      `Hoogwaardige metaalprint van de iconische albumhoes van ${releaseData.title} door ${releaseData.artist}. Perfect voor aan de muur en een must-have voor elke muziekliefhebber.`;
+    if (perplexityKey) {
+      try {
+        const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${perplexityKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.1-sonar-small-128k-online',
+            messages: [
+              { role: 'system', content: 'Be precise and concise.' },
+              { role: 'user', content: perplexityPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 300
+          }),
+        });
 
-    console.log('✍️ Description generated');
+        if (perplexityResponse.ok) {
+          const perplexityData = await perplexityResponse.json();
+          enrichedDescription = perplexityData.choices?.[0]?.message?.content || enrichedDescription;
+          console.log('✍️ Description generated');
+        } else {
+          console.warn('⚠️ Perplexity returned non-2xx, using fallback:', perplexityResponse.status);
+        }
+      } catch (e) {
+        console.warn('⚠️ Perplexity call failed, using fallback description:', (e as Error).message);
+      }
+    } else {
+      console.warn('⚠️ PERPLEXITY_API_KEY missing, using fallback description');
+    }
 
     // Step 5: Check for existing product
     const { data: existingProducts } = await supabase

@@ -25,8 +25,42 @@ serve(async (req) => {
     let artworkUrl = null;
     let artworkSource = null;
 
-    // Try iTunes Search API first (highest quality, fastest, free)
-    if (artist && title) {
+    // For products with discogs_url, try Discogs first (most reliable for merchandise)
+    const hasDiscogsUrl = discogs_url && discogs_url.includes('/release/');
+    
+    if (hasDiscogsUrl) {
+      try {
+        console.log('🔍 Product has Discogs URL, trying Discogs first for better accuracy:', discogs_url);
+        
+        // Extract discogs ID from URL
+        const discogsIdMatch = discogs_url.match(/\/release\/(\d+)/);
+        if (discogsIdMatch) {
+          const discogsId = discogsIdMatch[1];
+          const discogsApiUrl = `https://api.discogs.com/releases/${discogsId}`;
+          
+          const response = await fetch(discogsApiUrl, {
+            headers: {
+              'User-Agent': 'VinylScanner/1.0',
+              'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.images && data.images.length > 0) {
+              artworkUrl = data.images[0].uri;
+              artworkSource = 'discogs';
+              console.log('✅ Found Discogs artwork:', artworkUrl);
+            }
+          }
+        }
+      } catch (error) {
+        console.log('❌ Error fetching from Discogs:', error);
+      }
+    }
+
+    // Try iTunes Search API as fallback (or first if no Discogs URL)
+    if (!artworkUrl && artist && title) {
       try {
         console.log('🍎 Searching iTunes for:', artist, '-', title);
         
@@ -59,10 +93,10 @@ serve(async (req) => {
       }
     }
 
-  // Try to fetch artwork from Discogs (only if iTunes didn't find anything)
-  if (!artworkUrl && discogs_url) {
+  // Skip Discogs fallback if already tried
+  if (!artworkUrl && discogs_url && !hasDiscogsUrl) {
       try {
-        console.log('🔍 Fetching from Discogs:', discogs_url);
+        console.log('🔍 Fetching from Discogs as fallback:', discogs_url);
         
         // Extract discogs ID from URL
         const discogsIdMatch = discogs_url.match(/\/release\/(\d+)/);

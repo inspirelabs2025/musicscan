@@ -40,11 +40,11 @@ const getReleaseMetadata = async (discogsId: string, authHeaders: any) => {
 };
 
 // Parallel search strategies
-const runParallelSearches = async (catalogNumber: string, artist?: string, title?: string, authHeaders?: any) => {
+const runParallelSearches = async (catalogNumber: string | undefined, artist?: string, title?: string, authHeaders?: any) => {
   const searches = [];
 
   // Strategy 1: Catalog number search
-  if (catalogNumber.trim()) {
+  if (catalogNumber?.trim()) {
     searches.push(
       searchDiscogsQuick(`catno:"${catalogNumber}"`, authHeaders)
         .then(data => ({ strategy: 'Catalog Number', data }))
@@ -62,7 +62,7 @@ const runParallelSearches = async (catalogNumber: string, artist?: string, title
   }
 
   // Strategy 3: Combined search
-  if (catalogNumber.trim() && artist?.trim()) {
+  if (catalogNumber?.trim() && artist?.trim()) {
     searches.push(
       searchDiscogsQuick(`${catalogNumber} ${artist}`, authHeaders)
         .then(data => ({ strategy: 'Combined', data }))
@@ -221,9 +221,9 @@ Deno.serve(async (req) => {
     }
 
     // Handle catalog search with parallel strategies
-    if (!catalog_number) {
+    if (!catalog_number && (!artist || !title)) {
       return new Response(
-        JSON.stringify({ error: 'Catalog number is required' }),
+        JSON.stringify({ error: 'Either catalog_number or (artist + title) is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

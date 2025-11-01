@@ -27,19 +27,12 @@ serve(async (req) => {
 
     console.log('🧹 Starting cleanup of ART (metal print) products...');
 
-    // Find candidate products to delete (ART metal prints created by our flow)
-    const orFilter = [
-      'tags.cs.{metal-print}',
-      'categories.cs.{metaalprint}',
-      'title.ilike.*[Metaalprint]*',
-      'format.ilike.Metal Print*'
-    ].join(',');
-
+    // Delete ALL merchandise products with a discogs_id (created by our create-art-product flow)
     const { data: products, error: selectError, count } = await supabase
       .from('platform_products')
       .select('id', { count: 'exact' })
       .eq('media_type', 'merchandise')
-      .or(orFilter);
+      .not('discogs_id', 'is', null);
 
     if (selectError) {
       console.error('❌ Select error:', selectError);

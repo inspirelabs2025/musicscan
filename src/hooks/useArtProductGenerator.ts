@@ -55,10 +55,10 @@ export const useArtProductGenerator = () => {
           description: "Dit album is al als ART product toegevoegd",
           variant: "destructive"
         });
-      } else if (message.includes('No results found')) {
+      } else if (status === 404 || message.includes('No results found')) {
         toast({
           title: "❌ Niet Gevonden",
-          description: "Album niet gevonden op Discogs. Controleer je zoekgegevens.",
+          description: "Album niet gevonden op Discogs. Controleer de spelling.",
           variant: "destructive"
         });
       } else {

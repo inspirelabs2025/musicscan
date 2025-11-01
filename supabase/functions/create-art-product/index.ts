@@ -42,7 +42,14 @@ serve(async (req) => {
       if (error) throw new Error(`Discogs search failed: ${error.message}`);
       
       if (!data?.results || data.results.length === 0) {
-        throw new Error('No results found on Discogs');
+        console.log('❌ No results found on Discogs');
+        return new Response(
+          JSON.stringify({ 
+            error: 'No results found on Discogs',
+            details: 'Please check the artist and title spelling'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+        );
       }
       releaseData = data.results[0];
     } else {

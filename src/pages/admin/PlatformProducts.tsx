@@ -40,6 +40,13 @@ export default function PlatformProducts() {
         </div>
         <div className="flex gap-2">
           <Button 
+            onClick={() => navigate('/test-discogs-id')} 
+            variant="outline"
+            size="sm"
+          >
+            🧪 Test Discogs ID
+          </Button>
+          <Button 
             onClick={() => navigate('/admin/art-generator')} 
             variant="secondary"
             size="lg"

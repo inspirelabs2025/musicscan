@@ -48,6 +48,7 @@ import TestBlogRegeneration from "./pages/TestBlogRegeneration";
 import TestAlbumCoverBackfill from "./pages/TestAlbumCoverBackfill";
 import TestDiscogsFlow from "./pages/TestDiscogsFlow";
 import TestDiscogsBlogGeneration from "./pages/TestDiscogsBlogGeneration";
+import TestDiscogsIdFinder from "./pages/TestDiscogsIdFinder";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Podcasts from "./pages/Podcasts";
 import { ShopProducts } from "./pages/admin/ShopProducts";
@@ -271,6 +272,11 @@ const App = () => {
             <Route path="/test-discogs-blog-generation" element={
               <ProtectedRoute>
                 <TestDiscogsBlogGeneration />
+              </ProtectedRoute>
+            } />
+            <Route path="/test-discogs-id" element={
+              <ProtectedRoute>
+                <TestDiscogsIdFinder />
               </ProtectedRoute>
             } />
             <Route path="/superadmin" element={<SuperAdminDashboard />} />

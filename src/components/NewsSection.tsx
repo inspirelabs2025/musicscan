@@ -84,7 +84,12 @@ const fetchBlogPosts = async (): Promise<BlogPost[]> => {
   return freshBlogPosts || [];
 };
 
-export const NewsSection = () => {
+interface NewsSectionProps {
+  compact?: boolean;
+  limit?: number;
+}
+
+export const NewsSection = ({ compact = false, limit }: NewsSectionProps = {}) => {
   const [newsSource, setNewsSource] = useState<'discogs' | 'perplexity' | 'blog'>('discogs');
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -146,6 +151,45 @@ export const NewsSection = () => {
     : newsSource === 'perplexity' 
     ? blogPostsError 
     : albumBlogsError;
+
+  // Compact mode for homepage
+  if (compact) {
+    const displayItems = blogPosts.slice(0, limit || 3);
+    
+    if (isLoadingBlogPosts) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <Skeleton className="h-48 w-full" />
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {displayItems.map((post) => (
+          <Link key={post.id} to={`/nieuws/${post.slug}`}>
+            <Card className="h-full hover:shadow-lg transition-shadow overflow-hidden">
+              <div className="aspect-video bg-muted relative overflow-hidden">
+                <img 
+                  src={post.image_url || getPlaceholderImage(post.id)} 
+                  alt={post.title}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <CardContent className="p-4">
+                <h3 className="font-semibold line-clamp-2 mb-2">{post.title}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-2">{post.summary}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    );
+  }
 
   const handleSourceSwitch = (source: 'discogs' | 'perplexity' | 'blog') => {
     if (source !== newsSource) {

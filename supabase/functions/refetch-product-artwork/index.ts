@@ -7,6 +7,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function normalizeProductTitle(productTitle: string, artist: string): string {
+  let normalized = productTitle;
+  
+  // Remove [Metaalprint] or [Merchandise] tags
+  normalized = normalized.replace(/\s*\[Metaalprint\]\s*/gi, '');
+  normalized = normalized.replace(/\s*\[Merchandise\]\s*/gi, '');
+  
+  // Remove artist name from beginning if present
+  // Example: "Manfred Mann's Earth Band - 40th Anniversary" -> "40th Anniversary"
+  if (artist && normalized.startsWith(artist)) {
+    normalized = normalized.substring(artist.length).trim();
+    // Remove leading dash if present
+    if (normalized.startsWith('-')) {
+      normalized = normalized.substring(1).trim();
+    }
+  }
+  
+  return normalized.trim();
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -57,6 +77,11 @@ serve(async (req) => {
         }
 
         console.log(`🎵 Fetching artwork for: ${product.artist} - ${product.title}`);
+        
+        // Normalize title for better iTunes matching
+        const normalizedTitle = normalizeProductTitle(product.title, product.artist);
+        console.log(`📝 Original title: ${product.title}`);
+        console.log(`✨ Normalized title: ${normalizedTitle}`);
 
         // Call fetch-album-artwork function
         const artworkResponse = await fetch(`${supabaseUrl}/functions/v1/fetch-album-artwork`, {
@@ -67,7 +92,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             artist: product.artist,
-            title: product.title,
+            title: normalizedTitle,
             discogs_url: product.discogs_url,
             media_type: product.media_type || 'merchandise',
             item_id: product.id,

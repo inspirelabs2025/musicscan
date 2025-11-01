@@ -123,50 +123,40 @@ export default function BulkArtGenerator() {
               }
             });
             
-            if (error) {
-              // Parse error details - Supabase functions can return errors in different formats
-              let errorData: any = null;
-              let errorMessage = '';
+            // Check if we got a successful response first
+            // Note: Supabase functions.invoke does NOT throw for non-2xx status codes!
+            // So we need to check the response data structure
+            if (data && data.success === true) {
+              // Success case
+              setResults(prev => {
+                const updated = [...prev];
+                updated[resultIndex] = {
+                  ...updated[resultIndex],
+                  status: 'success',
+                  productId: data.product_id,
+                  productSlug: data.product_slug,
+                  discogsId: data.discogs_id
+                };
+                return updated;
+              });
+            } else if (data && data.error) {
+              // Error in response body (409, 500, etc.)
+              const errorMessage = data.error;
+              const details = data.details || '';
               
-              // Try to parse error message as JSON if it contains structured data
-              if (typeof error === 'string') {
-                try {
-                  errorData = JSON.parse(error);
-                } catch {
-                  errorMessage = error;
-                }
-              } else if (error.message) {
-                errorMessage = error.message;
-                // Try to extract JSON from error message
-                try {
-                  const jsonMatch = error.message.match(/\{.*\}/);
-                  if (jsonMatch) {
-                    errorData = JSON.parse(jsonMatch[0]);
-                  }
-                } catch {
-                  // Not JSON, continue
-                }
-              }
-              
-              // Check if product already exists (409 or "already exists" in message or data)
-              const isAlreadyExists = 
-                errorData?.error?.includes('already exists') ||
-                errorMessage.includes('already exists') ||
-                errorMessage.includes('Product already exists') ||
-                error.status === 409;
-              
-              if (isAlreadyExists) {
+              // Check if product already exists
+              if (errorMessage.includes('already exists') || errorMessage.includes('Product already exists')) {
                 setResults(prev => {
                   const updated = [...prev];
                   updated[resultIndex] = {
                     ...updated[resultIndex],
                     status: 'exists',
-                    productId: errorData?.product_id,
+                    productId: data.product_id,
                     error: 'Product bestaat al'
                   };
                   return updated;
                 });
-              } else if (errorMessage.includes('No results found') || errorData?.error?.includes('No results found')) {
+              } else if (errorMessage.includes('No results found') || details.includes('No results found')) {
                 setResults(prev => {
                   const updated = [...prev];
                   updated[resultIndex] = {
@@ -177,18 +167,36 @@ export default function BulkArtGenerator() {
                   return updated;
                 });
               } else {
-                throw error;
+                // Other error
+                setResults(prev => {
+                  const updated = [...prev];
+                  updated[resultIndex] = {
+                    ...updated[resultIndex],
+                    status: 'error',
+                    error: errorMessage || 'Onbekende fout'
+                  };
+                  return updated;
+                });
               }
-            } else {
-              // Success
+            } else if (error) {
+              // Network/transport error
               setResults(prev => {
                 const updated = [...prev];
                 updated[resultIndex] = {
                   ...updated[resultIndex],
-                  status: 'success',
-                  productId: data.product_id,
-                  productSlug: data.product_slug,
-                  discogsId: data.discogs_id
+                  status: 'error',
+                  error: error.message || 'Netwerk fout'
+                };
+                return updated;
+              });
+            } else {
+              // Unexpected response format
+              setResults(prev => {
+                const updated = [...prev];
+                updated[resultIndex] = {
+                  ...updated[resultIndex],
+                  status: 'error',
+                  error: 'Onverwachte response'
                 };
                 return updated;
               });

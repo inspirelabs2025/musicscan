@@ -4,21 +4,95 @@ import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Archive, Copy, Sparkles } from "lucide-react";
+import { Plus, Edit, RefreshCw, Loader2, Upload, Sparkles } from "lucide-react";
 import { ProductFormModal } from "@/components/admin/ProductFormModal";
 import { Badge } from "@/components/ui/badge";
 import type { PlatformProduct } from "@/hooks/usePlatformProducts";
 import { useNavigate } from "react-router-dom";
-import { Upload } from "lucide-react";
+import { useRefetchProductArtwork } from "@/hooks/useRefetchProductArtwork";
+import { RefetchProgressDialog } from "@/components/admin/RefetchProgressDialog";
+import { checkArtworkQuality, filterProductsNeedingRefetch } from "@/utils/artworkQualityCheck";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function PlatformProducts() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<PlatformProduct | null>(null);
+  const [showLowQualityOnly, setShowLowQualityOnly] = useState(false);
+  const [showProgressDialog, setShowProgressDialog] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({
+    current: 0,
+    total: 0,
+    successCount: 0,
+    errorCount: 0,
+    noArtworkCount: 0,
+    currentProduct: undefined as any,
+    isComplete: false,
+    results: [] as any[]
+  });
   
   const { data: activeProducts = [] } = usePlatformProducts({ });
   const { data: featuredProducts = [] } = usePlatformProducts({ featured: true });
+  const { refetchSingle, refetchBatch, isLoading: isRefetching } = useRefetchProductArtwork();
+
+  const handleRefetchSingle = async (productId: string) => {
+    await refetchSingle(productId);
+    queryClient.invalidateQueries({ queryKey: ['platform-products'] });
+  };
+
+  const handleBatchRefetch = async () => {
+    const productsToRefetch = showLowQualityOnly 
+      ? filterProductsNeedingRefetch(activeProducts)
+      : activeProducts;
+    
+    if (productsToRefetch.length === 0) {
+      return;
+    }
+
+    setBatchProgress({
+      current: 0,
+      total: productsToRefetch.length,
+      successCount: 0,
+      errorCount: 0,
+      noArtworkCount: 0,
+      currentProduct: undefined,
+      isComplete: false,
+      results: []
+    });
+    setShowProgressDialog(true);
+
+    const productIds = productsToRefetch.map(p => p.id);
+    
+    const result = await refetchBatch(productIds, (current, total, currentProduct) => {
+      setBatchProgress(prev => ({
+        ...prev,
+        current,
+        total,
+        currentProduct,
+        successCount: prev.results.filter(r => r.status === 'success').length,
+        errorCount: prev.results.filter(r => r.status === 'error').length,
+        noArtworkCount: prev.results.filter(r => r.status === 'no_artwork').length
+      }));
+    });
+
+    if (result.success) {
+      setBatchProgress(prev => ({
+        ...prev,
+        isComplete: true,
+        results: result.results || [],
+        successCount: result.summary?.successCount || 0,
+        errorCount: result.summary?.errorCount || 0,
+        noArtworkCount: result.summary?.noArtworkCount || 0
+      }));
+      queryClient.invalidateQueries({ queryKey: ['platform-products'] });
+    }
+  };
+
+  const filteredProducts = showLowQualityOnly 
+    ? filterProductsNeedingRefetch(activeProducts)
+    : activeProducts;
 
   if (!user) {
     return (
@@ -56,6 +130,18 @@ export default function PlatformProducts() {
             Bulk Import
           </Button>
           <Button 
+            variant="outline" 
+            onClick={handleBatchRefetch}
+            disabled={isRefetching}
+            size="lg"
+          >
+            {isRefetching ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Ophalen...</>
+            ) : (
+              <><RefreshCw className="w-4 h-4 mr-2" /> Re-fetch Artwork</>
+            )}
+          </Button>
+          <Button 
             onClick={() => navigate('/admin/art-generator')} 
             variant="secondary"
             size="lg"
@@ -70,10 +156,20 @@ export default function PlatformProducts() {
         </div>
       </div>
 
+      <div className="flex items-center gap-2">
+        <Button
+          variant={showLowQualityOnly ? "default" : "outline"}
+          size="sm"
+          onClick={() => setShowLowQualityOnly(!showLowQualityOnly)}
+        >
+          {showLowQualityOnly ? '✓' : ''} Alleen lage kwaliteit ({filterProductsNeedingRefetch(activeProducts).length})
+        </Button>
+      </div>
+
       <Tabs defaultValue="all" className="w-full">
         <TabsList>
           <TabsTrigger value="all">
-            Alle Producten ({activeProducts.length})
+            {showLowQualityOnly ? 'Lage Kwaliteit' : 'Alle Producten'} ({filteredProducts.length})
           </TabsTrigger>
           <TabsTrigger value="featured">
             Featured ({featuredProducts.length})
@@ -82,8 +178,10 @@ export default function PlatformProducts() {
 
         <TabsContent value="all" className="mt-6">
           <ProductsGrid 
-            products={activeProducts} 
+            products={filteredProducts} 
             onEdit={setEditingProduct}
+            onRefetch={handleRefetchSingle}
+            isRefetching={isRefetching}
           />
         </TabsContent>
 
@@ -91,6 +189,8 @@ export default function PlatformProducts() {
           <ProductsGrid 
             products={featuredProducts} 
             onEdit={setEditingProduct}
+            onRefetch={handleRefetchSingle}
+            isRefetching={isRefetching}
           />
         </TabsContent>
       </Tabs>
@@ -103,16 +203,26 @@ export default function PlatformProducts() {
         }}
         product={editingProduct}
       />
+
+      <RefetchProgressDialog 
+        open={showProgressDialog}
+        onOpenChange={setShowProgressDialog}
+        {...batchProgress}
+      />
     </div>
   );
 }
 
 function ProductsGrid({ 
   products, 
-  onEdit 
+  onEdit,
+  onRefetch,
+  isRefetching
 }: { 
   products: PlatformProduct[];
   onEdit: (product: PlatformProduct) => void;
+  onRefetch?: (productId: string) => void;
+  isRefetching?: boolean;
 }) {
   if (products.length === 0) {
     return (
@@ -127,72 +237,112 @@ function ProductsGrid({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {products.map((product) => (
-        <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-          <div className="aspect-square bg-muted relative">
-            {product.primary_image ? (
-              <img
-                src={product.primary_image}
-                alt={product.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                Geen afbeelding
-              </div>
-            )}
-            {product.is_featured && (
-              <Badge className="absolute top-2 left-2 bg-primary">Featured</Badge>
-            )}
-            {product.is_on_sale && (
-              <Badge className="absolute top-2 right-2 bg-destructive">Sale</Badge>
-            )}
-            {product.stock_quantity <= product.low_stock_threshold && (
-              <Badge className="absolute bottom-2 left-2 bg-orange-500">
-                Laag voorraad: {product.stock_quantity}
-              </Badge>
-            )}
-          </div>
-          
-          <div className="p-4 space-y-3">
-            <div>
-              <h3 className="font-semibold line-clamp-1">{product.title}</h3>
-              {product.artist && (
-                <p className="text-sm text-muted-foreground line-clamp-1">{product.artist}</p>
+      {products.map((product) => {
+        const artworkQuality = checkArtworkQuality(product.primary_image);
+        
+        return (
+          <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="aspect-square bg-muted relative">
+              {product.primary_image ? (
+                <img
+                  src={product.primary_image}
+                  alt={product.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                  Geen afbeelding
+                </div>
+              )}
+              {product.is_featured && (
+                <Badge className="absolute top-2 left-2 bg-primary">Featured</Badge>
+              )}
+              {product.is_on_sale && (
+                <Badge className="absolute top-2 right-2 bg-destructive">Sale</Badge>
+              )}
+              {artworkQuality.quality === 'low' && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute bottom-2 left-2"
+                >
+                  ⚠️ Lage kwaliteit
+                </Badge>
+              )}
+              {artworkQuality.quality === 'none' && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute bottom-2 left-2"
+                >
+                  ❌ Geen artwork
+                </Badge>
+              )}
+              {product.stock_quantity <= product.low_stock_threshold && (
+                <Badge className="absolute bottom-2 right-2 bg-orange-500">
+                  Laag voorraad: {product.stock_quantity}
+                </Badge>
               )}
             </div>
-
-            <div className="flex items-center justify-between">
+            
+            <div className="p-4 space-y-3">
               <div>
-                <span className="text-lg font-bold">{product.currency}{product.price}</span>
-                {product.compare_at_price && (
-                  <span className="text-sm text-muted-foreground line-through ml-2">
-                    {product.currency}{product.compare_at_price}
-                  </span>
+                <h3 className="font-semibold line-clamp-1">{product.title}</h3>
+                {product.artist && (
+                  <p className="text-sm text-muted-foreground line-clamp-1">{product.artist}</p>
+                )}
+                {artworkQuality.dimensions && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    📐 {artworkQuality.dimensions}
+                  </p>
                 )}
               </div>
-              <Badge variant="outline">{product.media_type}</Badge>
-            </div>
 
-            <div className="flex gap-2 pt-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1"
-                onClick={() => onEdit(product)}
-              >
-                <Edit className="h-3 w-3 mr-1" />
-                Bewerk
-              </Button>
-            </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-lg font-bold">{product.currency}{product.price}</span>
+                  {product.compare_at_price && (
+                    <span className="text-sm text-muted-foreground line-through ml-2">
+                      {product.currency}{product.compare_at_price}
+                    </span>
+                  )}
+                </div>
+                <Badge variant="outline">{product.media_type}</Badge>
+              </div>
 
-            <div className="text-xs text-muted-foreground flex justify-between pt-2 border-t">
-              <span>👁 {product.view_count} views</span>
-              <span>🛒 {product.purchase_count} verkocht</span>
+              <div className="flex gap-2 pt-2">
+                {onRefetch && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onRefetch(product.id)}
+                    disabled={isRefetching}
+                    title="Re-fetch artwork"
+                  >
+                    {isRefetching ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => onEdit(product)}
+                >
+                  <Edit className="h-3 w-3 mr-1" />
+                  Bewerk
+                </Button>
+              </div>
+
+              <div className="text-xs text-muted-foreground flex justify-between pt-2 border-t">
+                <span>👁 {product.view_count} views</span>
+                <span>🛒 {product.purchase_count} verkocht</span>
+              </div>
             </div>
-          </div>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 }

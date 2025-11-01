@@ -23,6 +23,41 @@ serve(async (req) => {
     console.log('🎨 Starting artwork fetch for:', { artist, title, media_type, discogs_url });
 
     let artworkUrl = null;
+    let artworkSource = null;
+
+    // Try iTunes Search API first (highest quality, fastest, free)
+    if (artist && title) {
+      try {
+        console.log('🍎 Searching iTunes for:', artist, '-', title);
+        
+        const itunesQuery = encodeURIComponent(`${artist} ${title}`);
+        const itunesUrl = `https://itunes.apple.com/search?term=${itunesQuery}&entity=album&limit=5`;
+        
+        const itunesResponse = await fetch(itunesUrl);
+        if (itunesResponse.ok) {
+          const itunesData = await itunesResponse.json();
+          
+          if (itunesData.results && itunesData.results.length > 0) {
+            // Find best match with artist validation
+            const normalizedArtist = artist.toLowerCase().trim();
+            const bestMatch = itunesData.results.find((r: any) => 
+              r.artistName?.toLowerCase().includes(normalizedArtist)
+            ) || itunesData.results[0];
+            
+            // Get highest quality artwork (up to 1200x1200)
+            if (bestMatch.artworkUrl100) {
+              artworkUrl = bestMatch.artworkUrl100
+                .replace('100x100bb', '1200x1200bb')
+                .replace('100x100', '1200x1200');
+              artworkSource = 'itunes';
+              console.log('✅ Found iTunes artwork:', artworkUrl);
+            }
+          }
+        }
+      } catch (error) {
+        console.log('❌ Error fetching from iTunes:', error);
+      }
+    }
 
     // Try to fetch artwork from Discogs
     if (discogs_url) {
@@ -49,6 +84,7 @@ serve(async (req) => {
             if (data.images && data.images.length > 0) {
               const primaryImage = data.images.find((img: any) => img.type === 'primary') || data.images[0];
               artworkUrl = primaryImage.resource_url;
+              artworkSource = 'discogs';
               console.log('✅ Found Discogs artwork:', artworkUrl);
             }
           } else {
@@ -133,6 +169,7 @@ serve(async (req) => {
           const coverResponse = await fetch(coverArtUrl, { method: 'HEAD' });
           if (coverResponse.ok) {
             artworkUrl = coverArtUrl;
+            artworkSource = 'musicbrainz';
             console.log('✅ Found Cover Art Archive artwork:', artworkUrl);
             console.log('🎯 Match validation: Used', selectedStrategy, 'for', artist, '-', title);
           } else {
@@ -204,6 +241,34 @@ serve(async (req) => {
               } else {
                 console.log('✅ Music story updated with official artwork for item:', item_id);
               }
+            } else if (item_type === 'platform_products') {
+              // Update platform_products table
+              const { data: existingProduct, error: fetchError } = await supabase
+                .from('platform_products')
+                .select('images')
+                .eq('id', item_id)
+                .single();
+              
+              if (fetchError) {
+                console.log('❌ Error fetching existing product:', fetchError);
+              } else {
+                const existingImages = existingProduct?.images || [];
+                const updatedImages = [storedImageUrl, ...existingImages.filter((url: string) => url !== storedImageUrl)];
+                
+                const { error: updateError } = await supabase
+                  .from('platform_products')
+                  .update({ 
+                    primary_image: storedImageUrl,
+                    images: updatedImages
+                  })
+                  .eq('id', item_id);
+                  
+                if (updateError) {
+                  console.log('❌ Platform product artwork update error:', updateError);
+                } else {
+                  console.log('✅ Platform product updated with official artwork');
+                }
+              }
             } else {
               // Update legacy cd_scan/vinyl2_scan tables
               const table = media_type === 'cd' ? 'cd_scan' : 'vinyl2_scan';
@@ -227,7 +292,7 @@ serve(async (req) => {
             return new Response(JSON.stringify({ 
               success: true, 
               artwork_url: storedImageUrl,
-              source: artworkUrl.includes('discogs') ? 'discogs' : 'musicbrainz'
+              source: artworkSource || 'unknown'
             }), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });

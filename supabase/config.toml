@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.clear-art-products]
 verify_jwt = false
+
+[functions.refetch-product-artwork]
+verify_jwt = false

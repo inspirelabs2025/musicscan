@@ -11,14 +11,8 @@ export const MetalPrintSpotlight = () => {
     limit: 6 
   });
 
-  // Example album for showcase
-  const exampleAlbum = {
-    title: "Dark Side of the Moon",
-    artist: "Pink Floyd",
-    artwork: "https://images.unsplash.com/photo-1619983081563-430f63602796?w=800&h=800&fit=crop"
-  };
-
-  const displayImage = artProducts?.[0]?.primary_image || exampleAlbum.artwork;
+  const displayProduct = artProducts?.[0];
+  const displayImage = displayProduct?.primary_image;
 
   const features = [
     { icon: Sparkles, text: 'Hoogwaardige Metalen Prints' },
@@ -51,15 +45,17 @@ export const MetalPrintSpotlight = () => {
                 {/* Before: Original Artwork */}
                 <div className="relative group">
                   <Card className="p-2 bg-card border-2 border-border hover:border-primary/50 transition-all">
-                    <div className="aspect-square rounded-lg overflow-hidden">
+                    <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center">
                       {isLoading ? (
                         <Skeleton className="w-full h-full" />
-                      ) : (
+                      ) : displayImage ? (
                         <img 
                           src={displayImage} 
-                          alt="Album artwork"
+                          alt={displayProduct?.title || "Album artwork"}
                           className="w-full h-full object-cover"
                         />
+                      ) : (
+                        <div className="text-6xl">🎨</div>
                       )}
                     </div>
                   </Card>
@@ -71,14 +67,14 @@ export const MetalPrintSpotlight = () => {
                 {/* After: Metal Print Effect */}
                 <div className="relative group">
                   <Card className="p-2 bg-gradient-to-br from-vinyl-gold/20 to-vinyl-purple/20 border-2 border-vinyl-gold/50 hover:border-vinyl-gold transition-all">
-                    <div className="aspect-square rounded-lg overflow-hidden relative metal-print-effect">
+                    <div className="aspect-square rounded-lg overflow-hidden relative metal-print-effect bg-muted flex items-center justify-center">
                       {isLoading ? (
                         <Skeleton className="w-full h-full" />
-                      ) : (
+                      ) : displayImage ? (
                         <>
                           <img 
                             src={displayImage} 
-                            alt="Metal print preview"
+                            alt={`${displayProduct?.title || "Album"} metal print`}
                             className="w-full h-full object-cover"
                           />
                           {/* Metal gloss overlay */}
@@ -86,6 +82,8 @@ export const MetalPrintSpotlight = () => {
                           {/* Corner shine effect */}
                           <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-br from-white/30 to-transparent blur-xl pointer-events-none" />
                         </>
+                      ) : (
+                        <div className="text-6xl">🎨</div>
                       )}
                     </div>
                   </Card>
@@ -123,7 +121,7 @@ export const MetalPrintSpotlight = () => {
               {/* Price & USP */}
               <div className="bg-card p-6 rounded-lg border-2 border-vinyl-gold/30">
                 <p className="text-sm text-muted-foreground mb-2">Vanaf</p>
-                <p className="text-4xl font-bold text-vinyl-gold mb-4">€29,95</p>
+                <p className="text-4xl font-bold text-vinyl-gold mb-4">€49,95</p>
                 <div className="flex gap-4 text-sm text-muted-foreground">
                   <span>✓ Gratis Verzending</span>
                   <span>✓ 30 Dagen Retour</span>

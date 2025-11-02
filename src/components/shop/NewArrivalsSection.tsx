@@ -38,7 +38,7 @@ export function NewArrivalsSection() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {products.map((product) => (
-        <Link key={product.id} to={`/shop/product/${product.slug}`}>
+        <Link key={product.id} to={`/product/${product.slug}`}>
           <Card className="overflow-hidden hover:shadow-lg transition-all group">
             <div className="relative aspect-square bg-muted">
               {product.primary_image ? (

@@ -78,6 +78,7 @@ import ForumTopic from "./pages/ForumTopic";
 import MuziekVerhaal from "./pages/MuziekVerhaal";
 import Marketplace from "./pages/Marketplace";
 import PublicShopItemDetail from "./pages/PublicShopItemDetail";
+import PlatformProductDetail from "./pages/PlatformProductDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -226,6 +227,7 @@ const App = () => {
             <Route path="/shop" element={<Navigate to="/shops" replace />} />
             <Route path="/shop/:shopSlug" element={<PublicShop />} />
             <Route path="/shop/:shopSlug/item/:itemId" element={<PublicShopItemDetail />} />
+            <Route path="/product/:slug" element={<PlatformProductDetail />} />
             <Route path="/shop/order-success" element={<OrderSuccess />} />
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/track-order" element={<TrackOrder />} />

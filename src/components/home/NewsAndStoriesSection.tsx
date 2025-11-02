@@ -280,68 +280,6 @@ export const NewsAndStoriesSection = () => {
       </div>
     );
   };
-    if (forumLoading) {
-      return (
-        <div className="grid md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="p-6 space-y-3">
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-8 w-24" />
-            </Card>
-          ))}
-        </div>
-      );
-    }
-
-    if (!forumTopics || forumTopics.length === 0) {
-      return <p className="text-center text-muted-foreground py-12">Geen discussies gevonden</p>;
-    }
-
-    return (
-      <div className="grid md:grid-cols-3 gap-6">
-        {forumTopics.slice(0, 3).map((topic) => (
-          <Link key={topic.id} to={`/forum/${topic.id}`}>
-            <Card className="p-6 hover:shadow-xl transition-all hover:scale-105 group h-full">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center text-white font-bold">
-                    {topic.profiles?.first_name?.[0]?.toUpperCase() || '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">
-                      {topic.profiles?.first_name || 'Anoniem'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {topic.created_at && formatDistanceToNow(new Date(topic.created_at), { 
-                        addSuffix: true, 
-                        locale: nl 
-                      })}
-                    </p>
-                  </div>
-                </div>
-
-                <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                  {topic.title}
-                </h3>
-
-                {topic.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {topic.description}
-                  </p>
-                )}
-
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>💬 {topic.reply_count || 0} reacties</span>
-                  {topic.view_count > 0 && <span>👁️ {topic.view_count}</span>}
-                </div>
-              </div>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <section className="py-16">
@@ -353,7 +291,7 @@ export const NewsAndStoriesSection = () => {
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'releases' | 'nieuws' | 'verhalen')} className="space-y-8">
           <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 bg-white/10 backdrop-blur-md border border-white/20 p-1 rounded-xl">
             <TabsTrigger 
               value="releases"

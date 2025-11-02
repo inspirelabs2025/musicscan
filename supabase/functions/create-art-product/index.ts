@@ -34,6 +34,13 @@ serve(async (req) => {
       const first = data?.results?.[0];
       if (!first) throw new Error('No results found on Discogs');
       releaseData = first;
+      
+      // Log what we received from the search
+      console.log('🔍 Received from search:', {
+        release_id: releaseData.discogs_id,
+        master_id: releaseData.master_id,
+        original_master_id: releaseData.original_master_id
+      });
     } else if (catalog_number || (artist && title)) {
       console.log('🔍 Searching by catalog/artist/title');
       const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
@@ -119,7 +126,13 @@ serve(async (req) => {
 
     // Step 3: Fetch artwork
     const masterId = releaseData.original_master_id || releaseData.master_id;
-    console.log('🖼️ Fetching artwork...', masterId ? `(Master ID: ${masterId})` : '(Release ID only)');
+    
+    console.log('📦 Artwork fetch params:', {
+      master_id: masterId,
+      discogs_url: releaseData.discogs_url,
+      artist: artistValue,
+      title: releaseData.title
+    });
     
     const { data: artworkData, error: artworkError } = await supabase.functions.invoke('fetch-album-artwork', {
       body: {

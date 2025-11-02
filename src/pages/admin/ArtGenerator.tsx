@@ -36,6 +36,25 @@ export default function ArtGenerator() {
   // Price
   const [price, setPrice] = useState("49.95");
 
+  // Iconic albums for quick add
+  const iconicAlbums = [
+    { artist: "Pink Floyd", title: "The Dark Side Of The Moon", discogs_id: 4594540 },
+    { artist: "The Beatles", title: "Abbey Road", discogs_id: 10598332 },
+    { artist: "Nirvana", title: "Nevermind", discogs_id: 3426781 },
+    { artist: "Michael Jackson", title: "Thriller", discogs_id: 3642592 },
+    { artist: "Fleetwood Mac", title: "Rumours", discogs_id: 6774890 },
+    { artist: "Led Zeppelin", title: "Led Zeppelin IV", discogs_id: 3788890 },
+  ];
+
+  const handleQuickAdd = (album: typeof iconicAlbums[0]) => {
+    createArtProduct({
+      discogs_id: album.discogs_id,
+      artist: album.artist,
+      title: album.title,
+      price: parseFloat(price)
+    });
+  };
+
   const handleDiscogsIdSearch = () => {
     const id = parseInt(discogsId);
     if (isNaN(id)) {
@@ -92,6 +111,31 @@ export default function ArtGenerator() {
               Deze prijs wordt gebruikt voor alle nieuwe ART producten
             </p>
           </div>
+        </div>
+      </Card>
+
+      {/* Quick Add Iconic Albums */}
+      <Card className="p-6 mb-6 bg-gradient-to-br from-vinyl-gold/10 to-vinyl-purple/10 border-2 border-vinyl-gold/30">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="h-5 w-5 text-vinyl-gold" />
+          <h2 className="text-xl font-bold">⚡ Quick Add Iconische Albums</h2>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Voeg bekende albums met 1 klik toe om de catalogus te vullen
+        </p>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {iconicAlbums.map((album) => (
+            <Button
+              key={album.discogs_id}
+              onClick={() => handleQuickAdd(album)}
+              disabled={isPending}
+              variant="outline"
+              className="h-auto py-3 px-4 flex flex-col items-start text-left hover:bg-vinyl-gold/10 hover:border-vinyl-gold transition-all"
+            >
+              <span className="font-semibold text-sm">{album.artist}</span>
+              <span className="text-xs text-muted-foreground line-clamp-1">{album.title}</span>
+            </Button>
+          ))}
         </div>
       </Card>
 

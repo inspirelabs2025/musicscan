@@ -165,11 +165,28 @@ const BulkArtGenerator = () => {
             if (data?.results?.[0]) {
               const result = data.results[0];
               
-              // ✅ Log validation for debugging
-              console.log(`✅ Validated ${idInfo.type} ${idInfo.id}:`, {
+              // ✅ Smart URL validation: Check if URL text hints at different artist
+              const extractArtistHint = (url: string) => {
+                // Extract artist name from URL pattern: /release/123-Artist-Name-Album
+                const match = url.match(/\/(?:release|master)\/\d+-([^-]+(?:-[^-]+)?)/i);
+                return match ? match[1].replace(/-/g, ' ').toLowerCase() : '';
+              };
+              
+              const urlArtistHint = idInfo.url ? extractArtistHint(idInfo.url) : '';
+              const actualArtist = result.artist.toLowerCase();
+              
+              // Check for mismatch: URL hints at artist A, but Discogs returns artist B
+              const urlMatchWarning = urlArtistHint && 
+                                     urlArtistHint.length > 3 &&
+                                     !actualArtist.includes(urlArtistHint) &&
+                                     !urlArtistHint.includes(actualArtist.split(' ')[0]);
+              
+              console.log(`${urlMatchWarning ? '⚠️ URL MISMATCH!' : '✅'} Validated ${idInfo.type} ${idInfo.id}:`, {
                 artist: result.artist,
                 title: result.title,
-                url: idInfo.url || `https://www.discogs.com/${idInfo.type}/${idInfo.id}`
+                url: idInfo.url || `https://www.discogs.com/${idInfo.type}/${idInfo.id}`,
+                urlHint: urlArtistHint || 'none',
+                warning: urlMatchWarning ? `URL suggests "${urlArtistHint}" but got "${result.artist}"` : 'OK'
               });
               
               parsed.push({
@@ -179,10 +196,11 @@ const BulkArtGenerator = () => {
                 discogsId: idInfo.id,
                 idType: idInfo.type,
                 masterId: result.master_id,
-                matchStatus: 'match',
+                matchStatus: urlMatchWarning ? 'error' : 'match',
                 verifiedArtist: result.artist,
                 verifiedTitle: result.title,
-                similarity: 1.0,
+                similarity: urlMatchWarning ? 0.0 : 1.0,
+                error: urlMatchWarning ? `⚠️ URL bevat "${urlArtistHint}", maar Discogs geeft: "${result.artist}"` : undefined,
                 originalLine: trimmed
               });
               seenIds.add(idInfo.id);
@@ -811,12 +829,11 @@ Bryan Ferry - In Your Mind, 1034729
               <CardTitle className="text-base">💡 Tips</CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-2">
-              <p>• ⚠️ <strong>Plak volledige Discogs URLs</strong> voor beste resultaten</p>
-              <p>• <strong>Release URLs</strong>: <code className="text-xs">https://www.discogs.com/release/1225959-...</code></p>
-              <p>• <strong>Master URLs</strong>: <code className="text-xs">https://www.discogs.com/master/11452-...</code></p>
-              <p>• Gebruik de <strong>Verifieer Lijst</strong> knop voor een dry-run preview</p>
-              <p>• Groene rijen = perfect match, gele = gedeeltelijke match, rode = mismatch</p>
-              <p>• ⚠️ Check console logs voor ID validatie voordat je verwerkt!</p>
+              <p>• ⚠️ <strong>Check console en tabel</strong>: Rode rijen = verkeerde URL!</p>
+              <p>• <strong>Release URLs</strong>: <code className="text-xs">https://www.discogs.com/release/XXXXX-Artist-Title</code></p>
+              <p>• <strong>Master URLs (aanbevolen)</strong>: <code className="text-xs">https://www.discogs.com/master/XXXX-Artist-Title</code></p>
+              <p>• Gebruik de <strong>Verifieer Lijst</strong> knop om URLs te valideren!</p>
+              <p>• Groene rijen = correcte match, rode = URL wijst naar verkeerd album</p>
             </CardContent>
           </Card>
         </CardContent>

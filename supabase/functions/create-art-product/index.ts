@@ -354,7 +354,7 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
     // Defensive normalization for categories and tags
     const genreStr = genreValue || 'music';
     const firstGenre = genreStr.split(',')[0].trim().toLowerCase();
-    const categories = ['album-art', 'metaalprint', firstGenre];
+    const categories = ['metaal album cover', 'album-art', 'metaalprint', firstGenre];
     
     const tags = [
       artistValue.toLowerCase(),

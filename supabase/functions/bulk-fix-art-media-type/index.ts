@@ -12,53 +12,99 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🔧 Starting bulk media_type fix for metal print products...');
+    console.log('🔧 Starting bulk media_type and category fix for metal print products...');
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // First, count how many products need updating
-    const { count: beforeCount } = await supabase
+    // Fetch all products with media_type 'merchandise' or 'art'
+    const { data: products, error: fetchError } = await supabase
       .from('platform_products')
-      .select('id', { count: 'exact', head: true })
-      .eq('media_type', 'merchandise')
-      .or('metaalprint.cs.{categories},album-art.cs.{categories},metal-print.cs.{tags}');
+      .select('id, title, categories, tags, media_type');
 
-    console.log(`📊 Found ${beforeCount} products to update`);
-
-    // Update all merchandise products that are actually metal prints to 'art'
-    const { data: updatedProducts, error: updateError } = await supabase
-      .from('platform_products')
-      .update({ 
-        media_type: 'art',
-        updated_at: new Date().toISOString()
-      })
-      .eq('media_type', 'merchandise')
-      .or('metaalprint.cs.{categories},album-art.cs.{categories},metal-print.cs.{tags}')
-      .select('id, title');
-
-    if (updateError) {
-      console.error('❌ Update failed:', updateError);
-      throw updateError;
+    if (fetchError) {
+      console.error('❌ Fetch failed:', fetchError);
+      throw fetchError;
     }
 
-    console.log(`✅ Successfully updated ${updatedProducts?.length || 0} products to media_type='art'`);
+    console.log(`📊 Fetched ${products?.length || 0} products to analyze`);
 
-    // Verify the update
-    const { count: afterCount } = await supabase
+    // Helper function to identify metal prints
+    const isMetalPrint = (p: any) => {
+      const cats = (p.categories || []).map((c: string) => c.toLowerCase());
+      const tags = (p.tags || []).map((t: string) => t.toLowerCase());
+      const title = (p.title || '').toLowerCase();
+      
+      return title.includes('metaalprint') ||
+             title.includes('[metaalprint]') ||
+             cats.includes('metaalprint') ||
+             cats.includes('album-art') ||
+             tags.includes('metal-print') ||
+             tags.includes('wall-art');
+    };
+
+    // Process updates
+    const updates: Promise<any>[] = [];
+    let updateCount = 0;
+
+    for (const p of products || []) {
+      if (!isMetalPrint(p)) continue;
+
+      // Build new categories set with 'metaal album cover'
+      const newCatsSet = new Set([...(p.categories || [])]);
+      const hadMetaalCategory = newCatsSet.has('metaal album cover');
+      newCatsSet.add('metaal album cover');
+
+      const payload: any = {
+        categories: Array.from(newCatsSet),
+        updated_at: new Date().toISOString()
+      };
+
+      // Update media_type if currently merchandise
+      if (p.media_type === 'merchandise') {
+        payload.media_type = 'art';
+      }
+
+      // Only update if something changed
+      if (payload.media_type || !hadMetaalCategory) {
+        console.log(`🔄 Updating product: ${p.title?.substring(0, 50)}...`);
+        updateCount++;
+        updates.push(
+          supabase
+            .from('platform_products')
+            .update(payload)
+            .eq('id', p.id)
+        );
+      }
+    }
+
+    console.log(`📝 Executing ${updates.length} updates...`);
+
+    // Execute all updates in parallel
+    const results = await Promise.allSettled(updates);
+    const successful = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+
+    console.log(`✅ Successfully updated ${successful} products`);
+    if (failed > 0) {
+      console.log(`⚠️ Failed to update ${failed} products`);
+    }
+
+    // Verify final state
+    const { count: finalArtCount } = await supabase
       .from('platform_products')
       .select('id', { count: 'exact', head: true })
       .eq('media_type', 'art')
-      .or('metaalprint.cs.{categories},album-art.cs.{categories},metal-print.cs.{tags}');
+      .contains('categories', ['metaal album cover']);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        updated_count: updatedProducts?.length || 0,
-        before_count: beforeCount,
-        after_count: afterCount,
-        message: `Successfully updated ${updatedProducts?.length || 0} metal print products to 'art' media type`
+        updated_count: successful,
+        failed_count: failed,
+        final_art_count: finalArtCount,
+        message: `Successfully updated ${successful} metal print products to 'art' with 'metaal album cover' category`
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

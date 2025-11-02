@@ -18,6 +18,13 @@ const PLAAT_VERHAAL_PROMPT = `Je bent een muziekjournalist die "Plaat & Verhaal"
 Schrijf een volledige blogpost in **Markdown** met **YAML front matter** + body volgens de exacte structuur hieronder.
 Voeg onderaan een korte social post toe.
 
+**KRITIEKE INSTRUCTIE - DISCOGS URL:**
+- Als er een discogs_url is meegegeven: BEZOEK DEZE URL EERST
+- Haal de correcte artist en album naam van de Discogs pagina
+- GEBRUIK DEZE DISCOGS DATA als primaire bron voor artist/album naam
+- Negeer de artist/album velden uit ALBUM_DATA als ze niet overeenkomen met Discogs
+- De Discogs URL is de WAARHEID, niet de database velden
+
 **BELANGRIJKE INSTRUCTIES:**
 - Gebruik de scan informatie ALLEEN als inspiratie voor het album
 - Het verhaal gaat over het ALBUM IN HET ALGEMEEN, niet over de specifieke persing uit de scan
@@ -291,9 +298,14 @@ serve(async (req) => {
     let albumInfo;
     if (actualTableUsed === 'platform_products') {
       albumInfo = `
-ALBUM_DATA (gebruik als inspiratie voor algemeen verhaal over dit album):
-- artist: ${albumData.artist || '—'}
-- album: ${albumData.title?.replace(/\s*\[Metaalprint\]\s*$/, '').replace(/^.*?\s*-\s*/, '') || '—'}
+**PRIMAIRE BRON - BEZOEK DEZE URL:**
+Discogs URL: ${albumData.discogs_url || '—'}
+Discogs ID: ${albumData.discogs_id || '—'}
+
+INSTRUCTIE: Bezoek de Discogs URL hierboven en haal daar de CORRECTE artist en album naam op.
+Gebruik deze Discogs data als waarheid voor je blogpost.
+
+**AANVULLENDE DATA (ter referentie):**
 - year: ${albumData.release_year || '—'}
 - label: ${albumData.label || '—'}
 - catalog: ${albumData.catalog_number || '—'}
@@ -301,12 +313,13 @@ ALBUM_DATA (gebruik als inspiratie voor algemeen verhaal over dit album):
 - format: Metal Print
 - genre: ${albumData.genre || '—'}
 - styles: ${albumData.style ? JSON.stringify(albumData.style) : '—'}
-- discogs_url: ${albumData.discogs_url || '—'}
-- discogs_id: ${albumData.discogs_id || '—'}
 
-INSTRUCTIE: Gebruik deze informatie als BASIS voor een verhaal over het album zelf. 
+DATABASE VELDEN (kunnen incorrect zijn, check tegen Discogs):
+- database_artist: ${albumData.artist || '—'}
+- database_title: ${albumData.title?.replace(/\s*\[Metaalprint\]\s*$/, '').replace(/^.*?\s*-\s*/, '') || '—'}
+
 ZOEK ZELF OP: studio, producer, muzikanten, commercieel succes wereldwijd.
-Het verhaal gaat NIET over deze specifieke persing of conditie.
+Het verhaal gaat over het album, niet over deze specifieke persing.
 `;
     } else {
       albumInfo = `

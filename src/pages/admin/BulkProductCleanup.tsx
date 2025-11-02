@@ -15,9 +15,12 @@ const INCORRECT_IDS = [
 
 const BulkProductCleanup = () => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeletingToday, setIsDeletingToday] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [confirmedToday, setConfirmedToday] = useState(false);
   const [customIds, setCustomIds] = useState(INCORRECT_IDS.join(', '));
   const [result, setResult] = useState<any>(null);
+  const [todayResult, setTodayResult] = useState<any>(null);
   const { toast } = useToast();
 
   const handleDelete = async () => {
@@ -69,13 +72,108 @@ const BulkProductCleanup = () => {
     }
   };
 
+  const handleDeleteToday = async () => {
+    if (!confirmedToday) {
+      toast({
+        title: "⚠️ Bevestiging vereist",
+        description: "Vink het vakje aan om te bevestigen",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsDeletingToday(true);
+    setTodayResult(null);
+
+    try {
+      toast({
+        title: "🗑️ Verwijderen van vandaag gestart",
+        description: "Bezig met verwijderen van ALLE producten en blogs van vandaag...",
+      });
+
+      const { data, error } = await supabase.functions.invoke('admin-bulk-cleanup-today', {
+        body: { cleanup_mode: 'today' }
+      });
+
+      if (error) throw error;
+
+      setTodayResult(data);
+      setConfirmedToday(false);
+      
+      toast({
+        title: "✅ Cleanup van vandaag voltooid",
+        description: `${data.products_deleted} producten en ${data.blogs_deleted} blogs verwijderd`,
+      });
+    } catch (error: any) {
+      console.error('Cleanup today error:', error);
+      toast({
+        title: "❌ Cleanup fout",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeletingToday(false);
+    }
+  };
+
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Delete Everything from Today */}
+      <Card className="border-destructive">
+        <CardHeader>
+          <CardTitle>🚨 Verwijder ALLES van Vandaag</CardTitle>
+          <CardDescription>
+            Verwijdert ALLE producten en blogs die vandaag zijn aangemaakt (75 producten + 84 blogs)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center space-x-2 p-4 border border-destructive/50 rounded-lg bg-destructive/5">
+            <Checkbox 
+              id="confirm-today" 
+              checked={confirmedToday}
+              onCheckedChange={(checked) => setConfirmedToday(checked as boolean)}
+            />
+            <Label 
+              htmlFor="confirm-today" 
+              className="text-sm font-normal cursor-pointer"
+            >
+              Ik begrijp dat deze actie ALLE producten en blogs van VANDAAG permanent verwijdert
+            </Label>
+          </div>
+
+          <Button 
+            onClick={handleDeleteToday} 
+            disabled={isDeletingToday || !confirmedToday}
+            variant="destructive"
+            size="lg"
+            className="w-full"
+          >
+            {isDeletingToday && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Trash2 className="mr-2 h-4 w-4" />
+            {isDeletingToday ? 'Bezig met verwijderen...' : 'Verwijder ALLES van Vandaag'}
+          </Button>
+
+          {todayResult && (
+            <div className="mt-6 p-4 bg-muted rounded-lg space-y-2">
+              <h3 className="font-semibold">Resultaat</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>🗑️ Producten verwijderd: <strong>{todayResult.products_deleted}</strong></div>
+                <div>📝 Blogs verwijderd: <strong>{todayResult.blogs_deleted}</strong></div>
+              </div>
+              {todayResult.message && (
+                <p className="text-sm text-muted-foreground mt-2">{todayResult.message}</p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Delete by Discogs IDs */}
       <Card>
         <CardHeader>
-          <CardTitle>🗑️ Bulk Product Cleanup</CardTitle>
+          <CardTitle>🗑️ Bulk Product Cleanup (Specifieke IDs)</CardTitle>
           <CardDescription>
-            Verwijder verkeerd aangemaakte producten en hun bijbehorende blogs
+            Verwijder verkeerd aangemaakte producten en hun bijbehorende blogs via Discogs IDs
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

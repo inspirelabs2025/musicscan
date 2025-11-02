@@ -12,18 +12,62 @@ serve(async (req) => {
   }
 
   try {
-    const { discogs_ids } = await req.json();
-
-    if (!discogs_ids || !Array.isArray(discogs_ids) || discogs_ids.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'discogs_ids array is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const { discogs_ids, cleanup_mode } = await req.json();
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // MODE 1: Delete everything from today
+    if (cleanup_mode === 'today') {
+      console.log(`🗑️ Starting cleanup of ALL items created today`);
+
+      // Delete all blog posts from today
+      const { data: deletedBlogs, error: blogsError } = await supabase
+        .from('blog_posts')
+        .delete()
+        .gte('created_at', new Date().toISOString().split('T')[0])
+        .lt('created_at', new Date(Date.now() + 86400000).toISOString().split('T')[0])
+        .select('id');
+
+      if (blogsError) {
+        console.error('Error deleting blogs:', blogsError);
+      }
+
+      console.log(`📝 Deleted ${deletedBlogs?.length || 0} blog posts from today`);
+
+      // Delete all products from today
+      const { data: deletedProducts, error: deleteError } = await supabase
+        .from('platform_products')
+        .delete()
+        .gte('created_at', new Date().toISOString().split('T')[0])
+        .lt('created_at', new Date(Date.now() + 86400000).toISOString().split('T')[0])
+        .select('id');
+
+      if (deleteError) {
+        console.error('Error deleting products:', deleteError);
+        throw deleteError;
+      }
+
+      console.log(`✅ Deleted ${deletedProducts?.length || 0} products from today`);
+
+      return new Response(
+        JSON.stringify({ 
+          products_deleted: deletedProducts?.length || 0,
+          blogs_deleted: deletedBlogs?.length || 0,
+          message: `Successfully deleted ALL items from today: ${deletedProducts?.length || 0} products and ${deletedBlogs?.length || 0} blogs`
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // MODE 2: Delete by discogs_ids (original functionality)
+    if (!discogs_ids || !Array.isArray(discogs_ids) || discogs_ids.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'discogs_ids array is required or use cleanup_mode: "today"' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     console.log(`🗑️ Starting bulk cleanup for ${discogs_ids.length} discogs_ids`);
 

@@ -21,9 +21,9 @@ const searchDiscogsQuick = async (searchQuery: string, authHeaders: any) => {
   return await response.json();
 };
 
-// Get release metadata quickly without pricing
-const getReleaseMetadata = async (discogsId: string, authHeaders: any) => {
-  const apiUrl = `https://api.discogs.com/releases/${discogsId}`;
+// Get master data from Discogs
+const getMasterData = async (masterId: string, authHeaders: any) => {
+  const apiUrl = `https://api.discogs.com/masters/${masterId}`;
   
   const response = await fetch(apiUrl, {
     headers: {
@@ -33,10 +33,68 @@ const getReleaseMetadata = async (discogsId: string, authHeaders: any) => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch release metadata: ${response.status}`);
+    throw new Error(`Failed to fetch master data: ${response.status}`);
   }
 
   return await response.json();
+};
+
+// Get release metadata quickly without pricing
+// Supports both Release IDs and Master IDs (auto-converts Master → Release)
+const getReleaseMetadata = async (discogsId: string, authHeaders: any) => {
+  // Try as Release ID first
+  const releaseUrl = `https://api.discogs.com/releases/${discogsId}`;
+  
+  const releaseResponse = await fetch(releaseUrl, {
+    headers: {
+      ...authHeaders,
+      'User-Agent': 'VinylScanner/2.0'
+    }
+  });
+
+  if (releaseResponse.ok) {
+    return await releaseResponse.json();
+  }
+
+  // If Release fetch failed (404), try as Master ID
+  if (releaseResponse.status === 404) {
+    console.log(`🔄 ID ${discogsId} is not a Release, trying as Master...`);
+    
+    try {
+      const masterData = await getMasterData(discogsId, authHeaders);
+      const mainReleaseId = masterData.main_release;
+      
+      if (!mainReleaseId) {
+        throw new Error('Master has no main_release');
+      }
+      
+      console.log(`✅ Master ${discogsId} → Release ${mainReleaseId}`);
+      
+      // Fetch the main release
+      const mainReleaseResponse = await fetch(`https://api.discogs.com/releases/${mainReleaseId}`, {
+        headers: {
+          ...authHeaders,
+          'User-Agent': 'VinylScanner/2.0'
+        }
+      });
+      
+      if (!mainReleaseResponse.ok) {
+        throw new Error(`Failed to fetch main release ${mainReleaseId}: ${mainReleaseResponse.status}`);
+      }
+      
+      const releaseData = await mainReleaseResponse.json();
+      
+      // Add a flag to indicate this was converted from Master
+      releaseData._converted_from_master = discogsId;
+      releaseData._actual_release_id = mainReleaseId;
+      
+      return releaseData;
+    } catch (masterError) {
+      throw new Error(`Invalid Discogs ID ${discogsId}: Not a valid Release or Master ID (${masterError.message})`);
+    }
+  }
+
+  throw new Error(`Failed to fetch release metadata: ${releaseResponse.status}`);
 };
 
 // Parallel search strategies
@@ -156,6 +214,14 @@ Deno.serve(async (req) => {
       
       const releaseData = await getReleaseMetadata(direct_discogs_id, authHeaders);
       
+      // Check if this was converted from Master
+      const actualReleaseId = releaseData._actual_release_id || direct_discogs_id;
+      const wasConverted = !!releaseData._converted_from_master;
+      
+      if (wasConverted) {
+        console.log(`ℹ️ Using Release ID ${actualReleaseId} (converted from Master ${direct_discogs_id})`);
+      }
+      
       // Determine media type
       const formats = releaseData.formats || [];
       let mediaType = 'vinyl';
@@ -169,10 +235,11 @@ Deno.serve(async (req) => {
       }
       
       const result = {
-        discogs_id: direct_discogs_id,
-        discogs_url: `https://www.discogs.com/release/${direct_discogs_id}`,
-        sell_url: `https://www.discogs.com/sell/release/${direct_discogs_id}`,
-        api_url: `https://api.discogs.com/releases/${direct_discogs_id}`,
+        discogs_id: actualReleaseId,
+        original_master_id: wasConverted ? direct_discogs_id : null,
+        discogs_url: `https://www.discogs.com/release/${actualReleaseId}`,
+        sell_url: `https://www.discogs.com/sell/release/${actualReleaseId}`,
+        api_url: `https://api.discogs.com/releases/${actualReleaseId}`,
         title: releaseData.title || '',
         artist: releaseData.artists?.map((a: any) => a.name).join(', ') || '',
         year: releaseData.year?.toString() || '',
@@ -187,7 +254,7 @@ Deno.serve(async (req) => {
         ).join(', '),
         media_type: mediaType,
         similarity_score: 1.0,
-        search_strategy: 'Direct Discogs ID',
+        search_strategy: wasConverted ? 'Master ID → Release ID' : 'Direct Discogs ID',
         pricing_stats: include_pricing ? { 
           lowest_price: releaseData.lowest_price || null,
           median_price: null,
@@ -212,9 +279,13 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           results: [result],
-          search_strategies: ['Direct Discogs ID'],
+          search_strategies: [result.search_strategy],
           total_found: 1,
-          media_type: mediaType
+          media_type: mediaType,
+          conversion_info: wasConverted ? {
+            from_master_id: direct_discogs_id,
+            to_release_id: actualReleaseId
+          } : null
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

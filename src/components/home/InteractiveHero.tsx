@@ -31,7 +31,7 @@ const heroVariants = [
     description: 'Duizenden verhalen over iconische albums en artiesten. Elke dag nieuw.',
     icon: BookOpen,
     cta: 'Lees Verhalen',
-    ctaLink: '/muziek-verhaal',
+    ctaLink: '/news?filter=verhalen',
     gradient: 'from-vinyl-gold/20 to-vinyl-silver/20',
     stats: '1.000+ verhalen'
   }

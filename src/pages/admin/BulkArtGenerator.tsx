@@ -36,46 +36,61 @@ export default function BulkArtGenerator() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
+  const normalizeInput = (text: string): string => {
+    return text
+      // Replace different types of dashes with standard hyphen
+      .replace(/[–—−‐]/g, '-')
+      // Normalize whitespace around delimiters
+      .replace(/\s*-\s*/g, ' - ')  // "Artist-Album" → "Artist - Album"
+      .replace(/\s*\|\s*/g, ' | ')  // "Artist|Album" → "Artist | Album"
+      .replace(/\s*,\s*/g, ', ')    // "Artist,Album" → "Artist, Album"
+      // Remove multiple spaces
+      .replace(/\s+/g, ' ')
+      // Remove non-breaking spaces
+      .replace(/\u00A0/g, ' ')
+      // Trim each line
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .join('\n');
+  };
+
   const parseInput = (text: string): AlbumInput[] => {
     const price = parseFloat(defaultPrice) || 49.95;
     
-    const parsed = text
+    // NORMALIZE INPUT FIRST
+    const normalizedText = normalizeInput(text);
+    
+    const parsed = normalizedText
       .split('\n')
       .filter(line => line.trim())
       .map(line => {
         let artist = '', title = '';
         const trimmedLine = line.trim();
         
-        // Try delimiters in order of reliability
-        // 1. " - " (space-dash-space) - most reliable
+        // Now all delimiters are normalized, prioritize by reliability
         if (trimmedLine.includes(' - ')) {
           const parts = trimmedLine.split(' - ');
           artist = parts[0].trim();
           title = parts.slice(1).join(' - ').trim();
         } 
-        // 2. " | " (space-pipe-space)
         else if (trimmedLine.includes(' | ')) {
           const parts = trimmedLine.split(' | ');
           artist = parts[0].trim();
           title = parts.slice(1).join(' | ').trim();
         }
-        // 3. "-" (dash without spaces) - only if clearly separating words
-        else if (trimmedLine.includes('-')) {
-          const dashIndex = trimmedLine.indexOf('-');
-          artist = trimmedLine.substring(0, dashIndex).trim();
-          title = trimmedLine.substring(dashIndex + 1).trim();
+        else if (trimmedLine.includes(', ')) {
+          const parts = trimmedLine.split(', ');
+          artist = parts[0].trim();
+          title = parts.slice(1).join(', ').trim();
         }
-        // 4. "|" (pipe without spaces)
-        else if (trimmedLine.includes('|')) {
-          const pipeIndex = trimmedLine.indexOf('|');
-          artist = trimmedLine.substring(0, pipeIndex).trim();
-          title = trimmedLine.substring(pipeIndex + 1).trim();
-        }
-        // 5. "," (comma) - least preferred
-        else if (trimmedLine.includes(',')) {
-          const commaIndex = trimmedLine.indexOf(',');
-          artist = trimmedLine.substring(0, commaIndex).trim();
-          title = trimmedLine.substring(commaIndex + 1).trim();
+        // Fallback: Try to split on first capital letter after lowercase
+        else {
+          const match = trimmedLine.match(/^(.+?)([A-Z][a-z].*)$/);
+          if (match) {
+            artist = match[1].trim();
+            title = match[2].trim();
+          }
         }
         
         return {
@@ -94,9 +109,10 @@ export default function BulkArtGenerator() {
     const parsed = parseInput(inputText);
     
     if (parsed.length === 0) {
+      const firstLine = inputText.split('\n').find(line => line.trim());
       toast({
         title: "❌ Geen albums gevonden",
-        description: "Gebruik bij voorkeur format: Artist - Album (met spaties rond het streepje). Andere formaten: Artist-Album, Artist | Album",
+        description: `Kon geen artist/album scheiden in: "${firstLine}". Probeer format: Artist - Album`,
         variant: "destructive"
       });
       return;
@@ -110,7 +126,7 @@ export default function BulkArtGenerator() {
     if (failedCount > 0) {
       toast({
         title: "⚠️ Input geparsed met waarschuwing",
-        description: `${parsed.length} albums gevonden, ${failedCount} regels overgeslagen. Controleer of elke regel Artist - Album format heeft.`,
+        description: `${parsed.length} albums gevonden, ${failedCount} regels overgeslagen`,
       });
     } else {
       toast({
@@ -322,9 +338,11 @@ export default function BulkArtGenerator() {
               📋 Plak je lijst hier (Artist - Album per regel)
             </Label>
             <p className="text-sm text-muted-foreground mb-2">
-              Aanbevolen format: <strong>Artist - Album</strong> (met spaties rond streepje).
+              ✨ <strong>Automatische normalisatie actief!</strong>
               <br />
-              Werkt ook: Artist-Album, Artist | Album
+              Alle formaten worden automatisch geconverteerd naar: <strong>Artist - Album</strong>
+              <br />
+              Ondersteunt: Artist-Album, Artist–Album, Artist | Album, Artist, Album
             </p>
             <Textarea
               id="input-text"

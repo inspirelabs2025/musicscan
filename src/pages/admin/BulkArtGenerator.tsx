@@ -37,6 +37,25 @@ export default function BulkArtGenerator() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
+  // Helper: Extract Discogs ID from various formats (plain number, URL, text with ID)
+  const extractDiscogsId = (str: string): number | null => {
+    if (!str) return null;
+    const s = String(str).trim();
+
+    // 1) Plain numeric ID (at least 3 digits)
+    if (/^\d{3,}$/.test(s)) return parseInt(s, 10);
+
+    // 2) Discogs URL (release or master)
+    const urlMatch = s.match(/discogs\.com\/(?:release|master)\/(\d+)/i);
+    if (urlMatch?.[1]) return parseInt(urlMatch[1], 10);
+
+    // 3) General "ID somewhere in text" (minimum 3 digits)
+    const anyNum = s.match(/\b\d{3,}\b/);
+    if (anyNum?.[0]) return parseInt(anyNum[0], 10);
+
+    return null;
+  };
+
   const normalizeInput = (text: string): string => {
     return text
       // Remove non-breaking spaces
@@ -46,6 +65,8 @@ export default function BulkArtGenerator() {
       .map(line => line
         // Replace different types of dashes with standard hyphen
         .replace(/[–—−‐]/g, '-')
+        // Handle ">" delimiter (including ">." variant)
+        .replace(/\s*>\.?\s*/g, ' - ')  // "Artist >. Album" → "Artist - Album"
         // Normalize whitespace around delimiters
         .replace(/\s*-\s*/g, ' - ')  // "Artist-Album" → "Artist - Album"
         .replace(/\s*\|\s*/g, ' | ')  // "Artist|Album" → "Artist | Album"
@@ -77,17 +98,16 @@ export default function BulkArtGenerator() {
           artist = parts[0]?.trim() || '';
           title = parts[1]?.trim() || '';
           
-          // Check for 3rd part (Discogs ID)
-          if (parts[2]) {
-            const idParsed = parseInt(parts[2].trim(), 10);
-            if (!isNaN(idParsed) && idParsed > 0) {
-              discogsId = idParsed;
-            } else {
-              // If 3rd part exists but isn't a valid ID, include it in title
-              title = parts.slice(1).join(' - ').trim();
-            }
+          // Try to extract Discogs ID from parts[2] and beyond
+          const tail = parts.slice(2).join(' ').trim();
+          let foundId = extractDiscogsId(parts[2] || '');
+          if (!foundId && tail) foundId = extractDiscogsId(tail);
+          if (!foundId) foundId = extractDiscogsId(trimmedLine);
+          
+          if (foundId) {
+            discogsId = foundId;
           } else if (parts.length > 2) {
-            // More than 2 parts but no valid ID, join as title
+            // If 3rd part exists but isn't a valid ID, include it in title
             title = parts.slice(1).join(' - ').trim();
           }
         } 
@@ -96,14 +116,14 @@ export default function BulkArtGenerator() {
           artist = parts[0]?.trim() || '';
           title = parts[1]?.trim() || '';
           
-          // Check for 3rd part (Discogs ID)
-          if (parts[2]) {
-            const idParsed = parseInt(parts[2].trim(), 10);
-            if (!isNaN(idParsed) && idParsed > 0) {
-              discogsId = idParsed;
-            } else {
-              title = parts.slice(1).join(' | ').trim();
-            }
+          // Try to extract Discogs ID
+          const tail = parts.slice(2).join(' ').trim();
+          let foundId = extractDiscogsId(parts[2] || '');
+          if (!foundId && tail) foundId = extractDiscogsId(tail);
+          if (!foundId) foundId = extractDiscogsId(trimmedLine);
+          
+          if (foundId) {
+            discogsId = foundId;
           } else if (parts.length > 2) {
             title = parts.slice(1).join(' | ').trim();
           }
@@ -113,14 +133,14 @@ export default function BulkArtGenerator() {
           artist = parts[0]?.trim() || '';
           title = parts[1]?.trim() || '';
           
-          // Check for 3rd part (Discogs ID)
-          if (parts[2]) {
-            const idParsed = parseInt(parts[2].trim(), 10);
-            if (!isNaN(idParsed) && idParsed > 0) {
-              discogsId = idParsed;
-            } else {
-              title = parts.slice(1).join(', ').trim();
-            }
+          // Try to extract Discogs ID
+          const tail = parts.slice(2).join(' ').trim();
+          let foundId = extractDiscogsId(parts[2] || '');
+          if (!foundId && tail) foundId = extractDiscogsId(tail);
+          if (!foundId) foundId = extractDiscogsId(trimmedLine);
+          
+          if (foundId) {
+            discogsId = foundId;
           } else if (parts.length > 2) {
             title = parts.slice(1).join(', ').trim();
           }
@@ -132,6 +152,9 @@ export default function BulkArtGenerator() {
             artist = match[1].trim();
             title = match[2].trim();
           }
+          // Still try to find an ID anywhere in the line
+          const foundId = extractDiscogsId(trimmedLine);
+          if (foundId) discogsId = foundId;
         }
         
         return {
@@ -142,6 +165,9 @@ export default function BulkArtGenerator() {
           originalLine: trimmedLine
         };
       });
+    
+    const idsFromUrls = parsed.filter(p => p.discogsId && p.originalLine.includes('discogs.com')).length;
+    console.log(`📊 Parsed ${parsed.length} albums, ${parsed.filter(p => p.discogsId).length} with IDs (${idsFromUrls} from URLs)`);
     
     return parsed.filter(item => item.artist && item.title);
   };
@@ -404,13 +430,15 @@ export default function BulkArtGenerator() {
               <br />
               Formaat: <strong>Artist - Album</strong> of <strong>Artist - Album - DiscogsID</strong>
               <br />
-              Ondersteunt: Artist-Album, Artist–Album, Artist | Album, Artist, Album
+              Ondersteunt: Artist-Album, Artist–Album, Artist | Album, Artist &gt; Album
               <br />
-              💡 <strong>Tip:</strong> Voeg Discogs ID toe (3e kolom) voor 100% nauwkeurigheid!
+              💡 <strong>Tip:</strong> Plak Discogs URL of ID (3e kolom) voor 100% nauwkeurigheid!
+              <br />
+              📎 <strong>URL voorbeeld:</strong> Artist - Album - https://www.discogs.com/master/29615
             </p>
             <Textarea
               id="input-text"
-              placeholder={"Pink Floyd - The Wall\nThe Beatles - Abbey Road - 123456\nLed Zeppelin - IV"}
+              placeholder={"Pink Floyd - The Wall\nThe Beatles - Abbey Road - 123456\nPeter Gabriel - Peter Gabriel - https://www.discogs.com/master/29615"}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               className="min-h-[200px] font-mono text-sm"

@@ -57,6 +57,7 @@ import ArtGenerator from "./pages/admin/ArtGenerator";
 import BulkArtGenerator from "./pages/admin/BulkArtGenerator";
 import FixProductTitles from "./pages/admin/FixProductTitles";
 import BulkProductCleanup from "./pages/admin/BulkProductCleanup";
+import AutoCleanupToday from "./pages/admin/AutoCleanupToday";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 import Community from "./pages/Community";
@@ -313,6 +314,11 @@ const App = () => {
             <Route path="/admin/bulk-art-generator" element={
               <ProtectedRoute>
                 <BulkArtGenerator />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/auto-cleanup-today" element={
+              <ProtectedRoute>
+                <AutoCleanupToday />
               </ProtectedRoute>
             } />
             <Route path="/admin/fix-product-titles" element={

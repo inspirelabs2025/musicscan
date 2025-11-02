@@ -117,63 +117,132 @@ const BulkArtGenerator = () => {
   };
 
   // Parse input text
-  const parseInput = () => {
+  const parseInput = async () => {
     const normalizedText = normalizeInput(input);
     const lines = normalizedText.split('\n').filter(line => line.trim());
     const parsed: AlbumInput[] = [];
     const seenIds = new Set<number>();
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
+    setIsProcessing(true);
 
-      // Extract Discogs ID
-      const idInfo = extractDiscogsId(trimmed);
-      
-      // Remove ID/URL from text for artist/title parsing
-      let cleanText = trimmed
-        .replace(/https?:\/\/[^\s]+/g, '')
-        .replace(/\b\d{4,}\b/g, '')
-        .trim();
+    try {
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
 
-      // Split on common delimiters
-      const parts = cleanText.split(/[—–-]\s*|\s*-\s*/).map(p => p.trim()).filter(Boolean);
-      
-      if (parts.length >= 2) {
-        const artist = parts[0];
-        const title = parts.slice(1).join(' - ');
+        // Extract Discogs ID
+        const idInfo = extractDiscogsId(trimmed);
         
-        // Skip duplicates
-        if (idInfo && seenIds.has(idInfo.id)) {
-          console.log(`Skipping duplicate ID: ${idInfo.id}`);
-          continue;
+        // Check if input is ONLY an ID (no artist/title)
+        const isIdOnly = /^(m|r)?(\d+)$/i.test(trimmed);
+
+        if (isIdOnly && idInfo) {
+          // Skip duplicates
+          if (seenIds.has(idInfo.id)) {
+            console.log(`Skipping duplicate ID: ${idInfo.id}`);
+            continue;
+          }
+
+          // Fetch artist/title from Discogs
+          try {
+            const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
+              body: { 
+                direct_discogs_id: idInfo.id.toString(),
+                is_master: idInfo.type === 'master'
+              }
+            });
+
+            if (error) throw error;
+
+            if (data?.results?.[0]) {
+              const result = data.results[0];
+              parsed.push({
+                artist: result.artist,
+                title: result.title,
+                price: defaultPrice,
+                discogsId: idInfo.id,
+                idType: idInfo.type,
+                masterId: result.master_id,
+                matchStatus: 'match',
+                verifiedArtist: result.artist,
+                verifiedTitle: result.title,
+                similarity: 1.0,
+                originalLine: trimmed
+              });
+              seenIds.add(idInfo.id);
+              continue;
+            }
+          } catch (err: any) {
+            console.error(`Failed to fetch data for ${idInfo.id}:`, err);
+            parsed.push({
+              artist: '',
+              title: '',
+              price: defaultPrice,
+              discogsId: idInfo.id,
+              idType: idInfo.type,
+              matchStatus: 'error',
+              error: 'Kon album data niet ophalen',
+              originalLine: trimmed
+            });
+            seenIds.add(idInfo.id);
+            continue;
+          }
         }
 
-        const album: AlbumInput = {
-          artist,
-          title,
-          price: defaultPrice,
-          matchStatus: 'idle',
-          originalLine: trimmed
-        };
+        // Remove ID/URL from text for artist/title parsing
+        let cleanText = trimmed
+          .replace(/https?:\/\/[^\s]+/g, '')
+          .replace(/\b\d{4,}\b/g, '')
+          .trim();
 
-        if (idInfo) {
-          album.discogsId = idInfo.id;
-          album.idType = idInfo.type;
-          seenIds.add(idInfo.id);
+        // Split on common delimiters
+        const parts = cleanText.split(/[—–-]\s*|\s*-\s*/).map(p => p.trim()).filter(Boolean);
+        
+        if (parts.length >= 2) {
+          const artist = parts[0];
+          const title = parts.slice(1).join(' - ');
+          
+          // Skip duplicates
+          if (idInfo && seenIds.has(idInfo.id)) {
+            console.log(`Skipping duplicate ID: ${idInfo.id}`);
+            continue;
+          }
+
+          const album: AlbumInput = {
+            artist,
+            title,
+            price: defaultPrice,
+            matchStatus: 'idle',
+            originalLine: trimmed
+          };
+
+          if (idInfo) {
+            album.discogsId = idInfo.id;
+            album.idType = idInfo.type;
+            seenIds.add(idInfo.id);
+          }
+
+          parsed.push(album);
         }
-
-        parsed.push(album);
       }
-    }
 
-    setAlbums(parsed);
-    setResults(parsed.map(a => ({ ...a, status: 'pending' })));
-    
-    toast({
-      title: "✅ Lijst geparsed",
-      description: `${parsed.length} albums gevonden`,
-    });
+      setAlbums(parsed);
+      setResults(parsed.map(a => ({ ...a, status: 'pending' })));
+      
+      toast({
+        title: "✅ Lijst geparsed",
+        description: `${parsed.length} albums gevonden`,
+      });
+    } catch (err: any) {
+      console.error('Parse error:', err);
+      toast({
+        title: "❌ Parse fout",
+        description: err.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // Verify list with Discogs API
@@ -193,6 +262,12 @@ const BulkArtGenerator = () => {
     try {
       for (let i = 0; i < albums.length; i++) {
         const album = albums[i];
+        
+        // Skip albums that are already verified during parse
+        if (album.matchStatus === 'match') {
+          verified.push(album);
+          continue;
+        }
         
         // Update status
         setAlbums(prev => prev.map((a, idx) => 

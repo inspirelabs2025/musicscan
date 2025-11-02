@@ -36,16 +36,19 @@ const categories = [
 
 export function ShopByCategorySection() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
       {categories.map((cat) => (
         <Link key={cat.slug} to={`/shop?category=${cat.slug}`}>
-          <Card className="p-6 hover:shadow-lg transition-all hover:scale-105 cursor-pointer group">
-            <div className="text-center space-y-2">
-              <div className="text-5xl mb-3 group-hover:scale-110 transition-transform">
+          <Card className="p-8 hover:shadow-2xl transition-all hover:scale-105 cursor-pointer group border-2 hover:border-primary h-full">
+            <div className="text-center space-y-4">
+              <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">
                 {cat.emoji}
               </div>
-              <h3 className="font-bold text-lg">{cat.name}</h3>
+              <h3 className="font-bold text-xl">{cat.name}</h3>
               <p className="text-sm text-muted-foreground">{cat.description}</p>
+              <div className="pt-2">
+                <p className="text-lg font-bold text-vinyl-gold">Vanaf €{cat.slug === 'art' ? '29,95' : cat.slug === 'vinyl' ? '15' : '5'}</p>
+              </div>
             </div>
           </Card>
         </Link>

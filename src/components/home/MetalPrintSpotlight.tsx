@@ -1,0 +1,136 @@
+import { Link } from 'react-router-dom';
+import { Sparkles, Upload, Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { usePlatformProducts } from '@/hooks/usePlatformProducts';
+import { Skeleton } from '@/components/ui/skeleton';
+
+export const MetalPrintSpotlight = () => {
+  const { data: artProducts, isLoading } = usePlatformProducts({ 
+    mediaType: 'art',
+    limit: 6 
+  });
+
+  const features = [
+    { icon: Sparkles, text: 'Hoogwaardige Metalen Prints' },
+    { icon: Check, text: 'Premium Afwerking' },
+    { icon: Check, text: 'Direct aan de Muur' }
+  ];
+
+  return (
+    <section className="py-16 bg-gradient-to-br from-background via-vinyl-gold/5 to-background relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              🎨 Jouw Favoriete Album Cover op Metaal
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Transformeer iconische album artwork in prachtige metalen wanddecoratie
+            </p>
+          </div>
+
+          {/* Main showcase with split layout */}
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            {/* Left: Visual showcase */}
+            <div className="relative group">
+              <Card className="p-2 bg-gradient-to-br from-vinyl-gold/20 to-vinyl-purple/20 border-2 border-vinyl-gold/50 hover:border-vinyl-gold transition-all">
+                <div className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-zinc-900 to-zinc-800 flex items-center justify-center">
+                  {isLoading ? (
+                    <Skeleton className="w-full h-full" />
+                  ) : artProducts && artProducts.length > 0 ? (
+                    <img 
+                      src={artProducts[0].primary_image || ''} 
+                      alt={artProducts[0].title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="text-6xl">🎨</div>
+                  )}
+                </div>
+              </Card>
+              {/* 3D effect shadow */}
+              <div className="absolute -inset-4 bg-gradient-to-br from-vinyl-gold/20 to-vinyl-purple/20 blur-2xl -z-10 group-hover:blur-3xl transition-all" />
+            </div>
+
+            {/* Right: Features & CTA */}
+            <div className="flex flex-col justify-center space-y-6">
+              {/* Features list */}
+              <div className="space-y-4">
+                {features.map((feature, index) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div key={index} className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-vinyl-gold to-amber-500 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-lg font-semibold">{feature.text}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Price & USP */}
+              <div className="bg-card p-6 rounded-lg border-2 border-vinyl-gold/30">
+                <p className="text-sm text-muted-foreground mb-2">Vanaf</p>
+                <p className="text-4xl font-bold text-vinyl-gold mb-4">€29,95</p>
+                <div className="flex gap-4 text-sm text-muted-foreground">
+                  <span>✓ Gratis Verzending</span>
+                  <span>✓ 30 Dagen Retour</span>
+                </div>
+              </div>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  asChild 
+                  size="lg" 
+                  className="text-lg bg-gradient-to-r from-vinyl-gold to-amber-500 hover:shadow-lg hover:scale-105 transition-all"
+                >
+                  <Link to="/shop?category=art">
+                    Bekijk Collectie
+                  </Link>
+                </Button>
+                <Button 
+                  asChild 
+                  size="lg" 
+                  variant="outline"
+                  className="text-lg border-2 border-vinyl-gold text-vinyl-gold hover:bg-vinyl-gold/10"
+                >
+                  <Link to="/scanner">
+                    <Upload className="w-5 h-5 mr-2" />
+                    Upload je Album
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Popular prints showcase */}
+          {artProducts && artProducts.length > 0 && (
+            <div>
+              <h3 className="text-xl font-bold mb-6 text-center">Populaire Prints</h3>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+                {artProducts.map((product) => (
+                  <Link key={product.id} to={`/shop/${product.slug}`}>
+                    <Card className="aspect-square overflow-hidden hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-vinyl-gold">
+                      <img 
+                        src={product.primary_image || ''} 
+                        alt={product.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};

@@ -1,10 +1,11 @@
-import { InteractiveHero } from '@/components/home/InteractiveHero';
+import { SimpleHero } from '@/components/home/SimpleHero';
 import { QuickDiscoveryBar } from '@/components/home/QuickDiscoveryBar';
-import { LiveActivityFeed } from '@/components/home/LiveActivityFeed';
-import { FeaturedContentGrid } from '@/components/home/FeaturedContentGrid';
-import { TrendingAlbums } from '@/components/home/TrendingAlbums';
+import { MetalPrintSpotlight } from '@/components/home/MetalPrintSpotlight';
+import { ShopByCategorySection } from '@/components/shop/ShopByCategorySection';
 import { FeaturedProductsCarousel } from '@/components/shop/FeaturedProductsCarousel';
-import { NewsSection } from '@/components/NewsSection';
+import { NewsAndStoriesSection } from '@/components/home/NewsAndStoriesSection';
+import { AIFeaturesCompact } from '@/components/home/AIFeaturesCompact';
+import { CommunityStats } from '@/components/home/CommunityStats';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
 import { useSEO } from '@/hooks/useSEO';
 
@@ -16,96 +17,81 @@ const Home = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <InteractiveHero />
+      {/* Hero Section - Simple with 3 CTAs */}
+      <SimpleHero />
 
       {/* Quick Discovery Bar */}
       <QuickDiscoveryBar />
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-12 space-y-16">
-        {/* Live Activity & Stats */}
-        <section>
-          <LiveActivityFeed />
-        </section>
+      {/* Metal Print Spotlight - Prominent ART Section */}
+      <MetalPrintSpotlight />
 
-        {/* Featured Content Grid */}
-        <section>
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2">Uitgelicht</h2>
-            <p className="text-muted-foreground">
-              Het beste van verhalen, discussies en vondsten
+      {/* Shop Categories - Large Visual Cards */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">🛍️ Onze Shop - Browse op Categorie</h2>
+            <p className="text-xl text-muted-foreground">
+              Van vintage vinyl tot moderne art prints
             </p>
           </div>
-          <FeaturedContentGrid />
-        </section>
+          <ShopByCategorySection />
+        </div>
+      </section>
 
-        {/* Trending Albums */}
-        <section>
-          <TrendingAlbums />
-        </section>
-
-        {/* Shop Products */}
-        <section>
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2">Ontdek de Shop</h2>
-            <p className="text-muted-foreground">
-              Zeldzame vondsten en limited editions
+      {/* Featured Products */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">⭐ Uitgelichte Producten</h2>
+            <p className="text-xl text-muted-foreground">
+              Handpicked items uit onze collectie
             </p>
           </div>
           <FeaturedProductsCarousel />
-        </section>
+        </div>
+      </section>
 
-        {/* News & Updates */}
-        <section>
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2">Laatste Nieuws</h2>
-            <p className="text-muted-foreground">
-              Blijf op de hoogte van de muziekwereld
-            </p>
-          </div>
-          <NewsSection compact={true} />
-        </section>
+      {/* News & Stories Section with Tabs */}
+      <NewsAndStoriesSection />
 
-        {/* Final CTA */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple/20 via-vinyl-gold/20 to-accent/20 p-12 text-center">
-          <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-          <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-            <h2 className="text-4xl font-bold">Klaar om te Beginnen?</h2>
-            <p className="text-lg text-muted-foreground">
-              Sluit je aan bij duizenden verzamelaars en ontdek wat je collectie waard is
+      {/* AI Features - Compact */}
+      <AIFeaturesCompact />
+
+      {/* Community Stats */}
+      <CommunityStats />
+
+      {/* Final CTA */}
+      <section className="py-16 bg-gradient-to-br from-vinyl-purple/20 via-vinyl-gold/20 to-accent/20">
+        <div className="container mx-auto px-4">
+          <div className="text-center space-y-8 max-w-3xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-bold">Klaar om te Beginnen?</h2>
+            <p className="text-xl text-muted-foreground">
+              Sluit je aan bij duizenden muziekliefhebbers en ontdek wat je collectie waard is
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               <a
-                href="/auth"
-                className="inline-flex items-center justify-center rounded-lg bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                href="/shop"
+                className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-vinyl-gold to-amber-500 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"
               >
-                Start Gratis
+                🛍️ Browse Shop
               </a>
               <a
-                href="/shop"
-                className="inline-flex items-center justify-center rounded-lg border-2 border-vinyl-gold bg-transparent px-8 py-4 text-lg font-semibold text-vinyl-gold hover:bg-vinyl-gold/10 transition-all"
+                href="/music-news"
+                className="inline-flex items-center justify-center rounded-lg border-2 border-primary bg-transparent px-8 py-4 text-lg font-semibold text-primary hover:bg-primary/10 transition-all"
               >
-                Browse Shop
+                📰 Lees Nieuws
+              </a>
+              <a
+                href="/auth"
+                className="inline-flex items-center justify-center rounded-lg border-2 border-vinyl-purple bg-transparent px-8 py-4 text-lg font-semibold text-vinyl-purple hover:bg-vinyl-purple/10 transition-all"
+              >
+                📸 Scan Gratis
               </a>
             </div>
-            <div className="flex gap-8 justify-center text-sm text-muted-foreground pt-6">
-              <div>
-                <p className="text-2xl font-bold text-foreground">10.000+</p>
-                <p>Albums Gescand</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">1.000+</p>
-                <p>Verhalen</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">50+</p>
-                <p>Actieve Shops</p>
-              </div>
-            </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
       <ConditionalFooter />
     </div>

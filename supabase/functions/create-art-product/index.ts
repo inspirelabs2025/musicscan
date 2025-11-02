@@ -98,6 +98,38 @@ serve(async (req) => {
     }
 
     console.log('✅ Found release:', releaseData.title);
+    
+    // Determine master_id from all available sources
+    const masterIdCandidate = master_id || releaseData.original_master_id || releaseData.master_id;
+    
+    // If we have a master_id but haven't fetched metadata yet, fetch it now
+    if (masterIdCandidate && !masterMetadata) {
+      console.log('🎯 Fetching Master metadata for ID:', masterIdCandidate);
+      try {
+        const masterResponse = await fetch(`https://api.discogs.com/masters/${masterIdCandidate}`, {
+          headers: {
+            'Authorization': `Discogs token=${discogsToken}`,
+            'User-Agent': 'VinylValue/1.0'
+          }
+        });
+        
+        if (masterResponse.ok) {
+          masterMetadata = await masterResponse.json();
+          console.log('✅ Master metadata retrieved for naming:', {
+            artists: masterMetadata.artists?.map((a: any) => a.name).join(', '),
+            title: masterMetadata.title
+          });
+        } else {
+          console.log(`⚠️ Master metadata fetch returned ${masterResponse.status}, will use release data for naming`);
+        }
+      } catch (e) {
+        console.warn('⚠️ Failed to fetch master metadata, will use release data for naming:', (e as Error).message);
+      }
+    }
+    
+    if (!masterIdCandidate) {
+      console.log('ℹ️ No master_id available, will use release metadata for naming');
+    }
 
     // Step 2: Create or find release in database
     // Normalize fields for DB function types
@@ -120,7 +152,7 @@ serve(async (req) => {
       // Extract from master metadata
       artistValue = masterMetadata.artists?.map((a: any) => a.name).join(', ') || releaseData.artist || '';
       albumTitle = masterMetadata.title || '';
-      console.log('🎭 Using Master metadata for names:', { artist: artistValue, title: albumTitle });
+      console.log(`🎭 Using Master metadata for names (Master ID: ${masterIdCandidate}):`, { artist: artistValue, title: albumTitle });
     } else {
       // Fall back to release data
       artistValue = releaseData.artist || '';
@@ -134,7 +166,7 @@ serve(async (req) => {
             ? releaseData.title.split(' - ').slice(1).join(' - ').trim()
             : releaseData.title)
         : '';
-      console.log('📀 Using Release data for names:', { artist: artistValue, title: albumTitle });
+      console.log('📀 Fallback to Release data for names:', { artist: artistValue, title: albumTitle });
     }
 
     // Normalize genre, label, format to strings (not arrays)
@@ -169,7 +201,7 @@ serve(async (req) => {
         country: releaseData.country,
         style: styleValue,
         discogs_url: releaseData.discogs_url,
-        master_id: master_id ? parseInt(master_id) : releaseData.master_id
+        master_id: masterIdCandidate ? parseInt(masterIdCandidate) : null
       }
     });
 
@@ -179,9 +211,7 @@ serve(async (req) => {
     console.log('💾 Release saved with ID:', release_id);
 
     // Step 3: Get initial artwork URL (for product creation)
-    const providedMasterId = master_id ? parseInt(master_id) : null;
-    const masterId = providedMasterId || releaseData.original_master_id || releaseData.master_id;
-    
+    const masterId = masterIdCandidate;
     console.log('🖼️ Master ID for artwork:', masterId || 'none');
     
     const artworkUrl = releaseData.cover_image;

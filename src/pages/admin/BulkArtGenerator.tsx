@@ -39,20 +39,37 @@ export default function BulkArtGenerator() {
   const parseInput = (text: string): AlbumInput[] => {
     const price = parseFloat(defaultPrice) || 49.95;
     
-    return text
+    const parsed = text
       .split('\n')
       .filter(line => line.trim())
       .map(line => {
         let artist = '', title = '';
         const trimmedLine = line.trim();
         
-        // Support multiple formats: Artist - Album, Artist | Album, Artist, Album
+        // Support multiple formats with flexible spacing
+        // Try " - " first (most common)
         if (trimmedLine.includes(' - ')) {
-          [artist, title] = trimmedLine.split(' - ').map(s => s.trim());
-        } else if (trimmedLine.includes('|')) {
-          [artist, title] = trimmedLine.split('|').map(s => s.trim());
-        } else if (trimmedLine.includes(',')) {
-          [artist, title] = trimmedLine.split(',').map(s => s.trim());
+          const parts = trimmedLine.split(' - ');
+          artist = parts[0].trim();
+          title = parts.slice(1).join(' - ').trim(); // Handle multiple " - " in title
+        } 
+        // Try "-" without spaces
+        else if (trimmedLine.includes('-') && !trimmedLine.includes('–')) {
+          const parts = trimmedLine.split('-');
+          artist = parts[0].trim();
+          title = parts.slice(1).join('-').trim();
+        }
+        // Try "|"
+        else if (trimmedLine.includes('|')) {
+          const parts = trimmedLine.split('|');
+          artist = parts[0].trim();
+          title = parts.slice(1).join('|').trim();
+        } 
+        // Try "," (least common, only if no "-" found)
+        else if (trimmedLine.includes(',')) {
+          const parts = trimmedLine.split(',');
+          artist = parts[0].trim();
+          title = parts.slice(1).join(',').trim();
         }
         
         return {
@@ -61,28 +78,40 @@ export default function BulkArtGenerator() {
           price,
           originalLine: trimmedLine
         };
-      })
-      .filter(item => item.artist && item.title);
+      });
+    
+    return parsed.filter(item => item.artist && item.title);
   };
 
   const handleParseInput = () => {
+    const totalLines = inputText.split('\n').filter(line => line.trim()).length;
     const parsed = parseInput(inputText);
     
     if (parsed.length === 0) {
       toast({
         title: "❌ Geen albums gevonden",
-        description: "Controleer je input format (Artist - Album per regel)",
+        description: "Gebruik format: Artist - Album (één per regel). Ondersteunt ook: Artist-Album, Artist|Album, Artist,Album",
         variant: "destructive"
       });
       return;
     }
     
+    const failedCount = totalLines - parsed.length;
+    
     setAlbums(parsed);
     setResults([]);
-    toast({
-      title: "✅ Input geparsed",
-      description: `${parsed.length} albums gevonden en klaar voor verwerking`,
-    });
+    
+    if (failedCount > 0) {
+      toast({
+        title: "⚠️ Input geparsed met waarschuwing",
+        description: `${parsed.length} albums gevonden, ${failedCount} regels overgeslagen (controleer format)`,
+      });
+    } else {
+      toast({
+        title: "✅ Input geparsed",
+        description: `${parsed.length} albums gevonden en klaar voor verwerking`,
+      });
+    }
   };
 
   const processBatch = async () => {
@@ -287,7 +316,7 @@ export default function BulkArtGenerator() {
               📋 Plak je lijst hier (Artist - Album per regel)
             </Label>
             <p className="text-sm text-muted-foreground mb-2">
-              Ondersteunde formaten: "Artist - Album", "Artist | Album", "Artist, Album"
+              Ondersteunde formaten: "Artist - Album", "Artist-Album", "Artist | Album", "Artist, Album"
             </p>
             <Textarea
               id="input-text"

@@ -499,11 +499,12 @@ const BulkArtGenerator = () => {
     setIsProcessing(false);
     
     const successful = results.filter(r => r.status === 'success').length;
+    const existing = results.filter(r => r.status === 'exists').length;
     const failed = results.filter(r => r.status === 'error').length;
 
     toast({
       title: "🎉 Batch verwerking voltooid",
-      description: `${successful} succesvol, ${failed} gefaald`,
+      description: `${successful} nieuw aangemaakt, ${existing} bestonden al, ${failed} gefaald`,
     });
   };
 

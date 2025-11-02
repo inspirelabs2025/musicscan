@@ -24,7 +24,24 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Step 1: Search Discogs for the release
+    // Helper function for retry with exponential backoff
+    const retryWithBackoff = async (fn: () => Promise<any>, maxRetries = 3) => {
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          const result = await fn();
+          return result;
+        } catch (error) {
+          const isLastRetry = i === maxRetries - 1;
+          if (isLastRetry) throw error;
+          
+          const delayMs = Math.pow(2, i) * 1000; // 1s, 2s, 4s
+          console.log(`⏳ Retry ${i + 1}/${maxRetries} after ${delayMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    };
+
+    // Step 1: Search Discogs for the release with retry logic
     let releaseData: any;
     let masterMetadata: any = null;
     
@@ -50,24 +67,46 @@ serve(async (req) => {
         console.warn('⚠️ Failed to fetch master metadata:', (e as Error).message);
       }
       
-      // Search using master_id to get the main release
+      // Search using master_id to get the main release with retry
       console.log('📀 Searching via Master ID:', master_id);
-      const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
-        body: { direct_discogs_id: master_id.toString() }
-      });
-      if (error) throw new Error(`Discogs search failed: ${error.message}`);
-      const first = data?.results?.[0];
-      if (!first) throw new Error('No results found on Discogs');
-      releaseData = first;
+      try {
+        const result = await retryWithBackoff(async () => {
+          const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
+            body: { direct_discogs_id: master_id.toString() }
+          });
+          if (error) {
+            console.error('❌ Catalog search error:', JSON.stringify(error));
+            throw new Error(`Catalog search failed: ${JSON.stringify(error)}`);
+          }
+          if (!data?.results?.[0]) {
+            throw new Error('No results found');
+          }
+          return data.results[0];
+        });
+        releaseData = result;
+      } catch (e) {
+        throw new Error(`Failed to search Discogs after retries: ${(e as Error).message}`);
+      }
     } else if (discogs_id) {
       console.log('📀 Searching by Discogs ID:', discogs_id);
-      const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
-        body: { direct_discogs_id: discogs_id.toString() }
-      });
-      if (error) throw new Error(`Discogs search failed: ${error.message}`);
-      const first = data?.results?.[0];
-      if (!first) throw new Error('No results found on Discogs');
-      releaseData = first;
+      try {
+        const result = await retryWithBackoff(async () => {
+          const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
+            body: { direct_discogs_id: discogs_id.toString() }
+          });
+          if (error) {
+            console.error('❌ Catalog search error:', JSON.stringify(error));
+            throw new Error(`Catalog search failed: ${JSON.stringify(error)}`);
+          }
+          if (!data?.results?.[0]) {
+            throw new Error('No results found');
+          }
+          return data.results[0];
+        });
+        releaseData = result;
+      } catch (e) {
+        throw new Error(`Failed to search Discogs after retries: ${(e as Error).message}`);
+      }
       
       // Log what we received from the search
       console.log('🔍 Received from search:', {
@@ -77,22 +116,31 @@ serve(async (req) => {
       });
     } else if (catalog_number || (artist && title)) {
       console.log('🔍 Searching by catalog/artist/title');
-      const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
-        body: { catalog_number, artist, title }
-      });
-      if (error) throw new Error(`Discogs search failed: ${error.message}`);
-      
-      if (!data?.results || data.results.length === 0) {
-        console.log('❌ No results found on Discogs');
+      try {
+        const result = await retryWithBackoff(async () => {
+          const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
+            body: { catalog_number, artist, title }
+          });
+          if (error) {
+            console.error('❌ Catalog search error:', JSON.stringify(error));
+            throw new Error(`Catalog search failed: ${JSON.stringify(error)}`);
+          }
+          if (!data?.results || data.results.length === 0) {
+            throw new Error('No results found on Discogs');
+          }
+          return data.results[0];
+        });
+        releaseData = result;
+      } catch (e) {
+        console.log('❌ Failed after retries:', (e as Error).message);
         return new Response(
           JSON.stringify({ 
-            error: 'No results found on Discogs',
-            details: 'Please check the artist and title spelling'
+            error: 'No results found on Discogs after retries',
+            details: 'Please check the artist and title spelling, or try again in a moment'
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
         );
       }
-      releaseData = data.results[0];
     } else {
       throw new Error('Please provide either discogs_id or catalog_number/artist/title');
     }

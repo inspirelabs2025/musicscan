@@ -68,3 +68,15 @@ verify_jwt = false
 
 [functions.refetch-product-artwork]
 verify_jwt = false
+
+[functions.plaat-verhaal-generator]
+verify_jwt = false
+
+[functions.discogs-blog-generator]
+verify_jwt = false
+
+[functions.find-or-create-release]
+verify_jwt = false
+
+[functions.optimized-catalog-search]
+verify_jwt = false

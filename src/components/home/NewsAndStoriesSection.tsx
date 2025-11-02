@@ -230,7 +230,7 @@ export const NewsAndStoriesSection = () => {
           const description = blog.yaml_frontmatter?.description || blog.yaml_frontmatter?.excerpt || '';
           
           return (
-            <Link key={blog.id} to={`/news/${blog.slug}`}>
+            <Link key={blog.id} to={`/plaat-verhaal/${blog.slug}`}>
               <Card className="overflow-hidden hover:shadow-xl transition-all hover:scale-105 group h-full border-2 hover:border-accent">
                 {/* Cover Image */}
                 <div className="aspect-video overflow-hidden bg-gradient-to-br from-accent/20 to-primary/20">

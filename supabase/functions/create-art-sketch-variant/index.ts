@@ -126,34 +126,77 @@ serve(async (req) => {
     let originalArtworkUrl = albumInfo.cover_image || albumInfo.thumb;
     
     // If no artwork in albumInfo, fetch directly from Discogs
-    if (!originalArtworkUrl) {
+    if (!originalArtworkUrl && albumInfo.discogs_id) {
       console.log('📀 No artwork in search results, fetching from Discogs API');
       
       const discogsToken = Deno.env.get('DISCOGS_TOKEN');
       if (!discogsToken) {
-        throw new Error('DISCOGS_TOKEN not configured');
+        console.warn('⚠️ DISCOGS_TOKEN not configured, skipping Discogs fallback');
+      } else {
+        const discogsResponse = await fetch(
+          `https://api.discogs.com/releases/${albumInfo.discogs_id}`,
+          {
+            headers: {
+              'User-Agent': 'VinylVault/1.0',
+              'Authorization': `Discogs token=${discogsToken}`
+            }
+          }
+        );
+  
+        if (discogsResponse.ok) {
+          const discogsData = await discogsResponse.json();
+          originalArtworkUrl = discogsData.images?.[0]?.uri || discogsData.images?.[0]?.resource_url || discogsData.thumb || null;
+        } else {
+          console.warn('⚠️ Discogs release fetch failed:', discogsResponse.status);
+        }
       }
+    }
 
-      const discogsResponse = await fetch(
-        `https://api.discogs.com/releases/${albumInfo.discogs_id}`,
-        {
-          headers: {
-            'User-Agent': 'VinylVault/1.0',
-            'Authorization': `Discogs token=${discogsToken}`
+    // Fallback 2: iTunes Search API (high-res)
+    if (!originalArtworkUrl && albumInfo.artist && albumInfo.title) {
+      try {
+        console.log('🍎 Trying iTunes fallback for:', albumInfo.artist, '-', albumInfo.title);
+        const itunesQuery = encodeURIComponent(`${albumInfo.artist} ${albumInfo.title}`);
+        const itunesUrl = `https://itunes.apple.com/search?term=${itunesQuery}&entity=album&limit=5`;
+        const itunesResponse = await fetch(itunesUrl);
+        if (itunesResponse.ok) {
+          const itunesData = await itunesResponse.json();
+          const normalizedArtist = (albumInfo.artist || '').toLowerCase();
+          const best = itunesData.results?.find((r: any) => r.artistName?.toLowerCase().includes(normalizedArtist)) || itunesData.results?.[0];
+          if (best?.artworkUrl100) {
+            originalArtworkUrl = best.artworkUrl100
+              .replace('100x100bb', '1200x1200bb')
+              .replace('100x100', '1200x1200');
           }
         }
-      );
-
-      if (!discogsResponse.ok) {
-        throw new Error('Kon album details niet ophalen van Discogs');
+      } catch (e) {
+        console.warn('⚠️ iTunes fallback failed:', e);
       }
+    }
 
-      const discogsData = await discogsResponse.json();
-      originalArtworkUrl = discogsData.images?.[0]?.uri || discogsData.thumb;
+    // Fallback 3: MusicBrainz + Cover Art Archive
+    if (!originalArtworkUrl && albumInfo.artist && albumInfo.title) {
+      try {
+        console.log('🎼 Trying MusicBrainz/Cover Art Archive fallback');
+        const query = encodeURIComponent(`artist:"${albumInfo.artist}" AND release:"${albumInfo.title}"`);
+        const mbUrl = `https://musicbrainz.org/ws/2/release?query=${query}&fmt=json&limit=3`;
+        const mbResp = await fetch(mbUrl, { headers: { 'User-Agent': 'VinylVault/1.0 (contact@example.com)' } });
+        if (mbResp.ok) {
+          const mbData = await mbResp.json();
+          const release = mbData.releases?.[0];
+          if (release?.id) {
+            const caaUrl = `https://coverartarchive.org/release/${release.id}/front`;
+            const head = await fetch(caaUrl, { method: 'HEAD' });
+            if (head.ok) originalArtworkUrl = caaUrl;
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ MusicBrainz fallback failed:', e);
+      }
     }
 
     if (!originalArtworkUrl) {
-      throw new Error('Geen albumcover gevonden voor dit album');
+      throw new Error('Geen albumcover gevonden');
     }
 
     console.log('✅ Original artwork URL:', originalArtworkUrl);

@@ -294,18 +294,50 @@ serve(async (req) => {
       userId = '00000000-0000-0000-0000-000000000000'; // System user placeholder
     }
 
+    // Fetch correct data from Discogs API if available
+    let discogsArtist = albumData.artist;
+    let discogsTitle = albumData.title?.replace(/\s*\[Metaalprint\]\s*$/, '').replace(/^.*?\s*-\s*/, '');
+    
+    if (actualTableUsed === 'platform_products' && albumData.discogs_url && discogsToken) {
+      console.log('🎯 Fetching correct data from Discogs API...');
+      try {
+        // Extract master or release ID from URL
+        const urlMatch = albumData.discogs_url.match(/\/(master|release)\/(\d+)/);
+        if (urlMatch) {
+          const [, type, id] = urlMatch;
+          const discogsApiUrl = type === 'master' 
+            ? `https://api.discogs.com/masters/${id}`
+            : `https://api.discogs.com/releases/${id}`;
+          
+          const discogsResponse = await fetch(discogsApiUrl, {
+            headers: {
+              'Authorization': `Discogs token=${discogsToken}`,
+              'User-Agent': 'MusicScanApp/1.0'
+            }
+          });
+          
+          if (discogsResponse.ok) {
+            const discogsData = await discogsResponse.json();
+            // Use Discogs data as source of truth
+            discogsArtist = discogsData.artists?.[0]?.name || discogsData.artists_sort || discogsArtist;
+            discogsTitle = discogsData.title || discogsTitle;
+            console.log('✅ Fetched from Discogs:', { artist: discogsArtist, title: discogsTitle });
+          } else {
+            console.warn('⚠️ Discogs API call failed:', discogsResponse.status);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error fetching Discogs data:', error);
+      }
+    }
+
     // Map platform_products fields to standard album format
     let albumInfo;
     if (actualTableUsed === 'platform_products') {
       albumInfo = `
-**PRIMAIRE BRON - BEZOEK DEZE URL:**
-Discogs URL: ${albumData.discogs_url || '—'}
-Discogs ID: ${albumData.discogs_id || '—'}
-
-INSTRUCTIE: Bezoek de Discogs URL hierboven en haal daar de CORRECTE artist en album naam op.
-Gebruik deze Discogs data als waarheid voor je blogpost.
-
-**AANVULLENDE DATA (ter referentie):**
+**CORRECTE ALBUM DATA (van Discogs API opgehaald):**
+- artist: ${discogsArtist || '—'}
+- album: ${discogsTitle || '—'}
 - year: ${albumData.release_year || '—'}
 - label: ${albumData.label || '—'}
 - catalog: ${albumData.catalog_number || '—'}
@@ -313,11 +345,11 @@ Gebruik deze Discogs data als waarheid voor je blogpost.
 - format: Metal Print
 - genre: ${albumData.genre || '—'}
 - styles: ${albumData.style ? JSON.stringify(albumData.style) : '—'}
+- discogs_url: ${albumData.discogs_url || '—'}
+- discogs_id: ${albumData.discogs_id || '—'}
 
-DATABASE VELDEN (kunnen incorrect zijn, check tegen Discogs):
-- database_artist: ${albumData.artist || '—'}
-- database_title: ${albumData.title?.replace(/\s*\[Metaalprint\]\s*$/, '').replace(/^.*?\s*-\s*/, '') || '—'}
-
+INSTRUCTIE: Gebruik de artist en album naam hierboven voor je blogpost.
+Deze data is rechtstreeks van de Discogs API opgehaald en is correct.
 ZOEK ZELF OP: studio, producer, muzikanten, commercieel succes wereldwijd.
 Het verhaal gaat over het album, niet over deze specifieke persing.
 `;

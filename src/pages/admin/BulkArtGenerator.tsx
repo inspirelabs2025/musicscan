@@ -76,15 +76,23 @@ const BulkArtGenerator = () => {
     return matches / longer.length;
   };
 
-  // Extract Discogs ID from various formats
-  const extractDiscogsId = (text: string): { id: number; type: 'master' | 'release' } | null => {
+  // Extract Discogs ID from various formats WITH URL validation
+  const extractDiscogsId = (text: string): { id: number; type: 'master' | 'release'; url?: string } | null => {
     // Check /master/ URL
-    const masterUrlMatch = text.match(/discogs\.com\/master\/(\d+)/);
-    if (masterUrlMatch) return { id: parseInt(masterUrlMatch[1]), type: 'master' };
+    const masterUrlMatch = text.match(/(https?:\/\/)?(?:www\.)?discogs\.com\/master\/(\d+)/i);
+    if (masterUrlMatch) return { 
+      id: parseInt(masterUrlMatch[2]), 
+      type: 'master',
+      url: `https://www.discogs.com/master/${masterUrlMatch[2]}`
+    };
     
     // Check /release/ URL
-    const releaseUrlMatch = text.match(/discogs\.com\/release\/(\d+)/);
-    if (releaseUrlMatch) return { id: parseInt(releaseUrlMatch[1]), type: 'release' };
+    const releaseUrlMatch = text.match(/(https?:\/\/)?(?:www\.)?discogs\.com\/release\/(\d+)/i);
+    if (releaseUrlMatch) return { 
+      id: parseInt(releaseUrlMatch[2]), 
+      type: 'release',
+      url: `https://www.discogs.com/release/${releaseUrlMatch[2]}`
+    };
     
     // Plain number: use toggle state
     const plainNumber = text.match(/\b(\d{4,})\b/);
@@ -156,6 +164,14 @@ const BulkArtGenerator = () => {
 
             if (data?.results?.[0]) {
               const result = data.results[0];
+              
+              // ✅ Log validation for debugging
+              console.log(`✅ Validated ${idInfo.type} ${idInfo.id}:`, {
+                artist: result.artist,
+                title: result.title,
+                url: idInfo.url || `https://www.discogs.com/${idInfo.type}/${idInfo.id}`
+              });
+              
               parsed.push({
                 artist: result.artist,
                 title: result.title,
@@ -795,11 +811,12 @@ Bryan Ferry - In Your Mind, 1034729
               <CardTitle className="text-base">💡 Tips</CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-2">
-              <p>• <strong>Master IDs</strong> geven de beste resultaten (bijv. <code className="text-xs">/master/11452</code>)</p>
+              <p>• ⚠️ <strong>Plak volledige Discogs URLs</strong> voor beste resultaten</p>
+              <p>• <strong>Release URLs</strong>: <code className="text-xs">https://www.discogs.com/release/1225959-...</code></p>
+              <p>• <strong>Master URLs</strong>: <code className="text-xs">https://www.discogs.com/master/11452-...</code></p>
               <p>• Gebruik de <strong>Verifieer Lijst</strong> knop voor een dry-run preview</p>
               <p>• Groene rijen = perfect match, gele = gedeeltelijke match, rode = mismatch</p>
-              <p>• Items met mismatch worden automatisch overgeslagen tijdens processing</p>
-              <p>• Batch verwerking is gelimiteerd tot 5 concurrent requests</p>
+              <p>• ⚠️ Check console logs voor ID validatie voordat je verwerkt!</p>
             </CardContent>
           </Card>
         </CardContent>

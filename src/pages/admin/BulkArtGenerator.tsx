@@ -16,6 +16,7 @@ interface AlbumInput {
   title: string;
   price: number;
   discogsId?: number;
+  idType?: 'master' | 'release';
   originalLine: string;
 }
 
@@ -38,21 +39,33 @@ export default function BulkArtGenerator() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
-  // Helper: Extract Discogs ID from various formats (plain number, URL, text with ID)
-  const extractDiscogsId = (str: string): number | null => {
+  // Helper: Extract Discogs ID and determine type (master vs release)
+  const extractDiscogsId = (str: string): { id: number; type: 'master' | 'release' } | null => {
     if (!str) return null;
     const s = String(str).trim();
 
-    // 1) Plain numeric ID (at least 3 digits)
-    if (/^\d{3,}$/.test(s)) return parseInt(s, 10);
+    // 1) Master URL
+    const masterMatch = s.match(/discogs\.com\/master\/(\d+)/i);
+    if (masterMatch?.[1]) {
+      return { id: parseInt(masterMatch[1], 10), type: 'master' };
+    }
 
-    // 2) Discogs URL (release or master)
-    const urlMatch = s.match(/discogs\.com\/(?:release|master)\/(\d+)/i);
-    if (urlMatch?.[1]) return parseInt(urlMatch[1], 10);
+    // 2) Release URL
+    const releaseMatch = s.match(/discogs\.com\/release\/(\d+)/i);
+    if (releaseMatch?.[1]) {
+      return { id: parseInt(releaseMatch[1], 10), type: 'release' };
+    }
 
-    // 3) General "ID somewhere in text" (minimum 3 digits)
+    // 3) Plain numeric ID (default to release)
+    if (/^\d{3,}$/.test(s)) {
+      return { id: parseInt(s, 10), type: 'release' };
+    }
+
+    // 4) General "ID somewhere in text" (default to release)
     const anyNum = s.match(/\b\d{3,}\b/);
-    if (anyNum?.[0]) return parseInt(anyNum[0], 10);
+    if (anyNum?.[0]) {
+      return { id: parseInt(anyNum[0], 10), type: 'release' };
+    }
 
     return null;
   };
@@ -94,19 +107,20 @@ export default function BulkArtGenerator() {
       const trimmedLine = line.trim();
       
       // Check if this is a URL-only or number-only line
-      const extractedId = extractDiscogsId(trimmedLine);
+      const extractedIdInfo = extractDiscogsId(trimmedLine);
       const isUrlOnlyLine = trimmedLine.includes('discogs.com') && !trimmedLine.includes(' - ') && !trimmedLine.includes(' | ');
       const isNumberOnlyLine = /^\d{3,}$/.test(trimmedLine);
       
       // If URL-only or number-only, attach to last album if it has no ID
-      if ((isUrlOnlyLine || isNumberOnlyLine) && extractedId && lastAlbum && !lastAlbum.discogsId) {
-        console.log(`📎 Attaching ID ${extractedId} to previous album:`, lastAlbum.artist, '-', lastAlbum.title);
-        lastAlbum.discogsId = extractedId;
+      if ((isUrlOnlyLine || isNumberOnlyLine) && extractedIdInfo && lastAlbum && !lastAlbum.discogsId) {
+        console.log(`📎 Attaching ${extractedIdInfo.type} ID ${extractedIdInfo.id} to previous album:`, lastAlbum.artist, '-', lastAlbum.title);
+        lastAlbum.discogsId = extractedIdInfo.id;
+        lastAlbum.idType = extractedIdInfo.type;
         continue; // Skip this line, it's been attached
       }
       
       // Otherwise, parse as normal album
-      let artist = '', title = '', discogsId: number | undefined;
+      let artist = '', title = '', discogsId: number | undefined, idType: 'master' | 'release' | undefined;
       
       // Now all delimiters are normalized, prioritize by reliability
       if (trimmedLine.includes(' - ')) {
@@ -116,12 +130,13 @@ export default function BulkArtGenerator() {
         
         // Try to extract Discogs ID from parts[2] and beyond
         const tail = parts.slice(2).join(' ').trim();
-        let foundId = extractDiscogsId(parts[2] || '');
-        if (!foundId && tail) foundId = extractDiscogsId(tail);
-        if (!foundId) foundId = extractDiscogsId(trimmedLine);
+        let foundIdInfo = extractDiscogsId(parts[2] || '');
+        if (!foundIdInfo && tail) foundIdInfo = extractDiscogsId(tail);
+        if (!foundIdInfo) foundIdInfo = extractDiscogsId(trimmedLine);
         
-        if (foundId) {
-          discogsId = foundId;
+        if (foundIdInfo) {
+          discogsId = foundIdInfo.id;
+          idType = foundIdInfo.type;
         } else if (parts.length > 2) {
           // If 3rd part exists but isn't a valid ID, include it in title
           title = parts.slice(1).join(' - ').trim();
@@ -134,12 +149,13 @@ export default function BulkArtGenerator() {
         
         // Try to extract Discogs ID
         const tail = parts.slice(2).join(' ').trim();
-        let foundId = extractDiscogsId(parts[2] || '');
-        if (!foundId && tail) foundId = extractDiscogsId(tail);
-        if (!foundId) foundId = extractDiscogsId(trimmedLine);
+        let foundIdInfo = extractDiscogsId(parts[2] || '');
+        if (!foundIdInfo && tail) foundIdInfo = extractDiscogsId(tail);
+        if (!foundIdInfo) foundIdInfo = extractDiscogsId(trimmedLine);
         
-        if (foundId) {
-          discogsId = foundId;
+        if (foundIdInfo) {
+          discogsId = foundIdInfo.id;
+          idType = foundIdInfo.type;
         } else if (parts.length > 2) {
           title = parts.slice(1).join(' | ').trim();
         }
@@ -151,12 +167,13 @@ export default function BulkArtGenerator() {
         
         // Try to extract Discogs ID
         const tail = parts.slice(2).join(' ').trim();
-        let foundId = extractDiscogsId(parts[2] || '');
-        if (!foundId && tail) foundId = extractDiscogsId(tail);
-        if (!foundId) foundId = extractDiscogsId(trimmedLine);
+        let foundIdInfo = extractDiscogsId(parts[2] || '');
+        if (!foundIdInfo && tail) foundIdInfo = extractDiscogsId(tail);
+        if (!foundIdInfo) foundIdInfo = extractDiscogsId(trimmedLine);
         
-        if (foundId) {
-          discogsId = foundId;
+        if (foundIdInfo) {
+          discogsId = foundIdInfo.id;
+          idType = foundIdInfo.type;
         } else if (parts.length > 2) {
           title = parts.slice(1).join(', ').trim();
         }
@@ -169,8 +186,11 @@ export default function BulkArtGenerator() {
           title = match[2].trim();
         }
         // Still try to find an ID anywhere in the line
-        const foundId = extractDiscogsId(trimmedLine);
-        if (foundId) discogsId = foundId;
+        const foundIdInfo = extractDiscogsId(trimmedLine);
+        if (foundIdInfo) {
+          discogsId = foundIdInfo.id;
+          idType = foundIdInfo.type;
+        }
       }
       
       if (artist && title) {
@@ -179,6 +199,7 @@ export default function BulkArtGenerator() {
           title,
           price,
           discogsId,
+          idType,
           originalLine: trimmedLine
         };
         parsed.push(album);
@@ -284,13 +305,18 @@ export default function BulkArtGenerator() {
             });
             
             // Call create-art-product (handles search + creation)
+            // Send ONLY master_id OR discogs_id based on detected type
             const { data, error } = await supabase.functions.invoke('create-art-product', {
               body: {
                 artist: album.artist,
                 title: album.title,
                 price: album.price,
-                ...(album.discogsId && { discogs_id: album.discogsId }),
-                ...(album.discogsId && { master_id: album.discogsId }) // Behandel numerieke/URL input als Master ID
+                ...(album.discogsId && album.idType === 'master' 
+                  ? { master_id: album.discogsId }
+                  : album.discogsId 
+                    ? { discogs_id: album.discogsId }
+                    : {}
+                )
               }
             });
             
@@ -373,11 +399,12 @@ export default function BulkArtGenerator() {
 
   const downloadResults = () => {
     const csv = [
-      ['Artist', 'Album', 'Input Discogs ID', 'Status', 'Result Discogs ID', 'Master ID', 'Product ID', 'Error'].join(','),
+      ['Artist', 'Album', 'Input Discogs ID', 'ID Type', 'Status', 'Result Discogs ID', 'Master ID', 'Product ID', 'Error'].join(','),
       ...results.map(r => [
         r.input.artist,
         r.input.title,
         r.input.discogsId || '',
+        r.input.idType || 'release',
         r.status,
         r.discogsId || '',
         (r as any).masterId || '',

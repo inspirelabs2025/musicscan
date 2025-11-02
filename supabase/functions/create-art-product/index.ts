@@ -15,6 +15,8 @@ serve(async (req) => {
     const { discogs_id, catalog_number, artist, title, price = 49.95, master_id } = await req.json();
     
     console.log('🎨 Starting ART product creation:', { discogs_id, catalog_number, artist, title, master_id });
+    
+    const discogsToken = Deno.env.get('DISCOGS_TOKEN');
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -24,8 +26,40 @@ serve(async (req) => {
 
     // Step 1: Search Discogs for the release
     let releaseData: any;
+    let masterMetadata: any = null;
     
-    if (discogs_id) {
+    // If master_id is provided, fetch master data first
+    if (master_id) {
+      console.log('🎭 Fetching Master metadata:', master_id);
+      try {
+        const masterResponse = await fetch(`https://api.discogs.com/masters/${master_id}`, {
+          headers: {
+            'Authorization': `Discogs token=${discogsToken}`,
+            'User-Agent': 'VinylValue/1.0'
+          }
+        });
+        
+        if (masterResponse.ok) {
+          masterMetadata = await masterResponse.json();
+          console.log('✅ Master metadata retrieved:', {
+            artists: masterMetadata.artists?.map((a: any) => a.name).join(', '),
+            title: masterMetadata.title
+          });
+        }
+      } catch (e) {
+        console.warn('⚠️ Failed to fetch master metadata:', (e as Error).message);
+      }
+      
+      // Search using master_id to get the main release
+      console.log('📀 Searching via Master ID:', master_id);
+      const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
+        body: { direct_discogs_id: master_id.toString() }
+      });
+      if (error) throw new Error(`Discogs search failed: ${error.message}`);
+      const first = data?.results?.[0];
+      if (!first) throw new Error('No results found on Discogs');
+      releaseData = first;
+    } else if (discogs_id) {
       console.log('📀 Searching by Discogs ID:', discogs_id);
       const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
         body: { direct_discogs_id: discogs_id.toString() }
@@ -78,9 +112,29 @@ serve(async (req) => {
           ? releaseData.style.split(',').map((s: string) => s.trim()).filter(Boolean)
           : null);
 
-    let artistValue: string = releaseData.artist || '';
-    if (!artistValue && typeof releaseData.title === 'string' && releaseData.title.includes(' - ')) {
-      artistValue = releaseData.title.split(' - ')[0].trim();
+    // Use master metadata for names if available, otherwise fall back to release data
+    let artistValue: string;
+    let albumTitle: string;
+    
+    if (masterMetadata) {
+      // Extract from master metadata
+      artistValue = masterMetadata.artists?.map((a: any) => a.name).join(', ') || releaseData.artist || '';
+      albumTitle = masterMetadata.title || '';
+      console.log('🎭 Using Master metadata for names:', { artist: artistValue, title: albumTitle });
+    } else {
+      // Fall back to release data
+      artistValue = releaseData.artist || '';
+      if (!artistValue && typeof releaseData.title === 'string' && releaseData.title.includes(' - ')) {
+        artistValue = releaseData.title.split(' - ')[0].trim();
+      }
+      
+      // Extract clean album title
+      albumTitle = typeof releaseData.title === 'string'
+        ? (releaseData.title.includes(' - ')
+            ? releaseData.title.split(' - ').slice(1).join(' - ').trim()
+            : releaseData.title)
+        : '';
+      console.log('📀 Using Release data for names:', { artist: artistValue, title: albumTitle });
     }
 
     // Normalize genre, label, format to strings (not arrays)
@@ -115,7 +169,7 @@ serve(async (req) => {
         country: releaseData.country,
         style: styleValue,
         discogs_url: releaseData.discogs_url,
-        master_id: releaseData.master_id
+        master_id: master_id ? parseInt(master_id) : releaseData.master_id
       }
     });
 
@@ -132,13 +186,6 @@ serve(async (req) => {
     
     const artworkUrl = releaseData.cover_image;
     console.log('🖼️ Initial artwork URL:', artworkUrl);
-
-    // Extract clean album title (before using it in Step 4)
-    const albumTitle = typeof releaseData.title === 'string'
-      ? (releaseData.title.includes(' - ')
-          ? releaseData.title.split(' - ').slice(1).join(' - ').trim()
-          : releaseData.title)
-      : '';
 
     // Step 4: Generate rich description with Perplexity
     console.log('🤖 Generating description with Perplexity...');

@@ -64,13 +64,23 @@ export const usePlaatVerhaalGenerator = () => {
       }
 
       return result.blog;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating blog:', error);
-      toast({
-        title: "Fout bij blog generatie",
-        description: "Er is een fout opgetreden bij het genereren van de blog",
-        variant: "destructive"
-      });
+      
+      // Handle incomplete metadata error (422)
+      if (error.status === 422 || error.message?.includes('INCOMPLETE_METADATA')) {
+        toast({
+          title: "⚠️ Onvolledige gegevens",
+          description: "Artiest of album onbekend. Koppel eerst een juiste Discogs URL of vul de metadata aan.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Fout bij blog generatie",
+          description: error.message || "Er is een fout opgetreden bij het genereren van de blog",
+          variant: "destructive"
+        });
+      }
       return null;
     } finally {
       setIsGenerating(false);

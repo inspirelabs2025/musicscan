@@ -13,6 +13,15 @@ const discogsToken = Deno.env.get('DISCOGS_TOKEN');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
+// Helper function to validate meaningful names
+function isMeaningfulName(v?: string): boolean {
+  if (!v) return false;
+  const s = String(v).trim().toLowerCase();
+  if (!s) return false;
+  const bad = ['unknown', 'unknown artist', 'unknown album', 'onbekend', 'onbekende', 'untitled', '—', '-'];
+  return !bad.includes(s);
+}
+
 const PLAAT_VERHAAL_PROMPT = `Je bent een muziekjournalist die "Plaat & Verhaal" blogposts schrijft in het Nederlands.
 
 Schrijf een volledige blogpost in **Markdown** met **YAML front matter** + body volgens de exacte structuur hieronder.
@@ -331,6 +340,33 @@ serve(async (req) => {
       }
     }
 
+    // Determine effective artist/title based on table and available data
+    const effectiveArtist = actualTableUsed === 'platform_products' ? discogsArtist : albumData.artist;
+    const effectiveTitle = actualTableUsed === 'platform_products' ? discogsTitle : albumData.title;
+    const effectiveYear = albumData.year || albumData.release_year;
+
+    // Guard: Check if we have meaningful names before proceeding
+    if (!isMeaningfulName(effectiveArtist) || !isMeaningfulName(effectiveTitle)) {
+      console.warn('⚠️ Skipping blog generation: incomplete metadata', { 
+        effectiveArtist, 
+        effectiveTitle, 
+        albumId, 
+        albumType, 
+        table: actualTableUsed 
+      });
+      
+      return new Response(JSON.stringify({
+        error: 'INCOMPLETE_METADATA',
+        message: 'Artiest of album is onbekend; bloggeneratie overgeslagen',
+        details: { albumId, albumType, artist: effectiveArtist, title: effectiveTitle }
+      }), { 
+        status: 422, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    console.log('✅ Validated metadata:', { effectiveArtist, effectiveTitle, effectiveYear });
+
     // Map platform_products fields to standard album format
     let albumInfo;
     if (actualTableUsed === 'platform_products') {
@@ -554,8 +590,10 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
     // Gebruik de opgeschoonde body als markdown_content
     const markdownBody = content.trim();
 
-    // Generate slug
-    const slug = `${albumData.artist?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${albumData.title?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${albumData.year || 'unknown'}`.replace(/--+/g, '-');
+    // Generate slug using effective artist/title (from Discogs for platform_products)
+    const slug = `${effectiveArtist?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${effectiveTitle?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${effectiveYear || 'unknown'}`.replace(/--+/g, '-');
+    
+    console.log('🔗 Generated slug:', slug, { effectiveArtist, effectiveTitle, effectiveYear });
 
     // Save to database
     const { data: blogPost, error: insertError } = await supabase

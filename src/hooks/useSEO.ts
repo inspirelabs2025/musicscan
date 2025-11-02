@@ -66,6 +66,11 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     updateMetaTag('twitter:description', finalSEO.description!);
     updateMetaTag('twitter:image', finalSEO.image || DEFAULT_SEO.image!);
     updateMetaTag('twitter:site', '@musicscan_app');
+    updateMetaTag('twitter:creator', '@musicscan_app');
+    
+    // Additional SEO meta tags
+    updateMetaTag('author', 'MusicScan');
+    updateMetaTag('application-name', 'MusicScan');
     
     // Canonical URL
     let canonicalLink = document.querySelector('link[rel="canonical"]');

@@ -77,7 +77,7 @@ export const PlaatVerhaal: React.FC = () => {
     keywords: seoKeywords,
     image: blog?.album_cover_url || frontmatter.og_image || '/placeholder.svg',
     type: 'article',
-    canonicalUrl: `https://www.musicscan.app/plaat-verhaal/${slug}`
+    canonicalUrl: blog ? `https://www.musicscan.app/plaat-verhaal/${blog.slug}` : `https://www.musicscan.app/plaat-verhaal/${slug}`
   });
 
   useEffect(() => {

@@ -75,6 +75,12 @@ serve(async (req) => {
             .from('platform_products')
             .update(payload)
             .eq('id', p.id)
+            .select('id, media_type, categories')
+            .single()
+            .then(({ data, error }) => {
+              if (error) throw error;
+              return data;
+            })
         );
       }
     }
@@ -92,10 +98,14 @@ serve(async (req) => {
     }
 
     // Verify final state
-    const { count: finalArtCount } = await supabase
+    const { count: artCount } = await supabase
       .from('platform_products')
       .select('id', { count: 'exact', head: true })
-      .eq('media_type', 'art')
+      .eq('media_type', 'art');
+
+    const { count: categoryCount } = await supabase
+      .from('platform_products')
+      .select('id', { count: 'exact', head: true })
       .contains('categories', ['metaal album cover']);
 
     return new Response(
@@ -103,8 +113,9 @@ serve(async (req) => {
         success: true,
         updated_count: successful,
         failed_count: failed,
-        final_art_count: finalArtCount,
-        message: `Successfully updated ${successful} metal print products to 'art' with 'metaal album cover' category`
+        final_art_count: artCount,
+        metaal_category_count: categoryCount,
+        message: `Updated ${successful} products. Art=${artCount}, with 'metaal album cover'=${categoryCount}`
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

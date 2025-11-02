@@ -87,6 +87,7 @@ const getReleaseMetadata = async (discogsId: string, authHeaders: any) => {
       // Add a flag to indicate this was converted from Master
       releaseData._converted_from_master = discogsId;
       releaseData._actual_release_id = mainReleaseId;
+      releaseData.master_id = parseInt(discogsId);
       
       return releaseData;
     } catch (masterError) {
@@ -236,6 +237,7 @@ Deno.serve(async (req) => {
       
       const result = {
         discogs_id: actualReleaseId,
+        master_id: releaseData.master_id || null,
         original_master_id: wasConverted ? direct_discogs_id : null,
         discogs_url: `https://www.discogs.com/release/${actualReleaseId}`,
         sell_url: `https://www.discogs.com/sell/release/${actualReleaseId}`,

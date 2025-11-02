@@ -18,19 +18,45 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { discogs_url, artist, title, media_type, item_id, item_type } = await req.json();
+    const { discogs_url, master_id, artist, title, media_type, item_id, item_type } = await req.json();
 
     console.log('🎨 Starting artwork fetch for:', { artist, title, media_type, discogs_url });
 
     let artworkUrl = null;
     let artworkSource = null;
 
-    // For products with discogs_url, try Discogs first (most reliable for merchandise)
+    // Strategy 1: Try Master ID first (best quality, official artwork)
+    if (master_id) {
+      try {
+        console.log('🎨 Trying Master ID for artwork:', master_id);
+        const masterUrl = `https://api.discogs.com/masters/${master_id}`;
+        
+        const response = await fetch(masterUrl, {
+          headers: {
+            'User-Agent': 'VinylScanner/1.0',
+            'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.images && data.images.length > 0) {
+            artworkUrl = data.images[0].uri;
+            artworkSource = 'discogs-master';
+            console.log('✅ Found Master artwork:', artworkUrl);
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Error fetching from Discogs Master:', error.message);
+      }
+    }
+
+    // Strategy 2: For products with discogs_url, try Discogs Release (fallback)
     const hasDiscogsUrl = discogs_url && discogs_url.includes('/release/');
     
-    if (hasDiscogsUrl) {
+    if (!artworkUrl && hasDiscogsUrl) {
       try {
-        console.log('🔍 Product has Discogs URL, trying Discogs first for better accuracy:', discogs_url);
+        console.log('🔍 Trying Discogs Release URL as fallback:', discogs_url);
         
         // Extract discogs ID from URL
         const discogsIdMatch = discogs_url.match(/\/release\/(\d+)/);

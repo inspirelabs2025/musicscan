@@ -118,10 +118,13 @@ serve(async (req) => {
     console.log('💾 Release saved with ID:', release_id);
 
     // Step 3: Fetch artwork
-    console.log('🖼️ Fetching artwork...');
+    const masterId = releaseData.original_master_id || releaseData.master_id;
+    console.log('🖼️ Fetching artwork...', masterId ? `(Master ID: ${masterId})` : '(Release ID only)');
+    
     const { data: artworkData, error: artworkError } = await supabase.functions.invoke('fetch-album-artwork', {
       body: {
         discogs_url: releaseData.discogs_url,
+        master_id: masterId,
         artist: artistValue,
         title: releaseData.title,
         item_id: null // We'll update the product later

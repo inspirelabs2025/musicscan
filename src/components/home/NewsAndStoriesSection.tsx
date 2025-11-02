@@ -36,57 +36,71 @@ export const NewsAndStoriesSection = () => {
       );
     }
 
-    if (!blogs || blogs.length === 0) {
-      return <p className="text-center text-muted-foreground py-12">Geen artikelen gevonden</p>;
+    const displayBlogs = blogs.slice(0, 3);
+
+    if (!displayBlogs || displayBlogs.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground mb-4">Geen artikelen beschikbaar</p>
+          <p className="text-sm text-muted-foreground">Kom later terug voor nieuwe verhalen!</p>
+        </div>
+      );
     }
 
     return (
       <div className="grid md:grid-cols-3 gap-6">
-        {blogs.slice(0, 3).map((blog) => (
-          <Link key={blog.id} to={`/news/${blog.slug}`}>
-            <Card className="overflow-hidden hover:shadow-xl transition-all hover:scale-105 group h-full">
-              {/* Cover Image */}
-              <div className="aspect-video overflow-hidden bg-muted">
-                {blog.album_cover_url ? (
-                  <img 
-                    src={blog.album_cover_url} 
-                    alt={blog.yaml_frontmatter?.title || 'Album'}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-6xl">
-                    {activeTab === 'verhalen' ? '📖' : '📰'}
-                  </div>
-                )}
-              </div>
-              
-              {/* Content */}
-              <div className="p-6 space-y-3">
-                <div className="flex items-center gap-2">
-                  {blog.album_type && (
-                    <Badge variant="secondary">{blog.album_type}</Badge>
+        {displayBlogs.map((blog) => {
+          const title = blog.yaml_frontmatter?.title || blog.yaml_frontmatter?.album || 'Muziekverhaal';
+          const description = blog.yaml_frontmatter?.description || blog.yaml_frontmatter?.excerpt || '';
+          
+          return (
+            <Link key={blog.id} to={`/news/${blog.slug}`}>
+              <Card className="overflow-hidden hover:shadow-xl transition-all hover:scale-105 group h-full">
+                {/* Cover Image */}
+                <div className="aspect-video overflow-hidden bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20">
+                  {blog.album_cover_url ? (
+                    <img 
+                      src={blog.album_cover_url} 
+                      alt={title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-6xl">
+                      {activeTab === 'verhalen' ? '📖' : '📰'}
+                    </div>
                   )}
-                  <span className="text-xs text-muted-foreground">
-                    {blog.created_at && formatDistanceToNow(new Date(blog.created_at), { 
-                      addSuffix: true, 
-                      locale: nl 
-                    })}
-                  </span>
                 </div>
                 
-                <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                  {blog.yaml_frontmatter?.title || 'Untitled'}
-                </h3>
-                
-                {blog.yaml_frontmatter?.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {blog.yaml_frontmatter.description}
-                  </p>
-                )}
-              </div>
-            </Card>
-          </Link>
-        ))}
+                {/* Content */}
+                <div className="p-6 space-y-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {blog.album_type && (
+                      <Badge variant="secondary" className="text-xs">
+                        {blog.album_type}
+                      </Badge>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(blog.created_at), { 
+                        addSuffix: true, 
+                        locale: nl 
+                      })}
+                    </span>
+                  </div>
+                  
+                  <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
+                    {title}
+                  </h3>
+                  
+                  {description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {description}
+                    </p>
+                  )}
+                </div>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     );
   };

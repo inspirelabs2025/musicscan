@@ -3,6 +3,7 @@ import { QuickDiscoveryBar } from '@/components/home/QuickDiscoveryBar';
 import { MetalPrintSpotlight } from '@/components/home/MetalPrintSpotlight';
 import { ShopByCategorySection } from '@/components/shop/ShopByCategorySection';
 import { FeaturedProductsCarousel } from '@/components/shop/FeaturedProductsCarousel';
+import { LatestReleasesSection } from '@/components/home/LatestReleasesSection';
 import { NewsAndStoriesSection } from '@/components/home/NewsAndStoriesSection';
 import { AIFeaturesCompact } from '@/components/home/AIFeaturesCompact';
 import { CommunityStats } from '@/components/home/CommunityStats';
@@ -51,6 +52,9 @@ const Home = () => {
           <FeaturedProductsCarousel />
         </div>
       </section>
+
+      {/* Latest Releases */}
+      <LatestReleasesSection />
 
       {/* News & Stories Section with Tabs */}
       <NewsAndStoriesSection />

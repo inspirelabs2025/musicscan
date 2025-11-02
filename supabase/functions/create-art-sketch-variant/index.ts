@@ -295,12 +295,24 @@ serve(async (req) => {
 
     const { data: existingProduct } = await supabase
       .from('platform_products')
-      .select('id')
+      .select('*')
       .eq('slug', slug)
       .single();
 
     if (existingProduct) {
-      throw new Error('Sketch variant bestaat al voor dit album');
+      console.log('✅ Sketch variant already exists, returning existing product:', existingProduct.id);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          product_id: existingProduct.id,
+          product_slug: existingProduct.slug,
+          sketch_url: existingProduct.primary_image,
+          original_artwork: existingProduct.images?.[1] || originalArtworkUrl,
+          message: `Sketch variant "${productTitle}" bestaat al`,
+          already_exists: true
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const { data: product, error: productError } = await supabase

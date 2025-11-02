@@ -38,20 +38,22 @@ export default function BulkArtGenerator() {
 
   const normalizeInput = (text: string): string => {
     return text
-      // Replace different types of dashes with standard hyphen
-      .replace(/[–—−‐]/g, '-')
-      // Normalize whitespace around delimiters
-      .replace(/\s*-\s*/g, ' - ')  // "Artist-Album" → "Artist - Album"
-      .replace(/\s*\|\s*/g, ' | ')  // "Artist|Album" → "Artist | Album"
-      .replace(/\s*,\s*/g, ', ')    // "Artist,Album" → "Artist, Album"
-      // Remove multiple spaces
-      .replace(/\s+/g, ' ')
       // Remove non-breaking spaces
       .replace(/\u00A0/g, ' ')
-      // Trim each line
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0)
+      // Split on newlines (handle both Unix and Windows)
+      .split(/\r?\n/)
+      .map(line => line
+        // Replace different types of dashes with standard hyphen
+        .replace(/[–—−‐]/g, '-')
+        // Normalize whitespace around delimiters
+        .replace(/\s*-\s*/g, ' - ')  // "Artist-Album" → "Artist - Album"
+        .replace(/\s*\|\s*/g, ' | ')  // "Artist|Album" → "Artist | Album"
+        .replace(/\s*,\s*/g, ', ')    // "Artist,Album" → "Artist, Album"
+        // Collapse only spaces and tabs (NOT newlines!)
+        .replace(/[ \t]+/g, ' ')
+        .trim()
+      )
+      .filter(Boolean)
       .join('\n');
   };
 

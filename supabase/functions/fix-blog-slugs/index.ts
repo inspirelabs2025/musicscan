@@ -317,14 +317,34 @@ serve(async (req) => {
 
         console.log(`🔄 Updating slug: "${blog.slug}" → "${newSlug}" (year from: ${yearSource || 'unknown'})`);
 
-        // Update yaml_frontmatter.year if we found a new year
+        // Build update payload including frontmatter fixes
         const updateData: any = { slug: newSlug };
-        
-        if (discogsYear && (!blog.yaml_frontmatter?.year || blog.yaml_frontmatter.year === 'unknown')) {
-          updateData.yaml_frontmatter = {
-            ...(blog.yaml_frontmatter || {}),
-            year: discogsYear
-          };
+        const currentFm: any = { ...(blog.yaml_frontmatter || {}) };
+        let fmChanged = false;
+
+        // Year
+        if (discogsYear && (!currentFm.year || String(currentFm.year).toLowerCase() === 'unknown')) {
+          currentFm.year = discogsYear;
+          fmChanged = true;
+        }
+        // Artist
+        if (isMeaningfulName(String(effectiveArtist)) && !isMeaningfulName(currentFm.artist)) {
+          currentFm.artist = String(effectiveArtist);
+          fmChanged = true;
+        }
+        // Album (title of release)
+        if (isMeaningfulName(String(effectiveTitle)) && !isMeaningfulName(currentFm.album)) {
+          currentFm.album = String(effectiveTitle);
+          fmChanged = true;
+        }
+        // Title for the blog card
+        if (!isMeaningfulName(currentFm.title) && isMeaningfulName(String(effectiveArtist)) && isMeaningfulName(String(effectiveTitle))) {
+          currentFm.title = `${effectiveArtist} - ${effectiveTitle}`;
+          fmChanged = true;
+        }
+
+        if (fmChanged) {
+          updateData.yaml_frontmatter = currentFm;
         }
 
         // Update blog post

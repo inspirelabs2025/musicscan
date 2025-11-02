@@ -1,91 +1,114 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, Sparkles, Download, Eye, Loader2, CheckCircle, AlertCircle, XCircle, Clock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Download, CheckCircle2, XCircle, Clock, Search, AlertCircle, ArrowLeft, Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 
 interface AlbumInput {
   artist: string;
   title: string;
-  price: number;
+  price?: number;
   discogsId?: number;
   idType?: 'master' | 'release';
-  originalLine: string;
+  masterId?: number;
+  verifiedArtist?: string;
+  verifiedTitle?: string;
+  matchStatus?: 'idle' | 'verifying' | 'match' | 'partial' | 'mismatch' | 'search' | 'error';
+  similarity?: number;
+  error?: string;
+  originalLine?: string;
 }
 
-interface ProcessingResult {
-  input: AlbumInput;
+interface ProcessingResult extends AlbumInput {
   status: 'pending' | 'searching' | 'creating' | 'success' | 'exists' | 'error';
-  discogsId?: number;
-  masterId?: number;
   productId?: string;
   productSlug?: string;
-  error?: string;
+  message?: string;
 }
 
-export default function BulkArtGenerator() {
+const BulkArtGenerator = () => {
   const navigate = useNavigate();
-  const [inputText, setInputText] = useState("");
-  const [defaultPrice, setDefaultPrice] = useState("49.95");
+  const [input, setInput] = useState("");
+  const [defaultPrice, setDefaultPrice] = useState(29.99);
   const [albums, setAlbums] = useState<AlbumInput[]>([]);
   const [results, setResults] = useState<ProcessingResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [idTypeIsMaster, setIdTypeIsMaster] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const { toast } = useToast();
 
-  // Helper: Extract Discogs ID and determine type (master vs release)
-  const extractDiscogsId = (str: string): { id: number; type: 'master' | 'release' } | null => {
-    if (!str) return null;
-    const s = String(str).trim();
+  // Normalization helper
+  const normalize = (text: string): string => {
+    return text.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
 
-    // 1) Master URL
-    const masterMatch = s.match(/discogs\.com\/master\/(\d+)/i);
-    if (masterMatch?.[1]) {
-      return { id: parseInt(masterMatch[1], 10), type: 'master' };
+  // Simple similarity calculation
+  const calculateSimilarity = (a: string, b: string): number => {
+    const normA = normalize(a);
+    const normB = normalize(b);
+    
+    if (normA === normB) return 1.0;
+    if (normA.length === 0 || normB.length === 0) return 0;
+    
+    const longer = normA.length > normB.length ? normA : normB;
+    const shorter = normA.length > normB.length ? normB : normA;
+    
+    if (longer.includes(shorter)) return 0.85;
+    
+    // Count matching characters
+    let matches = 0;
+    for (let i = 0; i < shorter.length; i++) {
+      if (longer.includes(shorter[i])) matches++;
     }
+    return matches / longer.length;
+  };
 
-    // 2) Release URL
-    const releaseMatch = s.match(/discogs\.com\/release\/(\d+)/i);
-    if (releaseMatch?.[1]) {
-      return { id: parseInt(releaseMatch[1], 10), type: 'release' };
+  // Extract Discogs ID from various formats
+  const extractDiscogsId = (text: string): { id: number; type: 'master' | 'release' } | null => {
+    // Check /master/ URL
+    const masterUrlMatch = text.match(/discogs\.com\/master\/(\d+)/);
+    if (masterUrlMatch) return { id: parseInt(masterUrlMatch[1]), type: 'master' };
+    
+    // Check /release/ URL
+    const releaseUrlMatch = text.match(/discogs\.com\/release\/(\d+)/);
+    if (releaseUrlMatch) return { id: parseInt(releaseUrlMatch[1]), type: 'release' };
+    
+    // Plain number: use toggle state
+    const plainNumber = text.match(/\b(\d{4,})\b/);
+    if (plainNumber) {
+      return { 
+        id: parseInt(plainNumber[1]), 
+        type: idTypeIsMaster ? 'master' : 'release' 
+      };
     }
-
-    // 3) Plain numeric ID (default to release)
-    if (/^\d{3,}$/.test(s)) {
-      return { id: parseInt(s, 10), type: 'release' };
-    }
-
-    // 4) General "ID somewhere in text" (default to release)
-    const anyNum = s.match(/\b\d{3,}\b/);
-    if (anyNum?.[0]) {
-      return { id: parseInt(anyNum[0], 10), type: 'release' };
-    }
-
+    
     return null;
   };
 
+  // Normalize input text
   const normalizeInput = (text: string): string => {
     return text
-      // Remove non-breaking spaces
       .replace(/\u00A0/g, ' ')
-      // Split on newlines (handle both Unix and Windows)
       .split(/\r?\n/)
       .map(line => line
-        // Replace different types of dashes with standard hyphen
         .replace(/[–—−‐]/g, '-')
-        // Handle ">" delimiter (including ">." variant)
-        .replace(/\s*>\.?\s*/g, ' - ')  // "Artist >. Album" → "Artist - Album"
-        // Normalize whitespace around delimiters
-        .replace(/\s*-\s*/g, ' - ')  // "Artist-Album" → "Artist - Album"
-        .replace(/\s*\|\s*/g, ' | ')  // "Artist|Album" → "Artist | Album"
-        .replace(/\s*,\s*/g, ', ')    // "Artist,Album" → "Artist, Album"
-        // Collapse only spaces and tabs (NOT newlines!)
+        .replace(/\s*>\.?\s*/g, ' - ')
+        .replace(/\s*-\s*/g, ' - ')
+        .replace(/\s*\|\s*/g, ' | ')
+        .replace(/\s*,\s*/g, ', ')
         .replace(/[ \t]+/g, ' ')
         .trim()
       )
@@ -93,375 +116,361 @@ export default function BulkArtGenerator() {
       .join('\n');
   };
 
-  const parseInput = (text: string): AlbumInput[] => {
-    const price = parseFloat(defaultPrice) || 49.95;
-    
-    // NORMALIZE INPUT FIRST
-    const normalizedText = normalizeInput(text);
-    
+  // Parse input text
+  const parseInput = () => {
+    const normalizedText = normalizeInput(input);
     const lines = normalizedText.split('\n').filter(line => line.trim());
     const parsed: AlbumInput[] = [];
-    let lastAlbum: AlbumInput | null = null;
+    const seenIds = new Set<number>();
 
     for (const line of lines) {
-      const trimmedLine = line.trim();
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+
+      // Extract Discogs ID
+      const idInfo = extractDiscogsId(trimmed);
       
-      // Check if this is a URL-only or number-only line
-      const extractedIdInfo = extractDiscogsId(trimmedLine);
-      const isUrlOnlyLine = trimmedLine.includes('discogs.com') && !trimmedLine.includes(' - ') && !trimmedLine.includes(' | ');
-      const isNumberOnlyLine = /^\d{3,}$/.test(trimmedLine);
+      // Remove ID/URL from text for artist/title parsing
+      let cleanText = trimmed
+        .replace(/https?:\/\/[^\s]+/g, '')
+        .replace(/\b\d{4,}\b/g, '')
+        .trim();
+
+      // Split on common delimiters
+      const parts = cleanText.split(/[—–-]\s*|\s*-\s*/).map(p => p.trim()).filter(Boolean);
       
-      // If URL-only or number-only, attach to last album if it has no ID
-      if ((isUrlOnlyLine || isNumberOnlyLine) && extractedIdInfo && lastAlbum && !lastAlbum.discogsId) {
-        console.log(`📎 Attaching ${extractedIdInfo.type} ID ${extractedIdInfo.id} to previous album:`, lastAlbum.artist, '-', lastAlbum.title);
-        lastAlbum.discogsId = extractedIdInfo.id;
-        lastAlbum.idType = extractedIdInfo.type;
-        continue; // Skip this line, it's been attached
-      }
-      
-      // Otherwise, parse as normal album
-      let artist = '', title = '', discogsId: number | undefined, idType: 'master' | 'release' | undefined;
-      
-      // Now all delimiters are normalized, prioritize by reliability
-      if (trimmedLine.includes(' - ')) {
-        const parts = trimmedLine.split(' - ');
-        artist = parts[0]?.trim() || '';
-        title = parts[1]?.trim() || '';
+      if (parts.length >= 2) {
+        const artist = parts[0];
+        const title = parts.slice(1).join(' - ');
         
-        // Try to extract Discogs ID from parts[2] and beyond
-        const tail = parts.slice(2).join(' ').trim();
-        let foundIdInfo = extractDiscogsId(parts[2] || '');
-        if (!foundIdInfo && tail) foundIdInfo = extractDiscogsId(tail);
-        if (!foundIdInfo) foundIdInfo = extractDiscogsId(trimmedLine);
-        
-        if (foundIdInfo) {
-          discogsId = foundIdInfo.id;
-          idType = foundIdInfo.type;
-        } else if (parts.length > 2) {
-          // If 3rd part exists but isn't a valid ID, include it in title
-          title = parts.slice(1).join(' - ').trim();
+        // Skip duplicates
+        if (idInfo && seenIds.has(idInfo.id)) {
+          console.log(`Skipping duplicate ID: ${idInfo.id}`);
+          continue;
         }
-      } 
-      else if (trimmedLine.includes(' | ')) {
-        const parts = trimmedLine.split(' | ');
-        artist = parts[0]?.trim() || '';
-        title = parts[1]?.trim() || '';
-        
-        // Try to extract Discogs ID
-        const tail = parts.slice(2).join(' ').trim();
-        let foundIdInfo = extractDiscogsId(parts[2] || '');
-        if (!foundIdInfo && tail) foundIdInfo = extractDiscogsId(tail);
-        if (!foundIdInfo) foundIdInfo = extractDiscogsId(trimmedLine);
-        
-        if (foundIdInfo) {
-          discogsId = foundIdInfo.id;
-          idType = foundIdInfo.type;
-        } else if (parts.length > 2) {
-          title = parts.slice(1).join(' | ').trim();
-        }
-      }
-      else if (trimmedLine.includes(', ')) {
-        const parts = trimmedLine.split(', ');
-        artist = parts[0]?.trim() || '';
-        title = parts[1]?.trim() || '';
-        
-        // Try to extract Discogs ID
-        const tail = parts.slice(2).join(' ').trim();
-        let foundIdInfo = extractDiscogsId(parts[2] || '');
-        if (!foundIdInfo && tail) foundIdInfo = extractDiscogsId(tail);
-        if (!foundIdInfo) foundIdInfo = extractDiscogsId(trimmedLine);
-        
-        if (foundIdInfo) {
-          discogsId = foundIdInfo.id;
-          idType = foundIdInfo.type;
-        } else if (parts.length > 2) {
-          title = parts.slice(1).join(', ').trim();
-        }
-      }
-      // Fallback: Try to split on first capital letter after lowercase
-      else {
-        const match = trimmedLine.match(/^(.+?)([A-Z][a-z].*)$/);
-        if (match) {
-          artist = match[1].trim();
-          title = match[2].trim();
-        }
-        // Still try to find an ID anywhere in the line
-        const foundIdInfo = extractDiscogsId(trimmedLine);
-        if (foundIdInfo) {
-          discogsId = foundIdInfo.id;
-          idType = foundIdInfo.type;
-        }
-      }
-      
-      if (artist && title) {
-        const album = {
+
+        const album: AlbumInput = {
           artist,
           title,
-          price,
-          discogsId,
-          idType,
-          originalLine: trimmedLine
+          price: defaultPrice,
+          matchStatus: 'idle',
+          originalLine: trimmed
         };
+
+        if (idInfo) {
+          album.discogsId = idInfo.id;
+          album.idType = idInfo.type;
+          seenIds.add(idInfo.id);
+        }
+
         parsed.push(album);
-        lastAlbum = album;
       }
     }
+
+    setAlbums(parsed);
+    setResults(parsed.map(a => ({ ...a, status: 'pending' })));
     
-    // Deduplicate by Discogs ID (keep first occurrence)
-    const seen = new Set<number>();
-    const deduplicated = parsed.filter(album => {
-      if (!album.discogsId) return true; // Keep albums without ID
-      if (seen.has(album.discogsId)) {
-        console.log(`🔄 Skipping duplicate Discogs ID ${album.discogsId}:`, album.artist, '-', album.title);
-        return false;
-      }
-      seen.add(album.discogsId);
-      return true;
+    toast({
+      title: "✅ Lijst geparsed",
+      description: `${parsed.length} albums gevonden`,
     });
-    
-    const idsFromUrls = deduplicated.filter(p => p.discogsId && p.originalLine.includes('discogs.com')).length;
-    console.log(`📊 Parsed ${deduplicated.length} unique albums (${parsed.length - deduplicated.length} duplicates removed), ${deduplicated.filter(p => p.discogsId).length} with IDs (${idsFromUrls} from URLs)`);
-    
-    return deduplicated;
   };
 
-  const handleParseInput = () => {
-    const normalizedText = normalizeInput(inputText);
-    const inputLines = normalizedText.split('\n').filter(line => line.trim());
-    const totalLines = inputLines.length;
-    const parsed = parseInput(inputText);
-    
-    if (parsed.length === 0) {
-      const firstLine = inputLines[0];
+  // Verify list with Discogs API
+  const handleVerifyList = async () => {
+    if (albums.length === 0) {
       toast({
-        title: "❌ Geen albums gevonden",
-        description: `Kon geen artist/album scheiden in: "${firstLine}". Probeer format: Artist - Album`,
+        title: "⚠️ Geen albums",
+        description: "Parse eerst de input lijst",
         variant: "destructive"
       });
       return;
     }
-    
-    const failedCount = totalLines - parsed.length;
-    
-    setAlbums(parsed);
-    setResults([]);
-    
-    if (failedCount > 0) {
-      // Find which lines failed by comparing with successfully parsed lines
-      const parsedLines = new Set(parsed.map(p => p.originalLine));
-      const failedLines = inputLines.filter(line => !parsedLines.has(line)).slice(0, 3);
+
+    setIsVerifying(true);
+    const verified: AlbumInput[] = [];
+
+    try {
+      for (let i = 0; i < albums.length; i++) {
+        const album = albums[i];
+        
+        // Update status
+        setAlbums(prev => prev.map((a, idx) => 
+          idx === i ? { ...a, matchStatus: 'verifying' } : a
+        ));
+
+        if (!album.discogsId) {
+          // No ID → fallback to search
+          verified.push({ ...album, matchStatus: 'search' });
+          continue;
+        }
+
+        try {
+          // Call optimized-catalog-search
+          const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
+            body: { 
+              direct_discogs_id: album.discogsId.toString(),
+              is_master: album.idType === 'master'
+            }
+          });
+
+          if (error) throw error;
+
+          if (!data || !data.results || data.results.length === 0) {
+            verified.push({ 
+              ...album, 
+              matchStatus: 'error',
+              error: 'Geen resultaten gevonden'
+            });
+            continue;
+          }
+
+          const result = data.results[0];
+          const inputNorm = normalize(`${album.artist} ${album.title}`);
+          const resultNorm = normalize(`${result.artist} ${result.title}`);
+          
+          const similarity = calculateSimilarity(inputNorm, resultNorm);
+
+          if (similarity >= 0.8) {
+            verified.push({ 
+              ...album, 
+              matchStatus: 'match',
+              verifiedArtist: result.artist,
+              verifiedTitle: result.title,
+              masterId: result.master_id,
+              similarity
+            });
+          } else if (similarity >= 0.5) {
+            verified.push({ 
+              ...album, 
+              matchStatus: 'partial',
+              verifiedArtist: result.artist,
+              verifiedTitle: result.title,
+              similarity
+            });
+          } else {
+            verified.push({ 
+              ...album, 
+              matchStatus: 'mismatch',
+              verifiedArtist: result.artist,
+              verifiedTitle: result.title,
+              similarity
+            });
+          }
+        } catch (err: any) {
+          console.error(`Verification error for ${album.artist} - ${album.title}:`, err);
+          verified.push({ 
+            ...album, 
+            matchStatus: 'error',
+            error: err.message
+          });
+        }
+
+        // Small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
+      setAlbums(verified);
+      setResults(verified.map(a => ({ ...a, status: 'pending' })));
       
-      console.log('🔍 Debug info:');
-      console.log('Total lines:', totalLines);
-      console.log('Parsed successfully:', parsed.length);
-      console.log('Failed lines (first 3):', failedLines);
-      
+      const matches = verified.filter(a => a.matchStatus === 'match').length;
+      const mismatches = verified.filter(a => a.matchStatus === 'mismatch').length;
+
       toast({
-        title: "⚠️ Input geparsed met waarschuwing",
-        description: (
-          <div className="space-y-1">
-            <p>{parsed.length} albums gevonden, {failedCount} regels overgeslagen</p>
-            <p className="text-xs mt-2">Eerste overgeslagen regel:</p>
-            <p className="text-xs font-mono bg-muted p-1 rounded">{failedLines[0]?.substring(0, 60)}...</p>
-            <p className="text-xs mt-1 text-muted-foreground">Check console voor alle overgeslagen regels</p>
-          </div>
-        ),
+        title: "🔍 Verificatie voltooid",
+        description: `${matches} matches, ${mismatches} mismatches`,
       });
-    } else {
+    } catch (error: any) {
+      console.error('Verification error:', error);
       toast({
-        title: "✅ Input geparsed",
-        description: `${parsed.length} albums gevonden en klaar voor verwerking`,
+        title: "❌ Verificatie fout",
+        description: error.message,
+        variant: "destructive"
       });
+    } finally {
+      setIsVerifying(false);
     }
   };
 
+  // Process batch
   const processBatch = async () => {
-    if (albums.length === 0) return;
+    if (albums.length === 0) {
+      toast({
+        title: "⚠️ Geen albums om te verwerken",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsProcessing(true);
-    setProgress({ current: 0, total: albums.length });
-    
-    const initialResults: ProcessingResult[] = albums.map(album => ({
-      input: album,
-      status: 'pending'
-    }));
-    setResults(initialResults);
+    setProgress(0);
 
-    const chunkSize = 5;
-    
-    for (let i = 0; i < albums.length; i += chunkSize) {
-      const chunk = albums.slice(i, i + chunkSize);
+    const batchSize = 5;
+    let completed = 0;
+
+    for (let i = 0; i < albums.length; i += batchSize) {
+      const batch = albums.slice(i, i + batchSize);
       
-      await Promise.allSettled(
-        chunk.map(async (album, index) => {
-          const resultIndex = i + index;
-          
+      await Promise.all(
+        batch.map(async (album, batchIndex) => {
+          const index = i + batchIndex;
+
+          // Skip mismatches
+          if (album.matchStatus === 'mismatch') {
+            setResults(prev => prev.map((r, idx) => 
+              idx === index 
+                ? { ...r, status: 'error', message: '❌ ID mismatch - overgeslagen' }
+                : r
+            ));
+            completed++;
+            setProgress((completed / albums.length) * 100);
+            return;
+          }
+
+          setResults(prev => prev.map((r, idx) => 
+            idx === index ? { ...r, status: 'creating' } : r
+          ));
+
           try {
-            // Update status to searching
-            setResults(prev => {
-              const updated = [...prev];
-              updated[resultIndex] = { ...updated[resultIndex], status: 'searching' };
-              return updated;
-            });
-            
-            // Call create-art-product (handles search + creation)
-            // Send ONLY master_id OR discogs_id based on detected type
+            const requestBody: any = {
+              artist: album.verifiedArtist || album.artist,
+              title: album.verifiedTitle || album.title,
+              price: album.price || defaultPrice
+            };
+
+            // Priority: masterId from verification > masterId from input > discogsId
+            if (album.masterId) {
+              requestBody.master_id = album.masterId;
+            } else if (album.discogsId && album.idType === 'master') {
+              requestBody.master_id = album.discogsId;
+            } else if (album.discogsId) {
+              requestBody.discogs_id = album.discogsId;
+            }
+
+            console.log(`Creating product for ${album.artist} - ${album.title}`, requestBody);
+
             const { data, error } = await supabase.functions.invoke('create-art-product', {
-              body: {
-                artist: album.artist,
-                title: album.title,
-                price: album.price,
-                ...(album.discogsId && album.idType === 'master' 
-                  ? { master_id: album.discogsId }
-                  : album.discogsId 
-                    ? { discogs_id: album.discogsId }
-                    : {}
-                )
-              }
+              body: requestBody
             });
-            
-            if (error) {
-              const errorMessage = error.message || '';
-              const status = error.status || error?.context?.response?.status;
-              
-              // Handle "already exists" as warning, not error
-              if (status === 409 || errorMessage.includes('already exists')) {
-                setResults(prev => {
-                  const updated = [...prev];
-                  updated[resultIndex] = {
-                    ...updated[resultIndex],
-                    status: 'exists',
-                    error: 'Product bestaat al'
-                  };
-                  return updated;
-                });
-              } else if (errorMessage.includes('No results found')) {
-                setResults(prev => {
-                  const updated = [...prev];
-                  updated[resultIndex] = {
-                    ...updated[resultIndex],
-                    status: 'error',
-                    error: 'Niet gevonden op Discogs'
-                  };
-                  return updated;
-                });
-              } else {
-                throw error;
-              }
-            } else {
-              // Success
-              setResults(prev => {
-                const updated = [...prev];
-                updated[resultIndex] = {
-                  ...updated[resultIndex],
-                  status: 'success',
-                  productId: data.product_id,
-                  productSlug: data.product_slug,
-                  discogsId: data.discogs_id,
-                  masterId: data.master_id
-                };
-                return updated;
-              });
+
+            if (error) throw error;
+
+            if (data.exists) {
+              setResults(prev => prev.map((r, idx) => 
+                idx === index 
+                  ? { ...r, status: 'exists', message: '⚠️ Product bestaat al' }
+                  : r
+              ));
+            } else if (data.product) {
+              setResults(prev => prev.map((r, idx) => 
+                idx === index 
+                  ? { 
+                      ...r, 
+                      status: 'success',
+                      productId: data.product.id,
+                      productSlug: data.product.slug,
+                      message: '✅ Aangemaakt'
+                    }
+                  : r
+              ));
             }
           } catch (error: any) {
-            setResults(prev => {
-              const updated = [...prev];
-              updated[resultIndex] = {
-                ...updated[resultIndex],
-                status: 'error',
-                error: error.message || 'Onbekende fout'
-              };
-              return updated;
-            });
+            console.error(`Error creating product for ${album.artist} - ${album.title}:`, error);
+            setResults(prev => prev.map((r, idx) => 
+              idx === index 
+                ? { ...r, status: 'error', message: `❌ ${error.message}` }
+                : r
+            ));
           }
-          
-          setProgress(prev => ({ ...prev, current: prev.current + 1 }));
+
+          completed++;
+          setProgress((completed / albums.length) * 100);
         })
       );
-      
-      // Small delay between chunks
-      if (i + chunkSize < albums.length) {
+
+      // Delay between batches
+      if (i + batchSize < albums.length) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
-    
+
     setIsProcessing(false);
     
-    const successCount = results.filter(r => r.status === 'success').length;
-    const existsCount = results.filter(r => r.status === 'exists').length;
-    const errorCount = results.filter(r => r.status === 'error').length;
-    
+    const successful = results.filter(r => r.status === 'success').length;
+    const failed = results.filter(r => r.status === 'error').length;
+
     toast({
-      title: "🎉 Batch Verwerking Voltooid",
-      description: `✅ ${successCount} aangemaakt | ⚠️ ${existsCount} bestond al | ❌ ${errorCount} fouten`,
+      title: "🎉 Batch verwerking voltooid",
+      description: `${successful} succesvol, ${failed} gefaald`,
     });
   };
 
+  // Download results as CSV
   const downloadResults = () => {
     const csv = [
-      ['Artist', 'Album', 'Input Discogs ID', 'ID Type', 'Status', 'Result Discogs ID', 'Master ID', 'Product ID', 'Error'].join(','),
+      ['Artist', 'Title', 'Status', 'Product ID', 'Slug', 'Message'].join(','),
       ...results.map(r => [
-        r.input.artist,
-        r.input.title,
-        r.input.discogsId || '',
-        r.input.idType || 'release',
+        r.artist,
+        r.title,
         r.status,
-        r.discogsId || '',
-        (r as any).masterId || '',
         r.productId || '',
-        r.error || ''
+        r.productSlug || '',
+        r.message || ''
       ].map(field => `"${field}"`).join(','))
     ].join('\n');
-    
+
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `bulk-art-results-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `art-products-${Date.now()}.csv`;
     a.click();
-    URL.revokeObjectURL(url);
   };
 
-  const getStatusIcon = (status: ProcessingResult['status']) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
-        return <Clock className="w-4 h-4 text-muted-foreground" />;
-      case 'searching':
-      case 'creating':
-        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
-      case 'success':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'exists':
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      case 'error':
-        return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'success': return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+      case 'error': return <XCircle className="h-4 w-4 text-red-600" />;
+      case 'exists': return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+      case 'creating': return <Loader2 className="h-4 w-4 animate-spin" />;
+      case 'searching': return <Search className="h-4 w-4 animate-pulse" />;
+      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
-  const getStatusBadge = (status: ProcessingResult['status']) => {
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, any> = {
+      success: 'default',
+      error: 'destructive',
+      exists: 'secondary',
+      pending: 'outline'
+    };
+    return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
+  };
+
+  const getMatchIcon = (status?: string) => {
     switch (status) {
-      case 'pending':
-        return <Badge variant="outline">Wacht</Badge>;
-      case 'searching':
-        return <Badge className="bg-blue-500">Zoeken...</Badge>;
-      case 'creating':
-        return <Badge className="bg-blue-600">Aanmaken...</Badge>;
-      case 'success':
-        return <Badge className="bg-green-500">Aangemaakt</Badge>;
-      case 'exists':
-        return <Badge className="bg-yellow-500">Bestaat al</Badge>;
-      case 'error':
-        return <Badge variant="destructive">Fout</Badge>;
+      case 'match': return '✅';
+      case 'partial': return '⚠️';
+      case 'mismatch': return '❌';
+      case 'search': return '🔍';
+      case 'verifying': return '⏳';
+      case 'error': return '❌';
+      default: return '—';
     }
   };
 
-  const successCount = results.filter(r => r.status === 'success').length;
-  const existsCount = results.filter(r => r.status === 'exists').length;
-  const errorCount = results.filter(r => r.status === 'error').length;
-  const progressPercentage = progress.total > 0 ? (progress.current / progress.total) * 100 : 0;
+  const getRowClassName = (matchStatus?: string) => {
+    switch (matchStatus) {
+      case 'match': return 'bg-green-50 dark:bg-green-950/20';
+      case 'partial': return 'bg-yellow-50 dark:bg-yellow-950/20';
+      case 'mismatch': return 'bg-red-50 dark:bg-red-950/20';
+      default: return '';
+    }
+  };
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -473,194 +482,227 @@ export default function BulkArtGenerator() {
               <Sparkles className="h-8 w-8 text-primary" />
               Bulk ART Generator
             </h1>
-            <p className="text-muted-foreground">
-              Importeer meerdere albums tegelijk - volledig geautomatiseerd
-            </p>
+            <p className="text-muted-foreground">Genereer meerdere merchandise producten tegelijk</p>
           </div>
         </div>
       </div>
 
-      {/* Input Section */}
-      <Card className="p-6">
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="input-text" className="text-base font-semibold">
-              📋 Plak je lijst hier (Artist - Album per regel)
-            </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              ✨ <strong>Automatische normalisatie actief!</strong>
-              <br />
-              Formaat: <strong>Artist - Album</strong> of <strong>Artist - Album - DiscogsID</strong>
-              <br />
-              Ondersteunt: Artist-Album, Artist–Album, Artist | Album, Artist &gt; Album
-              <br />
-              💡 <strong>Tip:</strong> Plak Discogs URL of ID (ook op aparte regel onder het album) voor 100% nauwkeurigheid!
-              <br />
-              📎 <strong>URL voorbeeld:</strong> Artist - Album - https://www.discogs.com/master/29615
-              <br />
-              🎯 <strong>Master URL's:</strong> /master/... URLs hebben voorrang voor hoogste kwaliteit artwork
-            </p>
-            <Textarea
-              id="input-text"
-              placeholder={"Pink Floyd - The Wall\nThe Beatles - Abbey Road - 123456\nPeter Gabriel - Peter Gabriel - https://www.discogs.com/master/29615"}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              className="min-h-[200px] font-mono text-sm"
-              disabled={isProcessing}
-            />
-          </div>
-
-          <div className="flex items-end gap-4">
-            <div className="flex-1">
-              <Label htmlFor="default-price">💰 Standaard Prijs (€)</Label>
-              <Input
-                id="default-price"
-                type="number"
-                step="0.01"
-                value={defaultPrice}
-                onChange={(e) => setDefaultPrice(e.target.value)}
-                disabled={isProcessing}
+      <Card>
+        <CardHeader>
+          <CardTitle>🎨 Bulk Art Product Generator</CardTitle>
+          <CardDescription>
+            Genereer meerdere merchandise producten tegelijk vanuit een lijst
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Settings */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <Label htmlFor="master-toggle" className="text-base font-semibold">
+                  🎭 IDs zijn Master IDs (aanbevolen)
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Zet aan als je lijst Master IDs bevat (bijv. 11452) in plaats van Release IDs
+                </p>
+              </div>
+              <Switch 
+                id="master-toggle"
+                checked={idTypeIsMaster} 
+                onCheckedChange={setIdTypeIsMaster}
               />
             </div>
-            <Button onClick={handleParseInput} disabled={!inputText.trim() || isProcessing}>
-              <Upload className="w-4 h-4 mr-2" />
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="price">Standaard Prijs (€)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  value={defaultPrice}
+                  onChange={(e) => setDefaultPrice(parseFloat(e.target.value))}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Input */}
+          <div className="space-y-2">
+            <Label htmlFor="input">Album Lijst</Label>
+            <Textarea
+              id="input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={`Voorbeelden:
+
+🎭 MASTER IDs (aanbevolen):
+The Clash - The Clash, 11452
+https://www.discogs.com/master/13750
+Pink Floyd - The Wall
+
+📀 RELEASE IDs werken ook:
+https://www.discogs.com/release/1034729
+Bryan Ferry - In Your Mind, 1034729
+
+💡 TIP: Gebruik /master/ URLs voor beste resultaten!`}
+              rows={10}
+              className="font-mono text-sm"
+            />
+            <p className="text-sm text-muted-foreground">
+              Formaat: Artist - Title, ID (of URL). Één album per regel.
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <Button onClick={parseInput} disabled={!input.trim()}>
               Parse Input
             </Button>
-          </div>
-        </div>
-      </Card>
-
-      {/* Preview & Processing */}
-      {albums.length > 0 && (
-        <Card className="p-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">
-                📋 Preview ({albums.length} albums gevonden)
-              </h2>
-              {!isProcessing && results.length === 0 && (
-                <Button onClick={processBatch} size="lg" className="gap-2">
-                  <Sparkles className="w-5 h-5" />
-                  Start Batch Processing
-                </Button>
-              )}
-            </div>
-
-            {/* Progress Bar */}
-            {isProcessing && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Progress: {progress.current} / {progress.total}</span>
-                  <span>{Math.round(progressPercentage)}%</span>
-                </div>
-                <Progress value={progressPercentage} className="h-2" />
-              </div>
-            )}
-
-            {/* Results Summary */}
+            <Button 
+              onClick={handleVerifyList} 
+              disabled={albums.length === 0 || isVerifying || isProcessing}
+              variant="outline"
+            >
+              {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              🔍 Verifieer Lijst (Dry-Run)
+            </Button>
+            <Button 
+              onClick={processBatch} 
+              disabled={albums.length === 0 || isProcessing || isVerifying}
+              variant="default"
+            >
+              {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Start Batch Processing
+            </Button>
             {results.length > 0 && (
-              <div className="flex gap-4 p-4 bg-muted rounded-lg">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="font-semibold">{successCount}</span>
-                  <span className="text-sm text-muted-foreground">Aangemaakt</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-yellow-500" />
-                  <span className="font-semibold">{existsCount}</span>
-                  <span className="text-sm text-muted-foreground">Bestond al</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <XCircle className="w-5 h-5 text-red-500" />
-                  <span className="font-semibold">{errorCount}</span>
-                  <span className="text-sm text-muted-foreground">Fouten</span>
-                </div>
-              </div>
+              <Button onClick={downloadResults} variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Download Rapport
+              </Button>
             )}
+          </div>
 
-            {/* Results Table */}
-            <div className="border rounded-lg overflow-hidden">
-              <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                <table className="w-full">
-                  <thead className="bg-muted sticky top-0">
-                    <tr>
-                      <th className="text-left p-3 font-semibold">Status</th>
-                      <th className="text-left p-3 font-semibold">Artist</th>
-                      <th className="text-left p-3 font-semibold">Album</th>
-                      <th className="text-left p-3 font-semibold">Discogs ID</th>
-                      <th className="text-left p-3 font-semibold">Prijs</th>
-                      <th className="text-left p-3 font-semibold">Details</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(results.length > 0 ? results : albums.map(a => ({ input: a, status: 'pending' as const }))).map((result, index) => (
-                      <tr key={index} className="border-t hover:bg-muted/50">
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(result.status)}
-                            {getStatusBadge(result.status)}
-                          </div>
-                        </td>
-                        <td className="p-3 font-medium">{result.input.artist}</td>
-                        <td className="p-3">{result.input.title}</td>
-                        <td className="p-3 text-sm text-muted-foreground">
-                          {result.input.discogsId ? (
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono">{result.input.discogsId}</span>
-                              {result.input.originalLine.includes('/master/') && (
-                                <Badge variant="outline" className="text-xs">master</Badge>
+          {/* Progress */}
+          {isProcessing && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Voortgang</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} />
+            </div>
+          )}
+
+          {/* Preview / Results */}
+          {albums.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">
+                  {isProcessing ? 'Resultaten' : 'Preview'} ({albums.length} albums)
+                </h3>
+                {results.filter(r => r.status === 'success').length > 0 && (
+                  <Badge variant="default">
+                    {results.filter(r => r.status === 'success').length} succesvol
+                  </Badge>
+                )}
+              </div>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">Status</TableHead>
+                      <TableHead className="w-12">ID</TableHead>
+                      <TableHead>Artist</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead className="w-24">ID Type</TableHead>
+                      <TableHead className="w-20">Prijs</TableHead>
+                      <TableHead>Resultaat</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {albums.map((album, index) => {
+                      const result = results[index];
+                      return (
+                        <TableRow key={index} className={getRowClassName(album.matchStatus)}>
+                          <TableCell>
+                            {result ? getStatusIcon(result.status) : getMatchIcon(album.matchStatus)}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono">
+                            {album.discogsId ? `${album.discogsId}` : '—'}
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{album.verifiedArtist || album.artist}</div>
+                              {album.matchStatus === 'mismatch' && album.verifiedArtist && (
+                                <div className="text-xs text-red-600">
+                                  Input: {album.artist}
+                                </div>
                               )}
                             </div>
-                          ) : '—'}
-                        </td>
-                        <td className="p-3">€{result.input.price.toFixed(2)}</td>
-                        <td className="p-3">
-                          {result.error && (
-                            <span className="text-sm text-red-500">{result.error}</span>
-                          )}
-                          {result.discogsId && (
-                            <span className="text-sm text-muted-foreground">
-                              Discogs: {result.discogsId}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div>{album.verifiedTitle || album.title}</div>
+                              {album.matchStatus === 'mismatch' && album.verifiedTitle && (
+                                <div className="text-xs text-red-600">
+                                  Input: {album.title}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {album.idType === 'master' && (
+                              <Badge variant="default" className="text-xs">🎭 Master</Badge>
+                            )}
+                            {album.idType === 'release' && (
+                              <Badge variant="secondary" className="text-xs">📀 Release</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>€{album.price?.toFixed(2)}</TableCell>
+                          <TableCell>
+                            {result ? (
+                              <div className="space-y-1">
+                                {getStatusBadge(result.status)}
+                                {result.message && (
+                                  <p className="text-xs text-muted-foreground">{result.message}</p>
+                                )}
+                                {result.similarity !== undefined && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Match: {(result.similarity * 100).toFixed(0)}%
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">Wachtend...</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               </div>
             </div>
+          )}
 
-            {/* Action Buttons */}
-            {results.length > 0 && !isProcessing && (
-              <div className="flex gap-2">
-                <Button onClick={downloadResults} variant="outline">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Report
-                </Button>
-                <Button onClick={() => navigate('/admin/platform-products')} variant="default">
-                  <Eye className="w-4 h-4 mr-2" />
-                  Bekijk Producten
-                </Button>
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
-
-      {/* Help Card */}
-      <Card className="p-4 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-        <h3 className="font-semibold mb-2">💡 Tips</h3>
-        <ul className="text-sm space-y-1 text-muted-foreground">
-          <li>• Elk album op een nieuwe regel</li>
-          <li>• Format: "Artist - Album" of "Artist - Album - DiscogsID"</li>
-          <li>• Ondersteunt ook: "Artist | Album" of "Artist, Album"</li>
-          <li>• 🎯 Met Discogs ID = 100% match, zonder ID = automatisch zoeken</li>
-          <li>• Systeem verwerkt automatisch in batches van 5 albums tegelijk</li>
-          <li>• Duplicates worden automatisch gedetecteerd (⚠️ warning, geen error)</li>
-          <li>• Download het rapport na afloop voor een compleet overzicht</li>
-        </ul>
+          {/* Help */}
+          <Card className="bg-muted/50">
+            <CardHeader>
+              <CardTitle className="text-base">💡 Tips</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm space-y-2">
+              <p>• <strong>Master IDs</strong> geven de beste resultaten (bijv. <code className="text-xs">/master/11452</code>)</p>
+              <p>• Gebruik de <strong>Verifieer Lijst</strong> knop voor een dry-run preview</p>
+              <p>• Groene rijen = perfect match, gele = gedeeltelijke match, rode = mismatch</p>
+              <p>• Items met mismatch worden automatisch overgeslagen tijdens processing</p>
+              <p>• Batch verwerking is gelimiteerd tot 5 concurrent requests</p>
+            </CardContent>
+          </Card>
+        </CardContent>
       </Card>
     </div>
   );
-}
+};
+
+export default BulkArtGenerator;

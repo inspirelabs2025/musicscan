@@ -56,6 +56,7 @@ import PlatformProducts from "./pages/admin/PlatformProducts";
 import ArtGenerator from "./pages/admin/ArtGenerator";
 import BulkArtGenerator from "./pages/admin/BulkArtGenerator";
 import FixProductTitles from "./pages/admin/FixProductTitles";
+import BulkProductCleanup from "./pages/admin/BulkProductCleanup";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 import Community from "./pages/Community";
@@ -317,6 +318,11 @@ const App = () => {
             <Route path="/admin/fix-product-titles" element={
               <ProtectedRoute>
                 <FixProductTitles />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/bulk-cleanup" element={
+              <ProtectedRoute>
+                <BulkProductCleanup />
               </ProtectedRoute>
             } />
             <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />

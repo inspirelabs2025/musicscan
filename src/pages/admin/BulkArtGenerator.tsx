@@ -430,21 +430,22 @@ const BulkArtGenerator = () => {
 
             if (error) throw error;
 
-            if (data.exists) {
+            if (data.success === false && data.message?.includes('already exists')) {
               setResults(prev => prev.map((r, idx) => 
                 idx === index 
                   ? { ...r, status: 'exists', message: '⚠️ Product bestaat al' }
                   : r
               ));
-            } else if (data.product) {
+            } else if (data.success && data.product_id) {
               setResults(prev => prev.map((r, idx) => 
                 idx === index 
                   ? { 
                       ...r, 
                       status: 'success',
-                      productId: data.product.id,
-                      productSlug: data.product.slug,
-                      message: '✅ Aangemaakt'
+                      productId: data.product_id,
+                      productSlug: data.product_slug,
+                      blogId: data.blog_id,
+                      message: `✅ ${data.message || 'Aangemaakt'}`
                     }
                   : r
               ));

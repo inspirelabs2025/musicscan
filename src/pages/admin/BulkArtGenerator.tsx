@@ -105,11 +105,13 @@ export default function BulkArtGenerator() {
   };
 
   const handleParseInput = () => {
-    const totalLines = inputText.split('\n').filter(line => line.trim()).length;
+    const normalizedText = normalizeInput(inputText);
+    const inputLines = normalizedText.split('\n').filter(line => line.trim());
+    const totalLines = inputLines.length;
     const parsed = parseInput(inputText);
     
     if (parsed.length === 0) {
-      const firstLine = inputText.split('\n').find(line => line.trim());
+      const firstLine = inputLines[0];
       toast({
         title: "❌ Geen albums gevonden",
         description: `Kon geen artist/album scheiden in: "${firstLine}". Probeer format: Artist - Album`,
@@ -124,9 +126,25 @@ export default function BulkArtGenerator() {
     setResults([]);
     
     if (failedCount > 0) {
+      // Find which lines failed by comparing with successfully parsed lines
+      const parsedLines = new Set(parsed.map(p => p.originalLine));
+      const failedLines = inputLines.filter(line => !parsedLines.has(line)).slice(0, 3);
+      
+      console.log('🔍 Debug info:');
+      console.log('Total lines:', totalLines);
+      console.log('Parsed successfully:', parsed.length);
+      console.log('Failed lines (first 3):', failedLines);
+      
       toast({
         title: "⚠️ Input geparsed met waarschuwing",
-        description: `${parsed.length} albums gevonden, ${failedCount} regels overgeslagen`,
+        description: (
+          <div className="space-y-1">
+            <p>{parsed.length} albums gevonden, {failedCount} regels overgeslagen</p>
+            <p className="text-xs mt-2">Eerste overgeslagen regel:</p>
+            <p className="text-xs font-mono bg-muted p-1 rounded">{failedLines[0]?.substring(0, 60)}...</p>
+            <p className="text-xs mt-1 text-muted-foreground">Check console voor alle overgeslagen regels</p>
+          </div>
+        ),
       });
     } else {
       toast({

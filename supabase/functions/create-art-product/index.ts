@@ -271,12 +271,38 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
 
     console.log('✅ ART product created:', product.id);
 
+    // Step 7: Generate blog post automatically
+    console.log('📝 Generating blog post...');
+    let blogData = null;
+    try {
+      const { data: blogResponse, error: blogError } = await supabase.functions.invoke('plaat-verhaal-generator', {
+        body: {
+          albumId: release_id, // Use the release_id from Step 2
+          albumType: 'vinyl', // Metaalprints zijn meestal gebaseerd op vinyl releases
+          autoPublish: true, // Automatically publish the blog
+          forceRegenerate: false // Don't regenerate if blog already exists
+        }
+      });
+
+      if (blogError) {
+        console.warn('⚠️ Blog generation failed (non-blocking):', blogError.message);
+      } else {
+        blogData = blogResponse;
+        console.log('✅ Blog post generated:', blogData?.blog?.id);
+      }
+    } catch (blogErr) {
+      console.warn('⚠️ Blog generation error (non-blocking):', blogErr);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true,
         product_id: product.id,
         product_slug: product.slug,
-        message: `ART product created: ${productTitle}`
+        blog_generated: !!blogData?.blog,
+        blog_id: blogData?.blog?.id || null,
+        blog_slug: blogData?.blog?.slug || null,
+        message: `ART product created: ${productTitle}${blogData?.blog ? ' + blog post' : ''}`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );

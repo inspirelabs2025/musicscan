@@ -154,7 +154,7 @@ serve(async (req) => {
         actualTableUsed = 'ai_scan_results';
       }
     } else if (albumType === 'vinyl') {
-      // Try vinyl2_scan first, then ai_scan_results
+      // Try vinyl2_scan first, then ai_scan_results, then releases
       try {
         const { data, error } = await supabase
           .from('vinyl2_scan')
@@ -171,14 +171,32 @@ serve(async (req) => {
       }
       
       if (!albumData) {
+        try {
+          const { data, error } = await supabase
+            .from('ai_scan_results')
+            .select('*')
+            .eq('id', albumId)
+            .maybeSingle();
+          if (error) throw error;
+          if (data) {
+            albumData = data;
+            actualTableUsed = 'ai_scan_results';
+          }
+        } catch (error) {
+          console.log('Not found in ai_scan_results, trying releases...');
+        }
+      }
+      
+      // If still not found, try releases table (for bulk imported metaalprints)
+      if (!albumData) {
         const { data, error } = await supabase
-          .from('ai_scan_results')
+          .from('releases')
           .select('*')
           .eq('id', albumId)
           .maybeSingle();
         if (error) throw error;
         albumData = data;
-        actualTableUsed = 'ai_scan_results';
+        actualTableUsed = 'releases';
       }
     } else if (albumType === 'ai') {
       // Direct AI scan results query

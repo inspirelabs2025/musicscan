@@ -74,6 +74,8 @@ serve(async (req) => {
           format: firstResult.format,
           genre: firstResult.genre,
           country: firstResult.country,
+          cover_image: firstResult.cover_image,
+          thumb: firstResult.thumb
         };
 
         // Create release
@@ -105,6 +107,8 @@ serve(async (req) => {
         format: firstResult.format,
         genre: firstResult.genre,
         country: firstResult.country,
+        cover_image: firstResult.cover_image,
+        thumb: firstResult.thumb
       };
 
       const { data: createReleaseData } = await supabase.functions.invoke('find-or-create-release', {
@@ -116,21 +120,42 @@ serve(async (req) => {
       throw new Error('Discogs ID of artist + title is vereist');
     }
 
-    // Step 2: Get album artwork URL
-    console.log('🖼️ Fetching album artwork for release:', releaseId);
+    // Step 2: Get album artwork URL directly from catalog search results
+    console.log('🖼️ Getting album artwork from Discogs data');
     
-    const { data: artworkData } = await supabase.functions.invoke('fetch-album-artwork', {
-      body: { 
-        discogs_id: albumInfo.discogs_id,
-        album_id: releaseId 
+    let originalArtworkUrl = albumInfo.cover_image || albumInfo.thumb;
+    
+    // If no artwork in albumInfo, fetch directly from Discogs
+    if (!originalArtworkUrl) {
+      console.log('📀 No artwork in search results, fetching from Discogs API');
+      
+      const discogsToken = Deno.env.get('DISCOGS_TOKEN');
+      if (!discogsToken) {
+        throw new Error('DISCOGS_TOKEN not configured');
       }
-    });
 
-    if (!artworkData?.artwork_url) {
-      throw new Error('Geen albumcover gevonden');
+      const discogsResponse = await fetch(
+        `https://api.discogs.com/releases/${albumInfo.discogs_id}`,
+        {
+          headers: {
+            'User-Agent': 'VinylVault/1.0',
+            'Authorization': `Discogs token=${discogsToken}`
+          }
+        }
+      );
+
+      if (!discogsResponse.ok) {
+        throw new Error('Kon album details niet ophalen van Discogs');
+      }
+
+      const discogsData = await discogsResponse.json();
+      originalArtworkUrl = discogsData.images?.[0]?.uri || discogsData.thumb;
     }
 
-    const originalArtworkUrl = artworkData.artwork_url;
+    if (!originalArtworkUrl) {
+      throw new Error('Geen albumcover gevonden voor dit album');
+    }
+
     console.log('✅ Original artwork URL:', originalArtworkUrl);
 
     // Step 3: Generate sketch variant using Lovable AI

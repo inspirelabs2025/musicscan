@@ -16,6 +16,7 @@ import { useRefetchProductArtwork } from "@/hooks/useRefetchProductArtwork";
 import { RefetchProgressDialog } from "@/components/admin/RefetchProgressDialog";
 import { checkArtworkQuality, filterProductsNeedingRefetch } from "@/utils/artworkQualityCheck";
 import { useQueryClient } from "@tanstack/react-query";
+import { useBulkFixArtMediaType } from "@/hooks/useBulkFixArtMediaType";
 
 export default function PlatformProducts() {
   const { user } = useAuth();
@@ -41,6 +42,7 @@ export default function PlatformProducts() {
   const { data: activeProducts = [] } = usePlatformProducts({ });
   const { data: featuredProducts = [] } = usePlatformProducts({ featured: true });
   const { refetchSingle, refetchBatch, isLoading: isRefetching } = useRefetchProductArtwork();
+  const { mutate: fixArtMediaType, isPending: isFixing } = useBulkFixArtMediaType();
 
   const handleRefetchSingle = async (productId: string) => {
     await refetchSingle(productId);
@@ -153,6 +155,18 @@ export default function PlatformProducts() {
             size="sm"
           >
             🧪 Test Discogs ID
+          </Button>
+          <Button 
+            onClick={() => fixArtMediaType()}
+            variant="outline"
+            size="sm"
+            disabled={isFixing}
+          >
+            {isFixing ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fixing...</>
+            ) : (
+              <>🎨 Fix Art Type</>
+            )}
           </Button>
           <Button 
             onClick={() => navigate('/admin/bulk-art-generator')} 

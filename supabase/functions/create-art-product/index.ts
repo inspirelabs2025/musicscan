@@ -266,7 +266,7 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
       .from('platform_products')
       .select('id')
       .eq('discogs_id', releaseData.discogs_id)
-      .eq('media_type', 'merchandise')
+      .eq('media_type', 'art')
       .maybeSingle();
 
     if (existingProducts) {
@@ -346,7 +346,7 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
         slug: slug,
         description: enrichedDescription,
         long_description: `# ${productTitle}\n\n${enrichedDescription}\n\n## Specificaties\n- **Materiaal**: Hoogwaardig aluminium\n- **Afmeting**: 30x30cm (standaard)\n- **Print kwaliteit**: HD, UV-bestendig\n- **Montage**: Klaar om op te hangen\n\n## Over dit album\n- **Artist**: ${artistValue}\n- **Titel**: ${albumTitle}\n- **Jaar**: ${yearValue || 'Onbekend'}\n- **Genre**: ${genreStr}\n- **Label**: ${labelValue || 'Onbekend'}`,
-        media_type: 'merchandise',
+        media_type: 'art',
         format: 'Metal Print - 30x30cm',
         condition_grade: null,
         price: price,

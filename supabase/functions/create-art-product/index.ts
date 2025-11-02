@@ -124,32 +124,13 @@ serve(async (req) => {
     if (!release_id) throw new Error('No release_id returned from find-or-create-release');
     console.log('💾 Release saved with ID:', release_id);
 
-    // Step 3: Fetch artwork
+    // Step 3: Get initial artwork URL (for product creation)
     const masterId = releaseData.original_master_id || releaseData.master_id;
     
-    console.log('📦 Artwork fetch params:', {
-      master_id: masterId,
-      discogs_url: releaseData.discogs_url,
-      artist: artistValue,
-      title: releaseData.title
-    });
+    console.log('🖼️ Master ID for artwork:', masterId || 'none');
     
-    const { data: artworkData, error: artworkError } = await supabase.functions.invoke('fetch-album-artwork', {
-      body: {
-        discogs_url: releaseData.discogs_url,
-        master_id: masterId,
-        artist: artistValue,
-        title: releaseData.title,
-        item_id: null // We'll update the product later
-      }
-    });
-
-    if (artworkError) {
-      console.warn('⚠️ Artwork fetch failed:', artworkError.message);
-    }
-
-    const artworkUrl = artworkData?.artwork_url || releaseData.cover_image;
-    console.log('🖼️ Artwork URL:', artworkUrl);
+    const artworkUrl = releaseData.cover_image;
+    console.log('🖼️ Initial artwork URL:', artworkUrl);
 
     // Extract clean album title (before using it in Step 4)
     const albumTitle = typeof releaseData.title === 'string'
@@ -287,7 +268,25 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
 
     console.log('✅ ART product created:', product.id);
 
-    // Step 7: Generate blog post automatically
+    // Step 7: Fetch and store high-quality artwork for the product
+    console.log('🎨 Fetching high-quality artwork for product...');
+    try {
+      await supabase.functions.invoke('fetch-album-artwork', {
+        body: {
+          master_id: masterId,
+          discogs_url: releaseData.discogs_url,
+          artist: artistValue,
+          title: albumTitle,
+          item_id: product.id,
+          item_type: 'platform_products'
+        }
+      });
+      console.log('✅ Product artwork updated');
+    } catch (artErr) {
+      console.warn('⚠️ Product artwork update failed (non-blocking):', artErr);
+    }
+
+    // Step 8: Generate blog post automatically
     console.log('📝 Generating blog post...');
     let blogData = null;
     try {
@@ -305,6 +304,26 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
       } else {
         blogData = blogResponse;
         console.log('✅ Blog post generated:', blogData?.blog?.id);
+        
+        // Step 9: Fetch and store artwork for the blog post
+        if (blogData?.blog?.id) {
+          console.log('🎨 Fetching high-quality artwork for blog...');
+          try {
+            await supabase.functions.invoke('fetch-album-artwork', {
+              body: {
+                master_id: masterId,
+                discogs_url: releaseData.discogs_url,
+                artist: artistValue,
+                title: albumTitle,
+                item_id: blogData.blog.id,
+                item_type: 'music_stories'
+              }
+            });
+            console.log('✅ Blog artwork updated');
+          } catch (artErr) {
+            console.warn('⚠️ Blog artwork update failed (non-blocking):', artErr);
+          }
+        }
       }
     } catch (blogErr) {
       console.warn('⚠️ Blog generation error (non-blocking):', blogErr);
@@ -315,6 +334,8 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
         success: true,
         product_id: product.id,
         product_slug: product.slug,
+        discogs_id: releaseData.discogs_id,
+        master_id: masterId || null,
         blog_generated: !!blogData?.blog,
         blog_id: blogData?.blog?.id || null,
         blog_slug: blogData?.blog?.slug || null,

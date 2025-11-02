@@ -28,7 +28,7 @@ serve(async (req) => {
     // Strategy 1: Try Master ID first (best quality, official artwork)
     if (master_id) {
       try {
-        console.log('🎨 Trying Master ID for artwork:', master_id);
+        console.log('🎯 Using Master ID for artwork (highest priority):', master_id);
         const masterUrl = `https://api.discogs.com/masters/${master_id}`;
         
         const response = await fetch(masterUrl, {
@@ -43,7 +43,7 @@ serve(async (req) => {
           if (data.images && data.images.length > 0) {
             artworkUrl = data.images[0].uri;
             artworkSource = 'discogs-master';
-            console.log('✅ Found Master artwork:', artworkUrl);
+            console.log('✅ Found Master artwork (official):', artworkUrl);
           }
         }
       } catch (error) {
@@ -275,7 +275,7 @@ serve(async (req) => {
             console.log('✅ Artwork stored at:', storedImageUrl);
 
             // Update database record with official artwork
-            console.log('🔄 Updating database for item_type:', item_type, 'item_id:', item_id);
+            console.log(`🔄 Updating ${item_type} with artwork from ${artworkSource}:`, item_id);
             
             if (item_type === 'ai_scan_results') {
               // Update ai_scan_results table
@@ -287,7 +287,7 @@ serve(async (req) => {
               if (updateError) {
                 console.log('❌ AI scan artwork update error:', updateError);
               } else {
-                console.log('✅ AI scan updated with official artwork for item:', item_id);
+                console.log(`✅ Updated ai_scan_results with ${artworkSource} artwork:`, item_id);
               }
             } else if (item_type === 'music_stories') {
               // Update music_stories table
@@ -299,7 +299,7 @@ serve(async (req) => {
               if (updateError) {
                 console.log('❌ Music story artwork update error:', updateError);
               } else {
-                console.log('✅ Music story updated with official artwork for item:', item_id);
+                console.log(`✅ Updated music_stories with ${artworkSource} artwork:`, item_id);
               }
             } else if (item_type === 'platform_products') {
               // Update platform_products table
@@ -326,7 +326,7 @@ serve(async (req) => {
                 if (updateError) {
                   console.log('❌ Platform product artwork update error:', updateError);
                 } else {
-                  console.log('✅ Platform product updated with official artwork');
+                  console.log(`✅ Updated platform_products with ${artworkSource} artwork:`, item_id);
                 }
               }
             } else {

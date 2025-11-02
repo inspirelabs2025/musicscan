@@ -327,14 +327,16 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
       tags_count: tags.length
     });
 
-    // Build the correct Discogs URL - use master URL if available
-    let finalDiscogsUrl = releaseData.discogs_url;
-    if (masterIdCandidate) {
-      finalDiscogsUrl = `https://www.discogs.com/master/${masterIdCandidate}`;
-      console.log(`🎯 Using Master URL for product: ${finalDiscogsUrl}`);
-    } else {
-      console.log(`📀 Using Release URL for product: ${finalDiscogsUrl}`);
-    }
+    // ✅ CRITICAL FIX: Always use RELEASE data, not master data
+    // Store master_id separately in master_id column
+    const finalDiscogsUrl = releaseData.discogs_url; // Always keep release URL
+    const finalDiscogsId = parseInt(releaseData.discogs_id); // Always keep release ID
+    
+    console.log('🎯 Storing Release ID (not Master):', {
+      release_id: finalDiscogsId,
+      release_url: finalDiscogsUrl,
+      master_id: masterIdCandidate || 'none'
+    });
 
     const { data: product, error: productError } = await supabase
       .from('platform_products')
@@ -353,8 +355,9 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
         images: images,
         categories: categories,
         tags: tags,
-        discogs_id: parseInt(releaseData.discogs_id),
-        discogs_url: finalDiscogsUrl,
+        discogs_id: finalDiscogsId, // ✅ Store RELEASE ID here
+        master_id: masterIdCandidate ? parseInt(masterIdCandidate) : null, // ✅ Store Master ID separately
+        discogs_url: finalDiscogsUrl, // ✅ Keep RELEASE URL
         release_id: release_id,
         status: 'active',
         published_at: new Date().toISOString(),

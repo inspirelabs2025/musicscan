@@ -2160,6 +2160,7 @@ export type Database = {
           last_viewed_at: string | null
           long_description: string | null
           low_stock_threshold: number | null
+          master_id: number | null
           media_type: string
           meta_description: string | null
           meta_title: string | null
@@ -2206,6 +2207,7 @@ export type Database = {
           last_viewed_at?: string | null
           long_description?: string | null
           low_stock_threshold?: number | null
+          master_id?: number | null
           media_type: string
           meta_description?: string | null
           meta_title?: string | null
@@ -2252,6 +2254,7 @@ export type Database = {
           last_viewed_at?: string | null
           long_description?: string | null
           low_stock_threshold?: number | null
+          master_id?: number | null
           media_type?: string
           meta_description?: string | null
           meta_title?: string | null

@@ -308,15 +308,14 @@ serve(async (req) => {
     let discogsTitle = albumData.title?.replace(/\s*\[Metaalprint\]\s*$/, '').replace(/^.*?\s*-\s*/, '');
     
     if (actualTableUsed === 'platform_products' && albumData.discogs_url && discogsToken) {
-      console.log('🎯 Fetching correct data from Discogs API...');
+      console.log('🎯 Fetching correct data from Discogs RELEASE API...');
       try {
-        // Extract master or release ID from URL
-        const urlMatch = albumData.discogs_url.match(/\/(master|release)\/(\d+)/);
+        // ✅ ALWAYS use RELEASE URL for metadata (not master)
+        const urlMatch = albumData.discogs_url.match(/\/release\/(\d+)/);
         if (urlMatch) {
-          const [, type, id] = urlMatch;
-          const discogsApiUrl = type === 'master' 
-            ? `https://api.discogs.com/masters/${id}`
-            : `https://api.discogs.com/releases/${id}`;
+          const releaseId = urlMatch[1];
+          const discogsApiUrl = `https://api.discogs.com/releases/${releaseId}`;
+          console.log('📀 Using RELEASE API:', discogsApiUrl);
           
           const discogsResponse = await fetch(discogsApiUrl, {
             headers: {
@@ -438,15 +437,19 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
 
     console.log('Successfully generated blog content');
 
-    // Search for album cover - try Discogs API first, then Perplexity fallback
+    // Search for album cover - try Master ID first (better quality), then Release ID
     let albumCoverUrl = null;
     
-    // Try Discogs API first if we have a discogs_id
-    if (albumData.discogs_id && discogsToken) {
+    // ✅ Try Master ID first for artwork (higher quality), fallback to Release ID
+    const artworkId = albumData.master_id || albumData.discogs_id;
+    const artworkType = albumData.master_id ? 'master' : 'release';
+    
+    if (artworkId && discogsToken) {
       try {
-        console.log(`Fetching album cover from Discogs API for ID: ${albumData.discogs_id}`);
+        const endpoint = artworkType === 'master' ? 'masters' : 'releases';
+        console.log(`🎨 Fetching album cover from Discogs ${artworkType.toUpperCase()} API for ID: ${artworkId}`);
         
-        const discogsResponse = await fetch(`https://api.discogs.com/releases/${albumData.discogs_id}`, {
+        const discogsResponse = await fetch(`https://api.discogs.com/${endpoint}/${artworkId}`, {
           headers: {
             'Authorization': `Discogs token=${discogsToken}`,
             'User-Agent': 'PlatenScanner/1.0'
@@ -462,14 +465,14 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
             const primaryImage = discogsData.images.find((img: any) => img.type === 'primary') || discogsData.images[0];
             if (primaryImage && primaryImage.uri) {
               albumCoverUrl = primaryImage.uri;
-              console.log('Found album cover from Discogs:', albumCoverUrl);
+              console.log(`✅ Found album cover from Discogs ${artworkType}:`, albumCoverUrl);
             }
           }
         } else {
-          console.log(`Discogs API error: ${discogsResponse.status} - ${discogsResponse.statusText}`);
+          console.log(`❌ Discogs API error: ${discogsResponse.status} - ${discogsResponse.statusText}`);
         }
       } catch (error) {
-        console.error('Error fetching from Discogs API:', error);
+        console.error('❌ Error fetching from Discogs API:', error);
       }
     }
 
@@ -592,17 +595,22 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
 
     // Verrijk YAML met betrouwbare Discogs/album-velden (bron: database/Discogs API)
     const ensureMeaningful = (v: any) => (typeof v === 'string' && isMeaningfulName(v) ? v : undefined);
-    const extractDiscogsIdFromUrl = (u?: string | null) => {
+    
+    // ✅ Extract only RELEASE ID from URL (not master)
+    const extractReleaseIdFromUrl = (u?: string | null) => {
       if (!u) return undefined;
-      const m = u.match(/\/(?:master|release)\/(\d+)/i);
+      const m = u.match(/\/release\/(\d+)/i); // Only match /release/ URLs
       return m ? parseInt(m[1], 10) : undefined;
     };
 
     const enforcedArtist = ensureMeaningful(effectiveArtist);
     const enforcedTitle = ensureMeaningful(effectiveTitle);
     const enforcedYear = albumData.year || albumData.release_year || yamlFrontmatter.year;
+    
+    // ✅ CRITICAL: Always use RELEASE data, not master
     const enforcedDiscogsUrl = albumData.discogs_url || (typeof yamlFrontmatter.discogs_url === 'string' ? (yamlFrontmatter.discogs_url as string) : undefined);
-    const enforcedDiscogsId = albumData.discogs_id || yamlFrontmatter.discogs_id || extractDiscogsIdFromUrl(enforcedDiscogsUrl as string);
+    const enforcedDiscogsId = albumData.discogs_id || yamlFrontmatter.discogs_id || extractReleaseIdFromUrl(enforcedDiscogsUrl as string);
+    const enforcedMasterId = albumData.master_id; // Optional: for artwork only
 
     yamlFrontmatter = {
       ...yamlFrontmatter,
@@ -614,14 +622,22 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
       ...(albumData.country ? { country: albumData.country } : {}),
       ...(albumData.genre ? { genre: albumData.genre } : {}),
       ...(albumData.style ? { styles: Array.isArray(albumData.style) ? albumData.style : [albumData.style] } : {}),
-      ...(enforcedDiscogsUrl ? { discogs_url: enforcedDiscogsUrl } : {}),
-      ...(enforcedDiscogsId ? { discogs_id: enforcedDiscogsId } : {}),
+      ...(enforcedDiscogsUrl ? { discogs_url: enforcedDiscogsUrl } : {}), // ✅ Release URL
+      ...(enforcedDiscogsId ? { discogs_id: enforcedDiscogsId } : {}), // ✅ Release ID
+      ...(enforcedMasterId ? { master_id: enforcedMasterId } : {}), // ✅ Master ID (optional, for artwork)
     } as Record<string, unknown>;
 
     // Generate slug using effective artist/title (from Discogs for platform_products)
     const slug = `${effectiveArtist?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${effectiveTitle?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${effectiveYear || 'unknown'}`.replace(/--+/g, '-');
     
-    console.log('🔗 Generated slug:', slug, { effectiveArtist, effectiveTitle, effectiveYear, enforcedDiscogsId, enforcedDiscogsUrl });
+    console.log('🔗 Generated slug:', slug, { 
+      effectiveArtist, 
+      effectiveTitle, 
+      effectiveYear, 
+      release_id: enforcedDiscogsId, 
+      release_url: enforcedDiscogsUrl,
+      master_id: enforcedMasterId || 'none'
+    });
 
     // Save to database
     const { data: blogPost, error: insertError } = await supabase

@@ -18,8 +18,9 @@ Crawl-delay: 2
 
 # Sitemaps
 Sitemap: https://www.musicscan.app/sitemap.xml
-Sitemap: https://www.musicscan.app/sitemap-blog.xml
-Sitemap: https://www.musicscan.app/sitemap-music-stories.xml
+Sitemap: https://www.musicscan.app/sitemap-static.xml
+Sitemap: https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/generate-sitemaps?path=sitemap-blog
+Sitemap: https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/generate-sitemaps?path=sitemap-music-stories
 
 # SEO optimizations
 Allow: /public-catalog

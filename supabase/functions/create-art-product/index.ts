@@ -383,8 +383,8 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
     try {
       const { data: blogResponse, error: blogError } = await supabase.functions.invoke('plaat-verhaal-generator', {
         body: {
-          albumId: release_id, // Use the release_id from Step 2
-          albumType: 'vinyl', // Metaalprints zijn meestal gebaseerd op vinyl releases
+          albumId: product.id, // ✅ Use product ID with correct artist/title
+          albumType: 'product', // ✅ New type for platform_products
           autoPublish: true, // Automatically publish the blog
           forceRegenerate: false // Don't regenerate if blog already exists
         }

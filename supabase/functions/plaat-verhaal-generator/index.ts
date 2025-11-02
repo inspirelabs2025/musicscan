@@ -218,6 +218,16 @@ serve(async (req) => {
       if (error) throw error;
       albumData = data;
       actualTableUsed = 'releases';
+    } else if (albumType === 'product') {
+      // Direct platform_products query for ART products
+      const { data, error } = await supabase
+        .from('platform_products')
+        .select('*')
+        .eq('id', albumId)
+        .maybeSingle();
+      if (error) throw error;
+      albumData = data;
+      actualTableUsed = 'platform_products';
     } else {
       throw new Error("Ongeldig album type: " + albumType);
     }
@@ -269,15 +279,37 @@ serve(async (req) => {
     }
 
     // Prepare album data for prompt - focus on general album information only
-    // Handle user_id - for releases table, we need to provide a fallback
+    // Handle user_id - for releases table and platform_products, we need to provide a fallback
     let userId = albumData.user_id;
-    if (!userId && actualTableUsed === 'releases') {
-      // For public releases, we need a system user or get from request context
+    if (!userId && (actualTableUsed === 'releases' || actualTableUsed === 'platform_products')) {
+      // For public releases/products, we need a system user or get from request context
       // For now, we'll use a placeholder - in practice you might want to track who triggered the generation
       userId = '00000000-0000-0000-0000-000000000000'; // System user placeholder
     }
 
-    const albumInfo = `
+    // Map platform_products fields to standard album format
+    let albumInfo;
+    if (actualTableUsed === 'platform_products') {
+      albumInfo = `
+ALBUM_DATA (gebruik als inspiratie voor algemeen verhaal over dit album):
+- artist: ${albumData.artist || '—'}
+- album: ${albumData.title?.replace(/\s*\[Metaalprint\]\s*$/, '').replace(/^.*?\s*-\s*/, '') || '—'}
+- year: ${albumData.release_year || '—'}
+- label: ${albumData.label || '—'}
+- catalog: ${albumData.catalog_number || '—'}
+- country: ${albumData.country || '—'}
+- format: Metal Print
+- genre: ${albumData.genre || '—'}
+- styles: ${albumData.style ? JSON.stringify(albumData.style) : '—'}
+- discogs_url: ${albumData.discogs_url || '—'}
+- discogs_id: ${albumData.discogs_id || '—'}
+
+INSTRUCTIE: Gebruik deze informatie als BASIS voor een verhaal over het album zelf. 
+ZOEK ZELF OP: studio, producer, muzikanten, commercieel succes wereldwijd.
+Het verhaal gaat NIET over deze specifieke persing of conditie.
+`;
+    } else {
+      albumInfo = `
 ALBUM_DATA (gebruik als inspiratie voor algemeen verhaal over dit album):
 - artist: ${albumData.artist || '—'}
 - album: ${albumData.title || '—'}
@@ -296,6 +328,7 @@ INSTRUCTIE: Gebruik deze informatie als BASIS voor een verhaal over het album ze
 ZOEK ZELF OP: studio, producer, muzikanten, commercieel succes wereldwijd.
 Het verhaal gaat NIET over deze specifieke persing of conditie.
 `;
+    }
 
     console.log('Calling OpenAI with album data...');
 

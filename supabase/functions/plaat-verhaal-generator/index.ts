@@ -590,10 +590,38 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
     // Gebruik de opgeschoonde body als markdown_content
     const markdownBody = content.trim();
 
+    // Verrijk YAML met betrouwbare Discogs/album-velden (bron: database/Discogs API)
+    const ensureMeaningful = (v: any) => (typeof v === 'string' && isMeaningfulName(v) ? v : undefined);
+    const extractDiscogsIdFromUrl = (u?: string | null) => {
+      if (!u) return undefined;
+      const m = u.match(/\/(?:master|release)\/(\d+)/i);
+      return m ? parseInt(m[1], 10) : undefined;
+    };
+
+    const enforcedArtist = ensureMeaningful(effectiveArtist);
+    const enforcedTitle = ensureMeaningful(effectiveTitle);
+    const enforcedYear = albumData.year || albumData.release_year || yamlFrontmatter.year;
+    const enforcedDiscogsUrl = albumData.discogs_url || (typeof yamlFrontmatter.discogs_url === 'string' ? (yamlFrontmatter.discogs_url as string) : undefined);
+    const enforcedDiscogsId = albumData.discogs_id || yamlFrontmatter.discogs_id || extractDiscogsIdFromUrl(enforcedDiscogsUrl as string);
+
+    yamlFrontmatter = {
+      ...yamlFrontmatter,
+      ...(enforcedArtist ? { artist: enforcedArtist } : {}),
+      ...(enforcedTitle ? { album: enforcedTitle } : {}),
+      ...(enforcedYear ? { year: enforcedYear } : {}),
+      ...(albumData.label ? { label: albumData.label } : {}),
+      ...(albumData.catalog_number ? { catalog: albumData.catalog_number } : {}),
+      ...(albumData.country ? { country: albumData.country } : {}),
+      ...(albumData.genre ? { genre: albumData.genre } : {}),
+      ...(albumData.style ? { styles: Array.isArray(albumData.style) ? albumData.style : [albumData.style] } : {}),
+      ...(enforcedDiscogsUrl ? { discogs_url: enforcedDiscogsUrl } : {}),
+      ...(enforcedDiscogsId ? { discogs_id: enforcedDiscogsId } : {}),
+    } as Record<string, unknown>;
+
     // Generate slug using effective artist/title (from Discogs for platform_products)
     const slug = `${effectiveArtist?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${effectiveTitle?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${effectiveYear || 'unknown'}`.replace(/--+/g, '-');
     
-    console.log('🔗 Generated slug:', slug, { effectiveArtist, effectiveTitle, effectiveYear });
+    console.log('🔗 Generated slug:', slug, { effectiveArtist, effectiveTitle, effectiveYear, enforcedDiscogsId, enforcedDiscogsUrl });
 
     // Save to database
     const { data: blogPost, error: insertError } = await supabase

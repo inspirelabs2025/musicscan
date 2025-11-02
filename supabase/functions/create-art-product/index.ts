@@ -12,9 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const { discogs_id, catalog_number, artist, title, price = 49.95 } = await req.json();
+    const { discogs_id, catalog_number, artist, title, price = 49.95, master_id } = await req.json();
     
-    console.log('🎨 Starting ART product creation:', { discogs_id, catalog_number, artist, title });
+    console.log('🎨 Starting ART product creation:', { discogs_id, catalog_number, artist, title, master_id });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -125,7 +125,8 @@ serve(async (req) => {
     console.log('💾 Release saved with ID:', release_id);
 
     // Step 3: Get initial artwork URL (for product creation)
-    const masterId = releaseData.original_master_id || releaseData.master_id;
+    const providedMasterId = master_id ? parseInt(master_id) : null;
+    const masterId = providedMasterId || releaseData.original_master_id || releaseData.master_id;
     
     console.log('🖼️ Master ID for artwork:', masterId || 'none');
     
@@ -206,11 +207,24 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
     console.log('🎨 Creating ART product...');
 
     const productTitle = `${artistValue} - ${albumTitle} [Metaalprint]`;
-    const slug = `${artistValue}-${albumTitle}-metaalprint`
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .substring(0, 80);
+
+    // Generate a unique slug using DB function to avoid collisions
+    let slug = '';
+    try {
+      const { data: slugData, error: slugError } = await supabase.rpc('generate_product_slug', {
+        p_title: productTitle,
+        p_artist: artistValue
+      });
+      if (slugError) throw slugError;
+      slug = slugData as string;
+    } catch (e) {
+      console.warn('⚠️ Slug generation via RPC failed, falling back to local slug:', (e as Error).message);
+      slug = `${artistValue}-${albumTitle}-metaalprint`
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .substring(0, 80);
+    }
 
     // Defensive normalization for categories and tags
     const genreStr = genreValue || 'music';

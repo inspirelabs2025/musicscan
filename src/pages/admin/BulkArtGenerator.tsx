@@ -289,7 +289,8 @@ export default function BulkArtGenerator() {
                 artist: album.artist,
                 title: album.title,
                 price: album.price,
-                ...(album.discogsId && { discogs_id: album.discogsId })
+                ...(album.discogsId && { discogs_id: album.discogsId }),
+                ...(album.discogsId && { master_id: album.discogsId }) // Behandel numerieke/URL input als Master ID
               }
             });
             

@@ -195,12 +195,12 @@ const BulkArtGenerator = () => {
           .replace(/\b\d{4,}\b/g, '')
           .trim();
 
-        // Split on common delimiters
-        const parts = cleanText.split(/[—–-]\s*|\s*-\s*/).map(p => p.trim()).filter(Boolean);
+        // Parse using robust regex that matches FIRST " - " only (handles multi-word artists)
+        const standardMatch = cleanText.match(/^(.+?)\s+-\s+(.+)$/);
         
-        if (parts.length >= 2) {
-          const artist = parts[0];
-          const title = parts.slice(1).join(' - ');
+        if (standardMatch) {
+          const artist = standardMatch[1].trim();
+          const title = standardMatch[2].trim();
           
           // Skip duplicates
           if (idInfo && seenIds.has(idInfo.id)) {
@@ -223,6 +223,23 @@ const BulkArtGenerator = () => {
           }
 
           parsed.push(album);
+        } else if (idInfo) {
+          // If we only have an ID without artist/title, add it for Discogs fetch
+          if (seenIds.has(idInfo.id)) {
+            console.log(`Skipping duplicate ID: ${idInfo.id}`);
+            continue;
+          }
+
+          parsed.push({
+            artist: '',
+            title: '',
+            price: defaultPrice,
+            discogsId: idInfo.id,
+            idType: idInfo.type,
+            matchStatus: 'idle',
+            originalLine: trimmed
+          });
+          seenIds.add(idInfo.id);
         }
       }
 

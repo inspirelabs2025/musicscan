@@ -15,6 +15,7 @@ interface AlbumInput {
   artist: string;
   title: string;
   price: number;
+  discogsId?: number;
   originalLine: string;
 }
 
@@ -67,24 +68,62 @@ export default function BulkArtGenerator() {
       .split('\n')
       .filter(line => line.trim())
       .map(line => {
-        let artist = '', title = '';
+        let artist = '', title = '', discogsId: number | undefined;
         const trimmedLine = line.trim();
         
         // Now all delimiters are normalized, prioritize by reliability
         if (trimmedLine.includes(' - ')) {
           const parts = trimmedLine.split(' - ');
-          artist = parts[0].trim();
-          title = parts.slice(1).join(' - ').trim();
+          artist = parts[0]?.trim() || '';
+          title = parts[1]?.trim() || '';
+          
+          // Check for 3rd part (Discogs ID)
+          if (parts[2]) {
+            const idParsed = parseInt(parts[2].trim(), 10);
+            if (!isNaN(idParsed) && idParsed > 0) {
+              discogsId = idParsed;
+            } else {
+              // If 3rd part exists but isn't a valid ID, include it in title
+              title = parts.slice(1).join(' - ').trim();
+            }
+          } else if (parts.length > 2) {
+            // More than 2 parts but no valid ID, join as title
+            title = parts.slice(1).join(' - ').trim();
+          }
         } 
         else if (trimmedLine.includes(' | ')) {
           const parts = trimmedLine.split(' | ');
-          artist = parts[0].trim();
-          title = parts.slice(1).join(' | ').trim();
+          artist = parts[0]?.trim() || '';
+          title = parts[1]?.trim() || '';
+          
+          // Check for 3rd part (Discogs ID)
+          if (parts[2]) {
+            const idParsed = parseInt(parts[2].trim(), 10);
+            if (!isNaN(idParsed) && idParsed > 0) {
+              discogsId = idParsed;
+            } else {
+              title = parts.slice(1).join(' | ').trim();
+            }
+          } else if (parts.length > 2) {
+            title = parts.slice(1).join(' | ').trim();
+          }
         }
         else if (trimmedLine.includes(', ')) {
           const parts = trimmedLine.split(', ');
-          artist = parts[0].trim();
-          title = parts.slice(1).join(', ').trim();
+          artist = parts[0]?.trim() || '';
+          title = parts[1]?.trim() || '';
+          
+          // Check for 3rd part (Discogs ID)
+          if (parts[2]) {
+            const idParsed = parseInt(parts[2].trim(), 10);
+            if (!isNaN(idParsed) && idParsed > 0) {
+              discogsId = idParsed;
+            } else {
+              title = parts.slice(1).join(', ').trim();
+            }
+          } else if (parts.length > 2) {
+            title = parts.slice(1).join(', ').trim();
+          }
         }
         // Fallback: Try to split on first capital letter after lowercase
         else {
@@ -99,6 +138,7 @@ export default function BulkArtGenerator() {
           artist,
           title,
           price,
+          discogsId,
           originalLine: trimmedLine
         };
       });
@@ -190,7 +230,8 @@ export default function BulkArtGenerator() {
               body: {
                 artist: album.artist,
                 title: album.title,
-                price: album.price
+                price: album.price,
+                ...(album.discogsId && { discogs_id: album.discogsId })
               }
             });
             
@@ -272,10 +313,11 @@ export default function BulkArtGenerator() {
 
   const downloadResults = () => {
     const csv = [
-      ['Artist', 'Album', 'Status', 'Discogs ID', 'Product ID', 'Error'].join(','),
+      ['Artist', 'Album', 'Input Discogs ID', 'Status', 'Result Discogs ID', 'Product ID', 'Error'].join(','),
       ...results.map(r => [
         r.input.artist,
         r.input.title,
+        r.input.discogsId || '',
         r.status,
         r.discogsId || '',
         r.productId || '',
@@ -360,13 +402,15 @@ export default function BulkArtGenerator() {
             <p className="text-sm text-muted-foreground mb-2">
               ✨ <strong>Automatische normalisatie actief!</strong>
               <br />
-              Alle formaten worden automatisch geconverteerd naar: <strong>Artist - Album</strong>
+              Formaat: <strong>Artist - Album</strong> of <strong>Artist - Album - DiscogsID</strong>
               <br />
               Ondersteunt: Artist-Album, Artist–Album, Artist | Album, Artist, Album
+              <br />
+              💡 <strong>Tip:</strong> Voeg Discogs ID toe (3e kolom) voor 100% nauwkeurigheid!
             </p>
             <Textarea
               id="input-text"
-              placeholder={"Pink Floyd - The Wall\nThe Beatles - Abbey Road\nLed Zeppelin - IV"}
+              placeholder={"Pink Floyd - The Wall\nThe Beatles - Abbey Road - 123456\nLed Zeppelin - IV"}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               className="min-h-[200px] font-mono text-sm"
@@ -451,6 +495,7 @@ export default function BulkArtGenerator() {
                       <th className="text-left p-3 font-semibold">Status</th>
                       <th className="text-left p-3 font-semibold">Artist</th>
                       <th className="text-left p-3 font-semibold">Album</th>
+                      <th className="text-left p-3 font-semibold">Discogs ID</th>
                       <th className="text-left p-3 font-semibold">Prijs</th>
                       <th className="text-left p-3 font-semibold">Details</th>
                     </tr>
@@ -466,6 +511,9 @@ export default function BulkArtGenerator() {
                         </td>
                         <td className="p-3 font-medium">{result.input.artist}</td>
                         <td className="p-3">{result.input.title}</td>
+                        <td className="p-3 text-sm text-muted-foreground">
+                          {result.input.discogsId || '—'}
+                        </td>
                         <td className="p-3">€{result.input.price.toFixed(2)}</td>
                         <td className="p-3">
                           {result.error && (
@@ -506,7 +554,9 @@ export default function BulkArtGenerator() {
         <h3 className="font-semibold mb-2">💡 Tips</h3>
         <ul className="text-sm space-y-1 text-muted-foreground">
           <li>• Elk album op een nieuwe regel</li>
-          <li>• Format: "Artist - Album" of "Artist | Album" of "Artist, Album"</li>
+          <li>• Format: "Artist - Album" of "Artist - Album - DiscogsID"</li>
+          <li>• Ondersteunt ook: "Artist | Album" of "Artist, Album"</li>
+          <li>• 🎯 Met Discogs ID = 100% match, zonder ID = automatisch zoeken</li>
           <li>• Systeem verwerkt automatisch in batches van 5 albums tegelijk</li>
           <li>• Duplicates worden automatisch gedetecteerd (⚠️ warning, geen error)</li>
           <li>• Download het rapport na afloop voor een compleet overzicht</li>

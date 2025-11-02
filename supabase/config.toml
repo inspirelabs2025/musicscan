@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.optimized-catalog-search]
 verify_jwt = false
+
+[functions.fix-blog-slugs]
+verify_jwt = false

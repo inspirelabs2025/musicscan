@@ -58,6 +58,7 @@ import BulkArtGenerator from "./pages/admin/BulkArtGenerator";
 import FixProductTitles from "./pages/admin/FixProductTitles";
 import BulkProductCleanup from "./pages/admin/BulkProductCleanup";
 import AutoCleanupToday from "./pages/admin/AutoCleanupToday";
+import FixBlogSlugs from "./pages/admin/FixBlogSlugs";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 import Community from "./pages/Community";
@@ -329,6 +330,11 @@ const App = () => {
             <Route path="/admin/bulk-cleanup" element={
               <ProtectedRoute>
                 <BulkProductCleanup />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/fix-blog-slugs" element={
+              <ProtectedRoute>
+                <FixBlogSlugs />
               </ProtectedRoute>
             } />
             <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />

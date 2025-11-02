@@ -46,30 +46,36 @@ export default function BulkArtGenerator() {
         let artist = '', title = '';
         const trimmedLine = line.trim();
         
-        // Support multiple formats with flexible spacing
-        // Try " - " first (most common)
+        // Try delimiters in order of reliability
+        // 1. " - " (space-dash-space) - most reliable
         if (trimmedLine.includes(' - ')) {
           const parts = trimmedLine.split(' - ');
           artist = parts[0].trim();
-          title = parts.slice(1).join(' - ').trim(); // Handle multiple " - " in title
+          title = parts.slice(1).join(' - ').trim();
         } 
-        // Try "-" without spaces
-        else if (trimmedLine.includes('-') && !trimmedLine.includes('–')) {
-          const parts = trimmedLine.split('-');
+        // 2. " | " (space-pipe-space)
+        else if (trimmedLine.includes(' | ')) {
+          const parts = trimmedLine.split(' | ');
           artist = parts[0].trim();
-          title = parts.slice(1).join('-').trim();
+          title = parts.slice(1).join(' | ').trim();
         }
-        // Try "|"
+        // 3. "-" (dash without spaces) - only if clearly separating words
+        else if (trimmedLine.includes('-')) {
+          const dashIndex = trimmedLine.indexOf('-');
+          artist = trimmedLine.substring(0, dashIndex).trim();
+          title = trimmedLine.substring(dashIndex + 1).trim();
+        }
+        // 4. "|" (pipe without spaces)
         else if (trimmedLine.includes('|')) {
-          const parts = trimmedLine.split('|');
-          artist = parts[0].trim();
-          title = parts.slice(1).join('|').trim();
-        } 
-        // Try "," (least common, only if no "-" found)
+          const pipeIndex = trimmedLine.indexOf('|');
+          artist = trimmedLine.substring(0, pipeIndex).trim();
+          title = trimmedLine.substring(pipeIndex + 1).trim();
+        }
+        // 5. "," (comma) - least preferred
         else if (trimmedLine.includes(',')) {
-          const parts = trimmedLine.split(',');
-          artist = parts[0].trim();
-          title = parts.slice(1).join(',').trim();
+          const commaIndex = trimmedLine.indexOf(',');
+          artist = trimmedLine.substring(0, commaIndex).trim();
+          title = trimmedLine.substring(commaIndex + 1).trim();
         }
         
         return {
@@ -90,7 +96,7 @@ export default function BulkArtGenerator() {
     if (parsed.length === 0) {
       toast({
         title: "❌ Geen albums gevonden",
-        description: "Gebruik format: Artist - Album (één per regel). Ondersteunt ook: Artist-Album, Artist|Album, Artist,Album",
+        description: "Gebruik bij voorkeur format: Artist - Album (met spaties rond het streepje). Andere formaten: Artist-Album, Artist | Album",
         variant: "destructive"
       });
       return;
@@ -104,7 +110,7 @@ export default function BulkArtGenerator() {
     if (failedCount > 0) {
       toast({
         title: "⚠️ Input geparsed met waarschuwing",
-        description: `${parsed.length} albums gevonden, ${failedCount} regels overgeslagen (controleer format)`,
+        description: `${parsed.length} albums gevonden, ${failedCount} regels overgeslagen. Controleer of elke regel Artist - Album format heeft.`,
       });
     } else {
       toast({
@@ -316,7 +322,9 @@ export default function BulkArtGenerator() {
               📋 Plak je lijst hier (Artist - Album per regel)
             </Label>
             <p className="text-sm text-muted-foreground mb-2">
-              Ondersteunde formaten: "Artist - Album", "Artist-Album", "Artist | Album", "Artist, Album"
+              Aanbevolen format: <strong>Artist - Album</strong> (met spaties rond streepje).
+              <br />
+              Werkt ook: Artist-Album, Artist | Album
             </p>
             <Textarea
               id="input-text"

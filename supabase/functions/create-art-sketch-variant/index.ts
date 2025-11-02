@@ -314,19 +314,16 @@ serve(async (req) => {
         media_type: 'art',
         categories: ['sketch variant', 'metaal album cover'],
         primary_image: publicUrl,
-        additional_images: [originalArtworkUrl],
+        images: [publicUrl, originalArtworkUrl],
         stock_quantity: 10,
         status: 'active',
         published_at: new Date().toISOString(),
-        metadata: {
-          discogs_id: albumInfo.discogs_id,
-          release_id: releaseId,
-          sketch_style: style,
-          original_artwork: originalArtworkUrl,
-          year: albumInfo.year,
-          label: albumInfo.label,
-          catalog_number: albumInfo.catalog_number
-        }
+        discogs_id: albumInfo.discogs_id,
+        release_id: releaseId,
+        year: albumInfo.year,
+        label: albumInfo.label,
+        catalog_number: albumInfo.catalog_number,
+        master_id: albumInfo.master_id
       })
       .select()
       .single();

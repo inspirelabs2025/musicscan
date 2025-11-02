@@ -160,7 +160,7 @@ export const MetalPrintSpotlight = () => {
               <h3 className="text-xl font-bold mb-6 text-center">Populaire Prints</h3>
               <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
                 {artProducts.map((product) => (
-                  <Link key={product.id} to={`/shop/${product.slug}`}>
+                  <Link key={product.id} to={`/product/${product.slug}`}>
                     <Card className="aspect-square overflow-hidden hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-vinyl-gold">
                       <img 
                         src={product.primary_image || ''} 

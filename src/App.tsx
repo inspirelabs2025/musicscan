@@ -34,6 +34,7 @@ import MyCollection from "./pages/MyCollection";
 import MyCollectionOld from "./pages/MyCollectionOld";
 import MyShop from "./pages/MyShop";
 import PublicShop from "./pages/PublicShop";
+import ShopOrProductRouter from "./pages/ShopOrProductRouter";
 import PublicCollection from "./pages/PublicCollection";
 import PublicCatalog from "./pages/PublicCatalog";
 import PublicShopsOverview from "./pages/PublicShopsOverview";
@@ -225,7 +226,7 @@ const App = () => {
               </ProtectedRoute>
             } />
             <Route path="/shop" element={<Navigate to="/shops" replace />} />
-            <Route path="/shop/:shopSlug" element={<PublicShop />} />
+            <Route path="/shop/:shopSlug" element={<ShopOrProductRouter />} />
             <Route path="/shop/:shopSlug/item/:itemId" element={<PublicShopItemDetail />} />
             <Route path="/product/:slug" element={<PlatformProductDetail />} />
             <Route path="/shop/order-success" element={<OrderSuccess />} />

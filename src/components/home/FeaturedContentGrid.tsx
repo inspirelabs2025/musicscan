@@ -200,7 +200,7 @@ export const FeaturedContentGrid = () => {
                 </span>
               </div>
               <Button asChild className="w-full group/btn">
-                <Link to={`/shop/${product.id}`}>
+                <Link to={`/product/${product.slug || product.id}`}>
                   Bekijk Product
                   <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                 </Link>

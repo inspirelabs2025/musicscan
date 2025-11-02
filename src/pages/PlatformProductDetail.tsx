@@ -8,6 +8,7 @@ import { useShoppingCart } from "@/hooks/useShoppingCart";
 import { ArrowLeft, ShoppingCart, Check, Package, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useSEO } from "@/hooks/useSEO";
 
 export default function PlatformProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -19,6 +20,14 @@ export default function PlatformProductDetail() {
   );
   const { addToCart, isInCart } = useShoppingCart();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // SEO optimization for product page
+  useSEO({
+    title: product ? `${product.title}${product.artist ? ` - ${product.artist}` : ''} | MusicScan Shop` : 'Product | MusicScan Shop',
+    description: product ? `${product.title}${product.artist ? ` van ${product.artist}` : ''} - ${product.description || 'Bekijk details en bestel eenvoudig.'} Prijs: €${product.price}` : 'Bekijk productdetails in onze shop',
+    keywords: product ? `${product.title}, ${product.artist || ''}, ${product.media_type || ''}, muziek, shop, kopen, ${product.categories?.join(', ') || ''}`.replace(/,\s*,/g, ',').replace(/^,|,$/g, '') : 'muziek shop, producten',
+    canonicalUrl: `https://www.musicscan.app/product/${slug}`,
+  });
 
   if (isLoading) {
     return (

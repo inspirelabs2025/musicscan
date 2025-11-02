@@ -176,3 +176,21 @@ All colors MUST be HSL.
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-in-out;
 }
+
+/* Metal print effect */
+.metal-print-effect {
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.15),
+    0 16px 32px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.metal-print-effect::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+  pointer-events: none;
+  border-radius: inherit;
+}

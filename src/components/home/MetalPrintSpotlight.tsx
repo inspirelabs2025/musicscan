@@ -11,6 +11,15 @@ export const MetalPrintSpotlight = () => {
     limit: 6 
   });
 
+  // Example album for showcase
+  const exampleAlbum = {
+    title: "Dark Side of the Moon",
+    artist: "Pink Floyd",
+    artwork: "https://images.unsplash.com/photo-1619983081563-430f63602796?w=800&h=800&fit=crop"
+  };
+
+  const displayImage = artProducts?.[0]?.primary_image || exampleAlbum.artwork;
+
   const features = [
     { icon: Sparkles, text: 'Hoogwaardige Metalen Prints' },
     { icon: Check, text: 'Premium Afwerking' },
@@ -36,25 +45,62 @@ export const MetalPrintSpotlight = () => {
 
           {/* Main showcase with split layout */}
           <div className="grid md:grid-cols-2 gap-8 mb-12">
-            {/* Left: Visual showcase */}
-            <div className="relative group">
-              <Card className="p-2 bg-gradient-to-br from-vinyl-gold/20 to-vinyl-purple/20 border-2 border-vinyl-gold/50 hover:border-vinyl-gold transition-all">
-                <div className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-zinc-900 to-zinc-800 flex items-center justify-center">
-                  {isLoading ? (
-                    <Skeleton className="w-full h-full" />
-                  ) : artProducts && artProducts.length > 0 ? (
-                    <img 
-                      src={artProducts[0].primary_image || ''} 
-                      alt={artProducts[0].title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="text-6xl">🎨</div>
-                  )}
+            {/* Left: Before/After Comparison */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Before: Original Artwork */}
+                <div className="relative group">
+                  <Card className="p-2 bg-card border-2 border-border hover:border-primary/50 transition-all">
+                    <div className="aspect-square rounded-lg overflow-hidden">
+                      {isLoading ? (
+                        <Skeleton className="w-full h-full" />
+                      ) : (
+                        <img 
+                          src={displayImage} 
+                          alt="Album artwork"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                  </Card>
+                  <span className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold border border-border">
+                    📀 Origineel
+                  </span>
                 </div>
-              </Card>
-              {/* 3D effect shadow */}
-              <div className="absolute -inset-4 bg-gradient-to-br from-vinyl-gold/20 to-vinyl-purple/20 blur-2xl -z-10 group-hover:blur-3xl transition-all" />
+
+                {/* After: Metal Print Effect */}
+                <div className="relative group">
+                  <Card className="p-2 bg-gradient-to-br from-vinyl-gold/20 to-vinyl-purple/20 border-2 border-vinyl-gold/50 hover:border-vinyl-gold transition-all">
+                    <div className="aspect-square rounded-lg overflow-hidden relative metal-print-effect">
+                      {isLoading ? (
+                        <Skeleton className="w-full h-full" />
+                      ) : (
+                        <>
+                          <img 
+                            src={displayImage} 
+                            alt="Metal print preview"
+                            className="w-full h-full object-cover"
+                          />
+                          {/* Metal gloss overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
+                          {/* Corner shine effect */}
+                          <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-br from-white/30 to-transparent blur-xl pointer-events-none" />
+                        </>
+                      )}
+                    </div>
+                  </Card>
+                  <span className="absolute top-4 right-4 bg-vinyl-gold/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white border border-vinyl-gold">
+                    ✨ Op Metaal
+                  </span>
+                  {/* 3D effect shadow */}
+                  <div className="absolute -inset-2 bg-gradient-to-br from-vinyl-gold/30 to-vinyl-purple/30 blur-xl -z-10 group-hover:blur-2xl transition-all" />
+                </div>
+              </div>
+              
+              {/* Showcase description */}
+              <p className="text-sm text-muted-foreground text-center">
+                Zie het verschil: van album artwork naar luxe metalen wanddecoratie
+              </p>
             </div>
 
             {/* Right: Features & CTA */}

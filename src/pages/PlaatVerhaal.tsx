@@ -84,17 +84,73 @@ export const PlaatVerhaal: React.FC = () => {
     const fetchBlog = async () => {
       if (!slug) return;
 
+      // Helper: parse base and year from slug pattern "<base>-<year|unknown>"
+      const parseSlug = (s: string) => {
+        const m = s.match(/^(.*)-((?:\d{4})|unknown)$/);
+        if (m) {
+          return { base: m[1], year: m[2] } as const;
+        }
+        return { base: s, year: null as string | null } as const;
+      };
+
+      const { base, year: yearPart } = parseSlug(slug);
+
       try {
         setLoading(true);
-        
-        // Fetch blog post by slug
-        const { data: blogData, error } = await supabase
+
+        // 1) Try exact slug first
+        let { data: blogData, error } = await supabase
           .from('blog_posts')
           .select('*')
           .eq('slug', slug)
           .maybeSingle();
 
         if (error) throw error;
+
+        // 2) If not found, try the same base with -unknown (common legacy)
+        if (!blogData && yearPart && yearPart !== 'unknown') {
+          const altUnknown = `${base}-unknown`;
+          const { data: unknownData, error: unknownErr } = await supabase
+            .from('blog_posts')
+            .select('*')
+            .eq('slug', altUnknown)
+            .maybeSingle();
+          if (unknownErr) throw unknownErr;
+          if (unknownData) {
+            blogData = unknownData;
+            // Normalize URL to the actual found slug
+            setTimeout(() => navigate(`/plaat-verhaal/${unknownData.slug}`, { replace: true }), 0);
+          }
+        }
+
+        // 3) If still not found, try any slug with the same base prefix (any year)
+        if (!blogData) {
+          const { data: prefixList, error: prefixErr } = await supabase
+            .from('blog_posts')
+            .select('*')
+            .ilike('slug', `${base}-%`)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (prefixErr) throw prefixErr;
+          if (prefixList && prefixList.length > 0) {
+            blogData = prefixList[0];
+            setTimeout(() => navigate(`/plaat-verhaal/${prefixList[0].slug}`, { replace: true }), 0);
+          }
+        }
+
+        // 4) As a last resort, try the base without year (for very old records)
+        if (!blogData) {
+          const { data: baseData, error: baseErr } = await supabase
+            .from('blog_posts')
+            .select('*')
+            .eq('slug', base)
+            .maybeSingle();
+          if (baseErr) throw baseErr;
+          if (baseData) {
+            blogData = baseData;
+            setTimeout(() => navigate(`/plaat-verhaal/${baseData.slug}`, { replace: true }), 0);
+          }
+        }
 
         if (!blogData) {
           setNotFound(true);
@@ -103,12 +159,11 @@ export const PlaatVerhaal: React.FC = () => {
 
         setBlog(blogData as BlogPost);
 
-        // Increment view count
+        // Increment view count (best-effort)
         await supabase
           .from('blog_posts')
           .update({ views_count: (blogData.views_count || 0) + 1 })
           .eq('id', blogData.id);
-
       } catch (error) {
         console.error('Error fetching blog:', error);
         setNotFound(true);

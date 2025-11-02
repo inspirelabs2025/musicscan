@@ -55,6 +55,7 @@ import { ShopProducts } from "./pages/admin/ShopProducts";
 import PlatformProducts from "./pages/admin/PlatformProducts";
 import ArtGenerator from "./pages/admin/ArtGenerator";
 import BulkArtGenerator from "./pages/admin/BulkArtGenerator";
+import SketchArtGenerator from "./pages/admin/SketchArtGenerator";
 import FixProductTitles from "./pages/admin/FixProductTitles";
 import BulkProductCleanup from "./pages/admin/BulkProductCleanup";
 import AutoCleanupToday from "./pages/admin/AutoCleanupToday";
@@ -315,6 +316,11 @@ const App = () => {
             <Route path="/admin/bulk-art-generator" element={
               <ProtectedRoute>
                 <BulkArtGenerator />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/sketch-art-generator" element={
+              <ProtectedRoute>
+                <SketchArtGenerator />
               </ProtectedRoute>
             } />
             <Route path="/admin/auto-cleanup-today" element={

@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.create-art-sketch-variant]
+verify_jwt = false
+
 [functions.music-story-generator]
 verify_jwt = true
 

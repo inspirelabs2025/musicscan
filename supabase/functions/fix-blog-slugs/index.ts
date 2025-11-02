@@ -29,10 +29,10 @@ serve(async (req) => {
 
     console.log('🔧 Starting blog slug fix process...');
 
-    // Get all blog posts
+    // Get all blog posts with yaml_frontmatter
     const { data: blogPosts, error: fetchError } = await supabase
       .from('blog_posts')
-      .select('*')
+      .select('id, slug, album_type, album_id, yaml_frontmatter')
       .order('created_at', { ascending: false });
 
     if (fetchError) throw fetchError;
@@ -113,43 +113,65 @@ serve(async (req) => {
         let discogsArtist = albumData.artist;
         let discogsTitle = albumData.title?.replace(/\s*\[Metaalprint\]\s*$/, '').replace(/^.*?\s*-\s*/, '');
 
-        if (actualTableUsed === 'platform_products' && albumData.discogs_url && discogsToken) {
-          console.log('🎯 Fetching correct data from Discogs API...');
-          try {
-            const urlMatch = albumData.discogs_url.match(/\/(master|release)\/(\d+)/);
-            if (urlMatch) {
-              const [, type, id] = urlMatch;
-              const discogsApiUrl = type === 'master'
-                ? `https://api.discogs.com/masters/${id}`
-                : `https://api.discogs.com/releases/${id}`;
+        if (actualTableUsed === 'platform_products' && discogsToken) {
+          if (albumData.discogs_url) {
+            console.log('🎯 Fetching correct data from Discogs API...');
+            try {
+              const urlMatch = albumData.discogs_url.match(/\/(master|release)\/(\d+)/);
+              if (urlMatch) {
+                const [, type, id] = urlMatch;
+                const discogsApiUrl = type === 'master'
+                  ? `https://api.discogs.com/masters/${id}`
+                  : `https://api.discogs.com/releases/${id}`;
 
-              const discogsResponse = await fetch(discogsApiUrl, {
-                headers: {
-                  'Authorization': `Discogs token=${discogsToken}`,
-                  'User-Agent': 'MusicScanApp/1.0'
+                const discogsResponse = await fetch(discogsApiUrl, {
+                  headers: {
+                    'Authorization': `Discogs token=${discogsToken}`,
+                    'User-Agent': 'MusicScanApp/1.0'
+                  }
+                });
+
+                if (discogsResponse.ok) {
+                  const discogsData = await discogsResponse.json();
+                  discogsArtist = discogsData.artists?.[0]?.name || discogsData.artists_sort || discogsArtist;
+                  discogsTitle = discogsData.title || discogsTitle;
+                  console.log('✅ Fetched from Discogs:', { artist: discogsArtist, title: discogsTitle });
                 }
-              });
-
-              if (discogsResponse.ok) {
-                const discogsData = await discogsResponse.json();
-                discogsArtist = discogsData.artists?.[0]?.name || discogsData.artists_sort || discogsArtist;
-                discogsTitle = discogsData.title || discogsTitle;
-                console.log('✅ Fetched from Discogs:', { artist: discogsArtist, title: discogsTitle });
               }
+            } catch (error) {
+              console.error('❌ Error fetching Discogs data:', error);
             }
-          } catch (error) {
-            console.error('❌ Error fetching Discogs data:', error);
+          } else {
+            // No discogs_url, try parsing from title
+            const titleMatch = albumData.title?.match(/^(.+?)\s*-\s*(.+?)(?:\s*\[.*\])?$/);
+            if (titleMatch) {
+              const [, parsedArtist, parsedTitle] = titleMatch;
+              discogsArtist = parsedArtist.trim();
+              discogsTitle = parsedTitle.trim();
+              console.log('📝 Parsed from title:', { artist: discogsArtist, title: discogsTitle });
+            }
           }
         }
 
-        // Determine effective values
-        const effectiveArtist = actualTableUsed === 'platform_products' ? discogsArtist : albumData.artist;
-        const effectiveTitle = actualTableUsed === 'platform_products' ? discogsTitle : albumData.title;
-        const effectiveYear = albumData.year || albumData.release_year;
+        // Get fallback data from yaml_frontmatter
+        const yamlYear = blog.yaml_frontmatter?.year;
+        const yamlArtist = blog.yaml_frontmatter?.artist;
+        const yamlTitle = blog.yaml_frontmatter?.album || blog.yaml_frontmatter?.single_name;
 
-        // Check if we have meaningful names
+        // Determine effective values with yaml fallback
+        const effectiveArtist = actualTableUsed === 'platform_products' 
+          ? discogsArtist 
+          : (albumData.artist || yamlArtist);
+        
+        const effectiveTitle = actualTableUsed === 'platform_products' 
+          ? discogsTitle 
+          : (albumData.title || yamlTitle);
+        
+        const effectiveYear = albumData.year || albumData.release_year || yamlYear || 'unknown';
+
+        // Check if we have meaningful artist and title (year can be "unknown")
         if (!isMeaningfulName(effectiveArtist) || !isMeaningfulName(effectiveTitle)) {
-          console.log(`⏭️ Skipping blog ${blog.id}: incomplete metadata`, { effectiveArtist, effectiveTitle });
+          console.log(`⏭️ Skipping blog ${blog.id}: incomplete artist/title`, { effectiveArtist, effectiveTitle });
           skipped++;
           continue;
         }

@@ -57,17 +57,13 @@ serve(async (req) => {
       newCatsSet.add('metaal album cover');
 
       const payload: any = {
+        media_type: 'art',  // ALWAYS set to 'art' for metal prints
         categories: Array.from(newCatsSet),
         updated_at: new Date().toISOString()
       };
 
-      // Update media_type if currently merchandise
-      if (p.media_type === 'merchandise') {
-        payload.media_type = 'art';
-      }
-
       // Only update if something changed
-      if (payload.media_type || !hadMetaalCategory) {
+      if (p.media_type !== 'art' || !hadMetaalCategory) {
         console.log(`🔄 Updating product: ${p.title?.substring(0, 50)}...`);
         updateCount++;
         updates.push(

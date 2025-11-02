@@ -327,6 +327,15 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
       tags_count: tags.length
     });
 
+    // Build the correct Discogs URL - use master URL if available
+    let finalDiscogsUrl = releaseData.discogs_url;
+    if (masterIdCandidate) {
+      finalDiscogsUrl = `https://www.discogs.com/master/${masterIdCandidate}`;
+      console.log(`🎯 Using Master URL for product: ${finalDiscogsUrl}`);
+    } else {
+      console.log(`📀 Using Release URL for product: ${finalDiscogsUrl}`);
+    }
+
     const { data: product, error: productError } = await supabase
       .from('platform_products')
       .insert({
@@ -345,7 +354,7 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
         categories: categories,
         tags: tags,
         discogs_id: parseInt(releaseData.discogs_id),
-        discogs_url: releaseData.discogs_url,
+        discogs_url: finalDiscogsUrl,
         release_id: release_id,
         status: 'active',
         published_at: new Date().toISOString(),

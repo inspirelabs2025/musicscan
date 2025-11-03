@@ -46,6 +46,7 @@ interface BulkImportRow {
 interface BulkResult {
   artist: string;
   title: string;
+  catalog_number?: string;
   status: 'success' | 'error' | 'pending' | 'processing';
   discogs_id?: number;
   discogs_url?: string;
@@ -288,6 +289,7 @@ const DiscogsLookup = () => {
     setBulkResults(rows.map(row => ({
       artist: row.artist,
       title: row.title,
+      catalog_number: row.catalog_number,
       status: 'pending'
     })));
   };
@@ -308,7 +310,8 @@ const DiscogsLookup = () => {
 
     for (let i = 0; i < bulkResults.length; i++) {
       const row = bulkResults[i];
-      console.log(`🔍 [${i + 1}/${bulkResults.length}] Zoeken: ${row.artist} - ${row.title}`);
+      const catalogInfo = row.catalog_number ? ` (catalog: ${row.catalog_number})` : '';
+      console.log(`🔍 [${i + 1}/${bulkResults.length}] Zoeken: ${row.artist} - ${row.title}${catalogInfo}`);
 
       // Markeer huidige rij als 'processing' en update UI direct
       updatedResults[i] = {
@@ -323,6 +326,7 @@ const DiscogsLookup = () => {
           body: {
             artist: row.artist,
             title: row.title,
+            catalog_number: row.catalog_number,
             include_pricing: false
           }
         });

@@ -192,8 +192,8 @@ const processSearchResults = (searchResults: any[], originalArtist?: string, ori
         mediaType = 'cd';
       }
 
-      // Calculate similarity score
-      let similarityScore = 0.5; // Base score
+      // Calculate similarity score - Start at 0, only add points for actual matches
+      let similarityScore = 0.0;
       
       if (originalArtist && originalTitle) {
         const itemArtist = (Array.isArray(item.artist) ? item.artist.join(', ') : item.artist || '').toLowerCase();
@@ -201,31 +201,45 @@ const processSearchResults = (searchResults: any[], originalArtist?: string, ori
         const searchArtist = originalArtist.toLowerCase();
         const searchTitle = originalTitle.toLowerCase();
 
-        // Artist match (0.3 points max)
-        if (itemArtist.includes(searchArtist)) {
-          similarityScore += 0.3;
+        // Artist match (0.4 points max)
+        let artistMatch = 0;
+        if (itemArtist === searchArtist) {
+          artistMatch = 0.4; // Exact match
+        } else if (itemArtist.includes(searchArtist)) {
+          artistMatch = 0.25; // Contains search term
         } else if (searchArtist.includes(itemArtist)) {
-          similarityScore += 0.2;
+          artistMatch = 0.2; // Search term contains item
         }
 
-        // Title match (0.3 points max)
-        if (itemTitle.includes(searchTitle)) {
-          similarityScore += 0.3;
+        // Title match (0.4 points max)
+        let titleMatch = 0;
+        if (itemTitle === searchTitle) {
+          titleMatch = 0.4; // Exact match
+        } else if (itemTitle.includes(searchTitle)) {
+          titleMatch = 0.25; // Contains search term
         } else if (searchTitle.includes(itemTitle)) {
-          similarityScore += 0.2;
+          titleMatch = 0.2; // Search term contains item
         }
 
-        // Strategy bonus (0.2 points max)
-        const strategyBonus: Record<string, number> = {
-          'Catalog Number': 0.2,
-          'Artist + Title (Strict)': 0.15,
-          'Artist + Title (Relaxed)': 0.1,
-          'Release Title': 0.08,
-          'Artist + Keywords': 0.05,
-          'Title Keywords': 0.02,
-          'Combined': 0.1
-        };
-        similarityScore += strategyBonus[result.strategy] || 0;
+        // Only add strategy bonus if there's at least some artist or title match
+        if (artistMatch > 0 || titleMatch > 0) {
+          similarityScore = artistMatch + titleMatch;
+          
+          // Strategy bonus (0.2 points max) - only if base match exists
+          const strategyBonus: Record<string, number> = {
+            'Catalog Number': 0.2,
+            'Artist + Title (Strict)': 0.15,
+            'Artist + Title (Relaxed)': 0.1,
+            'Release Title': 0.08,
+            'Artist + Keywords': 0.05,
+            'Title Keywords': 0.02,
+            'Combined': 0.1
+          };
+          similarityScore += strategyBonus[result.strategy] || 0;
+        } else {
+          // No artist or title match at all → score stays 0.0
+          similarityScore = 0.0;
+        }
       }
 
       allResults.push({
@@ -252,8 +266,19 @@ const processSearchResults = (searchResults: any[], originalArtist?: string, ori
     }
   }
 
-  // Sort by similarity score (highest first)
-  return allResults.sort((a, b) => b.similarity_score - a.similarity_score);
+  // Filter out low-confidence results (< 85%) and sort by similarity score (highest first)
+  const filteredResults = allResults
+    .filter(result => result.similarity_score >= 0.85)
+    .sort((a, b) => b.similarity_score - a.similarity_score);
+  
+  // If no results pass the high-confidence filter, return best available match with warning
+  if (filteredResults.length === 0 && allResults.length > 0) {
+    console.warn('⚠️ No high-confidence results found (>= 0.85), returning best available match');
+    const sortedResults = allResults.sort((a, b) => b.similarity_score - a.similarity_score);
+    return sortedResults.slice(0, 1); // Return only top result
+  }
+  
+  return filteredResults;
 };
 
 Deno.serve(async (req) => {

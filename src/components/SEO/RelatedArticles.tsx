@@ -52,28 +52,39 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
 
         if (!articles) return;
 
-        // Score articles based on relevance
+        // Score articles based on relevance for SEO internal linking
         const scoredArticles = articles
           .map(article => {
             let score = 0;
             const frontmatter = article.yaml_frontmatter as any || {};
             
-            // Same artist gets high score
+            // HIGHEST PRIORITY: Same artist (critical for SEO)
             if (artist && frontmatter.artist && String(frontmatter.artist).toLowerCase().includes(artist.toLowerCase())) {
-              score += 10;
+              score += 50; // Increased from 10
             }
             
-            // Same genre gets medium score
+            // HIGH PRIORITY: Same genre
             if (genre && frontmatter.genre && String(frontmatter.genre).toLowerCase().includes(genre.toLowerCase())) {
-              score += 5;
+              score += 15; // Increased from 5
             }
             
-            // Similar year gets small score
+            // MEDIUM PRIORITY: Same decade
+            if (frontmatter.year) {
+              const currentYear = frontmatter.year;
+              const articleYear = Number(frontmatter.year);
+              const decade = Math.floor(articleYear / 10) * 10;
+              const currentDecade = Math.floor(currentYear / 10) * 10;
+              if (decade === currentDecade) {
+                score += 8;
+              }
+            }
+            
+            // LOW PRIORITY: Similar time period
             if (frontmatter.year && Math.abs(Number(frontmatter.year) - new Date().getFullYear()) < 10) {
-              score += 1;
+              score += 2;
             }
             
-            // Popular articles get small boost
+            // POPULARITY BOOST: Popular articles get small boost
             score += Math.min(article.views_count || 0, 100) / 100;
             
             return { ...article, score };
@@ -119,70 +130,84 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Gerelateerde Verhalen</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {relatedArticles.map((article) => {
-            const frontmatter = (article.yaml_frontmatter as any) || {};
-            return (
-              <div key={article.id} className="border-b border-border pb-4 last:border-b-0 last:pb-0">
-                <div className="flex items-start gap-3">
-                  {frontmatter.og_image && (
-                    <img 
-                      src={String(frontmatter.og_image)} 
-                      alt={`${frontmatter.artist || ''} - ${frontmatter.album || ''}`}
-                      className="w-12 h-12 rounded object-cover flex-shrink-0"
-                      loading="lazy"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm line-clamp-2 mb-1">
-                      {frontmatter.title || `${frontmatter.artist || ''} - ${frontmatter.album || ''}`}
-                    </h4>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                      <span>{frontmatter.artist || ''}</span>
-                      {frontmatter.year && (
-                        <>
-                          <span>•</span>
-                          <span>{frontmatter.year}</span>
-                        </>
-                      )}
-                      {frontmatter.reading_time && (
-                        <>
-                          <span>•</span>
-                          <Clock className="h-3 w-3" />
-                          <span>{frontmatter.reading_time} min</span>
-                        </>
-                      )}
-                      <span>•</span>
-                      <Eye className="h-3 w-3" />
-                      <span>{article.views_count || 0}</span>
-                    </div>
-                    {frontmatter.genre && (
-                      <Badge variant="secondary" className="text-xs">
-                        {String(frontmatter.genre)}
-                      </Badge>
+    <div className="mt-12">
+      <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold flex items-center gap-3">
+            <ExternalLink className="w-6 h-6 text-primary" />
+            Meer Albums van Deze Artiest
+          </CardTitle>
+          <p className="text-muted-foreground">
+            Ontdek gerelateerde albums en verhalen
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {relatedArticles.map((article) => {
+              const frontmatter = (article.yaml_frontmatter as any) || {};
+              return (
+                <Link 
+                  key={article.id}
+                  to={`/plaat-verhaal/${article.slug}`}
+                  className="group block"
+                >
+                  <Card className="h-full hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
+                    {/* Album Cover */}
+                    {frontmatter.og_image && (
+                      <div className="aspect-square overflow-hidden bg-muted">
+                        <img 
+                          src={String(frontmatter.og_image)} 
+                          alt={`${frontmatter.artist || ''} - ${frontmatter.album || ''}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      </div>
                     )}
-                  </div>
-                  <Button
-                    asChild
-                    variant="ghost"
-                    size="sm"
-                    className="flex-shrink-0"
-                  >
-                    <Link to={`/plaat-verhaal/${article.slug}`}>
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+                    
+                    <CardContent className="p-4">
+                      <h4 className="font-bold text-base line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                        {frontmatter.artist || ''}
+                      </h4>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                        {frontmatter.album || frontmatter.title || ''}
+                      </p>
+                      
+                      <div className="flex items-center flex-wrap gap-2 text-xs text-muted-foreground mb-3">
+                        {frontmatter.year && (
+                          <Badge variant="outline" className="text-xs">
+                            {frontmatter.year}
+                          </Badge>
+                        )}
+                        {frontmatter.genre && (
+                          <Badge variant="secondary" className="text-xs">
+                            {String(frontmatter.genre)}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border/50">
+                        <div className="flex items-center gap-3">
+                          {frontmatter.reading_time && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {frontmatter.reading_time} min
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            {article.views_count || 0}
+                          </span>
+                        </div>
+                        <ExternalLink className="h-3 w-3 group-hover:text-primary transition-colors" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };

@@ -597,6 +597,14 @@ export const PlaatVerhaal: React.FC = () => {
 
 
 
+          {/* Related Albums - Internal Linking for SEO */}
+          <RelatedArticles 
+            currentSlug={blog.slug}
+            artist={artist}
+            genre={genre}
+            maxResults={6}
+          />
+
           {/* Reviews Section */}
           <div className="mt-12">
             <ReviewsSection blogPostId={blog.id} />

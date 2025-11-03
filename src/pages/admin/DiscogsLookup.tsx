@@ -290,15 +290,22 @@ const DiscogsLookup = () => {
   };
 
   const processBulkSearch = async () => {
-    if (bulkResults.length === 0) return;
+    if (bulkResults.length === 0) {
+      console.warn('⚠️ Geen bulk results om te verwerken');
+      return;
+    }
 
+    console.log(`🔄 Start bulk search voor ${bulkResults.length} albums`);
     setIsBulkProcessing(true);
     setBulkProgress(0);
 
     const updatedResults = [...bulkResults];
+    let successCount = 0;
+    let errorCount = 0;
 
     for (let i = 0; i < bulkResults.length; i++) {
       const row = bulkResults[i];
+      console.log(`🔍 [${i + 1}/${bulkResults.length}] Zoeken: ${row.artist} - ${row.title}`);
       
       try {
         const { data, error: searchError } = await supabase.functions.invoke('optimized-catalog-search', {
@@ -309,44 +316,57 @@ const DiscogsLookup = () => {
           }
         });
 
-        if (searchError) throw searchError;
+        if (searchError) {
+          console.error(`❌ [${i + 1}] Error:`, searchError);
+          throw searchError;
+        }
 
         if (data?.results && data.results.length > 0) {
           const firstResult = data.results[0];
+          console.log(`✅ [${i + 1}] Gevonden: Discogs ID ${firstResult.discogs_id}`);
           updatedResults[i] = {
             ...row,
             status: 'success',
             discogs_id: firstResult.discogs_id,
             discogs_url: firstResult.discogs_url
           };
+          successCount++;
         } else {
+          console.warn(`⚠️ [${i + 1}] Geen resultaten gevonden`);
           updatedResults[i] = {
             ...row,
             status: 'error',
             error: 'Geen resultaten'
           };
+          errorCount++;
         }
       } catch (err: any) {
+        console.error(`❌ [${i + 1}] Exception:`, err);
         updatedResults[i] = {
           ...row,
           status: 'error',
           error: err.message || 'Fout opgetreden'
         };
+        errorCount++;
       }
 
       setBulkResults([...updatedResults]);
-      setBulkProgress(((i + 1) / bulkResults.length) * 100);
+      const progress = ((i + 1) / bulkResults.length) * 100;
+      setBulkProgress(progress);
+      console.log(`📊 Voortgang: ${Math.round(progress)}% (${i + 1}/${bulkResults.length})`);
 
       // Rate limiting: wait 1 second between requests
       if (i < bulkResults.length - 1) {
+        console.log('⏳ Wachten 1 seconde...');
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
     setIsBulkProcessing(false);
+    console.log(`✅ Bulk search voltooid - Succes: ${successCount}, Fouten: ${errorCount}`);
     toast({
       title: "✅ Bulk zoeken voltooid",
-      description: `${updatedResults.filter(r => r.status === 'success').length} van ${updatedResults.length} gevonden`
+      description: `${successCount} van ${bulkResults.length} gevonden`
     });
   };
 

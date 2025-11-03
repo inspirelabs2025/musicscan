@@ -12,6 +12,7 @@ interface RelatedArticle {
   views_count: number;
   published_at: string;
   album_cover_url?: string;
+  og_image?: string;
 }
 
 interface RelatedArticlesProps {
@@ -32,64 +33,96 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
 
   React.useEffect(() => {
     const fetchRelatedArticles = async () => {
+      if (!genre && !artist) return;
+      
       try {
         const { supabase } = await import('@/integrations/supabase/client');
-        
-        // STRATEGY 1: Try to find albums by the same artist first
-        let articles = [];
-        
+        let articles: any[] = [];
+
+        // STRATEGY 1: Exact artist match using database ILIKE
         if (artist) {
-          const { data: sameArtistArticles, error: artistError } = await supabase
+          console.log(`[RelatedArticles] Searching for exact artist: "${artist}"`);
+          
+          const { data: exactMatch, error: exactError } = await supabase
             .from('blog_posts')
-            .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url')
+            .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url, og_image')
             .eq('is_published', true)
             .neq('slug', currentSlug)
+            .or(`yaml_frontmatter->>artist.ilike.${artist},yaml_frontmatter->>artist.ilike.The ${artist}`)
             .order('views_count', { ascending: false })
-            .limit(maxResults * 2);
+            .limit(maxResults);
 
-          if (!artistError && sameArtistArticles) {
-            // Filter for same artist (case-insensitive)
-            articles = sameArtistArticles.filter(article => {
+          if (exactError) {
+            console.error('[RelatedArticles] Error fetching by artist:', exactError);
+          } else if (exactMatch && exactMatch.length > 0) {
+            console.log(`[RelatedArticles] Found ${exactMatch.length} database matches`);
+            
+            // Strict client-side validation: exact match only
+            articles = exactMatch.filter(article => {
               const frontmatter = article.yaml_frontmatter as any || {};
-              const articleArtist = String(frontmatter.artist || '').toLowerCase();
-              return articleArtist.includes(artist.toLowerCase()) || 
-                     artist.toLowerCase().includes(articleArtist);
+              const articleArtist = String(frontmatter.artist || '').toLowerCase().trim();
+              const targetArtist = artist.toLowerCase().trim();
+              const match = 
+                articleArtist === targetArtist || 
+                articleArtist === `the ${targetArtist}` ||
+                `the ${articleArtist}` === targetArtist;
+              
+              if (!match) {
+                console.log(`[RelatedArticles] Filtered out: "${frontmatter.artist}" (not exact match)`);
+              }
+              return match;
             });
+
+            console.log(`[RelatedArticles] After strict filtering: ${articles.length} articles`);
           }
         }
 
-        // STRATEGY 2: If not enough same-artist albums, add same-genre albums
-        if (articles.length < maxResults && genre) {
-          const { data: sameGenreArticles, error: genreError } = await supabase
+        // STRATEGY 2: If not enough results, get by same genre (exclude compilations)
+        if (articles.length < 3 && genre) {
+          console.log(`[RelatedArticles] Not enough artist matches, searching by genre: "${genre}"`);
+          
+          const { data: genreData, error: genreError } = await supabase
             .from('blog_posts')
-            .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url')
+            .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url, og_image')
             .eq('is_published', true)
             .neq('slug', currentSlug)
+            .ilike('yaml_frontmatter->>genre', `%${genre}%`)
             .order('views_count', { ascending: false })
             .limit(maxResults * 2);
 
-          if (!genreError && sameGenreArticles) {
-            // Filter for same genre but not already included
+          if (genreError) {
+            console.error('[RelatedArticles] Error fetching by genre:', genreError);
+          } else if (genreData) {
+            console.log(`[RelatedArticles] Found ${genreData.length} genre matches`);
+            
             const existingIds = new Set(articles.map(a => a.id));
-            const genreArticles = sameGenreArticles.filter(article => {
+            const genreArticles = genreData.filter(article => {
               if (existingIds.has(article.id)) return false;
+              
               const frontmatter = article.yaml_frontmatter as any || {};
-              const articleGenre = String(frontmatter.genre || '').toLowerCase();
               const articleArtist = String(frontmatter.artist || '').toLowerCase();
               
-              // Don't mix artists unless same genre
-              return articleGenre.includes(genre.toLowerCase()) || 
-                     genre.toLowerCase().includes(articleGenre);
+              // Exclude multi-artist compilations
+              const isCompilation = 
+                articleArtist.includes('diverse') ||
+                articleArtist.includes('various') ||
+                articleArtist.includes('&') ||
+                articleArtist.includes(',');
+              
+              if (isCompilation) {
+                console.log(`[RelatedArticles] Filtered out compilation: "${frontmatter.artist}"`);
+              }
+              return !isCompilation;
             });
-            
-            articles = [...articles, ...genreArticles];
+
+            articles = [...articles, ...genreArticles].slice(0, maxResults);
           }
         }
 
-        // Take only the top results
-        setRelatedArticles(articles.slice(0, maxResults));
+        console.log(`[RelatedArticles] Final result: ${articles.length} articles`);
+        setRelatedArticles(articles);
       } catch (error) {
-        console.error('Error fetching related articles:', error);
+        console.error('[RelatedArticles] Error:', error);
       } finally {
         setLoading(false);
       }
@@ -148,13 +181,21 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
                 >
                   <Card className="h-full hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
                     {/* Album Cover */}
-                    {(frontmatter.og_image || article.album_cover_url) && (
+                    {(article.album_cover_url || frontmatter.og_image) && (
                       <div className="aspect-square overflow-hidden bg-muted">
                         <img 
-                          src={String(frontmatter.og_image || article.album_cover_url)} 
-                          alt={`${frontmatter.artist || ''} - ${frontmatter.album || ''} album cover`}
+                          src={
+                            article.album_cover_url || 
+                            (String(frontmatter.og_image || '').startsWith('http') ? frontmatter.og_image : null) || 
+                            "/placeholder.svg"
+                          } 
+                          alt={`Album cover van ${frontmatter.album || ''} door ${frontmatter.artist || ''}`}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           loading="lazy"
+                          onError={(e) => {
+                            console.log(`[RelatedArticles] Image failed to load for ${frontmatter.album}`);
+                            e.currentTarget.src = "/placeholder.svg";
+                          }}
                         />
                       </div>
                     )}

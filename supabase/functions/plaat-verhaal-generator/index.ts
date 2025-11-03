@@ -7,6 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
 const discogsToken = Deno.env.get('DISCOGS_TOKEN');
@@ -421,30 +422,49 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
 `;
     }
 
-    console.log('Calling OpenAI with album data...');
+    // Use Lovable AI Gateway for text generation (OpenAI-compatible)
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: PLAAT_VERHAAL_PROMPT },
           { role: 'user', content: albumInfo }
-        ],
-        max_completion_tokens: 2500,
+        ]
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: 'RATE_LIMITED', message: 'AI rate limit bereikt, probeer het later opnieuw.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: 'PAYMENT_REQUIRED', message: 'AI credits op. Voeg tegoed toe om verder te gaan.' }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const t = await response.text();
+      console.error('AI gateway error:', response.status, t);
+      throw new Error('AI gateway error');
     }
 
     const data = await response.json();
-    const blogContent = data.choices[0].message.content;
+    const blogContent = data.choices?.[0]?.message?.content;
+    if (!blogContent) {
+      throw new Error('Lege AI respons: geen content ontvangen');
+    }
 
     console.log('Successfully generated blog content');
 

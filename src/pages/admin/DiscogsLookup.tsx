@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { AlertCircle, ExternalLink, Copy, ArrowLeft, Sparkles, Search, Hash, Clock, Upload, Download } from 'lucide-react';
+import { AlertCircle, ExternalLink, Copy, ArrowLeft, Sparkles, Search, Hash, Clock, List, Download } from 'lucide-react';
 
 interface DiscogsResult {
   discogs_id: number;
@@ -62,6 +63,7 @@ const DiscogsLookup = () => {
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   
   // Bulk import states
+  const [bulkInput, setBulkInput] = useState('');
   const [bulkResults, setBulkResults] = useState<BulkResult[]>([]);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
@@ -182,58 +184,54 @@ const DiscogsLookup = () => {
     setCatalogInput('');
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleBulkParse = () => {
+    const lines = bulkInput.split('\n').filter(line => line.trim());
+    
+    if (lines.length === 0) {
+      toast({ title: "❌ Voer albums in", variant: "destructive" });
+      return;
+    }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      const lines = text.split('\n').filter(line => line.trim());
+    const rows: BulkImportRow[] = [];
+    lines.forEach((line) => {
+      // Support both "Artist - Album" and "Artist, Album" formats
+      let artist = '', title = '', catalog = '';
       
-      if (lines.length === 0) {
-        toast({ title: "❌ Leeg bestand", variant: "destructive" });
-        return;
-      }
-
-      // Parse CSV (expect: Artist,Album or Artist,Album,Catalog)
-      const rows: BulkImportRow[] = [];
-      lines.forEach((line, index) => {
-        if (index === 0 && line.toLowerCase().includes('artist')) return; // Skip header
-        
+      if (line.includes(' - ')) {
+        const parts = line.split(' - ');
+        artist = parts[0]?.trim() || '';
+        title = parts[1]?.trim() || '';
+      } else if (line.includes(',')) {
         const parts = line.split(',').map(p => p.trim());
-        if (parts.length >= 2) {
-          rows.push({
-            artist: parts[0],
-            title: parts[1],
-            catalog_number: parts[2] || undefined
-          });
-        }
-      });
-
-      if (rows.length === 0) {
-        toast({ 
-          title: "❌ Geen geldige rijen", 
-          description: "Formaat: Artist,Album,Catalog (optioneel)",
-          variant: "destructive" 
-        });
-        return;
+        artist = parts[0] || '';
+        title = parts[1] || '';
+        catalog = parts[2] || '';
       }
+      
+      if (artist && title) {
+        rows.push({ artist, title, catalog_number: catalog || undefined });
+      }
+    });
 
-      toast({
-        title: `✅ ${rows.length} albums geladen`,
-        description: "Klik op 'Start Bulk Zoeken' om te beginnen"
+    if (rows.length === 0) {
+      toast({ 
+        title: "❌ Geen geldige rijen", 
+        description: "Gebruik: Artist - Album of Artist, Album",
+        variant: "destructive" 
       });
+      return;
+    }
 
-      setBulkResults(rows.map(row => ({
-        artist: row.artist,
-        title: row.title,
-        status: 'pending'
-      })));
-    };
+    toast({
+      title: `✅ ${rows.length} albums geladen`,
+      description: "Klik op 'Start Bulk Zoeken' om te beginnen"
+    });
 
-    reader.readAsText(file);
-    e.target.value = ''; // Reset input
+    setBulkResults(rows.map(row => ({
+      artist: row.artist,
+      title: row.title,
+      status: 'pending'
+    })));
   };
 
   const processBulkSearch = async () => {
@@ -348,8 +346,8 @@ const DiscogsLookup = () => {
                 Direct ID
               </TabsTrigger>
               <TabsTrigger value="bulk">
-                <Upload className="w-4 h-4 mr-2" />
-                Bulk Import
+                <List className="w-4 h-4 mr-2" />
+                Bulk Lijst
               </TabsTrigger>
             </TabsList>
 
@@ -411,21 +409,34 @@ const DiscogsLookup = () => {
             <TabsContent value="bulk" className="space-y-4 mt-4">
               <div className="space-y-4">
                 <div>
-                  <Label>Upload CSV Bestand</Label>
-                  <Input 
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileUpload}
+                  <Label htmlFor="bulk-input">Plak Album Lijst</Label>
+                  <Textarea 
+                    id="bulk-input"
+                    value={bulkInput}
+                    onChange={(e) => setBulkInput(e.target.value)}
+                    placeholder="Pink Floyd - The Wall&#10;The Beatles - Abbey Road&#10;Led Zeppelin - IV"
                     disabled={isBulkProcessing}
-                    className="cursor-pointer"
+                    rows={10}
+                    className="font-mono text-sm"
                   />
                   <p className="text-sm text-muted-foreground mt-2">
-                    CSV formaat: <code>Artist,Album,Catalog (optioneel)</code>
+                    Formaat: <code>Artist - Album</code> of <code>Artist, Album</code>
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Voorbeeld: <code>Pink Floyd,The Wall,50999 0 97784 1 3</code>
+                    Eén album per regel. Voorbeeld: <code>Pink Floyd - The Wall</code>
                   </p>
                 </div>
+
+                {bulkResults.length === 0 && (
+                  <Button
+                    onClick={handleBulkParse}
+                    disabled={!bulkInput.trim() || isBulkProcessing}
+                    className="w-full"
+                  >
+                    <List className="w-4 h-4 mr-2" />
+                    Laad Albums
+                  </Button>
+                )}
 
                 {bulkResults.length > 0 && (
                   <div className="space-y-2">

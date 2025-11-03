@@ -16,6 +16,7 @@ import { UserActivitiesSection } from '@/components/admin/UserActivitiesSection'
 import { TestEmailTrigger } from '@/components/TestEmailTrigger';
 import { ArtworkStatusSection } from '@/components/admin/ArtworkStatusSection';
 import { PodcastManagementSection } from '@/components/admin/PodcastManagementSection';
+import { IndexNowMonitor } from '@/components/admin/IndexNowMonitor';
 
 const SuperAdminDashboard: React.FC = () => {
   console.log('🔐 SuperAdminDashboard: Component loading...');
@@ -187,7 +188,7 @@ const SuperAdminDashboard: React.FC = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="users" key={refreshKey}>
-          <TabsList className="grid w-full grid-cols-9">
+          <TabsList className="grid w-full grid-cols-10">
             <TabsTrigger value="users">Gebruikers</TabsTrigger>
             <TabsTrigger value="activities">User Activities</TabsTrigger>
             <TabsTrigger value="user-scans">User Scans</TabsTrigger>
@@ -196,6 +197,7 @@ const SuperAdminDashboard: React.FC = () => {
             <TabsTrigger value="system">Systeem Status</TabsTrigger>
             <TabsTrigger value="artwork">Artwork Status</TabsTrigger>
             <TabsTrigger value="podcasts">Podcasts</TabsTrigger>
+            <TabsTrigger value="indexnow">IndexNow</TabsTrigger>
             <TabsTrigger value="email">Email Test</TabsTrigger>
           </TabsList>
 
@@ -229,6 +231,10 @@ const SuperAdminDashboard: React.FC = () => {
 
           <TabsContent value="podcasts" className="mt-6">
             <PodcastManagementSection />
+          </TabsContent>
+
+          <TabsContent value="indexnow" className="mt-6">
+            <IndexNowMonitor />
           </TabsContent>
 
           <TabsContent value="email" className="mt-6">

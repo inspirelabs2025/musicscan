@@ -184,6 +184,62 @@ const DiscogsLookup = () => {
     setCatalogInput('');
   };
 
+  const parseAlbumLine = (line: string): BulkImportRow | null => {
+    const trimmed = line.trim();
+    if (!trimmed) return null;
+
+    // Try separators with spaces first
+    const separatorsWithSpaces = [' - ', ' – ', ' — ', ', ', ' / ', ' | '];
+    for (const sep of separatorsWithSpaces) {
+      if (trimmed.includes(sep)) {
+        const parts = trimmed.split(sep).map(p => p.trim());
+        if (parts.length >= 2 && parts[0] && parts[1]) {
+          return {
+            artist: parts[0],
+            title: parts[1],
+            catalog_number: parts[2] || undefined
+          };
+        }
+      }
+    }
+
+    // Try separators without spaces
+    const separatorsNoSpaces = ['-', '–', '—', ',', '/', '|'];
+    for (const sep of separatorsNoSpaces) {
+      if (trimmed.includes(sep)) {
+        const parts = trimmed.split(sep).map(p => p.trim());
+        if (parts.length >= 2 && parts[0] && parts[1]) {
+          return {
+            artist: parts[0],
+            title: parts[1],
+            catalog_number: parts[2] || undefined
+          };
+        }
+      }
+    }
+
+    // Fallback: intelligent word split
+    // Assume first 2-3 words are artist, rest is album
+    const words = trimmed.split(/\s+/);
+    if (words.length >= 3) {
+      // Try 2-word artist first
+      const artist2 = words.slice(0, 2).join(' ');
+      const title2 = words.slice(2).join(' ');
+      
+      // Heuristic: if album title is very short, take 3 words for artist
+      if (title2.length < 5 && words.length >= 4) {
+        return {
+          artist: words.slice(0, 3).join(' '),
+          title: words.slice(3).join(' ')
+        };
+      }
+      
+      return { artist: artist2, title: title2 };
+    }
+
+    return null; // Can't parse this line
+  };
+
   const handleBulkParse = () => {
     const lines = bulkInput.split('\n').filter(line => line.trim());
     
@@ -193,39 +249,38 @@ const DiscogsLookup = () => {
     }
 
     const rows: BulkImportRow[] = [];
-    lines.forEach((line) => {
-      // Support both "Artist - Album" and "Artist, Album" formats
-      let artist = '', title = '', catalog = '';
-      
-      if (line.includes(' - ')) {
-        const parts = line.split(' - ');
-        artist = parts[0]?.trim() || '';
-        title = parts[1]?.trim() || '';
-      } else if (line.includes(',')) {
-        const parts = line.split(',').map(p => p.trim());
-        artist = parts[0] || '';
-        title = parts[1] || '';
-        catalog = parts[2] || '';
-      }
-      
-      if (artist && title) {
-        rows.push({ artist, title, catalog_number: catalog || undefined });
+    const failedLines: string[] = [];
+
+    lines.forEach((line, index) => {
+      const parsed = parseAlbumLine(line);
+      if (parsed) {
+        rows.push(parsed);
+      } else {
+        failedLines.push(`Regel ${index + 1}: "${line}"`);
       }
     });
 
     if (rows.length === 0) {
       toast({ 
         title: "❌ Geen geldige rijen", 
-        description: "Gebruik: Artist - Album of Artist, Album",
+        description: "Controleer het formaat (Artist - Album)",
         variant: "destructive" 
       });
       return;
     }
 
-    toast({
-      title: `✅ ${rows.length} albums geladen`,
-      description: "Klik op 'Start Bulk Zoeken' om te beginnen"
-    });
+    if (failedLines.length > 0) {
+      toast({
+        title: `⚠️ ${failedLines.length} rij${failedLines.length > 1 ? 'en' : ''} overgeslagen`,
+        description: `${rows.length} albums geladen`,
+        variant: "default"
+      });
+    } else {
+      toast({
+        title: `✅ ${rows.length} albums geladen`,
+        description: "Klik op 'Start Bulk Zoeken' om te beginnen"
+      });
+    }
 
     setBulkResults(rows.map(row => ({
       artist: row.artist,
@@ -420,10 +475,12 @@ const DiscogsLookup = () => {
                     className="font-mono text-sm"
                   />
                   <p className="text-sm text-muted-foreground mt-2">
-                    Formaat: <code>Artist - Album</code> of <code>Artist, Album</code>
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Eén album per regel. Voorbeeld: <code>Pink Floyd - The Wall</code>
+                    <strong>Ondersteunde formaten:</strong>
+                    <br />• <code>Artist - Album</code> (spatie-dash-spatie)
+                    <br />• <code>Artist, Album</code> (komma)
+                    <br />• <code>Artist / Album</code> (slash)
+                    <br />• <code>Artist | Album</code> (pipe)
+                    <br />• <code>Artist Album</code> (automatisch splitsen)
                   </p>
                 </div>
 

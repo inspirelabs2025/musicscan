@@ -241,8 +241,10 @@ const BulkArtGenerator = () => {
 
         // Remove ID/URL from text for artist/title parsing
         let cleanText = trimmed
-          .replace(/https?:\/\/[^\s]+/g, '')
-          .replace(/\b\d{4,}\b/g, '')
+          .replace(/https?:\/\/[^\s]+/g, '')         // Remove URLs first
+          .replace(/,\s*\d{4,}(?=\s|$)/g, '')        // Remove ", 12345" pattern (comma + ID)
+          .replace(/\b\d{4,}\b/g, '')                 // Remove any remaining standalone IDs
+          .replace(/,\s*$/g, '')                      // Remove trailing comma if any
           .trim();
 
         // Parse using robust regex that matches FIRST " - " only (handles multi-word artists)

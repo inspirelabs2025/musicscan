@@ -18,8 +18,6 @@ interface AlbumInput {
   title: string;
   price?: number;
   discogsId?: number;
-  idType?: 'master' | 'release';
-  masterId?: number;
   verifiedArtist?: string;
   verifiedTitle?: string;
   matchStatus?: 'idle' | 'verifying' | 'match' | 'partial' | 'mismatch' | 'search' | 'error';
@@ -44,7 +42,6 @@ const BulkArtGenerator = () => {
   const [results, setResults] = useState<ProcessingResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [idTypeIsMaster, setIdTypeIsMaster] = useState(true);
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
 
@@ -92,30 +89,22 @@ const BulkArtGenerator = () => {
     return matches / longer.length;
   };
 
-  // Extract Discogs ID from various formats WITH URL validation
-  const extractDiscogsId = (text: string): { id: number; type: 'master' | 'release'; url?: string } | null => {
-    // Check /master/ URL
-    const masterUrlMatch = text.match(/(https?:\/\/)?(?:www\.)?discogs\.com\/master\/(\d+)/i);
-    if (masterUrlMatch) return { 
-      id: parseInt(masterUrlMatch[2]), 
-      type: 'master',
-      url: `https://www.discogs.com/master/${masterUrlMatch[2]}`
-    };
-    
-    // Check /release/ URL
+  // Extract Discogs Release ID from various formats
+  const extractDiscogsId = (text: string): { id: number; url?: string } | null => {
+    // /release/ URL has priority (most specific)
     const releaseUrlMatch = text.match(/(https?:\/\/)?(?:www\.)?discogs\.com\/release\/(\d+)/i);
-    if (releaseUrlMatch) return { 
-      id: parseInt(releaseUrlMatch[2]), 
-      type: 'release',
-      url: `https://www.discogs.com/release/${releaseUrlMatch[2]}`
-    };
+    if (releaseUrlMatch) {
+      return { 
+        id: parseInt(releaseUrlMatch[2]),
+        url: `https://www.discogs.com/release/${releaseUrlMatch[2]}`
+      };
+    }
     
-    // Plain number: use toggle state
+    // Plain number = always Release ID
     const plainNumber = text.match(/\b(\d{4,})\b/);
     if (plainNumber) {
       return { 
-        id: parseInt(plainNumber[1]), 
-        type: idTypeIsMaster ? 'master' : 'release' 
+        id: parseInt(plainNumber[1])
       };
     }
     
@@ -167,14 +156,13 @@ const BulkArtGenerator = () => {
             continue;
           }
 
-          // Fetch artist/title from Discogs
-          try {
-            const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
-              body: { 
-                direct_discogs_id: idInfo.id.toString(),
-                is_master: idInfo.type === 'master'
-              }
-            });
+            // Fetch artist/title from Discogs
+            try {
+              const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
+                body: { 
+                  direct_discogs_id: idInfo.id.toString()
+                }
+              });
 
             if (error) throw error;
 
@@ -197,10 +185,10 @@ const BulkArtGenerator = () => {
                                      !actualArtist.includes(urlArtistHint) &&
                                      !urlArtistHint.includes(actualArtist.split(' ')[0]);
               
-              console.log(`${urlMatchWarning ? '⚠️ URL MISMATCH!' : '✅'} Validated ${idInfo.type} ${idInfo.id}:`, {
+              console.log(`${urlMatchWarning ? '⚠️ URL MISMATCH!' : '✅'} Validated Release ${idInfo.id}:`, {
                 artist: result.artist,
                 title: result.title,
-                url: idInfo.url || `https://www.discogs.com/${idInfo.type}/${idInfo.id}`,
+                url: idInfo.url || `https://www.discogs.com/release/${idInfo.id}`,
                 urlHint: urlArtistHint || 'none',
                 warning: urlMatchWarning ? `URL suggests "${urlArtistHint}" but got "${result.artist}"` : 'OK'
               });
@@ -210,8 +198,6 @@ const BulkArtGenerator = () => {
                 title: result.title,
                 price: defaultPrice,
                 discogsId: idInfo.id,
-                idType: idInfo.type,
-                masterId: result.master_id,
                 matchStatus: urlMatchWarning ? 'error' : 'match',
                 verifiedArtist: result.artist,
                 verifiedTitle: result.title,
@@ -229,7 +215,6 @@ const BulkArtGenerator = () => {
               title: '',
               price: defaultPrice,
               discogsId: idInfo.id,
-              idType: idInfo.type,
               matchStatus: 'error',
               error: 'Kon album data niet ophalen',
               originalLine: trimmed
@@ -270,7 +255,6 @@ const BulkArtGenerator = () => {
 
           if (idInfo) {
             album.discogsId = idInfo.id;
-            album.idType = idInfo.type;
             seenIds.add(idInfo.id);
           }
 
@@ -287,7 +271,6 @@ const BulkArtGenerator = () => {
             title: '',
             price: defaultPrice,
             discogsId: idInfo.id,
-            idType: idInfo.type,
             matchStatus: 'idle',
             originalLine: trimmed
           });
@@ -353,8 +336,7 @@ const BulkArtGenerator = () => {
           // Call optimized-catalog-search
           const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
             body: { 
-              direct_discogs_id: album.discogsId.toString(),
-              is_master: album.idType === 'master'
+              direct_discogs_id: album.discogsId.toString()
             }
           });
 
@@ -381,7 +363,6 @@ const BulkArtGenerator = () => {
               matchStatus: 'match',
               verifiedArtist: result.artist,
               verifiedTitle: result.title,
-              masterId: result.master_id,
               similarity
             });
           } else if (similarity >= 0.5) {
@@ -479,17 +460,9 @@ const BulkArtGenerator = () => {
             const requestBody: any = {
               artist: album.verifiedArtist || album.artist,
               title: album.verifiedTitle || album.title,
-              price: album.price || defaultPrice
+              price: album.price || defaultPrice,
+              discogs_id: album.discogsId
             };
-
-            // Priority: masterId from verification > masterId from input > discogsId
-            if (album.masterId) {
-              requestBody.master_id = album.masterId;
-            } else if (album.discogsId && album.idType === 'master') {
-              requestBody.master_id = album.discogsId;
-            } else if (album.discogsId) {
-              requestBody.discogs_id = album.discogsId;
-            }
 
             console.log(`Creating product for ${album.artist} - ${album.title}`, requestBody);
 
@@ -651,22 +624,6 @@ const BulkArtGenerator = () => {
         <CardContent className="space-y-6">
           {/* Settings */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="space-y-1">
-                <Label htmlFor="master-toggle" className="text-base font-semibold">
-                  🎭 IDs zijn Master IDs (aanbevolen)
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Zet aan als je lijst Master IDs bevat (bijv. 11452) in plaats van Release IDs
-                </p>
-              </div>
-              <Switch 
-                id="master-toggle"
-                checked={idTypeIsMaster} 
-                onCheckedChange={setIdTypeIsMaster}
-              />
-            </div>
-
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="price">Standaard Prijs (€)</Label>
@@ -690,13 +647,10 @@ const BulkArtGenerator = () => {
               onChange={(e) => setInput(e.target.value)}
               placeholder={`Voorbeelden:
 
-🎭 MASTER IDs (aanbevolen):
-The Clash - The Clash, 11452
-https://www.discogs.com/master/13750
-Pink Floyd - The Wall
-
-📀 RELEASE IDs werken ook:
+📀 RELEASE IDs:
+Rush - Fly by Night, 13313664
 https://www.discogs.com/release/1034729
+Pink Floyd - The Wall
 Bryan Ferry - In Your Mind, 1034729
 
 💡 TIP: Gebruik /master/ URLs voor beste resultaten!`}
@@ -806,12 +760,7 @@ Bryan Ferry - In Your Mind, 1034729
                             </div>
                           </TableCell>
                           <TableCell>
-                            {album.idType === 'master' && (
-                              <Badge variant="default" className="text-xs">🎭 Master</Badge>
-                            )}
-                            {album.idType === 'release' && (
-                              <Badge variant="secondary" className="text-xs">📀 Release</Badge>
-                            )}
+                            <Badge variant="default" className="text-xs">📀 Release</Badge>
                           </TableCell>
                           <TableCell>€{album.price?.toFixed(2)}</TableCell>
                           <TableCell>

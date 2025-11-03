@@ -12,9 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const { discogs_id, catalog_number, artist, title, price = 49.95, master_id } = await req.json();
+    const { discogs_id, catalog_number, artist, title, price = 49.95 } = await req.json();
     
-    console.log('🎨 Starting ART product creation:', { discogs_id, catalog_number, artist, title, master_id });
+    console.log('🎨 Starting ART product creation:', { discogs_id, catalog_number, artist, title });
     
     const discogsToken = Deno.env.get('DISCOGS_TOKEN');
 
@@ -43,52 +43,9 @@ serve(async (req) => {
 
     // Step 1: Search Discogs for the release with retry logic
     let releaseData: any;
-    let masterMetadata: any = null;
     
-    // If master_id is provided, fetch master data first
-    if (master_id) {
-      console.log('🎭 Fetching Master metadata:', master_id);
-      try {
-        const masterResponse = await fetch(`https://api.discogs.com/masters/${master_id}`, {
-          headers: {
-            'Authorization': `Discogs token=${discogsToken}`,
-            'User-Agent': 'VinylValue/1.0'
-          }
-        });
-        
-        if (masterResponse.ok) {
-          masterMetadata = await masterResponse.json();
-          console.log('✅ Master metadata retrieved:', {
-            artists: masterMetadata.artists?.map((a: any) => a.name).join(', '),
-            title: masterMetadata.title
-          });
-        }
-      } catch (e) {
-        console.warn('⚠️ Failed to fetch master metadata:', (e as Error).message);
-      }
-      
-      // Search using master_id to get the main release with retry
-      console.log('📀 Searching via Master ID:', master_id);
-      try {
-        const result = await retryWithBackoff(async () => {
-          const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
-            body: { direct_discogs_id: master_id.toString() }
-          });
-          if (error) {
-            console.error('❌ Catalog search error:', JSON.stringify(error));
-            throw new Error(`Catalog search failed: ${JSON.stringify(error)}`);
-          }
-          if (!data?.results?.[0]) {
-            throw new Error('No results found');
-          }
-          return data.results[0];
-        });
-        releaseData = result;
-      } catch (e) {
-        throw new Error(`Failed to search Discogs after retries: ${(e as Error).message}`);
-      }
-    } else if (discogs_id) {
-      console.log('📀 Searching by Discogs ID:', discogs_id);
+    if (discogs_id) {
+      console.log('📀 Searching by Release ID:', discogs_id);
       try {
         const result = await retryWithBackoff(async () => {
           const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
@@ -107,13 +64,6 @@ serve(async (req) => {
       } catch (e) {
         throw new Error(`Failed to search Discogs after retries: ${(e as Error).message}`);
       }
-      
-      // Log what we received from the search
-      console.log('🔍 Received from search:', {
-        release_id: releaseData.discogs_id,
-        master_id: releaseData.master_id,
-        original_master_id: releaseData.original_master_id
-      });
     } else if (catalog_number || (artist && title)) {
       console.log('🔍 Searching by catalog/artist/title');
       try {
@@ -146,38 +96,6 @@ serve(async (req) => {
     }
 
     console.log('✅ Found release:', releaseData.title);
-    
-    // Determine master_id from all available sources
-    const masterIdCandidate = master_id || releaseData.original_master_id || releaseData.master_id;
-    
-    // If we have a master_id but haven't fetched metadata yet, fetch it now
-    if (masterIdCandidate && !masterMetadata) {
-      console.log('🎯 Fetching Master metadata for ID:', masterIdCandidate);
-      try {
-        const masterResponse = await fetch(`https://api.discogs.com/masters/${masterIdCandidate}`, {
-          headers: {
-            'Authorization': `Discogs token=${discogsToken}`,
-            'User-Agent': 'VinylValue/1.0'
-          }
-        });
-        
-        if (masterResponse.ok) {
-          masterMetadata = await masterResponse.json();
-          console.log('✅ Master metadata retrieved for naming:', {
-            artists: masterMetadata.artists?.map((a: any) => a.name).join(', '),
-            title: masterMetadata.title
-          });
-        } else {
-          console.log(`⚠️ Master metadata fetch returned ${masterResponse.status}, will use release data for naming`);
-        }
-      } catch (e) {
-        console.warn('⚠️ Failed to fetch master metadata, will use release data for naming:', (e as Error).message);
-      }
-    }
-    
-    if (!masterIdCandidate) {
-      console.log('ℹ️ No master_id available, will use release metadata for naming');
-    }
 
     // Step 2: Create or find release in database
     // Normalize fields for DB function types
@@ -192,30 +110,17 @@ serve(async (req) => {
           ? releaseData.style.split(',').map((s: string) => s.trim()).filter(Boolean)
           : null);
 
-    // Use master metadata for names if available, otherwise fall back to release data
-    let artistValue: string;
-    let albumTitle: string;
-    
-    if (masterMetadata) {
-      // Extract from master metadata
-      artistValue = masterMetadata.artists?.map((a: any) => a.name).join(', ') || releaseData.artist || '';
-      albumTitle = masterMetadata.title || '';
-      console.log(`🎭 Using Master metadata for names (Master ID: ${masterIdCandidate}):`, { artist: artistValue, title: albumTitle });
-    } else {
-      // Fall back to release data
-      artistValue = releaseData.artist || '';
-      if (!artistValue && typeof releaseData.title === 'string' && releaseData.title.includes(' - ')) {
-        artistValue = releaseData.title.split(' - ')[0].trim();
-      }
-      
-      // Extract clean album title
-      albumTitle = typeof releaseData.title === 'string'
-        ? (releaseData.title.includes(' - ')
-            ? releaseData.title.split(' - ').slice(1).join(' - ').trim()
-            : releaseData.title)
-        : '';
-      console.log('📀 Fallback to Release data for names:', { artist: artistValue, title: albumTitle });
-    }
+    // Use Release data for naming
+    const artistValue = releaseData.artist || 
+      (releaseData.title?.includes(' - ') 
+        ? releaseData.title.split(' - ')[0].trim() 
+        : '');
+
+    const albumTitle = releaseData.title?.includes(' - ')
+      ? releaseData.title.split(' - ').slice(1).join(' - ').trim()
+      : releaseData.title || '';
+
+    console.log('📀 Using Release data for names:', { artist: artistValue, title: albumTitle });
 
     // Normalize genre, label, format to strings (not arrays)
     const genreValue = Array.isArray(releaseData.genre) 
@@ -249,7 +154,7 @@ serve(async (req) => {
         country: releaseData.country,
         style: styleValue,
         discogs_url: releaseData.discogs_url,
-        master_id: masterIdCandidate ? parseInt(masterIdCandidate) : null
+        master_id: releaseData.master_id ? parseInt(releaseData.master_id) : null
       }
     });
 
@@ -259,8 +164,8 @@ serve(async (req) => {
     console.log('💾 Release saved with ID:', release_id);
 
     // Step 3: Get initial artwork URL (for product creation)
-    const masterId = masterIdCandidate;
-    console.log('🖼️ Master ID for artwork:', masterId || 'none');
+    const masterId = releaseData.master_id || null;
+    console.log('🖼️ Master ID for artwork (from release metadata):', masterId || 'none');
     
     const artworkUrl = releaseData.cover_image;
     console.log('🖼️ Initial artwork URL:', artworkUrl);
@@ -377,15 +282,15 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
       tags_count: tags.length
     });
 
-    // ✅ CRITICAL FIX: Always use RELEASE data, not master data
-    // Store master_id separately in master_id column
-    const finalDiscogsUrl = releaseData.discogs_url; // Always keep release URL
-    const finalDiscogsId = parseInt(releaseData.discogs_id); // Always keep release ID
+    // ✅ Store Release ID in discogs_id column
+    // ✅ Store Master ID (from release metadata) in master_id column
+    const finalDiscogsUrl = releaseData.discogs_url;
+    const finalDiscogsId = parseInt(releaseData.discogs_id);
     
-    console.log('🎯 Storing Release ID (not Master):', {
+    console.log('🎯 Storing Release ID:', {
       release_id: finalDiscogsId,
       release_url: finalDiscogsUrl,
-      master_id: masterIdCandidate || 'none'
+      master_id: releaseData.master_id || 'none (from API metadata)'
     });
 
     const { data: product, error: productError } = await supabase
@@ -405,9 +310,9 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
         images: images,
         categories: categories,
         tags: tags,
-        discogs_id: finalDiscogsId, // ✅ Store RELEASE ID here
-        master_id: masterIdCandidate ? parseInt(masterIdCandidate) : null, // ✅ Store Master ID separately
-        discogs_url: finalDiscogsUrl, // ✅ Keep RELEASE URL
+        discogs_id: finalDiscogsId, // ✅ Always Release ID
+        master_id: releaseData.master_id ? parseInt(releaseData.master_id) : null, // ✅ From Discogs API
+        discogs_url: finalDiscogsUrl, // ✅ Release URL
         release_id: release_id,
         status: 'active',
         published_at: new Date().toISOString(),

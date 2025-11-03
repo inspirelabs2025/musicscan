@@ -8,8 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
-import { AlertCircle, ExternalLink, Copy, ArrowLeft, Sparkles, Search, Hash, Clock } from 'lucide-react';
+import { AlertCircle, ExternalLink, Copy, ArrowLeft, Sparkles, Search, Hash, Clock, Upload, Download } from 'lucide-react';
 
 interface DiscogsResult {
   discogs_id: number;
@@ -32,9 +34,24 @@ interface SearchHistoryItem {
   timestamp: number;
 }
 
+interface BulkImportRow {
+  artist: string;
+  title: string;
+  catalog_number?: string;
+}
+
+interface BulkResult {
+  artist: string;
+  title: string;
+  status: 'success' | 'error' | 'pending';
+  discogs_id?: number;
+  discogs_url?: string;
+  error?: string;
+}
+
 const DiscogsLookup = () => {
   const navigate = useNavigate();
-  const [searchMode, setSearchMode] = useState<'artist-album' | 'direct-id'>('artist-album');
+  const [searchMode, setSearchMode] = useState<'artist-album' | 'direct-id' | 'bulk'>('artist-album');
   const [artistInput, setArtistInput] = useState('');
   const [titleInput, setTitleInput] = useState('');
   const [catalogInput, setCatalogInput] = useState('');
@@ -43,6 +60,11 @@ const DiscogsLookup = () => {
   const [results, setResults] = useState<DiscogsResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  
+  // Bulk import states
+  const [bulkResults, setBulkResults] = useState<BulkResult[]>([]);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState(0);
 
   useEffect(() => {
     const history = localStorage.getItem('discogs-search-history');
@@ -160,6 +182,138 @@ const DiscogsLookup = () => {
     setCatalogInput('');
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      if (lines.length === 0) {
+        toast({ title: "❌ Leeg bestand", variant: "destructive" });
+        return;
+      }
+
+      // Parse CSV (expect: Artist,Album or Artist,Album,Catalog)
+      const rows: BulkImportRow[] = [];
+      lines.forEach((line, index) => {
+        if (index === 0 && line.toLowerCase().includes('artist')) return; // Skip header
+        
+        const parts = line.split(',').map(p => p.trim());
+        if (parts.length >= 2) {
+          rows.push({
+            artist: parts[0],
+            title: parts[1],
+            catalog_number: parts[2] || undefined
+          });
+        }
+      });
+
+      if (rows.length === 0) {
+        toast({ 
+          title: "❌ Geen geldige rijen", 
+          description: "Formaat: Artist,Album,Catalog (optioneel)",
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      toast({
+        title: `✅ ${rows.length} albums geladen`,
+        description: "Klik op 'Start Bulk Zoeken' om te beginnen"
+      });
+
+      setBulkResults(rows.map(row => ({
+        artist: row.artist,
+        title: row.title,
+        status: 'pending'
+      })));
+    };
+
+    reader.readAsText(file);
+    e.target.value = ''; // Reset input
+  };
+
+  const processBulkSearch = async () => {
+    if (bulkResults.length === 0) return;
+
+    setIsBulkProcessing(true);
+    setBulkProgress(0);
+
+    const updatedResults = [...bulkResults];
+
+    for (let i = 0; i < bulkResults.length; i++) {
+      const row = bulkResults[i];
+      
+      try {
+        const { data, error: searchError } = await supabase.functions.invoke('optimized-catalog-search', {
+          body: {
+            artist: row.artist,
+            title: row.title,
+            include_pricing: false
+          }
+        });
+
+        if (searchError) throw searchError;
+
+        if (data?.results && data.results.length > 0) {
+          const firstResult = data.results[0];
+          updatedResults[i] = {
+            ...row,
+            status: 'success',
+            discogs_id: firstResult.discogs_id,
+            discogs_url: firstResult.discogs_url
+          };
+        } else {
+          updatedResults[i] = {
+            ...row,
+            status: 'error',
+            error: 'Geen resultaten'
+          };
+        }
+      } catch (err: any) {
+        updatedResults[i] = {
+          ...row,
+          status: 'error',
+          error: err.message || 'Fout opgetreden'
+        };
+      }
+
+      setBulkResults([...updatedResults]);
+      setBulkProgress(((i + 1) / bulkResults.length) * 100);
+
+      // Rate limiting: wait 1 second between requests
+      if (i < bulkResults.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    setIsBulkProcessing(false);
+    toast({
+      title: "✅ Bulk zoeken voltooid",
+      description: `${updatedResults.filter(r => r.status === 'success').length} van ${updatedResults.length} gevonden`
+    });
+  };
+
+  const downloadBulkResults = () => {
+    const csv = [
+      'Artist,Album,Discogs ID,Discogs URL,Status',
+      ...bulkResults.map(r => 
+        `"${r.artist}","${r.title}",${r.discogs_id || ''},${r.discogs_url || ''},${r.status}`
+      )
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `discogs-bulk-results-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <Button
@@ -184,7 +338,7 @@ const DiscogsLookup = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <Tabs value={searchMode} onValueChange={(v) => setSearchMode(v as any)}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="artist-album">
                 <Search className="w-4 h-4 mr-2" />
                 Artist + Album
@@ -192,6 +346,10 @@ const DiscogsLookup = () => {
               <TabsTrigger value="direct-id">
                 <Hash className="w-4 h-4 mr-2" />
                 Direct ID
+              </TabsTrigger>
+              <TabsTrigger value="bulk">
+                <Upload className="w-4 h-4 mr-2" />
+                Bulk Import
               </TabsTrigger>
             </TabsList>
 
@@ -249,16 +407,133 @@ const DiscogsLookup = () => {
                 </p>
               </div>
             </TabsContent>
+
+            <TabsContent value="bulk" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                <div>
+                  <Label>Upload CSV Bestand</Label>
+                  <Input 
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileUpload}
+                    disabled={isBulkProcessing}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    CSV formaat: <code>Artist,Album,Catalog (optioneel)</code>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Voorbeeld: <code>Pink Floyd,The Wall,50999 0 97784 1 3</code>
+                  </p>
+                </div>
+
+                {bulkResults.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">
+                        {bulkResults.length} albums geladen
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={processBulkSearch}
+                          disabled={isBulkProcessing}
+                          size="sm"
+                        >
+                          {isBulkProcessing ? "Bezig..." : "Start Bulk Zoeken"}
+                        </Button>
+                        {bulkResults.some(r => r.status === 'success') && (
+                          <Button
+                            onClick={downloadBulkResults}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download CSV
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {isBulkProcessing && (
+                      <div className="space-y-2">
+                        <Progress value={bulkProgress} />
+                        <p className="text-xs text-muted-foreground text-center">
+                          {Math.round(bulkProgress)}% voltooid
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Artist</TableHead>
+                            <TableHead>Album</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Discogs ID</TableHead>
+                            <TableHead>Acties</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {bulkResults.map((result, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">{result.artist}</TableCell>
+                              <TableCell>{result.title}</TableCell>
+                              <TableCell>
+                                {result.status === 'pending' && <Badge variant="secondary">Wachten</Badge>}
+                                {result.status === 'success' && <Badge variant="default">Gevonden</Badge>}
+                                {result.status === 'error' && (
+                                  <Badge variant="destructive">{result.error}</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {result.discogs_id && (
+                                  <span className="font-mono font-bold">{result.discogs_id}</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {result.discogs_id && (
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => navigate(`/admin/art-generator?discogsId=${result.discogs_id}`)}
+                                    >
+                                      <Sparkles className="w-4 h-4" />
+                                    </Button>
+                                    {result.discogs_url && (
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => window.open(result.discogs_url, '_blank')}
+                                      >
+                                        <ExternalLink className="w-4 h-4" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
           </Tabs>
 
-          <Button 
-            onClick={handleSearch} 
-            disabled={isSearching}
-            className="w-full"
-            size="lg"
-          >
-            {isSearching ? "Zoeken..." : "🔍 Zoek op Discogs"}
-          </Button>
+          {searchMode !== 'bulk' && (
+            <Button 
+              onClick={handleSearch} 
+              disabled={isSearching}
+              className="w-full"
+              size="lg"
+            >
+              {isSearching ? "Zoeken..." : "🔍 Zoek op Discogs"}
+            </Button>
+          )}
 
           {/* Search History */}
           {searchHistory.length > 0 && searchMode === 'artist-album' && (

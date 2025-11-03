@@ -27,29 +27,26 @@ export default function SitemapManagement() {
     }
   };
 
-  const generateSitemap = async (type: 'main' | 'blog' | 'stories') => {
+  const generateAllSitemaps = async () => {
     try {
       setIsGenerating(true);
       
-      const path = type === 'main' ? '' : type === 'blog' ? 'sitemap-blog' : 'sitemap-music-stories';
-      const { data, error } = await supabase.functions.invoke('generate-sitemaps', {
-        body: { type: path },
-      });
+      const { data, error } = await supabase.functions.invoke('generate-static-sitemaps');
 
       if (error) throw error;
 
       toast({
-        title: "Sitemap gegenereerd",
-        description: `${type === 'main' ? 'Hoofd' : type === 'blog' ? 'Blog' : 'Music Stories'} sitemap succesvol gegenereerd`,
+        title: "Sitemaps gegenereerd",
+        description: `Alle sitemaps succesvol gegenereerd: ${data?.stats?.blogPosts || 0} blog posts, ${data?.stats?.musicStories || 0} music stories`,
       });
 
       await fetchStats();
     } catch (error) {
-      console.error('Error generating sitemap:', error);
+      console.error('Error generating sitemaps:', error);
       toast({
         variant: "destructive",
         title: "Fout bij genereren",
-        description: "Er is een fout opgetreden bij het genereren van de sitemap",
+        description: "Er is een fout opgetreden bij het genereren van de sitemaps",
       });
     } finally {
       setIsGenerating(false);
@@ -60,8 +57,8 @@ export default function SitemapManagement() {
     const url = type === 'main' 
       ? 'https://www.musicscan.app/sitemap.xml'
       : type === 'blog'
-      ? 'https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/generate-sitemaps?path=sitemap-blog'
-      : 'https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/generate-sitemaps?path=sitemap-music-stories';
+      ? 'https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog.xml'
+      : 'https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-music-stories.xml';
     
     window.open(url, '_blank');
   };
@@ -84,11 +81,31 @@ export default function SitemapManagement() {
           <strong>Google Search Console:</strong> Submit deze sitemaps in GSC voor optimale indexering:
           <ul className="list-disc ml-6 mt-2">
             <li>Hoofdsitemap: <code>https://www.musicscan.app/sitemap.xml</code></li>
-            <li>Blog sitemap: <code>https://www.musicscan.app/api/sitemap-blog.xml</code></li>
-            <li>Stories sitemap: <code>https://www.musicscan.app/api/sitemap-music-stories.xml</code></li>
+            <li>Blog sitemap: <code>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog.xml</code></li>
+            <li>Stories sitemap: <code>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-music-stories.xml</code></li>
           </ul>
         </AlertDescription>
       </Alert>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Alle Sitemaps Genereren</CardTitle>
+          <CardDescription>
+            Genereer blog en music stories sitemaps tegelijk (wordt automatisch elke nacht om 2:00 uur uitgevoerd)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={generateAllSitemaps} 
+            disabled={isGenerating}
+            className="w-full"
+            size="lg"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            {isGenerating ? 'Bezig met genereren...' : 'Genereer Alle Sitemaps'}
+          </Button>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-3 mb-6">
         <Card>
@@ -96,15 +113,7 @@ export default function SitemapManagement() {
             <CardTitle>Hoofdsitemap</CardTitle>
             <CardDescription>Sitemap index met alle submaps</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button 
-              onClick={() => generateSitemap('main')} 
-              disabled={isGenerating}
-              className="w-full"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Genereer
-            </Button>
+          <CardContent>
             <Button 
               onClick={() => downloadSitemap('main')} 
               variant="outline"
@@ -123,15 +132,7 @@ export default function SitemapManagement() {
               {stats ? `${stats.blogs} gepubliceerde posts` : 'Laden...'}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button 
-              onClick={() => generateSitemap('blog')} 
-              disabled={isGenerating}
-              className="w-full"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Genereer
-            </Button>
+          <CardContent>
             <Button 
               onClick={() => downloadSitemap('blog')} 
               variant="outline"
@@ -150,15 +151,7 @@ export default function SitemapManagement() {
               {stats ? `${stats.stories} gepubliceerde verhalen` : 'Laden...'}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button 
-              onClick={() => generateSitemap('stories')} 
-              disabled={isGenerating}
-              className="w-full"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Genereer
-            </Button>
+          <CardContent>
             <Button 
               onClick={() => downloadSitemap('stories')} 
               variant="outline"

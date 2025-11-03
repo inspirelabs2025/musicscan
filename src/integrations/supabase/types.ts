@@ -1269,6 +1269,63 @@ export type Database = {
         }
         Relationships: []
       }
+      indexnow_queue: {
+        Row: {
+          content_type: string
+          created_at: string
+          id: string
+          processed: boolean | null
+          processed_at: string | null
+          url: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          id?: string
+          processed?: boolean | null
+          processed_at?: string | null
+          url: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          id?: string
+          processed?: boolean | null
+          processed_at?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
+      indexnow_submissions: {
+        Row: {
+          content_type: string
+          created_at: string
+          id: string
+          response_body: string | null
+          status_code: number | null
+          submitted_at: string
+          urls: string[]
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          id?: string
+          response_body?: string | null
+          status_code?: number | null
+          submitted_at?: string
+          urls: string[]
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          id?: string
+          response_body?: string | null
+          status_code?: number | null
+          submitted_at?: string
+          urls?: string[]
+        }
+        Relationships: []
+      }
       market_prices: {
         Row: {
           condition_grade: string
@@ -4156,6 +4213,12 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      process_indexnow_queue: {
+        Args: never
+        Returns: {
+          processed_count: number
+        }[]
+      }
       search_platform_products: {
         Args: {
           p_category?: string
@@ -4175,6 +4238,10 @@ export type Database = {
           slug: string
           title: string
         }[]
+      }
+      submit_to_indexnow: {
+        Args: { p_content_type?: string; p_url: string }
+        Returns: undefined
       }
       update_cd_discogs_ids: { Args: never; Returns: number }
       update_release_aggregated_data: {

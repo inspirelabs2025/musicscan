@@ -44,7 +44,7 @@ interface BulkImportRow {
 interface BulkResult {
   artist: string;
   title: string;
-  status: 'success' | 'error' | 'pending';
+  status: 'success' | 'error' | 'pending' | 'processing';
   discogs_id?: number;
   discogs_url?: string;
   error?: string;
@@ -306,6 +306,14 @@ const DiscogsLookup = () => {
     for (let i = 0; i < bulkResults.length; i++) {
       const row = bulkResults[i];
       console.log(`🔍 [${i + 1}/${bulkResults.length}] Zoeken: ${row.artist} - ${row.title}`);
+
+      // Markeer huidige rij als 'processing' en update UI direct
+      updatedResults[i] = {
+        ...row,
+        status: 'processing',
+        error: undefined,
+      };
+      setBulkResults([...updatedResults]);
       
       try {
         const { data, error: searchError } = await supabase.functions.invoke('optimized-catalog-search', {
@@ -569,6 +577,7 @@ const DiscogsLookup = () => {
                               <TableCell>{result.title}</TableCell>
                               <TableCell>
                                 {result.status === 'pending' && <Badge variant="secondary">Wachten</Badge>}
+                                {result.status === 'processing' && <Badge variant="secondary">Bezig…</Badge>}
                                 {result.status === 'success' && <Badge variant="default">Gevonden</Badge>}
                                 {result.status === 'error' && (
                                   <Badge variant="destructive">{result.error}</Badge>

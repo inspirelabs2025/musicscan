@@ -5,8 +5,13 @@ import { IndexNowQueueMonitor } from "@/components/admin/IndexNowQueueMonitor";
 import { PriceChangeMonitor } from "@/components/admin/PriceChangeMonitor";
 import { ContentFreshnessOverview } from "@/components/admin/ContentFreshnessOverview";
 import { SEOHealthCheck } from "@/components/admin/SEOHealthCheck";
+import { PerformanceMonitor } from "@/components/admin/PerformanceMonitor";
+import { useWebVitals } from "@/hooks/useWebVitals";
 
 export default function SEOMonitoring() {
+  // Initialize web vitals tracking
+  useWebVitals();
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div>
@@ -23,6 +28,7 @@ export default function SEOMonitoring() {
           <TabsTrigger value="indexnow">IndexNow Queue</TabsTrigger>
           <TabsTrigger value="prices">Price Changes</TabsTrigger>
           <TabsTrigger value="content">Content Freshness</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -43,6 +49,10 @@ export default function SEOMonitoring() {
 
         <TabsContent value="content" className="space-y-4">
           <ContentFreshnessOverview />
+        </TabsContent>
+
+        <TabsContent value="performance" className="space-y-4">
+          <PerformanceMonitor />
         </TabsContent>
       </Tabs>
     </div>

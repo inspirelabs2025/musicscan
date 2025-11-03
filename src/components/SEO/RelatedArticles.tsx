@@ -30,55 +30,117 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
   const [relatedArticles, setRelatedArticles] = React.useState<RelatedArticle[]>([]);
   const [loading, setLoading] = React.useState(true);
 
+  // Normalize artist names for better matching
+  const normalizeArtist = (name: string) => {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/^the\s+/i, '') // Remove "The" prefix
+      .replace(/\s+(group|band|orchestra|ensemble)$/i, ''); // Remove suffixes
+  };
+
+  // Check if two artist names are related (variations of same artist)
+  const isRelatedArtist = (articleArtist: string, targetArtist: string) => {
+    const normalizedArticle = normalizeArtist(articleArtist);
+    const normalizedTarget = normalizeArtist(targetArtist);
+    
+    // Exact match after normalization
+    if (normalizedArticle === normalizedTarget) return true;
+    
+    // Check if one contains the other (e.g., "patti smith" in "patti smith group")
+    if (normalizedArticle.includes(normalizedTarget) || 
+        normalizedTarget.includes(normalizedArticle)) {
+      // But exclude if it's a different artist that happens to contain the name
+      const words = normalizedTarget.split(' ');
+      const firstWord = words[0];
+      
+      // If searching for multi-word artist, need substantial overlap
+      if (words.length > 1) {
+        return normalizedArticle.includes(normalizedTarget) || 
+               normalizedTarget.includes(normalizedArticle);
+      }
+      
+      // For single word, must be at start or full match
+      return normalizedArticle === firstWord || 
+             normalizedArticle.startsWith(firstWord + ' ');
+    }
+    
+    return false;
+  };
+
+  // Check if artist name indicates compilation/multi-artist
+  const isCompilation = (artistName: string) => {
+    const lower = artistName.toLowerCase();
+    return lower.includes('various') ||
+           lower.includes('diverse') ||
+           lower.includes('&') ||
+           lower.includes(' and ') ||
+           lower.includes('feat.') ||
+           lower.includes('vs') ||
+           lower.includes('tribute') ||
+           artistName.includes(',');
+  };
+
   React.useEffect(() => {
     const fetchRelatedArticles = async () => {
       if (!genre && !artist) return;
       
       try {
         const { supabase } = await import('@/integrations/supabase/client');
+        setLoading(true);
+        console.log(`[RelatedArticles] Fetching related articles for:`, { currentSlug, artist, genre });
+
         let articles: any[] = [];
 
-        // STRATEGY 1: Exact artist match using database ILIKE
+        // Strategy 1: Try fuzzy artist match first
         if (artist) {
-          console.log(`[RelatedArticles] Searching for exact artist: "${artist}"`);
+          console.log(`[RelatedArticles] Trying fuzzy artist match for: ${artist}`);
           
-          const { data: exactMatch, error: exactError } = await supabase
+          // Use fuzzy matching with wildcards to catch variations
+          const { data: artistMatches, error: artistError } = await supabase
             .from('blog_posts')
             .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url')
             .eq('is_published', true)
             .neq('slug', currentSlug)
-            .ilike('yaml_frontmatter->>artist', artist)
+            .or(`yaml_frontmatter->>artist.ilike.${artist},yaml_frontmatter->>artist.ilike.%${artist}%,yaml_frontmatter->>artist.ilike.${artist}%`)
             .order('views_count', { ascending: false })
-            .limit(maxResults);
+            .limit(maxResults * 3); // Get more to filter
 
-          if (exactError) {
-            console.error('[RelatedArticles] Error fetching by artist:', exactError);
-          } else if (exactMatch && exactMatch.length > 0) {
-            console.log(`[RelatedArticles] Found ${exactMatch.length} database matches`);
+          if (artistError) {
+            console.error('[RelatedArticles] Error fetching by artist:', artistError);
+          } else if (artistMatches && artistMatches.length > 0) {
+            console.log(`[RelatedArticles] Found ${artistMatches.length} potential artist matches`);
             
-            // Strict client-side validation: exact match only
-            articles = exactMatch.filter(article => {
+            // Client-side smart filtering
+            const validMatches = artistMatches.filter(article => {
               const frontmatter = article.yaml_frontmatter as any || {};
-              const articleArtist = String(frontmatter.artist || '').toLowerCase().trim();
-              const targetArtist = artist.toLowerCase().trim();
-              const match = 
-                articleArtist === targetArtist || 
-                articleArtist === `the ${targetArtist}` ||
-                `the ${articleArtist}` === targetArtist;
+              const articleArtist = String(frontmatter.artist || '');
+              if (!articleArtist) return false;
               
-              if (!match) {
-                console.log(`[RelatedArticles] Filtered out: "${frontmatter.artist}" (not exact match)`);
+              // Skip compilations
+              if (isCompilation(articleArtist)) {
+                console.log(`[RelatedArticles] Filtered out compilation: "${articleArtist}"`);
+                return false;
               }
-              return match;
-            });
-
-            console.log(`[RelatedArticles] After strict filtering: ${articles.length} articles`);
+              
+              // Check if artists are related
+              const isMatch = isRelatedArtist(articleArtist, artist);
+              
+              if (!isMatch) {
+                console.log(`[RelatedArticles] Filtered out: "${articleArtist}" (not related to "${artist}")`);
+              }
+              
+              return isMatch;
+            }).slice(0, maxResults);
+            
+            articles = validMatches;
+            console.log(`[RelatedArticles] After smart filtering: ${articles.length} matches`);
           }
         }
 
-        // STRATEGY 2: If not enough results, get by same genre (exclude compilations)
-        if (articles.length < 3 && genre) {
-          console.log(`[RelatedArticles] Not enough artist matches, searching by genre: "${genre}"`);
+        // Strategy 2: If no artist matches, try genre-based matching
+        if (articles.length === 0 && genre) {
+          console.log(`[RelatedArticles] No artist matches, trying genre match for: ${genre}`);
           
           const { data: genreData, error: genreError } = await supabase
             .from('blog_posts')
@@ -91,37 +153,33 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
 
           if (genreError) {
             console.error('[RelatedArticles] Error fetching by genre:', genreError);
-          } else if (genreData) {
-            console.log(`[RelatedArticles] Found ${genreData.length} genre matches`);
+          } else if (genreData && genreData.length > 0) {
+            console.log(`[RelatedArticles] Found ${genreData.length} genre matches, filtering compilations`);
             
-            const existingIds = new Set(articles.map(a => a.id));
-            const genreArticles = genreData.filter(article => {
-              if (existingIds.has(article.id)) return false;
-              
+            // Filter out compilations
+            const filteredByGenre = genreData.filter(article => {
               const frontmatter = article.yaml_frontmatter as any || {};
-              const articleArtist = String(frontmatter.artist || '').toLowerCase();
+              const articleArtist = String(frontmatter.artist || '');
+              if (!articleArtist) return false;
               
-              // Exclude multi-artist compilations
-              const isCompilation = 
-                articleArtist.includes('diverse') ||
-                articleArtist.includes('various') ||
-                articleArtist.includes('&') ||
-                articleArtist.includes(',');
-              
-              if (isCompilation) {
-                console.log(`[RelatedArticles] Filtered out compilation: "${frontmatter.artist}"`);
+              if (isCompilation(articleArtist)) {
+                console.log(`[RelatedArticles] Filtered out compilation: "${articleArtist}"`);
+                return false;
               }
-              return !isCompilation;
-            });
-
-            articles = [...articles, ...genreArticles].slice(0, maxResults);
+              
+              return true;
+            }).slice(0, maxResults);
+            
+            articles = filteredByGenre;
+            console.log(`[RelatedArticles] After compilation filtering: ${articles.length} matches`);
           }
         }
 
-        console.log(`[RelatedArticles] Final result: ${articles.length} articles`);
+        console.log(`[RelatedArticles] Final result: ${articles.length} related articles`);
         setRelatedArticles(articles);
       } catch (error) {
-        console.error('[RelatedArticles] Error:', error);
+        console.error('[RelatedArticles] Unexpected error:', error);
+        setRelatedArticles([]);
       } finally {
         setLoading(false);
       }

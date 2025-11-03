@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Newspaper, BookOpen, ShoppingBag } from 'lucide-react';
+import { Newspaper, BookOpen, ShoppingBag, Palette } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 export const SimpleHero = () => {
@@ -23,10 +23,18 @@ export const SimpleHero = () => {
     {
       icon: ShoppingBag,
       title: 'Shop',
-      subtitle: 'Kopen',
-      description: 'Vinyl, CD\'s & Art',
-      href: '/shop',
+      subtitle: 'Ontdek',
+      description: 'Gebruikerswinkels',
+      href: '/shops',
       gradient: 'from-primary to-vinyl-purple'
+    },
+    {
+      icon: Palette,
+      title: 'Art',
+      subtitle: 'Kopen',
+      description: 'Metaalprints & Posters',
+      href: '/art-shop',
+      gradient: 'from-accent to-vinyl-gold'
     }
   ];
 
@@ -48,12 +56,12 @@ export const SimpleHero = () => {
             🎵 Jouw Muziekplatform
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground">
-            Voor Nieuws, Verhalen & Vinyl
+            Voor Nieuws, Verhalen, Shops & Art
           </p>
         </div>
 
         {/* CTA Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {ctaCards.map((card) => {
             const Icon = card.icon;
             return (

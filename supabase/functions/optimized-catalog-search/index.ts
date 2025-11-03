@@ -111,12 +111,49 @@ const runParallelSearches = async (catalogNumber: string | undefined, artist?: s
     );
   }
 
-  // Strategy 2: Artist + Title search
+  // Strategy 2: Artist + Title (Strict) - for exact matches
   if (artist?.trim() && title?.trim()) {
     searches.push(
       searchDiscogsQuick(`artist:"${artist}" title:"${title}"`, authHeaders)
-        .then(data => ({ strategy: 'Artist + Title', data }))
-        .catch(error => ({ strategy: 'Artist + Title', error }))
+        .then(data => ({ strategy: 'Artist + Title (Strict)', data }))
+        .catch(error => ({ strategy: 'Artist + Title (Strict)', error }))
+    );
+  }
+
+  // Strategy 2b: Artist + Title (Relaxed) - without quotes for flexible matching
+  if (artist?.trim() && title?.trim()) {
+    searches.push(
+      searchDiscogsQuick(`${artist} ${title} type:release`, authHeaders)
+        .then(data => ({ strategy: 'Artist + Title (Relaxed)', data }))
+        .catch(error => ({ strategy: 'Artist + Title (Relaxed)', error }))
+    );
+  }
+
+  // Strategy 2c: Release Title Only - using Discogs release_title operator
+  if (title?.trim()) {
+    searches.push(
+      searchDiscogsQuick(`release_title:"${title}" type:release`, authHeaders)
+        .then(data => ({ strategy: 'Release Title', data }))
+        .catch(error => ({ strategy: 'Release Title', error }))
+    );
+  }
+
+  // Strategy 2d: Artist + Title Keywords - first word of title
+  if (artist?.trim() && title?.trim()) {
+    const titleKeyword = title.split(' ')[0];
+    searches.push(
+      searchDiscogsQuick(`artist:"${artist}" ${titleKeyword} type:release`, authHeaders)
+        .then(data => ({ strategy: 'Artist + Keywords', data }))
+        .catch(error => ({ strategy: 'Artist + Keywords', error }))
+    );
+  }
+
+  // Strategy 2e: Title Keywords Only - broadest search
+  if (title?.trim()) {
+    searches.push(
+      searchDiscogsQuick(`${title} type:release`, authHeaders)
+        .then(data => ({ strategy: 'Title Keywords', data }))
+        .catch(error => ({ strategy: 'Title Keywords', error }))
     );
   }
 
@@ -138,8 +175,8 @@ const runParallelSearches = async (catalogNumber: string | undefined, artist?: s
     .filter(result => !result.error && result.data?.results?.length > 0);
 };
 
-// Process search results and format them
-const processSearchResults = (searchResults: any[]) => {
+// Process search results and format them with similarity scoring
+const processSearchResults = (searchResults: any[], originalArtist?: string, originalTitle?: string) => {
   const allResults = [];
   const usedIds = new Set();
 
@@ -153,6 +190,42 @@ const processSearchResults = (searchResults: any[]) => {
       const format = item.format?.join(' ').toLowerCase() || '';
       if (format.includes('cd') || format.includes('compact disc')) {
         mediaType = 'cd';
+      }
+
+      // Calculate similarity score
+      let similarityScore = 0.5; // Base score
+      
+      if (originalArtist && originalTitle) {
+        const itemArtist = (Array.isArray(item.artist) ? item.artist.join(', ') : item.artist || '').toLowerCase();
+        const itemTitle = (item.title || '').toLowerCase();
+        const searchArtist = originalArtist.toLowerCase();
+        const searchTitle = originalTitle.toLowerCase();
+
+        // Artist match (0.3 points max)
+        if (itemArtist.includes(searchArtist)) {
+          similarityScore += 0.3;
+        } else if (searchArtist.includes(itemArtist)) {
+          similarityScore += 0.2;
+        }
+
+        // Title match (0.3 points max)
+        if (itemTitle.includes(searchTitle)) {
+          similarityScore += 0.3;
+        } else if (searchTitle.includes(itemTitle)) {
+          similarityScore += 0.2;
+        }
+
+        // Strategy bonus (0.2 points max)
+        const strategyBonus: Record<string, number> = {
+          'Catalog Number': 0.2,
+          'Artist + Title (Strict)': 0.15,
+          'Artist + Title (Relaxed)': 0.1,
+          'Release Title': 0.08,
+          'Artist + Keywords': 0.05,
+          'Title Keywords': 0.02,
+          'Combined': 0.1
+        };
+        similarityScore += strategyBonus[result.strategy] || 0;
       }
 
       allResults.push({
@@ -170,7 +243,7 @@ const processSearchResults = (searchResults: any[]) => {
         country: item.country || '',
         format: Array.isArray(item.format) ? item.format.join(', ') : item.format || '',
         media_type: mediaType,
-        similarity_score: 0.9,
+        similarity_score: similarityScore,
         search_strategy: result.strategy,
         thumb: item.thumb || '',
         // No pricing stats initially - will be loaded separately
@@ -179,6 +252,7 @@ const processSearchResults = (searchResults: any[]) => {
     }
   }
 
+  // Sort by similarity score (highest first)
   return allResults.sort((a, b) => b.similarity_score - a.similarity_score);
 };
 
@@ -301,7 +375,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`🔍 Running parallel searches for: ${catalog_number}, ${artist}, ${title}`);
+    console.log(`🔍 Running parallel searches for catalog: "${catalog_number || 'none'}", artist: "${artist || 'none'}", title: "${title || 'none'}"`);
     
     // Run parallel searches
     const searchResults = await runParallelSearches(catalog_number, artist, title, authHeaders);
@@ -318,8 +392,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Process and format results
-    const formattedResults = processSearchResults(searchResults);
+    // Process and format results with similarity scoring
+    const formattedResults = processSearchResults(searchResults, artist, title);
     const strategies = searchResults.map(r => r.strategy);
 
     console.log(`✅ Optimized search completed: ${formattedResults.length} results from ${strategies.length} strategies`);

@@ -12,11 +12,11 @@ export const LatestReleasesSection = () => {
   const { data: releases, isLoading } = useQuery({
     queryKey: ['latest-releases'],
     queryFn: async () => {
-      // Get latest albums from unified_scans
+      // Get latest releases from releases table
       const { data, error } = await supabase
-        .from('unified_scans')
+        .from('releases')
         .select('*')
-        .not('cover_image', 'is', null)
+        .not('artwork_url', 'is', null)
         .order('created_at', { ascending: false })
         .limit(6);
       
@@ -77,10 +77,10 @@ export const LatestReleasesSection = () => {
               <Card className="overflow-hidden hover:shadow-2xl transition-all hover:scale-105 h-full border-2 hover:border-vinyl-gold">
                 {/* Album Cover */}
                 <div className="aspect-square overflow-hidden bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20">
-                  {release.cover_image ? (
+                  {release.artwork_url ? (
                     <img 
-                      src={release.cover_image} 
-                      alt={release.album || 'Album'}
+                      src={release.artwork_url} 
+                      alt={release.title || 'Album'}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
                   ) : (
@@ -107,12 +107,12 @@ export const LatestReleasesSection = () => {
                   </h3>
 
                   <p className="text-xs text-muted-foreground line-clamp-1">
-                    {release.album || 'Album'}
+                    {release.title || 'Album'}
                   </p>
 
-                  {release.media_type && (
+                  {release.format && (
                     <Badge variant="secondary" className="text-xs">
-                      {release.media_type.toUpperCase()}
+                      {release.format}
                     </Badge>
                   )}
                 </div>

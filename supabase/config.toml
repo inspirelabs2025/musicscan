@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.latest-discogs-news]
 verify_jwt = false
 
+[[functions.latest-discogs-news.schedule]]
+cron = "0 3 * * *"  # Daily at 3 AM UTC
+
 [functions.daily-email-digest]
 verify_jwt = false
 

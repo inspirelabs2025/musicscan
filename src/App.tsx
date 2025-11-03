@@ -83,6 +83,7 @@ import MuziekVerhaal from "./pages/MuziekVerhaal";
 import Marketplace from "./pages/Marketplace";
 import PublicShopItemDetail from "./pages/PublicShopItemDetail";
 import PlatformProductDetail from "./pages/PlatformProductDetail";
+import ArtShop from "./pages/ArtShop";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -364,6 +365,8 @@ const App = () => {
                 <SEOMonitoring />
               </ProtectedRoute>
             } />
+            <Route path="/art-shop" element={<ArtShop />} />
+            <Route path="/metaalprints" element={<ArtShop />} />
             <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

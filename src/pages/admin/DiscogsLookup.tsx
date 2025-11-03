@@ -26,6 +26,8 @@ interface DiscogsResult {
   discogs_url?: string;
   search_strategy?: string;
   similarity_score?: number;
+  master_id?: number;
+  original_master_id?: number | string; // Set when a Master ID was converted to Release ID
 }
 
 interface SearchHistoryItem {
@@ -48,6 +50,7 @@ interface BulkResult {
   discogs_id?: number;
   discogs_url?: string;
   error?: string;
+  original_master_id?: number | string; // Set when Master ID was converted
 }
 
 const DiscogsLookup = () => {
@@ -336,7 +339,8 @@ const DiscogsLookup = () => {
             ...row,
             status: 'success',
             discogs_id: firstResult.discogs_id,
-            discogs_url: firstResult.discogs_url
+            discogs_url: firstResult.discogs_url,
+            original_master_id: firstResult.original_master_id
           };
           successCount++;
         } else {
@@ -511,7 +515,7 @@ const DiscogsLookup = () => {
                   disabled={isSearching}
                 />
                 <p className="text-sm text-muted-foreground mt-2">
-                  Voer een Release ID (bijv. 249504) of Master ID in. Master IDs worden automatisch geconverteerd.
+                  Voer een Release ID of Master ID in (bijv. 249504). Master IDs worden automatisch geconverteerd naar een Release ID. Het resultaat toont altijd een Release ID.
                 </p>
               </div>
             </TabsContent>
@@ -603,6 +607,7 @@ const DiscogsLookup = () => {
                             <TableHead>Artist</TableHead>
                             <TableHead>Album</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>ID Type</TableHead>
                             <TableHead>Discogs ID</TableHead>
                             <TableHead>Acties</TableHead>
                           </TableRow>
@@ -622,7 +627,27 @@ const DiscogsLookup = () => {
                               </TableCell>
                               <TableCell>
                                 {result.discogs_id && (
-                                  <span className="font-mono font-bold">{result.discogs_id}</span>
+                                  result.original_master_id ? (
+                                    <Badge variant="secondary" className="text-xs">
+                                      Master → Release
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="default" className="text-xs">
+                                      Release
+                                    </Badge>
+                                  )
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {result.discogs_id && (
+                                  <div className="space-y-1">
+                                    <span className="font-mono font-bold">{result.discogs_id}</span>
+                                    {result.original_master_id && (
+                                      <div className="text-xs text-muted-foreground">
+                                        (Master: {result.original_master_id})
+                                      </div>
+                                    )}
+                                  </div>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -733,8 +758,23 @@ const DiscogsLookup = () => {
                               <p className="font-semibold text-lg">{result.artist}</p>
                               <p className="text-muted-foreground">{result.title}</p>
                             </div>
-                            <div className="text-right">
-                              <p className="text-xs text-muted-foreground">Discogs ID</p>
+                            <div className="text-right space-y-1">
+                              <div className="flex items-center gap-2 justify-end">
+                                {result.original_master_id ? (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Master ID → Release ID
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="default" className="text-xs">
+                                    Release ID
+                                  </Badge>
+                                )}
+                              </div>
+                              {result.original_master_id && (
+                                <div className="text-xs text-muted-foreground">
+                                  Master: {result.original_master_id}
+                                </div>
+                              )}
                               <p className="text-2xl font-bold text-primary">
                                 {result.discogs_id}
                               </p>
@@ -768,7 +808,7 @@ const DiscogsLookup = () => {
                             )}
                           </div>
 
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             {result.search_strategy && (
                               <Badge variant="secondary" className="text-xs">
                                 {result.search_strategy}
@@ -777,6 +817,11 @@ const DiscogsLookup = () => {
                             {result.similarity_score !== undefined && (
                               <Badge variant="outline" className="text-xs">
                                 Score: {result.similarity_score.toFixed(2)}
+                              </Badge>
+                            )}
+                            {result.master_id && !result.original_master_id && (
+                              <Badge variant="outline" className="text-xs">
+                                Master: {result.master_id}
                               </Badge>
                             )}
                           </div>

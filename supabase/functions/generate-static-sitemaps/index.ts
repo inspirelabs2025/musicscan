@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     const { data: blogPosts, error: blogError } = await supabase
       .from('blog_posts')
       .select('slug, updated_at')
-      .eq('status', 'published')
+      .eq('is_published', true)
       .order('updated_at', { ascending: false });
 
     if (blogError) {
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     const { data: musicStories, error: storiesError } = await supabase
       .from('music_stories')
       .select('slug, updated_at')
-      .eq('status', 'published')
+      .eq('is_published', true)
       .order('updated_at', { ascending: false });
 
     if (storiesError) {

@@ -9,6 +9,7 @@ import { ArrowLeft, ShoppingCart, Check, Package, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useSEO } from "@/hooks/useSEO";
+import { Helmet } from "react-helmet";
 
 export default function PlatformProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -75,8 +76,41 @@ export default function PlatformProductDetail() {
     toast.success("Toegevoegd aan winkelwagen");
   };
 
+  // Structured data for Product schema
+  const structuredData = product ? {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": product.title,
+    "image": product.primary_image || "",
+    "description": product.description || `${product.title}${product.artist ? ` van ${product.artist}` : ''}`,
+    "brand": {
+      "@type": "Brand",
+      "name": product.artist || "MusicScan"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `https://www.musicscan.app/product/${slug}`,
+      "priceCurrency": "EUR",
+      "price": product.price,
+      "availability": product.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "seller": {
+        "@type": "Organization",
+        "name": "MusicScan"
+      }
+    },
+    "category": product.categories?.join(", ") || product.media_type || "Music"
+  } : null;
+
   return (
     <div className="container mx-auto px-4 py-8">
+      {structuredData && (
+        <Helmet>
+          <script type="application/ld+json">
+            {JSON.stringify(structuredData)}
+          </script>
+        </Helmet>
+      )}
+
       {/* Back button */}
       <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="h-4 w-4" />

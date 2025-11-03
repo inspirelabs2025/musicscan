@@ -21,6 +21,7 @@ Sitemap: https://www.musicscan.app/sitemap.xml
 Sitemap: https://www.musicscan.app/sitemap-static.xml
 Sitemap: https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog.xml
 Sitemap: https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-music-stories.xml
+Sitemap: https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-products.xml
 
 # SEO optimizations
 Allow: /public-catalog

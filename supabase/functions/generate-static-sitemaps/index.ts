@@ -39,7 +39,20 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch music stories: ${storiesError.message}`);
     }
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts and ${musicStories?.length || 0} music stories`);
+    // Fetch all active art products (metal prints)
+    const { data: artProducts, error: productsError } = await supabase
+      .from('platform_products')
+      .select('slug, updated_at')
+      .eq('media_type', 'art')
+      .eq('status', 'active')
+      .not('published_at', 'is', null)
+      .order('updated_at', { ascending: false });
+
+    if (productsError) {
+      throw new Error(`Failed to fetch art products: ${productsError.message}`);
+    }
+
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, and ${artProducts?.length || 0} art products`);
 
     // Generate blog sitemap XML
     const blogSitemapXml = generateSitemapXml(
@@ -51,6 +64,12 @@ Deno.serve(async (req) => {
     const storiesSitemapXml = generateSitemapXml(
       musicStories || [],
       'https://www.musicscan.app/muziek-verhaal'
+    );
+
+    // Generate art products sitemap XML
+    const productsSitemapXml = generateSitemapXml(
+      artProducts || [],
+      'https://www.musicscan.app/product'
     );
 
     // Upload blog sitemap to storage
@@ -81,6 +100,20 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to upload music stories sitemap: ${storiesUpload.error.message}`);
     }
 
+    // Upload art products sitemap to storage
+    const productsUpload = await supabase.storage
+      .from('sitemaps')
+      .upload('sitemap-products.xml', new Blob([productsSitemapXml], { type: 'application/xml' }), {
+        contentType: 'application/xml',
+        cacheControl: '3600',
+        upsert: true,
+      });
+
+    if (productsUpload.error) {
+      console.error('Art products sitemap upload error:', productsUpload.error);
+      throw new Error(`Failed to upload art products sitemap: ${productsUpload.error.message}`);
+    }
+
     console.log('Sitemaps uploaded successfully!');
 
     return new Response(
@@ -90,8 +123,10 @@ Deno.serve(async (req) => {
         stats: {
           blogPosts: blogPosts?.length || 0,
           musicStories: musicStories?.length || 0,
+          artProducts: artProducts?.length || 0,
           blogSitemapUrl: `${supabaseUrl}/storage/v1/object/public/sitemaps/sitemap-blog.xml`,
           storiesSitemapUrl: `${supabaseUrl}/storage/v1/object/public/sitemaps/sitemap-music-stories.xml`,
+          productsSitemapUrl: `${supabaseUrl}/storage/v1/object/public/sitemaps/sitemap-products.xml`,
         },
       }),
       {

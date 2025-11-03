@@ -73,6 +73,7 @@ SELECT cron.unschedule('generate-sitemaps-daily');
 Na succesvolle generatie zijn de sitemaps beschikbaar op:
 - Blog: `https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog.xml`
 - Music Stories: `https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-music-stories.xml`
+- Producten (Metaalprints): `https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-products.xml`
 
 ### Troubleshooting
 Als de cron job niet werkt:

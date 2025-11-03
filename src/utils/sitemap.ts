@@ -201,3 +201,35 @@ export const generateUserCollectionUrl = (username: string): string => {
 export const generateMusicStoryUrl = (slug: string): string => {
   return `/muziek-verhaal/${slug}`;
 };
+
+// Get art products (metal prints) for sitemap
+export const getArtProductRoutes = async (): Promise<SitemapEntry[]> => {
+  const { supabase } = await import('@/integrations/supabase/client');
+  
+  try {
+    const { data: products, error } = await supabase
+      .from('platform_products')
+      .select('slug, updated_at')
+      .eq('media_type', 'art')
+      .eq('status', 'active')
+      .not('published_at', 'is', null)
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching art products for sitemap:', error);
+      return [];
+    }
+
+    const baseUrl = 'https://www.musicscan.app';
+    
+    return products.map((product) => ({
+      url: `${baseUrl}/product/${product.slug}`,
+      lastmod: product.updated_at || new Date().toISOString().split('T')[0],
+      changefreq: 'weekly' as const,
+      priority: 0.7
+    }));
+  } catch (error) {
+    console.error('Error generating art product sitemap entries:', error);
+    return [];
+  }
+};

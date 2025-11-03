@@ -8,19 +8,21 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function SitemapManagement() {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [stats, setStats] = useState<{ blogs: number; stories: number } | null>(null);
+  const [stats, setStats] = useState<{ blogs: number; stories: number; products: number } | null>(null);
   const { toast } = useToast();
 
   const fetchStats = async () => {
     try {
-      const [blogsResult, storiesResult] = await Promise.all([
+      const [blogsResult, storiesResult, productsResult] = await Promise.all([
         supabase.from('blog_posts').select('id', { count: 'exact', head: true }).eq('is_published', true),
         supabase.from('music_stories').select('id', { count: 'exact', head: true }).eq('is_published', true),
+        supabase.from('platform_products').select('id', { count: 'exact', head: true }).eq('media_type', 'art').eq('status', 'active').not('published_at', 'is', null),
       ]);
 
       setStats({
         blogs: blogsResult.count || 0,
         stories: storiesResult.count || 0,
+        products: productsResult.count || 0,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -37,7 +39,7 @@ export default function SitemapManagement() {
 
       toast({
         title: "Sitemaps gegenereerd",
-        description: `Alle sitemaps succesvol gegenereerd: ${data?.stats?.blogPosts || 0} blog posts, ${data?.stats?.musicStories || 0} music stories`,
+        description: `Alle sitemaps succesvol gegenereerd: ${data?.stats?.blogPosts || 0} blog posts, ${data?.stats?.musicStories || 0} music stories, ${data?.stats?.artProducts || 0} producten`,
       });
 
       await fetchStats();
@@ -54,13 +56,14 @@ export default function SitemapManagement() {
   };
 
   const downloadSitemap = (type: string) => {
-    const url = type === 'main' 
-      ? 'https://www.musicscan.app/sitemap.xml'
-      : type === 'blog'
-      ? 'https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog.xml'
-      : 'https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-music-stories.xml';
+    const urls = {
+      main: 'https://www.musicscan.app/sitemap.xml',
+      blog: 'https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog.xml',
+      stories: 'https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-music-stories.xml',
+      products: 'https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-products.xml',
+    };
     
-    window.open(url, '_blank');
+    window.open(urls[type as keyof typeof urls], '_blank');
   };
 
   useState(() => {
@@ -83,6 +86,7 @@ export default function SitemapManagement() {
             <li>Hoofdsitemap: <code>https://www.musicscan.app/sitemap.xml</code></li>
             <li>Blog sitemap: <code>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog.xml</code></li>
             <li>Stories sitemap: <code>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-music-stories.xml</code></li>
+            <li>Producten sitemap: <code>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-products.xml</code></li>
           </ul>
         </AlertDescription>
       </Alert>
@@ -107,7 +111,7 @@ export default function SitemapManagement() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-3 mb-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
           <CardHeader>
             <CardTitle>Hoofdsitemap</CardTitle>
@@ -154,6 +158,25 @@ export default function SitemapManagement() {
           <CardContent>
             <Button 
               onClick={() => downloadSitemap('stories')} 
+              variant="outline"
+              className="w-full"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Preview
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Producten Sitemap</CardTitle>
+            <CardDescription>
+              {stats ? `${stats.products} metaalprint producten` : 'Laden...'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => downloadSitemap('products')} 
               variant="outline"
               className="w-full"
             >

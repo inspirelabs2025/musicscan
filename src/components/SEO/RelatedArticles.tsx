@@ -12,7 +12,6 @@ interface RelatedArticle {
   views_count: number;
   published_at: string;
   album_cover_url?: string;
-  og_image?: string;
 }
 
 interface RelatedArticlesProps {
@@ -45,10 +44,10 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
           
           const { data: exactMatch, error: exactError } = await supabase
             .from('blog_posts')
-            .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url, og_image')
+            .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url')
             .eq('is_published', true)
             .neq('slug', currentSlug)
-            .or(`yaml_frontmatter->>artist.ilike.${artist},yaml_frontmatter->>artist.ilike.The ${artist}`)
+            .ilike('yaml_frontmatter->>artist', artist)
             .order('views_count', { ascending: false })
             .limit(maxResults);
 
@@ -83,7 +82,7 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
           
           const { data: genreData, error: genreError } = await supabase
             .from('blog_posts')
-            .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url, og_image')
+            .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url')
             .eq('is_published', true)
             .neq('slug', currentSlug)
             .ilike('yaml_frontmatter->>genre', `%${genre}%`)
@@ -181,24 +180,17 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
                 >
                   <Card className="h-full hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
                     {/* Album Cover */}
-                    {(article.album_cover_url || frontmatter.og_image) && (
-                      <div className="aspect-square overflow-hidden bg-muted">
-                        <img 
-                          src={
-                            article.album_cover_url || 
-                            (String(frontmatter.og_image || '').startsWith('http') ? frontmatter.og_image : null) || 
-                            "/placeholder.svg"
-                          } 
-                          alt={`Album cover van ${frontmatter.album || ''} door ${frontmatter.artist || ''}`}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
-                          onError={(e) => {
-                            console.log(`[RelatedArticles] Image failed to load for ${frontmatter.album}`);
-                            e.currentTarget.src = "/placeholder.svg";
-                          }}
-                        />
-                      </div>
-                    )}
+                    <div className="aspect-square overflow-hidden bg-muted">
+                      <img 
+                        src={article.album_cover_url || "/placeholder.svg"} 
+                        alt={`Album cover van ${frontmatter.album || ''} door ${frontmatter.artist || ''}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.src = "/placeholder.svg";
+                        }}
+                      />
+                    </div>
                     
                     <CardContent className="p-4">
                       <h4 className="font-bold text-base line-clamp-2 mb-2 group-hover:text-primary transition-colors">

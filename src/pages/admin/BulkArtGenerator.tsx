@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Download, CheckCircle2, XCircle, Clock, Search, AlertCircle, ArrowLeft, Sparkles } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface AlbumInput {
   artist: string;
@@ -37,6 +37,7 @@ interface ProcessingResult extends AlbumInput {
 
 const BulkArtGenerator = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [input, setInput] = useState("");
   const [defaultPrice, setDefaultPrice] = useState(29.99);
   const [albums, setAlbums] = useState<AlbumInput[]>([]);
@@ -46,6 +47,21 @@ const BulkArtGenerator = () => {
   const [idTypeIsMaster, setIdTypeIsMaster] = useState(true);
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
+
+  // Auto-import albums from DiscogsLookup
+  useEffect(() => {
+    if (location.state?.importedAlbums) {
+      setInput(location.state.importedAlbums);
+      const count = location.state.importedAlbums.split('\n').length;
+      toast({
+        title: "✅ Albums geïmporteerd",
+        description: `${count} albums geladen vanuit Discogs Lookup`,
+      });
+      
+      // Clear state to prevent re-import on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, toast]);
 
   // Normalization helper
   const normalize = (text: string): string => {

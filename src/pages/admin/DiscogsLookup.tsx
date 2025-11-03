@@ -395,6 +395,33 @@ const DiscogsLookup = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleExportToArtGenerator = () => {
+    const successfulResults = bulkResults.filter(r => r.status === 'success' && r.discogs_id);
+    
+    if (successfulResults.length === 0) {
+      toast({
+        title: "⚠️ Geen resultaten om te exporteren",
+        description: "Zoek eerst naar albums met succesvolle matches",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Format: "Artist - Title, DiscogsID"
+    const formatted = successfulResults
+      .map(r => `${r.artist} - ${r.title}, ${r.discogs_id}`)
+      .join('\n');
+
+    toast({
+      title: "📤 Exporteren naar ART Generator...",
+      description: `${successfulResults.length} albums worden geëxporteerd`
+    });
+
+    navigate('/admin/bulk-art-generator', {
+      state: { importedAlbums: formatted }
+    });
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <Button
@@ -538,14 +565,24 @@ const DiscogsLookup = () => {
                           {isBulkProcessing ? "Bezig..." : "Start Bulk Zoeken"}
                         </Button>
                         {bulkResults.some(r => r.status === 'success') && (
-                          <Button
-                            onClick={downloadBulkResults}
-                            variant="outline"
-                            size="sm"
-                          >
-                            <Download className="w-4 h-4 mr-2" />
-                            Download CSV
-                          </Button>
+                          <>
+                            <Button
+                              onClick={downloadBulkResults}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Download CSV
+                            </Button>
+                            <Button
+                              onClick={handleExportToArtGenerator}
+                              variant="default"
+                              size="sm"
+                            >
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Export naar ART Generator ({bulkResults.filter(r => r.status === 'success').length})
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>

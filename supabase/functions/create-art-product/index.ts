@@ -411,47 +411,65 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
       console.warn('⚠️ Product artwork update failed (non-blocking):', artErr);
     }
 
-    // Step 8: Generate blog post automatically
-    console.log('📝 Generating blog post...');
+    // Step 8: Queue blog generation for batch processing (prevents rate limiting)
+    console.log('📝 Queueing product for batch blog generation...');
     let blogData = null;
-    try {
-      const { data: blogResponse, error: blogError } = await supabase.functions.invoke('plaat-verhaal-generator', {
-        body: {
-          albumId: product.id, // ✅ Use product ID with correct artist/title
-          albumType: 'product', // ✅ New type for platform_products
-          autoPublish: true, // Automatically publish the blog
-          forceRegenerate: false // Don't regenerate if blog already exists
-        }
-      });
+    
+    // Check if this is part of a bulk operation by looking at request headers or recent products
+    const { data: recentProducts } = await supabase
+      .from('platform_products')
+      .select('id')
+      .eq('media_type', 'art')
+      .gte('created_at', new Date(Date.now() - 60000).toISOString()) // Last minute
+      .limit(5);
+    
+    const isBulkOperation = recentProducts && recentProducts.length >= 3;
+    
+    if (isBulkOperation) {
+      console.log('🚀 Bulk operation detected - skipping immediate blog generation');
+      console.log('💡 Use batch-blog-generator after import completes to generate all blogs with rate limiting');
+    } else {
+      // Single product creation - generate blog immediately
+      console.log('📝 Single product - generating blog post...');
+      try {
+        const { data: blogResponse, error: blogError } = await supabase.functions.invoke('plaat-verhaal-generator', {
+          body: {
+            albumId: product.id,
+            albumType: 'product',
+            autoPublish: true,
+            forceRegenerate: false
+          }
+        });
 
-      if (blogError) {
-        console.warn('⚠️ Blog generation failed (non-blocking):', blogError.message);
-      } else {
-        blogData = blogResponse;
-        console.log('✅ Blog post generated:', blogData?.blog?.id);
-        
-        // Step 9: Fetch and store artwork for the blog post
-        if (blogData?.blog?.id) {
-          console.log('🎨 Fetching high-quality artwork for blog...');
-          try {
-            await supabase.functions.invoke('fetch-album-artwork', {
-              body: {
-                master_id: masterId,
-                discogs_url: releaseData.discogs_url,
-                artist: artistValue,
-                title: albumTitle,
-                item_id: blogData.blog.id,
-                item_type: 'music_stories'
-              }
-            });
-            console.log('✅ Blog artwork updated');
-          } catch (artErr) {
-            console.warn('⚠️ Blog artwork update failed (non-blocking):', artErr);
+        if (blogError) {
+          console.warn('⚠️ Blog generation failed (non-blocking):', blogError.message);
+        } else {
+          blogData = blogResponse;
+          console.log('✅ Blog post generated:', blogData?.blog?.id);
+          
+          // Step 9: Fetch and store artwork for the blog post
+          if (blogData?.blog?.id) {
+            console.log('🎨 Fetching high-quality artwork for blog...');
+            try {
+              await supabase.functions.invoke('fetch-album-artwork', {
+                body: {
+                  master_id: masterId,
+                  discogs_url: releaseData.discogs_url,
+                  artist: artistValue,
+                  title: albumTitle,
+                  item_id: blogData.blog.id,
+                  item_type: 'music_stories'
+                }
+              });
+              console.log('✅ Blog artwork updated');
+            } catch (artErr) {
+              console.warn('⚠️ Blog artwork update failed (non-blocking):', artErr);
+            }
           }
         }
+      } catch (blogErr) {
+        console.warn('⚠️ Blog generation error (non-blocking):', blogErr);
       }
-    } catch (blogErr) {
-      console.warn('⚠️ Blog generation error (non-blocking):', blogErr);
     }
 
     return new Response(

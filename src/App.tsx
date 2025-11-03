@@ -68,6 +68,7 @@ import Community from "./pages/Community";
 import Social from "./pages/Social";
 import Profile from "./pages/Profile";
 import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
+import SitemapManagement from "./pages/admin/SitemapManagement";
 import Quiz from "./pages/Quiz";
 import Pricing from "./pages/Pricing";
 import Prestaties from "./pages/Prestaties";
@@ -350,6 +351,11 @@ const App = () => {
             <Route path="/admin/fix-blog-slugs" element={
               <ProtectedRoute>
                 <FixBlogSlugs />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/sitemap-management" element={
+              <ProtectedRoute>
+                <SitemapManagement />
               </ProtectedRoute>
             } />
             <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />

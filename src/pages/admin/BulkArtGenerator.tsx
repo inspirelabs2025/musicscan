@@ -612,6 +612,14 @@ const BulkArtGenerator = () => {
             <p className="text-muted-foreground">Genereer meerdere merchandise producten tegelijk</p>
           </div>
         </div>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/admin/discogs-lookup')}
+          className="flex items-center gap-2"
+        >
+          <Search className="h-4 w-4" />
+          Discogs Lookup
+        </Button>
       </div>
 
       <Card>

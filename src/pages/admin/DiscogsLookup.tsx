@@ -1,0 +1,465 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/hooks/use-toast';
+import { AlertCircle, ExternalLink, Copy, ArrowLeft, Sparkles, Search, Hash, Clock } from 'lucide-react';
+
+interface DiscogsResult {
+  discogs_id: number;
+  artist: string;
+  title: string;
+  year?: number;
+  label?: string;
+  catalog_number?: string;
+  format?: string;
+  thumb?: string;
+  discogs_url?: string;
+  search_strategy?: string;
+  similarity_score?: number;
+}
+
+interface SearchHistoryItem {
+  artist: string;
+  title: string;
+  discogs_id: number;
+  timestamp: number;
+}
+
+const DiscogsLookup = () => {
+  const navigate = useNavigate();
+  const [searchMode, setSearchMode] = useState<'artist-album' | 'direct-id'>('artist-album');
+  const [artistInput, setArtistInput] = useState('');
+  const [titleInput, setTitleInput] = useState('');
+  const [catalogInput, setCatalogInput] = useState('');
+  const [directIdInput, setDirectIdInput] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [results, setResults] = useState<DiscogsResult[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+
+  useEffect(() => {
+    const history = localStorage.getItem('discogs-search-history');
+    if (history) {
+      setSearchHistory(JSON.parse(history));
+    }
+  }, []);
+
+  const saveToHistory = (artist: string, title: string, discogs_id: number) => {
+    const newEntry: SearchHistoryItem = {
+      artist,
+      title,
+      discogs_id,
+      timestamp: Date.now()
+    };
+    const updated = [newEntry, ...searchHistory.filter(h => h.discogs_id !== discogs_id)].slice(0, 10);
+    setSearchHistory(updated);
+    localStorage.setItem('discogs-search-history', JSON.stringify(updated));
+  };
+
+  const handleSearch = async () => {
+    if (searchMode === 'artist-album' && (!artistInput.trim() || !titleInput.trim())) {
+      toast({ 
+        title: "⚠️ Vul Artist en Album in", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    if (searchMode === 'direct-id' && !directIdInput.trim()) {
+      toast({ 
+        title: "⚠️ Vul een Discogs ID in", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    setIsSearching(true);
+    setError(null);
+    setResults([]);
+
+    try {
+      const body = searchMode === 'direct-id' 
+        ? { direct_discogs_id: directIdInput.trim(), include_pricing: false }
+        : {
+            artist: artistInput.trim(),
+            title: titleInput.trim(),
+            catalog_number: catalogInput.trim() || undefined,
+            include_pricing: false
+          };
+
+      const { data, error: searchError } = await supabase.functions.invoke('optimized-catalog-search', {
+        body
+      });
+
+      if (searchError) throw searchError;
+
+      if (!data?.results || data.results.length === 0) {
+        const suggestion = searchMode === 'artist-album' 
+          ? 'Probeer zonder "The" of andere spelling'
+          : 'Controleer of het ID correct is (Release of Master ID)';
+        setError(`Geen resultaten gevonden. ${suggestion}`);
+        toast({
+          title: "❌ Geen resultaten",
+          description: suggestion,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setResults(data.results);
+      
+      if (data.results.length > 0 && searchMode === 'artist-album') {
+        saveToHistory(artistInput, titleInput, data.results[0].discogs_id);
+      }
+
+      toast({
+        title: "✅ Resultaten gevonden!",
+        description: `${data.results.length} match${data.results.length !== 1 ? 'es' : ''} gevonden`
+      });
+
+    } catch (err: any) {
+      console.error('Search error:', err);
+      let errorMsg = 'Er is een fout opgetreden';
+      
+      if (err.message?.includes('rate limit')) {
+        errorMsg = 'Te veel verzoeken. Wacht 60 seconden.';
+      } else if (err.message?.includes('not found')) {
+        errorMsg = 'Release niet gevonden op Discogs';
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      
+      setError(errorMsg);
+      toast({
+        title: "❌ Zoeken mislukt",
+        description: errorMsg,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !isSearching) {
+      handleSearch();
+    }
+  };
+
+  const loadFromHistory = (item: SearchHistoryItem) => {
+    setSearchMode('artist-album');
+    setArtistInput(item.artist);
+    setTitleInput(item.title);
+    setCatalogInput('');
+  };
+
+  return (
+    <div className="container mx-auto p-6 max-w-6xl">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate(-1)}
+        className="mb-4"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Terug
+      </Button>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            🔍 Discogs ID Lookup
+            <Badge variant="secondary">Admin Tool</Badge>
+          </CardTitle>
+          <CardDescription>
+            Zoek Discogs Release IDs op basis van artist + album of direct via ID nummer
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Tabs value={searchMode} onValueChange={(v) => setSearchMode(v as any)}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="artist-album">
+                <Search className="w-4 h-4 mr-2" />
+                Artist + Album
+              </TabsTrigger>
+              <TabsTrigger value="direct-id">
+                <Hash className="w-4 h-4 mr-2" />
+                Direct ID
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="artist-album" className="space-y-4 mt-4">
+              <div className="grid gap-4">
+                <div>
+                  <Label htmlFor="artist">Artist *</Label>
+                  <Input 
+                    id="artist"
+                    value={artistInput}
+                    onChange={(e) => setArtistInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Pink Floyd"
+                    disabled={isSearching}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="title">Album Title *</Label>
+                  <Input 
+                    id="title"
+                    value={titleInput}
+                    onChange={(e) => setTitleInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="The Wall"
+                    disabled={isSearching}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="catalog">Catalog Number (optioneel)</Label>
+                  <Input 
+                    id="catalog"
+                    value={catalogInput}
+                    onChange={(e) => setCatalogInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="50999 0 97784 1 3"
+                    disabled={isSearching}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="direct-id" className="space-y-4 mt-4">
+              <div>
+                <Label htmlFor="direct-id">Discogs Release ID of Master ID *</Label>
+                <Input 
+                  id="direct-id"
+                  value={directIdInput}
+                  onChange={(e) => setDirectIdInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="249504"
+                  disabled={isSearching}
+                />
+                <p className="text-sm text-muted-foreground mt-2">
+                  Voer een Release ID (bijv. 249504) of Master ID in. Master IDs worden automatisch geconverteerd.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <Button 
+            onClick={handleSearch} 
+            disabled={isSearching}
+            className="w-full"
+            size="lg"
+          >
+            {isSearching ? "Zoeken..." : "🔍 Zoek op Discogs"}
+          </Button>
+
+          {/* Search History */}
+          {searchHistory.length > 0 && searchMode === 'artist-album' && (
+            <div className="border rounded-lg p-4 bg-muted/30">
+              <div className="flex items-center gap-2 mb-3">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium">Recent gezocht</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {searchHistory.slice(0, 5).map((item) => (
+                  <Button
+                    key={item.timestamp}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => loadFromHistory(item)}
+                    className="text-xs"
+                  >
+                    {item.artist} - {item.title}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Fout</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Results Grid */}
+          {results.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">
+                  {results.length} Resultaten
+                </h3>
+              </div>
+              
+              <div className="grid gap-4">
+                {results.map((result) => (
+                  <Card key={result.discogs_id} className="overflow-hidden">
+                    <CardContent className="p-4">
+                      <div className="flex gap-4">
+                        {/* Thumbnail */}
+                        {result.thumb && (
+                          <div className="flex-shrink-0">
+                            <img 
+                              src={result.thumb} 
+                              alt={result.title}
+                              className="w-24 h-24 object-cover rounded-lg shadow-md"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Metadata */}
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="font-semibold text-lg">{result.artist}</p>
+                              <p className="text-muted-foreground">{result.title}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-muted-foreground">Discogs ID</p>
+                              <p className="text-2xl font-bold text-primary">
+                                {result.discogs_id}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                            {result.year && (
+                              <div>
+                                <span className="text-muted-foreground">Year:</span>{' '}
+                                <span className="font-medium">{result.year}</span>
+                              </div>
+                            )}
+                            {result.label && (
+                              <div>
+                                <span className="text-muted-foreground">Label:</span>{' '}
+                                <span className="font-medium">{result.label}</span>
+                              </div>
+                            )}
+                            {result.format && (
+                              <div>
+                                <span className="text-muted-foreground">Format:</span>{' '}
+                                <span className="font-medium">{result.format}</span>
+                              </div>
+                            )}
+                            {result.catalog_number && (
+                              <div>
+                                <span className="text-muted-foreground">Cat#:</span>{' '}
+                                <span className="font-medium">{result.catalog_number}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex gap-2">
+                            {result.search_strategy && (
+                              <Badge variant="secondary" className="text-xs">
+                                {result.search_strategy}
+                              </Badge>
+                            )}
+                            {result.similarity_score !== undefined && (
+                              <Badge variant="outline" className="text-xs">
+                                Score: {result.similarity_score.toFixed(2)}
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 pt-2">
+                            <Button 
+                              variant="default" 
+                              size="sm"
+                              onClick={() => navigate(`/admin/art-generator?discogsId=${result.discogs_id}`)}
+                            >
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Maak ART Product
+                            </Button>
+                            {result.discogs_url && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => window.open(result.discogs_url, '_blank')}
+                              >
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Discogs
+                              </Button>
+                            )}
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(result.discogs_id.toString());
+                                toast({ title: "✅ ID gekopieerd!" });
+                              }}
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Quick Examples */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-lg">Quick Tests</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchMode('artist-album');
+                setArtistInput('Pink Floyd');
+                setTitleInput('The Wall');
+                setCatalogInput('');
+              }}
+            >
+              Pink Floyd - The Wall
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchMode('artist-album');
+                setArtistInput('The Beatles');
+                setTitleInput('Abbey Road');
+                setCatalogInput('');
+              }}
+            >
+              The Beatles - Abbey Road
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchMode('direct-id');
+                setDirectIdInput('249504');
+              }}
+            >
+              Direct ID: 249504
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default DiscogsLookup;

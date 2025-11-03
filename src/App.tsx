@@ -50,6 +50,7 @@ import TestAlbumCoverBackfill from "./pages/TestAlbumCoverBackfill";
 import TestDiscogsFlow from "./pages/TestDiscogsFlow";
 import TestDiscogsBlogGeneration from "./pages/TestDiscogsBlogGeneration";
 import TestDiscogsIdFinder from "./pages/TestDiscogsIdFinder";
+import DiscogsLookup from "./pages/admin/DiscogsLookup";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Podcasts from "./pages/Podcasts";
 import { ShopProducts } from "./pages/admin/ShopProducts";
@@ -286,6 +287,11 @@ const App = () => {
             <Route path="/test-discogs-id" element={
               <ProtectedRoute>
                 <TestDiscogsIdFinder />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/discogs-lookup" element={
+              <ProtectedRoute>
+                <DiscogsLookup />
               </ProtectedRoute>
             } />
             <Route path="/superadmin" element={<SuperAdminDashboard />} />

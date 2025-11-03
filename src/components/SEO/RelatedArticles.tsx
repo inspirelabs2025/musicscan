@@ -39,6 +39,27 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
       .replace(/\s+(group|band|orchestra|ensemble)$/i, ''); // Remove suffixes
   };
 
+  // Build multiple search terms from artist name for fuzzy matching
+  const buildSearchTerms = (artistName?: string): string[] => {
+    if (!artistName) return [];
+    
+    const normalized = normalizeArtist(artistName);
+    const terms = new Set<string>();
+    
+    // Add original artist name
+    terms.add(artistName);
+    
+    // Add normalized version if different
+    if (normalized && normalized !== artistName.toLowerCase()) {
+      terms.add(normalized);
+    }
+    
+    // Filter and validate terms
+    return Array.from(terms)
+      .map(s => s.trim())
+      .filter(s => s.length >= 3);
+  };
+
   // Check if two artist names are related (variations of same artist)
   const isRelatedArtist = (articleArtist: string, targetArtist: string) => {
     const normalizedArticle = normalizeArtist(articleArtist);
@@ -92,49 +113,62 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
 
         let articles: any[] = [];
 
-        // Strategy 1: Try fuzzy artist match first
+        // Strategy 1: Try fuzzy artist match first with multiple search terms
         if (artist) {
-          console.log(`[RelatedArticles] Trying fuzzy artist match for: ${artist}`);
+          const searchTerms = buildSearchTerms(artist);
+          console.log(`[RelatedArticles] Artist: "${artist}"`);
+          console.log(`[RelatedArticles] Search terms:`, searchTerms);
           
-          // Use fuzzy matching with wildcards to catch variations
-          const { data: artistMatches, error: artistError } = await supabase
-            .from('blog_posts')
-            .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url')
-            .eq('is_published', true)
-            .neq('slug', currentSlug)
-            .or(`yaml_frontmatter->>artist.ilike.${artist},yaml_frontmatter->>artist.ilike.%${artist}%,yaml_frontmatter->>artist.ilike.${artist}%`)
-            .order('views_count', { ascending: false })
-            .limit(maxResults * 3); // Get more to filter
+          if (searchTerms.length > 0) {
+            // Build OR filter with wildcards for all search terms
+            const orFilter = searchTerms
+              .map(term => `yaml_frontmatter->>artist.ilike.%${term}%`)
+              .join(',');
+            
+            console.log(`[RelatedArticles] OR filter: ${orFilter}`);
+            
+            const { data: artistMatches, error: artistError } = await supabase
+              .from('blog_posts')
+              .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url')
+              .eq('is_published', true)
+              .neq('slug', currentSlug)
+              .or(orFilter)
+              .order('views_count', { ascending: false })
+              .limit(maxResults * 5); // Get more to filter
 
-          if (artistError) {
-            console.error('[RelatedArticles] Error fetching by artist:', artistError);
-          } else if (artistMatches && artistMatches.length > 0) {
-            console.log(`[RelatedArticles] Found ${artistMatches.length} potential artist matches`);
-            
-            // Client-side smart filtering
-            const validMatches = artistMatches.filter(article => {
-              const frontmatter = article.yaml_frontmatter as any || {};
-              const articleArtist = String(frontmatter.artist || '');
-              if (!articleArtist) return false;
+            console.log(`[RelatedArticles] Raw artistMatches:`, artistMatches?.length);
+
+            if (artistError) {
+              console.error('[RelatedArticles] Error fetching by artist:', artistError);
+            } else if (artistMatches && artistMatches.length > 0) {
               
-              // Skip compilations
-              if (isCompilation(articleArtist)) {
-                console.log(`[RelatedArticles] Filtered out compilation: "${articleArtist}"`);
-                return false;
-              }
+              // Client-side smart filtering
+              const validMatches = artistMatches.filter(article => {
+                const frontmatter = article.yaml_frontmatter as any || {};
+                const articleArtist = String(frontmatter.artist || '');
+                if (!articleArtist) return false;
+                
+                // Skip compilations
+                if (isCompilation(articleArtist)) {
+                  console.log(`[RelatedArticles] Filtered out compilation: "${articleArtist}"`);
+                  return false;
+                }
+                
+                // Check if artists are related
+                const isMatch = isRelatedArtist(articleArtist, artist);
+                
+                if (!isMatch) {
+                  console.log(`[RelatedArticles] Filtered out: "${articleArtist}" (not related to "${artist}")`);
+                } else {
+                  console.log(`[RelatedArticles] Valid match: "${articleArtist}" matches "${artist}"`);
+                }
+                
+                return isMatch;
+              }).slice(0, maxResults);
               
-              // Check if artists are related
-              const isMatch = isRelatedArtist(articleArtist, artist);
-              
-              if (!isMatch) {
-                console.log(`[RelatedArticles] Filtered out: "${articleArtist}" (not related to "${artist}")`);
-              }
-              
-              return isMatch;
-            }).slice(0, maxResults);
-            
-            articles = validMatches;
-            console.log(`[RelatedArticles] After smart filtering: ${articles.length} matches`);
+              articles = validMatches;
+              console.log(`[RelatedArticles] Valid matches after filtering: ${articles.length}`);
+            }
           }
         }
 

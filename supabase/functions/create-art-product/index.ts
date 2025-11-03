@@ -15,6 +15,46 @@ serve(async (req) => {
     const { discogs_id, catalog_number, artist, title, price = 49.95 } = await req.json();
     
     console.log('🎨 Starting ART product creation:', { discogs_id, catalog_number, artist, title });
+
+    // ✅ VALIDATION: Detect and fix artist/title swaps
+    let validatedArtist = artist;
+    let validatedTitle = title;
+
+    if (artist && title) {
+      const artistLower = artist.toLowerCase();
+      const titleLower = title.toLowerCase();
+      
+      // Heuristic checks for common swap patterns
+      const swapIndicators = [
+        // Artist field contains typical album title words
+        /^(the|a|an)\s/i.test(artist) && artist.length > title.length,
+        // Artist contains year (albums often have years in title)
+        /\b(19|20)\d{2}\b/.test(artist) && !/\b(19|20)\d{2}\b/.test(title),
+        // Artist is significantly longer (albums usually have longer titles)
+        artist.length > title.length * 1.8,
+        // Title contains common artist indicators
+        /\b(band|orchestra|ensemble|quartet)\b/i.test(title)
+      ];
+      
+      const shouldSwap = swapIndicators.filter(Boolean).length >= 2;
+      
+      if (shouldSwap) {
+        console.warn('⚠️ SWAP DETECTED - Correcting artist/title order:', {
+          original: { artist, title },
+          corrected: { artist: title, title: artist }
+        });
+        validatedArtist = title;
+        validatedTitle = artist;
+      } else {
+        console.log('✅ Artist/title validation passed');
+      }
+    }
+
+    // Use validated values going forward
+    const finalArtist = validatedArtist;
+    const finalTitle = validatedTitle;
+
+    console.log('📝 Validated input:', { artist: finalArtist, title: finalTitle, discogs_id });
     
     const discogsToken = Deno.env.get('DISCOGS_TOKEN');
 
@@ -49,7 +89,11 @@ serve(async (req) => {
       try {
         const result = await retryWithBackoff(async () => {
           const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
-            body: { direct_discogs_id: discogs_id.toString() }
+            body: { 
+              direct_discogs_id: discogs_id.toString(),
+              artist: finalArtist,
+              title: finalTitle
+            }
           });
           if (error) {
             console.error('❌ Catalog search error:', JSON.stringify(error));
@@ -69,7 +113,11 @@ serve(async (req) => {
       try {
         const result = await retryWithBackoff(async () => {
           const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
-            body: { catalog_number, artist, title }
+            body: { 
+              catalog_number, 
+              artist: finalArtist, 
+              title: finalTitle 
+            }
           });
           if (error) {
             console.error('❌ Catalog search error:', JSON.stringify(error));
@@ -95,7 +143,14 @@ serve(async (req) => {
       throw new Error('Please provide either discogs_id or catalog_number/artist/title');
     }
 
-    console.log('✅ Found release:', releaseData.title);
+    console.log('✅ Release data retrieved:', {
+      discogs_id: releaseData.discogs_id,
+      api_artist: releaseData.artist,
+      api_title: releaseData.title,
+      input_artist: finalArtist || 'from API',
+      input_title: finalTitle || 'from API',
+      match: releaseData.artist === finalArtist && releaseData.title === finalTitle
+    });
 
     // Step 2: Create or find release in database
     // Normalize fields for DB function types

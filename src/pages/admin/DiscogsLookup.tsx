@@ -415,14 +415,24 @@ const DiscogsLookup = () => {
       return;
     }
 
-    // Format: "Artist - Title, DiscogsID"
+    // ✅ ALWAYS use "DiscogsID, Artist - Title" format (ID first for easy parsing)
     const formatted = successfulResults
-      .map(r => `${r.artist} - ${r.title}, ${r.discogs_id}`)
+      .map(r => {
+        const artist = r.artist.trim();
+        const title = r.title.trim();
+        return `${r.discogs_id}, ${artist} - ${title}`;
+      })
       .join('\n');
+
+    console.log('📤 Exporting to ART Generator:', {
+      count: successfulResults.length,
+      format: 'DiscogsID, Artist - Title',
+      preview: formatted.split('\n')[0]
+    });
 
     toast({
       title: "📤 Exporteren naar ART Generator...",
-      description: `${successfulResults.length} albums worden geëxporteerd`
+      description: `${successfulResults.length} albums in correct formaat`
     });
 
     navigate('/admin/bulk-art-generator', {

@@ -111,6 +111,46 @@ const BulkArtGenerator = () => {
     return null;
   };
 
+  // Parse single line with multiple format support
+  const parseAlbumLine = (line: string): { discogs_id: number; artist: string; title: string } | null => {
+    const trimmed = line.trim();
+    if (!trimmed) return null;
+
+    // Extract Discogs ID (always first part)
+    const idMatch = trimmed.match(/^(\d+)/);
+    if (!idMatch) return null;
+    
+    const discogsId = parseInt(idMatch[1]);
+    if (isNaN(discogsId)) return null;
+
+    // Remove ID from string
+    const restOfLine = trimmed.replace(/^\d+\s*,?\s*/, '').trim();
+
+    // Format 1: "Artist - Title" (preferred)
+    if (restOfLine.includes(' - ')) {
+      const dashIndex = restOfLine.indexOf(' - ');
+      const artist = restOfLine.substring(0, dashIndex).trim();
+      const title = restOfLine.substring(dashIndex + 3).trim();
+      
+      if (artist && title) {
+        console.log(`✅ Parsed (Artist - Title):`, { discogsId, artist, title });
+        return { discogs_id: discogsId, artist, title };
+      }
+    }
+
+    // Format 2: "Title, Artist" (fallback)
+    const parts = restOfLine.split(',').map(p => p.trim());
+    if (parts.length >= 2) {
+      const title = parts[0];
+      const artist = parts[1];
+      console.log(`⚠️ Parsed (Title, Artist) - may need swapping:`, { discogsId, artist, title });
+      return { discogs_id: discogsId, artist, title };
+    }
+
+    console.warn(`❌ Could not parse line: "${line}"`);
+    return null;
+  };
+
   // Normalize input text
   const normalizeInput = (text: string): string => {
     return text
@@ -148,6 +188,26 @@ const BulkArtGenerator = () => {
         
         // Check if input is ONLY an ID (no artist/title)
         const isIdOnly = /^(m|r)?(\d+)$/i.test(trimmed);
+
+        // Try to parse as "DiscogsID, Artist - Title" first
+        const parsedAlbum = parseAlbumLine(trimmed);
+        if (parsedAlbum && !isIdOnly) {
+          if (seenIds.has(parsedAlbum.discogs_id)) {
+            console.log(`Skipping duplicate ID: ${parsedAlbum.discogs_id}`);
+            continue;
+          }
+          seenIds.add(parsedAlbum.discogs_id);
+          
+          parsed.push({
+            artist: parsedAlbum.artist,
+            title: parsedAlbum.title,
+            price: defaultPrice,
+            discogsId: parsedAlbum.discogs_id,
+            matchStatus: 'idle',
+            originalLine: trimmed
+          });
+          continue;
+        }
 
         if (isIdOnly && idInfo) {
           // Skip duplicates
@@ -464,7 +524,12 @@ const BulkArtGenerator = () => {
               discogs_id: album.discogsId
             };
 
-            console.log(`Creating product for ${album.artist} - ${album.title}`, requestBody);
+            console.log(`🎨 Creating ART product ${i + batchIndex + 1}/${albums.length}:`, {
+              discogs_id: album.discogsId,
+              artist: requestBody.artist,
+              title: requestBody.title,
+              expected_format: `${requestBody.artist} - ${requestBody.title}`
+            });
 
             const { data, error } = await supabase.functions.invoke('create-art-product', {
               body: requestBody
@@ -653,20 +718,27 @@ const BulkArtGenerator = () => {
               id="input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={`Voorbeelden:
+              placeholder={`Voorbeelden (CORRECT FORMAAT):
 
-📀 RELEASE IDs:
-Rush - Fly by Night, 13313664
+📀 DiscogsID, Artist - Album Title:
+1973, Pink Floyd - The Dark Side of the Moon
+13313664, Rush - Fly by Night
+1034729, Bryan Ferry - In Your Mind
+
+🔗 Release URLs (automatisch herkend):
 https://www.discogs.com/release/1034729
-Pink Floyd - The Wall
-Bryan Ferry - In Your Mind, 1034729
 
-💡 TIP: Gebruik /master/ URLs voor beste resultaten!`}
+🆔 Alleen ID (haalt automatisch gegevens op):
+1973
+13313664
+
+⚠️ LET OP: Gebruik ALTIJD "Artist - Title" formaat met scheidingsteken "-"
+✅ Export vanuit Discogs Lookup gebruikt automatisch het correcte formaat!`}
               rows={10}
               className="font-mono text-sm"
             />
             <p className="text-sm text-muted-foreground">
-              Formaat: Artist - Title, ID (of URL). Één album per regel.
+              <strong>Formaat:</strong> DiscogsID, Artist - Album Title (één per regel)
             </p>
           </div>
 
@@ -800,14 +872,23 @@ Bryan Ferry - In Your Mind, 1034729
           {/* Help */}
           <Card className="bg-muted/50">
             <CardHeader>
-              <CardTitle className="text-base">💡 Tips</CardTitle>
+              <CardTitle className="text-base">💡 Format Instructies</CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-2">
-              <p>• ⚠️ <strong>Check console en tabel</strong>: Rode rijen = verkeerde URL!</p>
-              <p>• <strong>Release URLs</strong>: <code className="text-xs">https://www.discogs.com/release/XXXXX-Artist-Title</code></p>
-              <p>• <strong>Master URLs (aanbevolen)</strong>: <code className="text-xs">https://www.discogs.com/master/XXXX-Artist-Title</code></p>
-              <p>• Gebruik de <strong>Verifieer Lijst</strong> knop om URLs te valideren!</p>
-              <p>• Groene rijen = correcte match, rode = URL wijst naar verkeerd album</p>
+              <p><strong>✅ CORRECT FORMAAT:</strong></p>
+              <p className="ml-4">• <code className="text-xs bg-background px-2 py-1 rounded">DiscogsID, Artist - Album Title</code></p>
+              <p className="ml-4 text-muted-foreground">Voorbeeld: <code className="text-xs">1973, Pink Floyd - The Dark Side of the Moon</code></p>
+              
+              <p className="mt-3"><strong>📤 TIP:</strong> Gebruik <strong>Discogs Lookup</strong> knop hierboven om automatisch het correcte formaat te krijgen!</p>
+              
+              <p className="mt-3 text-red-600"><strong>⚠️ LET OP:</strong></p>
+              <p className="ml-4 text-red-600">• Gebruik altijd het <strong>"-"</strong> scheidingsteken tussen Artist en Title</p>
+              <p className="ml-4 text-red-600">• Plaats Discogs ID <strong>vooraan</strong> (voor betere parsing)</p>
+              
+              <p className="mt-3"><strong>🔍 Verificatie:</strong></p>
+              <p className="ml-4">• Groene rijen = ✅ perfecte match</p>
+              <p className="ml-4">• Gele rijen = ⚠️ gedeeltelijke match</p>
+              <p className="ml-4">• Rode rijen = ❌ mismatch (wordt overgeslagen)</p>
             </CardContent>
           </Card>
         </CardContent>

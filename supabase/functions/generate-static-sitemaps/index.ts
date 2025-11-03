@@ -17,10 +17,10 @@ Deno.serve(async (req) => {
 
     console.log('Starting static sitemap generation...');
 
-    // Fetch all published blog posts
+    // Fetch all published blog posts with images
     const { data: blogPosts, error: blogError } = await supabase
       .from('blog_posts')
-      .select('slug, updated_at')
+      .select('slug, updated_at, album_cover_url, yaml_frontmatter')
       .eq('is_published', true)
       .order('updated_at', { ascending: false });
 
@@ -28,10 +28,10 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch blog posts: ${blogError.message}`);
     }
 
-    // Fetch all published music stories
+    // Fetch all published music stories with images
     const { data: musicStories, error: storiesError } = await supabase
       .from('music_stories')
-      .select('slug, updated_at')
+      .select('slug, updated_at, cover_image_url, yaml_frontmatter')
       .eq('is_published', true)
       .order('updated_at', { ascending: false });
 
@@ -39,10 +39,10 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch music stories: ${storiesError.message}`);
     }
 
-    // Fetch all active art products (metal prints)
+    // Fetch all active art products (metal prints) with images
     const { data: artProducts, error: productsError } = await supabase
       .from('platform_products')
-      .select('slug, updated_at')
+      .select('slug, updated_at, primary_image, title, artist')
       .eq('media_type', 'art')
       .eq('status', 'active')
       .not('published_at', 'is', null)
@@ -54,67 +54,43 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, and ${artProducts?.length || 0} art products`);
 
-    // Generate blog sitemap XML
-    const blogSitemapXml = generateSitemapXml(
-      blogPosts || [],
-      'https://www.musicscan.app/plaat-verhaal'
-    );
+    // Generate regular sitemaps
+    const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal');
+    const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal');
+    const productsSitemapXml = generateSitemapXml(artProducts || [], 'https://www.musicscan.app/product');
 
-    // Generate music stories sitemap XML
-    const storiesSitemapXml = generateSitemapXml(
-      musicStories || [],
-      'https://www.musicscan.app/muziek-verhaal'
-    );
+    // Generate image sitemaps
+    const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
+    const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal', 'cover_image_url');
+    const productsImageSitemapXml = generateImageSitemapXml(artProducts || [], 'https://www.musicscan.app/product', 'primary_image');
 
-    // Generate art products sitemap XML
-    const productsSitemapXml = generateSitemapXml(
-      artProducts || [],
-      'https://www.musicscan.app/product'
-    );
+    // Upload all sitemaps
+    const uploads = [
+      { name: 'sitemap-blog.xml', data: blogSitemapXml },
+      { name: 'sitemap-music-stories.xml', data: storiesSitemapXml },
+      { name: 'sitemap-products.xml', data: productsSitemapXml },
+      { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
+      { name: 'sitemap-images-stories.xml', data: storiesImageSitemapXml },
+      { name: 'sitemap-images-products.xml', data: productsImageSitemapXml },
+    ];
 
-    // Upload blog sitemap to storage
-    const blogUpload = await supabase.storage
-      .from('sitemaps')
-      .upload('sitemap-blog.xml', new Blob([blogSitemapXml], { type: 'application/xml' }), {
-        contentType: 'application/xml',
-        cacheControl: '3600',
-        upsert: true,
-      });
+    for (const upload of uploads) {
+      const result = await supabase.storage
+        .from('sitemaps')
+        .upload(upload.name, new Blob([upload.data], { type: 'application/xml' }), {
+          contentType: 'application/xml',
+          cacheControl: '3600',
+          upsert: true,
+        });
 
-    if (blogUpload.error) {
-      console.error('Blog sitemap upload error:', blogUpload.error);
-      throw new Error(`Failed to upload blog sitemap: ${blogUpload.error.message}`);
+      if (result.error) {
+        console.error(`Error uploading ${upload.name}:`, result.error);
+        throw new Error(`Failed to upload ${upload.name}: ${result.error.message}`);
+      }
+      console.log(`✅ Uploaded ${upload.name}`);
     }
 
-    // Upload music stories sitemap to storage
-    const storiesUpload = await supabase.storage
-      .from('sitemaps')
-      .upload('sitemap-music-stories.xml', new Blob([storiesSitemapXml], { type: 'application/xml' }), {
-        contentType: 'application/xml',
-        cacheControl: '3600',
-        upsert: true,
-      });
-
-    if (storiesUpload.error) {
-      console.error('Music stories sitemap upload error:', storiesUpload.error);
-      throw new Error(`Failed to upload music stories sitemap: ${storiesUpload.error.message}`);
-    }
-
-    // Upload art products sitemap to storage
-    const productsUpload = await supabase.storage
-      .from('sitemaps')
-      .upload('sitemap-products.xml', new Blob([productsSitemapXml], { type: 'application/xml' }), {
-        contentType: 'application/xml',
-        cacheControl: '3600',
-        upsert: true,
-      });
-
-    if (productsUpload.error) {
-      console.error('Art products sitemap upload error:', productsUpload.error);
-      throw new Error(`Failed to upload art products sitemap: ${productsUpload.error.message}`);
-    }
-
-    console.log('Sitemaps uploaded successfully!');
+    console.log('All sitemaps uploaded successfully!');
 
     return new Response(
       JSON.stringify({
@@ -124,9 +100,10 @@ Deno.serve(async (req) => {
           blogPosts: blogPosts?.length || 0,
           musicStories: musicStories?.length || 0,
           artProducts: artProducts?.length || 0,
-          blogSitemapUrl: `${supabaseUrl}/storage/v1/object/public/sitemaps/sitemap-blog.xml`,
-          storiesSitemapUrl: `${supabaseUrl}/storage/v1/object/public/sitemaps/sitemap-music-stories.xml`,
-          productsSitemapUrl: `${supabaseUrl}/storage/v1/object/public/sitemaps/sitemap-products.xml`,
+          sitemaps: uploads.map(u => ({
+            name: u.name,
+            url: `${supabaseUrl}/storage/v1/object/public/sitemaps/${u.name}`
+          }))
         },
       }),
       {
@@ -164,6 +141,34 @@ function generateSitemapXml(items: Array<{ slug: string; updated_at: string }>, 
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+}
+
+function generateImageSitemapXml(items: Array<any>, baseUrl: string, imageField: string): string {
+  const urls = items
+    .filter(item => item[imageField]) // Only include items with images
+    .map((item) => {
+      const imageUrl = item[imageField];
+      const metadata = item.yaml_frontmatter || {};
+      const title = metadata.title || item.title || '';
+      const artist = metadata.artist || item.artist || '';
+      const caption = artist && title ? `${artist} - ${title}` : title || artist || 'Album Cover';
+      
+      return `  <url>
+    <loc>${baseUrl}/${item.slug}</loc>
+    <image:image>
+      <image:loc>${imageUrl}</image:loc>
+      <image:caption>${caption}</image:caption>
+      <image:title>${caption}</image:title>
+    </image:image>
+  </url>`;
+    })
+    .join('\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${urls}
 </urlset>`;
 }

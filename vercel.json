@@ -2,7 +2,29 @@
   "rewrites": [
     {
       "source": "/plaat-verhaal/:slug",
-      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/blog-meta-proxy/plaat-verhaal/:slug",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/plaat-verhaal/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(bot|crawler|spider|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot).*"
+        }
+      ]
+    },
+    {
+      "source": "/muziek-verhaal/:slug",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/muziek-verhaal/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(bot|crawler|spider|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot).*"
+        }
+      ]
+    },
+    {
+      "source": "/product/:slug",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/product/:slug",
       "has": [
         {
           "type": "header",

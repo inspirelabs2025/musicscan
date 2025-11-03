@@ -93,5 +93,11 @@ verify_jwt = false
 [functions.generate-sitemaps]
 verify_jwt = false
 
+[functions.generate-static-sitemaps]
+verify_jwt = false
+
+[[functions.generate-static-sitemaps.schedule]]
+cron = "0 3 * * *"  # Daily at 3 AM UTC
+
 [functions.blog-meta-proxy]
 verify_jwt = false

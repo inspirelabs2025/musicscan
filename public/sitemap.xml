@@ -5,11 +5,11 @@
     <lastmod>2025-11-02</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/generate-sitemaps?path=sitemap-blog</loc>
-    <lastmod>2025-11-02</lastmod>
+    <loc>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog.xml</loc>
+    <lastmod>2025-11-03</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/generate-sitemaps?path=sitemap-music-stories</loc>
-    <lastmod>2025-11-02</lastmod>
+    <loc>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-music-stories.xml</loc>
+    <lastmod>2025-11-03</lastmod>
   </sitemap>
 </sitemapindex>

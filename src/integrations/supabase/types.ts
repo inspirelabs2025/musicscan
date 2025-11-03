@@ -2340,6 +2340,45 @@ export type Database = {
           },
         ]
       }
+      price_change_log: {
+        Row: {
+          blog_post_updated: boolean | null
+          changed_at: string
+          created_at: string
+          discogs_id: number | null
+          id: string
+          new_price: number | null
+          old_price: number | null
+          price_change_percent: number | null
+          scan_id: string
+          scan_type: string
+        }
+        Insert: {
+          blog_post_updated?: boolean | null
+          changed_at?: string
+          created_at?: string
+          discogs_id?: number | null
+          id?: string
+          new_price?: number | null
+          old_price?: number | null
+          price_change_percent?: number | null
+          scan_id: string
+          scan_type: string
+        }
+        Update: {
+          blog_post_updated?: boolean | null
+          changed_at?: string
+          created_at?: string
+          discogs_id?: number | null
+          id?: string
+          new_price?: number | null
+          old_price?: number | null
+          price_change_percent?: number | null
+          scan_id?: string
+          scan_type?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           allow_messages: boolean | null
@@ -4179,6 +4218,16 @@ export type Database = {
           bulk_uploads_used: number
           period_end: string
           period_start: string
+        }[]
+      }
+      get_price_trend: {
+        Args: { p_discogs_id: number }
+        Returns: {
+          avg_price: number
+          max_price: number
+          min_price: number
+          price_changes: number
+          trend_direction: string
         }[]
       }
       get_public_user_stats: {

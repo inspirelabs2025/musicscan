@@ -14,6 +14,10 @@ import { ReviewsSection } from '@/components/blog/ReviewsSection';
 import { CommentsSection } from '@/components/blog/CommentsSection';
 import { RelatedArticles } from '@/components/SEO/RelatedArticles';
 import { SpotifyAlbumLink } from '@/components/SpotifyAlbumLink';
+import { ReviewSchema, AggregateRatingSchema, FAQSchema } from '@/components/SEO/ReviewSchema';
+import { PriceTrendBadge, LastUpdatedBadge } from '@/components/PriceTrendBadge';
+import { SocialProofStats, PopularityBadge } from '@/components/SocialProofStats';
+import { usePriceTrend } from '@/hooks/usePriceTrend';
 
 
 
@@ -50,6 +54,11 @@ export const PlaatVerhaal: React.FC = () => {
   const readingTime = frontmatter.reading_time || 5;
   const tags = frontmatter.tags || [];
   const price = frontmatter.price_eur || 0;
+  const discogsId = frontmatter.discogs_id ? parseInt(frontmatter.discogs_id) : null;
+  const lastPriceUpdate = frontmatter.last_price_update;
+
+  // Fetch price trend data
+  const { data: priceTrend } = usePriceTrend(discogsId);
 
   // Enhanced SEO setup
   const seoDescription = blog?.social_post 
@@ -294,6 +303,48 @@ export const PlaatVerhaal: React.FC = () => {
         genre={genre}
         price={price > 0 ? price : undefined}
       />
+
+      {/* Review Schema for SEO */}
+      <ReviewSchema
+        itemName={`${artist} - ${album}`}
+        artist={artist}
+        reviewBody={cleanedMarkdown}
+        rating={4.5}
+        datePublished={blog.published_at || blog.created_at}
+        reviewUrl={`https://www.musicscan.app/plaat-verhaal/${blog.slug}`}
+        imageUrl={blog?.album_cover_url}
+      />
+
+      {/* Aggregate Rating if available */}
+      {blog.views_count > 10 && (
+        <AggregateRatingSchema
+          itemName={`${artist} - ${album}`}
+          artist={artist}
+          ratingValue={4.3}
+          reviewCount={Math.floor(blog.views_count / 10)}
+          imageUrl={blog?.album_cover_url}
+        />
+      )}
+
+      {/* FAQ Schema */}
+      <FAQSchema 
+        questions={[
+          {
+            question: `Wat is ${artist} - ${album} waard?`,
+            answer: price > 0 
+              ? `De huidige adviesprijs voor ${artist} - ${album} is ongeveer €${price}. Deze waarde kan variëren afhankelijk van de conditie en zeldzaamheid van de release.`
+              : `De waarde van ${artist} - ${album} varieert afhankelijk van conditie, editie en vraag op de markt. Scan je exemplaar voor een actuele waardering.`
+          },
+          {
+            question: `In welke conditie beïnvloedt de prijs?`,
+            answer: `De conditie heeft grote invloed op de waarde. Mint (M) condities zijn het meest waardevol, gevolgd door Near Mint (NM), Very Good Plus (VG+), en lagere grades. Ook de hoes conditie speelt een rol.`
+          },
+          {
+            question: `Waar kan ik ${artist} - ${album} kopen of verkopen?`,
+            answer: `Je kunt ${artist} - ${album} vinden op platformen zoals Discogs, eBay, of lokale platenzaken. Voor verkopen biedt MusicScan ook een marketplace functionaliteit.`
+          }
+        ]}
+      />
       
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80">
         {/* Background Pattern */}
@@ -364,14 +415,25 @@ export const PlaatVerhaal: React.FC = () => {
                         {year}
                       </Badge>
                     )}
-                    <Badge variant="outline" className="border-muted-foreground/30">
-                      <Clock className="w-3 h-3 mr-1" />
-                      {readingTime} min leestijd
-                    </Badge>
-                    <Badge variant="outline" className="border-muted-foreground/30">
-                      <Eye className="w-3 h-3 mr-1" />
-                      {blog.views_count || 0} views
-                    </Badge>
+                    
+                    {/* Price Trend Badge */}
+                    {priceTrend && priceTrend.trend_direction !== 'stable' && (
+                      <PriceTrendBadge 
+                        trend={priceTrend.trend_direction}
+                        changePercent={priceTrend.price_changes > 0 ? 
+                          ((priceTrend.max_price || 0) - (priceTrend.min_price || 0)) / (priceTrend.min_price || 1) * 100 
+                          : undefined
+                        }
+                      />
+                    )}
+
+                    {/* Last Updated Badge */}
+                    {lastPriceUpdate && (
+                      <LastUpdatedBadge lastUpdate={lastPriceUpdate} />
+                    )}
+
+                    {/* Popularity Badge */}
+                    <PopularityBadge views={blog.views_count || 0} />
                   </div>
 
                   {/* Main Title */}
@@ -402,7 +464,14 @@ export const PlaatVerhaal: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Meta Info */}
+                  {/* Meta Info with Social Proof */}
+                  <SocialProofStats
+                    views={blog.views_count || 0}
+                    readingTime={readingTime}
+                    compact
+                    className="mb-6"
+                  />
+
                   <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
                     <span className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />

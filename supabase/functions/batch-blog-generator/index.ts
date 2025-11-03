@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, batchSize = 1, delaySeconds = 30, mediaTypes = ['cd', 'vinyl', 'ai'], minConfidence = 0.7, dryRun = false } = await req.json();
+    const { action, batchSize = 1, delaySeconds = 30, mediaTypes = ['cd', 'vinyl', 'ai', 'product'], minConfidence = 0.7, dryRun = false } = await req.json();
     
     console.log('Batch blog generation request:', { action, batchSize, delaySeconds, mediaTypes, minConfidence, dryRun });
 
@@ -94,7 +94,7 @@ serve(async (req) => {
         batch_id: batchId,
         item_id: item.id,
         item_type: item.type,
-        priority: item.type === 'cd' ? 3 : item.type === 'vinyl' ? 2 : 1, // CD priority > vinyl > AI
+        priority: item.type === 'product' ? 4 : item.type === 'cd' ? 3 : item.type === 'vinyl' ? 2 : 1, // product > CD > vinyl > AI
         status: 'pending',
         attempts: 0,
         max_attempts: 3
@@ -425,9 +425,35 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
     }
   }
 
-  // Sort by priority: CD, vinyl, then AI by confidence
+  // Get platform products (art) without blog posts
+  if (mediaTypes.includes('product')) {
+    const { data: products, error: productError } = await supabase
+      .from('platform_products')
+      .select('id, artist, title, discogs_id')
+      .eq('media_type', 'art')
+      .not('discogs_id', 'is', null)
+      .not('artist', 'is', null)
+      .not('title', 'is', null);
+
+    if (productError) throw productError;
+
+    for (const product of products || []) {
+      const { data: existingBlog } = await supabase
+        .from('blog_posts')
+        .select('id')
+        .eq('album_id', product.id)
+        .eq('album_type', 'product')
+        .single();
+
+      if (!existingBlog) {
+        items.push({ ...product, type: 'product' });
+      }
+    }
+  }
+
+  // Sort by priority: product (art), CD, vinyl, then AI by confidence
   return items.sort((a, b) => {
-    const priorityOrder = { cd: 1, vinyl: 2, ai: 3 };
+    const priorityOrder = { product: 0, cd: 1, vinyl: 2, ai: 3 };
     if (a.type !== b.type) {
       return priorityOrder[a.type] - priorityOrder[b.type];
     }

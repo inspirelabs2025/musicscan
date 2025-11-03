@@ -44,7 +44,7 @@ export function BatchBlogGenerator() {
   const [settings, setSettings] = useState({
     batchSize: 1, // One album at a time for maximum stability
     delaySeconds: 30, // Shorter delay since processing one at a time
-    mediaTypes: ['cd', 'vinyl', 'ai'],
+    mediaTypes: ['product', 'cd', 'vinyl', 'ai'],
     minConfidence: 0.7,
     dryRun: false
   });
@@ -569,6 +569,37 @@ export function BatchBlogGenerator() {
                 onChange={(e) => setSettings(prev => ({ ...prev, minConfidence: parseFloat(e.target.value) || 0.7 }))}
                 disabled={isActive}
               />
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <Label>Media Types om te verwerken:</Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { value: 'product', label: 'Art Products (LP Metaalprints)', badge: '🎨' },
+                { value: 'cd', label: 'CD Scans', badge: '💿' },
+                { value: 'vinyl', label: 'Vinyl Scans', badge: '📀' },
+                { value: 'ai', label: 'AI Scans', badge: '🤖' }
+              ].map(type => (
+                <div key={type.value} className="flex items-center space-x-2">
+                  <Switch
+                    id={`type-${type.value}`}
+                    checked={settings.mediaTypes.includes(type.value)}
+                    onCheckedChange={(checked) => {
+                      setSettings(prev => ({
+                        ...prev,
+                        mediaTypes: checked 
+                          ? [...prev.mediaTypes, type.value]
+                          : prev.mediaTypes.filter(t => t !== type.value)
+                      }));
+                    }}
+                    disabled={isActive}
+                  />
+                  <Label htmlFor={`type-${type.value}`} className="text-sm">
+                    {type.badge} {type.label}
+                  </Label>
+                </div>
+              ))}
             </div>
           </div>
           

@@ -8,9 +8,10 @@ import { Link } from 'react-router-dom';
 interface RelatedArticle {
   id: string;
   slug: string;  
-  yaml_frontmatter: any; // Using any for JSON data from Supabase
+  yaml_frontmatter: any;
   views_count: number;
   published_at: string;
+  album_cover_url?: string;
 }
 
 interface RelatedArticlesProps {
@@ -34,65 +35,59 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
       try {
         const { supabase } = await import('@/integrations/supabase/client');
         
-        // Build query conditions for related content
-        let query = supabase
-          .from('blog_posts')
-          .select('id, slug, yaml_frontmatter, views_count, published_at')
-          .eq('is_published', true)
-          .neq('slug', currentSlug)
-          .order('published_at', { ascending: false })
-          .limit(maxResults + 3); // Get more to filter better matches
+        // STRATEGY 1: Try to find albums by the same artist first
+        let articles = [];
+        
+        if (artist) {
+          const { data: sameArtistArticles, error: artistError } = await supabase
+            .from('blog_posts')
+            .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url')
+            .eq('is_published', true)
+            .neq('slug', currentSlug)
+            .order('views_count', { ascending: false })
+            .limit(maxResults * 2);
 
-        const { data: articles, error } = await query;
-
-        if (error) {
-          console.error('Error fetching related articles:', error);
-          return;
+          if (!artistError && sameArtistArticles) {
+            // Filter for same artist (case-insensitive)
+            articles = sameArtistArticles.filter(article => {
+              const frontmatter = article.yaml_frontmatter as any || {};
+              const articleArtist = String(frontmatter.artist || '').toLowerCase();
+              return articleArtist.includes(artist.toLowerCase()) || 
+                     artist.toLowerCase().includes(articleArtist);
+            });
+          }
         }
 
-        if (!articles) return;
+        // STRATEGY 2: If not enough same-artist albums, add same-genre albums
+        if (articles.length < maxResults && genre) {
+          const { data: sameGenreArticles, error: genreError } = await supabase
+            .from('blog_posts')
+            .select('id, slug, yaml_frontmatter, views_count, published_at, album_cover_url')
+            .eq('is_published', true)
+            .neq('slug', currentSlug)
+            .order('views_count', { ascending: false })
+            .limit(maxResults * 2);
 
-        // Score articles based on relevance for SEO internal linking
-        const scoredArticles = articles
-          .map(article => {
-            let score = 0;
-            const frontmatter = article.yaml_frontmatter as any || {};
+          if (!genreError && sameGenreArticles) {
+            // Filter for same genre but not already included
+            const existingIds = new Set(articles.map(a => a.id));
+            const genreArticles = sameGenreArticles.filter(article => {
+              if (existingIds.has(article.id)) return false;
+              const frontmatter = article.yaml_frontmatter as any || {};
+              const articleGenre = String(frontmatter.genre || '').toLowerCase();
+              const articleArtist = String(frontmatter.artist || '').toLowerCase();
+              
+              // Don't mix artists unless same genre
+              return articleGenre.includes(genre.toLowerCase()) || 
+                     genre.toLowerCase().includes(articleGenre);
+            });
             
-            // HIGHEST PRIORITY: Same artist (critical for SEO)
-            if (artist && frontmatter.artist && String(frontmatter.artist).toLowerCase().includes(artist.toLowerCase())) {
-              score += 50; // Increased from 10
-            }
-            
-            // HIGH PRIORITY: Same genre
-            if (genre && frontmatter.genre && String(frontmatter.genre).toLowerCase().includes(genre.toLowerCase())) {
-              score += 15; // Increased from 5
-            }
-            
-            // MEDIUM PRIORITY: Same decade
-            if (frontmatter.year) {
-              const currentYear = frontmatter.year;
-              const articleYear = Number(frontmatter.year);
-              const decade = Math.floor(articleYear / 10) * 10;
-              const currentDecade = Math.floor(currentYear / 10) * 10;
-              if (decade === currentDecade) {
-                score += 8;
-              }
-            }
-            
-            // LOW PRIORITY: Similar time period
-            if (frontmatter.year && Math.abs(Number(frontmatter.year) - new Date().getFullYear()) < 10) {
-              score += 2;
-            }
-            
-            // POPULARITY BOOST: Popular articles get small boost
-            score += Math.min(article.views_count || 0, 100) / 100;
-            
-            return { ...article, score };
-          })
-          .sort((a, b) => b.score - a.score)
-          .slice(0, maxResults);
+            articles = [...articles, ...genreArticles];
+          }
+        }
 
-        setRelatedArticles(scoredArticles);
+        // Take only the top results
+        setRelatedArticles(articles.slice(0, maxResults));
       } catch (error) {
         console.error('Error fetching related articles:', error);
       } finally {
@@ -153,11 +148,11 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
                 >
                   <Card className="h-full hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
                     {/* Album Cover */}
-                    {frontmatter.og_image && (
+                    {(frontmatter.og_image || article.album_cover_url) && (
                       <div className="aspect-square overflow-hidden bg-muted">
                         <img 
-                          src={String(frontmatter.og_image)} 
-                          alt={`${frontmatter.artist || ''} - ${frontmatter.album || ''}`}
+                          src={String(frontmatter.og_image || article.album_cover_url)} 
+                          alt={`${frontmatter.artist || ''} - ${frontmatter.album || ''} album cover`}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           loading="lazy"
                         />

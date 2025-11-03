@@ -307,6 +307,17 @@ serve(async (req) => {
     let discogsArtist = albumData.artist;
     let discogsTitle = albumData.title?.replace(/\s*\[Metaalprint\]\s*$/, '').replace(/^.*?\s*-\s*/, '');
     
+    // ✅ FIX: Voor platform_products zonder artist, parse uit title
+    if (actualTableUsed === 'platform_products' && !discogsArtist && albumData.title) {
+      // Title format: " - Artist - Album [Metaalprint]" or "Artist - Album [Metaalprint]"
+      const titleParts = albumData.title.replace(/\s*\[Metaalprint\]\s*$/i, '').split(' - ').filter(p => p.trim());
+      if (titleParts.length >= 2) {
+        discogsArtist = titleParts[0].trim() || titleParts[1].trim();
+        discogsTitle = titleParts.slice(1).join(' - ').trim() || titleParts.slice(2).join(' - ').trim();
+        console.log(`✅ Extracted from title: artist="${discogsArtist}", album="${discogsTitle}"`);
+      }
+    }
+    
     if (actualTableUsed === 'platform_products' && albumData.discogs_url && discogsToken) {
       console.log('🎯 Fetching correct data from Discogs RELEASE API...');
       try {
@@ -481,7 +492,7 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
       try {
         console.log('Discogs failed, trying Perplexity fallback...');
         
-        const coverSearchQuery = `Find direct image URL for album cover: "${albumData.artist}" - "${albumData.title}" ${albumData.year || ''} official album art`;
+        const coverSearchQuery = `Find direct image URL for album cover: "${effectiveArtist}" - "${effectiveTitle}" ${effectiveYear || ''} official album art`;
         console.log(`Trying search query: ${coverSearchQuery}`);
         
         const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {

@@ -254,10 +254,10 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-3">
             <ExternalLink className="w-6 h-6 text-primary" />
-            Meer Albums van Deze Artiest
+            {artist ? `Meer Albums van ${artist}` : `Meer ${genre || ''} Albums`}
           </CardTitle>
           <p className="text-muted-foreground">
-            Ontdek gerelateerde albums en verhalen
+            Ontdek vergelijkbare albums uit {artist ? 'deze artiest' : `het ${genre || ''} genre`}
           </p>
         </CardHeader>
         <CardContent>

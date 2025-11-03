@@ -9,7 +9,7 @@ export const SimpleHero = () => {
       title: 'Nieuws',
       subtitle: 'Lezen',
       description: 'Laatste muzieknieuws',
-      href: '/music-news',
+      href: '/news',
       gradient: 'from-vinyl-purple to-accent'
     },
     {
@@ -17,7 +17,7 @@ export const SimpleHero = () => {
       title: 'Verhalen',
       subtitle: 'Ontdek',
       description: 'Plaat & Verhaal',
-      href: '/music-news?filter=verhalen',
+      href: '/news?filter=verhalen',
       gradient: 'from-vinyl-gold to-amber-500'
     },
     {

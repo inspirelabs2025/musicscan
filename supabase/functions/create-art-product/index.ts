@@ -321,10 +321,12 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
       console.log('⚠️ Product already exists:', existingProducts.id);
       return new Response(
         JSON.stringify({ 
-          error: 'Product already exists',
-          product_id: existingProducts.id 
+          success: true,
+          already_exists: true,
+          product_id: existingProducts.id,
+          message: 'Product already exists, skipped'
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 

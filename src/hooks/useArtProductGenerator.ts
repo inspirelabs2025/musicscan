@@ -12,6 +12,7 @@ interface CreateArtProductParams {
 
 interface CreateArtProductResponse {
   success: boolean;
+  already_exists?: boolean;
   product_id: string;
   product_slug: string;
   message: string;
@@ -36,10 +37,17 @@ export const useArtProductGenerator = () => {
       return data as CreateArtProductResponse;
     },
     onSuccess: (data) => {
-      toast({
-        title: "✅ Product Aangemaakt",
-        description: data.message,
-      });
+      if (data.already_exists) {
+        toast({
+          title: "ℹ️ Product Bestaat Al",
+          description: "Dit album is al als ART product toegevoegd",
+        });
+      } else {
+        toast({
+          title: "✅ Product Aangemaakt",
+          description: data.message,
+        });
+      }
       
       // Refresh product lists
       queryClient.invalidateQueries({ queryKey: ['platform-products'] });

@@ -479,23 +479,22 @@ const BulkArtGenerator = () => {
               body: requestBody
             });
 
-            // Handle 409 "already exists" errors
             if (error) {
-              if (error.message?.includes('already exists') || 
-                  error.context?.response?.status === 409) {
-                setResults(prev => prev.map((r, idx) => 
-                  idx === index 
-                    ? { 
-                        ...r, 
-                        status: 'exists',
-                        productId: error.context?.body?.product_id,
-                        message: '⚠️ Product bestaat al'
-                      }
-                    : r
-                ));
-              } else {
-                throw error;
-              }
+              throw error;
+            }
+
+            // Check if product already exists
+            if (data.already_exists) {
+              setResults(prev => prev.map((r, idx) => 
+                idx === index 
+                  ? { 
+                      ...r, 
+                      status: 'exists',
+                      productId: data.product_id,
+                      message: '⚠️ Product bestaat al'
+                    }
+                  : r
+              ));
             } else if (data.success && data.product_id) {
               setResults(prev => prev.map((r, idx) => 
                 idx === index 

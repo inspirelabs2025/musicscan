@@ -183,6 +183,14 @@ const processSearchResults = (searchResults: any[], originalArtist?: string, ori
   for (const result of searchResults) {
     for (const item of result.data.results || []) {
       if (usedIds.has(item.id)) continue;
+      
+      // Filter: only process release or master types
+      const itemType = item.type || '';
+      if (itemType && itemType !== 'release' && itemType !== 'master') {
+        console.log(`⏭️ Skipping type: ${itemType} (ID: ${item.id})`);
+        continue;
+      }
+      
       usedIds.add(item.id);
 
       // Determine media type
@@ -242,11 +250,22 @@ const processSearchResults = (searchResults: any[], originalArtist?: string, ori
         }
       }
 
+      // Construct correct URLs based on type (master vs release)
+      const discogsUrl = item.uri || (itemType === 'master'
+        ? `https://www.discogs.com/master/${item.id}`
+        : `https://www.discogs.com/release/${item.id}`);
+      const apiUrl = item.resource_url || (itemType === 'master'
+        ? `https://api.discogs.com/masters/${item.id}`
+        : `https://api.discogs.com/releases/${item.id}`);
+      const sellUrl = itemType === 'release' ? `https://www.discogs.com/sell/release/${item.id}` : null;
+      
+      console.log(`📊 ${itemType || 'unknown'} | Score: ${similarityScore.toFixed(2)} | ${item.artist} - ${item.title} | ${result.strategy}`);
+
       allResults.push({
         discogs_id: item.id,
-        discogs_url: `https://www.discogs.com/release/${item.id}`,
-        sell_url: `https://www.discogs.com/sell/release/${item.id}`,
-        api_url: `https://api.discogs.com/releases/${item.id}`,
+        discogs_url: discogsUrl,
+        sell_url: sellUrl,
+        api_url: apiUrl,
         title: item.title || '',
         artist: Array.isArray(item.artist) ? item.artist.join(', ') : item.artist || '',
         year: item.year?.toString() || '',
@@ -260,6 +279,8 @@ const processSearchResults = (searchResults: any[], originalArtist?: string, ori
         similarity_score: similarityScore,
         search_strategy: result.strategy,
         thumb: item.thumb || '',
+        result_type: itemType,
+        master_id: itemType === 'master' ? item.id : (item.master_id || null),
         // No pricing stats initially - will be loaded separately
         pricing_stats: null
       });

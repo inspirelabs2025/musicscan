@@ -331,16 +331,56 @@ Deno.serve(async (req) => {
 
     // Handle direct Discogs ID search
     if (direct_discogs_id) {
-      console.log(`🆔 Direct Discogs ID search for: ${direct_discogs_id}`);
+      const idStr = String(direct_discogs_id).trim();
       
-      const releaseData = await getReleaseMetadata(direct_discogs_id, authHeaders);
+      // ✅ Check if this is a Master ID (prefix m/M)
+      const isMasterId = /^[mM]/.test(idStr);
+      const numericId = idStr.replace(/^[mM]/i, ''); // Remove prefix
+      
+      console.log(`🆔 Direct Discogs ID search:`, { 
+        input: direct_discogs_id,
+        isMaster: isMasterId,
+        numericId 
+      });
+      
+      let releaseData;
+      
+      if (isMasterId) {
+        // Force Master → Release conversion
+        console.log(`🔄 Forcing Master ID ${numericId} conversion...`);
+        const masterData = await getMasterData(numericId, authHeaders);
+        const mainReleaseId = masterData.main_release;
+        
+        if (!mainReleaseId) {
+          throw new Error(`Master ${numericId} has no main_release`);
+        }
+        
+        console.log(`✅ Master ${numericId} → Release ${mainReleaseId}`);
+        
+        const mainReleaseResponse = await fetch(
+          `https://api.discogs.com/releases/${mainReleaseId}`, 
+          { headers: { ...authHeaders, 'User-Agent': 'VinylScanner/2.0' } }
+        );
+        
+        if (!mainReleaseResponse.ok) {
+          throw new Error(`Failed to fetch release ${mainReleaseId}`);
+        }
+        
+        releaseData = await mainReleaseResponse.json();
+        releaseData._converted_from_master = true;
+        releaseData._actual_release_id = mainReleaseId;
+        releaseData._original_master_id = numericId;
+      } else {
+        // Regular Release ID path (existing logic)
+        releaseData = await getReleaseMetadata(numericId, authHeaders);
+      }
       
       // Check if this was converted from Master
-      const actualReleaseId = releaseData._actual_release_id || direct_discogs_id;
+      const actualReleaseId = releaseData._actual_release_id || numericId;
       const wasConverted = !!releaseData._converted_from_master;
       
       if (wasConverted) {
-        console.log(`ℹ️ Using Release ID ${actualReleaseId} (converted from Master ${direct_discogs_id})`);
+        console.log(`ℹ️ Using Release ID ${actualReleaseId} (converted from Master ${numericId})`);
       }
       
       // Determine media type

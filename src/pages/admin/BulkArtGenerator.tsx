@@ -17,7 +17,7 @@ interface AlbumInput {
   artist: string;
   title: string;
   price?: number;
-  discogsId?: number;
+  discogsId?: string | number; // ✅ Support both "m4326" (string) and 4326 (number)
   verifiedArtist?: string;
   verifiedTitle?: string;
   matchStatus?: 'idle' | 'verifying' | 'match' | 'partial' | 'mismatch' | 'search' | 'error';
@@ -112,19 +112,32 @@ const BulkArtGenerator = () => {
   };
 
   // Parse single line with multiple format support
-  const parseAlbumLine = (line: string): { discogs_id: number; artist: string; title: string } | null => {
+  const parseAlbumLine = (line: string): { discogs_id: string | number; artist: string; title: string } | null => {
     const trimmed = line.trim();
     if (!trimmed) return null;
 
-    // Extract Discogs ID (always first part)
-    const idMatch = trimmed.match(/^(\d+)/);
+    // ✅ Check if ID has Master prefix (m/M) BEFORE extracting numeric part
+    const isMasterId = /^[mM]/.test(trimmed);
+    
+    // Extract Discogs ID (numeric part, with or without prefix)
+    const idMatch = trimmed.match(/^[mM]?(\d+)/);
     if (!idMatch) return null;
     
-    const discogsId = parseInt(idMatch[1]);
-    if (isNaN(discogsId)) return null;
+    const numericId = parseInt(idMatch[1]);
+    if (isNaN(numericId)) return null;
+    
+    // ✅ Preserve Master prefix if present
+    const discogsId = isMasterId ? `m${numericId}` : numericId;
 
-    // Remove ID from string
-    const restOfLine = trimmed.replace(/^\d+\s*,?\s*/, '').trim();
+    // Remove ID (with optional prefix) from string
+    const restOfLine = trimmed.replace(/^[mM]?\d+\s*,?\s*/, '').trim();
+
+    console.log(`📋 Parsed ID:`, { 
+      raw: trimmed.split(',')[0], 
+      numeric: numericId, 
+      isMaster: isMasterId,
+      final: discogsId 
+    });
 
     // Format 1: "Artist - Title" (preferred)
     if (restOfLine.includes(' - ')) {
@@ -174,7 +187,7 @@ const BulkArtGenerator = () => {
     const normalizedText = normalizeInput(input);
     const lines = normalizedText.split('\n').filter(line => line.trim());
     const parsed: AlbumInput[] = [];
-    const seenIds = new Set<number>();
+    const seenIds = new Set<string | number>(); // ✅ Support both string (m123) and number (123)
 
     setIsProcessing(true);
 

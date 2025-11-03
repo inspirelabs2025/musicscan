@@ -16,6 +16,18 @@ serve(async (req) => {
     
     console.log('🎨 Starting ART product creation:', { discogs_id, catalog_number, artist, title });
 
+    // ✅ Normalize Discogs ID (detect and preserve m/M prefix for Master IDs)
+    const idStr = String(discogs_id).trim();
+    const isMasterId = /^[mM]/.test(idStr);
+    const normalizedId = idStr.replace(/^[mM]/i, '');
+    
+    console.log(`📋 Discogs ID:`, {
+      input: discogs_id,
+      normalized: normalizedId,
+      isMaster: isMasterId,
+      willSendToSearch: idStr // Send WITH prefix to optimized-catalog-search
+    });
+
     // ✅ VALIDATION: Detect and fix artist/title swaps
     let validatedArtist = artist;
     let validatedTitle = title;
@@ -88,9 +100,9 @@ serve(async (req) => {
       console.log('📀 Searching by Release ID:', discogs_id);
       try {
         const result = await retryWithBackoff(async () => {
-          const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
+           const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
             body: { 
-              direct_discogs_id: discogs_id.toString(),
+              direct_discogs_id: idStr, // ✅ Send WITH prefix to optimized-catalog-search
               artist: finalArtist,
               title: finalTitle
             }

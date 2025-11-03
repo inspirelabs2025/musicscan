@@ -420,7 +420,13 @@ const DiscogsLookup = () => {
       .map(r => {
         const artist = r.artist.trim();
         const title = r.title.trim();
-        return `${r.discogs_id}, ${artist} - ${title}`;
+        
+        // ✅ If this was a Master → Release conversion, export the ORIGINAL Master ID with 'm' prefix
+        const idToExport = r.original_master_id 
+          ? `m${r.original_master_id}`  // Master ID with prefix
+          : r.discogs_id;                // Regular Release ID
+        
+        return `${idToExport}, ${artist} - ${title}`;
       })
       .join('\n');
 

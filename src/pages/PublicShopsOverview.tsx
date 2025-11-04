@@ -62,9 +62,15 @@ const PublicShopsOverview = () => {
       );
 
       // Sort by item count, then by view count
+      // Always show musicscan shop, filter others by item count
       return shopsWithCounts
-        .filter(shop => shop.item_count > 0)
-        .sort((a, b) => b.item_count - a.item_count || b.view_count - a.view_count);
+        .filter(shop => shop.item_count > 0 || shop.shop_url_slug === 'musicscan')
+        .sort((a, b) => {
+          // Musicscan shop always on top
+          if (a.shop_url_slug === 'musicscan') return -1;
+          if (b.shop_url_slug === 'musicscan') return 1;
+          return b.item_count - a.item_count || b.view_count - a.view_count;
+        });
     },
   });
 

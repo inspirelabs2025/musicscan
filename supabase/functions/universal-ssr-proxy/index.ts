@@ -28,6 +28,13 @@ const generateBlogHTML = (blog: any): string => {
   const imageUrl = blog.album_cover_url || frontmatter.image || `${BASE_URL}/placeholder.svg`;
   const genre = frontmatter.genre || '';
   const year = frontmatter.year || '';
+  
+  // Generate clean content preview
+  const contentPreview = blog.markdown_content
+    ?.replace(/<[^>]*>/g, '')
+    ?.replace(/\n+/g, ' ')
+    ?.trim()
+    ?.substring(0, 500) || '';
 
   return `<!DOCTYPE html>
 <html lang="nl">
@@ -36,12 +43,14 @@ const generateBlogHTML = (blog: any): string => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${artist} - ${album} | ${title} | MusicScan</title>
   <meta name="description" content="${description}">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
   
   <meta property="og:type" content="article">
   <meta property="og:title" content="${artist} - ${album}">
   <meta property="og:description" content="${description}">
   <meta property="og:image" content="${imageUrl}">
   <meta property="og:url" content="${BASE_URL}/plaat-verhaal/${blog.slug}">
+  <meta property="og:site_name" content="MusicScan">
   
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${artist} - ${album}">
@@ -60,16 +69,32 @@ const generateBlogHTML = (blog: any): string => {
     "author": { "@type": "Organization", "name": "MusicScan" },
     "publisher": { "@type": "Organization", "name": "MusicScan", "logo": { "@type": "ImageObject", "url": "${BASE_URL}/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" } },
     "datePublished": "${blog.published_at || blog.created_at}",
+    "dateModified": "${blog.updated_at || blog.published_at || blog.created_at}",
     "mainEntityOfPage": "${BASE_URL}/plaat-verhaal/${blog.slug}"
   }
   </script>
+  
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+    img { max-width: 100%; height: auto; border-radius: 8px; }
+    .content { margin-top: 2rem; }
+  </style>
 </head>
 <body>
   <article>
-    <h1>${artist} - ${album}</h1>
-    ${description ? `<p>${description}</p>` : ''}
+    <header>
+      <h1>${artist} - ${album}</h1>
+      ${imageUrl && imageUrl !== `${BASE_URL}/placeholder.svg` ? `<img src="${imageUrl}" alt="${album} album cover" loading="eager">` : ''}
+    </header>
+    <div class="content">
+      ${description ? `<p><strong>${description}</strong></p>` : ''}
+      ${contentPreview ? `<p>${contentPreview}...</p>` : ''}
+    </div>
   </article>
-  <script>window.location.href = "${BASE_URL}/plaat-verhaal/${blog.slug}";</script>
+  
+  <noscript>
+    <p><a href="${BASE_URL}/plaat-verhaal/${blog.slug}">Klik hier voor de volledige ervaring op MusicScan</a></p>
+  </noscript>
 </body>
 </html>`;
 };
@@ -80,7 +105,14 @@ const generateStoryHTML = (story: any): string => {
   const title = frontmatter.title || story.title || 'Music Story';
   const artist = frontmatter.artist || '';
   const description = frontmatter.description || story.excerpt || '';
-  const imageUrl = story.cover_image_url || frontmatter.image || `${BASE_URL}/placeholder.svg`;
+  const imageUrl = story.artwork_url || story.cover_image_url || frontmatter.image || `${BASE_URL}/placeholder.svg`;
+  
+  // Generate clean content preview
+  const contentPreview = story.story_content
+    ?.replace(/<[^>]*>/g, '')
+    ?.replace(/\n+/g, ' ')
+    ?.trim()
+    ?.substring(0, 500) || '';
 
   return `<!DOCTYPE html>
 <html lang="nl">
@@ -89,12 +121,14 @@ const generateStoryHTML = (story: any): string => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} | MusicScan Muziekverhalen</title>
   <meta name="description" content="${description}">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
   
   <meta property="og:type" content="article">
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${description}">
   <meta property="og:image" content="${imageUrl}">
   <meta property="og:url" content="${BASE_URL}/muziek-verhaal/${story.slug}">
+  <meta property="og:site_name" content="MusicScan">
   
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${title}">
@@ -113,17 +147,33 @@ const generateStoryHTML = (story: any): string => {
     "author": { "@type": "Organization", "name": "MusicScan" },
     "publisher": { "@type": "Organization", "name": "MusicScan", "logo": { "@type": "ImageObject", "url": "${BASE_URL}/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" } },
     "datePublished": "${story.published_at || story.created_at}",
+    "dateModified": "${story.updated_at || story.published_at || story.created_at}",
     "mainEntityOfPage": "${BASE_URL}/muziek-verhaal/${story.slug}"
   }
   </script>
+  
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+    img { max-width: 100%; height: auto; border-radius: 8px; }
+    .content { margin-top: 2rem; }
+  </style>
 </head>
 <body>
   <article>
-    <h1>${title}</h1>
-    ${artist ? `<p>Artiest: ${artist}</p>` : ''}
-    ${description ? `<p>${description}</p>` : ''}
+    <header>
+      <h1>${title}</h1>
+      ${imageUrl && imageUrl !== `${BASE_URL}/placeholder.svg` ? `<img src="${imageUrl}" alt="${title}" loading="eager">` : ''}
+    </header>
+    <div class="content">
+      ${artist ? `<p><strong>Artiest: ${artist}</strong></p>` : ''}
+      ${description ? `<p><strong>${description}</strong></p>` : ''}
+      ${contentPreview ? `<p>${contentPreview}...</p>` : ''}
+    </div>
   </article>
-  <script>window.location.href = "${BASE_URL}/muziek-verhaal/${story.slug}";</script>
+  
+  <noscript>
+    <p><a href="${BASE_URL}/muziek-verhaal/${story.slug}">Klik hier voor de volledige ervaring op MusicScan</a></p>
+  </noscript>
 </body>
 </html>`;
 };
@@ -135,6 +185,13 @@ const generateProductHTML = (product: any): string => {
   const description = product.description || '';
   const imageUrl = product.primary_image || `${BASE_URL}/placeholder.svg`;
   const price = product.price || 0;
+  
+  // Generate clean content preview
+  const contentPreview = description
+    ?.replace(/<[^>]*>/g, '')
+    ?.replace(/\n+/g, ' ')
+    ?.trim()
+    ?.substring(0, 500) || '';
 
   return `<!DOCTYPE html>
 <html lang="nl">
@@ -143,12 +200,14 @@ const generateProductHTML = (product: any): string => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} - Metal Print Album Cover | MusicScan</title>
   <meta name="description" content="${description || `Bestel ${title} als premium metalen albumcover print. Hoogwaardige kunst voor muziekliefhebbers.`}">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
   
   <meta property="og:type" content="product">
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${description}">
   <meta property="og:image" content="${imageUrl}">
   <meta property="og:url" content="${BASE_URL}/product/${product.slug}">
+  <meta property="og:site_name" content="MusicScan">
   <meta property="product:price:amount" content="${price}">
   <meta property="product:price:currency" content="EUR">
   
@@ -177,15 +236,31 @@ const generateProductHTML = (product: any): string => {
     }
   }
   </script>
+  
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+    img { max-width: 100%; height: auto; border-radius: 8px; }
+    .content { margin-top: 2rem; }
+    .price { font-size: 1.5rem; font-weight: bold; color: #059669; margin-top: 1rem; }
+  </style>
 </head>
 <body>
   <article>
-    <h1>${title}</h1>
-    ${artist ? `<p>Artiest: ${artist}</p>` : ''}
-    ${description ? `<p>${description}</p>` : ''}
-    <p>Prijs: €${price}</p>
+    <header>
+      <h1>${title}</h1>
+      ${imageUrl && imageUrl !== `${BASE_URL}/placeholder.svg` ? `<img src="${imageUrl}" alt="${title}" loading="eager">` : ''}
+    </header>
+    <div class="content">
+      ${artist ? `<p><strong>Artiest: ${artist}</strong></p>` : ''}
+      ${contentPreview ? `<p>${contentPreview}${contentPreview.length < description?.length ? '...' : ''}</p>` : ''}
+      <div class="price">€${price}</div>
+      ${product.stock_quantity > 0 ? '<p><strong>Op voorraad</strong></p>' : '<p><strong>Uitverkocht</strong></p>'}
+    </div>
   </article>
-  <script>window.location.href = "${BASE_URL}/product/${product.slug}";</script>
+  
+  <noscript>
+    <p><a href="${BASE_URL}/product/${product.slug}">Klik hier voor de volledige ervaring op MusicScan</a></p>
+  </noscript>
 </body>
 </html>`;
 };

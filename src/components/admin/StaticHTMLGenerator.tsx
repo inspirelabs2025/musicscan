@@ -18,36 +18,77 @@ export const StaticHTMLGenerator = () => {
     setStats({ success: 0, failed: 0, total: 0 });
 
     try {
-      // Fetch all published content
+      // Fetch ALL published content (not limited to 1000)
       let items: any[] = [];
       
       if (contentType === 'blog_post') {
-        const { data, error } = await supabase
+        // Get total count first
+        const { count, error: countError } = await supabase
           .from('blog_posts')
-          .select('slug')
+          .select('*', { count: 'exact', head: true })
           .eq('is_published', true);
         
-        if (error) throw error;
-        items = data || [];
+        if (countError) throw countError;
+        
+        // Fetch in batches of 1000
+        const batchSize = 1000;
+        for (let offset = 0; offset < (count || 0); offset += batchSize) {
+          const { data, error } = await supabase
+            .from('blog_posts')
+            .select('slug')
+            .eq('is_published', true)
+            .range(offset, offset + batchSize - 1);
+          
+          if (error) throw error;
+          if (data) items.push(...data);
+        }
       } else if (contentType === 'music_story') {
-        const { data, error } = await supabase
+        // Get total count first
+        const { count, error: countError } = await supabase
           .from('music_stories')
-          .select('slug')
+          .select('*', { count: 'exact', head: true })
           .eq('is_published', true);
         
-        if (error) throw error;
-        items = data || [];
+        if (countError) throw countError;
+        
+        // Fetch in batches of 1000
+        const batchSize = 1000;
+        for (let offset = 0; offset < (count || 0); offset += batchSize) {
+          const { data, error } = await supabase
+            .from('music_stories')
+            .select('slug')
+            .eq('is_published', true)
+            .range(offset, offset + batchSize - 1);
+          
+          if (error) throw error;
+          if (data) items.push(...data);
+        }
       } else if (contentType === 'product') {
-        const { data, error } = await supabase
+        // Get total count first
+        const { count, error: countError } = await supabase
           .from('platform_products')
-          .select('slug')
+          .select('*', { count: 'exact', head: true })
           .eq('status', 'active')
           .not('published_at', 'is', null);
         
-        if (error) throw error;
-        items = data || [];
+        if (countError) throw countError;
+        
+        // Fetch in batches of 1000
+        const batchSize = 1000;
+        for (let offset = 0; offset < (count || 0); offset += batchSize) {
+          const { data, error } = await supabase
+            .from('platform_products')
+            .select('slug')
+            .eq('status', 'active')
+            .not('published_at', 'is', null)
+            .range(offset, offset + batchSize - 1);
+          
+          if (error) throw error;
+          if (data) items.push(...data);
+        }
       }
 
+      console.log(`Generating HTML for ${items.length} ${contentType}s`);
       setStats(prev => ({ ...prev, total: items.length }));
 
       // Generate static HTML for each item

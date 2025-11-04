@@ -286,7 +286,7 @@ serve(async (req) => {
       charcoal: 'Charcoal Drawing'
     }[style] || 'Sketch';
 
-    const productTitle = `${albumInfo.artist} - ${albumInfo.title} (${styleName})`;
+    const productTitle = `${albumInfo.artist} - ${albumInfo.title} Album Cover (${styleName})`;
     const slug = productTitle
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')

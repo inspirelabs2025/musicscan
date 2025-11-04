@@ -305,7 +305,7 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
     // Step 6: Create ART product
     console.log('🎨 Creating ART product...');
 
-    const productTitle = `${artistValue} - ${albumTitle} [Metaalprint]`;
+    const productTitle = `${artistValue} - ${albumTitle} Album Cover [Metaalprint]`;
 
     // Generate a unique slug using DB function to avoid collisions
     let slug = '';
@@ -318,7 +318,7 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
       slug = slugData as string;
     } catch (e) {
       console.warn('⚠️ Slug generation via RPC failed, falling back to local slug:', (e as Error).message);
-      slug = `${artistValue}-${albumTitle}-metaalprint`
+      slug = `${artistValue}-${albumTitle}-album-cover-metaalprint`
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')

@@ -45,6 +45,8 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
   const getImageUrl = () => {
     if (item.media_type === 'product') {
       return item.images?.[0] || '/placeholder.svg';
+    } else if (item.media_type === 'art') {
+      return item.front_image || item.catalog_image || '/placeholder.svg';
     } else if (item.media_type === 'cd') {
       return item.front_image || item.back_image || item.barcode_image || item.matrix_image;
     } else if (item.media_type === 'vinyl') {
@@ -99,7 +101,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
 
     const cartItem = {
       id: item.id,
-      media_type: (item.media_type === 'vinyl' ? 'vinyl' : item.media_type === 'cd' ? 'cd' : 'product') as 'cd' | 'vinyl' | 'product',
+      media_type: (item.media_type === 'vinyl' ? 'vinyl' : item.media_type === 'cd' ? 'cd' : item.media_type === 'art' ? 'art' : 'product') as 'cd' | 'vinyl' | 'product' | 'art',
       artist: item.artist || '',
       title: item.media_type === 'product' ? item.name || '' : item.title || '',
       price,
@@ -134,6 +136,8 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
         return Disc;
       case 'product':
         return Package;
+      case 'art':
+        return Sparkles;
       default:
         return Music2;
     }
@@ -183,7 +187,7 @@ export const ShopItemCard = ({ item, shopContactInfo }: ShopItemCardProps) => {
             variant="secondary" 
             className="text-xs font-bold bg-gradient-to-r from-vinyl-purple to-primary text-white border-0 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300"
           >
-            {item.media_type === 'vinyl' ? '🎧 VINYL' : item.media_type === 'product' ? '📦 PRODUCT' : '💿 CD'}
+            {item.media_type === 'vinyl' ? '🎧 VINYL' : item.media_type === 'product' ? '📦 PRODUCT' : item.media_type === 'art' ? '🎨 ART' : '💿 CD'}
           </Badge>
           {item.condition_grade && (
             <Badge 

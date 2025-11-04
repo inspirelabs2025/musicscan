@@ -38,7 +38,7 @@ const BulkArtGenerator = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [input, setInput] = useState("");
-  const [defaultPrice, setDefaultPrice] = useState(29.99);
+  const [defaultPrice, setDefaultPrice] = useState(49.95);
   const [albums, setAlbums] = useState<AlbumInput[]>([]);
   const [results, setResults] = useState<ProcessingResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +30,8 @@ const CuratedArtists = () => {
   const queryClient = useQueryClient();
   const [newArtistName, setNewArtistName] = useState("");
   const [isTriggeringCrawl, setIsTriggeringCrawl] = useState(false);
-
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [autoSeeded, setAutoSeeded] = useState(false);
   const { data: artists, isLoading } = useQuery({
     queryKey: ['curated-artists'],
     queryFn: async () => {
@@ -125,9 +126,39 @@ const CuratedArtists = () => {
     }
   };
 
+  const seedArtists = async () => {
+    setIsSeeding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-curated-artists');
+      if (error) throw error;
+      toast({
+        title: "✅ Artiesten Toegevoegd",
+        description: `${data?.inserted || 0} nieuw, totaal ${data?.total || ''}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['curated-artists'] });
+    } catch (error: any) {
+      toast({
+        title: "❌ Seed Fout",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
   const activeCount = artists?.filter(a => a.is_active).length || 0;
   const totalCount = artists?.length || 0;
 
+  // Auto-seed once if fewer than 200 artists exist
+  // This will only run once per mount to prevent loops
+  // and immediately populate the dashboard for convenience
+  // (safe: insert ignores duplicates)
+  useEffect(() => {
+    if (!isLoading && !autoSeeded && (totalCount < 200)) {
+      setAutoSeeded(true);
+      seedArtists();
+    }
+  }, [isLoading, autoSeeded, totalCount]);
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Card>
@@ -174,7 +205,7 @@ const CuratedArtists = () => {
             </Card>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Input
               placeholder="Artiestnaam toevoegen..."
               value={newArtistName}
@@ -191,6 +222,23 @@ const CuratedArtists = () => {
             >
               <Plus className="h-4 w-4 mr-2" />
               Toevoegen
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={seedArtists}
+              disabled={isSeeding}
+            >
+              {isSeeding ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Seeden...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Seed 200 Artiesten
+                </>
+              )}
             </Button>
           </div>
 

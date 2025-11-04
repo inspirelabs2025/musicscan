@@ -2,8 +2,15 @@ project_id = "ssxbpyqnjfiyubsuonar"
 
 [functions.discogs-lp-crawler]
 verify_jwt = false
+[[functions.discogs-lp-crawler.schedule]]
+cron = "0 * * * *"  # Hourly
 
 [functions.process-discogs-queue]
+verify_jwt = false
+[[functions.process-discogs-queue.schedule]]
+cron = "*/2 * * * *"  # Every 2 minutes
+
+[functions.seed-curated-artists]
 verify_jwt = false
 
 [functions.create-art-sketch-variant]

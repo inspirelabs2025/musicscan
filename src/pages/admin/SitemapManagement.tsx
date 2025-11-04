@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ExternalLink, RefreshCw, Download, Home } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { StaticHTMLGenerator } from "@/components/admin/StaticHTMLGenerator";
+import { Separator } from "@/components/ui/separator";
 
 export default function SitemapManagement() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -106,6 +108,10 @@ export default function SitemapManagement() {
           </ul>
         </AlertDescription>
       </Alert>
+
+      <StaticHTMLGenerator />
+
+      <Separator className="my-8" />
 
       <Card className="mb-6">
         <CardHeader>

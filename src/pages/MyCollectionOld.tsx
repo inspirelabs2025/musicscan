@@ -42,7 +42,7 @@ export default function MyCollection() {
     window.location.reload();
   });
 
-  const handleItemUpdate = (itemId: string, mediaType: "cd" | "vinyl", updates: any) => {
+  const handleItemUpdate = (itemId: string, mediaType: "cd" | "vinyl" | "art", updates: any) => {
     updateItem({ id: itemId, media_type: mediaType, updates }, {
       onSuccess: () => {
         toast({

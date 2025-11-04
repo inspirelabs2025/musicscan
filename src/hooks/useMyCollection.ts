@@ -140,9 +140,28 @@ export const useMyCollection = (filter: FilterType = "all") => {
       updates 
     }: { 
       id: string; 
-      media_type: "cd" | "vinyl"; 
+      media_type: "cd" | "vinyl" | "art"; 
       updates: Partial<Pick<CollectionItem, "is_public" | "is_for_sale" | "shop_description" | "marketplace_price">>
     }) => {
+      // Art products are in platform_products table
+      if (media_type === "art") {
+        const { data, error } = await supabase
+          .from("platform_products")
+          .update({
+            // Map CollectionItem updates to platform_products fields
+            status: updates.is_for_sale ? "active" : "draft",
+            description: updates.shop_description,
+            price: updates.marketplace_price,
+          })
+          .eq("id", id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        return data;
+      }
+      
+      // CD and Vinyl items remain in their original tables
       const table = media_type === "cd" ? "cd_scan" : "vinyl2_scan";
       
       const { data, error } = await supabase
@@ -165,12 +184,13 @@ export const useMyCollection = (filter: FilterType = "all") => {
       items, 
       updates 
     }: { 
-      items: { id: string; media_type: "cd" | "vinyl" }[];
+      items: { id: string; media_type: "cd" | "vinyl" | "art" }[];
       updates: Partial<Pick<CollectionItem, "is_public" | "is_for_sale">>
     }) => {
       // Group by media type
       const cdItems = items.filter(item => item.media_type === "cd").map(item => item.id);
       const vinylItems = items.filter(item => item.media_type === "vinyl").map(item => item.id);
+      const artItems = items.filter(item => item.media_type === "art").map(item => item.id);
 
       const promises = [];
 
@@ -189,6 +209,17 @@ export const useMyCollection = (filter: FilterType = "all") => {
             .from("vinyl2_scan")
             .update(updates)
             .in("id", vinylItems)
+        );
+      }
+
+      if (artItems.length > 0) {
+        promises.push(
+          supabase
+            .from("platform_products")
+            .update({
+              status: updates.is_for_sale ? "active" : "draft",
+            })
+            .in("id", artItems)
         );
       }
 

@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface CartItem {
   id: string;
-  media_type: 'cd' | 'vinyl' | 'product';
+  media_type: 'cd' | 'vinyl' | 'product' | 'art';
   artist: string;
   title: string;
   price: number;

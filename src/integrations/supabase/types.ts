@@ -795,6 +795,45 @@ export type Database = {
           },
         ]
       }
+      curated_artists: {
+        Row: {
+          added_at: string | null
+          artist_name: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_crawled_at: string | null
+          notes: string | null
+          priority: number | null
+          releases_found_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          added_at?: string | null
+          artist_name: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_crawled_at?: string | null
+          notes?: string | null
+          priority?: number | null
+          releases_found_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          added_at?: string | null
+          artist_name?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_crawled_at?: string | null
+          notes?: string | null
+          priority?: number | null
+          releases_found_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       demand_analytics: {
         Row: {
           analysis_period: string
@@ -863,6 +902,90 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      discogs_import_log: {
+        Row: {
+          artist: string
+          blog_id: string | null
+          catalog_number: string | null
+          country: string | null
+          created_at: string | null
+          discogs_release_id: number
+          error_message: string | null
+          format: string | null
+          id: string
+          import_batch: string | null
+          label: string | null
+          master_id: number | null
+          max_retries: number | null
+          processed_at: string | null
+          product_id: string | null
+          retry_count: number | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          year: number | null
+        }
+        Insert: {
+          artist: string
+          blog_id?: string | null
+          catalog_number?: string | null
+          country?: string | null
+          created_at?: string | null
+          discogs_release_id: number
+          error_message?: string | null
+          format?: string | null
+          id?: string
+          import_batch?: string | null
+          label?: string | null
+          master_id?: number | null
+          max_retries?: number | null
+          processed_at?: string | null
+          product_id?: string | null
+          retry_count?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Update: {
+          artist?: string
+          blog_id?: string | null
+          catalog_number?: string | null
+          country?: string | null
+          created_at?: string | null
+          discogs_release_id?: number
+          error_message?: string | null
+          format?: string | null
+          id?: string
+          import_batch?: string | null
+          label?: string | null
+          master_id?: number | null
+          max_retries?: number | null
+          processed_at?: string | null
+          product_id?: string | null
+          retry_count?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discogs_import_log_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discogs_import_log_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "platform_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       discogs_price_listings: {
         Row: {

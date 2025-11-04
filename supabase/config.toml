@@ -1,5 +1,11 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.discogs-lp-crawler]
+verify_jwt = false
+
+[functions.process-discogs-queue]
+verify_jwt = false
+
 [functions.create-art-sketch-variant]
 verify_jwt = false
 

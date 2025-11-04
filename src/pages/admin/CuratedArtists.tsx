@@ -409,6 +409,38 @@ SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`;
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showCronSql} onOpenChange={setShowCronSql}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Cronjobs Activeren</DialogTitle>
+            <DialogDescription>
+              Voer deze SQL uit in de Supabase SQL Editor om de automatische crawler te starten
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs">
+              {cronSQL}
+            </pre>
+            <Button
+              onClick={() => {
+                navigator.clipboard.writeText(cronSQL);
+                toast({ title: "📋 SQL Gekopieerd" });
+              }}
+              className="w-full"
+            >
+              Kopieer SQL
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => window.open('https://supabase.com/dashboard/project/ssxbpyqnjfiyubsuonar/sql', '_blank')}
+              className="w-full"
+            >
+              Open Supabase SQL Editor →
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

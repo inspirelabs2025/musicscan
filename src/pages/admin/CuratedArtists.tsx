@@ -193,6 +193,38 @@ const CuratedArtists = () => {
       seedArtists();
     }
   }, [isLoading, autoSeeded, totalCount]);
+
+  const cronSQL = `-- Safe unschedule (ignore if job doesn't exist)
+DO $$ BEGIN PERFORM cron.unschedule('hourly-discogs-lp-crawler'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN PERFORM cron.unschedule('process-discogs-queue'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
+-- Schedule: Discogs LP Crawler (hourly)
+SELECT cron.schedule(
+  'hourly-discogs-lp-crawler',
+  '0 * * * *',
+  $$
+  SELECT net.http_post(
+    url := 'https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/discogs-lp-crawler',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeGJweXFuamZpeXVic3VvbmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMDgyNTMsImV4cCI6MjA2MTY4NDI1M30.UFZKmrN-gz4VUUlKmVfwocS5OQuxGm4ATYltBJn3Kq4"}'::jsonb
+  );
+  $$
+);
+
+-- Schedule: Process Discogs Queue (every 2 minutes)
+SELECT cron.schedule(
+  'process-discogs-queue',
+  '*/2 * * * *',
+  $$
+  SELECT net.http_post(
+    url := 'https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/process-discogs-queue',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeGJweXFuamZpeXVic3VvbmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMDgyNTMsImV4cCI6MjA2MTY4NDI1M30.UFZKmrN-gz4VUUlKmVfwocS5OQuxGm4ATYltBJn3Kq4"}'::jsonb
+  );
+  $$
+);
+
+-- Verify
+SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`;
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Card>
@@ -309,6 +341,12 @@ const CuratedArtists = () => {
                   Seed 200 Artiesten
                 </>
               )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowCronSql(true)}
+            >
+              Cronjobs Activeren (SQL)
             </Button>
           </div>
 

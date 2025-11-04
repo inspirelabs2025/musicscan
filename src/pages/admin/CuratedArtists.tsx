@@ -14,6 +14,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Trash2, Plus, Music, RefreshCw } from "lucide-react";
 
 interface CuratedArtist {
@@ -32,6 +33,9 @@ const CuratedArtists = () => {
   const [isTriggeringCrawl, setIsTriggeringCrawl] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   const [autoSeeded, setAutoSeeded] = useState(false);
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+  const [isRunningAll, setIsRunningAll] = useState(false);
+  const [showCronSql, setShowCronSql] = useState(false);
   const { data: artists, isLoading } = useQuery({
     queryKey: ['curated-artists'],
     queryFn: async () => {

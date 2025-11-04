@@ -70,6 +70,7 @@ import Profile from "./pages/Profile";
 import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
 import SitemapManagement from "./pages/admin/SitemapManagement";
 import SEOMonitoring from "./pages/admin/SEOMonitoring";
+import CuratedArtists from "./pages/admin/CuratedArtists";
 import Quiz from "./pages/Quiz";
 import Pricing from "./pages/Pricing";
 import Prestaties from "./pages/Prestaties";
@@ -363,6 +364,11 @@ const App = () => {
             <Route path="/admin/seo-monitoring" element={
               <ProtectedRoute>
                 <SEOMonitoring />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/curated-artists" element={
+              <ProtectedRoute>
+                <CuratedArtists />
               </ProtectedRoute>
             } />
             <Route path="/art-shop" element={<ArtShop />} />

@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSketchArtGenerator } from "@/hooks/useSketchArtGenerator";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Home } from "lucide-react";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 const SketchArtGenerator = () => {
   const [formData, setFormData] = useState({
@@ -42,6 +43,21 @@ const SketchArtGenerator = () => {
 
   return (
     <div className="container mx-auto p-6 max-w-2xl">
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Admin
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Sketch Art Generator</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

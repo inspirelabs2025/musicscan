@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Trash2, Plus, Music, RefreshCw } from "lucide-react";
+import { Trash2, Plus, Music, RefreshCw, Home } from "lucide-react";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 interface CuratedArtist {
   id: string;
@@ -243,6 +244,21 @@ SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Admin
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Curated Artists</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

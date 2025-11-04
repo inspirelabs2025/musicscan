@@ -5,8 +5,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, Home } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 const INCORRECT_IDS = [
   11452, 13565, 14240, 37205, 36729, 35373, 53983, 35667, 13214, 2183,
@@ -118,6 +119,21 @@ const BulkProductCleanup = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Admin
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Bulk Product Cleanup</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Delete Everything from Today */}
       <Card className="border-destructive">
         <CardHeader>

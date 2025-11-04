@@ -1,12 +1,28 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TestPriceCollection } from '@/components/TestPriceCollection';
 import { BlogPriceDataBackfill } from '@/components/admin/BlogPriceDataBackfill';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, Home } from 'lucide-react';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 export default function PriceHistoryAdmin() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
+        <Breadcrumb className="mb-4">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/admin" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                Admin
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Prijshistorie Beheer</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         <div className="flex items-center gap-3 mb-8">
           <TrendingUp className="w-8 h-8 text-primary" />
           <div>

@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ExternalLink, RefreshCw, Download } from "lucide-react";
+import { ExternalLink, RefreshCw, Download, Home } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 export default function SitemapManagement() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -72,6 +73,21 @@ export default function SitemapManagement() {
 
   return (
     <div className="container mx-auto py-8 px-4">
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Admin
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Sitemap Management</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Sitemap Management</h1>
         <p className="text-muted-foreground">

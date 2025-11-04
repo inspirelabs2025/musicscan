@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useArtProductGenerator } from "@/hooks/useArtProductGenerator";
-import { Loader2, Sparkles, Search, Link as LinkIcon } from "lucide-react";
+import { Loader2, Sparkles, Search, Link as LinkIcon, Home } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 export default function ArtGenerator() {
   const navigate = useNavigate();
@@ -85,6 +86,21 @@ export default function ArtGenerator() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Admin
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Art Generator</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <Sparkles className="h-8 w-8 text-primary" />

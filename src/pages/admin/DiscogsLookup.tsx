@@ -12,7 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { AlertCircle, ExternalLink, Copy, ArrowLeft, Sparkles, Search, Hash, Clock, List, Download } from 'lucide-react';
+import { AlertCircle, ExternalLink, Copy, ArrowLeft, Sparkles, Search, Hash, Clock, List, Download, Home } from 'lucide-react';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 interface DiscogsResult {
   discogs_id: number;
@@ -448,6 +449,21 @@ const DiscogsLookup = () => {
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Admin
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Discogs Lookup</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <Button
         variant="ghost"
         size="sm"

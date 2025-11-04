@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Shield, Users, Activity, Database, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Shield, Users, Activity, Database, AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { useSuperAdminStats } from '@/hooks/useSuperAdminStats';
 import { UserOverviewSection } from '@/components/admin/UserOverviewSection';
 import { ScanActivitySection } from '@/components/admin/ScanActivitySection';
@@ -17,6 +17,7 @@ import { TestEmailTrigger } from '@/components/TestEmailTrigger';
 import { ArtworkStatusSection } from '@/components/admin/ArtworkStatusSection';
 import { PodcastManagementSection } from '@/components/admin/PodcastManagementSection';
 import { IndexNowMonitor } from '@/components/admin/IndexNowMonitor';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 const SuperAdminDashboard: React.FC = () => {
   console.log('🔐 SuperAdminDashboard: Component loading...');
@@ -106,6 +107,21 @@ const SuperAdminDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4">
+        <Breadcrumb className="mb-4">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/admin" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                Admin
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>SuperAdmin Dashboard</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>

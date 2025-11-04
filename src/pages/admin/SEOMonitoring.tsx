@@ -7,6 +7,8 @@ import { ContentFreshnessOverview } from "@/components/admin/ContentFreshnessOve
 import { SEOHealthCheck } from "@/components/admin/SEOHealthCheck";
 import { PerformanceMonitor } from "@/components/admin/PerformanceMonitor";
 import { useWebVitals } from "@/hooks/useWebVitals";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Home } from "lucide-react";
 
 export default function SEOMonitoring() {
   // Initialize web vitals tracking
@@ -14,6 +16,21 @@ export default function SEOMonitoring() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Admin
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>SEO Monitoring</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div>
         <h1 className="text-3xl font-bold mb-2">SEO Monitoring Dashboard</h1>
         <p className="text-muted-foreground">

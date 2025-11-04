@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Download, CheckCircle2, XCircle, Clock, Search, AlertCircle, ArrowLeft, Sparkles } from "lucide-react";
+import { Loader2, Download, CheckCircle2, XCircle, Clock, Search, AlertCircle, ArrowLeft, Sparkles, Home } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 interface AlbumInput {
   artist: string;
@@ -677,6 +678,21 @@ const BulkArtGenerator = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Admin
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Bulk Art Generator</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/admin/platform-products')}>

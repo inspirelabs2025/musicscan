@@ -10,7 +10,9 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Clock, CheckCircle, XCircle, Loader2, AlertCircle } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Loader2, AlertCircle, ExternalLink } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Link } from "react-router-dom";
 
 interface QueueItem {
   id: string;
@@ -22,6 +24,8 @@ interface QueueItem {
   created_at: string;
   processed_at: string | null;
   retry_count: number;
+  product_id: string | null;
+  blog_id: string | null;
 }
 
 interface QueueStats {
@@ -66,7 +70,7 @@ export const DiscogsQueueMonitor = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('discogs_import_log')
-        .select('*')
+        .select('id, discogs_release_id, artist, title, status, error_message, created_at, processed_at, retry_count, product_id, blog_id')
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -193,6 +197,8 @@ export const DiscogsQueueMonitor = () => {
                   <TableHead>Release ID</TableHead>
                   <TableHead>Artiest</TableHead>
                   <TableHead>Titel</TableHead>
+                  <TableHead>ART Product</TableHead>
+                  <TableHead>Blog</TableHead>
                   <TableHead>Retries</TableHead>
                   <TableHead>Aangemaakt</TableHead>
                 </TableRow>
@@ -201,14 +207,51 @@ export const DiscogsQueueMonitor = () => {
                 {recentItems?.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(item.status)}
-                        {getStatusBadge(item.status)}
-                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-2">
+                              {getStatusIcon(item.status)}
+                              {getStatusBadge(item.status)}
+                            </div>
+                          </TooltipTrigger>
+                          {item.error_message && (
+                            <TooltipContent>
+                              <p className="max-w-xs">{item.error_message}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="font-mono text-sm">{item.discogs_release_id}</TableCell>
                     <TableCell>{item.artist}</TableCell>
                     <TableCell className="max-w-xs truncate">{item.title}</TableCell>
+                    <TableCell>
+                      {item.product_id ? (
+                        <Link 
+                          to={`/admin/platform-products`}
+                          className="flex items-center gap-1 text-green-600 hover:text-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      ) : (
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {item.blog_id ? (
+                        <Link 
+                          to={`/admin/platform-products`}
+                          className="flex items-center gap-1 text-green-600 hover:text-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      ) : (
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </TableCell>
                     <TableCell>
                       {item.retry_count > 0 && (
                         <Badge variant="outline">{item.retry_count}/3</Badge>

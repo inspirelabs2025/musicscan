@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { DiscogsQueueMonitor } from "@/components/admin/DiscogsQueueMonitor";
+import { Separator } from "@/components/ui/separator";
 import { 
   Table, 
   TableBody, 
@@ -443,10 +445,14 @@ SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`;
                   ))
                 )}
               </TableBody>
-            </Table>
+          </Table>
           </div>
         </CardContent>
       </Card>
+
+      <Separator className="my-8" />
+
+      <DiscogsQueueMonitor />
 
       <Dialog open={showCronSql} onOpenChange={setShowCronSql}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">

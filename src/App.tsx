@@ -71,6 +71,7 @@ import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
 import SitemapManagement from "./pages/admin/SitemapManagement";
 import SEOMonitoring from "./pages/admin/SEOMonitoring";
 import CuratedArtists from "./pages/admin/CuratedArtists";
+import MainAdmin from "./pages/admin/MainAdmin";
 import Quiz from "./pages/Quiz";
 import Pricing from "./pages/Pricing";
 import Prestaties from "./pages/Prestaties";
@@ -296,6 +297,11 @@ const App = () => {
             <Route path="/admin/discogs-lookup" element={
               <ProtectedRoute>
                 <DiscogsLookup />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <MainAdmin />
               </ProtectedRoute>
             } />
             <Route path="/superadmin" element={<SuperAdminDashboard />} />

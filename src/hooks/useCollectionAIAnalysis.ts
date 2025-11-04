@@ -134,17 +134,28 @@ export const useCollectionAIAnalysis = () => {
       
       if (error) {
         console.error('AI Analysis failed:', error);
-        throw new Error(`AI Analysis failed: ${error.message}`);
+        // Provide user-friendly error message
+        const errorMessage = error.message?.includes('overbelast') 
+          ? error.message 
+          : error.message?.includes('niet beschikbaar')
+          ? error.message
+          : 'AI analyse kon niet worden voltooid. Probeer het later opnieuw.';
+        throw new Error(errorMessage);
       }
       
       if (!data.success) {
         console.error('AI Analysis unsuccessful:', data.error);
-        throw new Error(data.error || 'AI Analysis failed');
+        const errorMessage = data.error?.includes('overbelast') || data.error?.includes('niet beschikbaar')
+          ? data.error
+          : 'AI analyse mislukt. Probeer het later opnieuw.';
+        throw new Error(errorMessage);
       }
       
       return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 2, // Retry failed requests 2 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff, max 30s
   });
 };

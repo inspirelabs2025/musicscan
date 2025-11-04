@@ -638,33 +638,80 @@ BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatt
       throw new Error('OpenAI API key not found');
     }
 
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a music historian and cultural analyst specializing in music collections and listening patterns. You provide deep, fascinating insights about music history, cultural context, and artistic connections. Always respond in Dutch and return only valid JSON without any markdown formatting.'
-          },
-          {
-            role: 'user', 
-            content: prompt
-          }
-        ],
-        max_tokens: 4000,
-        temperature: 0.8,
-      }),
-    });
+    // Retry logic with exponential backoff for rate limits
+    const MAX_RETRIES = 3;
+    const INITIAL_DELAY = 2000; // 2 seconds
+    
+    let openAIResponse;
+    let lastError;
+    
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        if (attempt > 0) {
+          const delay = INITIAL_DELAY * Math.pow(2, attempt - 1);
+          console.log(`⏳ Retry attempt ${attempt + 1}/${MAX_RETRIES} after ${delay}ms delay...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
 
-    if (!openAIResponse.ok) {
-      const errorText = await openAIResponse.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
+        openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a music historian and cultural analyst specializing in music collections and listening patterns. You provide deep, fascinating insights about music history, cultural context, and artistic connections. Always respond in Dutch and return only valid JSON without any markdown formatting.'
+              },
+              {
+                role: 'user', 
+                content: prompt
+              }
+            ],
+            max_tokens: 4000,
+            temperature: 0.8,
+          }),
+        });
+
+        if (openAIResponse.ok) {
+          console.log('✅ OpenAI API call successful');
+          break; // Success, exit retry loop
+        }
+
+        // Handle different error types
+        const errorText = await openAIResponse.text();
+        console.error(`OpenAI API error (attempt ${attempt + 1}):`, openAIResponse.status, errorText);
+        
+        if (openAIResponse.status === 429) {
+          // Rate limit - retry
+          lastError = new Error('AI analyse is tijdelijk overbelast. Probeer het over een paar minuten opnieuw.');
+          if (attempt === MAX_RETRIES - 1) {
+            throw lastError;
+          }
+          continue; // Retry
+        } else if (openAIResponse.status >= 500) {
+          // Server error - retry
+          lastError = new Error('AI service tijdelijk niet beschikbaar. Probeer het later opnieuw.');
+          if (attempt === MAX_RETRIES - 1) {
+            throw lastError;
+          }
+          continue; // Retry
+        } else {
+          // Client error (4xx except 429) - don't retry
+          throw new Error(`AI analyse fout: ${openAIResponse.status}`);
+        }
+      } catch (error) {
+        if (error.message.includes('AI analyse') || error.message.includes('overbelast')) {
+          throw error; // Re-throw our custom errors
+        }
+        lastError = error;
+        if (attempt === MAX_RETRIES - 1) {
+          throw new Error('Kon geen verbinding maken met AI service. Check je internetverbinding.');
+        }
+      }
     }
 
     const openAIData = await openAIResponse.json();

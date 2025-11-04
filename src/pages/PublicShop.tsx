@@ -153,6 +153,9 @@ export default function PublicShop() {
                 <p className="text-lg font-bold text-foreground">
                   {items.filter(item => item.media_type === "vinyl").length} LP's
                 </p>
+                <p className="text-lg font-bold text-foreground">
+                  {items.filter(item => item.media_type === "art").length} Art
+                </p>
               </div>
               <Store className="h-8 w-8 text-primary" />
             </div>
@@ -205,6 +208,17 @@ export default function PublicShop() {
                 }
               >
                 🎧 Vinyl ({items.filter(item => item.media_type === "vinyl").length})
+              </Button>
+              <Button
+                variant={formatFilter === "art" ? "default" : "outline"}
+                onClick={() => setFormatFilter("art")}
+                size="sm"
+                className={formatFilter === "art" 
+                  ? "bg-gradient-to-r from-vinyl-purple to-primary hover:from-vinyl-purple/90 hover:to-primary/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover-scale" 
+                  : "bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 hover-scale"
+                }
+              >
+                🎨 Art ({items.filter(item => item.media_type === "art").length})
               </Button>
             </div>
           </div>

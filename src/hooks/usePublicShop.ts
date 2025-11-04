@@ -36,7 +36,7 @@ export const usePublicShop = (shopSlug: string) => {
       if (!shop?.user_id) return [];
 
       // Fetch items that are both for sale AND public
-      const [cdResults, vinylResults] = await Promise.all([
+      const [cdResults, vinylResults, platformResults] = await Promise.all([
         supabase
           .from("cd_scan")
           .select(`
@@ -60,11 +60,23 @@ export const usePublicShop = (shopSlug: string) => {
           `)
           .eq("user_id", shop.user_id)
           .eq("is_for_sale", true)
-          .eq("is_public", true)
+          .eq("is_public", true),
+        supabase
+          .from("platform_products")
+          .select(`
+            id, artist, title, label, catalog_number, year, discogs_id, discogs_url,
+            description, condition_grade, price, currency, created_at, images, 
+            primary_image, media_type, slug
+          `)
+          .eq("created_by", shop.user_id)
+          .eq("status", "active")
+          .not("published_at", "is", null)
+          .gt("stock_quantity", 0)
       ]);
 
       if (cdResults.error) throw cdResults.error;
       if (vinylResults.error) throw vinylResults.error;
+      if (platformResults.error) throw platformResults.error;
 
       // Combine and format results
       const cdItems: CollectionItem[] = (cdResults.data || []).map(item => ({
@@ -77,7 +89,37 @@ export const usePublicShop = (shopSlug: string) => {
         media_type: "vinyl" as const
       }));
 
-      return [...cdItems, ...vinylItems];
+      // Convert platform products to CollectionItem format
+      const artItems: CollectionItem[] = (platformResults.data || []).map(item => ({
+        id: item.id,
+        artist: item.artist,
+        title: item.title,
+        label: item.label,
+        catalog_number: item.catalog_number,
+        year: item.year,
+        discogs_id: item.discogs_id,
+        discogs_url: item.discogs_url,
+        is_public: true,
+        is_for_sale: true,
+        shop_description: item.description,
+        condition_grade: item.condition_grade,
+        marketplace_price: item.price,
+        currency: item.currency,
+        created_at: item.created_at,
+        front_image: item.primary_image,
+        back_image: item.images?.[1] || null,
+        barcode_image: null,
+        matrix_image: null,
+        catalog_image: item.primary_image,
+        additional_image: item.images?.[1] || null,
+        calculated_advice_price: item.price,
+        lowest_price: null,
+        median_price: null,
+        highest_price: null,
+        media_type: item.media_type as any
+      }));
+
+      return [...cdItems, ...vinylItems, ...artItems];
     },
     enabled: !!shop?.user_id,
   });

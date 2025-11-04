@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export interface CollectionItem {
   id: string;
-  media_type: "cd" | "vinyl";
+  media_type: "cd" | "vinyl" | "art";
   artist: string | null;
   title: string | null;
   label: string | null;

@@ -176,12 +176,18 @@ serve(async (req) => {
           catalog_number: releaseData.labels?.[0]?.catno,
         });
 
-        // Update artist's last_crawled_at
+        // Update artist's last_crawled_at with safe increment
+        const { data: currentArtist } = await supabase
+          .from('curated_artists')
+          .select('releases_found_count')
+          .eq('id', artist.id)
+          .single();
+        
         await supabase
           .from('curated_artists')
           .update({ 
             last_crawled_at: new Date().toISOString(),
-            releases_found_count: (artist as any).releases_found_count + 1
+            releases_found_count: (currentArtist?.releases_found_count || 0) + 1
           })
           .eq('id', artist.id);
 

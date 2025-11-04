@@ -50,6 +50,20 @@ const CuratedArtists = () => {
     },
   });
 
+  const { data: queueCount } = useQuery({
+    queryKey: ['discogs-queue-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('discogs_import_log')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
+      if (error) throw error;
+      return count || 0;
+    },
+    refetchInterval: 5000, // Refresh every 5 seconds
+  });
+
   const addArtistMutation = useMutation({
     mutationFn: async (artistName: string) => {
       const { error } = await supabase
@@ -249,6 +263,15 @@ SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`;
               </CardContent>
             </Card>
             <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold text-orange-600">{queueCount || 0}</div>
+                <div className="text-sm text-muted-foreground">In Wachtrij</div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <Card>
               <CardContent className="pt-6 space-y-2">
                 <Button 
                   onClick={triggerCrawler} 
@@ -267,6 +290,10 @@ SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`;
                     </>
                   )}
                 </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6 space-y-2">
                 <Button
                   variant="secondary"
                   onClick={processQueueNow}
@@ -285,6 +312,10 @@ SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`;
                     </>
                   )}
                 </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6 space-y-2">
                 <Button
                   variant="outline"
                   onClick={runCrawlerAndQueue}
@@ -302,6 +333,13 @@ SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`;
                       Crawler + Wachtrij
                     </>
                   )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCronSql(true)}
+                  className="w-full"
+                >
+                  Cronjobs Activeren (SQL)
                 </Button>
               </CardContent>
             </Card>

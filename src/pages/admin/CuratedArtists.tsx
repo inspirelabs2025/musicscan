@@ -130,6 +130,36 @@ const CuratedArtists = () => {
     }
   };
 
+  const processQueueNow = async () => {
+    setIsProcessingQueue(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('process-discogs-queue');
+      if (error) throw error;
+      toast({
+        title: '⚙️ Wachtrij Verwerkt',
+        description: typeof data === 'object' ? JSON.stringify(data) : String(data),
+      });
+      queryClient.invalidateQueries({ queryKey: ['curated-artists'] });
+    } catch (error: any) {
+      toast({ title: '❌ Wachtrij Fout', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsProcessingQueue(false);
+    }
+  };
+
+  const runCrawlerAndQueue = async () => {
+    setIsRunningAll(true);
+    try {
+      await triggerCrawler();
+      await processQueueNow();
+      toast({ title: '✅ Crawler + Wachtrij gestart' });
+    } catch (error: any) {
+      toast({ title: '❌ Fout bij uitvoeren', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsRunningAll(false);
+    }
+  };
+
   const seedArtists = async () => {
     setIsSeeding(true);
     try {
@@ -187,7 +217,7 @@ const CuratedArtists = () => {
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-6 space-y-2">
                 <Button 
                   onClick={triggerCrawler} 
                   disabled={isTriggeringCrawl}
@@ -202,6 +232,42 @@ const CuratedArtists = () => {
                     <>
                       <RefreshCw className="h-4 w-4 mr-2" />
                       Handmatig Crawlen
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={processQueueNow}
+                  disabled={isProcessingQueue}
+                  className="w-full"
+                >
+                  {isProcessingQueue ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Wachtrij verwerken...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Verwerk Wachtrij Nu
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={runCrawlerAndQueue}
+                  disabled={isRunningAll || isTriggeringCrawl || isProcessingQueue}
+                  className="w-full"
+                >
+                  {isRunningAll ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Crawler + Wachtrij...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Crawler + Wachtrij
                     </>
                   )}
                 </Button>

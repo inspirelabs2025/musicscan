@@ -53,6 +53,15 @@ const adminPages: AdminPage[] = [
     status: "ok"
   },
   {
+    title: "Cronjob Monitor",
+    description: "Real-time monitoring van cronjob uitvoering en queue status",
+    path: "/admin/cronjob-monitor",
+    icon: Clock,
+    category: "monitoring",
+    status: "ok",
+    badge: "Live"
+  },
+  {
     title: "SEO Monitoring",
     description: "Bekijk SEO gezondheid, sitemaps en IndexNow status",
     path: "/admin/seo-monitoring",

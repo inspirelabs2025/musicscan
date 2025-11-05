@@ -72,6 +72,7 @@ import SitemapManagement from "./pages/admin/SitemapManagement";
 import SEOMonitoring from "./pages/admin/SEOMonitoring";
 import CuratedArtists from "./pages/admin/CuratedArtists";
 import MainAdmin from "./pages/admin/MainAdmin";
+import CronjobMonitorPage from "./pages/admin/CronjobMonitorPage";
 import Quiz from "./pages/Quiz";
 import Pricing from "./pages/Pricing";
 import Prestaties from "./pages/Prestaties";
@@ -370,6 +371,11 @@ const App = () => {
             <Route path="/admin/seo-monitoring" element={
               <ProtectedRoute>
                 <SEOMonitoring />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/cronjob-monitor" element={
+              <ProtectedRoute>
+                <CronjobMonitorPage />
               </ProtectedRoute>
             } />
             <Route path="/admin/curated-artists" element={

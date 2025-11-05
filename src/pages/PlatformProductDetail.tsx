@@ -25,6 +25,7 @@ export default function PlatformProductDetail() {
   
   // Find related blog post
   const { data: blogPost } = useBlogPostByProduct(
+    product?.id || null,
     product?.artist || null,
     product?.title || "",
     product?.discogs_id

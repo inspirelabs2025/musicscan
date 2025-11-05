@@ -38,9 +38,9 @@ interface QueueMetrics {
 interface BatchStatus {
   id: string;
   status: string;
-  items_processed: number;
-  items_successful: number;
-  items_failed: number;
+  processed_items: number;
+  successful_items: number;
+  failed_items: number;
   queue_size: number;
   started_at: string;
   updated_at: string;
@@ -246,11 +246,11 @@ export const CronjobMonitor = () => {
     {
       name: 'Blog Generator',
       status: batchStatus && (batchStatus.status === 'running' || batchStatus.status === 'active') ? 'active' : 'idle',
-      processedToday: batchStatus?.items_processed || 0,
+      processedToday: batchStatus?.processed_items || 0,
       successRate: batchStatus
-        ? Math.round((batchStatus.items_successful / Math.max(1, batchStatus.items_processed)) * 100)
+        ? Math.round((batchStatus.successful_items / Math.max(1, batchStatus.processed_items)) * 100)
         : 0,
-      errorCount: batchStatus?.items_failed || 0,
+      errorCount: batchStatus?.failed_items || 0,
       schedule: 'Elke 10 minuten',
     },
     {
@@ -471,15 +471,15 @@ export const CronjobMonitor = () => {
               </div>
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Verwerkt</div>
-                <div className="text-2xl font-bold">{batchStatus.items_processed}</div>
+                <div className="text-2xl font-bold">{batchStatus.processed_items}</div>
               </div>
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Succesvol</div>
-                <div className="text-2xl font-bold text-green-500">{batchStatus.items_successful}</div>
+                <div className="text-2xl font-bold text-green-500">{batchStatus.successful_items}</div>
               </div>
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Mislukt</div>
-                <div className="text-2xl font-bold text-red-500">{batchStatus.items_failed}</div>
+                <div className="text-2xl font-bold text-red-500">{batchStatus.failed_items}</div>
               </div>
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Heartbeat</div>
@@ -496,12 +496,12 @@ export const CronjobMonitor = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-muted-foreground">Voortgang</span>
                 <span className="text-sm font-medium">
-                  {batchStatus.items_processed} / {batchStatus.queue_size} 
-                  ({Math.round((batchStatus.items_processed / Math.max(1, batchStatus.queue_size)) * 100)}%)
+                  {batchStatus.processed_items} / {batchStatus.queue_size} 
+                  ({Math.round((batchStatus.processed_items / Math.max(1, batchStatus.queue_size)) * 100)}%)
                 </span>
               </div>
               <Progress 
-                value={(batchStatus.items_processed / Math.max(1, batchStatus.queue_size)) * 100} 
+                value={(batchStatus.processed_items / Math.max(1, batchStatus.queue_size)) * 100} 
                 className="h-3"
               />
             </div>

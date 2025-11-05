@@ -631,11 +631,11 @@ Geef een COMPLETE JSON response met Nederlandse tekst in deze exacte structuur:
 
 BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatting!`;
 
-    console.log('🤖 Calling OpenAI with music historian prompt...');
+    console.log('🤖 Calling Lovable AI with music historian prompt...');
     
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not found');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('Lovable AI key not found');
     }
 
     // Retry logic with exponential backoff for rate limits
@@ -653,14 +653,14 @@ BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatt
           await new Promise(resolve => setTimeout(resolve, delay));
         }
 
-        openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        openAIResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
+            'Authorization': `Bearer ${lovableApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini',
+            model: 'google/gemini-2.5-flash',
             messages: [
               {
                 role: 'system',
@@ -671,27 +671,28 @@ BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatt
                 content: prompt
               }
             ],
-            max_tokens: 4000,
-            temperature: 0.8,
           }),
         });
 
         if (openAIResponse.ok) {
-          console.log('✅ OpenAI API call successful');
+          console.log('✅ Lovable AI call successful');
           break; // Success, exit retry loop
         }
 
         // Handle different error types
         const errorText = await openAIResponse.text();
-        console.error(`OpenAI API error (attempt ${attempt + 1}):`, openAIResponse.status, errorText);
+        console.error(`Lovable AI error (attempt ${attempt + 1}):`, openAIResponse.status, errorText);
         
         if (openAIResponse.status === 429) {
           // Rate limit - retry
-          lastError = new Error('AI analyse is tijdelijk overbelast. Probeer het over een paar minuten opnieuw.');
+          lastError = new Error('Te veel verzoeken naar de AI. Even geduld en probeer het over 30 seconden opnieuw.');
           if (attempt === MAX_RETRIES - 1) {
             throw lastError;
           }
           continue; // Retry
+        } else if (openAIResponse.status === 402) {
+          // Payment required
+          throw new Error('AI credits zijn op. Voeg credits toe in Settings → Workspace → Usage.');
         } else if (openAIResponse.status >= 500) {
           // Server error - retry
           lastError = new Error('AI service tijdelijk niet beschikbaar. Probeer het later opnieuw.');
@@ -701,7 +702,7 @@ BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatt
           continue; // Retry
         } else {
           // Client error (4xx except 429) - don't retry
-          throw new Error(`AI analyse fout: ${openAIResponse.status}`);
+          throw new Error(`AI analyse fout: ${openAIResponse.status} - ${errorText.substring(0, 200)}`);
         }
       } catch (error) {
         if (error.message.includes('AI analyse') || error.message.includes('overbelast')) {
@@ -717,10 +718,10 @@ BELANGRIJK: Return ALLEEN valid JSON zonder markdown backticks of andere formatt
     const openAIData = await openAIResponse.json();
     const rawContent = openAIData.choices[0]?.message?.content;
     
-    console.log('🤖 Raw OpenAI response received, length:', rawContent?.length || 0);
+    console.log('🤖 Raw Lovable AI response received, length:', rawContent?.length || 0);
     
     if (!rawContent) {
-      throw new Error('No content received from OpenAI API');
+      throw new Error('No content received from AI');
     }
 
     // Parse the AI analysis with intelligent fallback

@@ -89,7 +89,37 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Step 5: Get final stats
+    // Step 5: Clean up old submission logs with vinylvault URLs
+    const { data: oldSubmissions, error: fetchSubmissionsError } = await supabase
+      .from('indexnow_submissions')
+      .select('id, urls');
+
+    if (fetchSubmissionsError) {
+      console.error('Error fetching submissions:', fetchSubmissionsError);
+    }
+
+    const submissionsToDelete = oldSubmissions
+      ?.filter(submission => 
+        submission.urls.some((url: string) => url.includes('vinylvault.app'))
+      )
+      .map(submission => submission.id) || [];
+
+    let deletedSubmissions = 0;
+    if (submissionsToDelete.length > 0) {
+      const { error: deleteSubmissionsError } = await supabase
+        .from('indexnow_submissions')
+        .delete()
+        .in('id', submissionsToDelete);
+
+      if (deleteSubmissionsError) {
+        console.error('Error deleting old submissions:', deleteSubmissionsError);
+      } else {
+        deletedSubmissions = submissionsToDelete.length;
+        console.log(`✅ Deleted ${deletedSubmissions} old submission logs with vinylvault URLs`);
+      }
+    }
+
+    // Step 6: Get final stats
     const { count: totalCount } = await supabase
       .from('indexnow_queue')
       .select('*', { count: 'exact', head: true });
@@ -107,6 +137,7 @@ Deno.serve(async (req) => {
           pendingProcessing: pendingCount || 0,
           blogPostsAdded: urlsToAdd.length,
           invalidUrlsRemoved: invalidIds.length,
+          oldSubmissionsDeleted: deletedSubmissions,
         },
         message: 'IndexNow queue cleaned up successfully',
       }),

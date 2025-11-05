@@ -58,13 +58,30 @@ export function GoogleIndexMonitor() {
     try {
       const { data, error } = await supabase.functions.invoke('indexnow-processor');
       
-      if (error) throw error;
+      if (error) {
+        console.error('IndexNow processor error:', error);
+        
+        // Check for specific error types
+        if (error.message?.includes('404') || error.message?.includes('Not Found')) {
+          toast.error('IndexNow-processor niet gevonden. Controleer of de functie is gedeployed.');
+        } else {
+          toast.error(`Fout bij verwerken IndexNow queue: ${error.message || 'Onbekende fout'}`);
+        }
+        return;
+      }
       
-      toast.success(`IndexNow verwerkt! ${data?.urlsSubmitted || 0} URLs ingediend bij Google/Bing`);
+      // Show different messages based on results
+      const urlsSubmitted = data?.urlsSubmitted || 0;
+      if (urlsSubmitted > 0) {
+        toast.success(`IndexNow verwerkt! ${urlsSubmitted} URLs ingediend bij Google/Bing`);
+      } else {
+        toast.info('Geen items in wachtrij — call succesvol uitgevoerd');
+      }
+      
       await refetch();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing IndexNow queue:', error);
-      toast.error('Fout bij verwerken IndexNow queue');
+      toast.error(`Fout bij verwerken: ${error.message || 'Onbekende fout'}`);
     } finally {
       setIsProcessing(false);
     }
@@ -89,7 +106,7 @@ export function GoogleIndexMonitor() {
               <CardTitle className="text-sm font-medium">Wacht op Indexering</CardTitle>
               <Button 
                 onClick={processQueue} 
-                disabled={isProcessing || !indexStats?.pendingIndexing}
+                disabled={isProcessing}
                 size="sm"
                 variant="outline"
                 className="h-7 text-xs gap-1"
@@ -114,6 +131,9 @@ export function GoogleIndexMonitor() {
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               In wachtrij {indexStats?.pendingIndexing && indexStats.pendingIndexing > 0 && '⚠️'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-2 opacity-75">
+              💡 Je kunt altijd handmatig verwerken
             </p>
           </CardContent>
         </Card>

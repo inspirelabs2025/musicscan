@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useShoppingCart } from "@/hooks/useShoppingCart";
-import { ArrowLeft, ShoppingCart, Check, Package, Clock } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Check, Package, Clock, BookOpen, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import { Helmet } from "react-helmet";
+import { useBlogPostByProduct } from "@/hooks/useBlogPostByProduct";
 
 export default function PlatformProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -21,6 +22,13 @@ export default function PlatformProductDetail() {
   );
   const { addToCart, isInCart } = useShoppingCart();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  
+  // Find related blog post
+  const { data: blogPost } = useBlogPostByProduct(
+    product?.artist || null,
+    product?.title || "",
+    product?.discogs_id
+  );
 
   // SEO optimization for product page
   useSEO({
@@ -238,6 +246,62 @@ export default function PlatformProductDetail() {
 
         </div>
       </div>
+
+      {/* Related Blog Post */}
+      {blogPost && (
+        <Card className="p-6 md:p-8 mb-12 bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/20 dark:to-pink-950/20 border-2">
+          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+            {/* Blog thumbnail */}
+            <div className="w-full md:w-48 aspect-square flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
+              <img
+                src={blogPost.album_cover_url || product.primary_image || '/placeholder.svg'}
+                alt={product.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                <span className="text-sm font-semibold uppercase tracking-wide text-primary">
+                  Verhaal over dit album
+                </span>
+              </div>
+              
+              <h3 className="text-2xl font-bold">
+                {blogPost.yaml_frontmatter?.title || `Het verhaal achter ${product.title}`}
+              </h3>
+              
+              <p className="text-muted-foreground line-clamp-3">
+                {blogPost.yaml_frontmatter?.description || 
+                 `Ontdek het fascinerende verhaal achter ${product.title}${product.artist ? ` van ${product.artist}` : ''}. Lees over de geschiedenis, de impact en wat dit album zo bijzonder maakt.`}
+              </p>
+
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Badge variant="secondary" className="bg-white/60 dark:bg-black/20">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Verhaal
+                </Badge>
+                {blogPost.yaml_frontmatter?.genre && (
+                  <Badge variant="outline">{blogPost.yaml_frontmatter.genre}</Badge>
+                )}
+              </div>
+            </div>
+
+            {/* CTA */}
+            <Link to={`/plaatverhaal/${blogPost.slug}`} className="w-full md:w-auto flex-shrink-0">
+              <Button 
+                size="lg"
+                className="w-full bg-gradient-to-r from-vinyl-purple to-accent hover:from-vinyl-purple/90 hover:to-accent/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                <BookOpen className="h-5 w-5 mr-2" />
+                Lees verhaal
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      )}
 
       {/* Similar Products */}
       {similarProducts.length > 0 && (

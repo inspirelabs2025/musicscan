@@ -11,6 +11,7 @@ import { PerformanceMonitor } from "@/components/admin/PerformanceMonitor";
 import { useWebVitals } from "@/hooks/useWebVitals";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Home } from "lucide-react";
+import { AutoIndexNowSubmitter } from "@/components/admin/AutoIndexNowSubmitter";
 
 export default function SEOMonitoring() {
   // Initialize web vitals tracking
@@ -64,6 +65,7 @@ export default function SEOMonitoring() {
         </TabsContent>
 
         <TabsContent value="indexnow" className="space-y-4">
+          <AutoIndexNowSubmitter />
           <IndexNowMonitor />
           <IndexNowQueueMonitor />
         </TabsContent>

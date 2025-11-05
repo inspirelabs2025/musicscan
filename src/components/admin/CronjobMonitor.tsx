@@ -142,16 +142,28 @@ export const CronjobMonitor = () => {
   const { data: batchStatus } = useQuery({
     queryKey: ['batch-processing-status', lastUpdate],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Prefer a currently active/running batch; fallback to most recent
+      const { data: activeBatch } = await supabase
         .from('batch_processing_status')
         .select('*')
         .eq('process_type', 'blog_generation')
-        .order('started_at', { ascending: false })
+        .in('status', ['running', 'active'])
+        .order('updated_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
+
+      if (activeBatch) return activeBatch as BatchStatus;
+
+      const { data: latestBatch, error } = await supabase
+        .from('batch_processing_status')
+        .select('*')
+        .eq('process_type', 'blog_generation')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
-      return data as BatchStatus | null;
+      return latestBatch as BatchStatus | null;
     },
     refetchInterval: 5000,
   });

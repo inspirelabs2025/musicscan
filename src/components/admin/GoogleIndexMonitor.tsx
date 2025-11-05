@@ -2,11 +2,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, AlertTriangle, CheckCircle, ExternalLink } from "lucide-react";
+import { TrendingUp, AlertTriangle, CheckCircle, ExternalLink, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export function GoogleIndexMonitor() {
-  const { data: indexStats } = useQuery({
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  const { data: indexStats, refetch } = useQuery({
     queryKey: ['google-index-stats'],
     queryFn: async () => {
       // Get total published blog posts
@@ -18,7 +22,7 @@ export function GoogleIndexMonitor() {
       // Get recent IndexNow submissions
       const { data: recentSubmissions } = await supabase
         .from('indexnow_submissions')
-        .select('*')
+        .select('submitted_at, status_code, urls_count')
         .order('submitted_at', { ascending: false })
         .limit(1);
 
@@ -38,6 +42,8 @@ export function GoogleIndexMonitor() {
         pendingIndexing: pendingQueue || 0,
         submittedToIndexNow: processedQueue || 0,
         lastSubmission: recentSubmissions?.[0]?.submitted_at || null,
+        lastSubmissionStatus: recentSubmissions?.[0]?.status_code || null,
+        lastSubmissionCount: recentSubmissions?.[0]?.urls_count || 0,
       };
     },
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -46,6 +52,23 @@ export function GoogleIndexMonitor() {
   const indexingRate = indexStats?.totalPublished 
     ? ((indexStats.submittedToIndexNow / indexStats.totalPublished) * 100).toFixed(1)
     : 0;
+
+  const processQueue = async () => {
+    setIsProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('indexnow-processor');
+      
+      if (error) throw error;
+      
+      toast.success(`IndexNow verwerkt! ${data?.urlsSubmitted || 0} URLs ingediend bij Google/Bing`);
+      await refetch();
+    } catch (error) {
+      console.error('Error processing IndexNow queue:', error);
+      toast.error('Fout bij verwerken IndexNow queue');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -62,13 +85,33 @@ export function GoogleIndexMonitor() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Wacht op Indexering</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium">Wacht op Indexering</CardTitle>
+              {indexStats?.pendingIndexing && indexStats.pendingIndexing > 0 && (
+                <Button 
+                  onClick={processQueue} 
+                  disabled={isProcessing}
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1"
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Send className="h-3 w-3" />
+                  )}
+                  Nu verwerken
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
               {indexStats?.pendingIndexing || 0}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">In wachtrij</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              In wachtrij {indexStats?.pendingIndexing && indexStats.pendingIndexing > 0 && '⚠️'}
+            </p>
           </CardContent>
         </Card>
 
@@ -166,9 +209,28 @@ export function GoogleIndexMonitor() {
             </Button>
           </div>
 
-          {indexStats?.lastSubmission && (
-            <div className="text-xs text-muted-foreground pt-2">
-              Laatste IndexNow submission: {new Date(indexStats.lastSubmission).toLocaleString('nl-NL')}
+          {indexStats?.lastSubmission ? (
+            <div className="flex items-center gap-2 pt-2 text-xs">
+              <span className="text-muted-foreground">
+                Laatste IndexNow submission: {new Date(indexStats.lastSubmission).toLocaleString('nl-NL')}
+              </span>
+              {indexStats.lastSubmissionStatus && (
+                <Badge 
+                  variant={indexStats.lastSubmissionStatus === 200 ? "default" : "destructive"}
+                  className="h-5"
+                >
+                  HTTP {indexStats.lastSubmissionStatus}
+                </Badge>
+              )}
+              {indexStats.lastSubmissionCount > 0 && (
+                <span className="text-muted-foreground">
+                  ({indexStats.lastSubmissionCount} URLs)
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="pt-2 text-xs text-destructive font-medium">
+              ⚠️ Nog nooit IndexNow submission gedaan! {indexStats?.pendingIndexing || 0} URLs wachten.
             </div>
           )}
         </CardContent>

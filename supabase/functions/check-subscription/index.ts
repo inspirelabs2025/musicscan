@@ -12,6 +12,39 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
+async function getUserWithRetry(supabaseClient: any, token: string, maxRetries = 3) {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      logStep(`Attempting to get user (attempt ${attempt}/${maxRetries})`);
+      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+      
+      if (userError) {
+        throw new Error(`Authentication error: ${userError.message}`);
+      }
+      
+      return userData.user;
+    } catch (error) {
+      lastError = error;
+      logStep(`Attempt ${attempt} failed`, { error: error instanceof Error ? error.message : String(error) });
+      
+      // Don't retry on auth errors, only on network errors
+      if (error instanceof Error && !error.message.includes('connection')) {
+        throw error;
+      }
+      
+      if (attempt < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        logStep(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -33,10 +66,7 @@ serve(async (req) => {
     if (!authHeader) throw new Error("No authorization header provided");
     
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
-    const user = userData.user;
+    const user = await getUserWithRetry(supabaseClient, token);
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
@@ -139,6 +169,13 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
+    
+    // For network errors, return 200 with free tier instead of 500
+    // This prevents app crashes when Supabase has temporary connection issues
+    const isNetworkError = errorMessage.includes('connection') || 
+                          errorMessage.includes('timeout') ||
+                          errorMessage.includes('ECONNRESET');
+    
     return new Response(JSON.stringify({ 
       error: errorMessage,
       subscribed: false,
@@ -146,7 +183,7 @@ serve(async (req) => {
       plan_name: 'FREE - Music Explorer'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: isNetworkError ? 200 : 500,
     });
   }
 });

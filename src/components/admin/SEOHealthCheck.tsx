@@ -11,16 +11,30 @@ export function SEOHealthCheck() {
       // Check sitemaps
       const sitemapCheck = { status: 'healthy', message: 'Sitemaps zijn up-to-date' };
       
-      // Check IndexNow queue
-      const { data: queueData } = await supabase
-        .from('indexnow_queue')
-        .select('*')
-        .eq('processed', false);
+      // Check IndexNow queue and submissions
+      const [queueData, submissionsData] = await Promise.all([
+        supabase
+          .from('indexnow_queue')
+          .select('*')
+          .eq('processed', false),
+        supabase
+          .from('indexnow_submissions')
+          .select('urls')
+      ]);
+      
+      const totalUrlsSubmitted = submissionsData.data?.reduce((total, sub) => 
+        total + (sub.urls?.length || 0), 0) || 0;
+      
+      const pendingCount = queueData.data?.length || 0;
+      const processingRate = totalUrlsSubmitted + pendingCount > 0 
+        ? Math.round((totalUrlsSubmitted / (totalUrlsSubmitted + pendingCount)) * 100)
+        : 0;
       
       const queueCheck = {
-        status: (queueData?.length || 0) < 100 ? 'healthy' : 'warning',
-        message: `${queueData?.length || 0} URLs in wachtrij`,
-        count: queueData?.length || 0
+        status: pendingCount < 100 ? 'healthy' : 'warning',
+        message: `${pendingCount} in wachtrij, ${totalUrlsSubmitted} gesubmit (${processingRate}%)`,
+        count: pendingCount,
+        submitted: totalUrlsSubmitted
       };
       
       // Check recent price updates

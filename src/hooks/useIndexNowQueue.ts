@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 interface QueueItem {
   id: string;
@@ -80,7 +81,7 @@ export const useIndexNowQueue = () => {
   const { data: stats } = useQuery({
     queryKey: ["indexnow-stats"],
     queryFn: async () => {
-      const [queueCount, successCount, failureCount] = await Promise.all([
+      const [queueCount, successCount, failureCount, allSubmissions] = await Promise.all([
         supabase
           .from("indexnow_queue")
           .select("*", { count: "exact", head: true })
@@ -93,16 +94,69 @@ export const useIndexNowQueue = () => {
           .from("indexnow_submissions")
           .select("*", { count: "exact", head: true })
           .not("status_code", "in", "(200,202)"),
+        supabase
+          .from("indexnow_submissions")
+          .select("urls")
       ]);
 
+      // Calculate total URLs submitted (not just batch count)
+      const totalUrlsSubmitted = allSubmissions.data?.reduce((total, sub) => 
+        total + (sub.urls?.length || 0), 0) || 0;
+
+      const pending = queueCount.count || 0;
+      const processingRate = totalUrlsSubmitted + pending > 0 
+        ? Math.round((totalUrlsSubmitted / (totalUrlsSubmitted + pending)) * 100)
+        : 0;
+
+      // Check if cron job might be stuck
+      const cronWarning = pending > 1000 && totalUrlsSubmitted < 100;
+
       return {
-        pending: queueCount.count || 0,
+        pending,
         successful: successCount.count || 0,
         failed: failureCount.count || 0,
+        totalUrlsSubmitted,
+        processingRate,
+        cronWarning,
       };
     },
     refetchInterval: 30000,
   });
+
+  // Setup realtime subscription for instant updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('indexnow-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'indexnow_submissions'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["indexnow-submissions"] });
+          queryClient.invalidateQueries({ queryKey: ["indexnow-stats"] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'indexnow_queue'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["indexnow-queue"] });
+          queryClient.invalidateQueries({ queryKey: ["indexnow-stats"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   return {
     queueItems,

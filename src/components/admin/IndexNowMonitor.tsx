@@ -1,8 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIndexNowQueue } from "@/hooks/useIndexNowQueue";
-import { Clock, CheckCircle2, XCircle, Send, RefreshCw } from "lucide-react";
+import { Clock, CheckCircle2, XCircle, Send, RefreshCw, TrendingUp, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -18,8 +19,19 @@ export const IndexNowMonitor = () => {
 
   return (
     <div className="space-y-6">
+      {/* Cron Job Warning */}
+      {stats?.cronWarning && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Waarschuwing:</strong> Er staan {stats.pending} URLs in de wachtrij maar er zijn pas {stats.totalUrlsSubmitted} URLs gesubmit. 
+            De cron job lijkt niet te draaien of is vastgelopen.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">In Wachtrij</CardTitle>
@@ -33,12 +45,27 @@ export const IndexNowMonitor = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Succesvol</CardTitle>
+            <CardTitle className="text-sm font-medium">URLs Gesubmit</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats?.successful || 0}</div>
-            <p className="text-xs text-muted-foreground">Gesubmit aan IndexNow</p>
+            <div className="text-2xl font-bold text-green-600">{stats?.totalUrlsSubmitted || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Totaal aantal URLs naar IndexNow
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Batch Submissions</CardTitle>
+            <TrendingUp className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{stats?.successful || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats?.processingRate || 0}% verwerkt
+            </p>
           </CardContent>
         </Card>
 

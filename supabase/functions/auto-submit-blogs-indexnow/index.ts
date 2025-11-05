@@ -70,13 +70,7 @@ Deno.serve(async (req) => {
     // Add URLs to IndexNow queue
     const urlsToQueue = blogsToSubmit.map((blog) => ({
       url: `https://www.musicscan.app/plaat-verhaal/${blog.slug}`,
-      priority: blog.views_count > 100 ? 'high' : 'normal',
-      source: 'auto-blog-submit',
-      metadata: {
-        slug: blog.slug,
-        views: blog.views_count,
-        updated_at: blog.updated_at,
-      },
+      content_type: 'blog_post',
     }));
 
     // Insert into queue (on conflict do nothing to avoid duplicates)
@@ -85,9 +79,7 @@ Deno.serve(async (req) => {
       .upsert(
         urlsToQueue.map((item) => ({
           url: item.url,
-          priority: item.priority,
-          source: item.source,
-          metadata: item.metadata,
+          content_type: item.content_type,
           processed: false,
         })),
         {

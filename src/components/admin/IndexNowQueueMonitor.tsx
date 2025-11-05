@@ -48,14 +48,15 @@ export function IndexNowQueueMonitor() {
 
   const cleanupMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('cleanup-indexnow-queue');
-      
+      const { data, error } = await supabase.functions.invoke('cleanup-indexnow-queue', {
+        body: { full: true },
+      });
       if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
       toast.success('Queue opgeruimd', {
-        description: `${data.stats.invalidUrlsRemoved} ongeldige URLs verwijderd, ${data.stats.blogPostsAdded} blog posts toegevoegd`,
+        description: `${data.stats.fullQueueDeleted || 0} items volledig verwijderd; ${data.stats.invalidUrlsRemoved} ongeldige URLs verwijderd; ${data.stats.blogPostsAdded} blog posts toegevoegd`,
       });
       queryClient.invalidateQueries({ queryKey: ['indexnow-queue-stats'] });
       queryClient.invalidateQueries({ queryKey: ['indexnow-recent'] });

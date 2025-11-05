@@ -18,6 +18,40 @@ Deno.serve(async (req) => {
 
     console.log('🧹 Starting IndexNow queue cleanup');
 
+    // Optional: full clear of entire queue via query param ?full=true
+    const urlObj = new URL(req.url);
+    let fullClear = urlObj.searchParams.get('full') === 'true' || urlObj.searchParams.get('full') === '1';
+    try {
+      const body = await req.json();
+      if (body && (body.full === true || body.full === 'true' || body.full === 1)) {
+        fullClear = true;
+      }
+    } catch (_) {}
+    let fullQueueDeleted = 0;
+
+    if (fullClear) {
+      const { data: allItems, error: fetchAllError } = await supabase
+        .from('indexnow_queue')
+        .select('id');
+
+      if (fetchAllError) {
+        console.error('Error fetching all queue items for full clear:', fetchAllError);
+      } else if (allItems && allItems.length > 0) {
+        const ids = allItems.map((i: any) => i.id);
+        const { error: deleteAllError } = await supabase
+          .from('indexnow_queue')
+          .delete()
+          .in('id', ids);
+
+        if (deleteAllError) {
+          console.error('Error performing full queue clear:', deleteAllError);
+        } else {
+          fullQueueDeleted = ids.length;
+          console.log(`🧨 Fully cleared queue: deleted ${fullQueueDeleted} items`);
+        }
+      }
+    }
+
     // Step 1: Delete all processed items
     const { data: deletedProcessed, error: deleteProcessedError } = await supabase
       .from('indexnow_queue')
@@ -138,6 +172,7 @@ Deno.serve(async (req) => {
           blogPostsAdded: urlsToAdd.length,
           invalidUrlsRemoved: invalidIds.length,
           oldSubmissionsDeleted: deletedSubmissions,
+          fullQueueDeleted: fullQueueDeleted,
         },
         message: 'IndexNow queue cleaned up successfully',
       }),

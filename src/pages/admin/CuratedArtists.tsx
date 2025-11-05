@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { DiscogsQueueMonitor } from "@/components/admin/DiscogsQueueMonitor";
 import { Separator } from "@/components/ui/separator";
+import { useImportLogByArtist, ImportLogItem } from "@/hooks/useImportLogByArtist";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Plus, Trash2, RefreshCw, ChevronDown, ChevronRight, ExternalLink, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Table, 
   TableBody, 
@@ -17,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Trash2, Plus, Music, RefreshCw, Home } from "lucide-react";
+import { Music, Home } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 interface CuratedArtist {
@@ -501,6 +505,162 @@ SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`;
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+interface ArtistRowProps {
+  artist: any;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
+}
+
+const ArtistRow = ({ artist, isExpanded, onToggleExpand, onDelete, isDeleting }: ArtistRowProps) => {
+  const { data: importLogItems, isLoading } = useImportLogByArtist(isExpanded ? artist.artist_name : null);
+
+  return (
+    <Collapsible open={isExpanded} onOpenChange={onToggleExpand}>
+      <div className="border rounded-lg">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="p-0 h-auto">
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              <h3 className="font-semibold">{artist.artist_name}</h3>
+              <Badge variant={artist.is_active ? "default" : "secondary"}>
+                {artist.is_active ? "Actief" : "Inactief"}
+              </Badge>
+              <Badge variant="outline">Prioriteit: {artist.priority}</Badge>
+            </div>
+            <div className="text-sm text-muted-foreground mt-1 ml-6">
+              {artist.releases_found_count} releases gevonden
+              {artist.last_crawled_at && (
+                <> • Laatste crawl: {new Date(artist.last_crawled_at).toLocaleDateString('nl-NL')}</>
+              )}
+            </div>
+            {artist.notes && (
+              <div className="text-sm text-muted-foreground mt-1 ml-6 italic">
+                {artist.notes}
+              </div>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onDelete}
+            disabled={isDeleting}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <CollapsibleContent>
+          <div className="border-t p-4 bg-muted/50">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : !importLogItems || importLogItems.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Geen releases gevonden in import log
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="text-sm font-semibold mb-2">
+                  Import Log Items ({importLogItems.length})
+                </div>
+                {importLogItems.map((item) => (
+                  <ImportLogItemCard key={item.id} item={item} />
+                ))}
+              </div>
+            )}
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+};
+
+interface ImportLogItemCardProps {
+  item: ImportLogItem;
+}
+
+const ImportLogItemCard = ({ item }: ImportLogItemCardProps) => {
+  const getStatusIcon = () => {
+    switch (item.status) {
+      case 'completed':
+        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+      case 'failed':
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      case 'processing':
+        return <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />;
+      default:
+        return <Clock className="h-4 w-4 text-yellow-600" />;
+    }
+  };
+
+  return (
+    <div className="p-3 border rounded bg-background">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            {getStatusIcon()}
+            <span className="font-mono text-xs text-muted-foreground">
+              {item.discogs_release_id}
+            </span>
+            <a
+              href={`https://www.discogs.com/release/${item.discogs_release_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+          <div className="font-medium">{item.title}</div>
+          {item.year && (
+            <div className="text-sm text-muted-foreground">
+              {item.year} • {item.label || 'Geen label'} • {item.catalog_number || 'Geen cat#'}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col gap-1">
+          {item.product_id && (
+            <a
+              href={`/product/${item.product_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Badge variant="default" className="cursor-pointer">
+                Product
+              </Badge>
+            </a>
+          )}
+          {item.blog_id && (
+            <Badge variant="secondary">Blog</Badge>
+          )}
+          <Badge variant="outline">{item.status}</Badge>
+        </div>
+      </div>
+      {item.error_message && (
+        <div className="mt-2 text-xs text-red-600 dark:text-red-400 font-mono bg-red-50 dark:bg-red-950 p-2 rounded">
+          {item.error_message}
+        </div>
+      )}
+      {item.retry_count > 0 && (
+        <div className="mt-1 text-xs text-muted-foreground">
+          Retry: {item.retry_count}
+        </div>
+      )}
     </div>
   );
 };

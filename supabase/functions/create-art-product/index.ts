@@ -382,9 +382,7 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
         discogs_url: finalDiscogsUrl, // ✅ Release URL
         release_id: release_id,
         status: 'active',
-        published_at: new Date().toISOString(),
-        is_featured: false,
-        is_on_sale: false
+        published_at: new Date().toISOString()
       })
       .select()
       .single();

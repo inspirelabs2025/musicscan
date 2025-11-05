@@ -152,7 +152,7 @@ export const CronjobMonitor = () => {
     },
     {
       name: 'Queue Processor',
-      status: queueMetrics && queueMetrics.processing > 0 ? 'active' : 'idle',
+      status: queueMetrics && (queueMetrics.processing > 0 || queueMetrics.pending > 0) ? 'active' : 'idle',
       processedToday: queueMetrics?.completed || 0,
       successRate: queueMetrics 
         ? Math.round((queueMetrics.completed / Math.max(1, queueMetrics.completed + queueMetrics.failed)) * 100)
@@ -162,7 +162,7 @@ export const CronjobMonitor = () => {
     },
     {
       name: 'Blog Generator',
-      status: batchStatus?.status === 'running' ? 'active' : 'idle',
+      status: batchStatus && (batchStatus.status === 'running' || batchStatus.status === 'active') ? 'active' : 'idle',
       processedToday: batchStatus?.items_processed || 0,
       successRate: batchStatus
         ? Math.round((batchStatus.items_successful / Math.max(1, batchStatus.items_processed)) * 100)

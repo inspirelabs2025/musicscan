@@ -348,7 +348,7 @@ serve(async (req) => {
 async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
   const items = [];
 
-  // Get CD scans without blog posts
+  // Get CD scans without blog posts (using NOT EXISTS for efficiency)
   if (mediaTypes.includes('cd')) {
     const { data: cdScans, error: cdError } = await supabase
       .from('cd_scan')
@@ -359,18 +359,21 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
 
     if (cdError) throw cdError;
 
-    // Filter out items that already have blog posts
-    for (const scan of cdScans || []) {
-      const { data: existingBlog } = await supabase
+    // Batch check for existing blogs
+    if (cdScans && cdScans.length > 0) {
+      const cdIds = cdScans.map(s => s.id);
+      const { data: existingBlogs } = await supabase
         .from('blog_posts')
-        .select('id')
-        .eq('album_id', scan.id)
+        .select('album_id')
         .eq('album_type', 'cd')
-        .single();
-
-      if (!existingBlog) {
-        items.push({ ...scan, type: 'cd' });
-      }
+        .in('album_id', cdIds);
+      
+      const existingIds = new Set((existingBlogs || []).map(b => b.album_id));
+      cdScans.forEach(scan => {
+        if (!existingIds.has(scan.id)) {
+          items.push({ ...scan, type: 'cd' });
+        }
+      });
     }
   }
 
@@ -385,17 +388,20 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
 
     if (vinylError) throw vinylError;
 
-    for (const scan of vinylScans || []) {
-      const { data: existingBlog } = await supabase
+    if (vinylScans && vinylScans.length > 0) {
+      const vinylIds = vinylScans.map(s => s.id);
+      const { data: existingBlogs } = await supabase
         .from('blog_posts')
-        .select('id')
-        .eq('album_id', scan.id)
+        .select('album_id')
         .eq('album_type', 'vinyl')
-        .single();
-
-      if (!existingBlog) {
-        items.push({ ...scan, type: 'vinyl' });
-      }
+        .in('album_id', vinylIds);
+      
+      const existingIds = new Set((existingBlogs || []).map(b => b.album_id));
+      vinylScans.forEach(scan => {
+        if (!existingIds.has(scan.id)) {
+          items.push({ ...scan, type: 'vinyl' });
+        }
+      });
     }
   }
 
@@ -411,17 +417,19 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
 
     if (aiError) throw aiError;
 
-    for (const scan of aiScans || []) {
-      const { data: existingBlog } = await supabase
+    if (aiScans && aiScans.length > 0) {
+      const aiIds = aiScans.map(s => s.id);
+      const { data: existingBlogs } = await supabase
         .from('blog_posts')
-        .select('id')
-        .eq('album_id', scan.id)
-        .eq('album_type', scan.media_type === 'ai' ? 'cd' : scan.media_type)
-        .single();
-
-      if (!existingBlog) {
-        items.push({ ...scan, type: scan.media_type || 'cd' });
-      }
+        .select('album_id')
+        .in('album_id', aiIds);
+      
+      const existingIds = new Set((existingBlogs || []).map(b => b.album_id));
+      aiScans.forEach(scan => {
+        if (!existingIds.has(scan.id)) {
+          items.push({ ...scan, type: scan.media_type || 'cd' });
+        }
+      });
     }
   }
 
@@ -437,17 +445,20 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
 
     if (productError) throw productError;
 
-    for (const product of products || []) {
-      const { data: existingBlog } = await supabase
+    if (products && products.length > 0) {
+      const productIds = products.map(p => p.id);
+      const { data: existingBlogs } = await supabase
         .from('blog_posts')
-        .select('id')
-        .eq('album_id', product.id)
+        .select('album_id')
         .eq('album_type', 'product')
-        .single();
-
-      if (!existingBlog) {
-        items.push({ ...product, type: 'product' });
-      }
+        .in('album_id', productIds);
+      
+      const existingIds = new Set((existingBlogs || []).map(b => b.album_id));
+      products.forEach(product => {
+        if (!existingIds.has(product.id)) {
+          items.push({ ...product, type: 'product' });
+        }
+      });
     }
   }
 

@@ -30,11 +30,15 @@ export default function ArtShop() {
   const filteredProducts = products
     ?.filter(product => {
       if (!searchQuery) return true;
-      const query = searchQuery.toLowerCase();
-      return (
-        product.title?.toLowerCase().includes(query) ||
-        product.artist?.toLowerCase().includes(query)
-      );
+      
+      // Split search query into individual terms and filter out empty strings
+      const searchTerms = searchQuery.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+      
+      // Combine artist and title for searching
+      const searchableText = `${product.artist || ''} ${product.title || ''}`.toLowerCase();
+      
+      // Check if ALL search terms are present in the combined text
+      return searchTerms.every(term => searchableText.includes(term));
     })
     .sort((a, b) => {
       switch (sortBy) {

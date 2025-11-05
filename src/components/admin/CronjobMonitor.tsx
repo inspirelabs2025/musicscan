@@ -22,6 +22,7 @@ interface CronjobStatus {
   processedToday: number;
   successRate: number;
   errorCount: number;
+  schedule?: string;
 }
 
 interface QueueMetrics {
@@ -147,6 +148,7 @@ export const CronjobMonitor = () => {
         ? Math.round((queueMetrics.completed / Math.max(1, queueMetrics.totalToday)) * 100)
         : 0,
       errorCount: queueMetrics?.failed || 0,
+      schedule: 'Elk uur',
     },
     {
       name: 'Queue Processor',
@@ -156,6 +158,7 @@ export const CronjobMonitor = () => {
         ? Math.round((queueMetrics.completed / Math.max(1, queueMetrics.completed + queueMetrics.failed)) * 100)
         : 0,
       errorCount: queueMetrics?.failed || 0,
+      schedule: 'Elke 2 minuten',
     },
     {
       name: 'Blog Generator',
@@ -165,6 +168,15 @@ export const CronjobMonitor = () => {
         ? Math.round((batchStatus.items_successful / Math.max(1, batchStatus.items_processed)) * 100)
         : 0,
       errorCount: batchStatus?.items_failed || 0,
+      schedule: 'Elke 10 minuten',
+    },
+    {
+      name: 'IndexNow Processor',
+      status: 'active',
+      processedToday: 0,
+      successRate: 100,
+      errorCount: 0,
+      schedule: 'Elke 5 minuten',
     },
   ];
 
@@ -250,6 +262,13 @@ export const CronjobMonitor = () => {
                 </Badge>
               </div>
               
+              {job.schedule && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Schema</span>
+                  <Badge variant="secondary">{job.schedule}</Badge>
+                </div>
+              )}
+
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-muted-foreground">Verwerkt vandaag</span>

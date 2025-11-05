@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
 const generateRandomQueryPrompt = (genre?: string, period?: string) => {
   let prompt = `Je bent een muziekexpert die interessante en diverse muziekquery's genereert voor verhalen. Je doel is om fascinerende, minder bekende verhalen uit de muziekgeschiedenis te ontdekken.
@@ -91,18 +91,18 @@ serve(async (req) => {
   try {
     const { genre, period } = await req.json().catch(() => ({ genre: null, period: null }));
     
-    console.log('🎲 Generating random music query...', { genre, period });
+    console.log('🎲 Generating random music query with Lovable AI...', { genre, period });
 
     const prompt = generateRandomQueryPrompt(genre, period);
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: prompt },
           { 
@@ -110,12 +110,17 @@ serve(async (req) => {
             content: `Genereer een interessante muziekquery${genre && genre !== 'alle' ? ` in het ${genre} genre` : ''}${period && period !== 'alle' ? ` uit de ${period}` : ''}. Zorg dat het verrassend maar boeiend is.` 
           }
         ],
-        max_completion_tokens: 50,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      const errorText = await response.text();
+      if (response.status === 429) {
+        throw new Error('Te veel verzoeken naar de AI. Even geduld en probeer het over 30 seconden opnieuw.');
+      } else if (response.status === 402) {
+        throw new Error('AI credits zijn op. Voeg credits toe in Settings → Workspace → Usage.');
+      }
+      throw new Error(`Lovable AI error: ${response.status} - ${errorText.substring(0, 200)}`);
     }
 
     const data = await response.json();

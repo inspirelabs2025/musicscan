@@ -41,6 +41,33 @@ serve(async (req) => {
 
     console.log(`Processing: ${item.artist} - ${item.title} (Release ID: ${item.discogs_release_id})`);
 
+    // ✅ STRICT VALIDATION: Ensure release ID is a valid positive integer
+    if (!item.discogs_release_id || typeof item.discogs_release_id !== 'number' || item.discogs_release_id <= 0) {
+      console.error(`❌ Invalid release ID: ${item.discogs_release_id}, marking as failed`);
+      
+      await supabase
+        .from('discogs_import_log')
+        .update({
+          status: 'failed',
+          error_message: `Invalid release ID: ${item.discogs_release_id} (must be positive integer)`,
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', item.id);
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          status: 'failed',
+          item_id: item.id,
+          error: 'Invalid release ID format',
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    console.log(`✅ Validated Release ID: ${item.discogs_release_id}`);
+
     // 2. Update status to processing
     const { error: updateError } = await supabase
       .from('discogs_import_log')

@@ -54,6 +54,31 @@ serve(async (req) => {
       try {
         console.log(`\n📝 Processing blog for release ${item.discogs_release_id} (${item.artist} - ${item.title})`);
 
+        // ✅ STRICT VALIDATION: Ensure release ID is valid
+        if (!item.discogs_release_id || typeof item.discogs_release_id !== 'number' || item.discogs_release_id <= 0) {
+          console.error(`  ❌ Invalid release ID: ${item.discogs_release_id}, skipping`);
+          errorCount++;
+          errors.push({
+            item_id: item.id,
+            artist: item.artist,
+            title: item.title,
+            error: `Invalid release ID: ${item.discogs_release_id} (must be positive integer)`
+          });
+          
+          await supabase
+            .from('discogs_import_log')
+            .update({
+              error_message: `Invalid release ID: ${item.discogs_release_id} (must be positive integer)`,
+              retry_count: (item.retry_count || 0) + 1,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', item.id);
+          
+          continue;
+        }
+
+        console.log(`  ✅ Validated Release ID: ${item.discogs_release_id}`);
+
         let albumId: string | null = null;
         let albumType: 'product' | 'release' = 'product';
 

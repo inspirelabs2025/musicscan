@@ -331,57 +331,22 @@ Deno.serve(async (req) => {
 
     // Handle direct Discogs ID search
     if (direct_discogs_id) {
-      const idStr = String(direct_discogs_id).trim();
+      // ✅ STRICT RELEASE ID VALIDATION: Only accept positive integers
+      const releaseId = parseInt(String(direct_discogs_id));
       
-      // ✅ Check if this is a Master ID (prefix m/M)
-      const isMasterId = /^[mM]/.test(idStr);
-      const numericId = idStr.replace(/^[mM]/i, ''); // Remove prefix
-      
-      console.log(`🆔 Direct Discogs ID search:`, { 
-        input: direct_discogs_id,
-        isMaster: isMasterId,
-        numericId 
-      });
-      
-      let releaseData;
-      
-      if (isMasterId) {
-        // Force Master → Release conversion
-        console.log(`🔄 Forcing Master ID ${numericId} conversion...`);
-        const masterData = await getMasterData(numericId, authHeaders);
-        const mainReleaseId = masterData.main_release;
-        
-        if (!mainReleaseId) {
-          throw new Error(`Master ${numericId} has no main_release`);
-        }
-        
-        console.log(`✅ Master ${numericId} → Release ${mainReleaseId}`);
-        
-        const mainReleaseResponse = await fetch(
-          `https://api.discogs.com/releases/${mainReleaseId}`, 
-          { headers: { ...authHeaders, 'User-Agent': 'VinylScanner/2.0' } }
+      if (!releaseId || isNaN(releaseId) || releaseId <= 0) {
+        return new Response(
+          JSON.stringify({ error: `Invalid release ID: must be a positive integer, got: ${direct_discogs_id}` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
-        
-        if (!mainReleaseResponse.ok) {
-          throw new Error(`Failed to fetch release ${mainReleaseId}`);
-        }
-        
-        releaseData = await mainReleaseResponse.json();
-        releaseData._converted_from_master = true;
-        releaseData._actual_release_id = mainReleaseId;
-        releaseData._original_master_id = numericId;
-      } else {
-        // Regular Release ID path (existing logic)
-        releaseData = await getReleaseMetadata(numericId, authHeaders);
       }
       
-      // Check if this was converted from Master
-      const actualReleaseId = releaseData._actual_release_id || numericId;
-      const wasConverted = !!releaseData._converted_from_master;
+      console.log(`🆔 Direct Release ID search: ${releaseId}`);
       
-      if (wasConverted) {
-        console.log(`ℹ️ Using Release ID ${actualReleaseId} (converted from Master ${numericId})`);
-      }
+      // Fetch release metadata directly (no master ID conversion)
+      const releaseData = await getReleaseMetadata(String(releaseId), authHeaders);
+      
+      const actualReleaseId = releaseData._actual_release_id || releaseId;
       
       // Determine media type
       const formats = releaseData.formats || [];
@@ -398,7 +363,6 @@ Deno.serve(async (req) => {
       const result = {
         discogs_id: actualReleaseId,
         master_id: releaseData.master_id || null,
-        original_master_id: wasConverted ? direct_discogs_id : null,
         discogs_url: `https://www.discogs.com/release/${actualReleaseId}`,
         sell_url: `https://www.discogs.com/sell/release/${actualReleaseId}`,
         api_url: `https://api.discogs.com/releases/${actualReleaseId}`,
@@ -416,7 +380,7 @@ Deno.serve(async (req) => {
         ).join(', '),
         media_type: mediaType,
         similarity_score: 1.0,
-        search_strategy: wasConverted ? 'Master ID → Release ID' : 'Direct Discogs ID',
+        search_strategy: 'Direct Release ID',
         pricing_stats: include_pricing ? { 
           lowest_price: releaseData.lowest_price || null,
           median_price: null,
@@ -443,11 +407,7 @@ Deno.serve(async (req) => {
           results: [result],
           search_strategies: [result.search_strategy],
           total_found: 1,
-          media_type: mediaType,
-          conversion_info: wasConverted ? {
-            from_master_id: direct_discogs_id,
-            to_release_id: actualReleaseId
-          } : null
+          media_type: mediaType
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

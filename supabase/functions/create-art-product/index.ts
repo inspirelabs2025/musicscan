@@ -16,17 +16,16 @@ serve(async (req) => {
     
     console.log('🎨 Starting ART product creation:', { discogs_id, catalog_number, artist, title });
 
-    // ✅ Normalize Discogs ID (detect and preserve m/M prefix for Master IDs)
-    const idStr = String(discogs_id).trim();
-    const isMasterId = /^[mM]/.test(idStr);
-    const normalizedId = idStr.replace(/^[mM]/i, '');
+    // ✅ STRICT RELEASE ID VALIDATION: Only accept positive integers
+    let releaseId: number | null = null;
     
-    console.log(`📋 Discogs ID:`, {
-      input: discogs_id,
-      normalized: normalizedId,
-      isMaster: isMasterId,
-      willSendToSearch: idStr // Send WITH prefix to optimized-catalog-search
-    });
+    if (discogs_id !== undefined && discogs_id !== null) {
+      releaseId = parseInt(String(discogs_id));
+      if (!releaseId || isNaN(releaseId) || releaseId <= 0) {
+        throw new Error(`Invalid release ID: must be a positive integer, got: ${discogs_id}`);
+      }
+      console.log(`✅ Validated Release ID: ${releaseId}`);
+    }
 
     // ✅ VALIDATION: Detect and fix artist/title swaps
     let validatedArtist = artist;
@@ -96,13 +95,13 @@ serve(async (req) => {
     // Step 1: Search Discogs for the release with retry logic
     let releaseData: any;
     
-    if (discogs_id) {
-      console.log('📀 Searching by Release ID:', discogs_id);
+    if (releaseId) {
+      console.log('📀 Searching by Release ID:', releaseId);
       try {
         const result = await retryWithBackoff(async () => {
            const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
             body: { 
-              direct_discogs_id: idStr, // ✅ Send WITH prefix to optimized-catalog-search
+              direct_discogs_id: releaseId, // ✅ Pure integer, no prefix
               artist: finalArtist,
               title: finalTitle
             }

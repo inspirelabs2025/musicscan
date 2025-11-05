@@ -36,6 +36,7 @@ interface QueueMetrics {
 }
 
 interface BatchStatus {
+  id: string;
   status: string;
   items_processed: number;
   items_successful: number;
@@ -43,11 +44,25 @@ interface BatchStatus {
   queue_size: number;
   started_at: string;
   updated_at: string;
+  last_heartbeat: string | null;
+}
+
+interface QueueItem {
+  id: string;
+  status: string;
+  album_title: string;
+  album_artist: string;
+  attempt_count: number;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export const CronjobMonitor = () => {
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [recentItems, setRecentItems] = useState<QueueItem[]>([]);
+  const [itemsUpdate, setItemsUpdate] = useState<Date>(new Date());
 
   // Handlers to control blog generator
   const startBlogBatch = async () => {
@@ -66,10 +81,10 @@ export const CronjobMonitor = () => {
     } catch (e) { console.error('Failed to run processor tick', e); }
   };
 
-  // Real-time subscription voor queue status
+  // Real-time subscription voor queue status en items
   useEffect(() => {
     const channel = supabase
-      .channel('cronjob-monitor')
+      .channel('cronjob-monitor-realtime')
       .on(
         'postgres_changes',
         {
@@ -89,6 +104,18 @@ export const CronjobMonitor = () => {
           table: 'batch_processing_status'
         },
         () => {
+          setLastUpdate(new Date());
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'batch_queue_items'
+        },
+        () => {
+          setItemsUpdate(new Date());
           setLastUpdate(new Date());
         }
       )
@@ -142,7 +169,6 @@ export const CronjobMonitor = () => {
   const { data: batchStatus } = useQuery({
     queryKey: ['batch-processing-status', lastUpdate],
     queryFn: async () => {
-      // Prefer a currently active/running batch; fallback to most recent
       const { data: activeBatch } = await supabase
         .from('batch_processing_status')
         .select('*')
@@ -165,8 +191,35 @@ export const CronjobMonitor = () => {
       if (error && error.code !== 'PGRST116') throw error;
       return latestBatch as BatchStatus | null;
     },
-    refetchInterval: 5000,
+    refetchInterval: 3000, // Faster polling
   });
+
+  // Recent queue items for live activity feed
+  const { data: queueItems } = useQuery({
+    queryKey: ['batch-queue-items', itemsUpdate, batchStatus?.id],
+    queryFn: async () => {
+      if (!batchStatus?.id) return [];
+
+      const { data, error } = await supabase
+        .from('batch_queue_items')
+        .select('id, status, album_title, album_artist, attempt_count, error_message, created_at, updated_at')
+        .eq('batch_id', batchStatus.id)
+        .order('updated_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      return data as QueueItem[];
+    },
+    enabled: !!batchStatus?.id,
+    refetchInterval: 3000,
+  });
+
+  // Update recent items when data changes
+  useEffect(() => {
+    if (queueItems) {
+      setRecentItems(queueItems);
+    }
+  }, [queueItems]);
 
   // Calculate cronjob statuses
   const cronjobStatuses: CronjobStatus[] = [
@@ -388,57 +441,128 @@ export const CronjobMonitor = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Blog Generation Batch Status</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                Blog Generation Batch
+                {(batchStatus.status === 'running' || batchStatus.status === 'active') && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-sm font-normal text-muted-foreground">Processing</span>
+                  </div>
+                )}
+              </CardTitle>
               <div className="flex gap-2">
                 {(batchStatus.status !== 'running' && batchStatus.status !== 'active') && (
-                  <Button size="sm" onClick={startBlogBatch}>Start</Button>
+                  <Button size="sm" onClick={startBlogBatch}>Start Batch</Button>
                 )}
-                <Button variant="outline" size="sm" onClick={runProcessorNow}>Process now</Button>
+                <Button variant="outline" size="sm" onClick={runProcessorNow}>
+                  <Zap className="h-4 w-4 mr-1" />
+                  Process Now
+                </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div>
-                <div className="text-sm text-muted-foreground">Status</div>
-                <Badge variant={batchStatus.status === 'running' ? 'default' : 'outline'}>
+                <div className="text-sm text-muted-foreground mb-1">Status</div>
+                <Badge variant={batchStatus.status === 'running' || batchStatus.status === 'active' ? 'default' : 'outline'}>
                   {batchStatus.status}
                 </Badge>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Verwerkt</div>
+                <div className="text-sm text-muted-foreground mb-1">Verwerkt</div>
                 <div className="text-2xl font-bold">{batchStatus.items_processed}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Succesvol</div>
+                <div className="text-sm text-muted-foreground mb-1">Succesvol</div>
                 <div className="text-2xl font-bold text-green-500">{batchStatus.items_successful}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Mislukt</div>
+                <div className="text-sm text-muted-foreground mb-1">Mislukt</div>
                 <div className="text-2xl font-bold text-red-500">{batchStatus.items_failed}</div>
               </div>
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Heartbeat</div>
+                <div className="text-xs font-mono">
+                  {batchStatus.last_heartbeat 
+                    ? new Date(batchStatus.last_heartbeat).toLocaleTimeString('nl-NL')
+                    : 'N/A'
+                  }
+                </div>
+              </div>
             </div>
+
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-muted-foreground">Voortgang</span>
                 <span className="text-sm font-medium">
-                  {batchStatus.items_processed} / {batchStatus.queue_size}
+                  {batchStatus.items_processed} / {batchStatus.queue_size} 
+                  ({Math.round((batchStatus.items_processed / Math.max(1, batchStatus.queue_size)) * 100)}%)
                 </span>
               </div>
               <Progress 
                 value={(batchStatus.items_processed / Math.max(1, batchStatus.queue_size)) * 100} 
-                className="h-2"
+                className="h-3"
               />
             </div>
-            <div className="text-xs text-muted-foreground">
-              Laatste update: {new Date(batchStatus.updated_at).toLocaleString('nl-NL')}
+
+            {/* Live Activity Feed */}
+            {recentItems.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Activity className="h-4 w-4" />
+                  Recente Activiteit
+                </div>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {recentItems.map((item) => (
+                    <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50 border">
+                      <div className="mt-1">
+                        {item.status === 'completed' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                        {item.status === 'failed' && <XCircle className="h-4 w-4 text-red-500" />}
+                        {item.status === 'processing' && <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />}
+                        {item.status === 'pending' && <Clock className="h-4 w-4 text-yellow-500" />}
+                        {item.status === 'skipped' && <AlertCircle className="h-4 w-4 text-gray-500" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">
+                          {item.album_artist} - {item.album_title}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {item.status}
+                          </Badge>
+                          {item.attempt_count > 1 && (
+                            <span className="text-xs text-muted-foreground">
+                              Poging {item.attempt_count}
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(item.updated_at).toLocaleTimeString('nl-NL')}
+                          </span>
+                        </div>
+                        {item.error_message && (
+                          <div className="text-xs text-red-500 mt-1 truncate">
+                            {item.error_message}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="text-xs text-muted-foreground flex items-center justify-between">
+              <span>Batch ID: {batchStatus.id.substring(0, 8)}...</span>
+              <span>Laatste update: {new Date(batchStatus.updated_at).toLocaleString('nl-NL')}</span>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="text-xs text-muted-foreground text-center">
-        Laatste update: {lastUpdate.toLocaleTimeString('nl-NL')} • Updates elke 5 seconden
+      <div className="text-xs text-muted-foreground text-center flex items-center justify-center gap-2">
+        <div className={`h-1.5 w-1.5 rounded-full ${connectionStatus === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+        Laatste update: {lastUpdate.toLocaleTimeString('nl-NL')} • Real-time updates actief
       </div>
     </div>
   );

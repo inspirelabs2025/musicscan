@@ -291,7 +291,7 @@ export default function PlatformProductDetail() {
             </div>
 
             {/* CTA */}
-            <Link to={`/plaatverhaal/${blogPost.slug}`} className="w-full md:w-auto flex-shrink-0">
+            <Link to={`/plaat-verhaal/${blogPost.slug}`} className="w-full md:w-auto flex-shrink-0">
               <Button 
                 size="lg"
                 className="w-full bg-gradient-to-r from-vinyl-purple to-accent hover:from-vinyl-purple/90 hover:to-accent/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all"

@@ -1,10 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, CheckCircle, AlertCircle, Trash2, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 export function IndexNowQueueMonitor() {
+  const queryClient = useQueryClient();
+
   const { data: queueStats } = useQuery({
     queryKey: ['indexnow-queue-stats'],
     queryFn: async () => {
@@ -40,6 +44,27 @@ export function IndexNowQueueMonitor() {
       return data;
     },
     refetchInterval: 30000,
+  });
+
+  const cleanupMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('cleanup-indexnow-queue');
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success('Queue opgeruimd', {
+        description: `${data.stats.invalidUrlsRemoved} ongeldige URLs verwijderd, ${data.stats.blogPostsAdded} blog posts toegevoegd`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['indexnow-queue-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['indexnow-recent'] });
+    },
+    onError: (error: Error) => {
+      toast.error('Fout bij opruimen', {
+        description: error.message,
+      });
+    },
   });
 
   return (
@@ -84,8 +109,30 @@ export function IndexNowQueueMonitor() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recente IndexNow Submissies</CardTitle>
-          <CardDescription>De laatste 10 URLs in de queue</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recente IndexNow Submissies</CardTitle>
+              <CardDescription>De laatste 10 URLs in de queue</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => cleanupMutation.mutate()}
+              disabled={cleanupMutation.isPending}
+            >
+              {cleanupMutation.isPending ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Bezig met opruimen...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Queue Opruimen
+                </>
+              )}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">

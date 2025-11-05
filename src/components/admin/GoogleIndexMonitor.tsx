@@ -87,22 +87,25 @@ export function GoogleIndexMonitor() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium">Wacht op Indexering</CardTitle>
-              {indexStats?.pendingIndexing && indexStats.pendingIndexing > 0 && (
-                <Button 
-                  onClick={processQueue} 
-                  disabled={isProcessing}
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs gap-1"
-                >
-                  {isProcessing ? (
+              <Button 
+                onClick={processQueue} 
+                disabled={isProcessing || !indexStats?.pendingIndexing}
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs gap-1"
+              >
+                {isProcessing ? (
+                  <>
                     <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
+                    Verwerken...
+                  </>
+                ) : (
+                  <>
                     <Send className="h-3 w-3" />
-                  )}
-                  Nu verwerken
-                </Button>
-              )}
+                    Nu verwerken
+                  </>
+                )}
+              </Button>
             </div>
           </CardHeader>
           <CardContent>

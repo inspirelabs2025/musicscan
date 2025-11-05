@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, Tag, ExternalLink, ShoppingCart, Music, Disc3, Share2, Copy, Eye, Heart } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Tag, ExternalLink, ShoppingCart, Music, Disc3, Share2, Copy, Eye, Heart, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useSEO } from '@/hooks/useSEO';
 import { ArticleStructuredData } from '@/components/SEO/StructuredData';
@@ -663,6 +663,66 @@ export const PlaatVerhaal: React.FC = () => {
               </Card>
             </div>
           )}
+
+          {/* Buy Album Art Print CTA */}
+          <div className="mt-8">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-vinyl-purple/20 to-accent/20 rounded-2xl blur-xl"></div>
+              <Card className="relative bg-card/80 backdrop-blur-sm border-vinyl-purple/30 hover:border-vinyl-purple/50 transition-all duration-300 group">
+                <CardContent className="p-8">
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+                    {/* Album Cover Preview */}
+                    {blog.album_cover_url && (
+                      <div className="w-32 h-32 flex-shrink-0">
+                        <div className="relative group">
+                          <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/30 to-accent/30 rounded-lg blur-md group-hover:blur-lg transition-all"></div>
+                          <img
+                            src={blog.album_cover_url}
+                            alt={`${artist} - ${album}`}
+                            className="relative w-full h-full object-cover rounded-lg shadow-lg group-hover:scale-105 transition-transform"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Content */}
+                    <div className="flex-1 text-center md:text-left">
+                      <h3 className="text-2xl font-bold mb-2 text-foreground flex items-center justify-center md:justify-start gap-2">
+                        <Sparkles className="w-6 h-6 text-vinyl-purple" />
+                        Hang deze albumhoes aan je muur
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        Verkrijgbaar als premium metaalprint of poster. Museum-kwaliteit op aluminium.
+                      </p>
+                      <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                        <Badge variant="outline" className="border-vinyl-purple/30">
+                          🎨 Premium kwaliteit
+                        </Badge>
+                        <Badge variant="outline" className="border-vinyl-purple/30">
+                          📦 Gratis verzending vanaf €50
+                        </Badge>
+                        <Badge variant="outline" className="border-vinyl-purple/30">
+                          ✨ Klaar om op te hangen
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* CTA Button */}
+                    <Link to="/art-shop" className="flex-shrink-0">
+                      <Button 
+                        size="lg" 
+                        className="bg-gradient-to-r from-vinyl-purple to-accent hover:from-vinyl-purple/90 hover:to-accent/90 text-white font-semibold px-8 group shadow-lg hover:shadow-xl transition-all"
+                      >
+                        <ShoppingCart className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                        Bekijk Art Shop
+                        <ExternalLink className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
 
 

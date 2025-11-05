@@ -2,6 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SitemapStatus } from "@/components/admin/SEOSitemapStatus";
 import { IndexNowQueueMonitor } from "@/components/admin/IndexNowQueueMonitor";
+import { IndexNowMonitor } from "@/components/admin/IndexNowMonitor";
+import { GoogleIndexMonitor } from "@/components/admin/GoogleIndexMonitor";
 import { PriceChangeMonitor } from "@/components/admin/PriceChangeMonitor";
 import { ContentFreshnessOverview } from "@/components/admin/ContentFreshnessOverview";
 import { SEOHealthCheck } from "@/components/admin/SEOHealthCheck";
@@ -41,8 +43,9 @@ export default function SEOMonitoring() {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="google">Google Index</TabsTrigger>
           <TabsTrigger value="sitemaps">Sitemaps</TabsTrigger>
-          <TabsTrigger value="indexnow">IndexNow Queue</TabsTrigger>
+          <TabsTrigger value="indexnow">IndexNow</TabsTrigger>
           <TabsTrigger value="prices">Price Changes</TabsTrigger>
           <TabsTrigger value="content">Content Freshness</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
@@ -52,11 +55,16 @@ export default function SEOMonitoring() {
           <SEOHealthCheck />
         </TabsContent>
 
+        <TabsContent value="google" className="space-y-4">
+          <GoogleIndexMonitor />
+        </TabsContent>
+
         <TabsContent value="sitemaps" className="space-y-4">
           <SitemapStatus />
         </TabsContent>
 
         <TabsContent value="indexnow" className="space-y-4">
+          <IndexNowMonitor />
           <IndexNowQueueMonitor />
         </TabsContent>
 

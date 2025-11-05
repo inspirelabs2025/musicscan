@@ -135,18 +135,32 @@ export const useCollectionAIAnalysis = () => {
       if (error) {
         console.error('AI Analysis failed:', error);
         // Provide user-friendly error message
-        const errorMessage = error.message?.includes('overbelast') 
-          ? error.message 
-          : error.message?.includes('niet beschikbaar')
-          ? error.message
+        const preserve = (msg?: string) =>
+          !!msg && (
+            msg.includes('overbelast') ||
+            msg.includes('niet beschikbaar') ||
+            msg.includes('credits') ||
+            msg.includes('Te veel verzoeken') ||
+            msg.includes('verbinding')
+          );
+        const errorMessage = preserve(error.message)
+          ? (error.message as string)
           : 'AI analyse kon niet worden voltooid. Probeer het later opnieuw.';
         throw new Error(errorMessage);
       }
       
       if (!data.success) {
         console.error('AI Analysis unsuccessful:', data.error);
-        const errorMessage = data.error?.includes('overbelast') || data.error?.includes('niet beschikbaar')
-          ? data.error
+        const preserve = (msg?: string) =>
+          !!msg && (
+            msg.includes('overbelast') ||
+            msg.includes('niet beschikbaar') ||
+            msg.includes('credits') ||
+            msg.includes('Te veel verzoeken') ||
+            msg.includes('verbinding')
+          );
+        const errorMessage = preserve(data.error)
+          ? (data.error as string)
           : 'AI analyse mislukt. Probeer het later opnieuw.';
         throw new Error(errorMessage);
       }

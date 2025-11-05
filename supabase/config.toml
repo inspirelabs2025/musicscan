@@ -126,3 +126,9 @@ cron = "*/5 * * * *"  # Every 5 minutes
 
 [functions.indexnow-submit]
 verify_jwt = false
+
+[functions.cleanup-indexnow-queue]
+verify_jwt = false
+
+[functions.auto-submit-blogs-indexnow]
+verify_jwt = false

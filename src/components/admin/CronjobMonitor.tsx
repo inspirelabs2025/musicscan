@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { 
   Activity,
   AlertCircle,
@@ -47,6 +48,23 @@ interface BatchStatus {
 export const CronjobMonitor = () => {
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+  // Handlers to control blog generator
+  const startBlogBatch = async () => {
+    try {
+      await supabase.functions.invoke('batch-blog-generator', {
+        body: { action: 'start', batchSize: 1, delaySeconds: 30, mediaTypes: ['product','cd','vinyl','ai'], minConfidence: 0.7, dryRun: false }
+      });
+      setLastUpdate(new Date());
+    } catch (e) { console.error('Failed to start blog batch', e); }
+  };
+
+  const runProcessorNow = async () => {
+    try {
+      await supabase.functions.invoke('batch-blog-processor', { body: { manual: true } });
+      setLastUpdate(new Date());
+    } catch (e) { console.error('Failed to run processor tick', e); }
+  };
 
   // Real-time subscription voor queue status
   useEffect(() => {
@@ -357,7 +375,15 @@ export const CronjobMonitor = () => {
       {batchStatus && (
         <Card>
           <CardHeader>
-            <CardTitle>Blog Generation Batch Status</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Blog Generation Batch Status</CardTitle>
+              <div className="flex gap-2">
+                {(batchStatus.status !== 'running' && batchStatus.status !== 'active') && (
+                  <Button size="sm" onClick={startBlogBatch}>Start</Button>
+                )}
+                <Button variant="outline" size="sm" onClick={runProcessorNow}>Process now</Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

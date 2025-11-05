@@ -25,7 +25,7 @@ serve(async (req) => {
       .from('batch_processing_status')
       .select('*')
       .eq('process_type', 'blog_generation')
-      .eq('status', 'active')
+      .eq('status', 'running')
       .maybeSingle();
 
     // Auto-recovery: if no active batch but pending items exist, reactivate correct batch
@@ -53,14 +53,14 @@ serve(async (req) => {
           await supabase
             .from('batch_processing_status')
             .update({ 
-              status: 'active',
+              status: 'running',
               completed_at: null,
               last_heartbeat: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })
             .eq('id', batchWithPendingItems.id);
           
-          batchStatus = { ...batchWithPendingItems, status: 'active' };
+          batchStatus = { ...batchWithPendingItems, status: 'running' };
           console.log('✅ Reactivated batch:', batchStatus.id);
         } else {
           // Orphaned queue items - batch status record is missing

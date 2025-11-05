@@ -127,7 +127,7 @@ export const CronjobMonitor = () => {
       const { data, error } = await supabase
         .from('batch_processing_status')
         .select('*')
-        .eq('batch_type', 'blog_generation')
+        .eq('process_type', 'blog_generation')
         .order('started_at', { ascending: false })
         .limit(1)
         .single();

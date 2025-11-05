@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { usePaginatedBlogs } from '@/hooks/usePaginatedBlogs';
 import { useDiscogsNews } from '@/hooks/useNewsCache';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,10 +9,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Disc3, Newspaper, FileText } from 'lucide-react';
+import { Disc3, Newspaper, FileText, ArrowRight, Music } from 'lucide-react';
 
 export const NewsAndStoriesSection = () => {
-  const [activeTab, setActiveTab] = useState<'releases' | 'nieuws' | 'verhalen'>('releases');
   
   // Releases from Discogs
   const { data: discogsReleases = [], isLoading: releasesLoading } = useDiscogsNews();
@@ -282,61 +280,101 @@ export const NewsAndStoriesSection = () => {
   };
 
   return (
-    <section className="py-16">
+    <section className="py-16 bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">🎵 Releases, Nieuws & Verhalen</h2>
-          <p className="text-xl text-muted-foreground">
-            Ontdek nieuwe releases, blijf op de hoogte van nieuws en lees verhalen
+          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            🎵 Ontdek Muzieknieuws
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Blijf op de hoogte van de nieuwste verhalen, nieuws en releases uit de muziekwereld
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'releases' | 'nieuws' | 'verhalen')} className="space-y-8">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 bg-white/10 backdrop-blur-md border border-white/20 p-1 rounded-xl">
-            <TabsTrigger 
-              value="releases"
-              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-purple data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 rounded-lg"
-            >
-              <Disc3 className="h-4 w-4" />
-              <span>🎵 Releases</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="nieuws"
-              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-vinyl-gold data-[state=active]:to-amber-500 data-[state=active]:text-white transition-all duration-300 rounded-lg"
-            >
-              <Newspaper className="h-4 w-4" />
-              <span>📰 Nieuws</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="verhalen"
-              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent data-[state=active]:to-primary data-[state=active]:text-white transition-all duration-300 rounded-lg"
-            >
-              <FileText className="h-4 w-4" />
-              <span>📚 Verhalen</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="releases">
-            {renderReleasesContent()}
-          </TabsContent>
-
-          <TabsContent value="nieuws">
-            {renderNewsContent()}
-          </TabsContent>
-
-          <TabsContent value="verhalen">
-            {renderVerhalenContent()}
-          </TabsContent>
-        </Tabs>
-
-        {/* View All Link */}
-        <div className="text-center mt-12">
-          <Link 
-            to="/music-news"
-            className="inline-flex items-center gap-2 text-lg font-semibold text-primary hover:underline"
-          >
-            Bekijk Alles →
+        {/* Three Column Grid with Direct Links */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Verhalen */}
+          <Link to="/verhalen" className="group">
+            <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-primary">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-vinyl-purple to-primary flex items-center justify-center">
+                  <FileText className="h-8 w-8 text-white" />
+                </div>
+                <CardTitle className="text-2xl group-hover:text-primary transition-colors">
+                  📚 Verhalen
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="text-muted-foreground mb-4">
+                  Ontdek de verhalen achter albums en artiesten
+                </p>
+                <Button variant="ghost" className="group-hover:bg-primary/10">
+                  Bekijk Verhalen
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </CardContent>
+            </Card>
           </Link>
+
+          {/* Nieuws */}
+          <Link to="/nieuws" className="group">
+            <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-primary">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-vinyl-purple to-primary flex items-center justify-center">
+                  <Newspaper className="h-8 w-8 text-white" />
+                </div>
+                <CardTitle className="text-2xl group-hover:text-primary transition-colors">
+                  📰 Nieuws
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="text-muted-foreground mb-4">
+                  Het laatste nieuws uit de muziekindustrie
+                </p>
+                <Button variant="ghost" className="group-hover:bg-primary/10">
+                  Bekijk Nieuws
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* Releases */}
+          <Link to="/releases" className="group">
+            <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-primary">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-vinyl-purple to-primary flex items-center justify-center">
+                  <Music className="h-8 w-8 text-white" />
+                </div>
+                <CardTitle className="text-2xl group-hover:text-primary transition-colors">
+                  🎵 Releases
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="text-muted-foreground mb-4">
+                  De nieuwste albums en releases
+                </p>
+                <Button variant="ghost" className="group-hover:bg-primary/10">
+                  Bekijk Releases
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
+        {/* Preview Content - Show Verhalen by default */}
+        <div className="mt-8">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-2xl font-bold">Laatste Verhalen</h3>
+            <Link to="/verhalen">
+              <Button variant="outline" className="group">
+                Bekijk alle verhalen
+                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+          </div>
+          {renderVerhalenContent()}
         </div>
       </div>
     </section>

@@ -42,6 +42,9 @@ import UserScans from "./pages/UserScans";
 import AlbumDetail from "./pages/AlbumDetail";
 import ReleaseDetail from "./pages/ReleaseDetail";
 import MusicNews from "./pages/MusicNews";
+import Verhalen from "./pages/Verhalen";
+import Nieuws from "./pages/Nieuws";
+import Releases from "./pages/Releases";
 import TestMusicNews from "./pages/TestMusicNews";
 import TestNewsUpdate from "./pages/TestNewsUpdate";
 import TestNewsGeneration from "./pages/TestNewsGeneration";
@@ -252,7 +255,10 @@ const App = () => {
         <Route path="/shops" element={<PublicShopsOverview />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/user-scans" element={<UserScans />} />
-            <Route path="/news" element={<MusicNews />} />
+          <Route path="/verhalen" element={<Verhalen />} />
+          <Route path="/nieuws" element={<Nieuws />} />
+          <Route path="/releases" element={<Releases />} />
+          <Route path="/news" element={<Navigate to="/verhalen" replace />} />
             <Route path="/nieuws/:slug" element={<NewsPost />} />
             <Route path="/test-music-news" element={
               <ProtectedRoute>

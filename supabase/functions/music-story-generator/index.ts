@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -168,16 +168,16 @@ serve(async (req) => {
       throw new Error("Authentication required");
     }
 
-    console.log('🎵 Generating music story for query:', query);
+    console.log('🎵 Generating music story with Lovable AI for query:', query);
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: MUSIC_STORY_PROMPT },
           { 
@@ -185,13 +185,19 @@ serve(async (req) => {
             content: `Schrijf een feitelijk, goed onderbouwd artikel over: "${query}". Gebruik ALLEEN verificeerbare informatie. Bij elke bewering: zorg dat deze onderbouwd kan worden met officiële bronnen. Gebruik de structuur met 8 secties voor een professioneel artikel van 800-1000 woorden. Voeg de verplichte disclaimer toe over bronverificatie.` 
           }
         ],
-        max_completion_tokens: 2000,
-        temperature: 0.3,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('❌ Lovable AI API error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        throw new Error('Te veel verzoeken naar de AI. Probeer het over 30 seconden opnieuw.');
+      } else if (response.status === 402) {
+        throw new Error('AI credits zijn op. Voeg credits toe in Settings → Workspace → Usage.');
+      }
+      throw new Error(`Lovable AI error: ${response.status} - ${errorText.substring(0, 200)}`);
     }
 
     const data = await response.json();

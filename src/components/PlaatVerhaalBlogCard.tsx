@@ -122,7 +122,10 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
 
   if (viewMode === 'list') {
     return (
-      <Card className="group hover:shadow-lg transition-all duration-300 hover:shadow-primary/10 flex overflow-hidden">
+      <Card 
+        className="group hover:shadow-lg transition-all duration-300 hover:shadow-primary/10 flex overflow-hidden cursor-pointer"
+        onClick={() => onView?.(blog)}
+      >
         {/* Album Cover - List View */}
         <div className="w-20 h-20 flex-shrink-0 m-4">
           <AlbumCover size="small" />
@@ -185,24 +188,55 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
                 className="h-8 text-xs"
               />
               {onView && (
-                <Button variant="outline" size="sm" onClick={() => onView(blog)} className="h-8 text-xs">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onView(blog);
+                  }} 
+                  className="h-8 text-xs"
+                >
                   <Eye className="w-3 h-3 mr-1" />
                   Bekijk
                 </Button>
               )}
               {onEdit && (
-                <Button variant="outline" size="sm" onClick={() => onEdit(blog)} className="h-8 text-xs">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(blog);
+                  }} 
+                  className="h-8 text-xs"
+                >
                   <Edit className="w-3 h-3 mr-1" />
                   Bewerk
                 </Button>
               )}
               {!blog.is_published && (
-                <Button size="sm" onClick={handlePublish} className="h-8 text-xs">
+                <Button 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePublish();
+                  }} 
+                  className="h-8 text-xs"
+                >
                   Publiceer
                 </Button>
               )}
               {blog.is_published && (
-                <Button variant="outline" size="sm" onClick={handleShare} className="h-8 px-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShare();
+                  }} 
+                  className="h-8 px-2"
+                >
                   <Share2 className="w-3 h-3" />
                 </Button>
               )}
@@ -215,7 +249,10 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
 
   // Grid View
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 hover:shadow-primary/20 hover:-translate-y-1 overflow-hidden">
+    <Card 
+      className="group hover:shadow-xl transition-all duration-300 hover:shadow-primary/20 hover:-translate-y-1 overflow-hidden cursor-pointer"
+      onClick={() => onView?.(blog)}
+    >
       {/* Album Cover - Grid View */}
       <div className="relative">
         <AspectRatio ratio={1} className="bg-gradient-to-br from-muted/30 to-muted/60">
@@ -305,7 +342,10 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleShare}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShare();
+                }}
               >
                 <Share2 className="w-4 h-4" />
               </Button>
@@ -317,7 +357,10 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onView(blog)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onView(blog);
+                }}
                 className="flex-1"
               >
                 <Eye className="w-4 h-4 mr-2" />
@@ -329,7 +372,10 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onEdit(blog)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(blog);
+                }}
                 className="flex-1"
               >
                 <Edit className="w-4 h-4 mr-2" />
@@ -340,7 +386,10 @@ export const PlaatVerhaalBlogCard: React.FC<PlaatVerhaalBlogCardProps> = ({
             {!blog.is_published && (
               <Button
                 size="sm"
-                onClick={handlePublish}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePublish();
+                }}
                 className="flex-1"
               >
                 Publiceer

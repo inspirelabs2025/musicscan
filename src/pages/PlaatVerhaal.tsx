@@ -708,7 +708,10 @@ export const PlaatVerhaal: React.FC = () => {
                     </div>
 
                     {/* CTA Button */}
-                    <Link to="/art-shop" className="flex-shrink-0">
+                    <Link 
+                      to={`/art-shop?search=${encodeURIComponent(`${artist} ${album}`)}`}
+                      className="flex-shrink-0"
+                    >
                       <Button 
                         size="lg" 
                         className="bg-gradient-to-r from-vinyl-purple to-accent hover:from-vinyl-purple/90 hover:to-accent/90 text-white font-semibold px-8 group shadow-lg hover:shadow-xl transition-all"

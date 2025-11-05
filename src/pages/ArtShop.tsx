@@ -12,7 +12,10 @@ import { Search, SlidersHorizontal, TrendingUp, Eye, Sparkles } from "lucide-rea
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 
 export default function ArtShop() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialSearch = searchParams.get('search') || '';
+  
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc" | "popular">("newest");
   const [showFeatured, setShowFeatured] = useState(false);
   const [showOnSale, setShowOnSale] = useState(false);

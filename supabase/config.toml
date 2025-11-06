@@ -133,5 +133,11 @@ verify_jwt = false
 [functions.auto-submit-blogs-indexnow]
 verify_jwt = false
 
+[functions.sitemap-queue-processor]
+verify_jwt = false
+
+[[functions.sitemap-queue-processor.schedule]]
+cron = "*/3 * * * *"  # Every 3 minutes
+
 [functions.serve-sitemap]
 verify_jwt = false

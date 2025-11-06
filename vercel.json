@@ -2,6 +2,13 @@
   "version": 2,
   "routes": [
     {
+      "src": "/lovable-uploads/(.*)",
+      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/vinyl_images/$1",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
       "src": "/sitemap\\.xml",
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-index-proxy",
       "headers": {

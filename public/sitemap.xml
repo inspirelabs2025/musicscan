@@ -1,31 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>https://www.musicscan.app/sitemap-static.xml</loc>
-    <lastmod>2025-11-02</lastmod>
+    <loc>https://musicscan.app/sitemaps/sitemap-static.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog.xml</loc>
-    <lastmod>2025-11-03</lastmod>
+    <loc>https://musicscan.app/sitemaps/sitemap-blog.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-music-stories.xml</loc>
-    <lastmod>2025-11-03</lastmod>
+    <loc>https://musicscan.app/sitemaps/sitemap-music-stories.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-products.xml</loc>
-    <lastmod>2025-11-03</lastmod>
+    <loc>https://musicscan.app/sitemaps/sitemap-products.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-images-blogs.xml</loc>
-    <lastmod>2025-11-03</lastmod>
+    <loc>https://musicscan.app/sitemaps/sitemap-images-blogs.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-images-stories.xml</loc>
-    <lastmod>2025-11-03</lastmod>
+    <loc>https://musicscan.app/sitemaps/sitemap-images-stories.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-images-products.xml</loc>
-    <lastmod>2025-11-03</lastmod>
+    <loc>https://musicscan.app/sitemaps/sitemap-images-products.xml</loc>
   </sitemap>
 </sitemapindex>

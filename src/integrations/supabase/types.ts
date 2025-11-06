@@ -3081,6 +3081,90 @@ export type Database = {
           },
         ]
       }
+      sitemap_regeneration_log: {
+        Row: {
+          completed_at: string | null
+          content_id: string | null
+          content_slug: string | null
+          content_type: string | null
+          created_at: string | null
+          duration_ms: number | null
+          error_message: string | null
+          gsc_response: Json | null
+          gsc_submitted: boolean | null
+          health_checks: Json | null
+          id: string
+          sitemaps_updated: string[] | null
+          started_at: string | null
+          status: string | null
+          trigger_source: string
+        }
+        Insert: {
+          completed_at?: string | null
+          content_id?: string | null
+          content_slug?: string | null
+          content_type?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          gsc_response?: Json | null
+          gsc_submitted?: boolean | null
+          health_checks?: Json | null
+          id?: string
+          sitemaps_updated?: string[] | null
+          started_at?: string | null
+          status?: string | null
+          trigger_source: string
+        }
+        Update: {
+          completed_at?: string | null
+          content_id?: string | null
+          content_slug?: string | null
+          content_type?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          gsc_response?: Json | null
+          gsc_submitted?: boolean | null
+          health_checks?: Json | null
+          id?: string
+          sitemaps_updated?: string[] | null
+          started_at?: string | null
+          status?: string | null
+          trigger_source?: string
+        }
+        Relationships: []
+      }
+      sitemap_regeneration_queue: {
+        Row: {
+          content_id: string
+          content_slug: string | null
+          content_type: string
+          id: string
+          processed_at: string | null
+          queued_at: string | null
+          status: string | null
+        }
+        Insert: {
+          content_id: string
+          content_slug?: string | null
+          content_type: string
+          id?: string
+          processed_at?: string | null
+          queued_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          content_id?: string
+          content_slug?: string | null
+          content_type?: string
+          id?: string
+          processed_at?: string | null
+          queued_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       spotify_curated_shows: {
         Row: {
           category: string | null

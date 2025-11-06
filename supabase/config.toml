@@ -150,3 +150,6 @@ verify_jwt = false
 
 [[functions.indexnow-cron.schedule]]
 cron = "*/15 * * * *"  # Every 15 minutes
+
+[functions.verify-sitemaps]
+verify_jwt = false

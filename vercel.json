@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/serve-sitemap?type=index" },
+    { "source": "/sitemap.xml", "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-index.xml" },
 
     // Primary sitemaps under /sitemaps/
     { "source": "/sitemaps/sitemap-static.xml", "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/serve-sitemap?type=static" },

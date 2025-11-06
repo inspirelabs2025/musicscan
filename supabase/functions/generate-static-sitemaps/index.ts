@@ -90,12 +90,79 @@ Deno.serve(async (req) => {
       console.log(`✅ Uploaded ${upload.name}`);
     }
 
+    // Generate dynamic sitemap index
+    const sitemapIndexXml = await generateSitemapIndex(uploads);
+    const indexUpload = await supabase.storage
+      .from('sitemaps')
+      .upload('sitemap-index.xml', new Blob([sitemapIndexXml], { type: 'application/xml' }), {
+        contentType: 'application/xml; charset=utf-8',
+        cacheControl: 'public, max-age=3600',
+        upsert: true,
+      });
+
+    if (indexUpload.error) {
+      console.error('Error uploading sitemap-index.xml:', indexUpload.error);
+    } else {
+      console.log('✅ Uploaded sitemap-index.xml');
+    }
+
+    // Perform health checks on all sitemaps
+    const healthChecks: Record<string, any> = {};
+    const sitemapBaseUrl = 'https://www.musicscan.app/sitemaps';
+    const allSitemaps = [...uploads.map(u => u.name), 'sitemap-index.xml', 'sitemap-static.xml'];
+
+    for (const sitemapName of allSitemaps) {
+      try {
+        const checkUrl = sitemapName === 'sitemap-index.xml'
+          ? 'https://www.musicscan.app/sitemap.xml'
+          : `${sitemapBaseUrl}/${sitemapName}`;
+        
+        const response = await fetch(checkUrl, { method: 'HEAD' });
+        healthChecks[sitemapName] = {
+          status: response.status,
+          ok: response.ok,
+          content_type: response.headers.get('content-type'),
+          last_modified: response.headers.get('last-modified'),
+          checked_at: new Date().toISOString()
+        };
+        
+        if (!response.ok) {
+          console.error(`⚠️ Health check failed for ${sitemapName}: ${response.status}`);
+        }
+      } catch (err) {
+        healthChecks[sitemapName] = { error: err.message, checked_at: new Date().toISOString() };
+      }
+    }
+
+    // Submit to Google Search Console API
+    let gscSubmitted = false;
+    let gscResponse = null;
+
+    try {
+      const { data: gscResult, error: gscError } = await supabase.functions.invoke('gsc-sitemap-submit');
+      
+      if (gscError) {
+        console.error('GSC submission error:', gscError);
+        gscResponse = { error: gscError.message };
+      } else {
+        gscSubmitted = gscResult?.success || false;
+        gscResponse = gscResult;
+      }
+    } catch (err) {
+      console.error('GSC submission failed:', err);
+      gscResponse = { error: err.message };
+    }
+
     console.log('All sitemaps uploaded successfully!');
 
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Static sitemaps generated successfully',
+        sitemaps_updated: [...uploads.map(u => u.name), 'sitemap-index.xml'],
+        health_checks: healthChecks,
+        gsc_submitted: gscSubmitted,
+        gsc_response: gscResponse,
         stats: {
           blogPosts: blogPosts?.length || 0,
           musicStories: musicStories?.length || 0,
@@ -171,4 +238,27 @@ function generateImageSitemapXml(items: Array<any>, baseUrl: string, imageField:
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${urls}
 </urlset>`;
+}
+
+function generateSitemapIndex(uploads: Array<{ name: string }>): string {
+  const baseUrl = 'https://www.musicscan.app/sitemaps';
+  const now = new Date().toISOString();
+  
+  const dynamicSitemaps = uploads.map(u => 
+    `  <sitemap>
+    <loc>${baseUrl}/${u.name}</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>`
+  ).join('\n');
+  
+  const staticEntry = `  <sitemap>
+    <loc>https://www.musicscan.app/sitemaps/sitemap-static.xml</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>`;
+  
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${staticEntry}
+${dynamicSitemaps}
+</sitemapindex>`;
 }

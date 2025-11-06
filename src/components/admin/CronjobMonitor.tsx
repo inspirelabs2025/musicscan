@@ -10,11 +10,15 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
+  Globe,
   Loader2,
   TrendingUp,
   XCircle,
   Zap
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { nl } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface CronjobStatus {
   name: string;
@@ -119,6 +123,28 @@ export const CronjobMonitor = () => {
           setLastUpdate(new Date());
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sitemap_regeneration_log'
+        },
+        () => {
+          setLastUpdate(new Date());
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sitemap_regeneration_queue'
+        },
+        () => {
+          setLastUpdate(new Date());
+        }
+      )
       .subscribe((status) => {
         setConnectionStatus(status === 'SUBSCRIBED' ? 'connected' : 'disconnected');
       });
@@ -127,6 +153,53 @@ export const CronjobMonitor = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Sitemap regeneration logs
+  const { data: sitemapLogs } = useQuery({
+    queryKey: ['sitemap-regeneration-logs', lastUpdate],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('sitemap_regeneration_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 5000,
+  });
+
+  // Sitemap queue status
+  const { data: sitemapQueue } = useQuery({
+    queryKey: ['sitemap-queue-status', lastUpdate],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('sitemap_regeneration_queue')
+        .select('status, queued_at')
+        .eq('status', 'pending')
+        .order('queued_at', { ascending: true });
+      
+      if (error) throw error;
+      return {
+        pending: data.length,
+        oldest_queued: data.length > 0 ? data[0].queued_at : null
+      };
+    },
+    refetchInterval: 3000,
+  });
+
+  // Manual trigger for sitemap regeneration
+  const triggerSitemapRegeneration = async () => {
+    try {
+      await supabase.functions.invoke('sitemap-queue-processor');
+      toast.success('Sitemap regeneratie gestart');
+    } catch (err: any) {
+      toast.error('Fout bij sitemap regeneratie', {
+        description: err.message
+      });
+    }
+  };
 
   // Queue metrics
   const { data: queueMetrics, isLoading: metricsLoading } = useQuery({
@@ -260,6 +333,20 @@ export const CronjobMonitor = () => {
       successRate: 100,
       errorCount: 0,
       schedule: 'Elke 5 minuten',
+    },
+    {
+      name: 'Sitemap Regeneratie',
+      status: sitemapQueue && sitemapQueue.pending > 0 ? 'active' : 'idle',
+      processedToday: sitemapLogs?.filter(l => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return new Date(l.created_at) >= today;
+      }).length || 0,
+      successRate: sitemapLogs 
+        ? Math.round((sitemapLogs.filter(l => l.status === 'success').length / Math.max(1, sitemapLogs.length)) * 100)
+        : 100,
+      errorCount: sitemapLogs?.filter(l => l.status === 'failed').length || 0,
+      schedule: 'Elke 3 minuten',
     },
   ];
 
@@ -559,6 +646,71 @@ export const CronjobMonitor = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Sitemap Regeneratie Monitor */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Sitemap Regeneratie
+              {sitemapQueue && sitemapQueue.pending > 0 && (
+                <Badge variant="default">{sitemapQueue.pending} in queue</Badge>
+              )}
+            </CardTitle>
+            <Button size="sm" onClick={triggerSitemapRegeneration}>
+              Force Regenerate
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Queue status */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-sm text-muted-foreground">Pending in Queue</div>
+                <div className="text-2xl font-bold">{sitemapQueue?.pending || 0}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Laatste Regeneratie</div>
+                <div className="text-sm font-mono">
+                  {sitemapLogs?.[0]?.completed_at 
+                    ? formatDistanceToNow(new Date(sitemapLogs[0].completed_at), { addSuffix: true, locale: nl })
+                    : 'Nog niet uitgevoerd'}
+                </div>
+              </div>
+            </div>
+            
+            {/* Recent logs */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Recente Regeneraties</div>
+              {sitemapLogs?.slice(0, 5).map((log: any) => (
+                <div key={log.id} className="flex items-center justify-between text-sm border-b pb-2">
+                  <div className="flex items-center gap-2">
+                    {log.status === 'success' ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : log.status === 'failed' ? (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    ) : (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                    <span>{log.trigger_source}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {log.gsc_submitted && <Badge variant="outline">GSC ✓</Badge>}
+                    <span className="text-xs text-muted-foreground">
+                      {log.duration_ms}ms
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {(!sitemapLogs || sitemapLogs.length === 0) && (
+                <div className="text-sm text-muted-foreground">Geen regeneraties gevonden</div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="text-xs text-muted-foreground text-center flex items-center justify-center gap-2">
         <div className={`h-1.5 w-1.5 rounded-full ${connectionStatus === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />

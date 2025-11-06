@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     // Fetch all published music stories with images
     const { data: musicStories, error: storiesError } = await supabase
       .from('music_stories')
-      .select('slug, updated_at, cover_image_url, yaml_frontmatter')
+      .select('slug, updated_at, artwork_url, yaml_frontmatter, artist, album, title')
       .eq('is_published', true)
       .order('updated_at', { ascending: false });
 
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
 
     // Generate image sitemaps
     const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
-    const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal', 'cover_image_url');
+    const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal', 'artwork_url');
     const productsImageSitemapXml = generateImageSitemapXml(artProducts || [], 'https://www.musicscan.app/product', 'primary_image');
 
     // Upload all sitemaps

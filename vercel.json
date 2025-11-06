@@ -10,74 +10,66 @@
     },
     {
       "src": "/sitemap\\.xml",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-index-proxy",
+      "dest": "https://ssxbpyqnjfiyubsuonar.functions.supabase.co/sitemaps-proxy?name=index",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
-        "X-Sitemap-Proxy": "vercel-routes"
+        "Cache-Control": "public, max-age=3600"
       }
     },
     {
       "src": "/sitemaps/sitemap-blog\\.xml",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy/sitemap-blog.xml",
+      "dest": "https://ssxbpyqnjfiyubsuonar.functions.supabase.co/sitemaps-proxy?name=blog",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
-        "X-Sitemap-Proxy": "vercel-routes"
+        "Cache-Control": "public, max-age=3600"
       }
     },
     {
       "src": "/sitemaps/sitemap-products\\.xml",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy/sitemap-products.xml",
+      "dest": "https://ssxbpyqnjfiyubsuonar.functions.supabase.co/sitemaps-proxy?name=products",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
-        "X-Sitemap-Proxy": "vercel-routes"
+        "Cache-Control": "public, max-age=3600"
       }
     },
     {
       "src": "/sitemaps/sitemap-music-stories\\.xml",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy/sitemap-music-stories.xml",
+      "dest": "https://ssxbpyqnjfiyubsuonar.functions.supabase.co/sitemaps-proxy?name=music-stories",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
-        "X-Sitemap-Proxy": "vercel-routes"
+        "Cache-Control": "public, max-age=3600"
       }
     },
     {
       "src": "/sitemaps/sitemap-static\\.xml",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy/sitemap-static.xml",
+      "dest": "https://ssxbpyqnjfiyubsuonar.functions.supabase.co/sitemaps-proxy?name=static",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
-        "X-Sitemap-Proxy": "vercel-routes"
+        "Cache-Control": "public, max-age=3600"
       }
     },
     {
       "src": "/sitemaps/sitemap-images-blogs\\.xml",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy/sitemap-images-blogs.xml",
+      "dest": "https://ssxbpyqnjfiyubsuonar.functions.supabase.co/sitemaps-proxy?name=images-blogs",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
-        "X-Sitemap-Proxy": "vercel-routes"
+        "Cache-Control": "public, max-age=3600"
       }
     },
     {
       "src": "/sitemaps/sitemap-images-products\\.xml",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy/sitemap-images-products.xml",
+      "dest": "https://ssxbpyqnjfiyubsuonar.functions.supabase.co/sitemaps-proxy?name=images-products",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
-        "X-Sitemap-Proxy": "vercel-routes"
+        "Cache-Control": "public, max-age=3600"
       }
     },
     {
       "src": "/sitemaps/sitemap-images-stories\\.xml",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy/sitemap-images-stories.xml",
+      "dest": "https://ssxbpyqnjfiyubsuonar.functions.supabase.co/sitemaps-proxy?name=images-stories",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
-        "X-Sitemap-Proxy": "vercel-routes"
+        "Cache-Control": "public, max-age=3600"
       }
     },
     {

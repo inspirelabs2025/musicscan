@@ -141,3 +141,12 @@ cron = "*/3 * * * *"  # Every 3 minutes
 
 [functions.serve-sitemap]
 verify_jwt = false
+
+[functions.gsc-sitemap-submit]
+verify_jwt = false
+
+[functions.indexnow-cron]
+verify_jwt = false
+
+[[functions.indexnow-cron.schedule]]
+cron = "*/15 * * * *"  # Every 15 minutes

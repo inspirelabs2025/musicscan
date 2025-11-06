@@ -139,18 +139,24 @@ Deno.serve(async (req) => {
     let gscResponse = null;
 
     try {
+      console.log('🔔 Calling GSC sitemap submission...');
       const { data: gscResult, error: gscError } = await supabase.functions.invoke('gsc-sitemap-submit');
       
       if (gscError) {
-        console.error('GSC submission error:', gscError);
-        gscResponse = { error: gscError.message };
+        console.error('❌ GSC submission error:', gscError);
+        gscResponse = { error: gscError.message, details: gscError };
       } else {
         gscSubmitted = gscResult?.success || false;
         gscResponse = gscResult;
+        console.log(`✅ GSC submission result:`, { 
+          success: gscSubmitted, 
+          submitted: gscResult?.submitted || 0,
+          failed: gscResult?.failed || 0 
+        });
       }
     } catch (err) {
-      console.error('GSC submission failed:', err);
-      gscResponse = { error: err.message };
+      console.error('❌ GSC submission exception:', err);
+      gscResponse = { error: err.message, stack: err.stack };
     }
 
     console.log('All sitemaps uploaded successfully!');

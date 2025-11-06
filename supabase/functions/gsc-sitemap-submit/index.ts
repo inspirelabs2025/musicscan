@@ -54,14 +54,35 @@ Deno.serve(async (req) => {
   try {
     const credentialsJson = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY');
     if (!credentialsJson) {
-      console.log('GOOGLE_SERVICE_ACCOUNT_KEY not configured, skipping GSC submission');
+      console.log('⚠️ GOOGLE_SERVICE_ACCOUNT_KEY not configured, skipping GSC submission');
       return new Response(
-        JSON.stringify({ success: false, message: 'GSC credentials not configured' }),
+        JSON.stringify({ 
+          success: false, 
+          message: 'GSC credentials not configured - add service account JSON to enable auto-submission',
+          hint: 'Generate a service account key at https://console.cloud.google.com/iam-admin/serviceaccounts'
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    const credentials: GoogleOAuthCredentials = JSON.parse(credentialsJson);
+    // Validate JSON format before parsing
+    let credentials: GoogleOAuthCredentials;
+    try {
+      credentials = JSON.parse(credentialsJson);
+      if (!credentials.client_email || !credentials.private_key) {
+        throw new Error('Invalid service account format: missing client_email or private_key');
+      }
+    } catch (parseError) {
+      console.error('❌ Invalid GOOGLE_SERVICE_ACCOUNT_KEY format:', parseError.message);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Invalid service account JSON format',
+          hint: 'Ensure GOOGLE_SERVICE_ACCOUNT_KEY contains valid service account JSON with client_email and private_key'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const accessToken = await getAccessToken(credentials);
     
     // Site URL moet exact matchen met GSC property

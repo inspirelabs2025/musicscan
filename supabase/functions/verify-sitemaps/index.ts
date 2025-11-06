@@ -1,4 +1,4 @@
-import { createHash } from "https://deno.land/std@0.168.0/hash/mod.ts";
+import { crypto } from "https://deno.land/std@0.224.0/crypto/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,10 +27,10 @@ Deno.serve(async (req) => {
     // Helper to fetch and hash
     const fetchAndHash = async (url: string): Promise<string> => {
       const response = await fetch(url + '?t=' + Date.now());
-      const text = await response.text();
-      const hash = createHash("md5");
-      hash.update(text);
-      return hash.toString();
+      const arrayBuffer = await response.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest('MD5', arrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     };
     
     // Count sitemap entries in index

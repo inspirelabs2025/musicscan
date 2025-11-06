@@ -219,8 +219,7 @@ serve(async (req) => {
         genre: genreValue,
         country: releaseData.country,
         style: styleValue,
-        discogs_url: releaseData.discogs_url,
-        master_id: releaseData.master_id ? parseInt(releaseData.master_id) : null
+        discogs_url: releaseData.discogs_url
       }
     });
 
@@ -230,9 +229,6 @@ serve(async (req) => {
     console.log('💾 Release saved with ID:', release_id);
 
     // Step 3: Get initial artwork URL (for product creation)
-    const masterId = releaseData.master_id || null;
-    console.log('🖼️ Master ID for artwork (from release metadata):', masterId || 'none');
-    
     const artworkUrl = releaseData.cover_image;
     console.log('🖼️ Initial artwork URL:', artworkUrl);
 
@@ -349,14 +345,12 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
     });
 
     // ✅ Store Release ID in discogs_id column
-    // ✅ Store Master ID (from release metadata) in master_id column
     const finalDiscogsUrl = releaseData.discogs_url;
     const finalDiscogsId = parseInt(releaseData.discogs_id);
     
     console.log('🎯 Storing Release ID:', {
       release_id: finalDiscogsId,
-      release_url: finalDiscogsUrl,
-      master_id: releaseData.master_id || 'none (from API metadata)'
+      release_url: finalDiscogsUrl
     });
 
     const { data: product, error: productError } = await supabase
@@ -377,7 +371,6 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
         categories: categories,
         tags: tags,
         discogs_id: finalDiscogsId, // ✅ Always Release ID
-        master_id: releaseData.master_id ? parseInt(releaseData.master_id) : null, // ✅ From Discogs API
         discogs_url: finalDiscogsUrl, // ✅ Release URL
         release_id: release_id,
         status: 'active',
@@ -395,7 +388,6 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
     try {
       await supabase.functions.invoke('fetch-album-artwork', {
         body: {
-          master_id: masterId,
           discogs_url: releaseData.discogs_url,
           artist: artistValue,
           title: albumTitle,
@@ -450,7 +442,6 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
             try {
               await supabase.functions.invoke('fetch-album-artwork', {
                 body: {
-                  master_id: masterId,
                   discogs_url: releaseData.discogs_url,
                   artist: artistValue,
                   title: albumTitle,
@@ -475,7 +466,6 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
         product_id: product.id,
         product_slug: product.slug,
         discogs_id: releaseData.discogs_id,
-        master_id: masterId || null,
         blog_generated: !!blogData?.blog,
         blog_id: blogData?.blog?.id || null,
         blog_slug: blogData?.blog?.slug || null,

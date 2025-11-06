@@ -1,4 +1,4 @@
-import { crypto } from "https://deno.land/std@0.224.0/crypto/mod.ts";
+// Using Web Crypto API for hashing
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,11 +24,11 @@ Deno.serve(async (req) => {
       return matches ? matches.length : 0;
     };
     
-    // Helper to fetch and hash
+    // Helper to fetch and hash (using SHA-256 instead of MD5)
     const fetchAndHash = async (url: string): Promise<string> => {
       const response = await fetch(url + '?t=' + Date.now());
       const arrayBuffer = await response.arrayBuffer();
-      const hashBuffer = await crypto.subtle.digest('MD5', arrayBuffer);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     };

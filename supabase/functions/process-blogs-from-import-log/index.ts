@@ -84,13 +84,32 @@ serve(async (req) => {
         console.log(`  ✅ Validated Release ID: ${item.discogs_release_id}`);
 
         let albumId: string | null = null;
-        let albumType: 'product' | 'release' = 'product';
+        let albumType: 'product' | 'release' = 'release';
 
-        // If we have a product_id, use that
+        // If we have a product_id, fetch the release_id from platform_products
         if (item.product_id) {
-          albumId = item.product_id;
-          albumType = 'product';
-          console.log(`  Using product_id: ${albumId}`);
+          console.log(`  Fetching release_id from product: ${item.product_id}`);
+          
+          const { data: productData, error: productError } = await supabase
+            .from('platform_products')
+            .select('release_id')
+            .eq('id', item.product_id)
+            .maybeSingle();
+          
+          if (productError) {
+            console.error('  ❌ Error fetching product:', productError);
+            throw productError;
+          }
+          
+          if (productData?.release_id) {
+            albumId = productData.release_id;
+            albumType = 'release';
+            console.log(`  ✅ Using release_id from product: ${albumId}`);
+          } else {
+            console.warn(`  ⚠️ No release_id found in product, falling back to product_id`);
+            albumId = item.product_id;
+            albumType = 'product';
+          }
         } else {
           // Try to find or create a release record
           console.log(`  No product_id, finding/creating release...`);

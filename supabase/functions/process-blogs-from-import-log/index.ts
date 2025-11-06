@@ -19,12 +19,16 @@ serve(async (req) => {
     console.log('🔍 Starting blog processing from import log...');
 
     // Fetch items where blog_id is null and we have a product_id OR status is completed/skipped
+    // Prioritize recent items (last 7 days) to avoid old failed items blocking new ones
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    
     const { data: itemsToProcess, error: fetchError } = await supabase
       .from('discogs_import_log')
       .select('*')
       .is('blog_id', null)
       .or('and(product_id.not.is.null),and(status.in.(completed,skipped))')
-      .order('created_at', { ascending: true })
+      .gte('created_at', sevenDaysAgo)
+      .order('created_at', { ascending: false }) // Process newest first
       .limit(10);
 
     if (fetchError) {

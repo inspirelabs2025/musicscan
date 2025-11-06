@@ -5,6 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Normalize URL for consistent canonical tags
+export function normalizeUrl(path: string): string {
+  // Remove trailing slash
+  let normalized = path.replace(/\/$/, '') || '/';
+  return normalized;
+}
+
+// Normalize full URL with domain
+export function normalizeFullUrl(pathname: string): string {
+  const normalized = normalizeUrl(pathname);
+  return `https://www.musicscan.app${normalized}`;
+}
+
 // Extract Discogs ID from URL as fallback
 export function extractDiscogsIdFromUrl(url: string | null): number | null {
   if (!url) return null;

@@ -7,6 +7,68 @@ const corsHeaders = {
 
 const BASE_URL = 'https://www.musicscan.app';
 
+// Normalize URL by removing trailing slashes
+const normalizeSlug = (slug: string): string => {
+  return slug.replace(/\/$/, '').trim();
+};
+
+// Find canonical slug for blog posts (handles year variants)
+const findCanonicalBlogSlug = async (supabaseClient: any, requestedSlug: string): Promise<string | null> => {
+  // Helper: parse base and year from slug pattern "<base>-<year|unknown>"
+  const parseSlug = (s: string) => {
+    const m = s.match(/^(.*)-((?:\d{4})|unknown)$/);
+    if (m) {
+      return { base: m[1], year: m[2] };
+    }
+    return { base: s, year: null };
+  };
+
+  const { base, year: yearPart } = parseSlug(requestedSlug);
+
+  // 1) Try exact slug first
+  let { data: blogData } = await supabaseClient
+    .from('blog_posts')
+    .select('slug')
+    .eq('slug', requestedSlug)
+    .eq('is_published', true)
+    .maybeSingle();
+
+  if (blogData) return blogData.slug;
+
+  // 2) Try same base with -unknown
+  if (yearPart && yearPart !== 'unknown') {
+    const altUnknown = `${base}-unknown`;
+    const { data: unknownData } = await supabaseClient
+      .from('blog_posts')
+      .select('slug')
+      .eq('slug', altUnknown)
+      .eq('is_published', true)
+      .maybeSingle();
+    if (unknownData) return unknownData.slug;
+  }
+
+  // 3) Try any slug with same base prefix
+  const { data: prefixList } = await supabaseClient
+    .from('blog_posts')
+    .select('slug')
+    .ilike('slug', `${base}-%`)
+    .eq('is_published', true)
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (prefixList && prefixList.length > 0) return prefixList[0].slug;
+
+  // 4) Try base without year
+  const { data: baseData } = await supabaseClient
+    .from('blog_posts')
+    .select('slug')
+    .eq('slug', base)
+    .eq('is_published', true)
+    .maybeSingle();
+  if (baseData) return baseData.slug;
+
+  return null;
+};
+
 // Detect if request is from a crawler
 const isCrawler = (userAgent: string): boolean => {
   const crawlerPatterns = [
@@ -297,15 +359,32 @@ Deno.serve(async (req) => {
     }
 
     const contentType = pathParts[0]; // 'plaat-verhaal', 'muziek-verhaal', 'product'
-    const slug = pathParts[1];
-
-    console.log(`[SSR] Content type: ${contentType}, slug: ${slug}`);
+    const rawSlug = pathParts[1];
+    const slug = normalizeSlug(rawSlug);
 
     // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
+
+    // For blog posts, check if we need to redirect to canonical slug
+    if (contentType === 'plaat-verhaal') {
+      const canonicalSlug = await findCanonicalBlogSlug(supabaseClient, slug);
+      if (canonicalSlug && canonicalSlug !== slug) {
+        console.log(`[SSR] Redirecting ${slug} -> ${canonicalSlug}`);
+        return new Response(null, {
+          status: 301,
+          headers: {
+            ...corsHeaders,
+            'Location': `${BASE_URL}/plaat-verhaal/${canonicalSlug}`,
+            'Cache-Control': 'public, max-age=86400'
+          }
+        });
+      }
+    }
+
+    console.log(`[SSR] Content type: ${contentType}, slug: ${slug}`);
 
     let html = '';
 

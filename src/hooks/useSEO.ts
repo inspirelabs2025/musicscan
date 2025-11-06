@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { normalizeFullUrl } from '@/lib/utils';
 
 interface SEOData {
   title?: string;
@@ -28,7 +29,7 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
   
   useEffect(() => {
     const finalSEO = { ...DEFAULT_SEO, ...seoData };
-    const currentUrl = `https://www.musicscan.app${location.pathname}`;
+    const currentUrl = normalizeFullUrl(location.pathname);
     
     // Update document title
     document.title = finalSEO.title || DEFAULT_SEO.title!;
@@ -81,7 +82,7 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     }
     canonicalLink.setAttribute('href', finalSEO.canonicalUrl || currentUrl);
     
-    // Language alternate
+    // Language alternate (only nl for now, remove en variant until implemented)
     let hreflangNL = document.querySelector('link[hreflang="nl"]');
     if (!hreflangNL) {
       hreflangNL = document.createElement('link');
@@ -91,14 +92,15 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     }
     hreflangNL.setAttribute('href', currentUrl);
     
-    let hreflangEN = document.querySelector('link[hreflang="en"]');
-    if (!hreflangEN) {
-      hreflangEN = document.createElement('link');
-      hreflangEN.setAttribute('rel', 'alternate');
-      hreflangEN.setAttribute('hreflang', 'en');
-      document.head.appendChild(hreflangEN);
+    // x-default hreflang for international targeting
+    let hreflangDefault = document.querySelector('link[hreflang="x-default"]');
+    if (!hreflangDefault) {
+      hreflangDefault = document.createElement('link');
+      hreflangDefault.setAttribute('rel', 'alternate');
+      hreflangDefault.setAttribute('hreflang', 'x-default');
+      document.head.appendChild(hreflangDefault);
     }
-    hreflangEN.setAttribute('href', currentUrl.replace('musicscan.app', 'musicscan.app/en'));
+    hreflangDefault.setAttribute('href', currentUrl);
     
   }, [seoData, location.pathname]);
 };

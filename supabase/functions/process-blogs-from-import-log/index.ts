@@ -166,7 +166,7 @@ serve(async (req) => {
           throw blogError;
         }
 
-        const blogId = blogData?.blog_post?.id || blogData?.id;
+        const blogId = blogData?.blog?.id || blogData?.blog_post?.id || blogData?.id;
         
         if (!blogId) {
           console.error('  ❌ No blog_id returned from generator');
@@ -190,7 +190,7 @@ serve(async (req) => {
 
         // Add to IndexNow queue
         try {
-          const blogSlug = blogData?.blog_post?.slug || blogData?.slug;
+          const blogSlug = blogData?.blog?.slug || blogData?.blog_post?.slug || blogData?.slug;
           if (blogSlug) {
             await supabase
               .from('indexnow_queue')

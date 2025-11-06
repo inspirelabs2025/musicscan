@@ -2,9 +2,12 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://musicscan.app/nieuws</loc>
+    <lastmod>2025-11-06T10:30:00+00:00</lastmod>
     <image:image>
       <image:loc>https://musicscan.app/lovable-uploads/87bd2c62-723d-46cd-8c50-386c02fd7ae5.png</image:loc>
-      <image:title>MusicScan Nieuws</image:title>
+      <image:title>MusicScan Nieuws en Muzieknieuws</image:title>
+      <image:caption>Laatste muzieknieuws en updates</image:caption>
     </image:image>
   </url>
+  <!-- Add individual blog post image entries here -->
 </urlset>

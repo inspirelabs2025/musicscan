@@ -1,4 +1,16 @@
 {
+  "redirects": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-index-proxy",
+      "permanent": false
+    },
+    {
+      "source": "/sitemaps/(.*)",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy/$1",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/sitemaps/(.*)",

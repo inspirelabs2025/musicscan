@@ -159,3 +159,6 @@ verify_jwt = false
 
 [functions.sitemap-index-proxy]
 verify_jwt = false
+
+[functions.sitemaps-proxy]
+verify_jwt = false

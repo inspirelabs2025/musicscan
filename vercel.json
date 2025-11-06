@@ -1,12 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/sitemaps/(.*).xml",
-      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/$1.xml"
+      "source": "/sitemaps/(.*)",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy/$1"
     },
     {
       "source": "/sitemap.xml",
-      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-index.xml"
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-index-proxy"
     },
     {
       "source": "/(.*)",

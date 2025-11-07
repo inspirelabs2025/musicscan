@@ -10,6 +10,7 @@ import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Sparkles, Eye, Palette } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
+import { CategoryNavigation } from "@/components/CategoryNavigation";
 
 export default function PosterShop() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -29,6 +30,11 @@ export default function PosterShop() {
   // Filter only POSTER products
   const posterProducts = allProducts?.filter(product => 
     product.categories?.includes('POSTER')
+  );
+
+  // Get metal print products for navigation
+  const metalProducts = allProducts?.filter(product => 
+    !product.categories?.includes('POSTER')
   );
 
   // Filter and sort products
@@ -59,6 +65,14 @@ export default function PosterShop() {
   const onSaleCount = posterProducts?.filter(p => p.is_on_sale).length || 0;
   const avgPrice = posterProducts?.length 
     ? Math.round(posterProducts.reduce((sum, p) => sum + p.price, 0) / posterProducts.length) 
+    : 0;
+
+  // Calculate prices for category navigation
+  const metalPrintsMinPrice = metalProducts?.length 
+    ? Math.min(...metalProducts.map(p => p.price))
+    : 0;
+  const postersMinPrice = posterProducts?.length 
+    ? Math.min(...posterProducts.map(p => p.price))
     : 0;
 
   return (
@@ -93,6 +107,15 @@ export default function PosterShop() {
             { name: "Home", url: "/" },
             { name: "Poster Shop", url: "/posters" }
           ]} />
+
+          {/* Category Navigation */}
+          <CategoryNavigation
+            currentCategory="poster"
+            metalPrintsCount={metalProducts?.length || 0}
+            postersCount={posterProducts?.length || 0}
+            metalPrintsMinPrice={metalPrintsMinPrice}
+            postersMinPrice={postersMinPrice}
+          />
 
           {/* Hero Header */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple to-accent p-8 md:p-12 text-white">

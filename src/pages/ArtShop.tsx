@@ -10,6 +10,7 @@ import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, SlidersHorizontal, TrendingUp, Eye, Sparkles } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
+import { CategoryNavigation } from "@/components/CategoryNavigation";
 
 export default function ArtShop() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -29,6 +30,11 @@ export default function ArtShop() {
   // Exclude POSTER products (metaalprints only)
   const products = allProducts?.filter(product => 
     !product.categories?.includes('POSTER')
+  );
+
+  // Get poster products for navigation
+  const posterProducts = allProducts?.filter(product => 
+    product.categories?.includes('POSTER')
   );
 
   // Filter and sort products
@@ -65,6 +71,14 @@ export default function ArtShop() {
     ? Math.round(products.reduce((sum, p) => sum + p.price, 0) / products.length) 
     : 0;
 
+  // Calculate prices for category navigation
+  const metalPrintsMinPrice = products?.length 
+    ? Math.min(...products.map(p => p.price))
+    : 0;
+  const postersMinPrice = posterProducts?.length 
+    ? Math.min(...posterProducts.map(p => p.price))
+    : 0;
+
   return (
     <>
       <Helmet>
@@ -81,6 +95,15 @@ export default function ArtShop() {
             { name: "Home", url: "/" },
             { name: "Art Shop", url: "/art-shop" }
           ]} />
+
+          {/* Category Navigation */}
+          <CategoryNavigation
+            currentCategory="metal"
+            metalPrintsCount={products?.length || 0}
+            postersCount={posterProducts?.length || 0}
+            metalPrintsMinPrice={metalPrintsMinPrice}
+            postersMinPrice={postersMinPrice}
+          />
 
           {/* Hero Header */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple to-accent p-8 md:p-12 text-white">

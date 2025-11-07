@@ -11,6 +11,7 @@ interface ReviewSchemaProps {
   datePublished: string;
   reviewUrl: string;
   imageUrl?: string;
+  itemType?: 'MusicAlbum' | 'MusicRecording' | 'Product';
 }
 
 export const ReviewSchema: React.FC<ReviewSchemaProps> = ({
@@ -22,18 +23,27 @@ export const ReviewSchema: React.FC<ReviewSchemaProps> = ({
   worstRating = 1,
   datePublished,
   reviewUrl,
-  imageUrl
+  imageUrl,
+  itemType = 'MusicAlbum'
 }) => {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Review",
     "itemReviewed": {
-      "@type": "MusicAlbum",
+      "@type": itemType,
       "name": itemName,
-      "byArtist": {
-        "@type": "MusicGroup",
-        "name": artist
-      },
+      ...(itemType !== 'Product' && {
+        "byArtist": {
+          "@type": "MusicGroup",
+          "name": artist
+        }
+      }),
+      ...(itemType === 'Product' && {
+        "brand": {
+          "@type": "Brand",
+          "name": artist || "MusicScan"
+        }
+      }),
       ...(imageUrl && { "image": imageUrl })
     },
     "reviewRating": {

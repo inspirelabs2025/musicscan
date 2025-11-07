@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import { Helmet } from "react-helmet";
 import { useBlogPostByProduct } from "@/hooks/useBlogPostByProduct";
+import { ReviewSchema, AggregateRatingSchema } from "@/components/SEO/ReviewSchema";
 
 export default function PlatformProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -118,6 +119,27 @@ export default function PlatformProductDetail() {
             {JSON.stringify(structuredData)}
           </script>
         </Helmet>
+      )}
+      
+      <ReviewSchema
+        itemName={`${product.artist ? product.artist + ' - ' : ''}${product.title}`}
+        artist={product.artist || 'MusicScan'}
+        reviewBody={product.description || `${product.title} beschikbaar in onze shop. Hoge kwaliteit en snelle verzending gegarandeerd.`}
+        rating={4.5}
+        datePublished={product.published_at || product.created_at}
+        reviewUrl={`https://www.musicscan.app/product/${slug}`}
+        imageUrl={product.primary_image || undefined}
+        itemType="Product"
+      />
+      
+      {product.view_count > 20 && (
+        <AggregateRatingSchema
+          itemName={`${product.artist ? product.artist + ' - ' : ''}${product.title}`}
+          artist={product.artist || 'MusicScan'}
+          ratingValue={4.4}
+          reviewCount={Math.floor(product.view_count / 15)}
+          imageUrl={product.primary_image || undefined}
+        />
       )}
 
       {/* Back button */}

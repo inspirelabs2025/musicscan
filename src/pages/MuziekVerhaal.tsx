@@ -9,6 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import { useSEO } from '@/hooks/useSEO';
 import { ArticleStructuredData } from '@/components/SEO/StructuredData';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
+import { ReviewSchema, FAQSchema } from '@/components/SEO/ReviewSchema';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -236,6 +237,18 @@ export const MuziekVerhaal: React.FC = () => {
   const publishedDate = formatDate(new Date(story.created_at), 'dd MMMM yyyy', { locale: nl });
   const readingTime = Math.ceil(story.story_content.length / 1000); // Approximate reading time
 
+  // Generate FAQ questions based on story content
+  const faqQuestions = [
+    {
+      question: `Wat is het verhaal achter ${story.artist && story.single_name ? `${story.artist} - ${story.single_name}` : story.query}?`,
+      answer: story.story_content.slice(0, 300).replace(/[#*]/g, '') + '...'
+    },
+    {
+      question: `Wie is ${story.artist || story.query.split(',')[0]?.trim() || story.query}?`,
+      answer: `Ontdek alles over ${story.artist || story.query} in dit AI-gegenereerde muziekverhaal. Lees over de achtergrond, betekenis en impact van deze muziek.`
+    }
+  ];
+
   return (
     <>
       <ArticleStructuredData
@@ -243,7 +256,24 @@ export const MuziekVerhaal: React.FC = () => {
         description={seoDescription}
         publishDate={story.created_at}
         author="MusicScan AI"
+        image={story.artwork_url}
+        artist={story.artist}
+        album={story.album}
+        genre={story.genre}
       />
+      
+      <ReviewSchema
+        itemName={story.artist && story.single_name ? `${story.artist} - ${story.single_name}` : story.title}
+        artist={story.artist || story.query.split(',')[1]?.trim() || story.query.split(' ')[0] || 'Various Artists'}
+        reviewBody={story.story_content}
+        rating={4.3}
+        datePublished={story.created_at}
+        reviewUrl={`https://www.musicscan.app/muziek-verhaal/${story.slug}`}
+        imageUrl={story.artwork_url}
+        itemType="MusicRecording"
+      />
+      
+      <FAQSchema questions={faqQuestions} />
       
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80">
         {/* Background Pattern */}

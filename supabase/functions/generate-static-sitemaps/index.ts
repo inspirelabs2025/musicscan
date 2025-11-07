@@ -17,15 +17,37 @@ Deno.serve(async (req) => {
 
     console.log('Starting static sitemap generation...');
 
-    // Fetch all published blog posts with images
-    const { data: blogPosts, error: blogError } = await supabase
-      .from('blog_posts')
-      .select('slug, updated_at, album_cover_url, yaml_frontmatter')
-      .eq('is_published', true)
-      .order('updated_at', { ascending: false });
+    // Fetch all published blog posts with pagination (batches of 1000)
+    let blogPosts: Array<{ slug: string; updated_at: string; album_cover_url?: string; yaml_frontmatter?: any }> = [];
+    const pageSize = 1000;
+    let from = 0;
+    let to = pageSize - 1;
+    let totalCount: number | null = null;
 
-    if (blogError) {
-      throw new Error(`Failed to fetch blog posts: ${blogError.message}`);
+    while (true) {
+      const { data, error, count } = await supabase
+        .from('blog_posts')
+        .select('slug, updated_at, album_cover_url, yaml_frontmatter', { count: 'exact' })
+        .eq('is_published', true)
+        .order('updated_at', { ascending: false })
+        .range(from, to);
+
+      if (error) {
+        throw new Error(`Failed to fetch blog posts: ${error.message}`);
+      }
+
+      if (data && data.length > 0) {
+        blogPosts = blogPosts.concat(data);
+      }
+
+      if (totalCount === null) totalCount = count ?? data?.length ?? 0;
+
+      if (!data || data.length < pageSize || (blogPosts.length >= (totalCount ?? 0))) {
+        break;
+      }
+
+      from += pageSize;
+      to += pageSize;
     }
 
     // Fetch all published music stories with images
@@ -54,19 +76,31 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, and ${artProducts?.length || 0} art products`);
 
-    // Generate regular sitemaps
-    const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://musicscan.app/plaat-verhaal');
+    // Generate regular sitemaps (with pagination for blogs)
+    const blogUploads: Array<{ name: string; data: string }> = [];
+    const blogPageSize = 1000;
+    const totalBlogParts = Math.max(1, Math.ceil((blogPosts?.length || 0) / blogPageSize));
+    for (let i = 0; i < totalBlogParts; i++) {
+      const start = i * blogPageSize;
+      const end = start + blogPageSize;
+      const partItems = (blogPosts || []).slice(start, end);
+      const partXml = generateSitemapXml(partItems, 'https://musicscan.app/plaat-verhaal');
+      const partName = `sitemap-blog-v3-part${i + 1}.xml`;
+      blogUploads.push({ name: partName, data: partXml });
+    }
+
+    // Other sitemaps (no pagination yet)
     const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal');
     const productsSitemapXml = generateSitemapXml(artProducts || [], 'https://musicscan.app/product');
 
-    // Generate image sitemaps
+    // Image sitemaps
     const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://musicscan.app/plaat-verhaal', 'album_cover_url');
     const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal', 'artwork_url');
     const productsImageSitemapXml = generateImageSitemapXml(artProducts || [], 'https://musicscan.app/product', 'primary_image');
 
-    // Upload all sitemaps
+    // Build uploads list
     const uploads = [
-      { name: 'sitemap-blog.xml', data: blogSitemapXml },
+      ...blogUploads,
       { name: 'sitemap-music-stories.xml', data: storiesSitemapXml },
       { name: 'sitemap-products.xml', data: productsSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },

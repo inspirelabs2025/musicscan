@@ -18,7 +18,7 @@
     },
     {
       "src": "/sitemaps/sitemap-blog\\.xml",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog.xml",
+      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog-v3-part1.xml",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
         "Cache-Control": "public, max-age=0, s-maxage=0, must-revalidate"
@@ -67,6 +67,14 @@
     {
       "src": "/sitemaps/sitemap-images-stories\\.xml",
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-images-stories.xml",
+      "headers": {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "public, max-age=0, s-maxage=0, must-revalidate"
+      }
+    },
+    {
+      "src": "/sitemaps/(.*)",
+      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/$1",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
         "Cache-Control": "public, max-age=0, s-maxage=0, must-revalidate"

@@ -11,6 +11,7 @@ interface ImageGalleryProps {
     url: string;
     label: string;
     type: string;
+    alt?: string;
   }>;
 }
 
@@ -41,8 +42,9 @@ export function ImageGallery({ images }: ImageGalleryProps) {
                 <div className="aspect-square relative group">
                   <img
                     src={image.url}
-                    alt={image.label}
+                    alt={image.alt || image.label}
                     className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    loading="lazy"
                     onError={(e) => {
                       e.currentTarget.src = "/placeholder.svg";
                     }}
@@ -85,8 +87,9 @@ export function ImageGallery({ images }: ImageGalleryProps) {
             >
               <img
                 src={image.url}
-                alt={image.label}
+                alt={image.alt || image.label}
                 className="w-full h-full object-cover"
+                loading="lazy"
                 onError={(e) => {
                   e.currentTarget.src = "/placeholder.svg";
                 }}

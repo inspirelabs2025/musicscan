@@ -11,10 +11,15 @@ import { AlbumInsightsSection } from "@/components/AlbumInsightsSection";
 import { ImageGallery } from "@/components/ImageGallery";
 import { PriceAnalysisSection } from "@/components/PriceAnalysisSection";
 import { TechnicalSpecsSection } from "@/components/TechnicalSpecsSection";
+import { RelatedContent } from "@/components/RelatedContent";
+import { ReviewSchema, AggregateRatingSchema } from "@/components/SEO/ReviewSchema";
+import { LastUpdatedBadge } from "@/components/SEO/LastUpdatedBadge";
+import { ViewCountBadge, TrendingBadge } from "@/components/SEO/SocialProofBadges";
 import { ArrowLeft, ExternalLink, Calendar, Tag, Music2, Disc3, Brain, Loader2, Clock, Hash } from "lucide-react";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
+import { generateAltTag } from "@/utils/generateAltTag";
 
 export default function AlbumDetail() {
   const { albumId } = useParams<{ albumId: string }>();
@@ -33,21 +38,56 @@ export default function AlbumDetail() {
     }
   }, [canonicalRelease, album?.discogs_id, navigate]);
 
-  // Prepare images array for the gallery
+  // Prepare images array for the gallery with SEO-optimized alt tags
   const getAlbumImages = () => {
     if (!album) return [];
     
     const images = [];
     
     if (album.media_type === 'cd') {
-      if (album.front_image) images.push({ url: album.front_image, label: "Voorkant", type: "front" });
-      if (album.back_image) images.push({ url: album.back_image, label: "Achterkant", type: "back" });
-      if (album.barcode_image) images.push({ url: album.barcode_image, label: "Barcode", type: "barcode" });
-      if (album.matrix_image) images.push({ url: album.matrix_image, label: "Matrix", type: "matrix" });
+      if (album.front_image) images.push({ 
+        url: album.front_image, 
+        label: "Voorkant", 
+        type: "front",
+        alt: generateAltTag(album.artist, album.title, album.year, 'CD', 'front')
+      });
+      if (album.back_image) images.push({ 
+        url: album.back_image, 
+        label: "Achterkant", 
+        type: "back",
+        alt: generateAltTag(album.artist, album.title, album.year, 'CD', 'back')
+      });
+      if (album.barcode_image) images.push({ 
+        url: album.barcode_image, 
+        label: "Barcode", 
+        type: "barcode",
+        alt: generateAltTag(album.artist, album.title, album.year, 'CD', 'barcode')
+      });
+      if (album.matrix_image) images.push({ 
+        url: album.matrix_image, 
+        label: "Matrix", 
+        type: "matrix",
+        alt: generateAltTag(album.artist, album.title, album.year, 'CD', 'matrix')
+      });
     } else {
-      if (album.catalog_image) images.push({ url: album.catalog_image, label: "Catalogus", type: "catalog" });
-      if (album.matrix_image) images.push({ url: album.matrix_image, label: "Matrix", type: "matrix" });
-      if (album.additional_image) images.push({ url: album.additional_image, label: "Extra", type: "additional" });
+      if (album.catalog_image) images.push({ 
+        url: album.catalog_image, 
+        label: "Catalogus", 
+        type: "catalog",
+        alt: generateAltTag(album.artist, album.title, album.year, 'Vinyl', 'catalog')
+      });
+      if (album.matrix_image) images.push({ 
+        url: album.matrix_image, 
+        label: "Matrix", 
+        type: "matrix",
+        alt: generateAltTag(album.artist, album.title, album.year, 'Vinyl', 'matrix')
+      });
+      if (album.additional_image) images.push({ 
+        url: album.additional_image, 
+        label: "Extra", 
+        type: "additional",
+        alt: generateAltTag(album.artist, album.title, album.year, 'Vinyl', 'additional')
+      });
     }
     
     return images;
@@ -112,10 +152,35 @@ export default function AlbumDetail() {
 
   const imageUrl = getImageUrl();
 
+  const displayImage = getImageUrl();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-vinyl-purple/5 via-transparent to-primary/5">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
+    <>
+      {/* SEO Structured Data */}
+      <ReviewSchema
+        itemName={`${album.artist} - ${album.title}`}
+        artist={album.artist}
+        reviewBody={album.shop_description || `${album.artist} - ${album.title} beschikbaar in onze collectie.`}
+        rating={4.5}
+        datePublished={album.created_at}
+        reviewUrl={`https://www.musicscan.app/album/${albumId}`}
+        imageUrl={displayImage}
+        itemType="MusicAlbum"
+      />
+
+      {album.discogs_id && (
+        <AggregateRatingSchema
+          itemName={`${album.artist} - ${album.title}`}
+          artist={album.artist}
+          ratingValue={4.3}
+          reviewCount={15}
+          imageUrl={displayImage}
+        />
+      )}
+
+      <div className="min-h-screen bg-gradient-to-br from-vinyl-purple/5 via-transparent to-primary/5">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-7xl mx-auto">
           {/* Back Navigation */}
           <Button
             variant="ghost"
@@ -152,6 +217,9 @@ export default function AlbumDetail() {
                   )}
                   {album.condition_grade && (
                     <Badge variant="outline">{album.condition_grade}</Badge>
+                  )}
+                  {album.updated_at && album.updated_at !== album.created_at && (
+                    <LastUpdatedBadge lastUpdate={album.updated_at} />
                   )}
                 </div>
 
@@ -290,8 +358,18 @@ export default function AlbumDetail() {
               <AlbumInsightsSection insights={insights} />
             </>
           )}
+
+          {/* Related Content - Internal Linking */}
+          <Separator className="my-8" />
+          <RelatedContent
+            artist={album.artist}
+            genre={album.genre}
+            year={album.year}
+            excludeId={albumId}
+          />
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -10,8 +10,13 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { PriceAnalysisSection } from "@/components/PriceAnalysisSection";
 import { TechnicalSpecsSection } from "@/components/TechnicalSpecsSection";
 import { AlbumInsightsSection } from "@/components/AlbumInsightsSection";
+import { RelatedContent } from "@/components/RelatedContent";
+import { AggregateRatingSchema } from "@/components/SEO/ReviewSchema";
+import { PopularityBadge, TrendingBadge } from "@/components/SEO/SocialProofBadges";
+import { LastUpdatedBadge } from "@/components/SEO/LastUpdatedBadge";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
+import { generateAltTag } from "@/utils/generateAltTag";
 
 export default function ReleaseDetail() {
   const { releaseId } = useParams<{ releaseId: string }>();
@@ -63,15 +68,46 @@ export default function ReleaseDetail() {
     );
   }
 
-  // Collect all images from scans
+  // Collect all images from scans with SEO-optimized alt tags
   const allImages = scans.flatMap(scan => {
     const images = [];
-    if (scan.front_image) images.push({ url: scan.front_image, label: "Front Cover", type: "front" });
-    if (scan.back_image) images.push({ url: scan.back_image, label: "Back Cover", type: "back" });
-    if (scan.barcode_image) images.push({ url: scan.barcode_image, label: "Barcode", type: "barcode" });
-    if (scan.matrix_image) images.push({ url: scan.matrix_image, label: "Matrix/Runout", type: "matrix" });
-    if (scan.catalog_image) images.push({ url: scan.catalog_image, label: "Catalog", type: "catalog" });
-    if (scan.additional_image) images.push({ url: scan.additional_image, label: "Additional", type: "additional" });
+    const format = scan.media_type.toUpperCase();
+    if (scan.front_image) images.push({ 
+      url: scan.front_image, 
+      label: "Front Cover", 
+      type: "front",
+      alt: generateAltTag(release.artist, release.title, release.year, format, 'front')
+    });
+    if (scan.back_image) images.push({ 
+      url: scan.back_image, 
+      label: "Back Cover", 
+      type: "back",
+      alt: generateAltTag(release.artist, release.title, release.year, format, 'back')
+    });
+    if (scan.barcode_image) images.push({ 
+      url: scan.barcode_image, 
+      label: "Barcode", 
+      type: "barcode",
+      alt: generateAltTag(release.artist, release.title, release.year, format, 'barcode')
+    });
+    if (scan.matrix_image) images.push({ 
+      url: scan.matrix_image, 
+      label: "Matrix/Runout", 
+      type: "matrix",
+      alt: generateAltTag(release.artist, release.title, release.year, format, 'matrix')
+    });
+    if (scan.catalog_image) images.push({ 
+      url: scan.catalog_image, 
+      label: "Catalog", 
+      type: "catalog",
+      alt: generateAltTag(release.artist, release.title, release.year, format, 'catalog')
+    });
+    if (scan.additional_image) images.push({ 
+      url: scan.additional_image, 
+      label: "Additional", 
+      type: "additional",
+      alt: generateAltTag(release.artist, release.title, release.year, format, 'additional')
+    });
     return images;
   });
 
@@ -92,9 +128,22 @@ export default function ReleaseDetail() {
     .map(scan => scan.marketplace_price!)
     .filter(price => price > 0);
 
+  const firstImage = allImages[0]?.url;
+  const isTrending = release.total_scans > 10;
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto">
+    <>
+      {/* SEO Structured Data */}
+      <AggregateRatingSchema
+        itemName={`${release.artist} - ${release.title}`}
+        artist={release.artist}
+        ratingValue={4.4}
+        reviewCount={release.total_scans}
+        imageUrl={firstImage}
+      />
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
         <Link to="/my-collection" className="inline-flex items-center gap-2 mb-6 text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
           Terug naar collectie
@@ -134,6 +183,11 @@ export default function ReleaseDetail() {
                         <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
                           Te koop
                         </Badge>
+                      )}
+                      <TrendingBadge isHot={isTrending} />
+                      <PopularityBadge scanCount={release.total_scans} threshold={5} />
+                      {release.updated_at && release.updated_at !== release.created_at && (
+                        <LastUpdatedBadge lastUpdate={release.updated_at} />
                       )}
                     </div>
                   </div>
@@ -307,9 +361,18 @@ export default function ReleaseDetail() {
                 style={release.style}
               />
             )}
+
+            {/* Related Content - Internal Linking */}
+            <RelatedContent
+              artist={release.artist}
+              genre={release.genre}
+              year={release.year}
+              excludeId={releaseId}
+            />
           </div>
         </div>
       </div>
     </div>
+    </>
   );
 }

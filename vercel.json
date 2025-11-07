@@ -10,7 +10,21 @@
     },
     {
       "src": "/sitemap\\.xml",
+      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy",
+      "headers": {
+        "x-sitemap-file": "sitemap-index.xml"
+      }
+    },
+    {
+      "src": "/sitemap\\.xml",
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy?file=sitemap-index.xml"
+    },
+    {
+      "src": "/sitemaps/(.*)",
+      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy",
+      "headers": {
+        "x-sitemap-file": "$1"
+      }
     },
     {
       "src": "/sitemaps/(.*)",

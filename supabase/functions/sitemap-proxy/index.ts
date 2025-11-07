@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   const filename = resolveFilename(req);
 
-  console.log('🗺️ Sitemap proxy request:', { path: url.pathname, filename });
+  console.log('🗺️ [v2] Sitemap proxy request:', { path: url.pathname, filename, testing: TESTING });
 
   if (!filename) {
     await logRequest({ path: url.pathname, file: null, status: 400, note: "missing filename" });

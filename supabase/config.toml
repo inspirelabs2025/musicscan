@@ -19,6 +19,9 @@ verify_jwt = false
 [functions.stylize-photo]
 verify_jwt = false
 
+[functions.create-poster-product]
+verify_jwt = false
+
 [functions.music-story-generator]
 verify_jwt = true
 

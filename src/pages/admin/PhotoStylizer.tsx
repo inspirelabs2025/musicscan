@@ -1,11 +1,17 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { usePhotoStylizer, StyleType } from '@/hooks/usePhotoStylizer';
-import { Upload, Download, RefreshCw, Sparkles } from 'lucide-react';
+import { usePosterProductCreator } from '@/hooks/usePosterProductCreator';
+import { Upload, Download, RefreshCw, Sparkles, ShoppingBag } from 'lucide-react';
 
 const STYLE_OPTIONS = [
   { value: 'posterize' as StyleType, label: 'Pop Art Posterize', emoji: '🎨', description: 'Andy Warhol style' },
@@ -17,9 +23,19 @@ const STYLE_OPTIONS = [
 ];
 
 export default function PhotoStylizer() {
+  const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<StyleType>('posterize');
+  const [showProductDialog, setShowProductDialog] = useState(false);
+  const [productMetadata, setProductMetadata] = useState({
+    artist: '',
+    title: '',
+    description: '',
+    price: 49.95
+  });
+  
   const { isProcessing, originalImage, stylizedImage, stylizePhoto, reset, downloadImage } = usePhotoStylizer();
+  const { createPosterProduct, isCreating } = usePosterProductCreator();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -51,6 +67,34 @@ export default function PhotoStylizer() {
   const handleReset = () => {
     setSelectedFile(null);
     reset();
+    setProductMetadata({ artist: '', title: '', description: '', price: 49.95 });
+  };
+
+  const handleCreateProduct = async () => {
+    if (!stylizedImage) return;
+
+    try {
+      const result = await createPosterProduct({
+        stylizedImage,
+        artist: productMetadata.artist,
+        title: productMetadata.title,
+        description: productMetadata.description,
+        style: selectedStyle,
+        price: productMetadata.price
+      });
+
+      setShowProductDialog(false);
+      
+      // Navigate to the new product
+      navigate(`/product/${result.product_slug}`);
+    } catch (error) {
+      console.error('Failed to create product:', error);
+    }
+  };
+
+  const getStyleLabel = () => {
+    const style = STYLE_OPTIONS.find(s => s.value === selectedStyle);
+    return style ? style.label : selectedStyle;
   };
 
   return (
@@ -136,10 +180,16 @@ export default function PhotoStylizer() {
                     alt="Stylized result"
                     className="max-h-64 mx-auto rounded-lg"
                   />
-                  <Button onClick={handleDownload} className="w-full">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Result
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={handleDownload} className="flex-1">
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                    <Button onClick={() => setShowProductDialog(true)} variant="secondary" className="flex-1">
+                      <ShoppingBag className="w-4 h-4 mr-2" />
+                      Save as POSTER
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="text-muted-foreground space-y-2">
@@ -227,6 +277,110 @@ export default function PhotoStylizer() {
           </CardContent>
         </Card>
       )}
+
+      {/* Create POSTER Product Dialog */}
+      <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              🖼️ Create POSTER Product
+            </DialogTitle>
+            <DialogDescription>
+              Add this stylized artwork to your ART SHOP as a POSTER product
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="artist">Artist Name *</Label>
+              <Input
+                id="artist"
+                placeholder="e.g., Freddie Mercury"
+                value={productMetadata.artist}
+                onChange={(e) => setProductMetadata({ ...productMetadata, artist: e.target.value })}
+                disabled={isCreating}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                placeholder="e.g., Pop Art Portrait"
+                value={productMetadata.title}
+                onChange={(e) => setProductMetadata({ ...productMetadata, title: e.target.value })}
+                disabled={isCreating}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (optional)</Label>
+              <Textarea
+                id="description"
+                placeholder="Custom description (AI will generate one if left empty)"
+                value={productMetadata.description}
+                onChange={(e) => setProductMetadata({ ...productMetadata, description: e.target.value })}
+                rows={3}
+                disabled={isCreating}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="price">Price (€) *</Label>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                min="0"
+                value={productMetadata.price}
+                onChange={(e) => setProductMetadata({ ...productMetadata, price: parseFloat(e.target.value) || 0 })}
+                disabled={isCreating}
+              />
+            </div>
+
+            <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
+              <p className="flex items-center gap-2">
+                <span className="font-medium">Style:</span>
+                <span className="text-muted-foreground">{getStyleLabel()}</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="font-medium">Category:</span>
+                <span className="text-muted-foreground">POSTER (ART)</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="font-medium">Media Type:</span>
+                <span className="text-muted-foreground">ART</span>
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowProductDialog(false)}
+              disabled={isCreating}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateProduct}
+              disabled={!productMetadata.artist || !productMetadata.title || isCreating}
+            >
+              {isCreating ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Create Product
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

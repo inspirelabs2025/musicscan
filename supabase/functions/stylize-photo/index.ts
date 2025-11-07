@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 const STYLE_PRESETS = {
+  vectorCartoon: "Transform this photo into a vectorized cartoon portrait style with smooth, flowing shapes and flat color areas with subtle gradients. Use clean outlines, simplified features, and a warm color palette. The style should look like professional vector illustration with rounded, organic shapes and a polished, modern cartoon aesthetic - similar to high-end digital illustration work with smooth contours and elegant simplification.",
   posterize: "Transform this photo into a bold posterized pop art style with vibrant colors, high contrast, and simplified shapes. Use 4-6 distinct color zones. Black background. Similar to Andy Warhol style.",
   oilPainting: "Transform this into a realistic oil painting with visible brush strokes, rich colors, and painterly texture. Classic portrait style.",
   watercolor: "Convert to a soft watercolor painting with flowing colors, white paper texture, and delicate edges.",
@@ -20,7 +21,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, style = 'posterize' } = await req.json();
+    const { imageUrl, style = 'vectorCartoon' } = await req.json();
     
     if (!imageUrl) {
       throw new Error('Image URL is required');
@@ -31,7 +32,7 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const stylePrompt = STYLE_PRESETS[style as keyof typeof STYLE_PRESETS] || STYLE_PRESETS.posterize;
+    const stylePrompt = STYLE_PRESETS[style as keyof typeof STYLE_PRESETS] || STYLE_PRESETS.vectorCartoon;
 
     console.log(`🎨 Stylizing photo with style: ${style}`);
 

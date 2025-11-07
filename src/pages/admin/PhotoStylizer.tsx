@@ -14,6 +14,7 @@ import { usePosterProductCreator } from '@/hooks/usePosterProductCreator';
 import { Upload, Download, RefreshCw, Sparkles, ShoppingBag } from 'lucide-react';
 
 const STYLE_OPTIONS = [
+  { value: 'vectorCartoon' as StyleType, label: 'Vectorized Cartoon', emoji: '🎭', description: 'Smooth vector portrait' },
   { value: 'posterize' as StyleType, label: 'Pop Art Posterize', emoji: '🎨', description: 'Andy Warhol style' },
   { value: 'oilPainting' as StyleType, label: 'Oil Painting', emoji: '🖌️', description: 'Classic portrait' },
   { value: 'watercolor' as StyleType, label: 'Watercolor', emoji: '💧', description: 'Soft and flowing' },
@@ -25,7 +26,7 @@ const STYLE_OPTIONS = [
 export default function PhotoStylizer() {
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedStyle, setSelectedStyle] = useState<StyleType>('posterize');
+  const [selectedStyle, setSelectedStyle] = useState<StyleType>('vectorCartoon');
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [productMetadata, setProductMetadata] = useState({
     artist: '',

@@ -2327,6 +2327,7 @@ export type Database = {
           description: string | null
           discogs_id: number | null
           discogs_url: string | null
+          edition_number: number | null
           featured_until: string | null
           format: string | null
           genre: string | null
@@ -2348,12 +2349,14 @@ export type Database = {
           primary_image: string | null
           published_at: string | null
           purchase_count: number | null
+          qr_code_data: string | null
           release_id: string | null
           sku: string | null
           slug: string
           status: string | null
           stock_quantity: number
           tags: string[] | null
+          time_machine_event_id: string | null
           title: string
           updated_at: string | null
           view_count: number | null
@@ -2374,6 +2377,7 @@ export type Database = {
           description?: string | null
           discogs_id?: number | null
           discogs_url?: string | null
+          edition_number?: number | null
           featured_until?: string | null
           format?: string | null
           genre?: string | null
@@ -2395,12 +2399,14 @@ export type Database = {
           primary_image?: string | null
           published_at?: string | null
           purchase_count?: number | null
+          qr_code_data?: string | null
           release_id?: string | null
           sku?: string | null
           slug: string
           status?: string | null
           stock_quantity?: number
           tags?: string[] | null
+          time_machine_event_id?: string | null
           title: string
           updated_at?: string | null
           view_count?: number | null
@@ -2421,6 +2427,7 @@ export type Database = {
           description?: string | null
           discogs_id?: number | null
           discogs_url?: string | null
+          edition_number?: number | null
           featured_until?: string | null
           format?: string | null
           genre?: string | null
@@ -2442,12 +2449,14 @@ export type Database = {
           primary_image?: string | null
           published_at?: string | null
           purchase_count?: number | null
+          qr_code_data?: string | null
           release_id?: string | null
           sku?: string | null
           slug?: string
           status?: string | null
           stock_quantity?: number
           tags?: string[] | null
+          time_machine_event_id?: string | null
           title?: string
           updated_at?: string | null
           view_count?: number | null
@@ -2459,6 +2468,13 @@ export type Database = {
             columns: ["release_id"]
             isOneToOne: false
             referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_products_time_machine_event_id_fkey"
+            columns: ["time_machine_event_id"]
+            isOneToOne: false
+            referencedRelation: "time_machine_events"
             referencedColumns: ["id"]
           },
         ]
@@ -3675,6 +3691,185 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      time_machine_events: {
+        Row: {
+          archive_photos: Json | null
+          artist_name: string
+          attendance_count: number | null
+          audio_fragments: Json | null
+          color_palette: Json | null
+          concert_date: string
+          created_at: string | null
+          cultural_significance: string | null
+          edition_size: number | null
+          event_subtitle: string | null
+          event_title: string
+          fan_quotes: Json | null
+          historical_context: string | null
+          id: string
+          is_featured: boolean | null
+          is_published: boolean | null
+          meta_description: string | null
+          meta_title: string | null
+          metal_print_image_url: string | null
+          poster_image_url: string | null
+          poster_style: string | null
+          press_reviews: Json | null
+          price_metal: number | null
+          price_poster: number | null
+          products_sold: number | null
+          published_at: string | null
+          qr_code_url: string | null
+          setlist: Json | null
+          slug: string
+          story_content: string
+          tags: string[] | null
+          ticket_price_original: number | null
+          tour_name: string | null
+          typography_style: string | null
+          updated_at: string | null
+          venue_city: string
+          venue_country: string | null
+          venue_name: string
+          views_count: number | null
+        }
+        Insert: {
+          archive_photos?: Json | null
+          artist_name: string
+          attendance_count?: number | null
+          audio_fragments?: Json | null
+          color_palette?: Json | null
+          concert_date: string
+          created_at?: string | null
+          cultural_significance?: string | null
+          edition_size?: number | null
+          event_subtitle?: string | null
+          event_title: string
+          fan_quotes?: Json | null
+          historical_context?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          metal_print_image_url?: string | null
+          poster_image_url?: string | null
+          poster_style?: string | null
+          press_reviews?: Json | null
+          price_metal?: number | null
+          price_poster?: number | null
+          products_sold?: number | null
+          published_at?: string | null
+          qr_code_url?: string | null
+          setlist?: Json | null
+          slug: string
+          story_content: string
+          tags?: string[] | null
+          ticket_price_original?: number | null
+          tour_name?: string | null
+          typography_style?: string | null
+          updated_at?: string | null
+          venue_city: string
+          venue_country?: string | null
+          venue_name: string
+          views_count?: number | null
+        }
+        Update: {
+          archive_photos?: Json | null
+          artist_name?: string
+          attendance_count?: number | null
+          audio_fragments?: Json | null
+          color_palette?: Json | null
+          concert_date?: string
+          created_at?: string | null
+          cultural_significance?: string | null
+          edition_size?: number | null
+          event_subtitle?: string | null
+          event_title?: string
+          fan_quotes?: Json | null
+          historical_context?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          metal_print_image_url?: string | null
+          poster_image_url?: string | null
+          poster_style?: string | null
+          press_reviews?: Json | null
+          price_metal?: number | null
+          price_poster?: number | null
+          products_sold?: number | null
+          published_at?: string | null
+          qr_code_url?: string | null
+          setlist?: Json | null
+          slug?: string
+          story_content?: string
+          tags?: string[] | null
+          ticket_price_original?: number | null
+          tour_name?: string | null
+          typography_style?: string | null
+          updated_at?: string | null
+          venue_city?: string
+          venue_country?: string | null
+          venue_name?: string
+          views_count?: number | null
+        }
+        Relationships: []
+      }
+      time_machine_fan_memories: {
+        Row: {
+          created_at: string | null
+          discovery_story: string | null
+          event_id: string | null
+          id: string
+          is_approved: boolean | null
+          is_featured: boolean | null
+          likes_count: number | null
+          memory_text: string
+          photo_url: string | null
+          updated_at: string | null
+          user_id: string | null
+          was_present: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          discovery_story?: string | null
+          event_id?: string | null
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          likes_count?: number | null
+          memory_text: string
+          photo_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          was_present?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          discovery_story?: string | null
+          event_id?: string | null
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          likes_count?: number | null
+          memory_text?: string
+          photo_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          was_present?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_machine_fan_memories_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "time_machine_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       usage_tracking: {
         Row: {

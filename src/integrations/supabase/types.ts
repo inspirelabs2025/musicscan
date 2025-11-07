@@ -3081,6 +3081,39 @@ export type Database = {
           },
         ]
       }
+      sitemap_logs: {
+        Row: {
+          created_at: string | null
+          file: string | null
+          id: number
+          method: string | null
+          note: string | null
+          path: string | null
+          size_bytes: number | null
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          file?: string | null
+          id?: number
+          method?: string | null
+          note?: string | null
+          path?: string | null
+          size_bytes?: number | null
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          file?: string | null
+          id?: number
+          method?: string | null
+          note?: string | null
+          path?: string | null
+          size_bytes?: number | null
+          status_code?: number | null
+        }
+        Relationships: []
+      }
       sitemap_regeneration_log: {
         Row: {
           completed_at: string | null

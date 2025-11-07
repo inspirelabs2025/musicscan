@@ -1,3 +1,3 @@
 # Trigger Vercel deployment
-timestamp: 2025-11-07T13:27:00Z
-reason: Force cache purge - sitemap-proxy works but Vercel routing not picking up rewrites
+timestamp: 2025-11-07T14:42:00Z
+reason: Switch to rewrites strategy - forces Edge Function priority over static files

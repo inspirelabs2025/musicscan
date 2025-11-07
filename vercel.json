@@ -1,30 +1,41 @@
 {
   "version": 2,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/lovable-uploads/(.*)",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/vinyl_images/$1",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
+      "source": "/lovable-uploads/:path*",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/vinyl_images/:path*"
     },
     {
-      "src": "/sitemap\\.xml",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy?file=sitemap-index.xml",
-      "headers": {
-        "Cache-Control": "public, max-age=900"
-      }
+      "source": "/sitemap.xml",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy?file=sitemap-index.xml"
     },
     {
-      "src": "/sitemaps/(.*)",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy?file=$1",
-      "headers": {
-        "Cache-Control": "public, max-age=900"
-      }
+      "source": "/sitemaps/:path*",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy?file=:path*"
     },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/lovable-uploads/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=900" }
+      ]
+    },
+    {
+      "source": "/sitemaps/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=900" }
+      ]
     }
   ]
 }

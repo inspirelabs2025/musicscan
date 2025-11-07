@@ -154,6 +154,9 @@ cron = "*/15 * * * *"  # Every 15 minutes
 [functions.verify-sitemaps]
 verify_jwt = false
 
+[functions.verify-blog-coverage]
+verify_jwt = false
+
 [functions.sitemap-proxy]
 verify_jwt = false
 

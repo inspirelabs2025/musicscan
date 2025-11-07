@@ -56,13 +56,13 @@ export const MuziekVerhaal: React.FC = () => {
   // Enhanced SEO setup
   const seoDescription = story?.story_content 
     ? story.story_content.slice(0, 160).replace(/[#*]/g, '')
-    : `Ontdek het fascinerende verhaal van ${story?.query || 'muziek'}. Een AI-gegenereerd muziekverhaal vol interessante achtergrondinformatie en verhalen.`;
+    : `Ontdek het fascinerende verhaal van ${story?.query || 'muziek'}. Een interactief muziekverhaal vol interessante achtergrondinformatie en verhalen.`;
   
   const seoKeywords = [
     story?.query,
     'muziekverhaal',
     'music story',
-    'AI verhaal',
+    'digitaal verhaal',
     'muziekgeschiedenis',
     'album verhaal',
     'muziek informatie'
@@ -245,7 +245,7 @@ export const MuziekVerhaal: React.FC = () => {
     },
     {
       question: `Wie is ${story.artist || story.query.split(',')[0]?.trim() || story.query}?`,
-      answer: `Ontdek alles over ${story.artist || story.query} in dit AI-gegenereerde muziekverhaal. Lees over de achtergrond, betekenis en impact van deze muziek.`
+      answer: `Ontdek alles over ${story.artist || story.query} in dit geautomatiseerd muziekverhaal. Lees over de achtergrond, betekenis en impact van deze muziek.`
     }
   ];
 
@@ -332,7 +332,7 @@ export const MuziekVerhaal: React.FC = () => {
                     </Badge>
                     <Badge variant="outline" className="border-primary/30 hover:bg-primary/10 transition-colors">
                       <Sparkles className="w-3 h-3 mr-1" />
-                      AI Verhaal
+                      Digitaal Verhaal
                     </Badge>
                     <Badge variant="outline" className="border-muted-foreground/30">
                       <Calendar className="w-3 h-3 mr-1" />

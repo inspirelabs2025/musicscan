@@ -46,7 +46,7 @@ export default function PlatformProductDetail() {
     
     if (isPoster) {
       const styleText = posterStyle ? ` in ${posterStyle} stijl` : '';
-      return `Koop ${product.artist} - ${product.title}${styleText}. Premium AI-gegenereerde poster. Museum kwaliteit. Gratis verzending vanaf €50. Nu beschikbaar voor €${product.price}`;
+      return `Koop ${product.artist} - ${product.title}${styleText}. Premium kunst poster. Museum kwaliteit. Gratis verzending vanaf €50. Nu beschikbaar voor €${product.price}`;
     }
     
     return `${product.title}${product.artist ? ` van ${product.artist}` : ''} - ${product.description || 'Bekijk details en bestel eenvoudig.'} Prijs: €${product.price}`;

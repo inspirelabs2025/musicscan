@@ -64,11 +64,11 @@ export default function PosterShop() {
   return (
     <>
       <Helmet>
-        <title>Premium Art Posters - AI-Gegenereerde Muziek Posters | VinylScout</title>
-        <meta name="description" content="Ontdek unieke AI-gegenereerde posters van iconische muziek artiesten. Pop Art, Vectorized Cartoon, Oil Painting stijlen. Premium kwaliteit. Gratis verzending vanaf €50." />
-        <meta name="keywords" content="art posters, muziek posters, AI-gegenereerde kunst, pop art posters, vectorized cartoon, albumcover posters, wanddecoratie, kunstposters" />
-        <meta property="og:title" content="Premium Art Posters - AI-Gegenereerde Muziek Kunst" />
-        <meta property="og:description" content="Unieke AI-gegenereerde posters van iconische muziek artiesten. Museum-kwaliteit kunst voor aan de muur." />
+        <title>Premium Art Posters - Unieke Muziek Kunst Posters | VinylScout</title>
+        <meta name="description" content="Ontdek unieke posters van iconische muziek artiesten in diverse kunststijlen. Pop Art, Vectorized Cartoon, Oil Painting stijlen. Premium kwaliteit. Gratis verzending vanaf €50." />
+        <meta name="keywords" content="art posters, muziek posters, kunst posters, pop art posters, vectorized cartoon, albumcover posters, wanddecoratie, kunstposters" />
+        <meta property="og:title" content="Premium Art Posters - Unieke Muziek Kunst" />
+        <meta property="og:description" content="Unieke posters van iconische muziek artiesten. Museum-kwaliteit kunst voor aan de muur." />
         <meta property="og:type" content="website" />
         
         <script type="application/ld+json">
@@ -76,7 +76,7 @@ export default function PosterShop() {
             "@context": "https://schema.org",
             "@type": "CollectionPage",
             "name": "Premium Art Posters",
-            "description": "AI-gegenereerde posters van muziek artiesten",
+            "description": "Unieke posters van muziek artiesten",
             "url": "https://musicscan.app/posters",
             "numberOfItems": posterProducts?.length || 0,
             "about": {
@@ -99,13 +99,13 @@ export default function PosterShop() {
             <div className="relative z-10 space-y-4">
               <div className="flex items-center gap-2">
                 <Palette className="h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-wide">AI-Gegenereerde Kunst</span>
+                <span className="text-sm font-semibold uppercase tracking-wide">Digitale Kunst</span>
               </div>
               <h1 className="text-4xl md:text-5xl font-bold">
                 Premium Art Posters
               </h1>
               <p className="text-xl text-white/90 max-w-2xl">
-                Unieke AI-gegenereerde posters van iconische muziek artiesten in verschillende kunststijlen. 
+                Unieke posters van iconische muziek artiesten in verschillende kunststijlen. 
                 Van Pop Art tot Vectorized Cartoon - elk kunstwerk is uniek.
               </p>
               

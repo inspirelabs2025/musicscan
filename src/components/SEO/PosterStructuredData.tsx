@@ -15,11 +15,11 @@ export const PosterStructuredData = ({ product, slug }: PosterStructuredDataProp
     "@context": "https://schema.org/",
     "@type": ["Product", "VisualArtwork"],
     "name": product.title,
-    "description": product.description || `${product.artist} - ${product.title} AI-gegenereerde poster`,
+    "description": product.description || `${product.artist} - ${product.title} kunst poster`,
     "image": {
       "@type": "ImageObject",
       "url": product.primary_image || "",
-      "caption": `${product.artist} - ${product.title} (${style || 'AI-generated'} poster)`,
+      "caption": `${product.artist} - ${product.title} (${style || 'art'} poster)`,
       "width": 1200,
       "height": 1200,
       "thumbnailUrl": product.primary_image
@@ -28,12 +28,12 @@ export const PosterStructuredData = ({ product, slug }: PosterStructuredDataProp
       "@type": "Brand",
       "name": product.artist || "MusicScan"
     },
-    "artMedium": "AI-Generated Digital Print",
+    "artMedium": "Digital Print",
     "artform": "Poster Art",
     "artworkSurface": "Premium Paper",
     "creativeWorkStatus": "Published",
-    "genre": product.tags?.join(", ") || style || "AI Art",
-    "keywords": `${product.artist}, ${product.title}, poster, ${style || 'AI art'}, kunstposter, muziek poster, wanddecoratie`,
+    "genre": product.tags?.join(", ") || style || "Art",
+    "keywords": `${product.artist}, ${product.title}, poster, ${style || 'kunst'}, kunstposter, muziek poster, wanddecoratie`,
     "creator": {
       "@type": "Organization",
       "name": "MusicScan AI Studio",

@@ -50,19 +50,36 @@ serve(async (req) => {
       let itemData, tableName;
       
       if (item.type === 'product') {
-        // Handle shop products
-        const { data, error } = await supabaseClient
-          .from("shop_products")
+        // Try platform_products first (for metal prints & posters)
+        let { data, error } = await supabaseClient
+          .from("platform_products")
           .select("*")
           .eq("id", item.id)
           .single();
+        
+        let isPlatformProduct = !error && data;
+        
+        // Fallback to shop_products for backwards compatibility
+        if (error || !data) {
+          const shopResult = await supabaseClient
+            .from("shop_products")
+            .select("*")
+            .eq("id", item.id)
+            .single();
           
+          if (!shopResult.error && shopResult.data) {
+            data = shopResult.data;
+            error = null;
+            isPlatformProduct = false;
+          }
+        }
+        
         if (error || !data) {
           throw new Error(`Product not found: ${item.id}`);
         }
         
         itemData = data;
-        tableName = 'shop_products';
+        tableName = isPlatformProduct ? 'platform_products' : 'shop_products';
       } else {
         // Handle CD/Vinyl items
         tableName = item.type === 'cd' ? 'cd_scan' : 'vinyl2_scan';
@@ -82,13 +99,13 @@ serve(async (req) => {
         itemData = data;
       }
 
-      // Calculate price
+      // Calculate price based on table type
       const itemPrice = item.type === 'product' 
-        ? itemData.price 
+        ? (itemData.price || 0) // Both platform_products and shop_products use 'price'
         : (itemData.marketplace_price || itemData.calculated_advice_price || 0);
       
       const shippingCost = item.type === 'product' 
-        ? itemData.shipping_cost || 0
+        ? (itemData.shipping_cost || 5) // Default to 5 if not set
         : 5; // Default shipping for albums
       
       totalAmount += itemPrice + shippingCost;
@@ -145,9 +162,18 @@ serve(async (req) => {
 
     // Create Stripe checkout session
     const lineItems = orderItems.map(item => {
-      const itemName = item.item_type === 'product' 
-        ? item.item_data.name
-        : `${item.item_data.artist || 'Unknown'} - ${item.item_data.title || 'Unknown'}`;
+      // Handle naming for different product types
+      let itemName;
+      if (item.item_type === 'product') {
+        // Platform products have title/artist, shop_products have name
+        if (item.item_data.title && item.item_data.artist) {
+          itemName = `${item.item_data.artist} - ${item.item_data.title}`;
+        } else {
+          itemName = item.item_data.name || item.item_data.title || 'Product';
+        }
+      } else {
+        itemName = `${item.item_data.artist || 'Unknown'} - ${item.item_data.title || 'Unknown'}`;
+      }
       
       const itemDescription = item.item_type === 'product'
         ? item.item_data.description || 'Shop product'

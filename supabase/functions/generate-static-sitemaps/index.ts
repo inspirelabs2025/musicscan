@@ -55,14 +55,14 @@ Deno.serve(async (req) => {
     console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, and ${artProducts?.length || 0} art products`);
 
     // Generate regular sitemaps
-    const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal');
-    const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal');
-    const productsSitemapXml = generateSitemapXml(artProducts || [], 'https://www.musicscan.app/product');
+    const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://musicscan.app/plaat-verhaal');
+    const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal');
+    const productsSitemapXml = generateSitemapXml(artProducts || [], 'https://musicscan.app/product');
 
     // Generate image sitemaps
-    const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
-    const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal', 'artwork_url');
-    const productsImageSitemapXml = generateImageSitemapXml(artProducts || [], 'https://www.musicscan.app/product', 'primary_image');
+    const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://musicscan.app/plaat-verhaal', 'album_cover_url');
+    const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal', 'artwork_url');
+    const productsImageSitemapXml = generateImageSitemapXml(artProducts || [], 'https://musicscan.app/product', 'primary_image');
 
     // Upload all sitemaps
     const uploads = [
@@ -108,13 +108,13 @@ Deno.serve(async (req) => {
 
     // Perform health checks on all sitemaps
     const healthChecks: Record<string, any> = {};
-    const sitemapBaseUrl = 'https://www.musicscan.app/sitemaps';
+    const sitemapBaseUrl = 'https://musicscan.app/sitemaps';
     const allSitemaps = [...uploads.map(u => u.name), 'sitemap-index.xml', 'sitemap-static.xml'];
 
     for (const sitemapName of allSitemaps) {
       try {
         const checkUrl = sitemapName === 'sitemap-index.xml'
-          ? 'https://www.musicscan.app/sitemap.xml'
+          ? 'https://musicscan.app/sitemap.xml'
           : `${sitemapBaseUrl}/${sitemapName}`;
         
         const response = await fetch(checkUrl, { method: 'HEAD' });
@@ -247,7 +247,7 @@ ${urls}
 }
 
 function generateSitemapIndex(uploads: Array<{ name: string }>): string {
-  const baseUrl = 'https://www.musicscan.app/sitemaps';
+  const baseUrl = 'https://musicscan.app/sitemaps';
   const now = new Date().toISOString();
   
   const dynamicSitemaps = uploads.map(u => 
@@ -258,7 +258,7 @@ function generateSitemapIndex(uploads: Array<{ name: string }>): string {
   ).join('\n');
   
   const staticEntry = `  <sitemap>
-    <loc>https://www.musicscan.app/sitemaps/sitemap-static.xml</loc>
+    <loc>https://musicscan.app/sitemaps/sitemap-static.xml</loc>
     <lastmod>${now}</lastmod>
   </sitemap>`;
   

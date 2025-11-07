@@ -13,7 +13,7 @@
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-index.xml",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600"
+        "Cache-Control": "public, max-age=0, s-maxage=0, must-revalidate"
       }
     },
     {
@@ -21,7 +21,7 @@
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-blog.xml",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600"
+        "Cache-Control": "public, max-age=0, s-maxage=0, must-revalidate"
       }
     },
     {
@@ -29,7 +29,7 @@
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-products.xml",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600"
+        "Cache-Control": "public, max-age=0, s-maxage=0, must-revalidate"
       }
     },
     {
@@ -37,7 +37,7 @@
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-music-stories.xml",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600"
+        "Cache-Control": "public, max-age=0, s-maxage=0, must-revalidate"
       }
     },
     {
@@ -45,7 +45,7 @@
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-static.xml",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600"
+        "Cache-Control": "public, max-age=0, s-maxage=0, must-revalidate"
       }
     },
     {
@@ -53,7 +53,7 @@
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-images-blogs.xml",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600"
+        "Cache-Control": "public, max-age=0, s-maxage=0, must-revalidate"
       }
     },
     {
@@ -61,7 +61,7 @@
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-images-products.xml",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600"
+        "Cache-Control": "public, max-age=0, s-maxage=0, must-revalidate"
       }
     },
     {
@@ -69,7 +69,7 @@
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/sitemaps/sitemap-images-stories.xml",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600"
+        "Cache-Control": "public, max-age=0, s-maxage=0, must-revalidate"
       }
     },
     {

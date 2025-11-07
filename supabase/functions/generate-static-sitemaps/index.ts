@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         .from('sitemaps')
         .upload(upload.name, new Blob([upload.data], { type: 'application/xml' }), {
           contentType: 'application/xml',
-          cacheControl: '3600',
+          cacheControl: '0',
           upsert: true,
         });
 
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
       .from('sitemaps')
       .upload('sitemap-index.xml', new Blob([sitemapIndexXml], { type: 'application/xml' }), {
         contentType: 'application/xml; charset=utf-8',
-        cacheControl: 'public, max-age=3600',
+        cacheControl: '0',
         upsert: true,
       });
 

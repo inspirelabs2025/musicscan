@@ -45,8 +45,9 @@ export function SitemapStatus() {
   const verifySitemap = async (name: string, url: string) => {
     setSitemapInfo(prev => ({ ...prev, [name]: { ...prev[name], isVerifying: true } }));
     
+    const cacheBustedUrl = `${url}${url.includes('?') ? '&' : '?'}v=${Date.now()}`;
     try {
-      const response = await fetch(url);
+      const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
       const text = await response.text();
       
       // Count URLs

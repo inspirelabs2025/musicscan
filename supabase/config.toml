@@ -171,3 +171,9 @@ verify_jwt = false
 
 [functions.sitemaps-proxy]
 verify_jwt = false
+
+[functions.time-machine-events]
+verify_jwt = false
+
+[functions.time-machine-fan-memories]
+verify_jwt = false

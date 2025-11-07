@@ -1,0 +1,232 @@
+import { useState } from 'react';
+import { useTimeMachineEvents, useDeleteTimeMachineEvent } from '@/hooks/useTimeMachineEvents';
+import { useGenerateTimeMachinePoster } from '@/hooks/useGenerateTimeMachinePoster';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AlertCircle, Plus, Wand2, Eye, Trash2, Calendar, MapPin, Package } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useNavigate } from 'react-router-dom';
+import { TimeMachineEventForm } from '@/components/admin/TimeMachineEventForm';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+export default function TimeMachineManager() {
+  const navigate = useNavigate();
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
+  
+  const { data: events, isLoading, error } = useTimeMachineEvents({ published: undefined });
+  const { mutate: generatePoster, isPending: isGenerating } = useGenerateTimeMachinePoster();
+  const { mutate: deleteEvent, isPending: isDeleting } = useDeleteTimeMachineEvent();
+
+  const handleGeneratePoster = (eventId: string) => {
+    generatePoster({ eventId, generateMetal: true });
+  };
+
+  const handleDelete = () => {
+    if (deleteEventId) {
+      deleteEvent(deleteEventId, {
+        onSuccess: () => setDeleteEventId(null)
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-96" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>Fout bij laden van Time Machine events: {error.message}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">🕰️ Time Machine Manager</h1>
+          <p className="text-muted-foreground">Beheer historische concert experiences</p>
+        </div>
+        <Button onClick={() => setShowCreateForm(true)} size="lg">
+          <Plus className="w-4 h-4 mr-2" />
+          Nieuw Event
+        </Button>
+      </div>
+
+      {showCreateForm && (
+        <Card className="mb-8 border-primary">
+          <CardHeader>
+            <CardTitle>{editingEvent ? 'Event Bewerken' : 'Nieuw Time Machine Event'}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TimeMachineEventForm
+              event={editingEvent}
+              onSuccess={() => {
+                setShowCreateForm(false);
+                setEditingEvent(null);
+              }}
+              onCancel={() => {
+                setShowCreateForm(false);
+                setEditingEvent(null);
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {events?.map((event) => (
+          <Card key={event.id} className="overflow-hidden hover:border-primary transition-colors">
+            <div className="aspect-[3/4] relative bg-muted">
+              {event.poster_image_url ? (
+                <img
+                  src={event.poster_image_url}
+                  alt={event.event_title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Package className="w-16 h-16 text-muted-foreground" />
+                </div>
+              )}
+              <div className="absolute top-2 right-2 flex gap-2">
+                <Badge variant={event.is_published ? 'default' : 'secondary'}>
+                  {event.is_published ? 'Published' : 'Draft'}
+                </Badge>
+                {event.is_featured && (
+                  <Badge variant="default" className="bg-primary">
+                    Featured
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            <CardContent className="pt-6">
+              <h3 className="font-bold text-lg mb-2 line-clamp-2">{event.event_title}</h3>
+              
+              <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>{new Date(event.concert_date).toLocaleDateString('nl-NL')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  <span>{event.venue_name}, {event.venue_city}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => navigate(`/time-machine/${event.slug}`)}
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
+                    Preview
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setEditingEvent(event);
+                      setShowCreateForm(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                </div>
+
+                <Button
+                  size="sm"
+                  className="w-full"
+                  onClick={() => handleGeneratePoster(event.id)}
+                  disabled={isGenerating}
+                >
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  {event.poster_image_url ? 'Regenereer Poster' : 'Genereer Poster'}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="w-full"
+                  onClick={() => setDeleteEventId(event.id)}
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Verwijder
+                </Button>
+              </div>
+
+              {event.views_count !== undefined && (
+                <p className="text-xs text-muted-foreground mt-3 text-center">
+                  {event.views_count} views · {event.products_sold || 0} verkocht
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {events?.length === 0 && (
+        <Card className="p-12 text-center">
+          <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-xl font-bold mb-2">Nog geen Time Machine Events</h3>
+          <p className="text-muted-foreground mb-6">
+            Maak je eerste historisch concert experience aan
+          </p>
+          <Button onClick={() => setShowCreateForm(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nieuw Event Aanmaken
+          </Button>
+        </Card>
+      )}
+
+      <AlertDialog open={!!deleteEventId} onOpenChange={(open) => !open && setDeleteEventId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Event Verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deze actie kan niet ongedaan worden gemaakt. Het event en alle bijbehorende data worden permanent verwijderd.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

@@ -94,6 +94,7 @@ import PlatformProductDetail from "./pages/PlatformProductDetail";
 import ArtShop from "./pages/ArtShop";
 import PosterShop from "./pages/PosterShop";
 import TimeMachineStory from "./pages/TimeMachineStory";
+import TimeMachineManager from "./pages/admin/TimeMachineManager";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -398,6 +399,11 @@ const App = () => {
             <Route path="/admin/curated-artists" element={
               <ProtectedRoute>
                 <CuratedArtists />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/time-machine" element={
+              <ProtectedRoute>
+                <TimeMachineManager />
               </ProtectedRoute>
             } />
             <Route path="/art-shop" element={<ArtShop />} />

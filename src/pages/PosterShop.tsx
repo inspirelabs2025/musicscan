@@ -8,10 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, SlidersHorizontal, TrendingUp, Eye, Sparkles } from "lucide-react";
+import { Search, Sparkles, Eye, Palette } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 
-export default function ArtShop() {
+export default function PosterShop() {
   const searchParams = new URLSearchParams(window.location.search);
   const initialSearch = searchParams.get('search') || '';
   
@@ -26,23 +26,19 @@ export default function ArtShop() {
     onSale: showOnSale || undefined,
   });
 
-  // Exclude POSTER products (metaalprints only)
-  const products = allProducts?.filter(product => 
-    !product.categories?.includes('POSTER')
+  // Filter only POSTER products
+  const posterProducts = allProducts?.filter(product => 
+    product.categories?.includes('POSTER')
   );
 
   // Filter and sort products
-  const filteredProducts = products
+  const filteredProducts = posterProducts
     ?.filter(product => {
       if (!searchQuery) return true;
       
-      // Split search query into individual terms and filter out empty strings
       const searchTerms = searchQuery.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+      const searchableText = `${product.artist || ''} ${product.title || ''} ${product.tags?.join(' ') || ''}`.toLowerCase();
       
-      // Combine artist and title for searching
-      const searchableText = `${product.artist || ''} ${product.title || ''}`.toLowerCase();
-      
-      // Check if ALL search terms are present in the combined text
       return searchTerms.every(term => searchableText.includes(term));
     })
     .sort((a, b) => {
@@ -59,49 +55,65 @@ export default function ArtShop() {
       }
     });
 
-  const featuredCount = products?.filter(p => p.is_featured).length || 0;
-  const onSaleCount = products?.filter(p => p.is_on_sale).length || 0;
-  const avgPrice = products?.length 
-    ? Math.round(products.reduce((sum, p) => sum + p.price, 0) / products.length) 
+  const featuredCount = posterProducts?.filter(p => p.is_featured).length || 0;
+  const onSaleCount = posterProducts?.filter(p => p.is_on_sale).length || 0;
+  const avgPrice = posterProducts?.length 
+    ? Math.round(posterProducts.reduce((sum, p) => sum + p.price, 0) / posterProducts.length) 
     : 0;
 
   return (
     <>
       <Helmet>
-        <title>Metaalprints - Albumcovers op Metaal | VinylScout</title>
-        <meta name="description" content="Ontdek onze collectie premium metaalprints van iconische albumcovers. Museum-kwaliteit prints op aluminium. Gratis verzending vanaf €50." />
-        <meta property="og:title" content="Metaalprints - Albumcovers op Metaal" />
-        <meta property="og:description" content="Premium metaalprints van iconische albumcovers. Museum-kwaliteit op aluminium." />
+        <title>Premium Art Posters - AI-Gegenereerde Muziek Posters | VinylScout</title>
+        <meta name="description" content="Ontdek unieke AI-gegenereerde posters van iconische muziek artiesten. Pop Art, Vectorized Cartoon, Oil Painting stijlen. Premium kwaliteit. Gratis verzending vanaf €50." />
+        <meta name="keywords" content="art posters, muziek posters, AI-gegenereerde kunst, pop art posters, vectorized cartoon, albumcover posters, wanddecoratie, kunstposters" />
+        <meta property="og:title" content="Premium Art Posters - AI-Gegenereerde Muziek Kunst" />
+        <meta property="og:description" content="Unieke AI-gegenereerde posters van iconische muziek artiesten. Museum-kwaliteit kunst voor aan de muur." />
         <meta property="og:type" content="website" />
+        
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "Premium Art Posters",
+            "description": "AI-gegenereerde posters van muziek artiesten",
+            "url": "https://musicscan.app/posters",
+            "numberOfItems": posterProducts?.length || 0,
+            "about": {
+              "@type": "Thing",
+              "name": "Art Posters"
+            }
+          })}
+        </script>
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
         <div className="container py-8 space-y-8">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },
-            { name: "Art Shop", url: "/art-shop" }
+            { name: "Poster Shop", url: "/posters" }
           ]} />
 
           {/* Hero Header */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple to-accent p-8 md:p-12 text-white">
             <div className="relative z-10 space-y-4">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Premium Art Collection</span>
+                <Palette className="h-6 w-6" />
+                <span className="text-sm font-semibold uppercase tracking-wide">AI-Gegenereerde Kunst</span>
               </div>
               <h1 className="text-4xl md:text-5xl font-bold">
-                Metaalprints van Albumcovers
+                Premium Art Posters
               </h1>
               <p className="text-xl text-white/90 max-w-2xl">
-                Museum-kwaliteit prints van iconische albumcovers op premium aluminium. 
-                Elke print is een kunstwerk voor aan de muur.
+                Unieke AI-gegenereerde posters van iconische muziek artiesten in verschillende kunststijlen. 
+                Van Pop Art tot Vectorized Cartoon - elk kunstwerk is uniek.
               </p>
               
               {/* Stats Row */}
               <div className="flex flex-wrap gap-6 pt-4">
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold">{products?.length || 0}</div>
-                  <div className="text-sm text-white/80">Kunstwerken</div>
+                  <div className="text-3xl font-bold">{posterProducts?.length || 0}</div>
+                  <div className="text-sm text-white/80">Posters</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">€{avgPrice}</div>
@@ -130,7 +142,7 @@ export default function ArtShop() {
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Zoek op artiest of album..."
+                    placeholder="Zoek op artiest, album of stijl..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -160,14 +172,6 @@ export default function ArtShop() {
                     <Sparkles className="h-4 w-4 mr-2" />
                     Featured
                   </Button>
-                  <Button
-                    variant={showOnSale ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setShowOnSale(!showOnSale)}
-                  >
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Sale
-                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -196,7 +200,7 @@ export default function ArtShop() {
                     <div className="relative aspect-square overflow-hidden bg-muted">
                       <img
                         src={product.primary_image || product.images[0] || '/placeholder.svg'}
-                        alt={`${product.artist} - ${product.title}`}
+                        alt={`${product.artist} - ${product.title} poster`}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                       
@@ -216,6 +220,12 @@ export default function ArtShop() {
                         {product.is_new && (
                           <Badge variant="secondary" className="font-bold">
                             Nieuw
+                          </Badge>
+                        )}
+                        {/* Style Badge */}
+                        {product.tags && product.tags.length > 0 && (
+                          <Badge variant="outline" className="bg-black/60 text-white border-white/20">
+                            {product.tags[0]}
                           </Badge>
                         )}
                       </div>
@@ -271,11 +281,11 @@ export default function ArtShop() {
             <Card className="p-12 text-center">
               <div className="space-y-4">
                 <div className="text-4xl">🎨</div>
-                <h3 className="text-xl font-bold">Geen kunstwerken gevonden</h3>
+                <h3 className="text-xl font-bold">Geen posters gevonden</h3>
                 <p className="text-muted-foreground">
                   {searchQuery 
                     ? `Geen resultaten voor "${searchQuery}". Probeer een andere zoekopdracht.`
-                    : "Er zijn momenteel geen art prints beschikbaar."}
+                    : "Er zijn momenteel geen posters beschikbaar."}
                 </p>
                 {searchQuery && (
                   <Button onClick={() => setSearchQuery("")} variant="outline">

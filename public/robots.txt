@@ -1,6 +1,6 @@
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 1
+Crawl-delay: 0.5
 
 User-agent: Bingbot
 Allow: /
@@ -18,11 +18,20 @@ Crawl-delay: 2
 
 # Sitemaps - All served from musicscan.app domain
 Sitemap: https://musicscan.app/sitemap.xml
+Sitemap: https://musicscan.app/sm/sitemap-posters.xml
+Sitemap: https://musicscan.app/sm/sitemap-metal-prints.xml
+Sitemap: https://musicscan.app/sm/sitemap-blog.xml
 
 # IndexNow Key
 Sitemap: https://www.musicscan.app/indexnow-key.txt
 
-# SEO optimizations
+# SEO optimizations - High Priority
+Allow: /posters
+Allow: /posters/*
+Allow: /product/*
+Allow: /art-shop
+
+# Other key content
 Allow: /public-catalog
 Allow: /public-shops-overview
 Allow: /music-news

@@ -12,6 +12,9 @@ import { useSEO } from "@/hooks/useSEO";
 import { Helmet } from "react-helmet";
 import { useBlogPostByProduct } from "@/hooks/useBlogPostByProduct";
 import { ReviewSchema, AggregateRatingSchema } from "@/components/SEO/ReviewSchema";
+import { PosterStructuredData } from "@/components/SEO/PosterStructuredData";
+import { generatePosterAltTag } from "@/utils/generateAltTag";
+import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 
 export default function PlatformProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -32,12 +35,31 @@ export default function PlatformProductDetail() {
     product?.discogs_id
   );
 
+  const isPoster = product?.categories?.includes('POSTER');
+  const posterStyle = product?.tags?.find(t => 
+    ['posterize', 'vectorcartoon', 'oilpainting', 'watercolor', 'pencilsketch', 'comicbook', 'abstract'].includes(t.toLowerCase())
+  );
+
+  // Generate POSTER-specific meta description
+  const generateMetaDescription = () => {
+    if (!product) return 'Bekijk productdetails in onze shop';
+    
+    if (isPoster) {
+      const styleText = posterStyle ? ` in ${posterStyle} stijl` : '';
+      return `Koop ${product.artist} - ${product.title}${styleText}. Premium AI-gegenereerde poster. Museum kwaliteit. Gratis verzending vanaf €50. Nu beschikbaar voor €${product.price}`;
+    }
+    
+    return `${product.title}${product.artist ? ` van ${product.artist}` : ''} - ${product.description || 'Bekijk details en bestel eenvoudig.'} Prijs: €${product.price}`;
+  };
+
   // SEO optimization for product page
   useSEO({
-    title: product ? `${product.title}${product.artist ? ` - ${product.artist}` : ''} | MusicScan Shop` : 'Product | MusicScan Shop',
-    description: product ? `${product.title}${product.artist ? ` van ${product.artist}` : ''} - ${product.description || 'Bekijk details en bestel eenvoudig.'} Prijs: €${product.price}` : 'Bekijk productdetails in onze shop',
-    keywords: product ? `${product.title}, ${product.artist || ''}, ${product.media_type || ''}, muziek, shop, kopen, ${product.categories?.join(', ') || ''}`.replace(/,\s*,/g, ',').replace(/^,|,$/g, '') : 'muziek shop, producten',
+    title: product ? `${product.title}${product.artist ? ` - ${product.artist}` : ''}${isPoster ? ' | Premium Art Poster' : ''} | MusicScan Shop` : 'Product | MusicScan Shop',
+    description: generateMetaDescription(),
+    keywords: product ? `${product.title}, ${product.artist || ''}, ${isPoster ? 'poster, AI art, kunstposter, wanddecoratie,' : ''} ${product.media_type || ''}, muziek, shop, kopen, ${product.tags?.join(', ') || ''}, ${product.categories?.join(', ') || ''}`.replace(/,\s*,/g, ',').replace(/^,|,$/g, '') : 'muziek shop, producten',
     canonicalUrl: `https://www.musicscan.app/product/${slug}`,
+    image: product?.primary_image,
+    type: isPoster ? 'product.item' : 'product'
   });
 
   if (isLoading) {
@@ -113,11 +135,51 @@ export default function PlatformProductDetail() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {structuredData && (
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNavigation items={[
+        { name: "Home", url: "/" },
+        ...(isPoster ? [
+          { name: "Posters", url: "/posters" }
+        ] : [
+          { name: "Art Shop", url: "/art-shop" }
+        ]),
+        { name: `${product.artist} - ${product.title}`, url: `/product/${slug}` }
+      ]} />
+
+      {/* Enhanced Structured Data for POSTER products */}
+      {isPoster ? (
+        <PosterStructuredData product={product} slug={slug!} />
+      ) : (
+        structuredData && (
+          <Helmet>
+            <script type="application/ld+json">
+              {JSON.stringify(structuredData)}
+            </script>
+          </Helmet>
+        )
+      )}
+
+      {/* Enhanced Social Media Meta Tags for POSTER */}
+      {isPoster && (
         <Helmet>
-          <script type="application/ld+json">
-            {JSON.stringify(structuredData)}
-          </script>
+          <meta property="product:brand" content={product.artist || "MusicScan"} />
+          <meta property="product:availability" content="in stock" />
+          <meta property="product:condition" content="new" />
+          <meta property="product:price:amount" content={product.price.toString()} />
+          <meta property="product:price:currency" content="EUR" />
+          <meta property="product:category" content="Posters & Prints" />
+          
+          {/* Pinterest Rich Pins */}
+          <meta property="og:type" content="product" />
+          <meta name="pinterest:price:amount" content={product.price.toString()} />
+          <meta name="pinterest:price:currency" content="EUR" />
+          
+          {/* Twitter Product Card */}
+          <meta name="twitter:card" content="product" />
+          <meta name="twitter:data1" content={`€${product.price}`} />
+          <meta name="twitter:label1" content="Prijs" />
+          <meta name="twitter:data2" content={product.stock_quantity > 0 ? "Op voorraad" : "Uitverkocht"} />
+          <meta name="twitter:label2" content="Beschikbaarheid" />
         </Helmet>
       )}
       
@@ -143,9 +205,9 @@ export default function PlatformProductDetail() {
       )}
 
       {/* Back button */}
-      <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
+      <Link to={isPoster ? "/posters" : "/art-shop"} className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="h-4 w-4" />
-        Terug naar overzicht
+        Terug naar {isPoster ? "Posters" : "Art Shop"}
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8 mb-12">
@@ -155,7 +217,14 @@ export default function PlatformProductDetail() {
             {displayImage ? (
               <img
                 src={displayImage}
-                alt={product.title}
+                alt={isPoster 
+                  ? generatePosterAltTag(
+                      product.artist || 'Unknown Artist', 
+                      product.title, 
+                      posterStyle
+                    )
+                  : product.title
+                }
                 className="w-full h-full object-cover"
               />
             ) : (

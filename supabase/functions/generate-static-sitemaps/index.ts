@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     // Fetch all active art products (metal prints) with images
     const { data: artProducts, error: productsError } = await supabase
       .from('platform_products')
-      .select('slug, updated_at, primary_image, title, artist')
+      .select('slug, updated_at, primary_image, title, artist, tags, categories')
       .eq('media_type', 'art')
       .eq('status', 'active')
       .not('published_at', 'is', null)
@@ -74,28 +74,36 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch art products: ${productsError.message}`);
     }
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, and ${artProducts?.length || 0} art products`);
+    // Separate POSTER products from other art products
+    const posterProducts = (artProducts || []).filter(p => p.categories?.includes('POSTER'));
+    const metalPrintProducts = (artProducts || []).filter(p => !p.categories?.includes('POSTER'));
+
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, ${posterProducts?.length || 0} posters, and ${metalPrintProducts?.length || 0} metal prints`);
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
     const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://musicscan.app/plaat-verhaal');
     const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal');
-    const productsSitemapXml = generateSitemapXml(artProducts || [], 'https://musicscan.app/product');
+    const metalPrintsSitemapXml = generateSitemapXml(metalPrintProducts || [], 'https://musicscan.app/product');
+    const postersSitemapXml = generatePosterSitemapXml(posterProducts || []);
 
     // Image sitemaps
     const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://musicscan.app/plaat-verhaal', 'album_cover_url');
     const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal', 'artwork_url');
-    const productsImageSitemapXml = generateImageSitemapXml(artProducts || [], 'https://musicscan.app/product', 'primary_image');
+    const metalPrintsImageSitemapXml = generateImageSitemapXml(metalPrintProducts || [], 'https://musicscan.app/product', 'primary_image');
+    const postersImageSitemapXml = generatePosterImageSitemapXml(posterProducts || []);
 
-    // Build uploads list (7 files total)
+    // Build uploads list (11 files total - added poster sitemaps)
     const uploads = [
       { name: 'sitemap-static.xml', data: staticSitemapXml },
       { name: 'sitemap-blog.xml', data: blogSitemapXml },
       { name: 'sitemap-music-stories.xml', data: storiesSitemapXml },
-      { name: 'sitemap-products.xml', data: productsSitemapXml },
+      { name: 'sitemap-metal-prints.xml', data: metalPrintsSitemapXml },
+      { name: 'sitemap-posters.xml', data: postersSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
       { name: 'sitemap-images-stories.xml', data: storiesImageSitemapXml },
-      { name: 'sitemap-images-products.xml', data: productsImageSitemapXml },
+      { name: 'sitemap-images-metal-prints.xml', data: metalPrintsImageSitemapXml },
+      { name: 'sitemap-images-posters.xml', data: postersImageSitemapXml },
     ];
 
     for (const upload of uploads) {
@@ -219,7 +227,8 @@ for (const sitemapName of allSitemaps) {
         stats: {
           blogPosts: blogPosts?.length || 0,
           musicStories: musicStories?.length || 0,
-          artProducts: artProducts?.length || 0,
+          posterProducts: posterProducts?.length || 0,
+          metalPrintProducts: metalPrintProducts?.length || 0,
           sitemaps: uploads.map(u => ({
             name: u.name,
             url: `${supabaseUrl}/storage/v1/object/public/sitemaps/${u.name}`
@@ -311,6 +320,62 @@ ${sitemaps}
 </sitemapindex>`;
 }
 
+function generatePosterSitemapXml(items: Array<any>): string {
+  const urls = items
+    .map((item) => {
+      const lastmod = new Date(item.updated_at).toISOString().split('T')[0];
+      const style = item.tags?.find((t: string) => 
+        ['posterize', 'vectorcartoon', 'oilpainting', 'watercolor', 'pencilsketch', 'comicbook', 'abstract'].includes(t.toLowerCase())
+      ) || 'AI-generated';
+      
+      return `  <url>
+    <loc>https://musicscan.app/product/${item.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>${item.primary_image}</image:loc>
+      <image:caption>${item.artist} - ${item.title} (${style} poster)</image:caption>
+      <image:title>${item.artist} - ${item.title}</image:title>
+    </image:image>
+  </url>`;
+    })
+    .join('\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${urls}
+</urlset>`;
+}
+
+function generatePosterImageSitemapXml(items: Array<any>): string {
+  const urls = items
+    .filter(item => item.primary_image)
+    .map((item) => {
+      const style = item.tags?.find((t: string) => 
+        ['posterize', 'vectorcartoon', 'oilpainting', 'watercolor', 'pencilsketch', 'comicbook', 'abstract'].includes(t.toLowerCase())
+      ) || 'AI-generated';
+      
+      return `  <url>
+    <loc>https://musicscan.app/product/${item.slug}</loc>
+    <image:image>
+      <image:loc>${item.primary_image}</image:loc>
+      <image:caption>${item.artist} - ${item.title} | ${style} poster | MusicScan Art</image:caption>
+      <image:title>${item.artist} - ${item.title} Poster</image:title>
+      <image:license>https://musicscan.app/terms</image:license>
+    </image:image>
+  </url>`;
+    })
+    .join('\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${urls}
+</urlset>`;
+}
+
 function generateStaticSitemapXml(): string {
   const baseUrl = 'https://musicscan.app';
   const currentDate = new Date().toISOString().split('T')[0];
@@ -318,13 +383,14 @@ function generateStaticSitemapXml(): string {
   const staticPages = [
     { url: baseUrl, priority: 1.0, changefreq: 'daily' },
     { url: `${baseUrl}/scanner`, priority: 0.9, changefreq: 'weekly' },
+    { url: `${baseUrl}/posters`, priority: 0.9, changefreq: 'daily' },
+    { url: `${baseUrl}/art-shop`, priority: 0.8, changefreq: 'weekly' },
     { url: `${baseUrl}/public-catalog`, priority: 0.8, changefreq: 'daily' },
     { url: `${baseUrl}/public-shops-overview`, priority: 0.8, changefreq: 'daily' },
     { url: `${baseUrl}/nieuws`, priority: 0.8, changefreq: 'hourly' },
     { url: `${baseUrl}/plaat-verhaal`, priority: 0.8, changefreq: 'daily' },
     { url: `${baseUrl}/muziek-verhaal`, priority: 0.8, changefreq: 'daily' },
     { url: `${baseUrl}/podcasts`, priority: 0.7, changefreq: 'weekly' },
-    { url: `${baseUrl}/art-shop`, priority: 0.7, changefreq: 'weekly' },
     { url: `${baseUrl}/auth`, priority: 0.6, changefreq: 'monthly' }
   ];
   

@@ -61,3 +61,28 @@ export const generateProductAltTag = (
   
   return parts.join(' ').trim();
 };
+
+/**
+ * Generate SEO-optimized alt tag for POSTER products
+ */
+export const generatePosterAltTag = (
+  artist: string,
+  title: string,
+  style?: string,
+  mediaType: 'poster' | 'print' | 'canvas' = 'poster'
+): string => {
+  const styleLabels: Record<string, string> = {
+    posterize: 'Pop Art Posterized',
+    vectorcartoon: 'Vectorized Cartoon',
+    oilpainting: 'Oil Painting Style',
+    watercolor: 'Watercolor Art',
+    pencilsketch: 'Pencil Sketch',
+    comicbook: 'Comic Book Style',
+    abstract: 'Abstract Art'
+  };
+  
+  const styleLabel = style ? styleLabels[style.toLowerCase()] || 'AI-Generated' : 'AI-Generated';
+  const mediaLabel = mediaType.charAt(0).toUpperCase() + mediaType.slice(1);
+  
+  return `${artist} - ${title} | ${styleLabel} ${mediaLabel} | MusicScan Art`;
+};

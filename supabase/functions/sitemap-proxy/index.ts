@@ -109,14 +109,25 @@ Deno.serve(async (req) => {
     return new Response("Bad Request: missing sitemap filename", { status: 400 });
   }
 
-  // Download from Storage
-  const { data, error } = await supabase.storage.from(BUCKET).download(filename);
-
-  if (error || !data) {
-    console.error('❌ Failed to fetch sitemap:', filename, error?.message);
-    await logRequest({ path: url.pathname, file: filename, status: 404, note: error?.message });
+  // Get public URL and fetch the file
+  const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(filename);
+  
+  if (!urlData?.publicUrl) {
+    console.error('❌ Failed to get public URL for:', filename);
+    await logRequest({ path: url.pathname, file: filename, status: 404, note: "No public URL" });
     return new Response("Not Found", { status: 404 });
   }
+
+  // Fetch the file from the public URL
+  const fileResponse = await fetch(urlData.publicUrl);
+  
+  if (!fileResponse.ok) {
+    console.error('❌ Failed to fetch sitemap:', filename, fileResponse.status);
+    await logRequest({ path: url.pathname, file: filename, status: 404, note: `HTTP ${fileResponse.status}` });
+    return new Response("Not Found", { status: 404 });
+  }
+
+  const data = await fileResponse.blob();
 
   // Fetch metadata (size, updated_at) for nicer headers (optional)
   const meta = await getFileMeta(filename).catch(() => null);

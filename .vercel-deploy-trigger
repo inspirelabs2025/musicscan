@@ -1,3 +1,3 @@
 # Trigger Vercel deployment
-timestamp: 2025-11-07T15:05:00Z
-reason: Switch to routes with explicit order + add /sm alias for cache bypass
+timestamp: 2025-11-07T15:16:00Z
+reason: Remove /lovable-uploads proxy - serve static files directly from filesystem

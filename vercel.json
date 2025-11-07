@@ -16,12 +16,15 @@
       "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy?file=$1",
       "headers": { "Cache-Control": "public, max-age=900" }
     },
-    {
-      "src": "^/lovable-uploads/(.*)$",
-      "dest": "https://ssxbpyqnjfiyubsuonar.supabase.co/storage/v1/object/public/vinyl_images/$1",
-      "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
-    },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/lovable-uploads/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
   ]
 }

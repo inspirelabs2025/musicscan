@@ -1,8 +1,9 @@
 import { TimeMachineEvent } from '@/hooks/useTimeMachineEvents';
+import { useTimeMachineProducts } from '@/hooks/useTimeMachineProducts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Sparkles, Package } from 'lucide-react';
+import { ShoppingCart, Sparkles, Package, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,6 +13,10 @@ interface TimeMachineProductCTAProps {
 
 export function TimeMachineProductCTA({ event }: TimeMachineProductCTAProps) {
   const navigate = useNavigate();
+  const { data: products, isLoading } = useTimeMachineProducts(event.id);
+
+  const fineArtProduct = products?.find(p => p.metadata?.product_type === 'fine_art_print');
+  const metalProduct = products?.find(p => p.metadata?.product_type === 'metal_print_deluxe');
 
   return (
     <motion.div
@@ -63,10 +68,25 @@ export function TimeMachineProductCTA({ event }: TimeMachineProductCTAProps) {
                     {event.edition_size ? `${event.edition_size} exemplaren` : 'Limited'}
                   </span>
                 </div>
-                <Button className="w-full" size="lg">
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Bestel Fine Art Print
-                </Button>
+                {isLoading ? (
+                  <Button className="w-full" size="lg" disabled>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Laden...
+                  </Button>
+                ) : fineArtProduct ? (
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={() => navigate(`/product/${fineArtProduct.slug}`)}
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Bestel Fine Art Print
+                  </Button>
+                ) : (
+                  <Button className="w-full" size="lg" disabled>
+                    Binnenkort Beschikbaar
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
@@ -106,10 +126,26 @@ export function TimeMachineProductCTA({ event }: TimeMachineProductCTAProps) {
                     100 exemplaren
                   </span>
                 </div>
-                <Button className="w-full" size="lg" variant="default">
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Bestel Metal Print
-                </Button>
+                {isLoading ? (
+                  <Button className="w-full" size="lg" disabled>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Laden...
+                  </Button>
+                ) : metalProduct ? (
+                  <Button 
+                    className="w-full" 
+                    size="lg" 
+                    variant="default"
+                    onClick={() => navigate(`/product/${metalProduct.slug}`)}
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Bestel Metal Print
+                  </Button>
+                ) : (
+                  <Button className="w-full" size="lg" disabled>
+                    Binnenkort Beschikbaar
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>

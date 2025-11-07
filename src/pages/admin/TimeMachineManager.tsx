@@ -31,7 +31,11 @@ export default function TimeMachineManager() {
   const { mutate: deleteEvent, isPending: isDeleting } = useDeleteTimeMachineEvent();
 
   const handleGeneratePoster = (eventId: string) => {
-    generatePoster({ eventId, generateMetal: true });
+    generatePoster({ 
+      eventId, 
+      generateMetal: true,
+      createProducts: true 
+    });
   };
 
   const handleDelete = () => {

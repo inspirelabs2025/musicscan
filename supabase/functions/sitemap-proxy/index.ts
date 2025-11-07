@@ -55,17 +55,22 @@ function detectContentType(filename: string): { ct: string; encoding?: string } 
 
 // Try to extract the filename to serve:
 // 1) x-sitemap-file header (from Vercel/CF rewrite)
-// 2) path after "/sitemaps/" (if routed directly)
-// 3) exact "/sitemap.xml" (allow apex sitemap index via mapping)
+// 2) "file" query parameter (from rewrites like ?file=$1)
+// 3) path after "/sitemaps/" (if routed directly)
+// 4) exact "/sitemap.xml" (map to index file)
 function resolveFilename(req: Request): string | null {
   const url = new URL(req.url);
   const hdr = req.headers.get("x-sitemap-file");
   if (hdr && hdr.trim()) return hdr.trim();
 
-  // Direct path parsing
+  // Query parameter support e.g. /functions/v1/sitemap-proxy?file=sitemap-blog.xml
+  const qp = url.searchParams.get("file");
+  if (qp && qp.trim()) return qp.trim();
+
+  // Direct path parsing (when function is routed with original path)
   // Examples:
   //   https://musicscan.app/sitemaps/sitemap-blog-v3-part1.xml  -> filename = "sitemap-blog-v3-part1.xml"
-  //   https://musicscan.app/sitemap.xml                         -> filename = "sitemap.xml" (if you route it)
+  //   https://musicscan.app/sitemap.xml                         -> filename = "sitemap-index.xml"
   const path = url.pathname;
 
   if (path === "/sitemap.xml" || path.endsWith("/sitemap.xml")) return "sitemap-index.xml";

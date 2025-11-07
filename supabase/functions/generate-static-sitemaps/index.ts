@@ -76,35 +76,21 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, and ${artProducts?.length || 0} art products`);
 
-    // Generate regular sitemaps (with pagination for blogs)
-    const blogUploads: Array<{ name: string; data: string }> = [];
-    const blogPageSize = 1000;
-    const totalBlogParts = Math.max(1, Math.ceil((blogPosts?.length || 0) / blogPageSize));
-    for (let i = 0; i < totalBlogParts; i++) {
-      const start = i * blogPageSize;
-      const end = start + blogPageSize;
-      const partItems = (blogPosts || []).slice(start, end);
-      const partXml = generateSitemapXml(partItems, 'https://musicscan.app/plaat-verhaal');
-      const partName = `sitemap-blog-v3-part${i + 1}.xml`;
-      blogUploads.push({ name: partName, data: partXml });
-    }
-
-    // Other sitemaps (no pagination yet)
+    // Generate regular sitemaps (single files, no pagination)
+    const staticSitemapXml = generateStaticSitemapXml();
+    const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://musicscan.app/plaat-verhaal');
     const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal');
     const productsSitemapXml = generateSitemapXml(artProducts || [], 'https://musicscan.app/product');
-
-    // Generate static pages sitemap
-    const staticSitemapXml = generateStaticSitemapXml();
 
     // Image sitemaps
     const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://musicscan.app/plaat-verhaal', 'album_cover_url');
     const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal', 'artwork_url');
     const productsImageSitemapXml = generateImageSitemapXml(artProducts || [], 'https://musicscan.app/product', 'primary_image');
 
-    // Build uploads list
+    // Build uploads list (7 files total)
     const uploads = [
       { name: 'sitemap-static.xml', data: staticSitemapXml },
-      ...blogUploads,
+      { name: 'sitemap-blog.xml', data: blogSitemapXml },
       { name: 'sitemap-music-stories.xml', data: storiesSitemapXml },
       { name: 'sitemap-products.xml', data: productsSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
@@ -128,6 +114,29 @@ Deno.serve(async (req) => {
       console.log(`✅ Uploaded ${upload.name}`);
     }
 
+    // Cleanup old paginated blog sitemap files (sitemap-blog-v3-part*.xml)
+    try {
+      console.log('🧹 Cleaning up old paginated blog sitemaps...');
+      const { data: existingFiles } = await supabase.storage.from('sitemaps').list();
+      const oldPartFiles = (existingFiles || [])
+        .filter(file => /^sitemap-blog-v3-part\d+\.xml$/.test(file.name));
+      
+      for (const file of oldPartFiles) {
+        const { error: deleteError } = await supabase.storage
+          .from('sitemaps')
+          .remove([file.name]);
+        
+        if (deleteError) {
+          console.error(`Failed to delete ${file.name}:`, deleteError);
+        } else {
+          console.log(`✅ Deleted old file: ${file.name}`);
+        }
+      }
+      console.log(`🧹 Cleaned up ${oldPartFiles.length} old paginated sitemap files`);
+    } catch (cleanupError) {
+      console.error('Cleanup error (non-fatal):', cleanupError);
+    }
+
     // Generate dynamic sitemap index
     const sitemapIndexXml = await generateSitemapIndex(uploads);
     const indexUpload = await supabase.storage
@@ -147,7 +156,7 @@ Deno.serve(async (req) => {
     // Perform health checks on all sitemaps
     const healthChecks: Record<string, any> = {};
     const sitemapBaseUrl = 'https://musicscan.app/sitemaps';
-    const allSitemaps = [...uploads.map(u => u.name), 'sitemap-index.xml', 'sitemap-static.xml'];
+    const allSitemaps = [...uploads.map(u => u.name), 'sitemap-index.xml'];
 
     for (const sitemapName of allSitemaps) {
       try {

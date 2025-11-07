@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import type { CartItem } from "@/hooks/useShoppingCart";
+import type { CartItem } from "@/contexts/CartContext";
 
 interface GuestCheckoutModalProps {
   open: boolean;

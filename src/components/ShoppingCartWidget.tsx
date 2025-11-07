@@ -5,13 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useShoppingCart } from '@/hooks/useShoppingCart';
+import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { GuestCheckoutModal } from './GuestCheckoutModal';
 
 export const ShoppingCartWidget = () => {
-  const { items, removeFromCart, getTotalPrice, getItemCount, checkout, isLoading, clearCart } = useShoppingCart();
+  const { items, removeFromCart, getTotalPrice, getItemCount, checkout, isLoading, clearCart } = useCart();
   const { toast } = useToast();
   const { user } = useAuth();
   const [guestCheckoutOpen, setGuestCheckoutOpen] = useState(false);

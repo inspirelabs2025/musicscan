@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AudioProvider } from "@/contexts/AudioContext";
+import { CartProvider } from "@/contexts/CartContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Navigation } from "@/components/Navigation";
@@ -121,14 +122,15 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AudioProvider>
-          <TooltipProvider>
-            <ErrorBoundary showDetails={true}>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Navigation />
-            <Routes>
+        <CartProvider>
+          <AudioProvider>
+            <TooltipProvider>
+              <ErrorBoundary showDetails={true}>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Navigation />
+              <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={
@@ -402,15 +404,16 @@ const App = () => {
             <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-            </Routes>
+             </Routes>
                 <ConditionalFooter />
                 <AudioPlayer />
              </BrowserRouter>
           </ErrorBoundary>
         </TooltipProvider>
       </AudioProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+    </CartProvider>
+  </AuthProvider>
+</QueryClientProvider>
   );
 };
 

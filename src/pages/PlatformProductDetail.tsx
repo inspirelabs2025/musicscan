@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useShoppingCart } from "@/hooks/useShoppingCart";
+import { useCart } from "@/contexts/CartContext";
 import { ArrowLeft, ShoppingCart, Check, Package, Clock, BookOpen, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -24,7 +24,7 @@ export default function PlatformProductDetail() {
     product?.categories?.[0],
     4
   );
-  const { addToCart, isInCart } = useShoppingCart();
+  const { addToCart, isInCart } = useCart();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   // Find related blog post

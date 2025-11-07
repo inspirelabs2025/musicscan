@@ -155,14 +155,14 @@ Deno.serve(async (req) => {
 
     // Perform health checks on all sitemaps
     const healthChecks: Record<string, any> = {};
-    const sitemapBaseUrl = 'https://musicscan.app/sitemaps';
-    const allSitemaps = [...uploads.map(u => u.name), 'sitemap-index.xml'];
+const sitemapBaseUrl = 'https://musicscan.app/sm';
+const allSitemaps = [...uploads.map(u => u.name), 'sitemap-index.xml'];
 
-    for (const sitemapName of allSitemaps) {
-      try {
-        const checkUrl = sitemapName === 'sitemap-index.xml'
-          ? 'https://musicscan.app/sitemap.xml'
-          : `${sitemapBaseUrl}/${sitemapName}`;
+for (const sitemapName of allSitemaps) {
+  try {
+    const checkUrl = sitemapName === 'sitemap-index.xml'
+      ? 'https://musicscan.app/sitemap.xml'
+      : `${sitemapBaseUrl}/${sitemapName}`;
         
         const response = await fetch(checkUrl, { method: 'HEAD' });
         healthChecks[sitemapName] = {
@@ -294,7 +294,8 @@ ${urls}
 }
 
 function generateSitemapIndex(uploads: Array<{ name: string }>): string {
-  const baseUrl = 'https://musicscan.app/sitemaps';
+  // Temporarily point to /sm alias to bypass any stale cache on /sitemaps
+  const baseUrl = 'https://musicscan.app/sm';
   const now = new Date().toISOString();
   
   const sitemaps = uploads.map(u => 

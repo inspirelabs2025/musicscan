@@ -23,6 +23,7 @@ const navigationItems = [
   { title: "Forum", url: "/forum", icon: MessageCircle },
   { title: "Prijscheck", url: "/quick-price-check", icon: DollarSign },
   { title: "Muzieknieuws", url: "/news", icon: Newspaper },
+  { title: "Time Machine", url: "/time-machine", icon: Music },
   { title: "Mijn Winkel", url: "/my-shop", icon: Store }
 ];
 
@@ -31,7 +32,7 @@ const publicNavigationItems = [
   { title: "Forum", url: "/forum", icon: MessageCircle },
   { title: "Prijscheck", url: "/quick-price-check", icon: DollarSign },
   { title: "Muzieknieuws", url: "/news", icon: Newspaper },
-  { title: "Posters", url: "/posters", icon: Images },
+  { title: "Time Machine", url: "/time-machine", icon: Music },
   { title: "Catalogus", url: "/catalog", icon: Library },
   { title: "Marktplaats", url: "/marketplace", icon: ShoppingCart },
   { title: "Winkels", url: "/shops", icon: Store },

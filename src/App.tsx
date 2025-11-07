@@ -93,6 +93,7 @@ import PublicShopItemDetail from "./pages/PublicShopItemDetail";
 import PlatformProductDetail from "./pages/PlatformProductDetail";
 import ArtShop from "./pages/ArtShop";
 import PosterShop from "./pages/PosterShop";
+import TimeMachine from "./pages/TimeMachine";
 import TimeMachineStory from "./pages/TimeMachineStory";
 import TimeMachineManager from "./pages/admin/TimeMachineManager";
 
@@ -272,6 +273,7 @@ const App = () => {
               </ProtectedRoute>
             } />
             <Route path="/plaat-verhaal/:slug" element={<PlaatVerhaal />} />
+            <Route path="/time-machine" element={<TimeMachine />} />
             <Route path="/time-machine/:slug" element={<TimeMachineStory />} />
             <Route path="/test-news-update" element={
               <ProtectedRoute>

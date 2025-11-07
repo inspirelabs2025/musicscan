@@ -1,6 +1,7 @@
 import { SimpleHero } from '@/components/home/SimpleHero';
 import { QuickDiscoveryBar } from '@/components/home/QuickDiscoveryBar';
 import { MetalPrintSpotlight } from '@/components/home/MetalPrintSpotlight';
+import { TimeMachineSpotlight } from '@/components/home/TimeMachineSpotlight';
 import { ShopByCategorySection } from '@/components/shop/ShopByCategorySection';
 import { FeaturedProductsCarousel } from '@/components/shop/FeaturedProductsCarousel';
 import { LatestReleasesSection } from '@/components/home/LatestReleasesSection';
@@ -26,6 +27,9 @@ const Home = () => {
 
       {/* Metal Print Spotlight - Prominent ART Section */}
       <MetalPrintSpotlight />
+
+      {/* Time Machine Spotlight */}
+      <TimeMachineSpotlight />
 
       {/* Shop Categories - Large Visual Cards */}
       <section className="py-16 bg-muted/30">

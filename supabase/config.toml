@@ -16,6 +16,9 @@ verify_jwt = false
 [functions.create-art-sketch-variant]
 verify_jwt = false
 
+[functions.stylize-photo]
+verify_jwt = false
+
 [functions.music-story-generator]
 verify_jwt = true
 

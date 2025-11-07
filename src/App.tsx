@@ -61,6 +61,7 @@ import PlatformProducts from "./pages/admin/PlatformProducts";
 import ArtGenerator from "./pages/admin/ArtGenerator";
 import BulkArtGenerator from "./pages/admin/BulkArtGenerator";
 import SketchArtGenerator from "./pages/admin/SketchArtGenerator";
+import PhotoStylizer from "./pages/admin/PhotoStylizer";
 import FixProductTitles from "./pages/admin/FixProductTitles";
 import BulkProductCleanup from "./pages/admin/BulkProductCleanup";
 import AutoCleanupToday from "./pages/admin/AutoCleanupToday";
@@ -347,6 +348,11 @@ const App = () => {
             <Route path="/admin/sketch-art-generator" element={
               <ProtectedRoute>
                 <SketchArtGenerator />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/photo-stylizer" element={
+              <ProtectedRoute>
+                <PhotoStylizer />
               </ProtectedRoute>
             } />
             <Route path="/admin/auto-cleanup-today" element={

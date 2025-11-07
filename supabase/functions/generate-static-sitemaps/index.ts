@@ -93,6 +93,9 @@ Deno.serve(async (req) => {
     const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal');
     const productsSitemapXml = generateSitemapXml(artProducts || [], 'https://musicscan.app/product');
 
+    // Generate static pages sitemap
+    const staticSitemapXml = generateStaticSitemapXml();
+
     // Image sitemaps
     const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://musicscan.app/plaat-verhaal', 'album_cover_url');
     const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal', 'artwork_url');
@@ -100,6 +103,7 @@ Deno.serve(async (req) => {
 
     // Build uploads list
     const uploads = [
+      { name: 'sitemap-static.xml', data: staticSitemapXml },
       ...blogUploads,
       { name: 'sitemap-music-stories.xml', data: storiesSitemapXml },
       { name: 'sitemap-products.xml', data: productsSitemapXml },
@@ -284,21 +288,45 @@ function generateSitemapIndex(uploads: Array<{ name: string }>): string {
   const baseUrl = 'https://musicscan.app/sitemaps';
   const now = new Date().toISOString();
   
-  const dynamicSitemaps = uploads.map(u => 
+  const sitemaps = uploads.map(u => 
     `  <sitemap>
     <loc>${baseUrl}/${u.name}</loc>
     <lastmod>${now}</lastmod>
   </sitemap>`
   ).join('\n');
   
-  const staticEntry = `  <sitemap>
-    <loc>https://musicscan.app/sitemaps/sitemap-static.xml</loc>
-    <lastmod>${now}</lastmod>
-  </sitemap>`;
-  
   return `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${staticEntry}
-${dynamicSitemaps}
+${sitemaps}
 </sitemapindex>`;
+}
+
+function generateStaticSitemapXml(): string {
+  const baseUrl = 'https://musicscan.app';
+  const currentDate = new Date().toISOString().split('T')[0];
+  
+  const staticPages = [
+    { url: baseUrl, priority: 1.0, changefreq: 'daily' },
+    { url: `${baseUrl}/scanner`, priority: 0.9, changefreq: 'weekly' },
+    { url: `${baseUrl}/public-catalog`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/public-shops-overview`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/nieuws`, priority: 0.8, changefreq: 'hourly' },
+    { url: `${baseUrl}/plaat-verhaal`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/muziek-verhaal`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/podcasts`, priority: 0.7, changefreq: 'weekly' },
+    { url: `${baseUrl}/art-shop`, priority: 0.7, changefreq: 'weekly' },
+    { url: `${baseUrl}/auth`, priority: 0.6, changefreq: 'monthly' }
+  ];
+  
+  const urls = staticPages.map(page => `  <url>
+    <loc>${page.url}</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>
+  </url>`).join('\n');
+  
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
 }

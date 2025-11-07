@@ -232,6 +232,9 @@ export function Navigation() {
             )}
           </NavigationMenuList>
         </NavigationMenu>
+        
+        {/* Shopping Cart Widget */}
+        <ShoppingCartWidget />
       </div>
 
       {/* Mobile Navigation */}
@@ -355,9 +358,12 @@ export function Navigation() {
             </div>
           </SheetContent>
         </Sheet>
-        <Link to="/">
+        <Link to="/" className="flex-shrink-0">
           <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer" />
         </Link>
+        
+        {/* Mobile Shopping Cart Widget */}
+        <ShoppingCartWidget />
       </div>
     </>
   );

@@ -51,10 +51,36 @@ serve(async (req) => {
       );
     }
 
-    // Validate image format
-    if (!stylizedImageBase64.startsWith('data:image/')) {
+    // Validate image format - accept both base64 data URIs and URLs
+    let imageBuffer: Uint8Array;
+    let mimeType: string;
+
+    if (stylizedImageBase64.startsWith('data:image/')) {
+      // Handle base64 data URI (single style generation)
+      const base64Data = stylizedImageBase64.split(',')[1];
+      mimeType = stylizedImageBase64.split(';')[0].split(':')[1];
+      imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      console.log('Processing base64 data URI');
+    } else if (stylizedImageBase64.startsWith('http')) {
+      // Handle URL (batch style generation from Supabase Storage)
+      console.log('Processing URL:', stylizedImageBase64);
+      
+      // Download the image
+      const imageResponse = await fetch(stylizedImageBase64);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to download image: ${imageResponse.statusText}`);
+      }
+      
+      // Get the image as ArrayBuffer and convert to Uint8Array
+      const arrayBuffer = await imageResponse.arrayBuffer();
+      imageBuffer = new Uint8Array(arrayBuffer);
+      
+      // Infer MIME type from URL or Content-Type header
+      mimeType = imageResponse.headers.get('content-type') || 'image/png';
+      console.log('Downloaded image:', { size: imageBuffer.length, mimeType });
+    } else {
       return new Response(
-        JSON.stringify({ error: 'Invalid image format' }),
+        JSON.stringify({ error: 'Invalid image format. Must be base64 data URI or URL' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -65,11 +91,6 @@ serve(async (req) => {
     const cleanDescription = description?.trim().slice(0, 2000);
 
     console.log('Creating POSTER product:', { artist: cleanArtist, title: cleanTitle, style });
-
-    // Convert base64 to blob
-    const base64Data = stylizedImageBase64.split(',')[1];
-    const mimeType = stylizedImageBase64.split(';')[0].split(':')[1];
-    const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
     // Generate filename
     const fileExt = mimeType.split('/')[1];

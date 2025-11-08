@@ -36,10 +36,15 @@ export default function TimeMachineManager() {
   const { mutate: generateEvent, isPending: isGeneratingEvent } = useGenerateTimeMachineEvent();
 
   const handleGeneratePoster = (eventId: string) => {
+    setAutoGeneratePosterForEvent(eventId);
     generatePoster({ 
       eventId, 
       generateMetal: true,
       createProducts: true 
+    }, {
+      onSettled: () => {
+        setAutoGeneratePosterForEvent(null);
+      }
     });
   };
 
@@ -233,15 +238,24 @@ export default function TimeMachineManager() {
                   </Button>
                 </div>
 
-                <Button
-                  size="sm"
-                  className="w-full"
-                  onClick={() => handleGeneratePoster(event.id)}
-                  disabled={isGenerating}
-                >
-                  <Wand2 className="w-4 h-4 mr-2" />
-                  {event.poster_image_url ? 'Regenereer Poster' : 'Genereer Poster'}
-                </Button>
+                {autoGeneratePosterForEvent === event.id && !event.poster_image_url ? (
+                  <div className="w-full py-3 px-4 bg-primary/10 border border-primary/20 rounded-md">
+                    <div className="flex items-center gap-2 text-sm text-primary">
+                      <Wand2 className="w-4 h-4 animate-pulse" />
+                      <span>Poster wordt gegenereerd… (30-60s)</span>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleGeneratePoster(event.id)}
+                    disabled={isGenerating}
+                  >
+                    <Wand2 className="w-4 h-4 mr-2" />
+                    {event.poster_image_url ? 'Regenereer Poster' : 'Genereer Poster'}
+                  </Button>
+                )}
 
                 <Button
                   size="sm"

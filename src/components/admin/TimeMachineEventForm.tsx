@@ -100,7 +100,7 @@ export function TimeMachineEventForm({ event, onSuccess, onCancel }: TimeMachine
       createEvent(eventData as any, {
         onSuccess: (data: any) => {
           // Pass the created event ID to parent
-          onSuccess?.(data?.event?.id);
+          onSuccess?.(data?.id);
         },
       });
     }

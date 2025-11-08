@@ -16,6 +16,12 @@ interface GeneratePosterResponse {
   qr_code_url: string;
   qr_code_image: string;
   event_id: string;
+  style_variants?: Array<{
+    style: string;
+    url: string;
+    label: string;
+    emoji: string;
+  }>;
 }
 
 export const useGenerateTimeMachinePoster = () => {
@@ -45,7 +51,10 @@ export const useGenerateTimeMachinePoster = () => {
       if (options.createProducts !== false && posterData.event_id) {
         try {
           const { error: productsError } = await supabase.functions.invoke('create-time-machine-products', {
-            body: { eventId: posterData.event_id }
+            body: { 
+              eventId: posterData.event_id,
+              styleVariants: posterData.style_variants || []
+            }
           });
 
           if (productsError) {
@@ -72,7 +81,7 @@ export const useGenerateTimeMachinePoster = () => {
       
       toast({
         title: '🎨 Posters & Producten Aangemaakt!',
-        description: 'AI heeft je Time Machine posters gegenereerd en shop producten zijn aangemaakt',
+        description: `AI heeft je Time Machine posters gegenereerd${data.style_variants?.length ? ` met ${data.style_variants.length} style varianten` : ''} en shop producten zijn aangemaakt`,
       });
     },
     onError: (error: Error) => {

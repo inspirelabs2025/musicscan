@@ -16,7 +16,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { eventId } = await req.json();
+    const { eventId, styleVariants } = await req.json();
 
     console.log('📦 Creating Time Machine products for event:', eventId);
 
@@ -98,6 +98,8 @@ Elk Time Machine poster vertelt het verhaal van een iconisch concert. Scan de QR
           dimensions: '50×70 cm',
           material: 'Hahnemühle Photo Rag 308gsm',
           technique: 'Giclée 12-color inkjet',
+          style_variants: styleVariants || [],
+          has_style_options: (styleVariants || []).length > 0
         }
       })
       .select()
@@ -169,6 +171,8 @@ Elk Time Machine poster vertelt het verhaal van een iconisch concert. Scan de QR
           material: 'Brushed Aluminum Dibond 3mm',
           finish: 'Purple reflection effect',
           technique: 'Direct UV print on metal',
+          style_variants: styleVariants || [],
+          has_style_options: (styleVariants || []).length > 0
         }
       })
       .select()

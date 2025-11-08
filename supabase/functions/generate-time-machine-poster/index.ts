@@ -160,6 +160,30 @@ The poster should evoke the energy and cultural moment of this historic concert 
       .from('time-machine-posters')
       .getPublicUrl(standardFilename);
 
+    // Generate all 7 style variants
+    console.log('🎨 Starting batch style generation...');
+    let styleVariants = [];
+
+    try {
+      const { data: styleData, error: styleError } = await supabase.functions.invoke('batch-generate-poster-styles', {
+        body: {
+          posterUrl: standardPublicUrl.publicUrl,
+          eventId: event.id,
+          artistName: event.artist_name
+        }
+      });
+
+      if (styleError) {
+        console.error('❌ Style generation failed:', styleError);
+      } else {
+        styleVariants = styleData?.styleVariants || [];
+        console.log(`✅ Generated ${styleVariants.length}/7 style variants`);
+      }
+    } catch (styleErr) {
+      console.error('❌ Batch style generation error:', styleErr);
+      // Don't fail the whole process
+    }
+
     let metalPrintUrl = null;
 
     // Generate metal print variant if requested
@@ -257,7 +281,8 @@ METAL PRINT VARIANT ADJUSTMENTS:
         metal_print_url: metalPrintUrl,
         qr_code_url: qrCodeStoryUrl,
         qr_code_image: qrCodeImageUrl,
-        event_id: event.id
+        event_id: event.id,
+        style_variants: styleVariants
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

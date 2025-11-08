@@ -15,6 +15,7 @@ import { ReviewSchema, AggregateRatingSchema } from "@/components/SEO/ReviewSche
 import { PosterStructuredData } from "@/components/SEO/PosterStructuredData";
 import { generatePosterAltTag } from "@/utils/generateAltTag";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
+import { PosterStyleSelector } from "@/components/timemachine/PosterStyleSelector";
 
 export default function PlatformProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -26,6 +27,7 @@ export default function PlatformProductDetail() {
   );
   const { addToCart, isInCart } = useCart();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   
   // Find related blog post
   const { data: blogPost } = useBlogPostByProduct(
@@ -39,6 +41,10 @@ export default function PlatformProductDetail() {
   const posterStyle = product?.tags?.find(t => 
     ['posterize', 'vectorcartoon', 'oilpainting', 'watercolor', 'pencilsketch', 'comicbook', 'abstract'].includes(t.toLowerCase())
   );
+
+  // Check for style options
+  const hasStyleOptions = product?.metadata?.has_style_options === true;
+  const styleVariants = product?.metadata?.style_variants || [];
 
   // Generate POSTER-specific meta description
   const generateMetaDescription = () => {
@@ -95,6 +101,7 @@ export default function PlatformProductDetail() {
   const inCart = isInCart(product.id);
 
   const handleAddToCart = () => {
+    const styleLabel = styleVariants.find((v: any) => v.style === selectedStyle)?.label;
     addToCart({
       id: product.id,
       media_type: 'product',
@@ -103,9 +110,10 @@ export default function PlatformProductDetail() {
       price: product.price,
       condition_grade: "Nieuw",
       seller_id: "platform",
-      image: product.primary_image || undefined,
+      image: selectedImage || product.primary_image || undefined,
+      selected_style: selectedStyle || product.metadata?.default_style,
     });
-    toast.success("Toegevoegd aan winkelwagen");
+    toast.success(`Toegevoegd: ${styleLabel || selectedStyle || 'Standaard'} style`);
   };
 
   // Structured data for Product schema
@@ -335,6 +343,20 @@ export default function PlatformProductDetail() {
               </Button>
             )}
           </Card>
+
+          {/* Style Selector - only for products with style options */}
+          {hasStyleOptions && styleVariants.length > 0 && (
+            <Card className="p-6">
+              <PosterStyleSelector
+                styleVariants={styleVariants}
+                currentStyle={selectedStyle || product.metadata?.default_style}
+                onStyleSelect={(url, style) => {
+                  setSelectedImage(url);
+                  setSelectedStyle(style);
+                }}
+              />
+            </Card>
+          )}
 
         </div>
       </div>

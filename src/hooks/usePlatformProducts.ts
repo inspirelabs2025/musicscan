@@ -37,6 +37,17 @@ export interface PlatformProduct {
   created_at: string;
   updated_at: string;
   published_at: string | null;
+  metadata?: {
+    style_variants?: Array<{
+      style: string;
+      url: string;
+      label: string;
+      emoji: string;
+    }>;
+    has_style_options?: boolean;
+    default_style?: string;
+    [key: string]: any;
+  } | null;
 }
 
 interface UsePlatformProductsFilters {

@@ -6,6 +6,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface StyleVariant {
+  style: string;
+  url: string;
+  label: string;
+  emoji: string;
+}
+
 interface CreatePosterRequest {
   stylizedImageBase64: string;
   artist: string;
@@ -13,6 +20,7 @@ interface CreatePosterRequest {
   description?: string;
   style: string;
   price: number;
+  styleVariants?: StyleVariant[];
 }
 
 serve(async (req) => {
@@ -31,7 +39,8 @@ serve(async (req) => {
       title,
       description,
       style,
-      price
+      price,
+      styleVariants
     }: CreatePosterRequest = await req.json();
 
     // Validate required fields
@@ -128,7 +137,7 @@ Transform your space with this stunning ${style} artwork of ${cleanArtist}.
         currency: 'EUR',
         stock_quantity: 999,
         low_stock_threshold: 10,
-        images: [publicUrl],
+        images: styleVariants ? [publicUrl, ...styleVariants.map(v => v.url)] : [publicUrl],
         primary_image: publicUrl,
         slug: slug,
         categories: ['ART', 'POSTER'],
@@ -139,7 +148,12 @@ Transform your space with this stunning ${style} artwork of ${cleanArtist}.
         is_featured: false,
         is_on_sale: false,
         view_count: 0,
-        purchase_count: 0
+        purchase_count: 0,
+        metadata: styleVariants ? {
+          style_variants: styleVariants,
+          has_style_options: true,
+          default_style: style
+        } : null
       })
       .select()
       .single();

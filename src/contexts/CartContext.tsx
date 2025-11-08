@@ -10,6 +10,7 @@ export interface CartItem {
   condition_grade: string;
   seller_id: string;
   image?: string;
+  selected_style?: string;
 }
 
 interface CartContextType {

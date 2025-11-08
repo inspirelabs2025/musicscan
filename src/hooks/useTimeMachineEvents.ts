@@ -2,6 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+const FUNCTIONS_BASE = 'https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeGJweXFuamZpeXVic3VvbmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMDgyNTMsImV4cCI6MjA2MTY4NDI1M30.UFZKmrN-gz4VUUlKmVfwocS5OQuxGm4ATYltBJn3Kq4';
+const defaultHeaders = {
+  'Content-Type': 'application/json',
+  'apikey': ANON_KEY,
+  'Authorization': `Bearer ${ANON_KEY}`,
+};
+
 export interface TimeMachineEvent {
   id: string;
   event_title: string;
@@ -62,10 +70,15 @@ export const useTimeMachineEvents = (options: UseTimeMachineEventsOptions = {}) 
       if (options.limit) params.append('limit', String(options.limit));
 
       const queryString = params.toString() ? `?${params.toString()}` : '';
-      const { data, error } = await supabase.functions.invoke(`time-machine-events${queryString}`);
-
-      if (error) throw error;
-      return data.events as TimeMachineEvent[];
+      const res = await fetch(`${FUNCTIONS_BASE}/time-machine-events${queryString}`, {
+        method: 'GET',
+        headers: defaultHeaders,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to fetch time machine events');
+      }
+      return (json.events || []) as TimeMachineEvent[];
     },
   });
 };
@@ -79,10 +92,16 @@ export const useTimeMachineEvent = (slugOrId?: string) => {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
       const param = isUuid ? 'id' : 'slug';
 
-      const { data, error } = await supabase.functions.invoke(`time-machine-events?${param}=${slugOrId}`);
-
-      if (error) throw error;
-      return data.event as TimeMachineEvent;
+      const res = await fetch(`${FUNCTIONS_BASE}/time-machine-events?${param}=${encodeURIComponent(slugOrId)}`, {
+        method: 'GET',
+        headers: defaultHeaders,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (res.status === 404) return null;
+        throw new Error(json.error || 'Failed to fetch time machine event');
+      }
+      return json.event as TimeMachineEvent;
     },
     enabled: !!slugOrId,
   });
@@ -94,13 +113,16 @@ export const useCreateTimeMachineEvent = () => {
 
   return useMutation({
     mutationFn: async (event: Partial<TimeMachineEvent>) => {
-      const { data, error } = await supabase.functions.invoke('time-machine-events', {
+      const res = await fetch(`${FUNCTIONS_BASE}/time-machine-events`, {
         method: 'POST',
-        body: event
+        headers: defaultHeaders,
+        body: JSON.stringify(event),
       });
-
-      if (error) throw error;
-      return data.event as TimeMachineEvent;
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to create time machine event');
+      }
+      return json.event as TimeMachineEvent;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['time-machine-events'] });
@@ -125,13 +147,16 @@ export const useUpdateTimeMachineEvent = () => {
 
   return useMutation({
     mutationFn: async (event: Partial<TimeMachineEvent> & { id: string }) => {
-      const { data, error } = await supabase.functions.invoke('time-machine-events', {
+      const res = await fetch(`${FUNCTIONS_BASE}/time-machine-events?id=${encodeURIComponent(event.id)}`, {
         method: 'PUT',
-        body: event
+        headers: defaultHeaders,
+        body: JSON.stringify(event),
       });
-
-      if (error) throw error;
-      return data.event as TimeMachineEvent;
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to update time machine event');
+      }
+      return json.event as TimeMachineEvent;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['time-machine-events'] });
@@ -158,13 +183,15 @@ export const useDeleteTimeMachineEvent = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase.functions.invoke('time-machine-events', {
+      const res = await fetch(`${FUNCTIONS_BASE}/time-machine-events?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
-        body: { id }
+        headers: defaultHeaders,
       });
-
-      if (error) throw error;
-      return data;
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to delete time machine event');
+      }
+      return json;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['time-machine-events'] });

@@ -9,8 +9,14 @@ interface CreatePosterProductParams {
   artist: string;
   title: string;
   description?: string;
-  style: StyleType;
+  style: StyleType | 'multi-style';
   price: number;
+  styleVariants?: Array<{
+    style: string;
+    url: string;
+    label: string;
+    emoji: string;
+  }>;
 }
 
 interface CreatePosterProductResult {
@@ -29,13 +35,14 @@ export const usePosterProductCreator = () => {
     title,
     description,
     style,
-    price
+    price,
+    styleVariants
   }: CreatePosterProductParams): Promise<CreatePosterProductResult> => {
     setIsCreating(true);
     try {
       toast({
         title: "📤 Creating POSTER product...",
-        description: "Uploading image and creating product listing",
+        description: styleVariants ? "Creating product with all style variants" : "Uploading image and creating product listing",
       });
 
       const { data, error } = await supabase.functions.invoke('create-poster-product', {
@@ -45,7 +52,8 @@ export const usePosterProductCreator = () => {
           title,
           description,
           style,
-          price
+          price,
+          styleVariants: styleVariants || []
         }
       });
 
@@ -60,7 +68,9 @@ export const usePosterProductCreator = () => {
 
       toast({
         title: "✅ POSTER product created!",
-        description: `"${title}" is now available in the ART SHOP`,
+        description: styleVariants 
+          ? `"${title}" is now available with ${styleVariants.length} style options!`
+          : `"${title}" is now available in the ART SHOP`,
       });
 
       return {

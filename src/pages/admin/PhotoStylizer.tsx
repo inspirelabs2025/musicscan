@@ -11,7 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { usePhotoStylizer, StyleType } from '@/hooks/usePhotoStylizer';
 import { usePosterProductCreator } from '@/hooks/usePosterProductCreator';
-import { Upload, Download, RefreshCw, Sparkles, ShoppingBag } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Upload, Download, RefreshCw, Sparkles, ShoppingBag, Check } from 'lucide-react';
 
 const STYLE_OPTIONS = [
   { value: 'vectorCartoon' as StyleType, label: 'Vectorized Cartoon', emoji: '🎭', description: 'Smooth vector portrait' },
@@ -25,6 +27,7 @@ const STYLE_OPTIONS = [
 
 export default function PhotoStylizer() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<StyleType>('vectorCartoon');
   const [showProductDialog, setShowProductDialog] = useState(false);
@@ -34,6 +37,13 @@ export default function PhotoStylizer() {
     description: '',
     price: 49.95
   });
+  const [allStyleVariants, setAllStyleVariants] = useState<Array<{
+    style: string;
+    url: string;
+    label: string;
+    emoji: string;
+  }>>([]);
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   
   const { isProcessing, originalImage, stylizedImage, stylizePhoto, reset, downloadImage } = usePhotoStylizer();
   const { createPosterProduct, isCreating } = usePosterProductCreator();
@@ -68,26 +78,99 @@ export default function PhotoStylizer() {
   const handleReset = () => {
     setSelectedFile(null);
     reset();
+    setAllStyleVariants([]);
     setProductMetadata({ artist: '', title: '', description: '', price: 49.95 });
   };
 
+  const handleGenerateAllStyles = async () => {
+    if (!selectedFile) return;
+    
+    setIsBatchProcessing(true);
+    setAllStyleVariants([]);
+    
+    try {
+      toast({ title: "📤 Uploading photo..." });
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+      const filePath = `originals/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('vinyl_images')
+        .upload(filePath, selectedFile);
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('vinyl_images')
+        .getPublicUrl(filePath);
+      
+      toast({ 
+        title: "🎨 Generating 7 artistic styles...", 
+        description: "This takes ~1 minute" 
+      });
+      
+      const { data, error } = await supabase.functions.invoke('batch-generate-poster-styles', {
+        body: {
+          posterUrl: publicUrl,
+          eventId: `photo-${Date.now()}`,
+          artistName: 'Custom Photo'
+        }
+      });
+      
+      if (error) throw error;
+      
+      setAllStyleVariants(data.styleVariants || []);
+      if (data.styleVariants?.length > 0) {
+        reset();
+      }
+      
+      toast({ 
+        title: `✅ ${data.styleVariants?.length || 0} styles generated!`,
+        description: "Click on any style to preview"
+      });
+      
+    } catch (error: any) {
+      console.error('Batch generation failed:', error);
+      toast({
+        title: "❌ Generation failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsBatchProcessing(false);
+    }
+  };
+
   const handleCreateProduct = async () => {
-    if (!stylizedImage) return;
+    if (!stylizedImage && allStyleVariants.length === 0) return;
 
     try {
-      const result = await createPosterProduct({
-        stylizedImage,
-        artist: productMetadata.artist,
-        title: productMetadata.title,
-        description: productMetadata.description,
-        style: selectedStyle,
-        price: productMetadata.price
-      });
-
-      setShowProductDialog(false);
-      
-      // Navigate to the new product
-      navigate(`/product/${result.product_slug}`);
+      if (allStyleVariants.length > 0) {
+        const result = await createPosterProduct({
+          stylizedImage: allStyleVariants[0].url,
+          artist: productMetadata.artist,
+          title: productMetadata.title,
+          description: productMetadata.description,
+          style: 'multi-style' as StyleType,
+          price: productMetadata.price,
+          styleVariants: allStyleVariants
+        });
+        
+        setShowProductDialog(false);
+        navigate(`/product/${result.product_slug}`);
+      } else {
+        const result = await createPosterProduct({
+          stylizedImage,
+          artist: productMetadata.artist,
+          title: productMetadata.title,
+          description: productMetadata.description,
+          style: selectedStyle,
+          price: productMetadata.price
+        });
+        
+        setShowProductDialog(false);
+        navigate(`/product/${result.product_slug}`);
+      }
     } catch (error) {
       console.error('Failed to create product:', error);
     }
@@ -203,67 +286,170 @@ export default function PhotoStylizer() {
         </Card>
       </div>
 
-      {/* Style Selection */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Choose Your Style</CardTitle>
-          <CardDescription>Select an artistic style to apply to your photo</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {STYLE_OPTIONS.map((style) => (
-              <button
-                key={style.value}
-                onClick={() => setSelectedStyle(style.value)}
-                disabled={isProcessing}
-                className={`p-4 rounded-lg border-2 transition-all text-left ${
-                  selectedStyle === style.value
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50'
-                } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+      {/* Batch Generation Section */}
+      {allStyleVariants.length === 0 && (
+        <Card className="mb-6 border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              Generate All Styles at Once
+            </CardTitle>
+            <CardDescription>
+              Let AI create 7 artistic styles automatically (~1 minute)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleGenerateAllStyles}
+              disabled={!selectedFile || isBatchProcessing}
+              size="lg"
+              className="w-full"
+              variant="default"
+            >
+              {isBatchProcessing ? (
+                <>
+                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                  Generating 7 styles...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  ✨ Generate All 7 Styles Automatically
+                </>
+              )}
+            </Button>
+            
+            {isBatchProcessing && (
+              <div className="mt-4">
+                <Progress value={undefined} className="w-full" />
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  AI is generating all 7 artistic styles...
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Style Variants Preview Grid */}
+      {allStyleVariants.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              🎨 Generated Style Variants ({allStyleVariants.length}/7)
+            </CardTitle>
+            <CardDescription>
+              Click on any style to preview it
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 md:grid-cols-7 gap-3">
+              {allStyleVariants.map((variant) => (
+                <button
+                  key={variant.style}
+                  onClick={() => {}}
+                  className="group relative aspect-square rounded-lg overflow-hidden border-2 transition-all hover:scale-105 hover:shadow-lg border-border hover:border-primary/50"
+                >
+                  <img 
+                    src={variant.url} 
+                    alt={variant.label}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end text-white text-center p-2 pb-3">
+                    <span className="text-2xl mb-1">{variant.emoji}</span>
+                    <span className="text-xs font-medium leading-tight">{variant.label}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            
+            <div className="mt-4 flex gap-3">
+              <Button 
+                onClick={() => setShowProductDialog(true)} 
+                className="flex-1"
+                size="lg"
               >
-                <div className="text-3xl mb-2">{style.emoji}</div>
-                <div className="font-semibold text-sm mb-1">{style.label}</div>
-                <div className="text-xs text-muted-foreground">{style.description}</div>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                <ShoppingBag className="w-4 h-4 mr-2" />
+                Save All Styles as POSTER
+              </Button>
+              <Button 
+                onClick={handleReset} 
+                variant="outline"
+                size="lg"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Start Over
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Action Buttons */}
-      <div className="flex gap-4 justify-center">
-        <Button
-          onClick={handleStylize}
-          disabled={!selectedFile || isProcessing}
-          size="lg"
-          className="min-w-[200px]"
-        >
-          {isProcessing ? (
-            <>
-              <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-              Transforming...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-5 h-5 mr-2" />
-              Stylize Photo
-            </>
-          )}
-        </Button>
+      {/* Style Selection - Only show if not batch processing */}
+      {allStyleVariants.length === 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Choose Your Style</CardTitle>
+            <CardDescription>Select an artistic style to apply to your photo</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {STYLE_OPTIONS.map((style) => (
+                <button
+                  key={style.value}
+                  onClick={() => setSelectedStyle(style.value)}
+                  disabled={isProcessing}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedStyle === style.value
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <div className="text-3xl mb-2">{style.emoji}</div>
+                  <div className="font-semibold text-sm mb-1">{style.label}</div>
+                  <div className="text-xs text-muted-foreground">{style.description}</div>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        {(selectedFile || stylizedImage) && (
+      {/* Action Buttons - Only show for single style flow */}
+      {allStyleVariants.length === 0 && (
+        <div className="flex gap-4 justify-center">
           <Button
-            onClick={handleReset}
-            variant="outline"
+            onClick={handleStylize}
+            disabled={!selectedFile || isProcessing}
             size="lg"
-            disabled={isProcessing}
+            className="min-w-[200px]"
           >
-            <RefreshCw className="w-5 h-5 mr-2" />
-            Start Over
+            {isProcessing ? (
+              <>
+                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                Transforming...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5 mr-2" />
+                Stylize Photo
+              </>
+            )}
           </Button>
-        )}
-      </div>
+
+          {(selectedFile || stylizedImage) && (
+            <Button
+              onClick={handleReset}
+              variant="outline"
+              size="lg"
+              disabled={isProcessing}
+            >
+              <RefreshCw className="w-5 h-5 mr-2" />
+              Start Over
+            </Button>
+          )}
+        </div>
+      )}
 
       {isProcessing && (
         <Card className="mt-6">

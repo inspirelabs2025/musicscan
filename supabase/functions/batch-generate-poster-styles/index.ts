@@ -57,12 +57,25 @@ serve(async (req) => {
         });
 
         if (styleError) {
-          console.error(`❌ Failed to stylize ${styleKey}:`, styleError);
+          // Log full error details to see WHAT is failing
+          console.error(`❌ Stylize-photo returned error for ${styleKey}:`, {
+            message: styleError.message,
+            details: styleError,
+            fullError: JSON.stringify(styleError)
+          });
           continue;
         }
 
+        // Also log the full response for debugging
+        console.log(`📦 Stylize-photo response for ${styleKey}:`, {
+          hasData: !!styleData,
+          hasUrl: !!styleData?.stylizedImageUrl,
+          success: styleData?.success,
+          error: styleData?.error
+        });
+
         if (!styleData?.stylizedImageUrl) {
-          console.error(`❌ No stylized image returned for ${styleKey}`);
+          console.error(`❌ No stylizedImageUrl for ${styleKey}. Response:`, JSON.stringify(styleData));
           continue;
         }
 

@@ -61,13 +61,13 @@ serve(async (req) => {
           continue;
         }
 
-        if (!styleData?.stylizedImageBase64) {
+        if (!styleData?.stylizedImageUrl) {
           console.error(`❌ No stylized image returned for ${styleKey}`);
           continue;
         }
 
         // Convert base64 to Uint8Array
-        const base64Data = styleData.stylizedImageBase64.replace(/^data:image\/\w+;base64,/, '');
+        const base64Data = styleData.stylizedImageUrl.replace(/^data:image\/\w+;base64,/, '');
         const imageBlob = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
         // Upload to storage

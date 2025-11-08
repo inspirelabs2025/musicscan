@@ -86,21 +86,7 @@ Elk Time Machine poster vertelt het verhaal van een iconisch concert. Scan de QR
         stock_quantity: event.edition_size || 100,
         status: 'active',
         published_at: new Date().toISOString(),
-        metadata: {
-          time_machine_event_id: event.id,
-          time_machine_slug: event.slug,
-          product_type: 'fine_art_print',
-          concert_date: event.concert_date,
-          venue_name: event.venue_name,
-          venue_city: event.venue_city,
-          qr_code_url: event.qr_code_url,
-          edition_size: event.edition_size || 100,
-          dimensions: '50×70 cm',
-          material: 'Hahnemühle Photo Rag 308gsm',
-          technique: 'Giclée 12-color inkjet',
-          style_variants: styleVariants || [],
-          has_style_options: (styleVariants || []).length > 0
-        }
+        images: [event.poster_image_url]
       })
       .select()
       .single();
@@ -158,22 +144,7 @@ Elk Time Machine poster vertelt het verhaal van een iconisch concert. Scan de QR
         stock_quantity: 100,
         status: 'active',
         published_at: new Date().toISOString(),
-        metadata: {
-          time_machine_event_id: event.id,
-          time_machine_slug: event.slug,
-          product_type: 'metal_print_deluxe',
-          concert_date: event.concert_date,
-          venue_name: event.venue_name,
-          venue_city: event.venue_city,
-          qr_code_url: event.qr_code_url,
-          edition_size: 100,
-          dimensions: '40×60 cm',
-          material: 'Brushed Aluminum Dibond 3mm',
-          finish: 'Purple reflection effect',
-          technique: 'Direct UV print on metal',
-          style_variants: styleVariants || [],
-          has_style_options: (styleVariants || []).length > 0
-        }
+        images: [event.metal_print_image_url || event.poster_image_url]
       })
       .select()
       .single();

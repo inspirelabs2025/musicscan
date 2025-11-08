@@ -146,13 +146,13 @@ Transform your space with this stunning ${style} artwork of ${cleanArtist}.
 
     const slug = slugData;
 
-    // Prepare images array with all style variants
-    const allImages = styleVariants ? [publicUrl, ...styleVariants.map(v => v.url)] : [publicUrl];
+    // Prepare images array - only style variants, NOT the primary image
+    const styleImages = styleVariants ? styleVariants.map(v => v.url) : [];
     
     console.log('📦 Product payload:', { 
-      images_count: allImages.length, 
-      has_variants: !!styleVariants,
-      variants_count: styleVariants?.length || 0
+      primary_image: publicUrl,
+      style_variants_count: styleImages.length, 
+      has_variants: !!styleVariants
     });
 
     // Create platform_products record - using only columns that exist
@@ -167,7 +167,7 @@ Transform your space with this stunning ${style} artwork of ${cleanArtist}.
         price: price || 49.95,
         stock_quantity: 999,
         primary_image: publicUrl,
-        images: allImages,
+        images: styleImages,
         categories: ['ART', 'POSTER'],
         tags: ['poster', style.toLowerCase(), 'ai-generated', cleanArtist.toLowerCase().replace(/\s+/g, '-')],
         status: 'active',

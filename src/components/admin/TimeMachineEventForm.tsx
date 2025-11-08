@@ -47,7 +47,7 @@ type EventFormValues = z.infer<typeof eventFormSchema>;
 
 interface TimeMachineEventFormProps {
   event?: TimeMachineEvent | null;
-  onSuccess?: () => void;
+  onSuccess?: (eventId?: string) => void;
   onCancel?: () => void;
 }
 
@@ -98,7 +98,10 @@ export function TimeMachineEventForm({ event, onSuccess, onCancel }: TimeMachine
       });
     } else {
       createEvent(eventData as any, {
-        onSuccess: () => onSuccess?.(),
+        onSuccess: (data: any) => {
+          // Pass the created event ID to parent
+          onSuccess?.(data?.event?.id);
+        },
       });
     }
   };

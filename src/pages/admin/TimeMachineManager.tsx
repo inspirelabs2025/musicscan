@@ -28,6 +28,7 @@ export default function TimeMachineManager() {
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState('');
+  const [autoGeneratePosterForEvent, setAutoGeneratePosterForEvent] = useState<string | null>(null);
   
   const { data: events, isLoading, error } = useTimeMachineEvents({ published: undefined });
   const { mutate: generatePoster, isPending: isGenerating } = useGenerateTimeMachinePoster();
@@ -143,8 +144,19 @@ export default function TimeMachineManager() {
           <CardContent>
             <TimeMachineEventForm
               event={editingEvent}
-              onSuccess={() => {
+              onSuccess={(createdEventId?: string) => {
                 setShowCreateForm(false);
+                
+                // Auto-generate poster for newly created AI events
+                if (createdEventId && !editingEvent?.id) {
+                  setAutoGeneratePosterForEvent(createdEventId);
+                  generatePoster({ 
+                    eventId: createdEventId, 
+                    generateMetal: true,
+                    createProducts: true 
+                  });
+                }
+                
                 setEditingEvent(null);
               }}
               onCancel={() => {

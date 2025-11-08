@@ -2479,6 +2479,56 @@ export type Database = {
           },
         ]
       }
+      poster_processing_queue: {
+        Row: {
+          artist_name: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          max_retries: number | null
+          processed_at: string | null
+          product_id: string | null
+          retry_count: number | null
+          status: string | null
+          storage_path: string
+          updated_at: string | null
+        }
+        Insert: {
+          artist_name: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          max_retries?: number | null
+          processed_at?: string | null
+          product_id?: string | null
+          retry_count?: number | null
+          status?: string | null
+          storage_path: string
+          updated_at?: string | null
+        }
+        Update: {
+          artist_name?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          max_retries?: number | null
+          processed_at?: string | null
+          product_id?: string | null
+          retry_count?: number | null
+          status?: string | null
+          storage_path?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poster_processing_queue_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "platform_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_change_log: {
         Row: {
           blog_post_updated: boolean | null

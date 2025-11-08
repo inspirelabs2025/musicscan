@@ -1,5 +1,14 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.bulk-upload-posters]
+verify_jwt = false
+
+[functions.bulk-poster-processor]
+verify_jwt = false
+
+[[functions.bulk-poster-processor.schedule]]
+cron = "*/5 * * * *"  # Every 5 minutes
+
 [functions.discogs-lp-crawler]
 verify_jwt = false
 [[functions.discogs-lp-crawler.schedule]]

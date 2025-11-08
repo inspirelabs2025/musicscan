@@ -105,7 +105,12 @@ The poster should evoke the energy and cultural moment of this historic concert 
         messages: [
           {
             role: 'user',
-            content: standardPrompt
+            content: [
+              {
+                type: 'text',
+                text: standardPrompt
+              }
+            ]
           }
         ],
         modalities: ['image', 'text']
@@ -183,7 +188,12 @@ METAL PRINT VARIANT ADJUSTMENTS:
           messages: [
             {
               role: 'user',
-              content: metalPrompt
+              content: [
+                {
+                  type: 'text',
+                  text: metalPrompt
+                }
+              ]
             }
           ],
           modalities: ['image', 'text']

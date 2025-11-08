@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useTimeMachineEvents, useDeleteTimeMachineEvent } from '@/hooks/useTimeMachineEvents';
 import { useGenerateTimeMachinePoster } from '@/hooks/useGenerateTimeMachinePoster';
+import { useGenerateTimeMachineEvent } from '@/hooks/useGenerateTimeMachineEvent';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Plus, Wand2, Eye, Trash2, Calendar, MapPin, Package } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { AlertCircle, Plus, Wand2, Eye, Trash2, Calendar, MapPin, Package, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { TimeMachineEventForm } from '@/components/admin/TimeMachineEventForm';
@@ -25,10 +27,12 @@ export default function TimeMachineManager() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
+  const [aiPrompt, setAiPrompt] = useState('');
   
   const { data: events, isLoading, error } = useTimeMachineEvents({ published: undefined });
   const { mutate: generatePoster, isPending: isGenerating } = useGenerateTimeMachinePoster();
   const { mutate: deleteEvent, isPending: isDeleting } = useDeleteTimeMachineEvent();
+  const { mutate: generateEvent, isPending: isGeneratingEvent } = useGenerateTimeMachineEvent();
 
   const handleGeneratePoster = (eventId: string) => {
     generatePoster({ 
@@ -44,6 +48,18 @@ export default function TimeMachineManager() {
         onSuccess: () => setDeleteEventId(null)
       });
     }
+  };
+
+  const handleGenerateWithAI = () => {
+    if (!aiPrompt.trim()) return;
+    
+    generateEvent(aiPrompt, {
+      onSuccess: (eventData) => {
+        setEditingEvent(eventData);
+        setShowCreateForm(true);
+        setAiPrompt('');
+      }
+    });
   };
 
   if (isLoading) {
@@ -82,6 +98,42 @@ export default function TimeMachineManager() {
           Nieuw Event
         </Button>
       </div>
+
+      {/* AI Event Generator */}
+      <Card className="mb-8 border-primary bg-gradient-to-br from-primary/5 to-primary/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            ✨ AI Event Generator
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Voer een concert beschrijving in en laat AI het event voor je maken
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Bijv: The Beatles - Shea Stadium, New York 15 aug 1965"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleGenerateWithAI()}
+              disabled={isGeneratingEvent}
+              className="flex-1"
+            />
+            <Button 
+              onClick={handleGenerateWithAI}
+              disabled={isGeneratingEvent || !aiPrompt.trim()}
+              size="lg"
+            >
+              <Wand2 className="w-4 h-4 mr-2" />
+              {isGeneratingEvent ? 'Genereren...' : 'Genereer met AI'}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            💡 Tip: Vermeld artiest, venue, locatie en datum voor de beste resultaten
+          </p>
+        </CardContent>
+      </Card>
 
       {showCreateForm && (
         <Card className="mb-8 border-primary">

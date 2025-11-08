@@ -183,3 +183,6 @@ verify_jwt = false
 
 [functions.create-time-machine-products]
 verify_jwt = false
+
+[functions.generate-time-machine-event]
+verify_jwt = false

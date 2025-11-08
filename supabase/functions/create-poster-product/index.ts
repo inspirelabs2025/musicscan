@@ -146,13 +146,14 @@ Transform your space with this stunning ${style} artwork of ${cleanArtist}.
 
     const slug = slugData;
 
-    // Prepare images array - only style variants, NOT the primary image
-    const styleImages = styleVariants ? styleVariants.map(v => v.url) : [];
+    // Prepare images array - filter out the primary image from variants to prevent duplicates
+    const filtered = (styleVariants || []).filter(v => v.url !== stylizedImageBase64);
+    const styleImages = filtered.map(v => v.url);
     
     console.log('📦 Product payload:', { 
       primary_image: publicUrl,
-      style_variants_count: styleImages.length, 
-      has_variants: !!styleVariants
+      style_variants_count: styleImages.length,
+      removed_primary_from_variants: (styleVariants?.length || 0) - styleImages.length
     });
 
     // Create platform_products record - using only columns that exist

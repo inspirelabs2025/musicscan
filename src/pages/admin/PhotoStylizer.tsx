@@ -153,7 +153,7 @@ export default function PhotoStylizer() {
           description: productMetadata.description,
           style: 'multi-style' as StyleType,
           price: productMetadata.price,
-          styleVariants: allStyleVariants
+          styleVariants: allStyleVariants.slice(1) // Exclude first variant (used as primary)
         });
         
         setShowProductDialog(false);

@@ -94,38 +94,50 @@ The poster should evoke the energy and cultural moment of this historic concert 
     console.log('Generating standard poster with Lovable AI...');
 
     // Call Lovable AI for standard poster
-    const standardResponse = await fetch('https://api.lovable.app/v1/images/generation', {
+    const standardResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image',
-        prompt: standardPrompt,
-        width: 768,
-        height: 1024,
-        num_outputs: 1
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: standardPrompt
+          }
+        ],
+        modalities: ['image', 'text']
       }),
     });
 
     if (!standardResponse.ok) {
       const errorText = await standardResponse.text();
-      throw new Error(`Lovable AI error: ${errorText}`);
+      if (standardResponse.status === 429) {
+        throw new Error('Te veel verzoeken. Probeer het over een minuut opnieuw.');
+      }
+      if (standardResponse.status === 402) {
+        throw new Error('Lovable AI credits opgebruikt. Voeg credits toe aan je workspace.');
+      }
+      throw new Error(`Lovable AI error (${standardResponse.status}): ${errorText}`);
     }
 
     const standardResult = await standardResponse.json();
-    const standardImageUrl = standardResult.output?.[0];
+    console.log('Standard poster API response received');
+    
+    // Extract base64 image from chat completion response
+    const standardImageData = standardResult.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
-    if (!standardImageUrl) {
+    if (!standardImageData) {
       throw new Error('No image generated from Lovable AI');
     }
 
     console.log('Standard poster generated, uploading to storage...');
 
-    // Download and upload standard poster to Supabase Storage
-    const standardImageResponse = await fetch(standardImageUrl);
-    const standardImageBlob = await standardImageResponse.arrayBuffer();
+    // Convert base64 to Uint8Array
+    const base64Data = standardImageData.replace(/^data:image\/\w+;base64,/, '');
+    const standardImageBlob = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
     
     const standardFilename = `${event.slug}-standard-${Date.now()}.png`;
     const { data: standardUpload, error: standardUploadError } = await supabase
@@ -160,28 +172,32 @@ METAL PRINT VARIANT ADJUSTMENTS:
 - Highlights should pop more for metal reflection
 - Overall: Make it "print-ready for metal" - slightly brighter, more vibrant`;
 
-      const metalResponse = await fetch('https://api.lovable.app/v1/images/generation', {
+      const metalResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${lovableApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash-image',
-          prompt: metalPrompt,
-          width: 768,
-          height: 1024,
-          num_outputs: 1
+          model: 'google/gemini-2.5-flash-image-preview',
+          messages: [
+            {
+              role: 'user',
+              content: metalPrompt
+            }
+          ],
+          modalities: ['image', 'text']
         }),
       });
 
       if (metalResponse.ok) {
         const metalResult = await metalResponse.json();
-        const metalImageUrl = metalResult.output?.[0];
+        const metalImageData = metalResult.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
-        if (metalImageUrl) {
-          const metalImageResponse = await fetch(metalImageUrl);
-          const metalImageBlob = await metalImageResponse.arrayBuffer();
+        if (metalImageData) {
+          // Convert base64 to Uint8Array
+          const metalBase64Data = metalImageData.replace(/^data:image\/\w+;base64,/, '');
+          const metalImageBlob = Uint8Array.from(atob(metalBase64Data), c => c.charCodeAt(0));
           
           const metalFilename = `${event.slug}-metal-${Date.now()}.png`;
           const { data: metalUpload, error: metalUploadError } = await supabase

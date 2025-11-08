@@ -70,7 +70,16 @@ serve(async (req) => {
 
     // POST - Create new event
     if (method === 'POST') {
-      const body = await req.json();
+      let body;
+      try {
+        const text = await req.text();
+        body = text ? JSON.parse(text) : {};
+      } catch (e) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON in request body' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
       
       // Generate slug if not provided
       if (!body.slug) {
@@ -97,7 +106,16 @@ serve(async (req) => {
 
     // PUT - Update event
     if (method === 'PUT') {
-      const body = await req.json();
+      let body;
+      try {
+        const text = await req.text();
+        body = text ? JSON.parse(text) : {};
+      } catch (e) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON in request body' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
       const eventId = body.id || id;
 
       if (!eventId) {
@@ -126,7 +144,16 @@ serve(async (req) => {
 
     // DELETE - Remove event
     if (method === 'DELETE') {
-      const eventId = id || (await req.json()).id;
+      let eventId = id;
+      if (!eventId) {
+        try {
+          const text = await req.text();
+          const body = text ? JSON.parse(text) : {};
+          eventId = body.id;
+        } catch (e) {
+          // If no body, use id from query param
+        }
+      }
 
       if (!eventId) {
         throw new Error('Event ID is required for deletion');

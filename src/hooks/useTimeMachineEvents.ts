@@ -61,10 +61,8 @@ export const useTimeMachineEvents = (options: UseTimeMachineEventsOptions = {}) 
       if (options.artist) params.append('artist', options.artist);
       if (options.limit) params.append('limit', String(options.limit));
 
-      const { data, error } = await supabase.functions.invoke('time-machine-events', {
-        method: 'GET',
-        body: Object.fromEntries(params)
-      });
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const { data, error } = await supabase.functions.invoke(`time-machine-events${queryString}`);
 
       if (error) throw error;
       return data.events as TimeMachineEvent[];
@@ -81,10 +79,7 @@ export const useTimeMachineEvent = (slugOrId?: string) => {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
       const param = isUuid ? 'id' : 'slug';
 
-      const { data, error } = await supabase.functions.invoke('time-machine-events', {
-        method: 'GET',
-        body: { [param]: slugOrId }
-      });
+      const { data, error } = await supabase.functions.invoke(`time-machine-events?${param}=${slugOrId}`);
 
       if (error) throw error;
       return data.event as TimeMachineEvent;

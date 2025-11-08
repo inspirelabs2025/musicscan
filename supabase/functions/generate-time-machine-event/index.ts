@@ -40,6 +40,9 @@ Je genereert:
 6. Een meeslepend verhaal (400-600 woorden) over de avond, geschreven alsof je erbij was
 7. Suggesties voor poster stijl passend bij het tijdperk
 8. Relevante tags
+9. Een setlist van 8-15 iconische nummers die gespeeld werden
+10. Beschrijvingen van 3-6 historische foto's (met placeholder Unsplash URLs)
+11. 2-4 fictieve maar realistische pers recensies van muziekpublicaties uit die periode
 
 Het verhaal moet levendig zijn, details bevatten, en de lezer meenemen naar die avond.`;
 
@@ -118,6 +121,47 @@ Genereer alle informatie in het Nederlands. Wees zo specifiek en gedetailleerd m
                   type: "array", 
                   items: { type: "string" },
                   description: "Array van relevante tags (5-8 tags)" 
+                },
+                setlist: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      position: { type: "number" },
+                      title: { type: "string" },
+                      duration: { type: "string", description: "Format: MM:SS" }
+                    }
+                  },
+                  description: "Array van 8-15 nummers die gespeeld werden. Gebruik bekende tracks van de artiest uit die periode."
+                },
+                archive_photos: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      url: { 
+                        type: "string",
+                        description: "Placeholder URL - gebruik https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800 of vergelijkbare concert foto's"
+                      },
+                      caption: { type: "string", description: "Beschrijving van de foto in het Nederlands" },
+                      source: { type: "string", description: "Fictieve bron (bijv. 'Fotograaf onbekend', 'Venue archief')" }
+                    }
+                  },
+                  description: "Array van 3-6 historische foto beschrijvingen met placeholder Unsplash URLs van concertfoto's"
+                },
+                press_reviews: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      publication: { type: "string", description: "Naam van publicatie (bijv. NME, Rolling Stone, Muziek Expres)" },
+                      date: { type: "string", description: "Datum in ISO format (YYYY-MM-DD)" },
+                      rating: { type: "number", description: "Rating 1-5 sterren" },
+                      excerpt: { type: "string", description: "Quote van 50-100 woorden in het Nederlands" },
+                      review_url: { type: "string", description: "Optioneel: fictieve URL naar recensie" }
+                    }
+                  },
+                  description: "Array van 2-4 fictieve maar realistische recensies van bekende muziekpublicaties uit die periode"
                 }
               },
               required: [

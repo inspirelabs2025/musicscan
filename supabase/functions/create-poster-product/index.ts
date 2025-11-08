@@ -146,41 +146,42 @@ Transform your space with this stunning ${style} artwork of ${cleanArtist}.
 
     const slug = slugData;
 
-    // Create platform_products record
+    // Prepare images array with all style variants
+    const allImages = styleVariants ? [publicUrl, ...styleVariants.map(v => v.url)] : [publicUrl];
+    
+    console.log('📦 Product payload:', { 
+      images_count: allImages.length, 
+      has_variants: !!styleVariants,
+      variants_count: styleVariants?.length || 0
+    });
+
+    // Create platform_products record - using only columns that exist
     const { data: product, error: insertError } = await supabase
       .from('platform_products')
       .insert({
         title: cleanTitle,
         artist: cleanArtist,
+        slug: slug,
         description: finalDescription,
         media_type: 'art',
         price: price || 49.95,
-        currency: 'EUR',
         stock_quantity: 999,
-        low_stock_threshold: 10,
-        images: styleVariants ? [publicUrl, ...styleVariants.map(v => v.url)] : [publicUrl],
         primary_image: publicUrl,
-        slug: slug,
+        images: allImages,
         categories: ['ART', 'POSTER'],
         tags: ['poster', style.toLowerCase(), 'ai-generated', cleanArtist.toLowerCase().replace(/\s+/g, '-')],
         status: 'active',
-        published_at: new Date().toISOString(),
-        is_new: true,
-        is_featured: false,
-        is_on_sale: false,
-        view_count: 0,
-        purchase_count: 0,
-        metadata: styleVariants ? {
-          style_variants: styleVariants,
-          has_style_options: true,
-          default_style: style
-        } : null
+        published_at: new Date().toISOString()
       })
       .select()
       .single();
 
     if (insertError) {
-      console.error('Insert error:', insertError);
+      console.error('❌ Insert error details:', {
+        message: insertError.message,
+        code: insertError.code,
+        details: insertError.details
+      });
       throw new Error(`Failed to create product: ${insertError.message}`);
     }
 

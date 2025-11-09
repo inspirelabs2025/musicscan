@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle2, AlertCircle, Home } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { AutoBlogSlugBatchProcessor } from "@/components/admin/AutoBlogSlugBatchProcessor";
 
 const FixBlogSlugs = () => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -72,7 +73,10 @@ const FixBlogSlugs = () => {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <Card>
+      <div className="space-y-6">
+        <AutoBlogSlugBatchProcessor />
+
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             🔧 Fix Blog Slugs
@@ -206,6 +210,7 @@ const FixBlogSlugs = () => {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

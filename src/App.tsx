@@ -63,6 +63,7 @@ import ArtGenerator from "./pages/admin/ArtGenerator";
 import BulkArtGenerator from "./pages/admin/BulkArtGenerator";
 import SketchArtGenerator from "./pages/admin/SketchArtGenerator";
 import PhotoStylizer from "./pages/admin/PhotoStylizer";
+import BulkPosterUpload from "./pages/admin/BulkPosterUpload";
 import FixProductTitles from "./pages/admin/FixProductTitles";
 import BulkProductCleanup from "./pages/admin/BulkProductCleanup";
 import AutoCleanupToday from "./pages/admin/AutoCleanupToday";
@@ -361,6 +362,11 @@ const App = () => {
             <Route path="/admin/photo-stylizer" element={
               <ProtectedRoute>
                 <PhotoStylizer />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/bulk-poster-upload" element={
+              <ProtectedRoute>
+                <BulkPosterUpload />
               </ProtectedRoute>
             } />
             <Route path="/admin/auto-cleanup-today" element={

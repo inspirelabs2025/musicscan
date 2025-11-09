@@ -14,10 +14,6 @@
       "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy?file=:path*"
     }
   ],
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ],
   "headers": [
     {
       "source": "/lovable-uploads/:path*",

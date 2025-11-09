@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
 import { ArrowLeft, ShoppingCart, Check, Package, Clock, BookOpen, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import { Helmet } from "react-helmet";
 import { useBlogPostByProduct } from "@/hooks/useBlogPostByProduct";
@@ -45,6 +45,20 @@ export default function PlatformProductDetail() {
   // Check for style options
   const hasStyleOptions = product?.metadata?.has_style_options === true;
   const styleVariants = product?.metadata?.style_variants || [];
+
+  // Set default style when product loads
+  useEffect(() => {
+    if (product && !selectedStyle && styleVariants.length > 0) {
+      const defaultStyle = product.metadata?.default_style || styleVariants[0]?.style;
+      if (defaultStyle) {
+        setSelectedStyle(defaultStyle);
+        const defaultVariant = styleVariants.find((v: any) => v.style === defaultStyle);
+        if (defaultVariant?.url) {
+          setSelectedImage(defaultVariant.url);
+        }
+      }
+    }
+  }, [product, styleVariants, selectedStyle]);
 
   // Generate POSTER-specific meta description
   const generateMetaDescription = () => {

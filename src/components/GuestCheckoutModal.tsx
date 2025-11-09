@@ -44,7 +44,8 @@ export const GuestCheckoutModal = ({ open, onOpenChange, items, onSuccess }: Gue
         body: {
           items: items.map(item => ({
             id: item.id,
-            media_type: item.media_type
+            media_type: item.media_type,
+            selected_style: item.selected_style
           })),
           shippingAddress,
           buyerName: formData.name,

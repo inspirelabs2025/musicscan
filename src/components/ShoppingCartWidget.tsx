@@ -86,13 +86,18 @@ export const ShoppingCartWidget = () => {
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium truncate">{item.artist}</h4>
                         <p className="text-sm text-muted-foreground truncate">{item.title}</p>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <Badge variant="secondary" className="text-xs">
                             {item.media_type.toUpperCase()}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
                             {item.condition_grade}
                           </Badge>
+                          {item.selected_style && (
+                            <Badge variant="default" className="text-xs bg-primary">
+                              {item.selected_style}
+                            </Badge>
+                          )}
                         </div>
                         <p className="font-semibold mt-1">{formatPrice(item.price)}</p>
                       </div>

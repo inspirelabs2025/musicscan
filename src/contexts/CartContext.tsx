@@ -93,7 +93,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         body: {
           items: items.map(item => ({
             id: item.id,
-            type: item.media_type
+            type: item.media_type,
+            selected_style: item.selected_style
           })),
           shippingAddress,
           buyerName

@@ -22,9 +22,19 @@ export const PosterStyleSelector = ({
     return null;
   }
 
+  const currentVariant = styleVariants.find(v => v.style === currentStyle);
+
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg">Kies je favoriete stijl 🎨</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-lg">Kies je favoriete stijl 🎨</h3>
+        {currentVariant && (
+          <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
+            <span className="text-xl">{currentVariant.emoji}</span>
+            <span className="font-medium text-primary text-sm">{currentVariant.label}</span>
+          </div>
+        )}
+      </div>
       <div className="grid grid-cols-3 md:grid-cols-7 gap-3">
         {styleVariants.map((variant) => (
           <button
@@ -45,8 +55,13 @@ export const PosterStyleSelector = ({
               className="w-full h-full object-cover"
             />
             
-            {/* Overlay with label */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end text-white text-center p-2 pb-3">
+            {/* Label - always visible for current, on hover for others */}
+            <div className={`
+              absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent 
+              flex flex-col items-center justify-end text-white text-center p-2 pb-3
+              transition-opacity
+              ${currentStyle === variant.style ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
+            `}>
               <span className="text-2xl mb-1">{variant.emoji}</span>
               <span className="text-xs font-medium leading-tight">{variant.label}</span>
             </div>

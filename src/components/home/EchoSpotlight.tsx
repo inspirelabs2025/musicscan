@@ -80,7 +80,7 @@ export function EchoSpotlight() {
                 <Button 
                   asChild 
                   size="lg" 
-                  className="text-lg bg-gradient-to-r from-echo-turquoise to-echo-copper hover:shadow-lg hover:scale-105 transition-all"
+                  className="text-lg hover:shadow-lg hover:scale-105 transition-all"
                 >
                   <Link to="/echo">
                     <Music2 className="w-5 h-5 mr-2" />

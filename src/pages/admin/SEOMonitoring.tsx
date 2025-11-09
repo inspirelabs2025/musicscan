@@ -13,6 +13,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Home } from "lucide-react";
 import { AutoIndexNowSubmitter } from "@/components/admin/AutoIndexNowSubmitter";
 import { ImportAuditWidget } from "@/components/admin/ImportAuditWidget";
+import { CanonicalChecker } from "@/components/admin/CanonicalChecker";
 
 export default function SEOMonitoring() {
   // Initialize web vitals tracking
@@ -48,6 +49,7 @@ export default function SEOMonitoring() {
           <TabsTrigger value="google">Google Index</TabsTrigger>
           <TabsTrigger value="sitemaps">Sitemaps</TabsTrigger>
           <TabsTrigger value="indexnow">IndexNow</TabsTrigger>
+          <TabsTrigger value="canonicals">Canonicals</TabsTrigger>
           <TabsTrigger value="prices">Price Changes</TabsTrigger>
           <TabsTrigger value="content">Content Freshness</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
@@ -70,6 +72,10 @@ export default function SEOMonitoring() {
           <ImportAuditWidget />
           <IndexNowMonitor />
           <IndexNowQueueMonitor />
+        </TabsContent>
+
+        <TabsContent value="canonicals" className="space-y-4">
+          <CanonicalChecker />
         </TabsContent>
 
         <TabsContent value="prices" className="space-y-4">

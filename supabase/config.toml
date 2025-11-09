@@ -219,3 +219,6 @@ verify_jwt = false
 
 [functions.echo-chat]
 verify_jwt = true
+
+[functions.canonical-checker]
+verify_jwt = false

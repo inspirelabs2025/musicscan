@@ -52,6 +52,12 @@ All colors MUST be HSL.
     --vinyl-purple: 271 81% 56%;
     --gradient-vinyl: linear-gradient(135deg, hsl(var(--vinyl-purple)), hsl(271 81% 45%));
     --gradient-scan: linear-gradient(180deg, hsl(var(--background)), hsl(210 40% 98%));
+    
+    /* Echo specific colors */
+    --echo-violet: 271 62% 29%;
+    --echo-copper: 23 100% 50%;
+    --echo-turquoise: 171 87% 60%;
+    --echo-cream: 36 57% 92%;
 
     --sidebar-background: 0 0% 98%;
 
@@ -193,4 +199,23 @@ All colors MUST be HSL.
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
   pointer-events: none;
   border-radius: inherit;
+}
+
+/* Echo animations */
+@keyframes echo-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes echo-wave {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(10px); }
+}
+
+.animate-echo-pulse {
+  animation: echo-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-echo-wave {
+  animation: echo-wave 3s ease-in-out infinite;
 }

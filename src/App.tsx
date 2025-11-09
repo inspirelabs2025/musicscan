@@ -100,6 +100,7 @@ import TimeMachineManager from "./pages/admin/TimeMachineManager";
 import LyricPosterGenerator from "./pages/admin/LyricPosterGenerator";
 import SockGenerator from "./pages/admin/SockGenerator";
 import SocksShop from "./pages/SocksShop";
+import Echo from "./pages/Echo";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -200,6 +201,11 @@ const App = () => {
             <Route path="/collection-chat" element={
               <ProtectedRoute>
                 <CollectionChat />
+              </ProtectedRoute>
+            } />
+            <Route path="/echo" element={
+              <ProtectedRoute>
+                <Echo />
               </ProtectedRoute>
             } />
             <Route path="/quiz" element={

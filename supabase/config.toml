@@ -216,3 +216,6 @@ verify_jwt = false
 
 [functions.batch-generate-poster-styles]
 verify_jwt = false
+
+[functions.echo-chat]
+verify_jwt = true

@@ -37,6 +37,7 @@ import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
 import { ChatWidget } from '@/components/dashboard/ChatWidget';
 import { QuizWidget } from '@/components/dashboard/QuizWidget';
 import { SpotifyWidget } from '@/components/dashboard/SpotifyWidget';
+import { EchoWidget } from '@/components/dashboard/EchoWidget';
 import { UnifiedContentWidget } from '@/components/dashboard/UnifiedContentWidget';
 import { BatchBlogGenerator } from '@/components/admin/BatchBlogGenerator';
 import { LatestAlbumsSection } from '@/components/LatestAlbumsSection';
@@ -238,6 +239,7 @@ const Dashboard = () => {
               🚀 Jouw Muziek Command Center
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <EchoWidget />
               <AIInsightsWidget />
               <ChatWidget />
               <QuizWidget />

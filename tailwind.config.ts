@@ -71,6 +71,12 @@ export default {
 					silver: 'hsl(var(--vinyl-silver))',
 					black: 'hsl(var(--vinyl-black))',
 					purple: 'hsl(var(--vinyl-purple))'
+				},
+				echo: {
+					violet: 'hsl(var(--echo-violet))',
+					copper: 'hsl(var(--echo-copper))',
+					turquoise: 'hsl(var(--echo-turquoise))',
+					cream: 'hsl(var(--echo-cream))'
 				}
 			},
 			backgroundImage: {

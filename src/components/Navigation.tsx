@@ -47,6 +47,7 @@ const scanCollectionMenuItems = [
 
 // AI TOOLS MENU ITEMS (Logged in only)
 const aiToolsMenuItems = [
+  { title: "Echo 🎵", url: "/echo", icon: Music },
   { title: "Chat met Collectie", url: "/collection-chat", icon: MessageCircle },
   { title: "Prijscheck", url: "/quick-price-check", icon: DollarSign },
   { title: "AI Analyse", url: "/ai-analysis", icon: Brain },

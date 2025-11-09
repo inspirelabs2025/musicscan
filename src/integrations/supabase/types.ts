@@ -1321,6 +1321,107 @@ export type Database = {
         }
         Relationships: []
       }
+      echo_conversations: {
+        Row: {
+          conversation_type: string | null
+          created_at: string | null
+          id: string
+          last_message_at: string | null
+          metadata: Json | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          conversation_type?: string | null
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          metadata?: Json | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          conversation_type?: string | null
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          metadata?: Json | null
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      echo_messages: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          id: string
+          message: string
+          message_type: string | null
+          metadata: Json | null
+          response_time_ms: number | null
+          sender_type: string
+          tokens_used: number | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          message_type?: string | null
+          metadata?: Json | null
+          response_time_ms?: number | null
+          sender_type: string
+          tokens_used?: number | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          message_type?: string | null
+          metadata?: Json | null
+          response_time_ms?: number | null
+          sender_type?: string
+          tokens_used?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "echo_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "echo_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      echo_user_preferences: {
+        Row: {
+          created_at: string | null
+          favorite_genres: string[] | null
+          language: string | null
+          tone_preference: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          favorite_genres?: string[] | null
+          language?: string | null
+          tone_preference?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          favorite_genres?: string[] | null
+          language?: string | null
+          tone_preference?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       forum_post_votes: {
         Row: {
           created_at: string

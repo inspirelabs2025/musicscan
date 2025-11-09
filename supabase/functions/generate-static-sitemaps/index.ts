@@ -82,15 +82,15 @@ Deno.serve(async (req) => {
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
-    const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://musicscan.app/plaat-verhaal');
-    const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal');
-    const metalPrintsSitemapXml = generateSitemapXml(metalPrintProducts || [], 'https://musicscan.app/product');
+    const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal');
+    const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal');
+    const metalPrintsSitemapXml = generateSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product');
     const postersSitemapXml = generatePosterSitemapXml(posterProducts || []);
 
     // Image sitemaps
-    const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://musicscan.app/plaat-verhaal', 'album_cover_url');
-    const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://musicscan.app/muziek-verhaal', 'artwork_url');
-    const metalPrintsImageSitemapXml = generateImageSitemapXml(metalPrintProducts || [], 'https://musicscan.app/product', 'primary_image');
+    const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
+    const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal', 'artwork_url');
+    const metalPrintsImageSitemapXml = generateImageSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product', 'primary_image');
     const postersImageSitemapXml = generatePosterImageSitemapXml(posterProducts || []);
 
     // Build uploads list (11 files total - added poster sitemaps)
@@ -163,13 +163,13 @@ Deno.serve(async (req) => {
 
     // Perform health checks on all sitemaps
     const healthChecks: Record<string, any> = {};
-const sitemapBaseUrl = 'https://musicscan.app/sm';
+const sitemapBaseUrl = 'https://www.musicscan.app/sm';
 const allSitemaps = [...uploads.map(u => u.name), 'sitemap-index.xml'];
 
 for (const sitemapName of allSitemaps) {
   try {
     const checkUrl = sitemapName === 'sitemap-index.xml'
-      ? 'https://musicscan.app/sitemap.xml'
+      ? 'https://www.musicscan.app/sitemap.xml'
       : `${sitemapBaseUrl}/${sitemapName}`;
         
         const response = await fetch(checkUrl, { method: 'HEAD' });
@@ -304,7 +304,7 @@ ${urls}
 
 function generateSitemapIndex(uploads: Array<{ name: string }>): string {
   // Temporarily point to /sm alias to bypass any stale cache on /sitemaps
-  const baseUrl = 'https://musicscan.app/sm';
+  const baseUrl = 'https://www.musicscan.app/sm';
   const now = new Date().toISOString();
   
   const sitemaps = uploads.map(u => 
@@ -329,7 +329,7 @@ function generatePosterSitemapXml(items: Array<any>): string {
       ) || 'AI-generated';
       
       return `  <url>
-    <loc>https://musicscan.app/product/${item.slug}</loc>
+    <loc>https://www.musicscan.app/product/${item.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -358,12 +358,12 @@ function generatePosterImageSitemapXml(items: Array<any>): string {
       ) || 'AI-generated';
       
       return `  <url>
-    <loc>https://musicscan.app/product/${item.slug}</loc>
+    <loc>https://www.musicscan.app/product/${item.slug}</loc>
     <image:image>
       <image:loc>${item.primary_image}</image:loc>
       <image:caption>${item.artist} - ${item.title} | ${style} poster | MusicScan Art</image:caption>
       <image:title>${item.artist} - ${item.title} Poster</image:title>
-      <image:license>https://musicscan.app/terms</image:license>
+      <image:license>https://www.musicscan.app/terms</image:license>
     </image:image>
   </url>`;
     })
@@ -377,7 +377,7 @@ ${urls}
 }
 
 function generateStaticSitemapXml(): string {
-  const baseUrl = 'https://musicscan.app';
+  const baseUrl = 'https://www.musicscan.app';
   const currentDate = new Date().toISOString().split('T')[0];
   
   const staticPages = [

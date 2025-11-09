@@ -89,6 +89,25 @@ const BulkPosterUpload = () => {
     }
   };
 
+  const handleManualTrigger = async () => {
+    toast.info("Processor wordt gestart...");
+    try {
+      const { data, error } = await supabase.functions.invoke('bulk-poster-processor');
+      
+      if (error) {
+        toast.error("Processor error: " + error.message);
+      } else if (data?.success) {
+        toast.success(`Verwerkt: ${data.artistName}`);
+        queryClient.invalidateQueries({ queryKey: ['poster-queue-stats'] });
+        queryClient.invalidateQueries({ queryKey: ['poster-queue-items'] });
+      } else {
+        toast.info("Geen items om te verwerken");
+      }
+    } catch (err: any) {
+      toast.error("Trigger failed: " + err.message);
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <Button
@@ -172,14 +191,20 @@ const BulkPosterUpload = () => {
       )}
 
       {/* Actions */}
-      {queueStats && queueStats.failed > 0 && (
-        <div className="mb-4">
+      <div className="mb-4 flex gap-2">
+        {queueStats && queueStats.pending > 0 && (
+          <Button onClick={handleManualTrigger} variant="default" size="sm">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Process Now ({queueStats.pending} pending)
+          </Button>
+        )}
+        {queueStats && queueStats.failed > 0 && (
           <Button onClick={handleRetryFailed} variant="outline" size="sm">
             <RefreshCw className="w-4 h-4 mr-2" />
             Retry Failed ({queueStats.failed})
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Queue Items List */}
       <Card className="p-6">

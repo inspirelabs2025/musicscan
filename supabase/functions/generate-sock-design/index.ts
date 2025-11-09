@@ -1,0 +1,224 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const ALBUM_DESIGN_ELEMENTS: Record<string, string> = {
+  'pink floyd dark side of the moon': 'Rainbow prism gradient on black with triangular geometric elements',
+  'nirvana nevermind': 'Yellow gradient with underwater blue tones and minimal iconic motif',
+  'the beatles sgt pepper': 'Vibrant psychedelic rainbow stripes with ornate Victorian patterns',
+  'joy division unknown pleasures': 'White radiating waveform pattern on black background',
+  'the velvet underground and nico': 'Yellow with pop art banana illustration on white stripes',
+  'david bowie ziggy stardust': 'Metallic silver and electric blue with lightning bolt accent',
+  'radiohead ok computer': 'Glitch art patterns in white/cyan/red on black digital noise',
+  'fleetwood mac rumours': 'Mystical black with silver chain pattern and bohemian details',
+};
+
+function getAlbumElements(album: string, artist: string): string {
+  const key = `${artist.toLowerCase()} ${album.toLowerCase()}`;
+  return ALBUM_DESIGN_ELEMENTS[key] || `Abstract patterns inspired by ${album}'s visual aesthetic`;
+}
+
+function generateSlug(artist: string, album: string): string {
+  const base = `${artist}-${album}-socks`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return base.substring(0, 80);
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { 
+      artistName, 
+      albumTitle, 
+      albumCoverUrl,
+      colorPalette,
+      discogsId,
+      releaseYear,
+      genre,
+      userId
+    } = await req.json();
+
+    if (!artistName || !albumTitle || !colorPalette) {
+      return new Response(
+        JSON.stringify({ error: 'artistName, albumTitle, and colorPalette are required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('🧦 Generating sock design for:', artistName, '-', albumTitle);
+    const startTime = Date.now();
+
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY not configured');
+    }
+
+    const albumElements = getAlbumElements(albumTitle, artistName);
+
+    const prompt = `Create a stylish, fashionable sock design inspired by the album "${albumTitle}" by ${artistName}.
+
+**Format:** Crew sock design (40cm tall), flat lay view showing both socks side by side
+
+**Design Style:**
+- Theme: ${colorPalette.design_theme} (${colorPalette.era})
+- Pattern Type: ${colorPalette.pattern_type}
+- Visual Elements: ${albumElements}
+
+**Color Palette (extracted from album cover):**
+- Primary/Base: ${colorPalette.primary_color}
+- Secondary/Pattern: ${colorPalette.secondary_color}
+- Accent/Highlights: ${colorPalette.accent_color}
+- Full Palette: ${colorPalette.color_palette.join(', ')}
+
+**Technical Requirements:**
+- High contrast for fabric visibility
+- Repeating pattern that works on cylindrical sock form
+- Small logo or text placement on ankle/calf area
+- Design should be immediately recognizable as inspired by this iconic album
+- Professional product photography aesthetic
+- Clean white background for easy mockup placement
+
+**Style Notes:**
+- Modern, wearable interpretation of album's visual identity
+- High-quality fashion product look
+- Suitable for both casual wear and music statement pieces
+- Make any music fan instantly recognize the album inspiration
+
+Ultra high resolution, product photography quality.`;
+
+    console.log('🎨 Calling AI for sock design generation...');
+
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        modalities: ['image', 'text']
+      })
+    });
+
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('AI API Error:', aiResponse.status, errorText);
+      throw new Error(`AI API returned ${aiResponse.status}`);
+    }
+
+    const aiData = await aiResponse.json();
+    const imageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    if (!imageUrl) {
+      throw new Error('No image generated by AI');
+    }
+
+    console.log('✅ Sock design generated, uploading to storage...');
+
+    // Upload to Supabase Storage
+    const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, '');
+    const imageBlob = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+
+    const slug = generateSlug(artistName, albumTitle);
+    const filename = `${slug}-${Date.now()}.png`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('time-machine-posters')
+      .upload(`socks/${filename}`, imageBlob, {
+        contentType: 'image/png',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw new Error(`Failed to upload: ${uploadError.message}`);
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('time-machine-posters')
+      .getPublicUrl(`socks/${filename}`);
+
+    console.log('📦 Creating album_socks record...');
+
+    // Create album_socks record
+    const { data: sockData, error: sockError } = await supabase
+      .from('album_socks')
+      .insert({
+        user_id: userId,
+        artist_name: artistName,
+        album_title: albumTitle,
+        album_cover_url: albumCoverUrl,
+        discogs_id: discogsId,
+        release_year: releaseYear,
+        genre: genre,
+        primary_color: colorPalette.primary_color,
+        secondary_color: colorPalette.secondary_color,
+        accent_color: colorPalette.accent_color,
+        color_palette: colorPalette.color_palette,
+        design_theme: colorPalette.design_theme,
+        pattern_type: colorPalette.pattern_type,
+        base_design_url: publicUrl,
+        slug: slug,
+        generation_time_ms: Date.now() - startTime,
+        description: `Stylish socks inspired by ${artistName}'s legendary album "${albumTitle}". ${colorPalette.design_theme} design featuring colors extracted from the iconic album cover.`,
+        story_text: `These unique socks pay homage to ${artistName}'s ${releaseYear || 'classic'} album "${albumTitle}". Every color has been carefully extracted from the original album artwork to create a wearable piece of music history.`
+      })
+      .select()
+      .single();
+
+    if (sockError) {
+      console.error('Database error:', sockError);
+      throw new Error(`Failed to save sock: ${sockError.message}`);
+    }
+
+    const generationTime = Date.now() - startTime;
+    console.log(`🎉 Sock design complete in ${generationTime}ms`);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        sock_id: sockData.id,
+        slug: sockData.slug,
+        base_design_url: publicUrl,
+        color_palette: colorPalette,
+        generation_time_ms: generationTime
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      }
+    );
+
+  } catch (error) {
+    console.error('❌ Error generating sock design:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        success: false 
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
+      }
+    );
+  }
+});

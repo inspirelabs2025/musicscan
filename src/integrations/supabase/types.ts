@@ -161,6 +161,114 @@ export type Database = {
         }
         Relationships: []
       }
+      album_socks: {
+        Row: {
+          accent_color: string | null
+          album_cover_url: string
+          album_title: string
+          artist_name: string
+          base_design_url: string | null
+          color_palette: Json | null
+          created_at: string
+          description: string | null
+          design_theme: string | null
+          discogs_id: number | null
+          discogs_master_id: number | null
+          generation_time_ms: number | null
+          genre: string | null
+          id: string
+          is_published: boolean | null
+          mockup_url: string | null
+          pattern_type: string | null
+          premium_product_id: string | null
+          primary_color: string
+          release_year: number | null
+          secondary_color: string | null
+          slug: string
+          standard_product_id: string | null
+          story_text: string | null
+          style_variants: Json | null
+          updated_at: string
+          user_id: string | null
+          view_count: number | null
+        }
+        Insert: {
+          accent_color?: string | null
+          album_cover_url: string
+          album_title: string
+          artist_name: string
+          base_design_url?: string | null
+          color_palette?: Json | null
+          created_at?: string
+          description?: string | null
+          design_theme?: string | null
+          discogs_id?: number | null
+          discogs_master_id?: number | null
+          generation_time_ms?: number | null
+          genre?: string | null
+          id?: string
+          is_published?: boolean | null
+          mockup_url?: string | null
+          pattern_type?: string | null
+          premium_product_id?: string | null
+          primary_color: string
+          release_year?: number | null
+          secondary_color?: string | null
+          slug: string
+          standard_product_id?: string | null
+          story_text?: string | null
+          style_variants?: Json | null
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          accent_color?: string | null
+          album_cover_url?: string
+          album_title?: string
+          artist_name?: string
+          base_design_url?: string | null
+          color_palette?: Json | null
+          created_at?: string
+          description?: string | null
+          design_theme?: string | null
+          discogs_id?: number | null
+          discogs_master_id?: number | null
+          generation_time_ms?: number | null
+          genre?: string | null
+          id?: string
+          is_published?: boolean | null
+          mockup_url?: string | null
+          pattern_type?: string | null
+          premium_product_id?: string | null
+          primary_color?: string
+          release_year?: number | null
+          secondary_color?: string | null
+          slug?: string
+          standard_product_id?: string | null
+          story_text?: string | null
+          style_variants?: Json | null
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_socks_premium_product_id_fkey"
+            columns: ["premium_product_id"]
+            isOneToOne: false
+            referencedRelation: "platform_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "album_socks_standard_product_id_fkey"
+            columns: ["standard_product_id"]
+            isOneToOne: false
+            referencedRelation: "platform_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       batch_processing_status: {
         Row: {
           auto_mode: boolean | null

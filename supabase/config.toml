@@ -193,6 +193,18 @@ verify_jwt = true
 [functions.create-lyric-poster-products]
 verify_jwt = true
 
+[functions.extract-album-colors]
+verify_jwt = false
+
+[functions.generate-sock-design]
+verify_jwt = false
+
+[functions.batch-generate-sock-styles]
+verify_jwt = false
+
+[functions.create-sock-products]
+verify_jwt = false
+
 [functions.generate-time-machine-poster]
 verify_jwt = false
 

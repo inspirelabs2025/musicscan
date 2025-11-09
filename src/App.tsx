@@ -98,6 +98,7 @@ import TimeMachine from "./pages/TimeMachine";
 import TimeMachineStory from "./pages/TimeMachineStory";
 import TimeMachineManager from "./pages/admin/TimeMachineManager";
 import LyricPosterGenerator from "./pages/admin/LyricPosterGenerator";
+import SockGenerator from "./pages/admin/SockGenerator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -363,6 +364,11 @@ const App = () => {
             <Route path="/admin/lyric-poster-generator" element={
               <ProtectedRoute>
                 <LyricPosterGenerator />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/sock-generator" element={
+              <ProtectedRoute>
+                <SockGenerator />
               </ProtectedRoute>
             } />
             <Route path="/admin/photo-stylizer" element={

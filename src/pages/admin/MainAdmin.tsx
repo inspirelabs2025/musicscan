@@ -122,6 +122,14 @@ const adminPages: AdminPage[] = [
     category: "products",
     badge: "New"
   },
+  {
+    title: "Socks of Sound",
+    description: "AI sokken designs geïnspireerd op albumcovers",
+    path: "/admin/sock-generator",
+    icon: Brush,
+    category: "products",
+    badge: "New"
+  },
 
   // Discogs & Content
   {

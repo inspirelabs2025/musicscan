@@ -1,6 +1,7 @@
 import { SimpleHero } from '@/components/home/SimpleHero';
 import { QuickDiscoveryBar } from '@/components/home/QuickDiscoveryBar';
 import { MetalPrintSpotlight } from '@/components/home/MetalPrintSpotlight';
+import { SocksSpotlight } from '@/components/home/SocksSpotlight';
 import { TimeMachineSpotlight } from '@/components/home/TimeMachineSpotlight';
 import { ShopByCategorySection } from '@/components/shop/ShopByCategorySection';
 import { FeaturedProductsCarousel } from '@/components/shop/FeaturedProductsCarousel';
@@ -27,6 +28,9 @@ const Home = () => {
 
       {/* Metal Print Spotlight - Prominent ART Section */}
       <MetalPrintSpotlight />
+
+      {/* Socks Spotlight */}
+      <SocksSpotlight />
 
       {/* Time Machine Spotlight */}
       <TimeMachineSpotlight />

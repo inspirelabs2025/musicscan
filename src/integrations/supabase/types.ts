@@ -1449,6 +1449,102 @@ export type Database = {
         }
         Relationships: []
       }
+      lyric_posters: {
+        Row: {
+          album_name: string | null
+          artist_name: string
+          color_palette: Json | null
+          copyright_notes: string | null
+          copyright_status: string | null
+          created_at: string
+          full_lyrics: string
+          highlight_lines: string
+          id: string
+          is_published: boolean | null
+          license_type: string | null
+          metal_product_id: string | null
+          poster_url: string | null
+          qr_code_url: string | null
+          release_year: number | null
+          slug: string | null
+          song_title: string
+          standard_product_id: string | null
+          style_preset: string | null
+          style_variants: Json | null
+          typography_hint: string | null
+          updated_at: string
+          user_id: string | null
+          user_license_confirmed: boolean | null
+        }
+        Insert: {
+          album_name?: string | null
+          artist_name: string
+          color_palette?: Json | null
+          copyright_notes?: string | null
+          copyright_status?: string | null
+          created_at?: string
+          full_lyrics: string
+          highlight_lines: string
+          id?: string
+          is_published?: boolean | null
+          license_type?: string | null
+          metal_product_id?: string | null
+          poster_url?: string | null
+          qr_code_url?: string | null
+          release_year?: number | null
+          slug?: string | null
+          song_title: string
+          standard_product_id?: string | null
+          style_preset?: string | null
+          style_variants?: Json | null
+          typography_hint?: string | null
+          updated_at?: string
+          user_id?: string | null
+          user_license_confirmed?: boolean | null
+        }
+        Update: {
+          album_name?: string | null
+          artist_name?: string
+          color_palette?: Json | null
+          copyright_notes?: string | null
+          copyright_status?: string | null
+          created_at?: string
+          full_lyrics?: string
+          highlight_lines?: string
+          id?: string
+          is_published?: boolean | null
+          license_type?: string | null
+          metal_product_id?: string | null
+          poster_url?: string | null
+          qr_code_url?: string | null
+          release_year?: number | null
+          slug?: string | null
+          song_title?: string
+          standard_product_id?: string | null
+          style_preset?: string | null
+          style_variants?: Json | null
+          typography_hint?: string | null
+          updated_at?: string
+          user_id?: string | null
+          user_license_confirmed?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lyric_posters_metal_product_id_fkey"
+            columns: ["metal_product_id"]
+            isOneToOne: false
+            referencedRelation: "platform_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lyric_posters_standard_product_id_fkey"
+            columns: ["standard_product_id"]
+            isOneToOne: false
+            referencedRelation: "platform_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       market_prices: {
         Row: {
           condition_grade: string

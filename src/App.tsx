@@ -97,6 +97,7 @@ import PosterShop from "./pages/PosterShop";
 import TimeMachine from "./pages/TimeMachine";
 import TimeMachineStory from "./pages/TimeMachineStory";
 import TimeMachineManager from "./pages/admin/TimeMachineManager";
+import LyricPosterGenerator from "./pages/admin/LyricPosterGenerator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -357,6 +358,11 @@ const App = () => {
             <Route path="/admin/sketch-art-generator" element={
               <ProtectedRoute>
                 <SketchArtGenerator />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/lyric-poster-generator" element={
+              <ProtectedRoute>
+                <LyricPosterGenerator />
               </ProtectedRoute>
             } />
             <Route path="/admin/photo-stylizer" element={

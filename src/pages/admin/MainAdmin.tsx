@@ -114,6 +114,14 @@ const adminPages: AdminPage[] = [
     icon: PenTool,
     category: "products"
   },
+  {
+    title: "Lyric Poster Generator",
+    description: "AI songtekst posters met copyright safeguards",
+    path: "/admin/lyric-poster-generator",
+    icon: Music,
+    category: "products",
+    badge: "New"
+  },
 
   // Discogs & Content
   {

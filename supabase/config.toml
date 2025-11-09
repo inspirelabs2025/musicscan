@@ -187,6 +187,12 @@ verify_jwt = false
 [functions.time-machine-fan-memories]
 verify_jwt = false
 
+[functions.generate-lyric-poster]
+verify_jwt = true
+
+[functions.create-lyric-poster-products]
+verify_jwt = true
+
 [functions.generate-time-machine-poster]
 verify_jwt = false
 

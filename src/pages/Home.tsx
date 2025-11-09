@@ -1,5 +1,6 @@
 import { SimpleHero } from '@/components/home/SimpleHero';
 import { QuickDiscoveryBar } from '@/components/home/QuickDiscoveryBar';
+import { EchoSpotlight } from '@/components/home/EchoSpotlight';
 import { MetalPrintSpotlight } from '@/components/home/MetalPrintSpotlight';
 import { SocksSpotlight } from '@/components/home/SocksSpotlight';
 import { TimeMachineSpotlight } from '@/components/home/TimeMachineSpotlight';
@@ -25,6 +26,9 @@ const Home = () => {
 
       {/* Quick Discovery Bar */}
       <QuickDiscoveryBar />
+
+      {/* Echo Spotlight - AI Music Guide */}
+      <EchoSpotlight />
 
       {/* Metal Print Spotlight - Prominent ART Section */}
       <MetalPrintSpotlight />

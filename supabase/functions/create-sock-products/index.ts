@@ -6,9 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function generateProductSlug(artist: string, album: string, type: 'standard' | 'premium'): string {
-  const suffix = type === 'premium' ? '-premium-merino' : '';
-  const base = `${artist}-${album}-socks${suffix}`
+function generateProductSlug(artist: string, album: string): string {
+  const base = `${artist}-${album}-socks`
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -51,77 +50,26 @@ serve(async (req) => {
       ? styleVariants.map((v: any) => v.url)
       : [sockData.base_design_url];
 
-    // Create Standard Cotton Socks
-    const standardSlug = generateProductSlug(sockData.artist_name, sockData.album_title, 'standard');
-    const standardDescription = `Comfortabele katoenen sokken geïnspireerd op het iconische album "${sockData.album_title}" van ${sockData.artist_name}.
-
-🎨 Kleuren gebaseerd op originele albumcover
-🧦 One size fits most (EU 38-46)
-🌱 80% katoen, 18% polyamide, 2% elastaan
-💫 Uniek ${sockData.design_theme} design
-
-${styleVariants?.length > 0 ? 'Kies uit 7 verschillende stijlen!' : ''}
-
-Perfect voor muziekliefhebbers die hun passie willen dragen!`;
-
-    const { data: standardProduct, error: standardError } = await supabase
-      .from('platform_products')
-      .insert({
-        title: `${sockData.album_title} Socks - ${sockData.artist_name}`,
-        artist: sockData.artist_name,
-        description: standardDescription,
-        media_type: 'merchandise',
-        categories: ['socks', 'music-merch', 'album-inspired'],
-        tags: [
-          sockData.artist_name.toLowerCase(),
-          'socks',
-          'cotton-blend',
-          'one-size',
-          'music-fashion',
-          sockData.genre?.toLowerCase() || 'music',
-          sockData.design_theme
-        ],
-        price: 14.95,
-        stock_quantity: 999,
-        slug: standardSlug,
-        images: images,
-        primary_image: images[0],
-        status: 'active',
-        published_at: new Date().toISOString(),
-        discogs_id: sockData.discogs_id,
-        year: sockData.release_year,
-        genre: sockData.genre
-      })
-      .select()
-      .single();
-
-    if (standardError) {
-      console.error('Failed to create standard product:', standardError);
-      throw new Error(`Failed to create standard product: ${standardError.message}`);
-    }
-
-    console.log('✅ Standard cotton socks created');
-
     // Create Premium Merino Wool Socks
-    const premiumSlug = generateProductSlug(sockData.artist_name, sockData.album_title, 'premium');
-    const premiumDescription = `Luxe merino wol sokken geïnspireerd op "${sockData.album_title}" van ${sockData.artist_name}.
+    const productSlug = generateProductSlug(sockData.artist_name, sockData.album_title);
+    const description = `Premium merino wol sokken geïnspireerd op "${sockData.album_title}" van ${sockData.artist_name}.
 
-✨ Premium merino wool blend (70% merino, 25% polyamide, 5% elastaan)
+✨ 70% merino wool, 25% polyamide, 5% elastaan
 🌟 Temperatuurregulerende eigenschappen
 💪 Extra versterkte hiel en teen
-🎁 Gift-ready verpakking
+🎁 Luxe geschenkverpakking
 🎨 Exclusief ${sockData.design_theme} design
 
 ${styleVariants?.length > 0 ? 'Verkrijgbaar in 7 unieke stijlen!' : ''}
 
-Perfect voor de serieuze muziek- en sockliefhebber. Extreem comfortabel en duurzaam.`;
+Perfect voor muziekliefhebbers. Extreem comfortabel en duurzaam.`;
 
-    const { data: premiumProduct, error: premiumError } = await supabase
+    const { data: product, error: productError } = await supabase
       .from('platform_products')
       .insert({
-        title: `${sockData.album_title} Premium Merino Socks - ${sockData.artist_name}`,
+        title: `${sockData.album_title} Socks - ${sockData.artist_name}`,
         artist: sockData.artist_name,
-        description: premiumDescription,
+        description: description,
         media_type: 'merchandise',
         categories: ['socks', 'music-merch', 'album-inspired', 'premium'],
         tags: [
@@ -136,7 +84,7 @@ Perfect voor de serieuze muziek- en sockliefhebber. Extreem comfortabel en duurz
         ],
         price: 24.95,
         stock_quantity: 999,
-        slug: premiumSlug,
+        slug: productSlug,
         images: images,
         primary_image: images[0],
         status: 'active',
@@ -149,19 +97,18 @@ Perfect voor de serieuze muziek- en sockliefhebber. Extreem comfortabel en duurz
       .select()
       .single();
 
-    if (premiumError) {
-      console.error('Failed to create premium product:', premiumError);
-      throw new Error(`Failed to create premium product: ${premiumError.message}`);
+    if (productError) {
+      console.error('Failed to create product:', productError);
+      throw new Error(`Failed to create product: ${productError.message}`);
     }
 
     console.log('✅ Premium merino socks created');
 
-    // Update album_socks record with product IDs
+    // Update album_socks record with product ID
     const { error: updateError } = await supabase
       .from('album_socks')
       .update({
-        standard_product_id: standardProduct.id,
-        premium_product_id: premiumProduct.id,
+        product_id: product.id,
         is_published: true
       })
       .eq('id', sockId);
@@ -170,16 +117,14 @@ Perfect voor de serieuze muziek- en sockliefhebber. Extreem comfortabel en duurz
       console.error('Failed to update sock record:', updateError);
     }
 
-    console.log('🎉 Products created and linked successfully');
+    console.log('🎉 Product created and linked successfully');
 
     return new Response(
       JSON.stringify({
         success: true,
-        standard_product_id: standardProduct.id,
-        standard_slug: standardSlug,
-        premium_product_id: premiumProduct.id,
-        premium_slug: premiumSlug,
-        products_created: 2
+        product_id: product.id,
+        slug: productSlug,
+        products_created: 1
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

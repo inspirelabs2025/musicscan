@@ -106,18 +106,16 @@ export const SocksSpotlight = () => {
               </div>
 
               {/* Pricing Card */}
-              <div className="bg-card p-6 rounded-lg border-2 border-vinyl-purple/30 space-y-3">
-                <div>
-                  <p className="text-sm text-muted-foreground">Standard Cotton</p>
-                  <p className="text-3xl font-bold text-vinyl-purple">€14,95</p>
+              <div className="bg-card p-6 rounded-lg border-2 border-vinyl-gold/50 space-y-4">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Premium Merino Wool</p>
+                  <p className="text-5xl font-bold text-vinyl-gold">€24,95</p>
+                  <p className="text-xs text-muted-foreground mt-2">Per paar sokken</p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Premium Merino</p>
-                  <p className="text-3xl font-bold text-vinyl-gold">€24,95</p>
-                </div>
-                <div className="flex gap-4 text-sm text-muted-foreground pt-2 border-t">
+                <div className="flex flex-col gap-2 text-sm text-muted-foreground pt-3 border-t">
                   <span>✓ Gratis Verzending</span>
                   <span>✓ One Size (EU 38-46)</span>
+                  <span>✓ 7 Unieke Designs</span>
                 </div>
               </div>
 

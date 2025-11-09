@@ -18,7 +18,6 @@ export default function SocksShop() {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc" | "popular">("newest");
   const [showFeatured, setShowFeatured] = useState(false);
-  const [showPremium, setShowPremium] = useState(false);
 
   const { data: allProducts, isLoading } = usePlatformProducts({ 
     mediaType: 'merchandise',
@@ -39,10 +38,6 @@ export default function SocksShop() {
       const searchableText = `${product.artist || ''} ${product.title || ''} ${product.tags?.join(' ') || ''}`.toLowerCase();
       
       return searchTerms.every(term => searchableText.includes(term));
-    })
-    .filter(product => {
-      if (!showPremium) return true;
-      return product.categories?.includes('premium');
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -108,8 +103,7 @@ export default function SocksShop() {
                 🧦 Socks of Sound
               </h1>
               <p className="text-xl text-white/90 max-w-2xl">
-                Draag je favoriete muziek aan je voeten. Unieke sokken geïnspireerd op iconische albums.
-                Verkrijgbaar in Standard Cotton en Premium Merino Wool.
+                Draag je favoriete muziek aan je voeten. Premium merino wool sokken geïnspireerd op iconische albums.
               </p>
               
               {/* Stats Row */}
@@ -123,8 +117,8 @@ export default function SocksShop() {
                   <div className="text-sm text-white/80">Gem. Prijs</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold">{premiumCount}</div>
-                  <div className="text-sm text-white/80">Premium Merino</div>
+                  <div className="text-3xl font-bold">Premium</div>
+                  <div className="text-sm text-white/80">Merino Wool</div>
                 </div>
                 {featuredCount > 0 && (
                   <div className="space-y-1">
@@ -137,28 +131,24 @@ export default function SocksShop() {
             <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
           </div>
 
-          {/* Info Cards */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-2">🌱 Standard Cotton Blend</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  80% katoen, 18% polyamide, 2% elastaan
-                </p>
-                <p className="text-2xl font-bold text-primary">€14.95</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200 dark:border-purple-800">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-2">✨ Premium Merino Wool</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  70% merino, 25% polyamide, 5% elastaan - Temperatuurregelerend
-                </p>
-                <p className="text-2xl font-bold text-primary">€24.95</p>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Info Card */}
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200 dark:border-purple-800">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg mb-2">✨ Premium Merino Wool Socks</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Alle sokken zijn gemaakt van premium merino wool blend voor optimaal comfort en duurzaamheid.
+                    70% merino, 25% polyamide, 5% elastaan - Temperatuurregelerend en extra versterkte hiel en teen.
+                  </p>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-3xl font-bold text-primary">€24,95</p>
+                    <span className="text-sm text-muted-foreground">per paar</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Filters & Search */}
           <Card>
@@ -198,13 +188,6 @@ export default function SocksShop() {
                     <Sparkles className="h-4 w-4 mr-2" />
                     Featured
                   </Button>
-                  <Button
-                    variant={showPremium ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setShowPremium(!showPremium)}
-                  >
-                    ✨ Premium
-                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -242,16 +225,9 @@ export default function SocksShop() {
                         
                         {/* Badges Overlay */}
                         <div className="absolute top-3 left-3 flex flex-col gap-2">
-                          {isPremium && (
-                            <Badge className="bg-purple-600 text-white font-bold">
-                              ✨ Premium Merino
-                            </Badge>
-                          )}
-                          {!isPremium && (
-                            <Badge className="bg-blue-600 text-white font-bold">
-                              🌱 Cotton Blend
-                            </Badge>
-                          )}
+                          <Badge className="bg-purple-600 text-white font-bold">
+                            ✨ Premium Merino
+                          </Badge>
                           {product.is_featured && (
                             <Badge className="bg-vinyl-gold text-black font-bold">
                               <Sparkles className="h-3 w-3 mr-1" />
@@ -301,7 +277,7 @@ export default function SocksShop() {
                             €{product.price.toFixed(2)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {isPremium ? 'Premium kwaliteit' : 'Comfortabel katoen'}
+                            Premium Merino Wool
                           </p>
                         </div>
                         <Button variant="outline" size="sm">

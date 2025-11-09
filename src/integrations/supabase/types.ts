@@ -180,12 +180,11 @@ export type Database = {
           is_published: boolean | null
           mockup_url: string | null
           pattern_type: string | null
-          premium_product_id: string | null
           primary_color: string
+          product_id: string | null
           release_year: number | null
           secondary_color: string | null
           slug: string
-          standard_product_id: string | null
           story_text: string | null
           style_variants: Json | null
           updated_at: string
@@ -210,12 +209,11 @@ export type Database = {
           is_published?: boolean | null
           mockup_url?: string | null
           pattern_type?: string | null
-          premium_product_id?: string | null
           primary_color: string
+          product_id?: string | null
           release_year?: number | null
           secondary_color?: string | null
           slug: string
-          standard_product_id?: string | null
           story_text?: string | null
           style_variants?: Json | null
           updated_at?: string
@@ -240,12 +238,11 @@ export type Database = {
           is_published?: boolean | null
           mockup_url?: string | null
           pattern_type?: string | null
-          premium_product_id?: string | null
           primary_color?: string
+          product_id?: string | null
           release_year?: number | null
           secondary_color?: string | null
           slug?: string
-          standard_product_id?: string | null
           story_text?: string | null
           style_variants?: Json | null
           updated_at?: string
@@ -255,14 +252,7 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "album_socks_premium_product_id_fkey"
-            columns: ["premium_product_id"]
-            isOneToOne: false
-            referencedRelation: "platform_products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "album_socks_standard_product_id_fkey"
-            columns: ["standard_product_id"]
+            columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "platform_products"
             referencedColumns: ["id"]

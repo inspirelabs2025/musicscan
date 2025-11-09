@@ -18,7 +18,7 @@ interface BatchResult {
 export const AutoBlogSlugBatchProcessor = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentBatch, setCurrentBatch] = useState(0);
-  const [totalBatches] = useState(10); // 914 blogs / 100 = ~10 batches
+  const [totalBatches] = useState(100); // Hoog getal, stopt automatisch als alle -unknown blogs verwerkt zijn
   const [totalProcessed, setTotalProcessed] = useState(0);
   const [totalUpdated, setTotalUpdated] = useState(0);
   const [totalSkipped, setTotalSkipped] = useState(0);
@@ -102,11 +102,13 @@ export const AutoBlogSlugBatchProcessor = () => {
           `Batch ${i} voltooid: ${result.updated} geüpdatet, ${result.skipped} overgeslagen, ${result.errors} errors`
         );
 
-        // If no more blogs to process, stop early
+        // Stop alleen als er GEEN blogs meer gevonden zijn (helemaal klaar)
         if (result.updated === 0 && result.skipped === 0) {
-          toast.success("Alle blogs zijn verwerkt!");
+          toast.success("✅ Alle -unknown blogs zijn verwerkt!");
           break;
         }
+        
+        // Anders doorgaan, ook als er minder dan 100 blogs zijn gevonden
 
         // Wait 2 minutes between batches (except after last batch)
         if (i < totalBatches && !shouldStop.current) {
@@ -141,7 +143,7 @@ export const AutoBlogSlugBatchProcessor = () => {
       <CardHeader>
         <CardTitle>🤖 Automatische Blog Slug Batch Processor</CardTitle>
         <CardDescription>
-          Verwerkt alle ~914 blogs met '-unknown' in batches van 100 met 2 minuten pauze
+          Verwerkt alle blogs met '-unknown' in batches van 100 met 2 minuten pauze. Stopt automatisch als alle blogs verwerkt zijn.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

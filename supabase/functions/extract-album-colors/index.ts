@@ -6,11 +6,25 @@ const corsHeaders = {
 };
 
 function cleanJsonResponse(content: string): string {
-  // Strip markdown code blocks (```json ... ``` or ``` ... ```)
-  return content
-    .replace(/^```(?:json)?\s*\n?/i, '')  // Remove opening ```json or ```
-    .replace(/\n?```\s*$/i, '')            // Remove closing ```
-    .trim();
+  try {
+    if (!content) return content;
+    // Remove any markdown code fences anywhere in the string
+    let out = content.replace(/```(?:json)?/gi, '').replace(/```/g, '');
+    out = out.trim();
+
+    // If not a clean JSON object yet, try to extract the first {...} block
+    if (!(out.startsWith('{') && out.endsWith('}'))) {
+      const start = out.indexOf('{');
+      const end = out.lastIndexOf('}');
+      if (start !== -1 && end !== -1 && end > start) {
+        out = out.slice(start, end + 1).trim();
+      }
+    }
+
+    return out;
+  } catch (_) {
+    return content;
+  }
 }
 
 serve(async (req) => {
@@ -92,8 +106,24 @@ Guidelines:
     }
 
     const aiData = await aiResponse.json();
-    const cleanContent = cleanJsonResponse(aiData.choices[0].message.content);
-    const colorData = JSON.parse(cleanContent);
+    let content = aiData.choices?.[0]?.message?.content ?? '';
+    content = cleanJsonResponse(content);
+
+    let colorData;
+    try {
+      colorData = JSON.parse(content);
+    } catch (parseErr) {
+      // Fallback: try to extract JSON object boundaries
+      const start = content.indexOf('{');
+      const end = content.lastIndexOf('}');
+      if (start !== -1 && end !== -1 && end > start) {
+        const sliced = content.slice(start, end + 1);
+        colorData = JSON.parse(sliced);
+      } else {
+        console.error('AI JSON parse failed. Content snippet:', content.slice(0, 200));
+        throw parseErr;
+      }
+    }
 
     console.log('✅ Colors extracted:', colorData);
 

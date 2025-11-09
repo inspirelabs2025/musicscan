@@ -43,9 +43,9 @@ export const AutoBlogSlugBatchProcessor = () => {
 
       const result: BatchResult = {
         batchNumber,
-        updated: data.stats?.updated || 0,
-        skipped: data.stats?.skipped || 0,
-        errors: data.stats?.errors || 0,
+        updated: data.updated || 0,
+        skipped: data.skipped || 0,
+        errors: data.errors || 0,
         timestamp: new Date().toLocaleTimeString()
       };
 

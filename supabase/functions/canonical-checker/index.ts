@@ -234,6 +234,9 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const action = body.action || 'parse-sitemaps';
+    
+    console.log('Received action:', action);
+    console.log('Request body:', JSON.stringify(body));
 
     if (action === 'parse-sitemaps') {
       const { sitemapUrls } = body;
@@ -243,9 +246,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ urls, count: urls.length }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-    }
-
-    if (action === 'check-urls') {
+    } else if (action === 'check-urls') {
       const { urls, concurrency = 8 } = body;
       const results = await checkURLsBatch(urls, concurrency);
       
@@ -253,9 +254,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ results }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-    }
-
-    if (action === 'test-single') {
+    } else if (action === 'test-single') {
       const { url } = body;
       const result = await checkURL(url);
       
@@ -263,12 +262,13 @@ Deno.serve(async (req) => {
         JSON.stringify({ result }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    } else {
+      console.error('Invalid action received:', action);
+      return new Response(
+        JSON.stringify({ error: 'Invalid action', receivedAction: action }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
-
-    return new Response(
-      JSON.stringify({ error: 'Invalid action' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error) {
     console.error('Error:', error);

@@ -5,6 +5,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function cleanJsonResponse(content: string): string {
+  // Strip markdown code blocks (```json ... ``` or ``` ... ```)
+  return content
+    .replace(/^```(?:json)?\s*\n?/i, '')  // Remove opening ```json or ```
+    .replace(/\n?```\s*$/i, '')            // Remove closing ```
+    .trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -84,7 +92,8 @@ Guidelines:
     }
 
     const aiData = await aiResponse.json();
-    const colorData = JSON.parse(aiData.choices[0].message.content);
+    const cleanContent = cleanJsonResponse(aiData.choices[0].message.content);
+    const colorData = JSON.parse(cleanContent);
 
     console.log('✅ Colors extracted:', colorData);
 

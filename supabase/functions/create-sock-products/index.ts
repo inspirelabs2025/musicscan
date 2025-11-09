@@ -75,6 +75,8 @@ Perfect voor muziekliefhebbers die hun passie willen dragen!`;
         tags: [
           sockData.artist_name.toLowerCase(),
           'socks',
+          'cotton-blend',
+          'one-size',
           'music-fashion',
           sockData.genre?.toLowerCase() || 'music',
           sockData.design_theme
@@ -86,20 +88,9 @@ Perfect voor muziekliefhebbers die hun passie willen dragen!`;
         primary_image: images[0],
         status: 'active',
         published_at: new Date().toISOString(),
-        metadata: {
-          product_type: 'socks',
-          sock_id: sockId,
-          size: 'one-size',
-          material: 'cotton-blend',
-          artist: sockData.artist_name,
-          album: sockData.album_title,
-          release_year: sockData.release_year,
-          discogs_id: sockData.discogs_id,
-          color_palette: sockData.color_palette,
-          design_theme: sockData.design_theme,
-          care_instructions: 'Wash at 30°C, tumble dry low',
-          size_guide: 'EU 38-46 / US 7-12 / UK 5-11'
-        }
+        discogs_id: sockData.discogs_id,
+        year: sockData.release_year,
+        genre: sockData.genre
       })
       .select()
       .single();
@@ -137,9 +128,11 @@ Perfect voor de serieuze muziek- en sockliefhebber. Extreem comfortabel en duurz
           sockData.artist_name.toLowerCase(),
           'socks',
           'merino-wool',
+          'one-size',
           'premium',
           'music-fashion',
-          sockData.genre?.toLowerCase() || 'music'
+          sockData.genre?.toLowerCase() || 'music',
+          sockData.design_theme
         ],
         price: 24.95,
         stock_quantity: 999,
@@ -149,27 +142,9 @@ Perfect voor de serieuze muziek- en sockliefhebber. Extreem comfortabel en duurz
         status: 'active',
         published_at: new Date().toISOString(),
         is_featured: true,
-        metadata: {
-          product_type: 'socks-premium',
-          sock_id: sockId,
-          size: 'one-size',
-          material: 'merino-wool',
-          artist: sockData.artist_name,
-          album: sockData.album_title,
-          release_year: sockData.release_year,
-          discogs_id: sockData.discogs_id,
-          color_palette: sockData.color_palette,
-          design_theme: sockData.design_theme,
-          care_instructions: 'Wash at 30°C gentle cycle, lay flat to dry',
-          size_guide: 'EU 38-46 / US 7-12 / UK 5-11',
-          premium_features: [
-            'Temperature regulating',
-            'Odor resistant',
-            'Extra cushioning',
-            'Reinforced heel and toe',
-            'Gift packaging included'
-          ]
-        }
+        discogs_id: sockData.discogs_id,
+        year: sockData.release_year,
+        genre: sockData.genre
       })
       .select()
       .single();

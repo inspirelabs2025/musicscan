@@ -99,6 +99,7 @@ import TimeMachineStory from "./pages/TimeMachineStory";
 import TimeMachineManager from "./pages/admin/TimeMachineManager";
 import LyricPosterGenerator from "./pages/admin/LyricPosterGenerator";
 import SockGenerator from "./pages/admin/SockGenerator";
+import SocksShop from "./pages/SocksShop";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -429,6 +430,7 @@ const App = () => {
             <Route path="/art-shop" element={<ArtShop />} />
             <Route path="/metaalprints" element={<ArtShop />} />
             <Route path="/posters" element={<PosterShop />} />
+            <Route path="/socks" element={<SocksShop />} />
             <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

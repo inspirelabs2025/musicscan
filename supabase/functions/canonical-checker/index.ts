@@ -232,11 +232,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    const body = await req.json();
+    const action = body.action || 'parse-sitemaps';
 
     if (action === 'parse-sitemaps') {
-      const { sitemapUrls } = await req.json();
+      const { sitemapUrls } = body;
       const urls = await parseSitemaps(sitemapUrls);
       
       return new Response(
@@ -246,7 +246,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'check-urls') {
-      const { urls, concurrency = 8 } = await req.json();
+      const { urls, concurrency = 8 } = body;
       const results = await checkURLsBatch(urls, concurrency);
       
       return new Response(
@@ -256,7 +256,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'test-single') {
-      const { url } = await req.json();
+      const { url } = body;
       const result = await checkURL(url);
       
       return new Response(

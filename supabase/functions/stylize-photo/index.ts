@@ -8,7 +8,7 @@ const corsHeaders = {
 const STYLE_PRESETS = {
   vectorCartoon: "Transform this photo into a vectorized cartoon portrait style with smooth, flowing shapes and flat color areas with subtle gradients. Use clean outlines, simplified features, and a warm color palette. The style should look like professional vector illustration with rounded, organic shapes and a polished, modern cartoon aesthetic - similar to high-end digital illustration work with smooth contours and elegant simplification.",
   posterize: "Transform this photo into a bold posterized pop art style with vibrant colors, high contrast, and simplified shapes. Use 4-6 distinct color zones. Black background. Similar to Andy Warhol style.",
-  oilPainting: "Transform this into a realistic oil painting with visible brush strokes, rich colors, and painterly texture. Classic portrait style.",
+  oilPainting: "Transform this into an expressive oil painting with thick, visible impasto brush strokes and rich textured oil paint. Use bold, dynamic brushwork with heavy paint application creating depth and dimension. Deep, saturated colors with dramatic light and shadow play. Emphasize the tactile quality of oil paint - thick dabs, layered strokes, palette knife marks. Style inspired by Van Gogh's expressive technique combined with classical portraiture richness. Raw, energetic brushwork with lustrous oil sheen.",
   watercolor: "Convert to a soft watercolor painting with flowing colors, white paper texture, and delicate edges.",
   pencilSketch: "Transform into a detailed pencil sketch drawing with fine hatching, shading, and realistic pencil textures.",
   comicBook: "Convert to comic book style with bold outlines, halftone dots, dramatic shadows, and vibrant flat colors.",

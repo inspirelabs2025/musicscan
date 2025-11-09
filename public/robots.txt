@@ -17,10 +17,10 @@ Allow: /
 Crawl-delay: 2
 
 # Sitemaps - All served from musicscan.app domain
-Sitemap: https://musicscan.app/sitemap.xml
-Sitemap: https://musicscan.app/sm/sitemap-posters.xml
-Sitemap: https://musicscan.app/sm/sitemap-metal-prints.xml
-Sitemap: https://musicscan.app/sm/sitemap-blog.xml
+Sitemap: https://www.musicscan.app/sitemap.xml
+Sitemap: https://www.musicscan.app/sm/sitemap-posters.xml
+Sitemap: https://www.musicscan.app/sm/sitemap-metal-prints.xml
+Sitemap: https://www.musicscan.app/sm/sitemap-blog.xml
 
 # IndexNow Key
 Sitemap: https://www.musicscan.app/indexnow-key.txt

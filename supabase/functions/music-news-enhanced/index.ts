@@ -104,7 +104,7 @@ async function parseRSSFeed(feedUrl: string, source: string, category: string): 
                 title,
                 link: linkMatch[1].trim(),
                 pubDate,
-                description: description.substring(0, 200) + '...',
+                description: description.substring(0, 1000),
                 source
               });
             }
@@ -286,11 +286,11 @@ serve(async (req) => {
       .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
       .slice(0, 6);
     
-    // Step 3: Process items (limit to 3 Perplexity calls)
+    // Step 3: Process items (limit to 6 Perplexity calls for better content)
     const blogPosts: BlogPost[] = [];
     const processedTitles = new Set<string>();
     let perplexityCallsUsed = 0;
-    const MAX_PERPLEXITY_CALLS = 3;
+    const MAX_PERPLEXITY_CALLS = 6;
     
     for (const item of sortedItems) {
       try {

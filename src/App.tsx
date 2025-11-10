@@ -72,6 +72,7 @@ import BulkProductCleanup from "./pages/admin/BulkProductCleanup";
 import AutoCleanupToday from "./pages/admin/AutoCleanupToday";
 import FixBlogSlugs from "./pages/admin/FixBlogSlugs";
 import BackfillArtistFanwalls from "./pages/admin/BackfillArtistFanwalls";
+import CreateArtistFanwall from "./pages/admin/CreateArtistFanwall";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 import Community from "./pages/Community";
@@ -424,6 +425,11 @@ const AppContent = () => {
         <Route path="/admin/backfill-artist-fanwalls" element={
           <ProtectedRoute>
             <BackfillArtistFanwalls />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/create-artist-fanwall" element={
+          <ProtectedRoute>
+            <CreateArtistFanwall />
           </ProtectedRoute>
         } />
         <Route path="/admin/sitemap-management" element={

@@ -190,9 +190,17 @@ const adminPages: AdminPage[] = [
     title: "Backfill Artist FanWalls",
     description: "Maak artist fanwall records aan voor bestaande foto's",
     path: "/admin/backfill-artist-fanwalls",
+    icon: RefreshCw,
+    category: "maintenance",
+    badge: "Bulk"
+  },
+  {
+    title: "Create Artist FanWall",
+    description: "Maak handmatig een nieuwe artiest FanWall aan met foto's",
+    path: "/admin/create-artist-fanwall",
     icon: Users,
     category: "maintenance",
-    badge: "FanWall"
+    badge: "New"
   },
 
   // Test Pages

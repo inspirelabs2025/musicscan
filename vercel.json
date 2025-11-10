@@ -12,11 +12,21 @@
     {
       "source": "/sm/:path*",
       "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy?file=:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
     {
       "source": "/lovable-uploads/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]

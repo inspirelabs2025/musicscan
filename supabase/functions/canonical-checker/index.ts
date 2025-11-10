@@ -317,15 +317,22 @@ result.variantUsed = variantUsed;
       result.wordCount = countWords(html);
       result.thinContent = result.wordCount < 150;
       
-      // Detect soft-404
+      // Detect soft-404 (but be careful with SPAs)
       const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
       const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
       const title = titleMatch?.[1]?.toLowerCase() || '';
       const h1 = h1Match?.[1]?.toLowerCase() || '';
       
-      if (result.status === 404 || result.wordCount < 120 || title.includes('404') || title.includes('not found') || h1.includes('404') || h1.includes('niet gevonden')) {
+      // Only mark as soft-404 if:
+      // 1. Explicit 404 status, OR
+      // 2. Title/H1 contains 404 text, OR
+      // 3. Very low wordcount BUT NOT an SPA (SPA detection happens later)
+      const hasExplicit404 = title.includes('404') || title.includes('not found') || h1.includes('404') || h1.includes('niet gevonden');
+      
+      if (result.status === 404 || hasExplicit404) {
         result.soft404 = true;
       }
+      // Note: We'll clear soft404 flag later if SPA is detected
       
 // Compare canonical (use final URL for comparison)
 result.canonicalStatus = compareCanonical(finalUrl, result.canonical, canonicals);
@@ -352,6 +359,9 @@ if (isDeepLink && isHomepageCanonical && isHtml) {
   const inferred = normalizeURL(finalUrl);
   result.canonical = inferred;
   result.canonicalStatus = 'OK_SELF';
+  
+  // Clear soft-404 flag for SPA pages (they have content after JS renders)
+  result.soft404 = false;
 }
 // Scenario 2: No canonical found and looks like SPA shell/404
 else {
@@ -373,6 +383,9 @@ else {
     const inferred = normalizeURL(finalUrl);
     result.canonical = inferred;
     result.canonicalStatus = compareCanonical(finalUrl, inferred, [inferred]);
+    
+    // Clear soft-404 flag for SPA pages (they have content after JS renders)
+    result.soft404 = false;
   }
 }
 

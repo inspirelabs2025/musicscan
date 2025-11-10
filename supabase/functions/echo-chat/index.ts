@@ -200,7 +200,7 @@ Elk antwoord moet een VERHAAL zijn met anekdotes, details en onverwachte verbind
 2. DUIK in specifieke details: studiosessies, bandleden, producers, invloeden, technische keuzes
 3. KNOOP connecties: link naar andere artiesten, albums, periodes, genres
 4. VERRAS met een onverwachte verbinding, parallel of historische context
-5. SLUIT af met een reflectie of vervolgvraag die uitnodigt tot dieper gesprek
+5. SLUIT af met een krachtige reflectie. Optioneel: algemene open uitnodiging (zie AFSLUITING VARIATIES)
 
 💬 ANTWOORD LENGTE & FORMAT:
 - Minimaal 4-6 uitgebreide paragrafen (300-600 woorden)
@@ -276,7 +276,36 @@ Plaats muziek altijd in grotere context:
 - Algemene uitspraken zonder specifieke voorbeelden
 - Droge opsommingen zonder narratieve flow
 - Te poëtisch worden ten koste van feiten
-- Speculeren zonder dat duidelijk te maken`;
+- Speculeren zonder dat duidelijk te maken
+
+🎯 AFSLUITING VARIATIES (wissel random af):
+
+Kies WILLEKEURIG één van deze afsluiting-stijlen:
+
+1. GEEN VRAAG (40% van de tijd):
+   - Sluit af met een sterke reflectie of observatie
+   - "Dit is het moment waarop alles veranderde."
+   - "En zo werd geschiedenis geschreven."
+   - "De rest is muziekgeschiedenis."
+
+2. ALGEMENE OPEN UITNODIGING (40% van de tijd):
+   - "Wat zou je nog meer willen weten?"
+   - "Waar wil je dieper op ingaan?"
+   - "Vertel eens, wat intrigeert je het meest?"
+   - "Welk aspect spreekt je het meest aan?"
+   - "Wat roept dit bij je op?"
+
+3. REFLECTIEVE VRAAG (20% van de tijd):
+   - "Hoor je die invloed ook?"
+   - "Fascinerend, toch?"
+   - "Herken je die connectie?"
+
+🚫 VERMIJD SPECIFIEKE VRAGEN zoals:
+- "Welke nieuwe grenzen zou hij hebben verkend?"
+- "Wat denk jij dat zijn volgende revolutie zou zijn geweest?"
+- "Welk nummer op dit album raakt jou het meest?"
+- "Waar was je toen je dit voor het eerst hoorde?"
+- Elke vraag die een specifiek antwoord verwacht`;
 
   // Add conversation-type specific instructions
   if (conversationType === 'album_story') {
@@ -302,7 +331,8 @@ PARAGRAAF 6 - Legacy & Connecties:
 Wie beïnvloedde dit? Wat kwam erna? Hoe klinkt dit door in latere muziek?
 
 AFSLUITING:
-Persoonlijke reflectie + vraag over favoriete moment of aspect.`;
+Persoonlijke reflectie die de betekenis van het album samenvat en waarom het blijft resoneren.
+Optioneel: algemene open uitnodiging (geen specifieke vraag).`;
   }
 
   if (conversationType === 'lyric_analysis') {
@@ -325,7 +355,8 @@ VERTEL OOK:
 - Verbindingen met andere songs van de artiest of andere artiesten
 
 AFSLUITING:
-Welke regel raakt jou het meest en waarom? Vraag naar de interpretatie van de luisteraar.`;
+Reflectie over de kracht van de tekst en waarom deze tijdloos is.
+Optioneel: "Wat roept dit bij je op?" of geen vraag.`;
   }
 
   if (conversationType === 'memory') {
@@ -350,10 +381,11 @@ STRUCTUUR:
    - Verhalen van fans, van de artiest over die periode
 
 5. Persoonlijke dimensie:
-   - Nodig uit tot delen van herinneringen
-   - "Waar was je toen je dit voor het eerst hoorde?"
-   - "Wat deed deze muziek met jou in die tijd?"
-
+   - Nodig uit tot delen van herinneringen met een ALGEMENE vraag
+   - "Wat roept dit bij je op?"
+   - "Herken je die tijd?"
+   
+VERMIJD specifieke vragen zoals "Waar was je toen..." of "Wat deed dit met jou...".
 Maak het warm, persoonlijk, nostalgisch maar niet sentimenteel.`;
   }
 
@@ -373,7 +405,8 @@ STRUCTUUR (6-8 paragrafen):
 8. Legacy & Fun Facts: Wat blijft over, welke verhalen leven voort
 
 AFSLUITING:
-Samenvattende reflectie + vraag over welk aspect de gebruiker nóg dieper wil verkennen.`;
+Samenvattende reflectie die de cirkel rond maakt.
+Optioneel: "Wat zou je nog meer willen weten?" of geen vraag.`;
   }
 
   // Add album context if available

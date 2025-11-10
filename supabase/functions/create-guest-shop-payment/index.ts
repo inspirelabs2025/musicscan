@@ -46,6 +46,7 @@ serve(async (req) => {
     // Process each item
     for (const item of items) {
       let itemData;
+      let tableName;
       
       // Fetch item details based on media type
       if (item.media_type === 'cd') {
@@ -57,6 +58,7 @@ serve(async (req) => {
         
         if (error) throw new Error(`CD not found: ${error.message}`);
         itemData = data;
+        tableName = 'cd_scan';
       } else if (item.media_type === 'vinyl') {
         const { data, error } = await supabase
           .from('vinyl2_scan')
@@ -66,6 +68,67 @@ serve(async (req) => {
         
         if (error) throw new Error(`Vinyl not found: ${error.message}`);
         itemData = data;
+        tableName = 'vinyl2_scan';
+      } else if (item.media_type === 'product') {
+        // Try platform_products first
+        const { data: platformData, error: platformError } = await supabase
+          .from('platform_products')
+          .select('*')
+          .eq('id', item.id)
+          .single();
+        
+        if (platformData) {
+          itemData = {
+            artist: platformData.artist || 'Unknown Artist',
+            title: platformData.title,
+            catalog_number: platformData.sku || '',
+            condition_grade: item.selected_style || 'N/A',
+            marketplace_price: platformData.price,
+            is_for_sale: platformData.status === 'active' && platformData.stock_quantity > 0,
+            catalog_image: platformData.primary_image,
+            user_id: null
+          };
+          tableName = 'platform_products';
+        } else {
+          // Try shop_products
+          const { data: shopData, error: shopError } = await supabase
+            .from('shop_products')
+            .select('*')
+            .eq('id', item.id)
+            .single();
+          
+          if (shopError) throw new Error(`Product not found: ${shopError.message}`);
+          itemData = {
+            artist: shopData.artist || 'Product',
+            title: shopData.name,
+            catalog_number: shopData.sku || '',
+            condition_grade: item.selected_style || shopData.condition || 'N/A',
+            marketplace_price: shopData.price,
+            is_for_sale: shopData.is_available,
+            catalog_image: shopData.image_url,
+            user_id: shopData.seller_id
+          };
+          tableName = 'shop_products';
+        }
+      } else if (item.media_type === 'art') {
+        const { data, error } = await supabase
+          .from('art_pieces')
+          .select('*')
+          .eq('id', item.id)
+          .single();
+        
+        if (error) throw new Error(`Art piece not found: ${error.message}`);
+        itemData = {
+          artist: data.artist_name || 'Unknown Artist',
+          title: data.title,
+          catalog_number: '',
+          condition_grade: 'Original',
+          marketplace_price: data.price,
+          is_for_sale: data.is_for_sale,
+          catalog_image: data.image_url,
+          user_id: data.user_id
+        };
+        tableName = 'art_pieces';
       } else {
         throw new Error(`Unsupported media type: ${item.media_type}`);
       }

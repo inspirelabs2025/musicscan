@@ -88,27 +88,49 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setIsLoading(true);
+    console.log('[CartContext] Starting checkout with items:', items.map(i => ({ 
+      id: i.id, 
+      type: i.media_type, 
+      style: i.selected_style 
+    })));
+    
     try {
+      const requestBody = {
+        items: items.map(item => ({
+          id: item.id,
+          type: item.media_type,
+          selected_style: item.selected_style
+        })),
+        shippingAddress,
+        buyerName
+      };
+      
+      console.log('[CartContext] Invoking create-shop-payment with:', requestBody);
+      
       const { data, error } = await supabase.functions.invoke('create-shop-payment', {
-        body: {
-          items: items.map(item => ({
-            id: item.id,
-            type: item.media_type,
-            selected_style: item.selected_style
-          })),
-          shippingAddress,
-          buyerName
-        }
+        body: requestBody
       });
 
-      if (error) throw error;
+      console.log('[CartContext] Edge function response:', { data, error });
 
+      if (error) {
+        console.error('[CartContext] Edge function error:', error);
+        throw new Error(error.message || 'Checkout failed');
+      }
+
+      if (!data?.url) {
+        console.error('[CartContext] No checkout URL received:', data);
+        throw new Error('No checkout URL received');
+      }
+
+      console.log('[CartContext] Checkout successful, clearing cart');
       clearCart();
       
       return data;
     } catch (error) {
-      console.error('Checkout error:', error);
-      throw error;
+      console.error('[CartContext] Checkout error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Er is iets misgegaan bij het afrekenen';
+      throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }

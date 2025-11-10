@@ -17,27 +17,38 @@ export const ShoppingCartWidget = () => {
   const [guestCheckoutOpen, setGuestCheckoutOpen] = useState(false);
 
   const handleCheckout = async () => {
+    console.log('[ShoppingCartWidget] Checkout button clicked, user:', user ? 'logged in' : 'guest');
+    
     if (user) {
       // Authenticated user checkout
       try {
+        console.log('[ShoppingCartWidget] Starting authenticated checkout');
         const result = await checkout();
+        console.log('[ShoppingCartWidget] Checkout result:', result);
+        
         if (result?.url) {
+          console.log('[ShoppingCartWidget] Opening Stripe checkout:', result.url);
           window.open(result.url, '_blank');
           
           toast({
             title: "Betalingslink geopend",
             description: "Voltooi je betaling in het nieuwe venster.",
           });
+        } else {
+          console.error('[ShoppingCartWidget] No URL in result:', result);
+          throw new Error('Geen checkout URL ontvangen');
         }
       } catch (error) {
+        console.error('[ShoppingCartWidget] Checkout error:', error);
         toast({
-          title: "Checkout Failed",
-          description: error instanceof Error ? error.message : "Something went wrong",
+          title: "Afrekenen mislukt",
+          description: error instanceof Error ? error.message : "Er is iets misgegaan",
           variant: "destructive",
         });
       }
     } else {
       // Guest checkout
+      console.log('[ShoppingCartWidget] Opening guest checkout modal');
       setGuestCheckoutOpen(true);
     }
   };

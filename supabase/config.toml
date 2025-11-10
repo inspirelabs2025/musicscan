@@ -222,3 +222,6 @@ verify_jwt = true
 
 [functions.canonical-checker]
 verify_jwt = false
+
+[functions.ai-enrich-photo]
+verify_jwt = true

@@ -9,19 +9,23 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Image as ImageIcon } from "lucide-react";
+import { Upload, Sparkles } from "lucide-react";
 import { Helmet } from "react-helmet";
+import { usePhotoEnrichment } from "@/hooks/usePhotoEnrichment";
 
 export default function UploadPhoto() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const enrichMutation = usePhotoEnrichment();
   
   const [step, setStep] = useState(1);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [enrichedData, setEnrichedData] = useState<any>(null);
   const [formData, setFormData] = useState({
     artist: "",
     album: "",
@@ -50,24 +54,52 @@ export default function UploadPhoto() {
     }
   };
 
+  const handleEnrich = async () => {
+    if (!preview) return;
+    
+    try {
+      const result = await enrichMutation.mutateAsync({
+        image_url: preview,
+        caption: formData.caption,
+        artist: formData.artist,
+        album: formData.album,
+        venue: formData.venue,
+        city: formData.city,
+        country: formData.country,
+        event_date: formData.year ? `${formData.year}-01-01` : undefined,
+      });
+      
+      setEnrichedData(result);
+      
+      // Auto-fill if confidence is high
+      if (result.inferred_data?.artist && result.inferred_data.confidence > 0.8 && !formData.artist) {
+        setFormData(prev => ({ ...prev, artist: result.inferred_data.artist }));
+      }
+      
+      toast({
+        title: "AI Verrijking Compleet",
+        description: `${result.tags.length} tags gegenereerd`,
+      });
+      
+      setStep(3);
+    } catch (error: any) {
+      toast({
+        title: "AI Verrijking Mislukt",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const uploadMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Login vereist");
       if (!file) throw new Error("Geen bestand geselecteerd");
       if (!formData.licenseGranted) throw new Error("Licentie acceptatie vereist");
 
-      // Generate slug
-      const slugParts = [
-        formData.artist || "photo",
-        formData.city || "",
-        formData.year || "",
-        Date.now().toString().slice(-6)
-      ].filter(Boolean);
-      const slug = slugParts.join("-").toLowerCase().replace(/[^a-z0-9-]/g, "");
-
       // Upload to storage
       const filePath = `${user.id}/${Date.now()}-${file.name}`;
-      const { error: uploadError, data: uploadData } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("fanwall-photos")
         .upload(filePath, file);
 
@@ -77,6 +109,12 @@ export default function UploadPhoto() {
       const { data: { publicUrl } } = supabase.storage
         .from("fanwall-photos")
         .getPublicUrl(filePath);
+
+      // Use enriched data if available
+      const slug = enrichedData?.slug_suggestion || `photo-${Date.now().toString().slice(-6)}`;
+      const seoTitle = enrichedData?.seo_title || `${formData.artist || "Muziek"} ${formData.year || ""} ${formData.city || ""}`.trim();
+      const seoDescription = enrichedData?.seo_description || formData.caption || "Muziek herinnering gedeeld op MusicScan";
+      const tags = enrichedData?.tags || [];
 
       // Create photo record
       const { error: insertError } = await supabase.from("photos").insert({
@@ -94,9 +132,10 @@ export default function UploadPhoto() {
         caption: formData.caption || null,
         license_granted: formData.licenseGranted,
         seo_slug: slug,
-        seo_title: `${formData.artist || "Muziek"} ${formData.year ? formData.year : ""} ${formData.city || ""}`.trim(),
-        seo_description: formData.caption || `Muziek herinnering gedeeld op MusicScan`,
-        canonical_url: `https://www.musicscan.app/photo/${slug}`,
+        seo_title: seoTitle,
+        seo_description: seoDescription,
+        tags: tags,
+        canonical_url: enrichedData?.canonical_url || `https://www.musicscan.app/photo/${slug}`,
         status: "published",
         published_at: new Date().toISOString(),
       });
@@ -183,6 +222,166 @@ export default function UploadPhoto() {
 
             {/* Step 2: Details */}
             {step === 2 && (
+              <Card className="p-6">
+                <Label className="text-lg font-semibold mb-4 block">Review & Publiceer</Label>
+                
+                <div className="mb-6 space-y-4">
+                  {/* Preview */}
+                  {preview && (
+                    <img src={preview} alt="Preview" className="w-full max-h-64 object-contain rounded" />
+                  )}
+
+                  {/* AI Generated Data */}
+                  <div className="bg-muted p-4 rounded-lg space-y-3">
+                    <div>
+                      <Label className="text-sm font-semibold">SEO Titel</Label>
+                      <p className="text-sm">{enrichedData.seo_title}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold">SEO Beschrijving</Label>
+                      <p className="text-sm text-muted-foreground">{enrichedData.seo_description}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold">Tags</Label>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {enrichedData.tags.map((tag: string) => (
+                          <Badge key={tag} variant="secondary">#{tag}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold">URL</Label>
+                      <p className="text-xs text-muted-foreground font-mono">
+                        /photo/{enrichedData.slug_suggestion}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Safety Check */}
+                  {!enrichedData.safety.is_safe && (
+                    <div className="bg-destructive/10 p-4 rounded-lg">
+                      <p className="text-sm font-semibold text-destructive">⚠️ Beveiligingswaarschuwing</p>
+                      <ul className="text-sm text-destructive mt-2">
+                        {enrichedData.safety.concerns.map((concern: string, i: number) => (
+                          <li key={i}>• {concern}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* License Agreement */}
+                  <div className="flex items-start space-x-2 border-t pt-4">
+                    <Checkbox
+                      id="license"
+                      checked={formData.licenseGranted}
+                      onCheckedChange={(checked) => setFormData({ ...formData, licenseGranted: checked as boolean })}
+                    />
+                    <label htmlFor="license" className="text-sm leading-tight cursor-pointer">
+                      Ik bevestig dat ik de rechten heb op deze foto en geef MusicScan een niet-exclusieve, wereldwijde licentie om deze weer te geven op musicscan.app. Ik behoud het copyright.
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
+                    Terug
+                  </Button>
+                  <Button
+                    onClick={() => uploadMutation.mutate()}
+                    disabled={!formData.licenseGranted || uploadMutation.isPending || !enrichedData.safety.is_safe}
+                    className="flex-1"
+                  >
+                    {uploadMutation.isPending ? "Publiceren..." : "Publiceer Foto"}
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Legacy Step 2 without AI (fallback) */}
+            {step === 2 && !enrichedData && (
+              <Card className="p-6">
+                <Label className="text-lg font-semibold mb-4 block">Voeg Details Toe (Handmatig)</Label>
+                
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <Label htmlFor="artist">Artiest</Label>
+                    <Input
+                      id="artist"
+                      value={formData.artist}
+                      onChange={(e) => setFormData({ ...formData, artist: e.target.value })}
+                      placeholder="Naam van de artiest of band"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="city">Stad</Label>
+                      <Input
+                        id="city"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        placeholder="Amsterdam"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="year">Jaar</Label>
+                      <Input
+                        id="year"
+                        type="number"
+                        value={formData.year}
+                        onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                        placeholder="2024"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="format">Type</Label>
+                    <Select value={formData.format} onValueChange={(value) => setFormData({ ...formData, format: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="concert">Concert</SelectItem>
+                        <SelectItem value="vinyl">Vinyl</SelectItem>
+                        <SelectItem value="cd">CD</SelectItem>
+                        <SelectItem value="cassette">Cassette</SelectItem>
+                        <SelectItem value="poster">Poster</SelectItem>
+                        <SelectItem value="other">Anders</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="caption">Beschrijving</Label>
+                    <Textarea
+                      id="caption"
+                      value={formData.caption}
+                      onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
+                      placeholder="Vertel het verhaal achter deze foto..."
+                      rows={4}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
+                    Terug
+                  </Button>
+                  <Button
+                    onClick={handleEnrich}
+                    disabled={enrichMutation.isPending}
+                    className="flex-1 gap-2"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {enrichMutation.isPending ? "AI Verrijken..." : "Verrijk met AI"}
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Step 3: Review & Publish */}
+            {step === 3 && enrichedData && (
               <Card className="p-6">
                 <Label className="text-lg font-semibold mb-4 block">Voeg Details Toe</Label>
                 

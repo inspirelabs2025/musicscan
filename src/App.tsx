@@ -105,6 +105,7 @@ import Echo from "./pages/Echo";
 import FanWall from "./pages/FanWall";
 import PhotoDetail from "./pages/PhotoDetail";
 import UploadPhoto from "./pages/UploadPhoto";
+import MyPhotos from "./pages/MyPhotos";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -437,6 +438,11 @@ const AppContent = () => {
         <Route path="/fanwall" element={<FanWall />} />
         <Route path="/photo/:slug" element={<PhotoDetail />} />
         <Route path="/upload" element={<UploadPhoto />} />
+        <Route path="/my/photos" element={
+          <ProtectedRoute>
+            <MyPhotos />
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <ConditionalFooter />

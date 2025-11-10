@@ -330,25 +330,50 @@ result.variantUsed = variantUsed;
 // Compare canonical (use final URL for comparison)
 result.canonicalStatus = compareCanonical(finalUrl, result.canonical, canonicals);
 
-// SPA-aware inference: if no canonical found and HTML looks like SPA shell/404
+// SPA-aware inference: detect if serving index.html with wrong canonical
 const vercelError = response.headers.get('x-vercel-error') || '';
 const isHtml = result.contentType?.includes('text/html');
-const isSpaShell = (!result.canonical) && !!isHtml && (
-  result.status === 404 ||
-  result.wordCount < 120 ||
-  vercelError.toUpperCase().includes('NOT_FOUND')
-);
 
-if (isSpaShell) {
+// Check if this is a deep link (not homepage)
+const finalUrlObj = new URL(finalUrl);
+const isDeepLink = finalUrlObj.pathname !== '/' && finalUrlObj.pathname !== '';
+
+// Check if canonical is homepage canonical
+const isHomepageCanonical = result.canonicalStatus === 'HOMEPAGE_CANONICAL';
+
+// Scenario 1: Deep link with homepage canonical = SPA serving index.html
+if (isDeepLink && isHomepageCanonical && isHtml) {
+  console.log(`🔍 SPA detected: deep link "${finalUrl}" has homepage canonical`);
   result.spaDetected = true;
   result.canonicalInferred = true;
-  result.inferredReason = vercelError
-    ? `Vercel: ${vercelError}; low-content HTML`
-    : 'Low-content HTML / SPA shell without SSR';
-  // Infer canonical from final URL (force https + www, strip query/hash)
+  result.inferredReason = 'Deep link with homepage canonical (SPA index.html)';
+  
+  // Infer canonical from final URL
   const inferred = normalizeURL(finalUrl);
   result.canonical = inferred;
-  result.canonicalStatus = compareCanonical(finalUrl, inferred, [inferred]);
+  result.canonicalStatus = 'OK_SELF';
+}
+// Scenario 2: No canonical found and looks like SPA shell/404
+else {
+  const isSpaShell = (!result.canonical) && !!isHtml && (
+    result.status === 404 ||
+    result.wordCount < 120 ||
+    vercelError.toUpperCase().includes('NOT_FOUND')
+  );
+
+  if (isSpaShell) {
+    console.log(`🔍 SPA detected: no canonical, status ${result.status}, wordcount ${result.wordCount}`);
+    result.spaDetected = true;
+    result.canonicalInferred = true;
+    result.inferredReason = vercelError
+      ? `Vercel: ${vercelError}; low-content HTML`
+      : 'Low-content HTML / SPA shell without SSR';
+    
+    // Infer canonical from final URL
+    const inferred = normalizeURL(finalUrl);
+    result.canonical = inferred;
+    result.canonicalStatus = compareCanonical(finalUrl, inferred, [inferred]);
+  }
 }
 
 console.log(`📊 Canonical: ${result.canonical || 'NONE'}, Status: ${result.canonicalStatus}, Words: ${result.wordCount}`);

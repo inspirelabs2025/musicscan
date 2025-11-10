@@ -66,40 +66,25 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const albumElements = getAlbumElements(albumTitle, artistName);
+    const prompt = `Place this album artwork directly onto a pair of stylish crew socks.
 
-    const prompt = `Create a stylish, fashionable sock design inspired by the album "${albumTitle}" by ${artistName}.
+**Requirements:**
+- Show 2 socks side by side, flat lay view
+- The ORIGINAL album artwork should be prominently displayed on the socks
+- Place the artwork on the calf/shin area of the socks (main visible area)
+- Keep the artwork recognizable and clear
+- White or neutral sock base color
+- Clean white background
+- Professional product photography look
+- The album art should be the main design element - DO NOT create abstract patterns
 
-**Format:** Crew sock design (40cm tall), flat lay view showing both socks side by side
+**Style:**
+- Modern, wearable music merchandise
+- The album artwork should be immediately recognizable
+- High-quality product photography aesthetic
+- Ultra high resolution`;
 
-**Design Style:**
-- Theme: ${colorPalette.design_theme} (${colorPalette.era})
-- Pattern Type: ${colorPalette.pattern_type}
-- Visual Elements: ${albumElements}
-
-**Color Palette (extracted from album cover):**
-- Primary/Base: ${colorPalette.primary_color}
-- Secondary/Pattern: ${colorPalette.secondary_color}
-- Accent/Highlights: ${colorPalette.accent_color}
-- Full Palette: ${colorPalette.color_palette.join(', ')}
-
-**Technical Requirements:**
-- High contrast for fabric visibility
-- Repeating pattern that works on cylindrical sock form
-- Small logo or text placement on ankle/calf area
-- Design should be immediately recognizable as inspired by this iconic album
-- Professional product photography aesthetic
-- Clean white background for easy mockup placement
-
-**Style Notes:**
-- Modern, wearable interpretation of album's visual identity
-- High-quality fashion product look
-- Suitable for both casual wear and music statement pieces
-- Make any music fan instantly recognize the album inspiration
-
-Ultra high resolution, product photography quality.`;
-
-    console.log('🎨 Calling AI for sock design generation...');
+    console.log('🎨 Calling AI for sock design with album artwork...');
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -112,7 +97,18 @@ Ultra high resolution, product photography quality.`;
         messages: [
           {
             role: 'user',
-            content: prompt
+            content: [
+              {
+                type: 'text',
+                text: prompt
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: albumCoverUrl
+                }
+              }
+            ]
           }
         ],
         modalities: ['image', 'text']
@@ -179,8 +175,8 @@ Ultra high resolution, product photography quality.`;
         base_design_url: publicUrl,
         slug: slug,
         generation_time_ms: Date.now() - startTime,
-        description: `Stylish socks inspired by ${artistName}'s legendary album "${albumTitle}". ${colorPalette.design_theme} design featuring colors extracted from the iconic album cover.`,
-        story_text: `These unique socks pay homage to ${artistName}'s ${releaseYear || 'classic'} album "${albumTitle}". Every color has been carefully extracted from the original album artwork to create a wearable piece of music history.`
+        description: `Stylish socks featuring the iconic album artwork of "${albumTitle}" by ${artistName}. The original album cover is prominently displayed on these premium crew socks.`,
+        story_text: `These unique socks showcase the complete album artwork from ${artistName}'s ${releaseYear || 'classic'} album "${albumTitle}". Wear a piece of music history with the full album cover design on these comfortable crew socks.`
       })
       .select()
       .single();

@@ -29,6 +29,7 @@ import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { usePosterProductCreator } from "@/hooks/usePosterProductCreator";
 import { useNavigate } from "react-router-dom";
+import { ShareButtons } from "@/components/ShareButtons";
 
 export default function PhotoDetail() {
   const { slug } = useParams();
@@ -240,12 +241,23 @@ export default function PhotoDetail() {
         <title>{photo.seo_title || photo.caption || "Muziek Herinnering"} | MusicScan</title>
         <meta name="description" content={photo.seo_description || photo.caption || "Een muziek herinnering gedeeld op MusicScan FanWall"} />
         <link rel="canonical" href={canonicalUrl} />
+        
+        {/* Open Graph */}
         <meta property="og:title" content={photo.seo_title || photo.caption} />
         <meta property="og:description" content={photo.seo_description || photo.caption} />
-        <meta property="og:image" content={photo.display_url} />
+        <meta property="og:image" content={photo.og_image_url || photo.display_url} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:type" content="article" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:site_name" content="MusicScan FanWall" />
+        
+        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={photo.display_url} />
+        <meta name="twitter:title" content={photo.seo_title || photo.caption} />
+        <meta name="twitter:description" content={photo.seo_description || photo.caption} />
+        <meta name="twitter:image" content={photo.og_image_url || photo.display_url} />
+        
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -344,6 +356,11 @@ export default function PhotoDetail() {
                     <MessageCircle className="h-5 w-5" />
                     {photo.comment_count}
                   </Button>
+                  <ShareButtons 
+                    url={`/photo/${photo.seo_slug}`}
+                    title={photo.seo_title || photo.caption || "Muziek Herinnering"}
+                    description={photo.seo_description}
+                  />
                   <Button
                     variant="outline"
                     size="sm"

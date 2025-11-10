@@ -65,6 +65,7 @@ import BulkArtGenerator from "./pages/admin/BulkArtGenerator";
 import SketchArtGenerator from "./pages/admin/SketchArtGenerator";
 import PhotoStylizer from "./pages/admin/PhotoStylizer";
 import PhotoModeration from "./pages/admin/PhotoModeration";
+import GenerateSeed from "./pages/admin/GenerateSeed";
 import BulkPosterUpload from "./pages/admin/BulkPosterUpload";
 import FixProductTitles from "./pages/admin/FixProductTitles";
 import BulkProductCleanup from "./pages/admin/BulkProductCleanup";
@@ -384,6 +385,11 @@ const AppContent = () => {
         <Route path="/admin/photo-moderation" element={
           <ProtectedRoute>
             <PhotoModeration />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/generate-seed" element={
+          <ProtectedRoute>
+            <GenerateSeed />
           </ProtectedRoute>
         } />
         <Route path="/admin/bulk-poster-upload" element={

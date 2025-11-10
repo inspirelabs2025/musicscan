@@ -228,3 +228,6 @@ verify_jwt = true
 
 [functions.generate-photo-sitemap]
 verify_jwt = false
+
+[functions.generate-fanwall-seed]
+verify_jwt = false

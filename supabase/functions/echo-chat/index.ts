@@ -27,14 +27,14 @@ serve(async (req) => {
     console.log(`Echo received message${userId ? ` from user ${userId}` : ''}: ${message.substring(0, 50)}...`);
 
     // Get or create conversation
-    let { data: conversation } = await supabaseClient
+    let { data: conversation, error: fetchError } = await supabaseClient
       .from('echo_conversations')
       .select('*')
       .eq('session_id', session_id)
-      .single();
+      .maybeSingle();
 
     if (!conversation) {
-      const { data: newConv } = await supabaseClient
+      const { data: newConv, error: insertError } = await supabaseClient
         .from('echo_conversations')
         .insert({
           user_id: userId,
@@ -43,8 +43,18 @@ serve(async (req) => {
         })
         .select()
         .single();
+      
+      if (insertError || !newConv) {
+        console.error('Failed to create conversation:', insertError);
+        throw new Error('Failed to create conversation');
+      }
+      
       conversation = newConv;
       console.log(`Created new conversation ${conversation.id}`);
+    }
+
+    if (!conversation) {
+      throw new Error('No conversation available');
     }
 
     // Save user message

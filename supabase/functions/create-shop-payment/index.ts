@@ -119,10 +119,20 @@ serve(async (req) => {
       });
     }
 
-    // Get seller info (assuming all items are from the same seller for now)
-    const sellerId = orderItems[0].item_type === 'product' 
-      ? orderItems[0].item_data.admin_user_id 
-      : orderItems[0].item_data.user_id;
+    // Get seller info (fallbacks ensure non-null)
+    let sellerId: string | null = null;
+    const firstData: any = orderItems[0]?.item_data || {};
+    if (orderItems[0]?.item_type === 'product') {
+      sellerId = firstData.seller_id || firstData.admin_user_id || firstData.created_by || firstData.user_id || null;
+    } else {
+      sellerId = firstData.user_id || null;
+    }
+
+    if (!sellerId) {
+      // Final fallback to the current user to satisfy NOT NULL and avoid 500s
+      console.log('[create-shop-payment] seller_id missing on product; falling back to buyer user.id');
+      sellerId = user.id;
+    }
 
     // Check if Stripe customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -198,7 +208,7 @@ serve(async (req) => {
       line_items: lineItems,
       mode: "payment",
       success_url: `${req.headers.get("origin")}/shop/order-success?order_id=${order.id}`,
-      cancel_url: `${req.headers.get("origin")}/shop/${orderItems[0].item_data.user_id}`,
+      cancel_url: `${req.headers.get("origin")}/shop`,
       metadata: {
         order_id: order.id,
         buyer_id: user.id,

@@ -231,3 +231,9 @@ verify_jwt = false
 
 [functions.generate-fanwall-seed]
 verify_jwt = false
+
+[functions.refresh-featured-photos]
+verify_jwt = false
+
+[[functions.refresh-featured-photos.schedule]]
+cron = "0 */6 * * *"  # Every 6 hours

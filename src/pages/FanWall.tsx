@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, Upload } from "lucide-react";
+import { Search, Upload, Eye } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 
@@ -18,6 +18,7 @@ interface Photo {
   year: number | null;
   like_count: number;
   comment_count: number;
+  view_count: number;
   format: string | null;
 }
 
@@ -152,11 +153,17 @@ export default function FanWall() {
                     </div>
                     <div className="p-3">
                       <h3 className="font-semibold text-sm truncate">{photo.artist || "Onbekend"}</h3>
-                      {photo.year && <p className="text-xs text-muted-foreground">{photo.year}</p>}
-                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        <span>❤️ {photo.like_count}</span>
-                        <span>💬 {photo.comment_count}</span>
-                      </div>
+                {photo.year && <p className="text-xs text-muted-foreground">{photo.year}</p>}
+                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                  {photo.view_count > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Eye className="h-3 w-3" />
+                      {photo.view_count}
+                    </span>
+                  )}
+                  <span>❤️ {photo.like_count}</span>
+                  <span>💬 {photo.comment_count}</span>
+                </div>
                     </div>
                   </Card>
                 </Link>

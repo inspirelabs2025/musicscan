@@ -11,6 +11,7 @@ import { NewsAndStoriesSection } from '@/components/home/NewsAndStoriesSection';
 import { AIFeaturesCompact } from '@/components/home/AIFeaturesCompact';
 import { CommunityStats } from '@/components/home/CommunityStats';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
+import { FeaturedPhotos } from '@/components/FeaturedPhotos';
 import { useSEO } from '@/hooks/useSEO';
 
 const Home = () => {
@@ -70,6 +71,9 @@ const Home = () => {
 
       {/* News & Stories Section with Tabs */}
       <NewsAndStoriesSection />
+
+      {/* Featured Photos from FanWall */}
+      <FeaturedPhotos />
 
       {/* AI Features - Compact */}
       <AIFeaturesCompact />

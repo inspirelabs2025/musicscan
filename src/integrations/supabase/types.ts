@@ -2501,6 +2501,13 @@ export type Database = {
             foreignKeyName: "photo_comments_photo_id_fkey"
             columns: ["photo_id"]
             isOneToOne: false
+            referencedRelation: "featured_photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_comments_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
             referencedRelation: "photos"
             referencedColumns: ["id"]
           },
@@ -2528,6 +2535,55 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "photo_likes_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "featured_photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_likes_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photo_views: {
+        Row: {
+          id: string
+          ip_address: string | null
+          photo_id: string
+          user_agent: string | null
+          user_id: string | null
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          photo_id: string
+          user_agent?: string | null
+          user_id?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          photo_id?: string
+          user_agent?: string | null
+          user_id?: string | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_views_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "featured_photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_views_photo_id_fkey"
             columns: ["photo_id"]
             isOneToOne: false
             referencedRelation: "photos"
@@ -2564,6 +2620,7 @@ export type Database = {
           tags: string[] | null
           user_id: string
           venue: string | null
+          view_count: number | null
           width: number | null
           year: number | null
         }
@@ -2595,6 +2652,7 @@ export type Database = {
           tags?: string[] | null
           user_id: string
           venue?: string | null
+          view_count?: number | null
           width?: number | null
           year?: number | null
         }
@@ -2626,6 +2684,7 @@ export type Database = {
           tags?: string[] | null
           user_id?: string
           venue?: string | null
+          view_count?: number | null
           width?: number | null
           year?: number | null
         }
@@ -5063,6 +5122,42 @@ export type Database = {
       }
     }
     Views: {
+      featured_photos: {
+        Row: {
+          album: string | null
+          artist: string | null
+          canonical_url: string | null
+          caption: string | null
+          city: string | null
+          comment_count: number | null
+          country: string | null
+          created_at: string | null
+          display_url: string | null
+          event_date: string | null
+          flagged_count: number | null
+          format: string | null
+          height: number | null
+          id: string | null
+          license_granted: boolean | null
+          like_count: number | null
+          original_url: string | null
+          print_allowed: boolean | null
+          published_at: string | null
+          recent_views: number | null
+          seo_description: string | null
+          seo_slug: string | null
+          seo_title: string | null
+          source_type: string | null
+          status: string | null
+          tags: string[] | null
+          user_id: string | null
+          venue: string | null
+          view_count: number | null
+          width: number | null
+          year: number | null
+        }
+        Relationships: []
+      }
       unified_scans: {
         Row: {
           ai_description: string | null
@@ -5208,6 +5303,7 @@ export type Database = {
           processed_count: number
         }[]
       }
+      refresh_featured_photos: { Args: never; Returns: undefined }
       search_platform_products: {
         Args: {
           p_category?: string

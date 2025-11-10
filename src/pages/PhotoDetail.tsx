@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Heart, MessageCircle, MapPin, Calendar, Music, Flag, Image as ImageIcon } from "lucide-react";
+import { Heart, MessageCircle, MapPin, Calendar, Music, Flag, Image as ImageIcon, Eye } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet";
@@ -184,6 +184,18 @@ export default function PhotoDetail() {
     },
   });
 
+  // Track view on mount
+  useState(() => {
+    if (photo?.id) {
+      supabase.from("photo_views").insert({
+        photo_id: photo.id,
+        user_id: user?.id,
+      }).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["photo", slug] });
+      });
+    }
+  });
+
   const handleOrderPoster = async () => {
     if (!photo) return;
     
@@ -314,6 +326,10 @@ export default function PhotoDetail() {
 
                 {/* Actions */}
                 <div className="flex gap-4 flex-wrap">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-lg">
+                    <Eye className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">{photo.view_count || 0}</span>
+                  </div>
                   <Button
                     variant={userLike ? "default" : "outline"}
                     size="lg"

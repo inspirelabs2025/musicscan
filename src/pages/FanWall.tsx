@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Upload, Eye } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
 
 interface Photo {
@@ -20,10 +21,18 @@ interface Photo {
   comment_count: number;
   view_count: number;
   format: string | null;
+  user_id: string;
+  profiles: {
+    user_id: string;
+    first_name: string;
+    avatar_url: string | null;
+  } | null;
 }
 
 export default function FanWall() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const userFilter = searchParams.get("user");
   const [searchQuery, setSearchQuery] = useState("");
   const [formatFilter, setFormatFilter] = useState<string>("all");
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -37,11 +46,11 @@ export default function FanWall() {
     hasNextPage, 
     isFetchingNextPage 
   } = useInfiniteQuery({
-    queryKey: ["fanwall-photos", searchQuery, formatFilter],
+    queryKey: ["fanwall-photos", searchQuery, formatFilter, userFilter],
     queryFn: async ({ pageParam = 0 }) => {
       let query = supabase
         .from("photos")
-        .select("*")
+        .select("*, profiles(user_id, first_name, avatar_url)")
         .eq("status", "published")
         .order("published_at", { ascending: false })
         .range(pageParam, pageParam + ITEMS_PER_PAGE - 1);
@@ -52,6 +61,10 @@ export default function FanWall() {
 
       if (formatFilter !== "all") {
         query = query.eq("format", formatFilter);
+      }
+
+      if (userFilter) {
+        query = query.eq("user_id", userFilter);
       }
 
       const { data, error } = await query;
@@ -142,8 +155,8 @@ export default function FanWall() {
           ) : photos && photos.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {photos.map((photo) => (
-                <Link key={photo.id} to={`/photo/${photo.seo_slug}`}>
-                  <Card className="group overflow-hidden hover:shadow-lg transition-all cursor-pointer">
+                <Card key={photo.id} className="group overflow-hidden hover:shadow-lg transition-all">
+                  <Link to={`/photo/${photo.seo_slug}`}>
                     <div className="aspect-square overflow-hidden">
                       <img
                         src={photo.display_url}
@@ -151,22 +164,41 @@ export default function FanWall() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       />
                     </div>
-                    <div className="p-3">
+                  </Link>
+                  <div className="p-3">
+                    {/* Author info */}
+                    {photo.profiles && (
+                      <Link 
+                        to={`/profile/${photo.profiles.user_id}`}
+                        className="flex items-center gap-2 mb-2 hover:opacity-80 transition-opacity"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={photo.profiles.avatar_url || undefined} />
+                          <AvatarFallback className="text-xs">
+                            {photo.profiles.first_name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs font-medium">{photo.profiles.first_name}</span>
+                      </Link>
+                    )}
+                    
+                    <Link to={`/photo/${photo.seo_slug}`}>
                       <h3 className="font-semibold text-sm truncate">{photo.artist || "Onbekend"}</h3>
-                {photo.year && <p className="text-xs text-muted-foreground">{photo.year}</p>}
-                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                  {photo.view_count > 0 && (
-                    <span className="flex items-center gap-1">
-                      <Eye className="h-3 w-3" />
-                      {photo.view_count}
-                    </span>
-                  )}
-                  <span>❤️ {photo.like_count}</span>
-                  <span>💬 {photo.comment_count}</span>
-                </div>
-                    </div>
-                  </Card>
-                </Link>
+                      {photo.year && <p className="text-xs text-muted-foreground">{photo.year}</p>}
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        {photo.view_count > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            {photo.view_count}
+                          </span>
+                        )}
+                        <span>❤️ {photo.like_count}</span>
+                        <span>💬 {photo.comment_count}</span>
+                      </div>
+                    </Link>
+                  </div>
+                </Card>
               ))}
             </div>
           ) : (

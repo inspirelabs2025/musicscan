@@ -7,6 +7,8 @@ import { CollectionSummaryWidget } from "@/components/profile/CollectionSummaryW
 import { ActivityTimeline } from "@/components/profile/ActivityTimeline";
 import { PersonalityInsights } from "@/components/profile/PersonalityInsights";
 import { SocialStats } from "@/components/profile/SocialStats";
+import { FanWallProfileGallery } from "@/components/profile/FanWallProfileGallery";
+import { FanWallProfileStats } from "@/components/profile/FanWallProfileStats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
@@ -61,13 +63,21 @@ const Profile: React.FC = () => {
 
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* FanWall Stats */}
+          <FanWallProfileStats userId={profile.user_id} />
+
+          {/* Social Stats */}
+          <SocialStats profile={profile} />
+
+          {/* FanWall Gallery */}
+          <div className="lg:col-span-2">
+            <FanWallProfileGallery userId={profile.user_id} />
+          </div>
+
           {/* Collection Summary */}
           {(profile.show_collection || isOwnProfile) && (
             <CollectionSummaryWidget userId={profile.user_id} />
           )}
-
-          {/* Social Stats */}
-          <SocialStats profile={profile} />
 
           {/* Activity Timeline */}
           {(profile.show_activity || isOwnProfile) && (

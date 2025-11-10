@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Heart, MessageCircle, MapPin, Calendar, Music, Flag, Image as ImageIcon, Eye } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet";
 import { format } from "date-fns";
@@ -30,6 +30,7 @@ import { nl } from "date-fns/locale";
 import { usePosterProductCreator } from "@/hooks/usePosterProductCreator";
 import { useNavigate } from "react-router-dom";
 import { ShareButtons } from "@/components/ShareButtons";
+import { usePhotoLike } from "@/hooks/usePhotoLike";
 
 export default function PhotoDetail() {
   const { slug } = useParams();
@@ -56,6 +57,24 @@ export default function PhotoDetail() {
     },
   });
 
+  // Use the new like hook with real-time updates
+  const { isLiked, toggleLike, isToggling } = usePhotoLike(photo?.id || "");
+
+  // Track view on mount
+  useEffect(() => {
+    if (!photo?.id || !slug) return;
+
+    const trackView = async () => {
+      await supabase.from("photo_views").insert({
+        photo_id: photo.id,
+        user_id: user?.id || null,
+      });
+      queryClient.invalidateQueries({ queryKey: ["photo", slug] });
+    };
+
+    trackView();
+  }, [photo?.id, user?.id, slug, queryClient]);
+
   const { data: comments } = useQuery({
     queryKey: ["photo-comments", photo?.id],
     enabled: !!photo?.id,
@@ -75,49 +94,6 @@ export default function PhotoDetail() {
       
       if (error) throw error;
       return data;
-    },
-  });
-
-  const { data: userLike } = useQuery({
-    queryKey: ["photo-like", photo?.id, user?.id],
-    enabled: !!photo?.id && !!user?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("photo_likes")
-        .select("*")
-        .eq("photo_id", photo.id)
-        .eq("user_id", user.id)
-        .single();
-      
-      return data;
-    },
-  });
-
-  const likeMutation = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error("Login vereist");
-      
-      if (userLike) {
-        await supabase
-          .from("photo_likes")
-          .delete()
-          .eq("id", userLike.id);
-      } else {
-        await supabase
-          .from("photo_likes")
-          .insert({ photo_id: photo.id, user_id: user.id });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["photo", slug] });
-      queryClient.invalidateQueries({ queryKey: ["photo-like", photo?.id, user?.id] });
-    },
-    onError: () => {
-      toast({
-        title: "Fout",
-        description: "Kon like niet verwerken",
-        variant: "destructive",
-      });
     },
   });
 
@@ -343,14 +319,14 @@ export default function PhotoDetail() {
                     <span className="font-medium">{photo.view_count || 0}</span>
                   </div>
                   <Button
-                    variant={userLike ? "default" : "outline"}
+                    variant={isLiked ? "default" : "outline"}
                     size="lg"
-                    onClick={() => likeMutation.mutate()}
-                    disabled={!user || likeMutation.isPending}
+                    onClick={() => toggleLike()}
+                    disabled={!user || isToggling}
                     className="gap-2"
                   >
-                    <Heart className={`h-5 w-5 ${userLike ? "fill-current" : ""}`} />
-                    {photo.like_count}
+                    <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
+                    {photo.like_count || 0}
                   </Button>
                   <Button variant="outline" size="lg" className="gap-2">
                     <MessageCircle className="h-5 w-5" />

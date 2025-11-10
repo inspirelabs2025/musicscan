@@ -108,6 +108,7 @@ import FanWall from "./pages/FanWall";
 import PhotoDetail from "./pages/PhotoDetail";
 import UploadPhoto from "./pages/UploadPhoto";
 import MyPhotos from "./pages/MyPhotos";
+import LikedPhotos from "./pages/LikedPhotos";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -453,6 +454,11 @@ const AppContent = () => {
         <Route path="/my/photos" element={
           <ProtectedRoute>
             <MyPhotos />
+          </ProtectedRoute>
+        } />
+        <Route path="/my/liked" element={
+          <ProtectedRoute>
+            <LikedPhotos />
           </ProtectedRoute>
         } />
         <Route path="*" element={<NotFound />} />

@@ -259,6 +259,96 @@ export type Database = {
           },
         ]
       }
+      album_tshirts: {
+        Row: {
+          accent_color: string | null
+          album_cover_url: string
+          album_title: string
+          artist_name: string
+          base_design_url: string | null
+          color_palette: Json | null
+          created_at: string
+          description: string | null
+          design_theme: string | null
+          discogs_id: number | null
+          discogs_master_id: number | null
+          generation_time_ms: number | null
+          genre: string | null
+          id: string
+          is_published: boolean | null
+          mockup_url: string | null
+          pattern_type: string | null
+          primary_color: string
+          product_id: string | null
+          release_year: number | null
+          secondary_color: string | null
+          slug: string
+          story_text: string | null
+          style_variants: Json | null
+          updated_at: string
+          user_id: string | null
+          view_count: number | null
+        }
+        Insert: {
+          accent_color?: string | null
+          album_cover_url: string
+          album_title: string
+          artist_name: string
+          base_design_url?: string | null
+          color_palette?: Json | null
+          created_at?: string
+          description?: string | null
+          design_theme?: string | null
+          discogs_id?: number | null
+          discogs_master_id?: number | null
+          generation_time_ms?: number | null
+          genre?: string | null
+          id?: string
+          is_published?: boolean | null
+          mockup_url?: string | null
+          pattern_type?: string | null
+          primary_color: string
+          product_id?: string | null
+          release_year?: number | null
+          secondary_color?: string | null
+          slug: string
+          story_text?: string | null
+          style_variants?: Json | null
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          accent_color?: string | null
+          album_cover_url?: string
+          album_title?: string
+          artist_name?: string
+          base_design_url?: string | null
+          color_palette?: Json | null
+          created_at?: string
+          description?: string | null
+          design_theme?: string | null
+          discogs_id?: number | null
+          discogs_master_id?: number | null
+          generation_time_ms?: number | null
+          genre?: string | null
+          id?: string
+          is_published?: boolean | null
+          mockup_url?: string | null
+          pattern_type?: string | null
+          primary_color?: string
+          product_id?: string | null
+          release_year?: number | null
+          secondary_color?: string | null
+          slug?: string
+          story_text?: string | null
+          style_variants?: Json | null
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       artist_fanwalls: {
         Row: {
           artist_name: string

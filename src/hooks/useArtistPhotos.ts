@@ -28,7 +28,7 @@ export const useArtistPhotos = (artistName: string, formatFilter: string = "all"
     queryFn: async ({ pageParam = 0 }) => {
       let query = supabase
         .from("photos")
-        .select("*, profiles(user_id, first_name, avatar_url)")
+        .select("*")
         .eq("status", "published")
         .eq("artist", artistName)
         .order("published_at", { ascending: false })

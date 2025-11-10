@@ -159,7 +159,7 @@ export default function PhotoDetail() {
         price: 24.99,
       });
 
-      navigate(`/products/${result.product_slug}`);
+      navigate(`/product/${result.product_slug}`);
     } catch (error) {
       console.error("Order poster error:", error);
     }

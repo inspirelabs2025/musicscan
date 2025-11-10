@@ -6,10 +6,15 @@ import { usePlatformProducts } from '@/hooks/usePlatformProducts';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const MetalPrintSpotlight = () => {
-  const { data: artProducts, isLoading } = usePlatformProducts({ 
+  const { data: allArtProducts, isLoading } = usePlatformProducts({ 
     mediaType: 'art',
     limit: 6 
   });
+
+  // Filter out posters - only show albums
+  const artProducts = allArtProducts?.filter(product => 
+    !product.tags?.includes('poster')
+  );
 
   const displayProduct = artProducts?.[0];
   const displayImage = displayProduct?.primary_image;

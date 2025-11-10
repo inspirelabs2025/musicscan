@@ -34,9 +34,6 @@ const Home = () => {
       {/* Metal Print Spotlight - Prominent ART Section */}
       <MetalPrintSpotlight />
 
-      {/* Socks Spotlight */}
-      <SocksSpotlight />
-
       {/* Time Machine Spotlight */}
       <TimeMachineSpotlight />
 
@@ -74,6 +71,9 @@ const Home = () => {
 
       {/* Featured Photos from FanWall */}
       <FeaturedPhotos />
+
+      {/* Socks Spotlight */}
+      <SocksSpotlight />
 
       {/* AI Features - Compact */}
       <AIFeaturesCompact />

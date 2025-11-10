@@ -28,6 +28,11 @@ export interface CanonicalCheckResult {
   wordCount: number;
   thinContent: boolean;
   checkedAt: string;
+  // SPA-aware fields
+  variantUsed?: string;
+  spaDetected?: boolean;
+  canonicalInferred?: boolean;
+  inferredReason?: string;
 }
 
 const DEFAULT_SITEMAPS = [

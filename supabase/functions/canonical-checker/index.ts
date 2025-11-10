@@ -20,6 +20,11 @@ interface CanonicalCheckResult {
   wordCount: number;
   thinContent: boolean;
   checkedAt: string;
+  // SPA-aware fields
+  variantUsed?: string;
+  spaDetected?: boolean;
+  canonicalInferred?: boolean;
+  inferredReason?: string;
 }
 
 // Helper: Normalize URL for comparison (strips www, normalizes protocol/slash)
@@ -259,6 +264,11 @@ async function checkURL(url: string): Promise<CanonicalCheckResult> {
     wordCount: 0,
     thinContent: false,
     checkedAt: new Date().toISOString(),
+    // New SPA-aware defaults
+    variantUsed: undefined,
+    spaDetected: false,
+    canonicalInferred: false,
+    inferredReason: undefined,
   };
 
   try {
@@ -267,11 +277,12 @@ async function checkURL(url: string): Promise<CanonicalCheckResult> {
     // Try with variants
     const { response, html, finalUrl, variantUsed } = await fetchWithVariants(url);
     
-    result.status = response.status;
-    result.finalURL = finalUrl;
-    result.contentType = response.headers.get('content-type') || undefined;
-    result.contentLength = parseInt(response.headers.get('content-length') || '0');
-    result.xRobotsTag = response.headers.get('x-robots-tag') || undefined;
+result.status = response.status;
+result.finalURL = finalUrl;
+result.contentType = response.headers.get('content-type') || undefined;
+result.contentLength = parseInt(response.headers.get('content-length') || '0');
+result.xRobotsTag = response.headers.get('x-robots-tag') || undefined;
+result.variantUsed = variantUsed;
     
     // Mark as redirected if we used a variant or if final URL differs
     if (variantUsed || finalUrl !== url) {
@@ -316,10 +327,31 @@ async function checkURL(url: string): Promise<CanonicalCheckResult> {
         result.soft404 = true;
       }
       
-      // Compare canonical (use final URL for comparison)
-      result.canonicalStatus = compareCanonical(finalUrl, result.canonical, canonicals);
-      
-      console.log(`📊 Canonical: ${result.canonical || 'NONE'}, Status: ${result.canonicalStatus}, Words: ${result.wordCount}`);
+// Compare canonical (use final URL for comparison)
+result.canonicalStatus = compareCanonical(finalUrl, result.canonical, canonicals);
+
+// SPA-aware inference: if no canonical found and HTML looks like SPA shell/404
+const vercelError = response.headers.get('x-vercel-error') || '';
+const isHtml = result.contentType?.includes('text/html');
+const isSpaShell = (!result.canonical) && !!isHtml && (
+  result.status === 404 ||
+  result.wordCount < 120 ||
+  vercelError.toUpperCase().includes('NOT_FOUND')
+);
+
+if (isSpaShell) {
+  result.spaDetected = true;
+  result.canonicalInferred = true;
+  result.inferredReason = vercelError
+    ? `Vercel: ${vercelError}; low-content HTML`
+    : 'Low-content HTML / SPA shell without SSR';
+  // Infer canonical from final URL (force https + www, strip query/hash)
+  const inferred = normalizeURL(finalUrl);
+  result.canonical = inferred;
+  result.canonicalStatus = compareCanonical(finalUrl, inferred, [inferred]);
+}
+
+console.log(`📊 Canonical: ${result.canonical || 'NONE'}, Status: ${result.canonicalStatus}, Words: ${result.wordCount}`);
     }
 
   } catch (error) {

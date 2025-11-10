@@ -100,12 +100,26 @@ export function SingleURLTester() {
                 {getStatusBadge(result.canonicalStatus)}
               </div>
 
-              <div>
-                <h4 className="text-sm font-medium mb-2">HTTP Status</h4>
-                <Badge variant={result.status === 200 ? "default" : "destructive"}>
-                  {result.status}
-                </Badge>
-              </div>
+<div>
+  <h4 className="text-sm font-medium mb-2">HTTP Status</h4>
+  <Badge variant={result.status === 200 ? "default" : "destructive"}>
+    {result.status}
+  </Badge>
+</div>
+
+<div>
+  <h4 className="text-sm font-medium mb-2">Final URL</h4>
+  <code className="block text-xs bg-muted p-2 rounded break-all">
+    {result.finalURL}
+  </code>
+</div>
+
+{result.variantUsed && (
+  <div>
+    <h4 className="text-sm font-medium mb-2">Variant</h4>
+    <Badge variant="secondary">🔧 {result.variantUsed}</Badge>
+  </div>
+)}
 
               <div className="col-span-2">
                 <h4 className="text-sm font-medium mb-2">Expected Canonical</h4>
@@ -147,15 +161,21 @@ export function SingleURLTester() {
                 </div>
               )}
 
-              <div className="col-span-2">
-                <h4 className="text-sm font-medium mb-2">Flags</h4>
-                <div className="flex gap-2 flex-wrap">
-                  {result.noindex && <Badge variant="secondary">🚫 Noindex</Badge>}
-                  {result.redirected && <Badge variant="secondary">↩️ Redirected</Badge>}
-                  {result.soft404 && <Badge variant="destructive">⚠️ Soft-404</Badge>}
-                  {result.thinContent && <Badge variant="secondary">📄 Thin ({result.wordCount} words)</Badge>}
-                </div>
-              </div>
+<div className="col-span-2">
+  <h4 className="text-sm font-medium mb-2">Flags</h4>
+  <div className="flex gap-2 flex-wrap">
+    {result.noindex && <Badge variant="secondary">🚫 Noindex</Badge>}
+    {result.redirected && <Badge variant="secondary">↩️ Redirected</Badge>}
+    {result.soft404 && <Badge variant="destructive">⚠️ Soft-404</Badge>}
+    {result.thinContent && <Badge variant="secondary">📄 Thin ({result.wordCount} words)</Badge>}
+    {result.spaDetected && <Badge variant="secondary">🧩 JS-rendered (inferred)</Badge>}
+    {result.canonicalInferred && <Badge variant="secondary">🏷️ Canonical inferred</Badge>}
+    {result.variantUsed && <Badge variant="secondary">🔧 {result.variantUsed}</Badge>}
+  </div>
+  {result.inferredReason && (
+    <p className="text-xs text-muted-foreground mt-2">Reason: {result.inferredReason}</p>
+  )}
+</div>
 
               <div className="col-span-2">
                 <h4 className="text-sm font-medium mb-2">Headers</h4>

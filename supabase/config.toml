@@ -225,3 +225,6 @@ verify_jwt = false
 
 [functions.ai-enrich-photo]
 verify_jwt = true
+
+[functions.generate-photo-sitemap]
+verify_jwt = false

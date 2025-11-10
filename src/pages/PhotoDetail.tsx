@@ -6,7 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Heart, MessageCircle, MapPin, Calendar, Music } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Heart, MessageCircle, MapPin, Calendar, Music, Flag } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet";
@@ -19,6 +34,8 @@ export default function PhotoDetail() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState("");
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportReason, setReportReason] = useState("");
 
   const { data: photo, isLoading } = useQuery({
     queryKey: ["photo", slug],
@@ -94,6 +111,39 @@ export default function PhotoDetail() {
       toast({
         title: "Fout",
         description: "Kon like niet verwerken",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reportMutation = useMutation({
+    mutationFn: async () => {
+      if (!reportReason) throw new Error("Selecteer een reden");
+
+      // Increment flag count
+      const { error: updateError } = await supabase
+        .from("photos")
+        .update({ 
+          flagged_count: (photo.flagged_count || 0) + 1,
+          status: (photo.flagged_count || 0) >= 2 ? "flagged" : photo.status
+        })
+        .eq("id", photo.id);
+
+      if (updateError) throw updateError;
+    },
+    onSuccess: () => {
+      setShowReportDialog(false);
+      setReportReason("");
+      queryClient.invalidateQueries({ queryKey: ["photo", slug] });
+      toast({
+        title: "Gemeld",
+        description: "Bedankt voor je melding. We zullen deze foto beoordelen.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Fout",
+        description: "Kon melding niet versturen",
         variant: "destructive",
       });
     },
@@ -246,6 +296,15 @@ export default function PhotoDetail() {
                     <MessageCircle className="h-5 w-5" />
                     {photo.comment_count}
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowReportDialog(true)}
+                    className="gap-2"
+                  >
+                    <Flag className="h-4 w-4" />
+                    Meld
+                  </Button>
                 </div>
 
                 {/* Comments */}
@@ -300,6 +359,46 @@ export default function PhotoDetail() {
             </div>
           </div>
         </div>
+
+        {/* Report Dialog */}
+        <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Foto Melden</DialogTitle>
+              <DialogDescription>
+                Help ons de community veilig te houden door ongepaste content te melden.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Reden</label>
+                <Select value={reportReason} onValueChange={setReportReason}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecteer een reden" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="copyright">Auteursrechtschending</SelectItem>
+                    <SelectItem value="inappropriate">Ongepaste inhoud</SelectItem>
+                    <SelectItem value="spam">Spam</SelectItem>
+                    <SelectItem value="misleading">Misleidend</SelectItem>
+                    <SelectItem value="other">Anders</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowReportDialog(false)}>
+                Annuleren
+              </Button>
+              <Button
+                onClick={() => reportMutation.mutate()}
+                disabled={!reportReason || reportMutation.isPending}
+              >
+                Verstuur Melding
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );

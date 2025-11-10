@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useRef, useEffect } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,16 +25,25 @@ export default function FanWall() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [formatFilter, setFormatFilter] = useState<string>("all");
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const { data: photos, isLoading } = useQuery({
+  const ITEMS_PER_PAGE = 20;
+
+  const { 
+    data, 
+    isLoading, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useInfiniteQuery({
     queryKey: ["fanwall-photos", searchQuery, formatFilter],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 0 }) => {
       let query = supabase
         .from("photos")
         .select("*")
         .eq("status", "published")
         .order("published_at", { ascending: false })
-        .limit(50);
+        .range(pageParam, pageParam + ITEMS_PER_PAGE - 1);
 
       if (searchQuery) {
         query = query.or(`artist.ilike.%${searchQuery}%,caption.ilike.%${searchQuery}%`);
@@ -48,7 +57,31 @@ export default function FanWall() {
       if (error) throw error;
       return data as Photo[];
     },
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length < ITEMS_PER_PAGE) return undefined;
+      return allPages.length * ITEMS_PER_PAGE;
+    },
+    initialPageParam: 0,
   });
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const photos = data?.pages.flatMap((page) => page) ?? [];
 
   return (
     <>
@@ -133,6 +166,19 @@ export default function FanWall() {
             <div className="text-center py-12">
               <p className="text-muted-foreground mb-4">Geen foto's gevonden</p>
               <Button onClick={() => navigate("/upload")}>Upload de eerste foto</Button>
+            </div>
+          )}
+
+          {/* Infinite scroll trigger */}
+          {hasNextPage && (
+            <div ref={loadMoreRef} className="py-8 text-center">
+              {isFetchingNextPage && (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="aspect-square bg-muted animate-pulse rounded-lg" />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

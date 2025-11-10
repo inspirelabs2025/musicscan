@@ -21,21 +21,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Heart, MessageCircle, MapPin, Calendar, Music, Flag } from "lucide-react";
+import { Heart, MessageCircle, MapPin, Calendar, Music, Flag, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
+import { usePosterProductCreator } from "@/hooks/usePosterProductCreator";
+import { useNavigate } from "react-router-dom";
 
 export default function PhotoDetail() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState("");
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportReason, setReportReason] = useState("");
+  const { createPosterProduct, isCreating } = usePosterProductCreator();
 
   const { data: photo, isLoading } = useQuery({
     queryKey: ["photo", slug],
@@ -180,6 +184,34 @@ export default function PhotoDetail() {
     },
   });
 
+  const handleOrderPoster = async () => {
+    if (!photo) return;
+    
+    try {
+      // Convert image URL to base64
+      const response = await fetch(photo.display_url);
+      const blob = await response.blob();
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+
+      const result = await createPosterProduct({
+        stylizedImage: base64,
+        artist: photo.artist || "Onbekend",
+        title: photo.caption || photo.seo_title || "Muziek Herinnering",
+        description: photo.seo_description || photo.caption || "",
+        style: 'original' as any,
+        price: 24.99,
+      });
+
+      navigate(`/products/${result.product_slug}`);
+    } catch (error) {
+      console.error("Order poster error:", error);
+    }
+  };
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Laden...</div>;
   }
@@ -281,7 +313,7 @@ export default function PhotoDetail() {
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-4">
+                <div className="flex gap-4 flex-wrap">
                   <Button
                     variant={userLike ? "default" : "outline"}
                     size="lg"
@@ -306,6 +338,27 @@ export default function PhotoDetail() {
                     Meld
                   </Button>
                 </div>
+
+                {/* Order Poster */}
+                <Card className="p-4 bg-primary/5 border-primary/20">
+                  <div className="flex items-start gap-3">
+                    <ImageIcon className="h-5 w-5 text-primary mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="font-semibold mb-1">Bestel als Poster</h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Krijg deze herinnering als hoogwaardige kunstposter (vanaf €24,99)
+                      </p>
+                      <Button 
+                        onClick={handleOrderPoster}
+                        disabled={isCreating}
+                        className="gap-2"
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                        {isCreating ? "Bezig..." : "Maak Poster"}
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
 
                 {/* Comments */}
                 <Card className="p-6">

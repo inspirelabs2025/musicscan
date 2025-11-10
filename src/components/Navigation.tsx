@@ -32,7 +32,7 @@ const shopMenuItems = [
 // VERHALEN MENU ITEMS
 const verhalenMenuItems = [
   { title: "Plaat Verhalen", url: "/verhalen", icon: Music },
-  { title: "Nieuws", url: "/news", icon: Newspaper },
+  { title: "Nieuws", url: "/nieuws", icon: Newspaper },
   { title: "Nieuwe Releases", url: "/releases", icon: Music },
   { title: "Time Machine", url: "/time-machine", icon: Clock }
 ];

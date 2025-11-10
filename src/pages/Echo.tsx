@@ -38,14 +38,13 @@ export default function Echo() {
   }, []);
 
   const loadMessages = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    
     const { data: conversation } = await supabase
       .from('echo_conversations')
       .select('id')
       .eq('session_id', sessionId)
-      .single();
+      .maybeSingle();
+
+    if (!conversation) return;
 
     if (conversation) {
       const { data } = await supabase

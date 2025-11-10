@@ -2471,6 +2471,166 @@ export type Database = {
           },
         ]
       }
+      photo_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          photo_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          photo_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          photo_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_comments_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photo_likes: {
+        Row: {
+          created_at: string
+          id: string
+          photo_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_likes_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photos: {
+        Row: {
+          album: string | null
+          artist: string | null
+          canonical_url: string | null
+          caption: string | null
+          city: string | null
+          comment_count: number | null
+          country: string | null
+          created_at: string
+          display_url: string
+          event_date: string | null
+          flagged_count: number | null
+          format: string | null
+          height: number | null
+          id: string
+          license_granted: boolean | null
+          like_count: number | null
+          original_url: string
+          print_allowed: boolean | null
+          published_at: string | null
+          seo_description: string | null
+          seo_slug: string | null
+          seo_title: string | null
+          source_type: string
+          status: string
+          tags: string[] | null
+          user_id: string
+          venue: string | null
+          width: number | null
+          year: number | null
+        }
+        Insert: {
+          album?: string | null
+          artist?: string | null
+          canonical_url?: string | null
+          caption?: string | null
+          city?: string | null
+          comment_count?: number | null
+          country?: string | null
+          created_at?: string
+          display_url: string
+          event_date?: string | null
+          flagged_count?: number | null
+          format?: string | null
+          height?: number | null
+          id?: string
+          license_granted?: boolean | null
+          like_count?: number | null
+          original_url: string
+          print_allowed?: boolean | null
+          published_at?: string | null
+          seo_description?: string | null
+          seo_slug?: string | null
+          seo_title?: string | null
+          source_type?: string
+          status?: string
+          tags?: string[] | null
+          user_id: string
+          venue?: string | null
+          width?: number | null
+          year?: number | null
+        }
+        Update: {
+          album?: string | null
+          artist?: string | null
+          canonical_url?: string | null
+          caption?: string | null
+          city?: string | null
+          comment_count?: number | null
+          country?: string | null
+          created_at?: string
+          display_url?: string
+          event_date?: string | null
+          flagged_count?: number | null
+          format?: string | null
+          height?: number | null
+          id?: string
+          license_granted?: boolean | null
+          like_count?: number | null
+          original_url?: string
+          print_allowed?: boolean | null
+          published_at?: string | null
+          seo_description?: string | null
+          seo_slug?: string | null
+          seo_title?: string | null
+          source_type?: string
+          status?: string
+          tags?: string[] | null
+          user_id?: string
+          venue?: string | null
+          width?: number | null
+          year?: number | null
+        }
+        Relationships: []
+      }
       platform_order_items: {
         Row: {
           artist: string | null

@@ -102,6 +102,9 @@ import LyricPosterGenerator from "./pages/admin/LyricPosterGenerator";
 import SockGenerator from "./pages/admin/SockGenerator";
 import SocksShop from "./pages/SocksShop";
 import Echo from "./pages/Echo";
+import FanWall from "./pages/FanWall";
+import PhotoDetail from "./pages/PhotoDetail";
+import UploadPhoto from "./pages/UploadPhoto";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -431,6 +434,9 @@ const AppContent = () => {
         <Route path="/posters" element={<PosterShop />} />
         <Route path="/sokken" element={<SocksShop />} />
         <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
+        <Route path="/fanwall" element={<FanWall />} />
+        <Route path="/photo/:slug" element={<PhotoDetail />} />
+        <Route path="/upload" element={<UploadPhoto />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <ConditionalFooter />

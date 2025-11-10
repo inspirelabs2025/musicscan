@@ -53,6 +53,25 @@
     <link rel="preconnect" href="https://ssxbpyqnjfiyubsuonar.supabase.co">
     <link rel="dns-prefetch" href="https://www.musicscan.app">
     
+    <!-- Google Analytics -->
+    <script>
+      (function() {
+        const GA_ID = 'VITE_GA_MEASUREMENT_ID';
+        if (!GA_ID || GA_ID === 'VITE_GA_MEASUREMENT_ID') return;
+        
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+        document.head.appendChild(script);
+        
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', GA_ID, { send_page_view: false });
+      })();
+    </script>
+    
     <!-- Performance hints -->
     <meta name="format-detection" content="telephone=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">

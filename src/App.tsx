@@ -12,6 +12,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Navigation } from "@/components/Navigation";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { AudioPlayer } from "@/components/audio/AudioPlayer";
+import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
 import Home from "./pages/Home";
 import Scanner from "./pages/Scanner";
 import Scan from "./pages/Scan";
@@ -123,8 +124,322 @@ const queryClient = new QueryClient({
   },
 });
 
+// AppContent wrapper to use hooks that need Router context
+const AppContent = () => {
+  useGoogleAnalytics();
+  
+  return (
+    <>
+      <Navigation />
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/scan" element={<Scan />} />
+        <Route path="/scanner" element={
+          <ProtectedRoute>
+            <Scanner />
+          </ProtectedRoute>
+        } />
+        <Route path="/quick-price-check" element={<QuickPriceCheck />} />
+        <Route path="/scanner/discogs" element={
+          <ProtectedRoute>
+            <BulkerImage />
+          </ProtectedRoute>
+        } />
+        <Route path="/ai-scan" element={
+          <ProtectedRoute>
+            <AIScan />
+          </ProtectedRoute>
+        } />
+        <Route path="/ai-scan-overview" element={
+          <ProtectedRoute>
+            <AIScanOverview />
+          </ProtectedRoute>
+        } />
+        <Route path="/ai-scan-v2" element={
+          <ProtectedRoute>
+            <AIScanV2 />
+          </ProtectedRoute>
+        } />
+        <Route path="/ai-scan-v2-overview" element={
+          <ProtectedRoute>
+            <AIScanV2Overview />
+          </ProtectedRoute>
+        } />
+        <Route path="/unified-scan-overview" element={
+          <ProtectedRoute>
+            <UnifiedScanOverview />
+          </ProtectedRoute>
+        } />
+        <Route path="/bulkerimage" element={
+          <ProtectedRoute>
+            <BulkerImage />
+          </ProtectedRoute>
+        } />
+        <Route path="/marketplace-overview" element={
+          <ProtectedRoute>
+            <MarketplaceOverview />
+          </ProtectedRoute>
+        } />
+        <Route path="/collection-overview" element={
+          <ProtectedRoute>
+            <CollectionOverview />
+          </ProtectedRoute>
+        } />
+        <Route path="/collection-chat" element={
+          <ProtectedRoute>
+            <CollectionChat />
+          </ProtectedRoute>
+        } />
+        <Route path="/echo" element={
+          <ProtectedRoute>
+            <Echo />
+          </ProtectedRoute>
+        } />
+        <Route path="/quiz" element={
+          <ProtectedRoute>
+            <Quiz />
+          </ProtectedRoute>
+        } />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/prestaties" element={
+          <ProtectedRoute>
+            <Prestaties />
+          </ProtectedRoute>
+        } />
+        <Route path="/social" element={
+          <ProtectedRoute>
+            <Social />
+          </ProtectedRoute>
+        } />
+        <Route path="/forum" element={<Forum />} />
+        <Route path="/forum/topic/:topicId" element={<ForumTopic />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/profile/:userId" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/ai-analysis" element={
+          <ProtectedRoute>
+            <AIAnalysis />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-collection" element={
+          <ProtectedRoute>
+            <MyCollection />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-collection-old" element={
+          <ProtectedRoute>
+            <MyCollectionOld />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-shop" element={
+          <ProtectedRoute>
+            <MyShop />
+          </ProtectedRoute>
+        } />
+        <Route path="/shop" element={<Navigate to="/shops" replace />} />
+        <Route path="/shop/:shopSlug" element={<ShopOrProductRouter />} />
+        <Route path="/shop/:shopSlug/item/:itemId" element={<PublicShopItemDetail />} />
+        <Route path="/product/:slug" element={<PlatformProductDetail />} />
+        <Route path="/shop/order-success" element={<OrderSuccess />} />
+        <Route path="/order-success" element={<OrderSuccess />} />
+        <Route path="/track-order" element={<TrackOrder />} />
+        <Route path="/collection/:userId" element={<PublicCollection />} />
+        <Route path="/spotify-profile" element={<ProtectedRoute><SpotifyProfile /></ProtectedRoute>} />
+        <Route path="/auth/spotify/callback" element={<ProtectedRoute><SpotifyCallback /></ProtectedRoute>} />
+        <Route path="/album/:albumId" element={
+          <ProtectedRoute>
+            <AlbumDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/release/:releaseId" element={<ReleaseDetail />} />
+        <Route path="/catalog" element={<PublicCatalog />} />
+        <Route path="/shops" element={<PublicShopsOverview />} />
+        <Route path="/marketplace" element={<Marketplace />} />
+        <Route path="/user-scans" element={<UserScans />} />
+        <Route path="/verhalen" element={<Verhalen />} />
+        <Route path="/nieuws" element={<Nieuws />} />
+        <Route path="/releases" element={<Releases />} />
+        <Route path="/news" element={<Navigate to="/verhalen" replace />} />
+        <Route path="/nieuws/:slug" element={<NewsPost />} />
+        <Route path="/test-music-news" element={
+          <ProtectedRoute>
+            <TestMusicNews />
+          </ProtectedRoute>
+        } />
+        <Route path="/plaat-verhaal/:slug" element={<PlaatVerhaal />} />
+        <Route path="/time-machine" element={<TimeMachine />} />
+        <Route path="/time-machine/:slug" element={<TimeMachineStory />} />
+        <Route path="/test-news-update" element={
+          <ProtectedRoute>
+            <TestNewsUpdate />
+          </ProtectedRoute>
+        } />
+        <Route path="/test-news-generation" element={
+          <ProtectedRoute>
+            <TestNewsGeneration />
+          </ProtectedRoute>
+        } />
+        <Route path="/test-blog-regeneration" element={
+          <ProtectedRoute>
+            <TestBlogRegeneration />
+          </ProtectedRoute>
+        } />
+        <Route path="/test-album-cover-backfill" element={
+          <ProtectedRoute>
+            <TestAlbumCoverBackfill />
+          </ProtectedRoute>
+        } />
+        <Route path="/test-discogs-flow" element={
+          <ProtectedRoute>
+            <TestDiscogsFlow />
+          </ProtectedRoute>
+        } />
+        <Route path="/test-discogs-blog-generation" element={
+          <ProtectedRoute>
+            <TestDiscogsBlogGeneration />
+          </ProtectedRoute>
+        } />
+        <Route path="/test-discogs-id" element={
+          <ProtectedRoute>
+            <TestDiscogsIdFinder />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/discogs-lookup" element={
+          <ProtectedRoute>
+            <DiscogsLookup />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <MainAdmin />
+          </ProtectedRoute>
+        } />
+        <Route path="/superadmin" element={<SuperAdminDashboard />} />
+        <Route path="/superadmin-dashboard" element={<SuperAdminDashboard />} />
+        <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
+        <Route path="/podcasts" element={
+          <ProtectedRoute>
+            <Podcasts />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/price-history" element={
+          <ProtectedRoute>
+            <PriceHistoryAdmin />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/shop-products" element={
+          <ProtectedRoute>
+            <ShopProducts />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/platform-products" element={
+          <ProtectedRoute>
+            <PlatformProducts />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/art-generator" element={
+          <ProtectedRoute>
+            <ArtGenerator />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/bulk-art-generator" element={
+          <ProtectedRoute>
+            <BulkArtGenerator />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/sketch-art-generator" element={
+          <ProtectedRoute>
+            <SketchArtGenerator />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/lyric-poster-generator" element={
+          <ProtectedRoute>
+            <LyricPosterGenerator />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/sock-generator" element={
+          <ProtectedRoute>
+            <SockGenerator />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/photo-stylizer" element={
+          <ProtectedRoute>
+            <PhotoStylizer />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/bulk-poster-upload" element={
+          <ProtectedRoute>
+            <BulkPosterUpload />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/auto-cleanup-today" element={
+          <ProtectedRoute>
+            <AutoCleanupToday />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/fix-product-titles" element={
+          <ProtectedRoute>
+            <FixProductTitles />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/bulk-cleanup" element={
+          <ProtectedRoute>
+            <BulkProductCleanup />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/fix-blog-slugs" element={
+          <ProtectedRoute>
+            <FixBlogSlugs />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/sitemap-management" element={
+          <ProtectedRoute>
+            <SitemapManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/seo-monitoring" element={
+          <ProtectedRoute>
+            <SEOMonitoring />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/cronjob-monitor" element={
+          <ProtectedRoute>
+            <CronjobMonitorPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/curated-artists" element={
+          <ProtectedRoute>
+            <CuratedArtists />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/time-machine" element={
+          <ProtectedRoute>
+            <TimeMachineManager />
+          </ProtectedRoute>
+        } />
+        <Route path="/art-shop" element={<ArtShop />} />
+        <Route path="/metaalprints" element={<ArtShop />} />
+        <Route path="/posters" element={<PosterShop />} />
+        <Route path="/sokken" element={<SocksShop />} />
+        <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <ConditionalFooter />
+      <AudioPlayer />
+    </>
+  );
+};
+
 const App = () => {
-  // Force refresh to fix module resolution
   console.log('🎯 App.tsx: Rendering App component');
   
   return (
@@ -137,313 +452,8 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                  <Navigation />
-              <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<Home />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/scan" element={<Scan />} />
-            <Route path="/scanner" element={
-              <ProtectedRoute>
-                <Scanner />
-              </ProtectedRoute>
-            } />
-            <Route path="/quick-price-check" element={<QuickPriceCheck />} />
-            <Route path="/scanner/discogs" element={
-              <ProtectedRoute>
-                <BulkerImage />
-              </ProtectedRoute>
-            } />
-            <Route path="/ai-scan" element={
-              <ProtectedRoute>
-                <AIScan />
-              </ProtectedRoute>
-            } />
-            <Route path="/ai-scan-overview" element={
-              <ProtectedRoute>
-                <AIScanOverview />
-              </ProtectedRoute>
-            } />
-            <Route path="/ai-scan-v2" element={
-              <ProtectedRoute>
-                <AIScanV2 />
-              </ProtectedRoute>
-            } />
-            <Route path="/ai-scan-v2-overview" element={
-              <ProtectedRoute>
-                <AIScanV2Overview />
-              </ProtectedRoute>
-            } />
-            <Route path="/unified-scan-overview" element={
-              <ProtectedRoute>
-                <UnifiedScanOverview />
-              </ProtectedRoute>
-            } />
-            <Route path="/bulkerimage" element={
-              <ProtectedRoute>
-                <BulkerImage />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketplace-overview" element={
-              <ProtectedRoute>
-                <MarketplaceOverview />
-              </ProtectedRoute>
-            } />
-            <Route path="/collection-overview" element={
-              <ProtectedRoute>
-                <CollectionOverview />
-              </ProtectedRoute>
-            } />
-            <Route path="/collection-chat" element={
-              <ProtectedRoute>
-                <CollectionChat />
-              </ProtectedRoute>
-            } />
-            <Route path="/echo" element={
-              <ProtectedRoute>
-                <Echo />
-              </ProtectedRoute>
-            } />
-            <Route path="/quiz" element={
-              <ProtectedRoute>
-                <Quiz />
-              </ProtectedRoute>
-            } />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/prestaties" element={
-              <ProtectedRoute>
-                <Prestaties />
-              </ProtectedRoute>
-            } />
-            <Route path="/social" element={
-              <ProtectedRoute>
-                <Social />
-              </ProtectedRoute>
-            } />
-            <Route path="/forum" element={<Forum />} />
-            <Route path="/forum/topic/:topicId" element={<ForumTopic />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/profile/:userId" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
-            <Route path="/ai-analysis" element={
-              <ProtectedRoute>
-                <AIAnalysis />
-              </ProtectedRoute>
-            } />
-            <Route path="/my-collection" element={
-              <ProtectedRoute>
-                <MyCollection />
-              </ProtectedRoute>
-            } />
-            <Route path="/my-collection-old" element={
-              <ProtectedRoute>
-                <MyCollectionOld />
-              </ProtectedRoute>
-            } />
-            <Route path="/my-shop" element={
-              <ProtectedRoute>
-                <MyShop />
-              </ProtectedRoute>
-            } />
-            <Route path="/shop" element={<Navigate to="/shops" replace />} />
-            <Route path="/shop/:shopSlug" element={<ShopOrProductRouter />} />
-            <Route path="/shop/:shopSlug/item/:itemId" element={<PublicShopItemDetail />} />
-            <Route path="/product/:slug" element={<PlatformProductDetail />} />
-            <Route path="/shop/order-success" element={<OrderSuccess />} />
-            <Route path="/order-success" element={<OrderSuccess />} />
-            <Route path="/track-order" element={<TrackOrder />} />
-            <Route path="/collection/:userId" element={<PublicCollection />} />
-            <Route path="/spotify-profile" element={<ProtectedRoute><SpotifyProfile /></ProtectedRoute>} />
-            <Route path="/auth/spotify/callback" element={<ProtectedRoute><SpotifyCallback /></ProtectedRoute>} />
-            <Route path="/album/:albumId" element={
-              <ProtectedRoute>
-                <AlbumDetail />
-              </ProtectedRoute>
-            } />
-        <Route path="/release/:releaseId" element={<ReleaseDetail />} />
-        <Route path="/catalog" element={<PublicCatalog />} />
-        <Route path="/shops" element={<PublicShopsOverview />} />
-        <Route path="/marketplace" element={<Marketplace />} />
-        <Route path="/user-scans" element={<UserScans />} />
-          <Route path="/verhalen" element={<Verhalen />} />
-          <Route path="/nieuws" element={<Nieuws />} />
-          <Route path="/releases" element={<Releases />} />
-          <Route path="/news" element={<Navigate to="/verhalen" replace />} />
-            <Route path="/nieuws/:slug" element={<NewsPost />} />
-            <Route path="/test-music-news" element={
-              <ProtectedRoute>
-                <TestMusicNews />
-              </ProtectedRoute>
-            } />
-            <Route path="/plaat-verhaal/:slug" element={<PlaatVerhaal />} />
-            <Route path="/time-machine" element={<TimeMachine />} />
-            <Route path="/time-machine/:slug" element={<TimeMachineStory />} />
-            <Route path="/test-news-update" element={
-              <ProtectedRoute>
-                <TestNewsUpdate />
-              </ProtectedRoute>
-            } />
-            <Route path="/test-news-generation" element={
-              <ProtectedRoute>
-                <TestNewsGeneration />
-              </ProtectedRoute>
-            } />
-            <Route path="/test-blog-regeneration" element={
-              <ProtectedRoute>
-                <TestBlogRegeneration />
-              </ProtectedRoute>
-            } />
-            <Route path="/test-album-cover-backfill" element={
-              <ProtectedRoute>
-                <TestAlbumCoverBackfill />
-              </ProtectedRoute>
-            } />
-            <Route path="/test-discogs-flow" element={
-              <ProtectedRoute>
-                <TestDiscogsFlow />
-              </ProtectedRoute>
-            } />
-            <Route path="/test-discogs-blog-generation" element={
-              <ProtectedRoute>
-                <TestDiscogsBlogGeneration />
-              </ProtectedRoute>
-            } />
-            <Route path="/test-discogs-id" element={
-              <ProtectedRoute>
-                <TestDiscogsIdFinder />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/discogs-lookup" element={
-              <ProtectedRoute>
-                <DiscogsLookup />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin" element={
-              <ProtectedRoute>
-                <MainAdmin />
-              </ProtectedRoute>
-            } />
-            <Route path="/superadmin" element={<SuperAdminDashboard />} />
-            <Route path="/superadmin-dashboard" element={<SuperAdminDashboard />} />
-            <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
-            <Route path="/podcasts" element={
-              <ProtectedRoute>
-                <Podcasts />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/price-history" element={
-              <ProtectedRoute>
-                <PriceHistoryAdmin />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/shop-products" element={
-              <ProtectedRoute>
-                <ShopProducts />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/platform-products" element={
-              <ProtectedRoute>
-                <PlatformProducts />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/art-generator" element={
-              <ProtectedRoute>
-                <ArtGenerator />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/bulk-art-generator" element={
-              <ProtectedRoute>
-                <BulkArtGenerator />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/sketch-art-generator" element={
-              <ProtectedRoute>
-                <SketchArtGenerator />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/lyric-poster-generator" element={
-              <ProtectedRoute>
-                <LyricPosterGenerator />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/sock-generator" element={
-              <ProtectedRoute>
-                <SockGenerator />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/photo-stylizer" element={
-              <ProtectedRoute>
-                <PhotoStylizer />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/bulk-poster-upload" element={
-              <ProtectedRoute>
-                <BulkPosterUpload />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/auto-cleanup-today" element={
-              <ProtectedRoute>
-                <AutoCleanupToday />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/fix-product-titles" element={
-              <ProtectedRoute>
-                <FixProductTitles />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/bulk-cleanup" element={
-              <ProtectedRoute>
-                <BulkProductCleanup />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/fix-blog-slugs" element={
-              <ProtectedRoute>
-                <FixBlogSlugs />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/sitemap-management" element={
-              <ProtectedRoute>
-                <SitemapManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/seo-monitoring" element={
-              <ProtectedRoute>
-                <SEOMonitoring />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/cronjob-monitor" element={
-              <ProtectedRoute>
-                <CronjobMonitorPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/curated-artists" element={
-              <ProtectedRoute>
-                <CuratedArtists />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/time-machine" element={
-              <ProtectedRoute>
-                <TimeMachineManager />
-              </ProtectedRoute>
-            } />
-            <Route path="/art-shop" element={<ArtShop />} />
-            <Route path="/metaalprints" element={<ArtShop />} />
-            <Route path="/posters" element={<PosterShop />} />
-            <Route path="/socks" element={<SocksShop />} />
-            <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-             </Routes>
-                <ConditionalFooter />
-                <AudioPlayer />
-             </BrowserRouter>
+                  <AppContent />
+                </BrowserRouter>
           </ErrorBoundary>
         </TooltipProvider>
       </AudioProvider>

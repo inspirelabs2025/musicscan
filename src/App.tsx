@@ -461,6 +461,7 @@ const AppContent = () => {
         <Route path="/metaalprints" element={<ArtShop />} />
         <Route path="/posters" element={<PosterShop />} />
         <Route path="/sokken" element={<SocksShop />} />
+        <Route path="/socks" element={<SocksShop />} />
         <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
         <Route path="/fanwall" element={<ArtistFanWallOverview />} />
         <Route path="/fanwall/:slug" element={<ArtistFanWall />} />

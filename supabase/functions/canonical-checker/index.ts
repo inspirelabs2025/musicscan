@@ -22,7 +22,30 @@ interface CanonicalCheckResult {
   checkedAt: string;
 }
 
-// Helper: Normalize URL
+// Helper: Normalize URL for comparison (strips www, normalizes protocol/slash)
+function normalizeForCompare(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    // Force https
+    urlObj.protocol = 'https:';
+    // Strip www from hostname for comparison
+    if (urlObj.hostname.startsWith('www.')) {
+      urlObj.hostname = urlObj.hostname.substring(4);
+    }
+    // Remove trailing slash except for root
+    if (urlObj.pathname !== '/') {
+      urlObj.pathname = urlObj.pathname.replace(/\/$/, '');
+    }
+    // Remove query params and hash
+    urlObj.search = '';
+    urlObj.hash = '';
+    return urlObj.toString();
+  } catch {
+    return url;
+  }
+}
+
+// Helper: Normalize URL (legacy, keeps www)
 function normalizeURL(url: string): string {
   try {
     const urlObj = new URL(url);
@@ -74,15 +97,16 @@ function countWords(html: string): number {
   return words.length;
 }
 
-// Helper: Compare canonical
+// Helper: Compare canonical (using www-normalized comparison)
 function compareCanonical(url: string, canonical: string | undefined, allCanonicals: string[]): string {
   if (!canonical) return 'MISSING';
   if (allCanonicals.length > 1) return 'MULTIPLE_CANONICALS';
   
-  const normalized = normalizeURL(url);
-  const normalizedCanonical = normalizeURL(canonical);
+  const normalized = normalizeForCompare(url);
+  const normalizedCanonical = normalizeForCompare(canonical);
   
-  if (normalizedCanonical === 'https://www.musicscan.app/') {
+  // Check if canonical points to homepage (with or without www)
+  if (normalizedCanonical === 'https://musicscan.app/' || normalizedCanonical === 'https://musicscan.app') {
     return 'HOMEPAGE_CANONICAL';
   }
   
@@ -104,6 +128,123 @@ function compareCanonical(url: string, canonical: string | undefined, allCanonic
   return 'OK_SELF';
 }
 
+// Helper: Try to fetch a single URL with browser headers
+async function tryFetchOnce(url: string): Promise<{ response: Response; html?: string }> {
+  const response = await fetch(url, {
+    method: 'GET',
+    redirect: 'follow', // Follow redirects like a browser
+    signal: AbortSignal.timeout(10000),
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+      'Accept-Language': 'nl-NL,nl;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Sec-Fetch-Site': 'none',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-User': '?1',
+      'Sec-Fetch-Dest': 'document',
+      'DNT': '1',
+      'Connection': 'keep-alive',
+      'Upgrade-Insecure-Requests': '1'
+    }
+  });
+
+  const contentType = response.headers.get('content-type') || '';
+  let html: string | undefined;
+  
+  // Read HTML if content type is HTML (even on 404 for soft-404 detection)
+  if (contentType.includes('text/html')) {
+    html = await response.text();
+  }
+  
+  return { response, html };
+}
+
+// Helper: Try URL with variants (www/non-www, trailing slash)
+async function fetchWithVariants(originalUrl: string): Promise<{
+  response: Response;
+  html?: string;
+  finalUrl: string;
+  variantUsed?: string;
+}> {
+  console.log(`🔍 Fetching with variants: ${originalUrl}`);
+  
+  const attempts: { url: string; reason: string }[] = [];
+  
+  // Parse original URL
+  const urlObj = new URL(originalUrl);
+  
+  // Attempt 1: Original URL
+  attempts.push({ url: originalUrl, reason: 'original' });
+  
+  // Attempt 2: Toggle www
+  const withoutWww = new URL(originalUrl);
+  if (withoutWww.hostname.startsWith('www.')) {
+    withoutWww.hostname = withoutWww.hostname.substring(4);
+    attempts.push({ url: withoutWww.toString(), reason: 'without-www' });
+  } else {
+    withoutWww.hostname = 'www.' + withoutWww.hostname;
+    attempts.push({ url: withoutWww.toString(), reason: 'with-www' });
+  }
+  
+  // Attempt 3: With trailing slash (if not present and not root)
+  if (urlObj.pathname !== '/' && !urlObj.pathname.endsWith('/')) {
+    const withSlash = new URL(originalUrl);
+    withSlash.pathname = withSlash.pathname + '/';
+    attempts.push({ url: withSlash.toString(), reason: 'with-trailing-slash' });
+  }
+  
+  // Attempt 4: Without trailing slash (if present)
+  if (urlObj.pathname.endsWith('/') && urlObj.pathname !== '/') {
+    const withoutSlash = new URL(originalUrl);
+    withoutSlash.pathname = withoutSlash.pathname.slice(0, -1);
+    attempts.push({ url: withoutSlash.toString(), reason: 'without-trailing-slash' });
+  }
+  
+  // Try each variant
+  for (const attempt of attempts) {
+    try {
+      console.log(`  Trying ${attempt.reason}: ${attempt.url}`);
+      const { response, html } = await tryFetchOnce(attempt.url);
+      
+      console.log(`  → Status: ${response.status}, Content-Type: ${response.headers.get('content-type')}`);
+      console.log(`  → Final URL: ${response.url}`);
+      
+      // Return first 2xx response
+      if (response.status >= 200 && response.status < 300) {
+        console.log(`  ✅ Success with ${attempt.reason}`);
+        return {
+          response,
+          html,
+          finalUrl: response.url,
+          variantUsed: attempt.reason !== 'original' ? attempt.reason : undefined
+        };
+      }
+      
+      // If it's a 404 with HTML, keep trying but remember this one
+      if (response.status === 404 && html) {
+        // Continue trying other variants
+        continue;
+      }
+    } catch (error) {
+      console.log(`  ❌ Failed ${attempt.reason}:`, error.message);
+      // Continue to next variant
+    }
+  }
+  
+  // All variants failed, try original one last time and return that
+  console.log(`  ⚠️  All variants failed, using original`);
+  const { response, html } = await tryFetchOnce(originalUrl);
+  return {
+    response,
+    html,
+    finalUrl: response.url,
+    variantUsed: undefined
+  };
+}
+
 // Main: Check single URL
 async function checkURL(url: string): Promise<CanonicalCheckResult> {
   const result: CanonicalCheckResult = {
@@ -121,48 +262,30 @@ async function checkURL(url: string): Promise<CanonicalCheckResult> {
   };
 
   try {
-    console.log(`Checking URL: ${url}`);
+    console.log(`\n🔎 Checking URL: ${url}`);
     
-    const response = await fetch(url, {
-      method: 'GET',
-      redirect: 'manual',
-      signal: AbortSignal.timeout(10000),
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'nl-NL,nl;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-User': '?1',
-        'Sec-Fetch-Dest': 'document',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
-      }
-    });
-
-    console.log(`Response status: ${response.status}`);
-    console.log(`Response headers:`, Object.fromEntries(response.headers.entries()));
+    // Try with variants
+    const { response, html, finalUrl, variantUsed } = await fetchWithVariants(url);
     
     result.status = response.status;
+    result.finalURL = finalUrl;
     result.contentType = response.headers.get('content-type') || undefined;
     result.contentLength = parseInt(response.headers.get('content-length') || '0');
     result.xRobotsTag = response.headers.get('x-robots-tag') || undefined;
-
-    // Check for redirect
-    if (response.status >= 300 && response.status < 400) {
+    
+    // Mark as redirected if we used a variant or if final URL differs
+    if (variantUsed || finalUrl !== url) {
       result.redirected = true;
-      result.redirectLocation = response.headers.get('location') || undefined;
-      return result;
+      result.redirectLocation = variantUsed ? `Resolved via ${variantUsed}: ${finalUrl}` : finalUrl;
+    }
+    
+    console.log(`✅ Final status: ${result.status}, Final URL: ${finalUrl}`);
+    if (variantUsed) {
+      console.log(`🔄 Variant used: ${variantUsed}`);
     }
 
-    // Only parse HTML for 200 responses
-    if (response.status === 200 && result.contentType?.includes('text/html')) {
-      const html = await response.text();
-      
+    // Parse HTML for both 200 and 404 (for soft-404 detection)
+    if (html && result.contentType?.includes('text/html')) {
       // Extract canonicals
       const canonicals = extractCanonicals(html);
       result.canonical = canonicals[0] || null;
@@ -189,18 +312,18 @@ async function checkURL(url: string): Promise<CanonicalCheckResult> {
       const title = titleMatch?.[1]?.toLowerCase() || '';
       const h1 = h1Match?.[1]?.toLowerCase() || '';
       
-      if (result.wordCount < 120 || title.includes('404') || title.includes('not found') || h1.includes('404') || h1.includes('niet gevonden')) {
+      if (result.status === 404 || result.wordCount < 120 || title.includes('404') || title.includes('not found') || h1.includes('404') || h1.includes('niet gevonden')) {
         result.soft404 = true;
       }
       
-      // Compare canonical
-      result.canonicalStatus = compareCanonical(url, result.canonical, canonicals);
+      // Compare canonical (use final URL for comparison)
+      result.canonicalStatus = compareCanonical(finalUrl, result.canonical, canonicals);
+      
+      console.log(`📊 Canonical: ${result.canonical || 'NONE'}, Status: ${result.canonicalStatus}, Words: ${result.wordCount}`);
     }
 
-    result.finalURL = url;
-
   } catch (error) {
-    console.error(`Error checking ${url}:`, error);
+    console.error(`❌ Error checking ${url}:`, error);
     result.status = 0;
   }
 

@@ -153,7 +153,7 @@ export default function CreateArtistFanwall() {
           .from('photos')
           .insert({
             user_id: user.id,
-            source_type: 'upload',
+            source_type: 'user',
             artist: artistName,
             display_url: publicUrl,
             original_url: publicUrl,

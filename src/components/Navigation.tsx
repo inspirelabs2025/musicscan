@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, ShoppingCart, Menu, X, Images, Brain, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign, Archive, Clock, Heart } from "lucide-react";
+import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -354,6 +355,9 @@ export function Navigation() {
             )}
           </NavigationMenuList>
         </NavigationMenu>
+        
+        {/* Notifications Bell - Only show when logged in */}
+        {user && <NotificationsDropdown />}
         
         {/* Shopping Cart Widget */}
         <ShoppingCartWidget />

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Menu, X, Images, Brain, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign, Archive, Clock } from "lucide-react";
+import { Home, ShoppingCart, Menu, X, Images, Brain, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign, Archive, Clock, Heart } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -58,6 +58,7 @@ const aiToolsMenuItems = [
 // COMMUNITY MENU ITEMS
 const communityMenuItems = [
   { title: "FanWall", url: "/fanwall", icon: Images },
+  { title: "Mijn Likes", url: "/my/liked", icon: Heart },
   { title: "Forum", url: "/forum", icon: MessageCircle },
   { title: "Social", url: "/social", icon: Users },
   { title: "Prestaties", url: "/prestaties", icon: Trophy }

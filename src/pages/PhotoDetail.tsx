@@ -31,6 +31,7 @@ import { usePosterProductCreator } from "@/hooks/usePosterProductCreator";
 import { useNavigate } from "react-router-dom";
 import { ShareButtons } from "@/components/ShareButtons";
 import { usePhotoLike } from "@/hooks/usePhotoLike";
+import { PhotoComments } from "@/components/PhotoComments";
 
 export default function PhotoDetail() {
   const { slug } = useParams();
@@ -38,7 +39,6 @@ export default function PhotoDetail() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [commentText, setCommentText] = useState("");
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const { createPosterProduct, isCreating } = usePosterProductCreator();
@@ -75,22 +75,30 @@ export default function PhotoDetail() {
     trackView();
   }, [photo?.id, user?.id, slug, queryClient]);
 
+  // Track view on mount
+  useEffect(() => {
+    if (!photo?.id || !slug) return;
+
+    const trackView = async () => {
+      await supabase.from("photo_views").insert({
+        photo_id: photo.id,
+        user_id: user?.id || null,
+      });
+      queryClient.invalidateQueries({ queryKey: ["photo", slug] });
+    };
+
+    trackView();
+  }, [photo?.id, user?.id, slug, queryClient]);
+
   const { data: comments } = useQuery({
     queryKey: ["photo-comments", photo?.id],
     enabled: !!photo?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("photo_comments")
-        .select(`
-          *,
-          profiles:user_id (
-            first_name,
-            avatar_url
-          )
-        `)
+        .select("id")
         .eq("photo_id", photo.id)
-        .eq("status", "visible")
-        .order("created_at", { ascending: false });
+        .eq("status", "visible");
       
       if (error) throw error;
       return data;
@@ -101,7 +109,6 @@ export default function PhotoDetail() {
     mutationFn: async () => {
       if (!reportReason) throw new Error("Selecteer een reden");
 
-      // Increment flag count
       const { error: updateError } = await supabase
         .from("photos")
         .update({ 
@@ -128,49 +135,6 @@ export default function PhotoDetail() {
         variant: "destructive",
       });
     },
-  });
-
-  const commentMutation = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error("Login vereist");
-      if (!commentText.trim()) throw new Error("Commentaar is leeg");
-      
-      await supabase
-        .from("photo_comments")
-        .insert({
-          photo_id: photo.id,
-          user_id: user.id,
-          body: commentText.trim(),
-        });
-    },
-    onSuccess: () => {
-      setCommentText("");
-      queryClient.invalidateQueries({ queryKey: ["photo-comments", photo?.id] });
-      queryClient.invalidateQueries({ queryKey: ["photo", slug] });
-      toast({
-        title: "Succes",
-        description: "Commentaar toegevoegd",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Fout",
-        description: "Kon commentaar niet plaatsen",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Track view on mount
-  useState(() => {
-    if (photo?.id) {
-      supabase.from("photo_views").insert({
-        photo_id: photo.id,
-        user_id: user?.id,
-      }).then(() => {
-        queryClient.invalidateQueries({ queryKey: ["photo", slug] });
-      });
-    }
   });
 
   const handleOrderPoster = async () => {
@@ -370,53 +334,7 @@ export default function PhotoDetail() {
                 </Card>
 
                 {/* Comments */}
-                <Card className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">Reacties</h2>
-                  
-                  {user ? (
-                    <div className="mb-6">
-                      <Textarea
-                        placeholder="Voeg een reactie toe..."
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                        className="mb-2"
-                      />
-                      <Button
-                        onClick={() => commentMutation.mutate()}
-                        disabled={!commentText.trim() || commentMutation.isPending}
-                      >
-                        Plaats reactie
-                      </Button>
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground mb-6">Log in om te reageren</p>
-                  )}
-
-                  <div className="space-y-4">
-                    {comments && comments.length > 0 ? (
-                      comments.map((comment: any) => (
-                        <div key={comment.id} className="border-b pb-4 last:border-0">
-                          <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                              {comment.profiles?.first_name?.[0] || "?"}
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-semibold text-sm">
-                                {comment.profiles?.first_name || "Anoniem"}
-                              </p>
-                              <p className="text-xs text-muted-foreground mb-2">
-                                {format(new Date(comment.created_at), "d MMM yyyy HH:mm", { locale: nl })}
-                              </p>
-                              <p className="text-sm">{comment.body}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground text-sm">Nog geen reacties</p>
-                    )}
-                  </div>
-                </Card>
+                <PhotoComments photoId={photo.id} />
               </div>
             </div>
           </div>

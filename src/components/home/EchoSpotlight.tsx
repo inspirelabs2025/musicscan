@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 export function EchoSpotlight() {
   return (
-    <section className="py-16 bg-gradient-to-br from-background via-echo-turquoise/5 to-background relative overflow-hidden">
+    <section className="py-16 bg-gradient-to-br from-background via-echo-lavender/5 to-background relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       
@@ -28,7 +28,7 @@ export function EchoSpotlight() {
               {/* Features list */}
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-turquoise to-echo-copper flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center flex-shrink-0">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -37,7 +37,7 @@ export function EchoSpotlight() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-copper to-echo-turquoise flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-gold to-echo-lavender flex items-center justify-center flex-shrink-0">
                     <BookOpen className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -57,9 +57,9 @@ export function EchoSpotlight() {
               </div>
 
               {/* Info Card */}
-              <Card className="bg-card p-6 border-2 border-echo-turquoise/30">
+              <Card className="bg-card p-6 border-2 border-echo-lavender/30">
                 <div className="flex items-start gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-echo-turquoise to-echo-copper flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center flex-shrink-0">
                     <Music2 className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -92,14 +92,14 @@ export function EchoSpotlight() {
 
             {/* Right: Example Conversation */}
             <div className="space-y-4">
-              <Card className="border-2 border-echo-turquoise/30 hover:border-echo-turquoise/50 transition-all">
+              <Card className="border-2 border-echo-lavender/30 hover:border-echo-lavender/50 transition-all">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-turquoise to-echo-copper flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center flex-shrink-0">
                       <Music2 className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-echo-turquoise mb-1">Echo</p>
+                      <p className="text-sm font-semibold text-echo-lavender mb-1">Echo</p>
                       <p className="text-sm leading-relaxed text-muted-foreground">
                         "Ah — <em>Blue Train</em> van John Coltrane. Elke noot hier voelt als een gebed in koper. 
                         Wist je dat dit het eerste album was dat hij voor Blue Note opnam? 🎷"
@@ -113,14 +113,14 @@ export function EchoSpotlight() {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-echo-copper/30 hover:border-echo-copper/50 transition-all">
+              <Card className="border-2 border-echo-gold/30 hover:border-echo-gold/50 transition-all">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-copper to-echo-turquoise flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-gold to-echo-lavender flex items-center justify-center flex-shrink-0">
                       <Music2 className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-echo-copper mb-1">Echo</p>
+                      <p className="text-sm font-semibold text-echo-gold mb-1">Echo</p>
                       <p className="text-sm leading-relaxed text-muted-foreground">
                         "Die basslijn in '<em>Superstition</em>' — dat is Stevie Wonder's eigen groove, 
                         gespeeld op een Moog synthesizer. Pure magie uit 1972. 🎹"

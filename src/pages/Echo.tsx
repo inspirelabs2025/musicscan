@@ -126,8 +126,8 @@ export default function Echo() {
       <div className="relative overflow-hidden py-12 px-4">
         {/* Animated background waves */}
         <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-echo-turquoise to-echo-copper animate-echo-pulse"></div>
-          <div className="absolute bottom-0 right-0 w-full h-32 bg-gradient-to-l from-echo-turquoise to-echo-violet animate-echo-pulse delay-1000"></div>
+          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-echo-lavender to-echo-gold animate-echo-pulse"></div>
+          <div className="absolute bottom-0 right-0 w-full h-32 bg-gradient-to-l from-echo-lavender to-echo-violet animate-echo-pulse delay-1000"></div>
         </div>
 
         <div className="container mx-auto max-w-5xl relative z-10">
@@ -135,19 +135,19 @@ export default function Echo() {
             {/* Echo Logo/Symbol */}
             <div className="flex justify-center mb-6">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-echo-turquoise to-echo-copper flex items-center justify-center animate-echo-pulse">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center animate-echo-pulse">
                   <Music2 className="w-12 h-12 text-white" />
                 </div>
                 {/* Resonantie rings */}
-                <div className="absolute inset-0 rounded-full border-2 border-echo-turquoise animate-ping"></div>
-                <div className="absolute inset-0 rounded-full border-2 border-echo-copper animate-ping delay-500"></div>
+                <div className="absolute inset-0 rounded-full border-2 border-echo-lavender animate-ping"></div>
+                <div className="absolute inset-0 rounded-full border-2 border-echo-gold animate-ping delay-500"></div>
               </div>
             </div>
 
             <h1 className="text-5xl font-bold text-white mb-2 font-serif">
               Echo
             </h1>
-            <p className="text-xl text-echo-turquoise mb-2">
+            <p className="text-xl text-echo-lavender mb-2">
               Waar elke plaat iets te vertellen heeft 🎵
             </p>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -159,15 +159,15 @@ export default function Echo() {
 
       {/* Main Chat Interface */}
       <div className="container mx-auto px-4 pb-8 max-w-5xl">
-        <Card className="border-2 border-echo-turquoise/20 bg-card/95 backdrop-blur">
+        <Card className="border-2 border-echo-lavender/20 bg-card/95 backdrop-blur">
           <CardHeader>
             <Tabs value={activeMode} onValueChange={setActiveMode} className="w-full">
               <TabsList className="grid w-full grid-cols-4 bg-echo-violet/20">
-                <TabsTrigger value="general" className="data-[state=active]:bg-echo-turquoise data-[state=active]:text-black">
+                <TabsTrigger value="general" className="data-[state=active]:bg-echo-lavender data-[state=active]:text-black">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Verkennen
                 </TabsTrigger>
-                <TabsTrigger value="album_story" className="data-[state=active]:bg-echo-copper data-[state=active]:text-white">
+                <TabsTrigger value="album_story" className="data-[state=active]:bg-echo-gold data-[state=active]:text-white">
                   <BookOpen className="w-4 h-4 mr-2" />
                   Album Verhaal
                 </TabsTrigger>
@@ -188,7 +188,7 @@ export default function Echo() {
             <ScrollArea className="h-[500px] pr-4">
               {messages.length === 0 && (
                 <div className="text-center py-12 space-y-6">
-                  <Music2 className="w-16 h-16 mx-auto text-echo-turquoise animate-echo-pulse" />
+                  <Music2 className="w-16 h-16 mx-auto text-echo-lavender animate-echo-pulse" />
                   <div>
                     <h3 className="text-xl font-semibold mb-2 font-serif">
                       Welkom bij Echo 🎧
@@ -205,7 +205,7 @@ export default function Echo() {
                       <Button
                         key={i}
                         variant="outline"
-                        className="w-full justify-start text-left h-auto py-3 hover:bg-echo-turquoise/10 hover:border-echo-turquoise"
+                        className="w-full justify-start text-left h-auto py-3 hover:bg-echo-lavender/10 hover:border-echo-lavender"
                         onClick={() => setInput(q)}
                       >
                         {q}
@@ -224,13 +224,13 @@ export default function Echo() {
                     className={`max-w-[80%] p-4 rounded-2xl ${
                       msg.sender_type === 'user'
                         ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground'
-                        : 'bg-gradient-to-br from-echo-violet/10 to-echo-turquoise/10 border border-echo-turquoise/20'
+                        : 'bg-gradient-to-br from-echo-violet/10 to-echo-lavender/10 border border-echo-lavender/20'
                     }`}
                   >
                     {msg.sender_type === 'echo' && (
                       <div className="flex items-center gap-2 mb-2">
-                        <Music2 className="w-4 h-4 text-echo-turquoise" />
-                        <span className="text-xs font-semibold text-echo-turquoise">Echo</span>
+                        <Music2 className="w-4 h-4 text-echo-lavender" />
+                        <span className="text-xs font-semibold text-echo-lavender">Echo</span>
                       </div>
                     )}
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
@@ -240,11 +240,11 @@ export default function Echo() {
 
               {isLoading && (
                 <div className="flex justify-start mb-4">
-                  <div className="bg-gradient-to-br from-echo-violet/10 to-echo-turquoise/10 border border-echo-turquoise/20 p-4 rounded-2xl">
+                  <div className="bg-gradient-to-br from-echo-violet/10 to-echo-lavender/10 border border-echo-lavender/20 p-4 rounded-2xl">
                     <div className="flex items-center gap-2">
-                      <Music2 className="w-4 h-4 text-echo-turquoise animate-echo-pulse" />
+                      <Music2 className="w-4 h-4 text-echo-lavender animate-echo-pulse" />
                       <span className="text-sm text-muted-foreground">Echo luistert... 🎵</span>
-                      <Loader2 className="w-4 h-4 animate-spin text-echo-turquoise" />
+                      <Loader2 className="w-4 h-4 animate-spin text-echo-lavender" />
                     </div>
                   </div>
                 </div>
@@ -261,12 +261,12 @@ export default function Echo() {
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                 placeholder="Vraag Echo over muziek... 🎵"
                 disabled={isLoading}
-                className="flex-1 border-echo-turquoise/20 focus:border-echo-turquoise bg-background/50"
+                className="flex-1 border-echo-lavender/20 focus:border-echo-lavender bg-background/50"
               />
               <Button
                 onClick={sendMessage}
                 disabled={isLoading || !input.trim()}
-                className="bg-gradient-to-r from-echo-turquoise to-echo-copper hover:opacity-90"
+                className="bg-gradient-to-r from-echo-lavender to-echo-gold hover:opacity-90"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

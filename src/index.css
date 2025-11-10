@@ -55,8 +55,8 @@ All colors MUST be HSL.
     
     /* Echo specific colors */
     --echo-violet: 271 62% 29%;
-    --echo-copper: 23 100% 50%;
-    --echo-turquoise: 171 87% 60%;
+    --echo-lavender: 271 70% 65%;
+    --echo-gold: 43 96% 56%;
     --echo-cream: 36 57% 92%;
 
     --sidebar-background: 0 0% 98%;

@@ -74,8 +74,8 @@ export default {
 				},
 				echo: {
 					violet: 'hsl(var(--echo-violet))',
-					copper: 'hsl(var(--echo-copper))',
-					turquoise: 'hsl(var(--echo-turquoise))',
+					lavender: 'hsl(var(--echo-lavender))',
+					gold: 'hsl(var(--echo-gold))',
 					cream: 'hsl(var(--echo-cream))'
 				}
 			},

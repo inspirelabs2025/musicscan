@@ -71,6 +71,7 @@ import FixProductTitles from "./pages/admin/FixProductTitles";
 import BulkProductCleanup from "./pages/admin/BulkProductCleanup";
 import AutoCleanupToday from "./pages/admin/AutoCleanupToday";
 import FixBlogSlugs from "./pages/admin/FixBlogSlugs";
+import BackfillArtistFanwalls from "./pages/admin/BackfillArtistFanwalls";
 import NotFound from "./pages/NotFound";
 import { PlaatVerhaal } from "./pages/PlaatVerhaal";
 import Community from "./pages/Community";
@@ -105,6 +106,8 @@ import SockGenerator from "./pages/admin/SockGenerator";
 import SocksShop from "./pages/SocksShop";
 import Echo from "./pages/Echo";
 import FanWall from "./pages/FanWall";
+import ArtistFanWallOverview from "./pages/ArtistFanWallOverview";
+import ArtistFanWall from "./pages/ArtistFanWall";
 import PhotoDetail from "./pages/PhotoDetail";
 import UploadPhoto from "./pages/UploadPhoto";
 import MyPhotos from "./pages/MyPhotos";
@@ -418,6 +421,11 @@ const AppContent = () => {
             <FixBlogSlugs />
           </ProtectedRoute>
         } />
+        <Route path="/admin/backfill-artist-fanwalls" element={
+          <ProtectedRoute>
+            <BackfillArtistFanwalls />
+          </ProtectedRoute>
+        } />
         <Route path="/admin/sitemap-management" element={
           <ProtectedRoute>
             <SitemapManagement />
@@ -448,7 +456,8 @@ const AppContent = () => {
         <Route path="/posters" element={<PosterShop />} />
         <Route path="/sokken" element={<SocksShop />} />
         <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
-        <Route path="/fanwall" element={<FanWall />} />
+        <Route path="/fanwall" element={<ArtistFanWallOverview />} />
+        <Route path="/fanwall/:slug" element={<ArtistFanWall />} />
         <Route path="/photo/:slug" element={<PhotoDetail />} />
         <Route path="/upload" element={<UploadPhoto />} />
         <Route path="/my/photos" element={

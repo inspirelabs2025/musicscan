@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Heart, MessageCircle, MapPin, Calendar, Music, Flag, Image as ImageIcon, Eye } from "lucide-react";
+import { Heart, MessageCircle, MapPin, Calendar, Music, Flag, Image as ImageIcon, Eye, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet";
@@ -218,6 +218,24 @@ export default function PhotoDetail() {
 
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
+          {/* Breadcrumbs */}
+          {photo.artist && (
+            <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
+              <Link to="/fanwall" className="hover:text-foreground transition-colors">
+                FanWall
+              </Link>
+              <ChevronRight className="h-4 w-4" />
+              <Link 
+                to={`/fanwall/${photo.artist.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-')}`}
+                className="hover:text-foreground transition-colors"
+              >
+                {photo.artist}
+              </Link>
+              <ChevronRight className="h-4 w-4" />
+              <span className="text-foreground">Foto</span>
+            </div>
+          )}
+
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-8">
               {/* Image */}

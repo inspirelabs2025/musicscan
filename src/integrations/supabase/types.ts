@@ -259,6 +259,57 @@ export type Database = {
           },
         ]
       }
+      artist_fanwalls: {
+        Row: {
+          artist_name: string
+          canonical_url: string | null
+          created_at: string | null
+          featured_photo_url: string | null
+          id: string
+          is_active: boolean | null
+          og_image_url: string | null
+          photo_count: number | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          total_likes: number | null
+          total_views: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          artist_name: string
+          canonical_url?: string | null
+          created_at?: string | null
+          featured_photo_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          og_image_url?: string | null
+          photo_count?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          total_likes?: number | null
+          total_views?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          artist_name?: string
+          canonical_url?: string | null
+          created_at?: string | null
+          featured_photo_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          og_image_url?: string | null
+          photo_count?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          total_likes?: number | null
+          total_views?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       batch_processing_status: {
         Row: {
           auto_mode: boolean | null
@@ -5325,6 +5376,10 @@ export type Database = {
         Args: { url_text: string }
         Returns: number
       }
+      find_or_create_artist_fanwall: {
+        Args: { artist_name_input: string }
+        Returns: string
+      }
       find_or_create_release: {
         Args: {
           p_artist: string
@@ -5340,6 +5395,10 @@ export type Database = {
           p_title: string
           p_year?: number
         }
+        Returns: string
+      }
+      generate_artist_slug: {
+        Args: { artist_name_input: string }
         Returns: string
       }
       generate_order_number: { Args: never; Returns: string }

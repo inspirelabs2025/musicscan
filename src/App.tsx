@@ -207,11 +207,7 @@ const AppContent = () => {
             <CollectionChat />
           </ProtectedRoute>
         } />
-        <Route path="/echo" element={
-          <ProtectedRoute>
-            <Echo />
-          </ProtectedRoute>
-        } />
+        <Route path="/echo" element={<Echo />} />
         <Route path="/quiz" element={
           <ProtectedRoute>
             <Quiz />

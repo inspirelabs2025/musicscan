@@ -135,7 +135,7 @@ export const MetalPrintSpotlight = () => {
                   size="lg" 
                   className="text-lg bg-gradient-to-r from-vinyl-gold to-amber-500 hover:shadow-lg hover:scale-105 transition-all"
                 >
-                  <Link to="/shop?category=art">
+                  <Link to="/art-shop">
                     Bekijk Collectie
                   </Link>
                 </Button>

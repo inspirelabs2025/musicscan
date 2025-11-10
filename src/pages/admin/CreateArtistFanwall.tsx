@@ -153,16 +153,17 @@ export default function CreateArtistFanwall() {
           .from('photos')
           .insert({
             user_id: user.id,
+            source_type: 'upload',
             artist: artistName,
             display_url: publicUrl,
             original_url: publicUrl,
-            storage_path: filePath,
             format: 'other',
             status: 'published',
             published_at: new Date().toISOString(),
             seo_title: `${artistName} - Fan Foto ${i + 1}`,
             seo_slug: `${createdSlug}-fan-photo-${Date.now()}-${i}`,
             seo_description: `Een ${artistName} fan foto gedeeld op MusicScan FanWall`,
+            canonical_url: `https://www.musicscan.app/photo/${createdSlug}-fan-photo-${Date.now()}-${i}`,
           });
 
         if (insertError) throw insertError;

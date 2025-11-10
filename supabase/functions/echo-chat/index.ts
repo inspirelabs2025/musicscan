@@ -20,11 +20,11 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader! } } }
     );
 
-    // Get user
+    // Get user (optional for public access)
     const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    const userId = user?.id || null;
 
-    console.log(`Echo received message from user ${user.id}: ${message.substring(0, 50)}...`);
+    console.log(`Echo received message${userId ? ` from user ${userId}` : ''}: ${message.substring(0, 50)}...`);
 
     // Get or create conversation
     let { data: conversation } = await supabaseClient
@@ -37,7 +37,7 @@ serve(async (req) => {
       const { data: newConv } = await supabaseClient
         .from('echo_conversations')
         .insert({
-          user_id: user.id,
+          user_id: userId,
           session_id,
           conversation_type: conversation_type || 'general'
         })
@@ -63,8 +63,8 @@ serve(async (req) => {
       .order('created_at', { ascending: true })
       .limit(10);
 
-    // Detect if user is asking about a specific album
-    const albumContext = await detectAlbumContext(message, supabaseClient, user.id);
+    // Detect if user is asking about a specific album (only if logged in)
+    const albumContext = userId ? await detectAlbumContext(message, supabaseClient, userId) : null;
 
     // Build Echo system prompt
     const systemPrompt = buildEchoSystemPrompt(albumContext, conversation_type);

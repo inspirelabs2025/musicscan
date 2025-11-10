@@ -213,38 +213,12 @@ export default function Nieuws() {
         {!isLoading && !error && (
           <div className={`grid gap-6 ${filters.viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
             {filteredNews.map((news: any) => (
-              news.url ? (
-                <a 
-                  key={news.id}
-                  href={news.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block"
-                >
-                  <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
-                    <CardHeader>
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <Badge variant="secondary" className="flex-shrink-0">
-                          <Newspaper className="w-3 h-3 mr-1" />
-                          {news.category || 'Nieuws'}
-                        </Badge>
-                        <time className="text-xs text-muted-foreground flex-shrink-0">
-                          {news.published_at ? new Date(news.published_at).toLocaleDateString('nl-NL') : ''}
-                        </time>
-                      </div>
-                      <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                        {news.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {news.summary}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </a>
-              ) : (
-                <Card key={news.id} className="group hover:shadow-lg transition-all duration-300">
+              <Link 
+                key={news.id}
+                to={`/nieuws/${news.slug}`}
+                className="block"
+              >
+                <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <Badge variant="secondary" className="flex-shrink-0">
@@ -255,7 +229,7 @@ export default function Nieuws() {
                         {news.published_at ? new Date(news.published_at).toLocaleDateString('nl-NL') : ''}
                       </time>
                     </div>
-                    <CardTitle className="text-lg line-clamp-2">
+                    <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
                       {news.title}
                     </CardTitle>
                   </CardHeader>
@@ -265,7 +239,7 @@ export default function Nieuws() {
                     </p>
                   </CardContent>
                 </Card>
-              )
+              </Link>
             ))}
           </div>
         )}

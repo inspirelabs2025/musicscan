@@ -2115,6 +2115,48 @@ export type Database = {
           },
         ]
       }
+      music_anecdotes: {
+        Row: {
+          anecdote_content: string
+          anecdote_date: string
+          anecdote_title: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          source_reference: string | null
+          subject_details: Json | null
+          subject_name: string
+          subject_type: string
+          views_count: number | null
+        }
+        Insert: {
+          anecdote_content: string
+          anecdote_date: string
+          anecdote_title: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          source_reference?: string | null
+          subject_details?: Json | null
+          subject_name: string
+          subject_type: string
+          views_count?: number | null
+        }
+        Update: {
+          anecdote_content?: string
+          anecdote_date?: string
+          anecdote_title?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          source_reference?: string | null
+          subject_details?: Json | null
+          subject_name?: string
+          subject_type?: string
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       music_stories: {
         Row: {
           album: string | null

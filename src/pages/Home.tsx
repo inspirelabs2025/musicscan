@@ -12,6 +12,7 @@ import { AIFeaturesCompact } from '@/components/home/AIFeaturesCompact';
 import { CommunityStats } from '@/components/home/CommunityStats';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
 import { FeaturedPhotos } from '@/components/FeaturedPhotos';
+import { DailyAnecdote } from '@/components/home/DailyAnecdote';
 import { useSEO } from '@/hooks/useSEO';
 
 const Home = () => {
@@ -36,6 +37,9 @@ const Home = () => {
 
       {/* Time Machine Spotlight */}
       <TimeMachineSpotlight />
+
+      {/* Daily Music Anecdote */}
+      <DailyAnecdote />
 
       {/* Shop Categories - Large Visual Cards */}
       <section className="py-16 bg-muted/30">

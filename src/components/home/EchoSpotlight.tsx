@@ -14,7 +14,7 @@ export function EchoSpotlight() {
           {/* Header */}
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              🎵 Echo — Jouw Persoonlijke Muziekarchivaris
+              🎵 Praat met Echo, onze muziekexpert
             </h2>
             <p className="text-xl text-muted-foreground">
               Waar elke plaat iets te vertellen heeft

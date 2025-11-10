@@ -213,38 +213,59 @@ export default function Nieuws() {
         {!isLoading && !error && (
           <div className={`grid gap-6 ${filters.viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
             {filteredNews.map((news: any) => (
-              <Card key={news.id} className="group hover:shadow-lg transition-all duration-300">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <Badge variant="secondary" className="flex-shrink-0">
-                      <Newspaper className="w-3 h-3 mr-1" />
-                      {news.category || 'Nieuws'}
-                    </Badge>
-                    <time className="text-xs text-muted-foreground flex-shrink-0">
-                      {news.published_at ? new Date(news.published_at).toLocaleDateString('nl-NL') : ''}
-                    </time>
-                  </div>
-                  <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                    {news.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                    {news.summary}
-                  </p>
-                  {news.url && (
-                    <a 
-                      href={news.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline inline-flex items-center gap-1"
-                    >
-                      Lees meer
-                      <Eye className="w-3 h-3" />
-                    </a>
-                  )}
-                </CardContent>
-              </Card>
+              news.url ? (
+                <a 
+                  key={news.id}
+                  href={news.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <Badge variant="secondary" className="flex-shrink-0">
+                          <Newspaper className="w-3 h-3 mr-1" />
+                          {news.category || 'Nieuws'}
+                        </Badge>
+                        <time className="text-xs text-muted-foreground flex-shrink-0">
+                          {news.published_at ? new Date(news.published_at).toLocaleDateString('nl-NL') : ''}
+                        </time>
+                      </div>
+                      <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
+                        {news.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {news.summary}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </a>
+              ) : (
+                <Card key={news.id} className="group hover:shadow-lg transition-all duration-300">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <Badge variant="secondary" className="flex-shrink-0">
+                        <Newspaper className="w-3 h-3 mr-1" />
+                        {news.category || 'Nieuws'}
+                      </Badge>
+                      <time className="text-xs text-muted-foreground flex-shrink-0">
+                        {news.published_at ? new Date(news.published_at).toLocaleDateString('nl-NL') : ''}
+                      </time>
+                    </div>
+                    <CardTitle className="text-lg line-clamp-2">
+                      {news.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground line-clamp-3">
+                      {news.summary}
+                    </p>
+                  </CardContent>
+                </Card>
+              )
             ))}
           </div>
         )}

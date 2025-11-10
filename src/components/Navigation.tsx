@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Menu, X, Images, Brain, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign, Archive, Clock, Heart } from "lucide-react";
+import { Home, ShoppingCart, Menu, X, Images, Brain, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign, Archive, Clock, Heart, Package } from "lucide-react";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 import {
   NavigationMenu,
@@ -23,6 +23,7 @@ const shopMenuItems = [
   { title: "Art Prints", url: "/art-shop", icon: Images },
   { title: "Metal Prints", url: "/metaalprints", icon: Images },
   { title: "Posters", url: "/posters", icon: Images },
+  { title: "Sokken", url: "/socks", icon: Package },
   { title: "Alle Winkels", url: "/shops", icon: Store },
   { title: "Marktplaats", url: "/marketplace", icon: ShoppingCart },
   { title: "Catalogus", url: "/catalog", icon: Library },

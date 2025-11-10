@@ -24,7 +24,8 @@ import {
   TestTube,
   Newspaper,
   RefreshCw,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Users
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -184,6 +185,14 @@ const adminPages: AdminPage[] = [
     path: "/admin/auto-cleanup-today",
     icon: RefreshCw,
     category: "maintenance"
+  },
+  {
+    title: "Backfill Artist FanWalls",
+    description: "Maak artist fanwall records aan voor bestaande foto's",
+    path: "/admin/backfill-artist-fanwalls",
+    icon: Users,
+    category: "maintenance",
+    badge: "FanWall"
   },
 
   // Test Pages

@@ -2609,6 +2609,7 @@ export type Database = {
           id: string
           license_granted: boolean | null
           like_count: number | null
+          og_image_url: string | null
           original_url: string
           print_allowed: boolean | null
           published_at: string | null
@@ -2641,6 +2642,7 @@ export type Database = {
           id?: string
           license_granted?: boolean | null
           like_count?: number | null
+          og_image_url?: string | null
           original_url: string
           print_allowed?: boolean | null
           published_at?: string | null
@@ -2673,6 +2675,7 @@ export type Database = {
           id?: string
           license_granted?: boolean | null
           like_count?: number | null
+          og_image_url?: string | null
           original_url?: string
           print_allowed?: boolean | null
           published_at?: string | null

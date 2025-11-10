@@ -104,7 +104,9 @@ import TimeMachineStory from "./pages/TimeMachineStory";
 import TimeMachineManager from "./pages/admin/TimeMachineManager";
 import LyricPosterGenerator from "./pages/admin/LyricPosterGenerator";
 import SockGenerator from "./pages/admin/SockGenerator";
+import TshirtGenerator from "./pages/admin/TshirtGenerator";
 import SocksShop from "./pages/SocksShop";
+import TshirtsShop from "./pages/TshirtsShop";
 import Echo from "./pages/Echo";
 import FanWall from "./pages/FanWall";
 import ArtistFanWallOverview from "./pages/ArtistFanWallOverview";
@@ -378,6 +380,11 @@ const AppContent = () => {
             <SockGenerator />
           </ProtectedRoute>
         } />
+        <Route path="/admin/tshirt-generator" element={
+          <ProtectedRoute>
+            <TshirtGenerator />
+          </ProtectedRoute>
+        } />
         <Route path="/admin/photo-stylizer" element={
           <ProtectedRoute>
             <PhotoStylizer />
@@ -458,6 +465,8 @@ const AppContent = () => {
         <Route path="/posters" element={<PosterShop />} />
         <Route path="/sokken" element={<SocksShop />} />
         <Route path="/socks" element={<SocksShop />} />
+        <Route path="/shirts" element={<TshirtsShop />} />
+        <Route path="/tshirts" element={<TshirtsShop />} />
         <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
         <Route path="/fanwall" element={<ArtistFanWallOverview />} />
         <Route path="/fanwall/:slug" element={<ArtistFanWall />} />

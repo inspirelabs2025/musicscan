@@ -94,10 +94,10 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
     };
 
     const results: any = {
-      posters: [],
-      canvas: null,
-      tshirt: null,
-      socks: null,
+      posters: { variants: [], productIds: [] },
+      canvas: { imageUrl: null, productId: null },
+      tshirt: { baseDesign: null, variants: [], productIds: [] },
+      socks: { imageUrl: null, productId: null },
       errors: []
     };
 
@@ -118,9 +118,36 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
 
       if (posterError) throw posterError;
       
-      results.posters = posterData.styleVariants || [];
-      await updateProgress(7, 'Poster styles completed');
-      console.log(`✅ Generated ${results.posters.length} poster styles`);
+      results.posters.variants = posterData.styleVariants || [];
+      await updateProgress(7, 'Poster styles completed, creating products...');
+      console.log(`✅ Generated ${results.posters.variants.length} poster styles`);
+
+      // Create poster products for each variant
+      try {
+        for (const variant of results.posters.variants) {
+          const { data: posterProduct, error: productError } = await supabase.functions.invoke(
+            'create-poster-product',
+            {
+              body: {
+                stylizedImageBase64: variant.url,
+                artist: 'Custom Photo',
+                title: `Photo ${new Date().toISOString().split('T')[0]}`,
+                style: variant.style,
+                price: 49.95,
+                styleVariants: []
+              }
+            }
+          );
+
+          if (!productError && posterProduct?.product_id) {
+            results.posters.productIds.push(posterProduct.product_id);
+            console.log(`✅ Created poster product: ${posterProduct.product_id}`);
+          }
+        }
+      } catch (productError) {
+        console.error('Poster product creation failed:', productError);
+        results.errors.push({ job: 'posters-products', error: productError.message });
+      }
       
     } catch (error) {
       console.error('Poster generation failed:', error);
@@ -144,9 +171,34 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
 
       if (canvasError) throw canvasError;
       
-      results.canvas = canvasStyle.stylizedImageUrl;
-      await updateProgress(8, 'Canvas style completed');
+      results.canvas.imageUrl = canvasStyle.stylizedImageUrl;
+      await updateProgress(8, 'Canvas style completed, creating product...');
       console.log(`✅ Generated canvas style`);
+
+      // Create canvas product
+      try {
+        const { data: canvasProduct, error: productError } = await supabase.functions.invoke(
+          'create-canvas-product',
+          {
+            body: {
+              stylizedImageBase64: canvasStyle.stylizedImageUrl,
+              artist: 'Custom Photo',
+              title: `Photo ${new Date().toISOString().split('T')[0]}`,
+              style: 'warmGrayscale',
+              price: 79.95,
+              styleVariants: []
+            }
+          }
+        );
+
+        if (!productError && canvasProduct?.product_id) {
+          results.canvas.productId = canvasProduct.product_id;
+          console.log(`✅ Created canvas product: ${canvasProduct.product_id}`);
+        }
+      } catch (productError) {
+        console.error('Canvas product creation failed:', productError);
+        results.errors.push({ job: 'canvas-product', error: productError.message });
+      }
       
     } catch (error) {
       console.error('Canvas generation failed:', error);
@@ -190,13 +242,37 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
 
       if (variantsError) throw variantsError;
 
-      results.tshirt = {
-        baseDesign: tshirtDesign.base_design_url,
-        variants: tshirtVariants.styleVariants || []
-      };
+      results.tshirt.baseDesign = tshirtDesign.base_design_url;
+      results.tshirt.variants = tshirtVariants.styleVariants || [];
       
-      await updateProgress(9, 'T-shirt styles completed');
+      await updateProgress(9, 'T-shirt styles completed, creating products...');
       console.log(`✅ Generated T-shirt with ${results.tshirt.variants.length} variants`);
+
+      // Create T-shirt products
+      try {
+        const { data: tshirtProducts, error: productError } = await supabase.functions.invoke(
+          'create-tshirt-products',
+          {
+            body: {
+              tshirtId: tshirtDesign.tshirt_id,
+              styleVariants: tshirtVariants.styleVariants
+            }
+          }
+        );
+
+        if (!productError && tshirtProducts) {
+          if (tshirtProducts.standard_product_id) {
+            results.tshirt.productIds.push(tshirtProducts.standard_product_id);
+          }
+          if (tshirtProducts.premium_product_id) {
+            results.tshirt.productIds.push(tshirtProducts.premium_product_id);
+          }
+          console.log(`✅ Created ${results.tshirt.productIds.length} T-shirt products`);
+        }
+      } catch (productError) {
+        console.error('T-shirt product creation failed:', productError);
+        results.errors.push({ job: 'tshirt-products', error: productError.message });
+      }
       
     } catch (error) {
       console.error('T-shirt generation failed:', error);
@@ -228,9 +304,30 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
 
       if (socksError) throw socksError;
       
-      results.socks = socksData.base_design_url;
-      await updateProgress(10, 'Socks design completed');
+      results.socks.imageUrl = socksData.base_design_url;
+      await updateProgress(10, 'Socks design completed, creating product...');
       console.log(`✅ Generated socks design`);
+
+      // Create socks product
+      try {
+        const { data: socksProduct, error: productError } = await supabase.functions.invoke(
+          'create-sock-products',
+          {
+            body: {
+              sockId: socksData.sock_id,
+              styleVariants: []
+            }
+          }
+        );
+
+        if (!productError && socksProduct?.product_id) {
+          results.socks.productId = socksProduct.product_id;
+          console.log(`✅ Created socks product: ${socksProduct.product_id}`);
+        }
+      } catch (productError) {
+        console.error('Socks product creation failed:', productError);
+        results.errors.push({ job: 'socks-product', error: productError.message });
+      }
       
     } catch (error) {
       console.error('Socks generation failed:', error);

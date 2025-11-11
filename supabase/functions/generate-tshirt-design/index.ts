@@ -48,21 +48,23 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const prompt = `Create premium black T-shirts with a creative, all-over design inspired by this album artwork. The design should be INTEGRATED into the T-shirt fabric, not just placed on top.
+    const prompt = `Create premium black SHORT-SLEEVE T-shirts with a creative, all-over design inspired by this album artwork. The design should be INTEGRATED into the T-shirt fabric, not just placed on top.
 
 **CRITICAL DESIGN REQUIREMENTS:**
-- Base: Premium BLACK T-shirts (crew neck or V-neck, not white/colored - BLACK)
+- Base: Premium BLACK SHORT-SLEEVE T-shirts (crew neck, NOT long sleeves or 3/4 sleeves)
+- Sleeve Length: EXPLICITLY SHORT SLEEVES - sleeves end above the elbow
 - Design Integration: The album artwork elements should flow creatively THROUGHOUT the entire T-shirt
-- Coverage: Design elements from collar to hem, across chest, back, and sleeves
+- Coverage: Design elements from collar to hem, across chest, back, and SHORT sleeves
 - Style: Deconstructed, abstract interpretation that remains RECOGNIZABLE to the original album
 - The artwork's key visual elements, colors, and iconic details must be identifiable
 - Think: all-over print fashion, high-end streetwear, not just a chest logo
 
 **COMPOSITION:**
-- Show T-shirt standing upright on invisible mannequin/ghost mannequin
+- Show SHORT-SLEEVE T-shirt standing upright on invisible mannequin/ghost mannequin
+- IMPORTANT: Sleeves must be visibly SHORT (ending above elbow)
 - 3D perspective showing form, natural fabric draping, and subtle wrinkles
 - Design should follow the T-shirt's contours naturally (wrapping around curves)
-- Front, chest, shoulders, sides all feature integrated design elements
+- Front, chest, shoulders, SHORT sleeves, sides all feature integrated design elements
 - Professional product photography with studio lighting creating depth and shadows
 
 **DESIGN STYLE:**

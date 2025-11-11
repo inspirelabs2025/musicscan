@@ -11,21 +11,21 @@ const STYLE_PROMPTS = {
 - Apply faded, worn-in look to the DESIGN elements (slightly muted colors)
 - Subtle distressed texture on the print pattern (small cracks, weathering)
 - Retro color palette with warm, desaturated tones in the design
-- Keep BLACK T-shirt base but give it a slightly vintage wash look
+- Keep BLACK SHORT-SLEEVE T-shirt base but give it a slightly vintage wash look
 - The all-over design should look aged and weathered
 - Maintain 80s/90s streetwear aesthetic
 - Album artwork elements still recognizable but with vintage patina
 
 **MAINTAIN BASE DESIGN:**
-- Keep the BLACK T-shirt base
+- Keep the BLACK SHORT-SLEEVE T-shirt base (sleeves end above elbow)
 - Maintain the all-over integrated design composition
-- Design flows throughout entire T-shirt (collar to hem)
+- Design flows throughout entire T-shirt including SHORT sleeves (collar to hem)
 - Photorealistic product photography with 3D form
 - No cropping - complete T-shirt visible`,
 
   neon: `Transform the design into a bold neon-style aesthetic:
 - Vibrant, fluorescent colors in the design (hot pink, electric blue, lime green, neon yellow)
-- Keep BLACK T-shirt base for high contrast
+- Keep BLACK SHORT-SLEEVE T-shirt base for high contrast
 - The all-over design pattern reimagined with neon glow effects
 - Bright, eye-catching pop art style integrated throughout
 - Colors should appear to "pop" off the black fabric
@@ -33,15 +33,15 @@ const STYLE_PROMPTS = {
 - Sharp, bold print quality flowing across entire shirt
 
 **MAINTAIN BASE DESIGN:**
-- Keep the BLACK T-shirt base
+- Keep the BLACK SHORT-SLEEVE T-shirt base (sleeves end above elbow)
 - Maintain the all-over integrated design composition
-- Design flows throughout entire T-shirt
+- Design flows throughout entire T-shirt including SHORT sleeves
 - Photorealistic product photography with 3D form
 - No cropping - complete T-shirt visible`,
 
   pastel: `Transform the design into a soft pastel-style aesthetic:
 - Dreamy pastel color palette in the design (soft pink, baby blue, mint, lavender, peach)
-- Keep BLACK T-shirt base for beautiful contrast with pastels
+- Keep BLACK SHORT-SLEEVE T-shirt base for beautiful contrast with pastels
 - The all-over design pattern reimagined with gentle, muted tones
 - Soft, aesthetic vibe with romantic feel throughout the shirt
 - Subtle gradients and soft edges in the pattern
@@ -49,15 +49,15 @@ const STYLE_PROMPTS = {
 - Keep artwork recognizable but softened
 
 **MAINTAIN BASE DESIGN:**
-- Keep the BLACK T-shirt base
+- Keep the BLACK SHORT-SLEEVE T-shirt base (sleeves end above elbow)
 - Maintain the all-over integrated design composition
-- Design flows throughout entire T-shirt
+- Design flows throughout entire T-shirt including SHORT sleeves
 - Photorealistic product photography with 3D form
 - No cropping - complete T-shirt visible`,
 
   monochrome: `Transform the design into a high-contrast monochrome aesthetic:
 - Strict black, white, and grey color scheme in the design pattern
-- Keep BLACK T-shirt base
+- Keep BLACK SHORT-SLEEVE T-shirt base
 - High contrast print with bright whites and greys flowing throughout
 - The all-over design converted to bold B&W graphic elements
 - Sharp, clean lines with strong visual impact across entire shirt
@@ -65,15 +65,15 @@ const STYLE_PROMPTS = {
 - Graphic design poster style integrated into fabric
 
 **MAINTAIN BASE DESIGN:**
-- Keep the BLACK T-shirt base
+- Keep the BLACK SHORT-SLEEVE T-shirt base (sleeves end above elbow)
 - Maintain the all-over integrated design composition
-- Design flows throughout entire T-shirt
+- Design flows throughout entire T-shirt including SHORT sleeves
 - Photorealistic product photography with 3D form
 - No cropping - complete T-shirt visible`,
 
   watercolor: `Transform the design into an artistic watercolor-style aesthetic:
 - Hand-painted watercolor aesthetic with soft edges in the pattern
-- Keep BLACK T-shirt base for dramatic watercolor contrast
+- Keep BLACK SHORT-SLEEVE T-shirt base for dramatic watercolor contrast
 - The all-over design reimagined as watercolor painting throughout shirt
 - Flowing colors with organic bleeds and gradients across fabric
 - Artistic, gallery-quality feel integrated into the garment
@@ -81,15 +81,15 @@ const STYLE_PROMPTS = {
 - Contemporary art wear style
 
 **MAINTAIN BASE DESIGN:**
-- Keep the BLACK T-shirt base
+- Keep the BLACK SHORT-SLEEVE T-shirt base (sleeves end above elbow)
 - Maintain the all-over integrated design composition
-- Design flows throughout entire T-shirt
+- Design flows throughout entire T-shirt including SHORT sleeves
 - Photorealistic product photography with 3D form
 - No cropping - complete T-shirt visible`,
 
   grunge: `Transform the design into an edgy grunge-style aesthetic:
 - Distressed, raw aesthetic with rough textures in the pattern
-- Keep BLACK T-shirt base (perfect for grunge aesthetic)
+- Keep BLACK SHORT-SLEEVE T-shirt base (perfect for grunge aesthetic)
 - The all-over design with grungy, weathered treatment throughout
 - Rough edges, paint splatters, scratches in the pattern
 - Underground music scene vibe integrated across entire shirt
@@ -97,15 +97,15 @@ const STYLE_PROMPTS = {
 - Heavy distressing but artwork still recognizable
 
 **MAINTAIN BASE DESIGN:**
-- Keep the BLACK T-shirt base
+- Keep the BLACK SHORT-SLEEVE T-shirt base (sleeves end above elbow)
 - Maintain the all-over integrated design composition
-- Design flows throughout entire T-shirt
+- Design flows throughout entire T-shirt including SHORT sleeves
 - Photorealistic product photography with 3D form
 - No cropping - complete T-shirt visible`,
 
   minimalist: `Transform the design into a clean minimalist-style aesthetic:
 - Ultra-simple, refined design approach with essential elements only
-- Keep BLACK T-shirt base for modern minimal contrast
+- Keep BLACK SHORT-SLEEVE T-shirt base for modern minimal contrast
 - The all-over design simplified to key visual elements flowing throughout
 - Clean lines, strategic negative space across the shirt
 - Modern Scandinavian aesthetic integrated into fabric
@@ -113,9 +113,9 @@ const STYLE_PROMPTS = {
 - High-quality, boutique fashion feel
 
 **MAINTAIN BASE DESIGN:**
-- Keep the BLACK T-shirt base
+- Keep the BLACK SHORT-SLEEVE T-shirt base (sleeves end above elbow)
 - Maintain the all-over integrated design composition
-- Design flows throughout entire T-shirt
+- Design flows throughout entire T-shirt including SHORT sleeves
 - Photorealistic product photography with 3D form
 - No cropping - complete T-shirt visible`
 };
@@ -152,7 +152,8 @@ serve(async (req) => {
       const prompt = `${stylePrompt}
 
 **CRITICAL REQUIREMENTS:**
-- T-shirt must be shown upright/standing (ghost mannequin or invisible mannequin)
+- SHORT-SLEEVE T-shirt must be shown upright/standing (ghost mannequin or invisible mannequin)
+- Sleeves MUST be SHORT (ending above the elbow, NOT long sleeves)
 - Natural 3D form with realistic fabric draping and folds
 - Print must follow the fabric contours - NOT flat or floating
 - Photorealistic rendering - this should look like REAL product photography

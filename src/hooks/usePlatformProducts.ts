@@ -71,7 +71,7 @@ export const usePlatformProducts = (filters?: UsePlatformProductsFilters) => {
         .eq('status', 'active')
         .not('published_at', 'is', null)
         .lte('published_at', new Date().toISOString())
-        .gt('stock_quantity', 0);
+        .or('stock_quantity.gt.0,allow_backorder.eq.true');
       
       if (filters?.mediaType) {
         query = query.eq('media_type', filters.mediaType);

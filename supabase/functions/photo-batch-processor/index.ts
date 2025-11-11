@@ -16,7 +16,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { action, photoUrl, batchId } = await req.json();
+    const { action, photoUrl, batchId, artist, title, description } = await req.json();
 
     if (action === 'start') {
       // Create batch record
@@ -37,7 +37,7 @@ serve(async (req) => {
       console.log(`🚀 Started batch ${newBatchId} for photo: ${photoUrl}`);
 
       // Start all background processes
-      EdgeRuntime.waitUntil(processPhotoBatch(newBatchId, photoUrl, supabase));
+      EdgeRuntime.waitUntil(processPhotoBatch(newBatchId, photoUrl, artist, title, description, supabase));
 
       return new Response(JSON.stringify({
         success: true,
@@ -77,7 +77,14 @@ serve(async (req) => {
   }
 });
 
-async function processPhotoBatch(batchId: string, photoUrl: string, supabase: any) {
+async function processPhotoBatch(
+  batchId: string, 
+  photoUrl: string,
+  artist: string,
+  title: string,
+  description: string,
+  supabase: any
+) {
   try {
     console.log(`📋 Processing batch ${batchId}`);
     
@@ -130,8 +137,9 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
             {
               body: {
                 stylizedImageBase64: variant.url,
-                artist: 'Custom Photo',
-                title: `Photo ${new Date().toISOString().split('T')[0]}`,
+                artist: artist,
+                title: title,
+                description: description,
                 style: variant.style,
                 price: 49.95,
                 styleVariants: []
@@ -182,8 +190,9 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
           {
             body: {
               stylizedImageBase64: canvasStyle.stylizedImageUrl,
-              artist: 'Custom Photo',
-              title: `Photo ${new Date().toISOString().split('T')[0]}`,
+              artist: artist,
+              title: title,
+              description: description,
               style: 'warmGrayscale',
               price: 79.95,
               styleVariants: []
@@ -215,8 +224,8 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
         {
           body: {
             albumCoverUrl: photoUrl,
-            albumTitle: 'Custom Photo',
-            artistName: 'Custom Artist',
+            albumTitle: title,
+            artistName: artist,
             colorPalette: {
               primary_color: '#000000',
               secondary_color: '#FFFFFF',
@@ -288,8 +297,8 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
         {
           body: {
             albumCoverUrl: photoUrl,
-            artistName: 'Custom Artist',
-            albumTitle: 'Custom Photo',
+            artistName: artist,
+            albumTitle: title,
             colorPalette: {
               primary_color: '#000000',
               secondary_color: '#FFFFFF',

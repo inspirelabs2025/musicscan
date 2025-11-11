@@ -29,19 +29,27 @@ export const usePhotoBatchProcessor = () => {
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  const startBatch = async (photoUrl: string): Promise<string> => {
+  const startBatch = async (
+    photoUrl: string,
+    artist: string,
+    title: string,
+    description?: string
+  ): Promise<string> => {
     setIsProcessing(true);
     
     try {
       toast({
         title: "🚀 Starting batch processing...",
-        description: "Generating all product variants in background"
+        description: `Generating products for "${artist} - ${title}"`
       });
 
       const { data, error } = await supabase.functions.invoke('photo-batch-processor', {
         body: {
           action: 'start',
-          photoUrl
+          photoUrl,
+          artist,
+          title,
+          description
         }
       });
 

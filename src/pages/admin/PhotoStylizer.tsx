@@ -48,6 +48,13 @@ export default function PhotoStylizer() {
     label: string;
     emoji: string;
   }>>([]);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
+  const [showBatchFormDialog, setShowBatchFormDialog] = useState(false);
+  const [batchMetadata, setBatchMetadata] = useState({
+    artist: '',
+    title: '',
+    description: ''
+  });
   
   const { isProcessing, originalImage, stylizedImage, stylizePhoto, reset, downloadImage } = usePhotoStylizer();
   const { createPosterProduct, isCreating } = usePosterProductCreator();
@@ -60,11 +67,10 @@ export default function PhotoStylizer() {
       setSelectedFile(file);
       reset();
       
-      // Automatically start batch processing
       try {
         toast({
           title: "📤 Uploading photo...",
-          description: "Starting automatic batch processing"
+          description: "Preparing for batch processing"
         });
 
         // Upload photo first
@@ -82,19 +88,20 @@ export default function PhotoStylizer() {
           .from('vinyl_images')
           .getPublicUrl(filePath);
 
-        // Start automatic batch processing
-        await startBatch(publicUrl);
+        // Store URL and show metadata form
+        setUploadedPhotoUrl(publicUrl);
+        setShowBatchFormDialog(true);
         
       } catch (error: any) {
-        console.error('Auto-batch failed:', error);
+        console.error('Upload failed:', error);
         toast({
-          title: "❌ Failed to start batch",
+          title: "❌ Upload failed",
           description: error.message,
           variant: "destructive"
         });
       }
     }
-  }, [reset, startBatch, toast]);
+  }, [reset, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -121,6 +128,21 @@ export default function PhotoStylizer() {
     reset();
     setAllStyleVariants([]);
     setProductMetadata({ artist: '', title: '', description: '', price: 49.95 });
+    setUploadedPhotoUrl(null);
+    setBatchMetadata({ artist: '', title: '', description: '' });
+  };
+
+  const handleStartBatchWithMetadata = async () => {
+    if (!uploadedPhotoUrl) return;
+    
+    setShowBatchFormDialog(false);
+    
+    await startBatch(
+      uploadedPhotoUrl,
+      batchMetadata.artist,
+      batchMetadata.title,
+      batchMetadata.description
+    );
   };
 
   const handleGenerateAllStyles = async () => {
@@ -545,6 +567,84 @@ export default function PhotoStylizer() {
           </CardContent>
         </Card>
       )}
+
+      {/* Batch Metadata Dialog */}
+      <Dialog open={showBatchFormDialog} onOpenChange={setShowBatchFormDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-primary" />
+              🎨 Product Generatie - Gegevens
+            </DialogTitle>
+            <DialogDescription>
+              Deze gegevens worden gebruikt voor alle 16 gegenereerde producten (7 posters, 1 canvas, 7 T-shirts, 1 sokken)
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="artist">Artiest Naam *</Label>
+              <Input
+                id="artist"
+                value={batchMetadata.artist}
+                onChange={(e) => setBatchMetadata(prev => ({ ...prev, artist: e.target.value }))}
+                placeholder="bijv. The Beatles"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="title">Titel/Album *</Label>
+              <Input
+                id="title"
+                value={batchMetadata.title}
+                onChange={(e) => setBatchMetadata(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="bijv. Abbey Road"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Beschrijving (optioneel)</Label>
+              <Textarea
+                id="description"
+                value={batchMetadata.description}
+                onChange={(e) => setBatchMetadata(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Extra informatie over dit artwork..."
+                rows={3}
+              />
+            </div>
+
+            <Button 
+              variant="ghost" 
+              className="w-full"
+              onClick={() => {
+                const now = new Date().toLocaleDateString('nl-NL');
+                setBatchMetadata({
+                  artist: 'Custom Photo',
+                  title: `Photo ${now}`,
+                  description: 'Automatically generated art products'
+                });
+              }}
+            >
+              Gebruik standaard waarden
+            </Button>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBatchFormDialog(false)}>
+              Annuleren
+            </Button>
+            <Button 
+              onClick={handleStartBatchWithMetadata}
+              disabled={!batchMetadata.artist || !batchMetadata.title}
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Start Generatie (16 producten)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Product Dialog */}
       <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>

@@ -9,6 +9,9 @@ interface MusicHistoryEvent {
   title: string;
   description: string;
   category: string;
+  source?: 'discogs' | 'perplexity' | 'ai';
+  image_url?: string;
+  artist?: string;
 }
 
 interface MusicHistoryData {
@@ -87,16 +90,37 @@ export const MusicHistorySpotlight = () => {
 
             <div className="space-y-4">
               {previewEvents.map((event, index) => (
-                <div key={index} className="border-l-2 border-primary/30 pl-4">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className={`text-sm font-bold ${getCategoryColor(event.category)}`}>
+                <div key={index} className="flex items-start gap-4 p-4 rounded-lg bg-background/50">
+                  {event.image_url && (
+                    <div className="flex-shrink-0">
+                      <img 
+                        src={event.image_url} 
+                        alt={event.title}
+                        className="w-16 h-16 rounded-md object-cover shadow-sm"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-shrink-0">
+                    <div className={`text-2xl font-bold ${getCategoryColor(event.category)}`}>
                       {event.year}
-                    </span>
-                    <h3 className="font-semibold text-foreground">{event.title}</h3>
+                    </div>
+                    {event.source === 'discogs' && (
+                      <div className="text-xs text-primary mt-1">🎵</div>
+                    )}
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {event.description}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm mb-1 line-clamp-1">
+                      {event.title}
+                    </h4>
+                    {event.artist && (
+                      <p className="text-xs text-primary font-medium mb-1">
+                        {event.artist}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {event.description}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>

@@ -12,6 +12,15 @@ interface MusicHistoryEvent {
   title: string;
   description: string;
   category: string;
+  source?: 'discogs' | 'perplexity' | 'ai';
+  image_url?: string;
+  artist?: string;
+  discogs_release_id?: number;
+  metadata?: {
+    label?: string;
+    catalog_number?: string;
+    format?: string;
+  };
 }
 
 interface MusicHistoryData {
@@ -208,6 +217,17 @@ const MusicHistory = () => {
                 {historyData.events.map((event, index) => (
                   <Card key={index} className="p-6 hover:shadow-lg transition-shadow duration-300">
                     <div className="flex items-start gap-4">
+                      {/* Album Cover (if available) */}
+                      {event.image_url && (
+                        <div className="flex-shrink-0">
+                          <img 
+                            src={event.image_url} 
+                            alt={event.title}
+                            className="w-24 h-24 rounded-lg object-cover shadow-md"
+                          />
+                        </div>
+                      )}
+
                       <div className="flex-shrink-0">
                         <div className={`text-3xl font-bold ${getCategoryColor(event.category)}`}>
                           {event.year}
@@ -215,15 +235,33 @@ const MusicHistory = () => {
                         <div className="text-xs text-muted-foreground mt-1 text-center">
                           {getCategoryLabel(event.category)}
                         </div>
+                        {event.source && (
+                          <div className="text-xs bg-primary/10 text-primary px-2 py-1 rounded mt-2">
+                            {event.source === 'discogs' ? '🎵 Discogs' : 
+                             event.source === 'perplexity' ? '🌐 Web' : '🤖 AI'}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex-1">
                         <h3 className="text-xl font-semibold mb-2 text-foreground">
                           {event.title}
                         </h3>
+                        {event.artist && (
+                          <p className="text-sm text-primary font-medium mb-1">
+                            {event.artist}
+                          </p>
+                        )}
                         <p className="text-muted-foreground leading-relaxed">
                           {event.description}
                         </p>
+                        {event.metadata && (
+                          <div className="mt-3 text-xs text-muted-foreground space-y-1">
+                            {event.metadata.label && <div>Label: {event.metadata.label}</div>}
+                            {event.metadata.catalog_number && <div>Cat#: {event.metadata.catalog_number}</div>}
+                            {event.metadata.format && <div>Format: {event.metadata.format}</div>}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </Card>

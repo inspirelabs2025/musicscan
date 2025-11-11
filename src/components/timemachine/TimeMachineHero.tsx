@@ -13,6 +13,11 @@ export function TimeMachineHero({ event }: TimeMachineHeroProps) {
     year: 'numeric'
   });
 
+  // Determine display poster URL with fallback
+  const displayPosterUrl = event.poster_source === 'original'
+    ? (event.original_poster_url || event.poster_image_url)
+    : event.poster_image_url;
+
   return (
     <div className="relative h-[70vh] min-h-[500px] overflow-hidden">
       {/* Background poster with parallax effect */}
@@ -22,9 +27,9 @@ export function TimeMachineHero({ event }: TimeMachineHeroProps) {
         transition={{ duration: 0.8 }}
         className="absolute inset-0"
       >
-        {event.poster_image_url ? (
+        {displayPosterUrl ? (
           <img
-            src={event.poster_image_url}
+            src={displayPosterUrl}
             alt={`${event.artist_name} at ${event.venue_name}`}
             className="w-full h-full object-cover object-center"
           />

@@ -33,7 +33,7 @@ serve(async (req) => {
 
     // Determine which poster to use based on poster_source
     const posterImageUrl = event.poster_source === 'original' 
-      ? event.original_poster_url 
+      ? (event.original_poster_url || event.poster_image_url) 
       : event.poster_image_url;
 
     if (!posterImageUrl) {

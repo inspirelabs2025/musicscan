@@ -36,7 +36,13 @@ export function TimeMachineSpotlight() {
         </motion.div>
 
         <div className="grid gap-6 md:grid-cols-3 mb-8">
-          {events.map((event, index) => (
+          {events.map((event, index) => {
+            // Determine display poster URL with fallback
+            const displayPosterUrl = event.poster_source === 'original'
+              ? (event.original_poster_url || event.poster_image_url)
+              : event.poster_image_url;
+            
+            return (
             <motion.div
               key={event.id}
               initial={{ y: 20, opacity: 0 }}
@@ -49,9 +55,9 @@ export function TimeMachineSpotlight() {
                 onClick={() => navigate(`/time-machine/${event.slug}`)}
               >
                 <div className="aspect-[3/4] relative overflow-hidden bg-muted">
-                  {event.poster_image_url ? (
+                  {displayPosterUrl ? (
                     <img
-                      src={event.poster_image_url}
+                      src={displayPosterUrl}
                       alt={event.event_title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
@@ -76,7 +82,8 @@ export function TimeMachineSpotlight() {
                 </div>
               </Card>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
 
         <motion.div

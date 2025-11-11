@@ -174,12 +174,18 @@ export default function TimeMachineManager() {
       )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {events?.map((event) => (
+        {events?.map((event) => {
+          // Determine display poster URL with fallback
+          const displayPosterUrl = event.poster_source === 'original'
+            ? (event.original_poster_url || event.poster_image_url)
+            : event.poster_image_url;
+          
+          return (
           <Card key={event.id} className="overflow-hidden hover:border-primary transition-colors">
             <div className="aspect-[3/4] relative bg-muted">
-              {event.poster_image_url ? (
+              {displayPosterUrl ? (
                 <img
-                  src={event.poster_image_url}
+                  src={displayPosterUrl}
                   alt={event.event_title}
                   className="w-full h-full object-cover"
                 />
@@ -192,6 +198,11 @@ export default function TimeMachineManager() {
                 <Badge variant={event.poster_source === 'original' ? 'default' : 'secondary'}>
                   {event.poster_source === 'original' ? '📜 Origineel' : '🤖 AI'}
                 </Badge>
+                {event.poster_source === 'original' && !event.original_poster_url && (
+                  <Badge variant="destructive" className="ml-2">
+                    ⚠️ Upload Vereist
+                  </Badge>
+                )}
               </div>
               <div className="absolute top-2 right-2 flex gap-2">
                 <Badge variant={event.is_published ? 'default' : 'secondary'}>
@@ -262,10 +273,16 @@ export default function TimeMachineManager() {
                       {event.poster_image_url ? 'Regenereer AI Poster' : 'Genereer AI Poster'}
                     </Button>
                   )
-                ) : (
+                ) : event.original_poster_url ? (
                   <div className="w-full py-2 px-3 bg-muted rounded-md text-center">
                     <p className="text-sm text-muted-foreground">
                       📜 Gebruikt originele poster
+                    </p>
+                  </div>
+                ) : (
+                  <div className="w-full py-2 px-3 bg-destructive/10 border border-destructive/20 rounded-md text-center">
+                    <p className="text-sm text-destructive font-medium">
+                      ⚠️ Upload originele poster via Edit
                     </p>
                   </div>
                 )}
@@ -289,7 +306,8 @@ export default function TimeMachineManager() {
               )}
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
       {events?.length === 0 && (

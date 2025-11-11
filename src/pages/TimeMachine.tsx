@@ -167,16 +167,22 @@ export default function TimeMachine() {
               <h2 className="text-3xl font-bold">Featured Events</h2>
             </div>
             <div className="grid gap-6 md:grid-cols-3">
-              {featuredEvents.map((event) => (
+              {featuredEvents.map((event) => {
+                // Determine display poster URL with fallback
+                const displayPosterUrl = event.poster_source === 'original'
+                  ? (event.original_poster_url || event.poster_image_url)
+                  : event.poster_image_url;
+                
+                return (
                 <Card
                   key={event.id}
                   className="overflow-hidden cursor-pointer hover:border-primary transition-all hover:shadow-lg group"
                   onClick={() => navigate(`/time-machine/${event.slug}`)}
                 >
                   <div className="aspect-[3/4] relative overflow-hidden bg-muted">
-                    {event.poster_image_url ? (
+                    {displayPosterUrl ? (
                       <img
-                        src={event.poster_image_url}
+                        src={displayPosterUrl}
                         alt={event.event_title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
@@ -205,7 +211,8 @@ export default function TimeMachine() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -311,7 +318,13 @@ export default function TimeMachine() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
-            {filteredEvents.map((event, index) => (
+              {filteredEvents.map((event, index) => {
+                // Determine display poster URL with fallback
+                const displayPosterUrl = event.poster_source === 'original'
+                  ? (event.original_poster_url || event.poster_image_url)
+                  : event.poster_image_url;
+                
+                return (
               <motion.div
                 key={event.id}
                 initial={{ y: 20, opacity: 0 }}
@@ -323,9 +336,9 @@ export default function TimeMachine() {
                   onClick={() => navigate(`/time-machine/${event.slug}`)}
                 >
                   <div className="aspect-[3/4] relative overflow-hidden bg-muted">
-                    {event.poster_image_url ? (
+                    {displayPosterUrl ? (
                       <img
-                        src={event.poster_image_url}
+                        src={displayPosterUrl}
                         alt={event.event_title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
@@ -371,7 +384,8 @@ export default function TimeMachine() {
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
+                );
+              })}
           </motion.div>
         )}
       </div>

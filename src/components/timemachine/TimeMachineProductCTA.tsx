@@ -18,6 +18,15 @@ export function TimeMachineProductCTA({ event }: TimeMachineProductCTAProps) {
   const fineArtProduct = products?.find(p => p.metadata?.product_type === 'fine_art_print');
   const metalProduct = products?.find(p => p.metadata?.product_type === 'metal_print_deluxe');
 
+  // Determine display poster URL with fallback
+  const displayPosterUrl = event.poster_source === 'original'
+    ? (event.original_poster_url || event.poster_image_url)
+    : event.poster_image_url;
+
+  const displayMetalUrl = event.poster_source === 'original'
+    ? (event.original_poster_url || event.metal_print_image_url || event.poster_image_url)
+    : (event.metal_print_image_url || event.poster_image_url);
+
   return (
     <motion.div
       initial={{ y: 50, opacity: 0 }}
@@ -44,9 +53,9 @@ export function TimeMachineProductCTA({ event }: TimeMachineProductCTAProps) {
             {/* Fine Art Print */}
             <Card className="overflow-hidden hover:border-primary transition-colors">
               <div className="aspect-[3/4] relative overflow-hidden bg-muted">
-                {event.poster_image_url ? (
+                {displayPosterUrl ? (
                   <img
-                    src={event.poster_image_url}
+                    src={displayPosterUrl}
                     alt="Fine Art Print"
                     className="w-full h-full object-cover"
                   />
@@ -96,15 +105,9 @@ export function TimeMachineProductCTA({ event }: TimeMachineProductCTAProps) {
                 Premium
               </Badge>
               <div className="aspect-[3/4] relative overflow-hidden bg-muted">
-                {event.metal_print_image_url ? (
+                {displayMetalUrl ? (
                   <img
-                    src={event.metal_print_image_url}
-                    alt="Metal Print"
-                    className="w-full h-full object-cover"
-                  />
-                ) : event.poster_image_url ? (
-                  <img
-                    src={event.poster_image_url}
+                    src={displayMetalUrl}
                     alt="Metal Print"
                     className="w-full h-full object-cover"
                   />

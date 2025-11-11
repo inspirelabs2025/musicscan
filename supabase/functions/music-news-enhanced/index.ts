@@ -184,36 +184,59 @@ async function generateEnhancedContent(topic: string, description: string, sourc
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
+        model: 'llama-3.1-sonar-large-128k-online',
         messages: [
           {
             role: 'system',
-            content: `Je bent een Nederlandse muziekjournalist. Vandaag is ${currentDate}. Schrijf 300-500 woorden in vloeiend Nederlands met Markdown formatting.`
+            content: `Je bent een professionele Nederlandse muziekjournalist. Vandaag is ${currentDate}. 
+
+TAAK: Schrijf een volledig, informatief nieuwsartikel van 400-600 woorden in vloeiend Nederlands.
+
+STRUCTUUR (verplicht):
+## Titel (gebruik H2)
+
+### Introductie (2-3 paragrafen)
+Geef context en belangrijkste feiten
+
+### Hoofdverhaal (3-4 paragrafen)
+Uitgebreide details, citaten indien beschikbaar, achtergrond
+
+### Conclusie/Perspectief (1-2 paragrafen)
+Wat betekent dit voor fans/industrie? Wat kunnen we verwachten?
+
+STIJL:
+- Professioneel maar toegankelijk
+- Feitelijk en informatief
+- Gebruik Markdown formatting
+- Geen afkortingen of "[...]"
+- Maak het artikel COMPLEET en AFGEROND`
           },
           {
             role: 'user',
-            content: `Schrijf een origineel nieuwsartikel over: "${topic}"\n\nContext: ${description}\nBron: ${source}`
+            content: `Schrijf een volledig nieuwsartikel over: "${topic}"\n\nContext: ${description}\nBron: ${source}\n\nZorg ervoor dat het artikel minimaal 400 woorden bevat en compleet is met introductie, hoofdverhaal en conclusie.`
           }
         ],
-        temperature: 0.5,
-        max_tokens: 1000,
+        temperature: 0.7,
+        max_tokens: 2000,
         search_recency_filter: 'day'
       }),
     });
 
     if (!response.ok) {
-      console.error(`Perplexity API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Perplexity API error: ${response.status} - ${errorText}`);
       return null;
     }
 
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    if (content.length < 200) {
-      console.log(`Content too short for: ${topic}`);
+    if (content.length < 500) {
+      console.log(`Content too short (${content.length} chars) for: ${topic}`);
       return null;
     }
     
+    console.log(`✅ Generated ${content.length} chars for: ${topic}`);
     return content;
     
   } catch (error) {
@@ -307,22 +330,31 @@ serve(async (req) => {
           continue;
         }
         
-        // Generate enhanced content (limited)
-        let content = `## ${item.title}\n\n${item.description}`;
-        
-        if (perplexityApiKey && perplexityCallsUsed < MAX_PERPLEXITY_CALLS) {
-          const enhancedContent = await generateEnhancedContent(
-            item.title, 
-            item.description, 
-            item.source, 
-            perplexityApiKey
-          );
-          
-          if (enhancedContent) {
-            content = enhancedContent;
-            perplexityCallsUsed++;
-          }
+        // Generate enhanced content (required for quality)
+        if (!perplexityApiKey) {
+          console.error('No Perplexity API key available, skipping article');
+          continue;
         }
+        
+        if (perplexityCallsUsed >= MAX_PERPLEXITY_CALLS) {
+          console.log('Max Perplexity calls reached, stopping');
+          break;
+        }
+        
+        const enhancedContent = await generateEnhancedContent(
+          item.title, 
+          item.description, 
+          item.source, 
+          perplexityApiKey
+        );
+        
+        if (!enhancedContent) {
+          console.log(`Failed to generate content for: ${item.title}, skipping`);
+          continue;
+        }
+        
+        const content = enhancedContent;
+        perplexityCallsUsed++;
         
         const blogPost: BlogPost = {
           title: item.title,

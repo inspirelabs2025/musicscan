@@ -289,7 +289,7 @@ export default function PlatformProductDetail() {
                     )
                   : product.title
                 }
-                className={`w-full h-full ${isTShirt ? 'object-contain' : 'object-cover'}`}
+                className={`w-full h-full ${isTShirt || isPoster || product?.categories?.includes('CANVAS') ? 'object-contain' : 'object-cover'}`}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -315,7 +315,7 @@ export default function PlatformProductDetail() {
                   <img
                     src={image}
                     alt={`${product.title} ${idx + 1}`}
-                    className={`w-full h-full ${isTShirt ? 'object-contain' : 'object-cover'}`}
+                    className={`w-full h-full ${isTShirt || isPoster || product?.categories?.includes('CANVAS') ? 'object-contain' : 'object-cover'}`}
                   />
                 </button>
               ))}

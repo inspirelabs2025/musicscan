@@ -78,7 +78,7 @@ Style requirements:
 - Dramatic stage lighting with spotlights
 - Distressed/vintage texture overlay for authenticity
 - Leave 150x150px space in bottom-right corner for QR code
-- Dimensions: Portrait orientation suitable for 50x70cm print
+- Dimensions: Portrait 50x70cm (3508x4961px @ 300DPI) orientation
 
 **CRITICAL COMPOSITION RULES - PREVENT CROPPING:**
 - DO NOT CROP any essential elements (heads, faces, text, key visual elements)
@@ -86,8 +86,10 @@ Style requirements:
 - Leave sufficient margin space (minimum 5% on all sides)
 - Ensure all subjects are FULLY VISIBLE within the frame
 - Artist silhouette or iconic pose must be COMPLETE (head to shoulders minimum)
+- Top safe zone: minimaal 12% ruimte boven het hoofd; geen close-up framing
+- Avoid tight close-ups; prefer medium shot of subject with head fully visible + headroom
 - No cut-off heads, partial text, or cropped focal points
-- Safe zones: Top 10%, Bottom 15% (for QR), Sides 5%
+- Safe zones: Top 12%, Bottom 15% (for QR), Sides 5%
 - ALL text must be fully readable and not cut off at edges
 
 Technical requirements:

@@ -388,12 +388,12 @@ export default function PhotoStylizer() {
                 <button
                   key={variant.style}
                   onClick={() => {}}
-                  className="group relative aspect-square rounded-lg overflow-hidden border-2 transition-all hover:scale-105 hover:shadow-lg border-border hover:border-primary/50"
+                  className="group relative aspect-square rounded-lg overflow-hidden border-2 transition-all hover:scale-105 hover:shadow-lg border-border hover:border-primary/50 bg-muted"
                 >
                   <img 
                     src={variant.url} 
                     alt={variant.label}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end text-white text-center p-2 pb-3">
                     <span className="text-2xl mb-1">{variant.emoji}</span>

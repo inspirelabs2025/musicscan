@@ -2771,6 +2771,45 @@ export type Database = {
           },
         ]
       }
+      photo_batch_queue: {
+        Row: {
+          completed_at: string | null
+          completed_jobs: number
+          created_at: string | null
+          current_job: string | null
+          id: string
+          photo_url: string
+          results: Json | null
+          status: string
+          total_jobs: number
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_jobs?: number
+          created_at?: string | null
+          current_job?: string | null
+          id?: string
+          photo_url: string
+          results?: Json | null
+          status?: string
+          total_jobs?: number
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          completed_jobs?: number
+          created_at?: string | null
+          current_job?: string | null
+          id?: string
+          photo_url?: string
+          results?: Json | null
+          status?: string
+          total_jobs?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       photo_comments: {
         Row: {
           body: string

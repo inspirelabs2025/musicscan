@@ -65,13 +65,7 @@ Draag je favoriete album met trots op dit comfortabele T-shirt!`;
         tags: ['tshirts', 'music-merch', 'album-inspired', 'apparel', genre].filter(Boolean),
         is_featured: false,
         status: 'active',
-        published_at: new Date().toISOString(),
-        metadata: {
-          album_title,
-          artist_name,
-          product_type: 'standard',
-          size_info: 'Verkrijgbaar in S, M, L, XL, XXL'
-        }
+        published_at: new Date().toISOString()
       })
       .select()
       .single();
@@ -126,14 +120,7 @@ Kies uit ${styleVariants.length} unieke styles: ${styleVariants.map((v: any) => 
           tags: ['tshirts', 'premium', 'music-merch', 'album-inspired', 'style-collection', genre].filter(Boolean),
           is_featured: true,
           status: 'active',
-          published_at: new Date().toISOString(),
-          metadata: {
-            album_title,
-            artist_name,
-            product_type: 'premium',
-            style_variants: styleVariants,
-            size_info: 'Verkrijgbaar in S, M, L, XL, XXL'
-          }
+          published_at: new Date().toISOString()
         })
         .select()
         .single();

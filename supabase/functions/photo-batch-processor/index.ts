@@ -162,9 +162,15 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
         'generate-tshirt-design',
         {
           body: {
-            albumArtUrl: photoUrl,
+            albumCoverUrl: photoUrl,
             albumTitle: 'Custom Photo',
-            artistName: 'Custom Artist'
+            artistName: 'Custom Artist',
+            colorPalette: {
+              primary_color: '#000000',
+              secondary_color: '#FFFFFF',
+              accent_color: '#808080',
+              design_theme: 'custom-photo'
+            }
           }
         }
       );
@@ -176,9 +182,8 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
         'batch-generate-tshirt-styles',
         {
           body: {
-            tshirtDesignUrl: tshirtDesign.tshirtDesignUrl,
-            albumTitle: 'Custom Photo',
-            artistName: 'Custom Artist'
+            baseDesignUrl: tshirtDesign.base_design_url,
+            tshirtId: tshirtDesign.tshirt_id
           }
         }
       );
@@ -186,7 +191,7 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
       if (variantsError) throw variantsError;
 
       results.tshirt = {
-        baseDesign: tshirtDesign.tshirtDesignUrl,
+        baseDesign: tshirtDesign.base_design_url,
         variants: tshirtVariants.styleVariants || []
       };
       
@@ -206,16 +211,24 @@ async function processPhotoBatch(batchId: string, photoUrl: string, supabase: an
         'generate-sock-design',
         {
           body: {
-            albumArtUrl: photoUrl,
+            albumCoverUrl: photoUrl,
+            artistName: 'Custom Artist',
             albumTitle: 'Custom Photo',
-            artistName: 'Custom Artist'
+            colorPalette: {
+              primary_color: '#000000',
+              secondary_color: '#FFFFFF',
+              accent_color: '#808080',
+              design_theme: 'custom-photo',
+              color_palette: ['#000000', '#FFFFFF', '#808080'],
+              pattern_type: 'custom-photo'
+            }
           }
         }
       );
 
       if (socksError) throw socksError;
       
-      results.socks = socksData.sockDesignUrl;
+      results.socks = socksData.base_design_url;
       await updateProgress(10, 'Socks design completed');
       console.log(`✅ Generated socks design`);
       

@@ -131,6 +131,22 @@ const adminPages: AdminPage[] = [
     category: "products",
     badge: "New"
   },
+  {
+    title: "T-Shirts of Sound",
+    description: "AI T-shirt designs met albumcover artwork",
+    path: "/admin/tshirt-generator",
+    icon: Palette,
+    category: "products",
+    badge: "New"
+  },
+  {
+    title: "Photo Art Stylizer",
+    description: "Transform foto's naar posters en canvas doeken met AI stijlen",
+    path: "/admin/photo-stylizer",
+    icon: Wand2,
+    category: "products",
+    badge: "Canvas"
+  },
 
   // Discogs & Content
   {

@@ -99,6 +99,7 @@ import PublicShopItemDetail from "./pages/PublicShopItemDetail";
 import PlatformProductDetail from "./pages/PlatformProductDetail";
 import ArtShop from "./pages/ArtShop";
 import PosterShop from "./pages/PosterShop";
+import CanvasShop from "./pages/CanvasShop";
 import TimeMachine from "./pages/TimeMachine";
 import TimeMachineStory from "./pages/TimeMachineStory";
 import TimeMachineManager from "./pages/admin/TimeMachineManager";
@@ -459,6 +460,8 @@ const AppContent = () => {
         <Route path="/art-shop" element={<ArtShop />} />
         <Route path="/metaalprints" element={<ArtShop />} />
         <Route path="/posters" element={<PosterShop />} />
+        <Route path="/canvas" element={<CanvasShop />} />
+        <Route path="/doeken" element={<CanvasShop />} />
         <Route path="/sokken" element={<SocksShop />} />
         <Route path="/socks" element={<SocksShop />} />
         <Route path="/shirts" element={<TshirtsShop />} />

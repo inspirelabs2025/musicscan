@@ -27,14 +27,17 @@ export default function ArtShop() {
     onSale: showOnSale || undefined,
   });
 
-  // Exclude POSTER products (metaalprints only)
+  // Exclude POSTER and CANVAS products (metaalprints only)
   const products = allProducts?.filter(product => 
-    !product.categories?.includes('POSTER')
+    !product.categories?.includes('POSTER') && !product.categories?.includes('CANVAS')
   );
 
-  // Get poster products for navigation
+  // Get poster and canvas products for navigation
   const posterProducts = allProducts?.filter(product => 
     product.categories?.includes('POSTER')
+  );
+  const canvasProducts = allProducts?.filter(product => 
+    product.categories?.includes('CANVAS')
   );
 
   // Filter and sort products
@@ -78,6 +81,9 @@ export default function ArtShop() {
   const postersMinPrice = posterProducts?.length 
     ? Math.min(...posterProducts.map(p => p.price))
     : 0;
+  const canvasMinPrice = canvasProducts?.length 
+    ? Math.min(...canvasProducts.map(p => p.price))
+    : 0;
 
   return (
     <>
@@ -101,8 +107,10 @@ export default function ArtShop() {
             currentCategory="metal"
             metalPrintsCount={products?.length || 0}
             postersCount={posterProducts?.length || 0}
+            canvasCount={canvasProducts?.length || 0}
             metalPrintsMinPrice={metalPrintsMinPrice}
             postersMinPrice={postersMinPrice}
+            canvasMinPrice={canvasMinPrice}
           />
 
           {/* Hero Header */}

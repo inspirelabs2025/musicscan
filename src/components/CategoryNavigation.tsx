@@ -1,22 +1,26 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Palette } from "lucide-react";
+import { Sparkles, Palette, Frame } from "lucide-react";
 
 interface CategoryNavigationProps {
-  currentCategory: 'metal' | 'poster';
+  currentCategory: 'metal' | 'poster' | 'canvas';
   metalPrintsCount: number;
   postersCount: number;
+  canvasCount?: number;
   metalPrintsMinPrice: number;
   postersMinPrice: number;
+  canvasMinPrice?: number;
 }
 
 export const CategoryNavigation = ({
   currentCategory,
   metalPrintsCount,
   postersCount,
+  canvasCount = 0,
   metalPrintsMinPrice,
-  postersMinPrice
+  postersMinPrice,
+  canvasMinPrice = 0
 }: CategoryNavigationProps) => {
   const categories = [
     {
@@ -38,8 +42,18 @@ export const CategoryNavigation = ({
       minPrice: postersMinPrice,
       url: '/posters',
       active: currentCategory === 'poster'
+    },
+    {
+      id: 'canvas',
+      name: 'Canvas Doeken',
+      description: 'Warm grayscale canvas',
+      icon: Frame,
+      count: canvasCount,
+      minPrice: canvasMinPrice,
+      url: '/canvas',
+      active: currentCategory === 'canvas'
     }
-  ];
+  ].filter(cat => cat.id === currentCategory || cat.count > 0);
 
   return (
     <div className="mb-8">
@@ -48,7 +62,7 @@ export const CategoryNavigation = ({
         <h2 className="text-lg font-semibold">Kies je kunststijl</h2>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {categories.map((category) => {
           const Icon = category.icon;
           

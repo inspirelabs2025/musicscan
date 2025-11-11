@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Sparkles, Eye, Palette } from "lucide-react";
+import { Search, Sparkles, Eye, Frame } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 import { CategoryNavigation } from "@/components/CategoryNavigation";
 
-export default function PosterShop() {
+export default function CanvasShop() {
   const searchParams = new URLSearchParams(window.location.search);
   const initialSearch = searchParams.get('search') || '';
   
@@ -27,21 +27,21 @@ export default function PosterShop() {
     onSale: showOnSale || undefined,
   });
 
-  // Filter only POSTER products
-  const posterProducts = allProducts?.filter(product => 
-    product.categories?.includes('POSTER')
+  // Filter only CANVAS products
+  const canvasProducts = allProducts?.filter(product => 
+    product.categories?.includes('CANVAS')
   );
 
   // Get other products for navigation
   const metalProducts = allProducts?.filter(product => 
     !product.categories?.includes('POSTER') && !product.categories?.includes('CANVAS')
   );
-  const canvasProducts = allProducts?.filter(product => 
-    product.categories?.includes('CANVAS')
+  const posterProducts = allProducts?.filter(product => 
+    product.categories?.includes('POSTER')
   );
 
   // Filter and sort products
-  const filteredProducts = posterProducts
+  const filteredProducts = canvasProducts
     ?.filter(product => {
       if (!searchQuery) return true;
       
@@ -64,10 +64,10 @@ export default function PosterShop() {
       }
     });
 
-  const featuredCount = posterProducts?.filter(p => p.is_featured).length || 0;
-  const onSaleCount = posterProducts?.filter(p => p.is_on_sale).length || 0;
-  const avgPrice = posterProducts?.length 
-    ? Math.round(posterProducts.reduce((sum, p) => sum + p.price, 0) / posterProducts.length) 
+  const featuredCount = canvasProducts?.filter(p => p.is_featured).length || 0;
+  const onSaleCount = canvasProducts?.filter(p => p.is_on_sale).length || 0;
+  const avgPrice = canvasProducts?.length 
+    ? Math.round(canvasProducts.reduce((sum, p) => sum + p.price, 0) / canvasProducts.length) 
     : 0;
 
   // Calculate prices for category navigation
@@ -84,39 +84,39 @@ export default function PosterShop() {
   return (
     <>
       <Helmet>
-        <title>Premium Art Posters - Unieke Muziek Kunst Posters | VinylScout</title>
-        <meta name="description" content="Ontdek unieke posters van iconische muziek artiesten in diverse kunststijlen. Pop Art, Vectorized Cartoon, Oil Painting stijlen. Premium kwaliteit. Gratis verzending vanaf €50." />
-        <meta name="keywords" content="art posters, muziek posters, kunst posters, pop art posters, vectorized cartoon, albumcover posters, wanddecoratie, kunstposters" />
-        <meta property="og:title" content="Premium Art Posters - Unieke Muziek Kunst" />
-        <meta property="og:description" content="Unieke posters van iconische muziek artiesten. Museum-kwaliteit kunst voor aan de muur." />
+        <title>Premium Canvas Doeken - Warm Grayscale Kunst Canvas | VinylScout</title>
+        <meta name="description" content="Ontdek unieke canvas doeken met elegante warm grayscale stijl. Zwart-wit met subtiele bruine en beige tonen. Premium canvas kwaliteit, gallery-wrapped. Gratis verzending vanaf €50." />
+        <meta name="keywords" content="canvas doeken, warm grayscale canvas, zwart wit canvas, kunst canvas, gallery wrap canvas, albumcover canvas, wanddecoratie canvas, premium canvas prints" />
+        <meta property="og:title" content="Premium Canvas Doeken - Warm Grayscale Kunst" />
+        <meta property="og:description" content="Elegante canvas doeken met warm grayscale stijl. Museum-kwaliteit canvas voor aan de muur." />
         <meta property="og:type" content="website" />
         
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            "name": "Premium Art Posters",
-            "description": "Unieke posters van muziek artiesten",
-            "url": "https://musicscan.app/posters",
-            "numberOfItems": posterProducts?.length || 0,
+            "name": "Premium Canvas Doeken",
+            "description": "Unieke canvas doeken met warm grayscale stijl",
+            "url": "https://musicscan.app/canvas",
+            "numberOfItems": canvasProducts?.length || 0,
             "about": {
               "@type": "Thing",
-              "name": "Art Posters"
+              "name": "Canvas Art"
             }
           })}
         </script>
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/20">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-amber-50/20 dark:to-amber-950/10">
         <div className="container py-8 space-y-8">
           <BreadcrumbNavigation items={[
             { name: "Home", url: "/" },
-            { name: "Poster Shop", url: "/posters" }
+            { name: "Canvas Doeken", url: "/canvas" }
           ]} />
 
           {/* Category Navigation */}
           <CategoryNavigation
-            currentCategory="poster"
+            currentCategory="canvas"
             metalPrintsCount={metalProducts?.length || 0}
             postersCount={posterProducts?.length || 0}
             canvasCount={canvasProducts?.length || 0}
@@ -126,25 +126,25 @@ export default function PosterShop() {
           />
 
           {/* Hero Header */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-vinyl-purple to-accent p-8 md:p-12 text-white">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-800 via-neutral-700 to-amber-900 p-8 md:p-12 text-white">
             <div className="relative z-10 space-y-4">
               <div className="flex items-center gap-2">
-                <Palette className="h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Digitale Kunst</span>
+                <Frame className="h-6 w-6" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Premium Canvas</span>
               </div>
               <h1 className="text-4xl md:text-5xl font-bold">
-                Premium Art Posters
+                Canvas Doeken - Warm Grayscale
               </h1>
               <p className="text-xl text-white/90 max-w-2xl">
-                Unieke posters van iconische muziek artiesten in verschillende kunststijlen. 
-                Van Pop Art tot Vectorized Cartoon - elk kunstwerk is uniek.
+                Elegante canvas doeken met warm grayscale stijl. Zwart-wit met subtiele bruine en beige tonen 
+                voor een tijdloze, klassieke uitstraling. Gallery-wrapped en klaar om op te hangen.
               </p>
               
               {/* Stats Row */}
               <div className="flex flex-wrap gap-6 pt-4">
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold">{posterProducts?.length || 0}</div>
-                  <div className="text-sm text-white/80">Posters</div>
+                  <div className="text-3xl font-bold">{canvasProducts?.length || 0}</div>
+                  <div className="text-sm text-white/80">Canvas Doeken</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">€{avgPrice}</div>
@@ -162,7 +162,7 @@ export default function PosterShop() {
                 )}
               </div>
             </div>
-            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl" />
           </div>
 
           {/* Filters & Search */}
@@ -231,7 +231,7 @@ export default function PosterShop() {
                     <div className="relative aspect-square overflow-hidden bg-muted">
                       <img
                         src={product.primary_image || product.images[0] || '/placeholder.svg'}
-                        alt={`${product.artist} - ${product.title} poster`}
+                        alt={`${product.artist} - ${product.title} canvas`}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                       
@@ -254,11 +254,9 @@ export default function PosterShop() {
                           </Badge>
                         )}
                         {/* Style Badge */}
-                        {product.tags && product.tags.length > 0 && (
-                          <Badge variant="outline" className="bg-black/60 text-white border-white/20">
-                            {product.tags[0]}
-                          </Badge>
-                        )}
+                        <Badge variant="outline" className="bg-black/60 text-white border-white/20">
+                          🖤 Warm Grayscale
+                        </Badge>
                       </div>
 
                       {/* View Count */}
@@ -311,12 +309,12 @@ export default function PosterShop() {
           ) : (
             <Card className="p-12 text-center">
               <div className="space-y-4">
-                <div className="text-4xl">🎨</div>
-                <h3 className="text-xl font-bold">Geen posters gevonden</h3>
+                <div className="text-4xl">🖼️</div>
+                <h3 className="text-xl font-bold">Geen canvas doeken gevonden</h3>
                 <p className="text-muted-foreground">
                   {searchQuery 
                     ? `Geen resultaten voor "${searchQuery}". Probeer een andere zoekopdracht.`
-                    : "Er zijn momenteel geen posters beschikbaar."}
+                    : "Er zijn momenteel geen canvas doeken beschikbaar."}
                 </p>
                 {searchQuery && (
                   <Button onClick={() => setSearchQuery("")} variant="outline">

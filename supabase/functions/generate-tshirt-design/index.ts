@@ -76,6 +76,15 @@ serve(async (req) => {
 - Realistic lighting with soft shadows to show depth and dimension
 - Studio photography setup with professional lighting
 
+**CRITICAL COMPOSITION RULES - NO CROPPING:**
+- The COMPLETE T-shirt must be visible (collar to bottom hem)
+- DO NOT CROP the top (collar area must be fully visible)
+- DO NOT CROP the sides or bottom
+- Leave adequate space around the entire shirt (minimum 5% margin)
+- If there's a person/mannequin, ensure head/neck area is FULLY VISIBLE
+- Full frame composition with the entire product within boundaries
+- Safe zones: Top 8%, Bottom 5%, Sides 5%
+
 **ALBUM ARTWORK PLACEMENT:**
 - Print the album artwork prominently on the chest area
 - Center placement, appropriately sized (not too large or overwhelming)
@@ -83,6 +92,8 @@ serve(async (req) => {
 - Follow the natural contours and folds of the T-shirt
 - Subtle distortion/wrapping where fabric curves
 - The print should have slight texture matching the fabric
+- Artwork should be COMPLETE and not cropped at edges
+- Ensure the artwork fits fully on the chest area without cutoff
 
 **T-SHIRT STYLE:**
 - Classic crew neck or V-neck style
@@ -101,7 +112,10 @@ serve(async (req) => {
 - Photorealistic rendering
 - Professional e-commerce product photography quality
 - The result should look like real merchandise photography, not a mockup
-- Ensure the album artwork remains clear and recognizable`;
+- Ensure the album artwork remains clear and recognizable
+- COMPLETE PRODUCT SHOT - nothing cropped
+- Entire T-shirt visible from collar to hem
+- Professional framing with adequate margins`;
 
     console.log('🎨 Calling AI for T-shirt design with album artwork...');
 

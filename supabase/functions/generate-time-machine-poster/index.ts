@@ -80,10 +80,21 @@ Style requirements:
 - Leave 150x150px space in bottom-right corner for QR code
 - Dimensions: Portrait orientation suitable for 50x70cm print
 
+**CRITICAL COMPOSITION RULES - PREVENT CROPPING:**
+- DO NOT CROP any essential elements (heads, faces, text, key visual elements)
+- Maintain FULL FRAME COMPOSITION with complete visible elements
+- Leave sufficient margin space (minimum 5% on all sides)
+- Ensure all subjects are FULLY VISIBLE within the frame
+- Artist silhouette or iconic pose must be COMPLETE (head to shoulders minimum)
+- No cut-off heads, partial text, or cropped focal points
+- Safe zones: Top 10%, Bottom 15% (for QR), Sides 5%
+- ALL text must be fully readable and not cut off at edges
+
 Technical requirements:
 - High resolution (minimum 300 DPI equivalent)
 - Print-ready quality
-- Balanced composition with clear focal point
+- COMPLETE COMPOSITION - nothing cropped at edges
+- Balanced composition with clear focal point FULLY VISIBLE
 - Text should be legible but integrated into the design
 - Vintage concert poster aesthetic
 
@@ -199,7 +210,9 @@ METAL PRINT VARIANT ADJUSTMENTS:
 - Optimized for brushed aluminum printing (40x60cm)
 - Shadows should be slightly lifted for metal visibility
 - Highlights should pop more for metal reflection
-- Overall: Make it "print-ready for metal" - slightly brighter, more vibrant`;
+- Overall: Make it "print-ready for metal" - slightly brighter, more vibrant
+- MAINTAIN FULL COMPOSITION - no cropping of essential elements
+- Ensure the COMPLETE design fits within frame including all margins`;
 
       const metalResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',

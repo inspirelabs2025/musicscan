@@ -6,14 +6,14 @@ const corsHeaders = {
 };
 
 const STYLE_PRESETS = {
-  vectorCartoon: "Transform this photo into a stunning vector illustration with dramatic flowing color gradients and painterly quality. Use bold, sweeping color transitions (yellows, oranges, purples, pinks, magentas) that flow naturally across the forms and create dimensional depth. Strong light and shadow contrasts with smooth gradient blending - similar to high-end digital illustration art on ArtStation. Maintain facial expression, emotional depth, and anatomical accuracy. Rich, saturated colors with dramatic lighting effects and glowing highlights. Deep black or dark gradient background for maximum visual impact. The style should feel artistic and expressive - elevated artistic interpretation with smooth vector contours, vibrant color flow, and a painted quality. NOT oversimplified cartoon, but premium digital art illustration. Ultra high resolution, professional gallery-quality illustration.",
-  posterize: "Transform this photo into a bold posterized pop art style with vibrant colors, high contrast, and simplified shapes. Use 4-6 distinct color zones. Black background. Similar to Andy Warhol style.",
-  oilPainting: "Transform this into an expressive oil painting with thick, visible impasto brush strokes and rich textured oil paint. Use bold, dynamic brushwork with heavy paint application creating depth and dimension. Deep, saturated colors with dramatic light and shadow play. Emphasize the tactile quality of oil paint - thick dabs, layered strokes, palette knife marks. Style inspired by Van Gogh's expressive technique combined with classical portraiture richness. Raw, energetic brushwork with lustrous oil sheen.",
-  watercolor: "Convert to a soft watercolor painting with flowing colors, white paper texture, and delicate edges.",
-  pencilSketch: "Transform into a detailed pencil sketch drawing with fine hatching, shading, and realistic pencil textures.",
-  comicBook: "Convert to comic book style with bold outlines, halftone dots, dramatic shadows, and vibrant flat colors.",
-  abstract: "Transform into abstract geometric art with bold shapes, striking colors, and modern artistic interpretation.",
-  warmGrayscale: "Transform this photo into a sophisticated warm grayscale artwork with subtle sepia tones. Create a timeless black and white image with delicate beige, brown, and cream undertones that add warmth and depth. Use smooth tonal gradients from deep charcoal blacks through warm mid-tone grays (with subtle brown/beige hints) to soft cream highlights. Emphasize elegant contrast and rich texture while maintaining a cohesive warm monochrome palette. The style should evoke vintage fine art photography with a contemporary twist - sophisticated, elegant, and museum-worthy. High resolution with subtle grain texture for canvas print quality."
+  vectorCartoon: "Transform this photo into a stunning vector illustration with dramatic flowing color gradients and painterly quality. Use bold, sweeping color transitions (yellows, oranges, purples, pinks, magentas) that flow naturally across the forms and create dimensional depth. Strong light and shadow contrasts with smooth gradient blending - similar to high-end digital illustration art on ArtStation. Maintain facial expression, emotional depth, and anatomical accuracy. Rich, saturated colors with dramatic lighting effects and glowing highlights. Deep black or dark gradient background for maximum visual impact. The style should feel artistic and expressive - elevated artistic interpretation with smooth vector contours, vibrant color flow, and a painted quality. NOT oversimplified cartoon, but premium digital art illustration. Ultra high resolution, professional gallery-quality illustration. CRITICAL: Maintain COMPLETE composition - do not crop any elements. Keep all subjects fully visible within the frame.",
+  posterize: "Transform this photo into a bold posterized pop art style with vibrant colors, high contrast, and simplified shapes. Use 4-6 distinct color zones. Black background. Similar to Andy Warhol style. CRITICAL: Preserve FULL FRAME - no cropping of edges or essential elements. Maintain the exact same composition and framing as the original.",
+  oilPainting: "Transform this into an expressive oil painting with thick, visible impasto brush strokes and rich textured oil paint. Use bold, dynamic brushwork with heavy paint application creating depth and dimension. Deep, saturated colors with dramatic light and shadow play. Emphasize the tactile quality of oil paint - thick dabs, layered strokes, palette knife marks. Style inspired by Van Gogh's expressive technique combined with classical portraiture richness. Raw, energetic brushwork with lustrous oil sheen. CRITICAL: Keep ENTIRE composition intact - all elements must remain fully visible. Do not crop any part of the image.",
+  watercolor: "Convert to a soft watercolor painting with flowing colors, white paper texture, and delicate edges. CRITICAL: Maintain COMPLETE composition - do not crop any elements. Keep all subjects fully visible and preserve the original framing.",
+  pencilSketch: "Transform into a detailed pencil sketch drawing with fine hatching, shading, and realistic pencil textures. CRITICAL: Preserve FULL FRAME - no cropping. Maintain exact composition as the original image.",
+  comicBook: "Convert to comic book style with bold outlines, halftone dots, dramatic shadows, and vibrant flat colors. CRITICAL: Keep ENTIRE composition intact - do not crop any elements. All subjects must remain fully visible within the frame.",
+  abstract: "Transform into abstract geometric art with bold shapes, striking colors, and modern artistic interpretation. CRITICAL: Maintain COMPLETE composition - preserve the original framing and do not crop any essential elements.",
+  warmGrayscale: "Transform this photo into a sophisticated warm grayscale artwork with subtle sepia tones. Create a timeless black and white image with delicate beige, brown, and cream undertones that add warmth and depth. Use smooth tonal gradients from deep charcoal blacks through warm mid-tone grays (with subtle brown/beige hints) to soft cream highlights. Emphasize elegant contrast and rich texture while maintaining a cohesive warm monochrome palette. The style should evoke vintage fine art photography with a contemporary twist - sophisticated, elegant, and museum-worthy. High resolution with subtle grain texture for canvas print quality. CRITICAL: Maintain COMPLETE composition - do not crop any elements. Keep all subjects fully visible."
 };
 
 serve(async (req) => {
@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, style = 'vectorCartoon' } = await req.json();
+    const { imageUrl, style = 'vectorCartoon', preserveComposition = false } = await req.json();
     
     if (!imageUrl) {
       throw new Error('Image URL is required');
@@ -33,9 +33,16 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const stylePrompt = STYLE_PRESETS[style as keyof typeof STYLE_PRESETS] || STYLE_PRESETS.vectorCartoon;
+    const baseStylePrompt = STYLE_PRESETS[style as keyof typeof STYLE_PRESETS] || STYLE_PRESETS.vectorCartoon;
+    
+    // Add composition preservation rules if requested
+    const compositionRules = preserveComposition 
+      ? "\n\n**COMPOSITION PRESERVATION RULES:**\n- DO NOT CROP any part of the original image\n- Maintain the EXACT same framing and composition\n- Keep all elements that were visible in the original FULLY VISIBLE\n- Apply style transformation ONLY - do not reframe or crop\n- Preserve margins and safe zones from original"
+      : "";
+    
+    const stylePrompt = baseStylePrompt + compositionRules;
 
-    console.log(`🎨 Stylizing photo with style: ${style}`);
+    console.log(`🎨 Stylizing photo with style: ${style}${preserveComposition ? ' (composition preserved)' : ''}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

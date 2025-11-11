@@ -148,6 +148,15 @@ ${releaseYear ? `Year: ${releaseYear}` : ''}
   ${lyrics.split('\n').filter(line => !highlightLines.includes(line)).join('\n')}
 - Bottom-right corner: Reserve 150x150px white space for QR code overlay
 
+**CRITICAL COMPOSITION RULES - PREVENT CROPPING:**
+- DO NOT CROP any text elements - all text must be FULLY VISIBLE
+- Maintain COMPLETE composition with adequate margins (minimum 40px on all sides)
+- Top section: Ensure subtitle text is FULLY visible (not cut off at top)
+- Center highlight block: COMPLETELY within frame, not cropped
+- Bottom lyrics: FULLY visible, not cut off at bottom
+- QR space in bottom-right: Leave 150x150px CLEAR space
+- Safe zones: Top 5%, Bottom 8%, Sides 5%
+
 **Style Guide - ${style.era}:**
 - Background color: ${style.palette.bg}
 - Primary text color: ${style.palette.primary}
@@ -163,6 +172,8 @@ ${releaseYear ? `Year: ${releaseYear}` : ''}
 - Rest of lyrics should be readable but not dominant
 - Clean, professional typography layout
 - Leave bottom-right corner empty (150x150px) for QR code
+- FULL FRAME COMPOSITION - no cropped elements
+- All text fully readable and within safe margins
 
 The poster should capture the essence and era of ${artist} while maintaining excellent typography and visual hierarchy.`;
 

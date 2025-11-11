@@ -52,7 +52,8 @@ serve(async (req) => {
         const { data: styleData, error: styleError } = await supabase.functions.invoke('stylize-photo', {
           body: {
             imageUrl: posterUrl,
-            style: styleKey
+            style: styleKey,
+            preserveComposition: true
           }
         });
 

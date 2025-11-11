@@ -15,6 +15,7 @@ import { CommunityStats } from '@/components/home/CommunityStats';
 import { ConditionalFooter } from '@/components/ConditionalFooter';
 import { FeaturedPhotos } from '@/components/FeaturedPhotos';
 import { DailyAnecdote } from '@/components/home/DailyAnecdote';
+import { MusicHistorySpotlight } from '@/components/home/MusicHistorySpotlight';
 import { useSEO } from '@/hooks/useSEO';
 
 const Home = () => {
@@ -74,6 +75,9 @@ const Home = () => {
 
       {/* News & Stories Section with Tabs */}
       <NewsAndStoriesSection />
+
+      {/* Music History - Today in Music History */}
+      <MusicHistorySpotlight />
 
       {/* Featured Photos from FanWall */}
       <FeaturedPhotos />

@@ -2247,6 +2247,36 @@ export type Database = {
         }
         Relationships: []
       }
+      music_history_events: {
+        Row: {
+          created_at: string
+          day_of_month: number
+          event_date: string
+          events: Json
+          generated_at: string
+          id: string
+          month_of_year: number
+        }
+        Insert: {
+          created_at?: string
+          day_of_month: number
+          event_date: string
+          events: Json
+          generated_at?: string
+          id?: string
+          month_of_year: number
+        }
+        Update: {
+          created_at?: string
+          day_of_month?: number
+          event_date?: string
+          events?: Json
+          generated_at?: string
+          id?: string
+          month_of_year?: number
+        }
+        Relationships: []
+      }
       music_stories: {
         Row: {
           album: string | null

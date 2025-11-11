@@ -116,6 +116,7 @@ import PhotoDetail from "./pages/PhotoDetail";
 import UploadPhoto from "./pages/UploadPhoto";
 import MyPhotos from "./pages/MyPhotos";
 import LikedPhotos from "./pages/LikedPhotos";
+import MusicHistory from "./pages/MusicHistory";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -276,6 +277,7 @@ const AppContent = () => {
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/user-scans" element={<UserScans />} />
         <Route path="/verhalen" element={<Verhalen />} />
+        <Route path="/vandaag-in-de-muziekgeschiedenis" element={<MusicHistory />} />
         <Route path="/nieuws" element={<Nieuws />} />
         <Route path="/releases" element={<Releases />} />
         <Route path="/news" element={<Navigate to="/verhalen" replace />} />

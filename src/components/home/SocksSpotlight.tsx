@@ -13,7 +13,7 @@ export const SocksSpotlight = () => {
 
   const features = [
     { icon: Sparkles, text: '7 Unieke Designs per Album' },
-    { icon: Wand2, text: 'AI-Gegenereerd Artwork' },
+    { icon: Wand2, text: 'Creatief Ontworpen Artwork' },
     { icon: Check, text: 'Premium Materials' },
     { icon: Package, text: 'Luxe Geschenkdoos' }
   ];
@@ -84,7 +84,7 @@ export const SocksSpotlight = () => {
               
               {/* Showcase description */}
               <p className="text-sm text-muted-foreground text-center">
-                Elk album krijgt 7 unieke AI-gegenereerde sock designs
+                Elk album krijgt 7 unieke ontworpen sock designs
               </p>
             </div>
 

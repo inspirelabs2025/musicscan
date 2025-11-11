@@ -125,7 +125,7 @@ const adminPages: AdminPage[] = [
   },
   {
     title: "Socks of Sound",
-    description: "AI sokken designs geïnspireerd op albumcovers",
+    description: "Sokken designs geïnspireerd op albumcovers",
     path: "/admin/sock-generator",
     icon: Brush,
     category: "products",

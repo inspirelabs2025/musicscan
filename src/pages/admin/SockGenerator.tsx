@@ -51,7 +51,7 @@ export default function SockGenerator() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">🧦 Socks of Sound Generator</h1>
         <p className="text-muted-foreground">
-          Create AI-designed socks inspired by iconic album covers
+          Creëer ontworpen sokken geïnspireerd op iconische albumhoezen
         </p>
       </div>
 

@@ -126,35 +126,35 @@ async function processPhotoBatch(
       if (posterError) throw posterError;
       
       results.posters.variants = posterData.styleVariants || [];
-      await updateProgress(7, 'Poster styles completed, creating products...');
+      await updateProgress(7, 'Poster styles completed, creating product...');
       console.log(`✅ Generated ${results.posters.variants.length} poster styles`);
 
-      // Create poster products for each variant
+      // Create ONE poster product with all style variants
       try {
-        for (const variant of results.posters.variants) {
-          const { data: posterProduct, error: productError } = await supabase.functions.invoke(
-            'create-poster-product',
-            {
-              body: {
-                stylizedImageBase64: variant.url,
-                artist: artist,
-                title: title,
-                description: description,
-                style: variant.style,
-                price: 49.95,
-                styleVariants: []
-              }
+        const { data: posterProduct, error: productError } = await supabase.functions.invoke(
+          'create-poster-product',
+          {
+            body: {
+              stylizedImageBase64: results.posters.variants[0]?.url, // Use first variant as main image
+              artist: artist,
+              title: title,
+              description: description,
+              style: results.posters.variants[0]?.style,
+              price: 49.95,
+              styleVariants: results.posters.variants // Pass ALL variants
             }
-          );
-
-          if (!productError && posterProduct?.product_id) {
-            results.posters.productIds.push(posterProduct.product_id);
-            console.log(`✅ Created poster product: ${posterProduct.product_id}`);
           }
+        );
+
+        if (!productError && posterProduct?.product_id) {
+          results.posters.productIds.push(posterProduct.product_id);
+          console.log(`✅ Created poster product with ${results.posters.variants.length} style variants: ${posterProduct.product_id}`);
+        } else if (productError) {
+          throw productError;
         }
       } catch (productError) {
         console.error('Poster product creation failed:', productError);
-        results.errors.push({ job: 'posters-products', error: productError.message });
+        results.errors.push({ job: 'posters-product', error: productError.message });
       }
       
     } catch (error) {

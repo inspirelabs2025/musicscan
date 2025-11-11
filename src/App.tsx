@@ -335,11 +335,7 @@ const AppContent = () => {
         <Route path="/superadmin" element={<SuperAdminDashboard />} />
         <Route path="/superadmin-dashboard" element={<SuperAdminDashboard />} />
         <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
-        <Route path="/podcasts" element={
-          <ProtectedRoute>
-            <Podcasts />
-          </ProtectedRoute>
-        } />
+        <Route path="/podcasts" element={<Podcasts />} />
         <Route path="/admin/price-history" element={
           <ProtectedRoute>
             <PriceHistoryAdmin />

@@ -4,6 +4,7 @@ import { EchoSpotlight } from '@/components/home/EchoSpotlight';
 import { MetalPrintSpotlight } from '@/components/home/MetalPrintSpotlight';
 import { SocksSpotlight } from '@/components/home/SocksSpotlight';
 import { TshirtSpotlight } from '@/components/home/TshirtSpotlight';
+import { PodcastSpotlight } from '@/components/home/PodcastSpotlight';
 import { TimeMachineSpotlight } from '@/components/home/TimeMachineSpotlight';
 import { ShopByCategorySection } from '@/components/shop/ShopByCategorySection';
 import { FeaturedProductsCarousel } from '@/components/shop/FeaturedProductsCarousel';
@@ -82,6 +83,9 @@ const Home = () => {
 
       {/* T-shirts Spotlight */}
       <TshirtSpotlight />
+
+      {/* Podcast Spotlight */}
+      <PodcastSpotlight />
 
       {/* AI Features - Compact */}
       <AIFeaturesCompact />

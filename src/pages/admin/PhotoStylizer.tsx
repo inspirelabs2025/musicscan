@@ -12,9 +12,11 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { usePhotoStylizer, StyleType } from '@/hooks/usePhotoStylizer';
 import { usePosterProductCreator } from '@/hooks/usePosterProductCreator';
 import { useCanvasProductCreator } from '@/hooks/useCanvasProductCreator';
+import { usePhotoBatchProcessor } from '@/hooks/usePhotoBatchProcessor';
+import { PhotoBatchProgress } from '@/components/admin/PhotoBatchProgress';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, Download, RefreshCw, Sparkles, ShoppingBag, Check } from 'lucide-react';
+import { Upload, Download, RefreshCw, Sparkles, ShoppingBag, Check, Zap } from 'lucide-react';
 
 const STYLE_OPTIONS = [
   { value: 'vectorCartoon' as StyleType, label: 'Vectorized Cartoon', emoji: '🎭', description: 'Smooth vector portrait' },
@@ -46,18 +48,53 @@ export default function PhotoStylizer() {
     label: string;
     emoji: string;
   }>>([]);
-  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   
   const { isProcessing, originalImage, stylizedImage, stylizePhoto, reset, downloadImage } = usePhotoStylizer();
   const { createPosterProduct, isCreating } = usePosterProductCreator();
   const { createCanvasProduct, isCreating: isCreatingCanvas } = useCanvasProductCreator();
+  const { startBatch, isProcessing: isBatchProcessing, batchStatus, progress } = usePhotoBatchProcessor();
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setSelectedFile(acceptedFiles[0]);
+      const file = acceptedFiles[0];
+      setSelectedFile(file);
       reset();
+      
+      // Automatically start batch processing
+      try {
+        toast({
+          title: "📤 Uploading photo...",
+          description: "Starting automatic batch processing"
+        });
+
+        // Upload photo first
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+        const filePath = `originals/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('vinyl_images')
+          .upload(filePath, file);
+        
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('vinyl_images')
+          .getPublicUrl(filePath);
+
+        // Start automatic batch processing
+        await startBatch(publicUrl);
+        
+      } catch (error: any) {
+        console.error('Auto-batch failed:', error);
+        toast({
+          title: "❌ Failed to start batch",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
     }
-  }, [reset]);
+  }, [reset, startBatch, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -89,7 +126,6 @@ export default function PhotoStylizer() {
   const handleGenerateAllStyles = async () => {
     if (!selectedFile) return;
     
-    setIsBatchProcessing(true);
     setAllStyleVariants([]);
     
     try {
@@ -140,8 +176,6 @@ export default function PhotoStylizer() {
         description: error.message,
         variant: "destructive"
       });
-    } finally {
-      setIsBatchProcessing(false);
     }
   };
 
@@ -220,9 +254,16 @@ export default function PhotoStylizer() {
           🎨 Photo Art Stylizer
         </h1>
         <p className="text-muted-foreground">
-          Transform your photos into stunning artistic styles using AI
+          Upload a photo to automatically generate all product variants (posters, canvas, T-shirts, socks)
         </p>
       </div>
+
+      {/* Batch Progress Monitor */}
+      {batchStatus && (
+        <div className="mb-6">
+          <PhotoBatchProgress batchStatus={batchStatus} progress={progress} />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Upload Section */}

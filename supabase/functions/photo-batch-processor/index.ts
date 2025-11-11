@@ -1,0 +1,253 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { action, photoUrl, batchId } = await req.json();
+
+    if (action === 'start') {
+      // Create batch record
+      const newBatchId = crypto.randomUUID();
+      
+      const { error: batchError } = await supabase
+        .from('photo_batch_queue')
+        .insert({
+          id: newBatchId,
+          photo_url: photoUrl,
+          status: 'processing',
+          total_jobs: 10, // 7 posters + 1 canvas + 1 tshirt + 1 socks
+          completed_jobs: 0
+        });
+
+      if (batchError) throw batchError;
+
+      console.log(`🚀 Started batch ${newBatchId} for photo: ${photoUrl}`);
+
+      // Start all background processes
+      EdgeRuntime.waitUntil(processPhotoBatch(newBatchId, photoUrl, supabase));
+
+      return new Response(JSON.stringify({
+        success: true,
+        batchId: newBatchId,
+        message: 'Batch processing started in background'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'status') {
+      const { data: batch } = await supabase
+        .from('photo_batch_queue')
+        .select('*')
+        .eq('id', batchId)
+        .single();
+
+      return new Response(JSON.stringify(batch), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    return new Response(JSON.stringify({ error: 'Invalid action' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Batch processor error:', error);
+    return new Response(JSON.stringify({ 
+      success: false,
+      error: error.message 
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
+
+async function processPhotoBatch(batchId: string, photoUrl: string, supabase: any) {
+  try {
+    console.log(`📋 Processing batch ${batchId}`);
+    
+    const updateProgress = async (completed: number, currentJob: string, result?: any) => {
+      await supabase
+        .from('photo_batch_queue')
+        .update({ 
+          completed_jobs: completed,
+          current_job: currentJob,
+          results: result ? { ...result } : null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', batchId);
+    };
+
+    const results: any = {
+      posters: [],
+      canvas: null,
+      tshirt: null,
+      socks: null,
+      errors: []
+    };
+
+    // Job 1-7: Generate 7 poster styles
+    try {
+      await updateProgress(0, 'Generating 7 poster styles...');
+      
+      const { data: posterData, error: posterError } = await supabase.functions.invoke(
+        'batch-generate-poster-styles',
+        {
+          body: {
+            posterUrl: photoUrl,
+            eventId: `batch-${batchId}`,
+            artistName: 'Custom Photo'
+          }
+        }
+      );
+
+      if (posterError) throw posterError;
+      
+      results.posters = posterData.styleVariants || [];
+      await updateProgress(7, 'Poster styles completed');
+      console.log(`✅ Generated ${results.posters.length} poster styles`);
+      
+    } catch (error) {
+      console.error('Poster generation failed:', error);
+      results.errors.push({ job: 'posters', error: error.message });
+    }
+
+    // Job 8: Generate Canvas (Warm Grayscale)
+    try {
+      await updateProgress(7, 'Generating canvas (warm grayscale)...');
+      
+      const { data: canvasStyle, error: canvasError } = await supabase.functions.invoke(
+        'stylize-photo',
+        {
+          body: {
+            imageUrl: photoUrl,
+            style: 'warmGrayscale',
+            preserveComposition: true
+          }
+        }
+      );
+
+      if (canvasError) throw canvasError;
+      
+      results.canvas = canvasStyle.stylizedImageUrl;
+      await updateProgress(8, 'Canvas style completed');
+      console.log(`✅ Generated canvas style`);
+      
+    } catch (error) {
+      console.error('Canvas generation failed:', error);
+      results.errors.push({ job: 'canvas', error: error.message });
+    }
+
+    // Job 9: Generate T-shirt design + 7 variants
+    try {
+      await updateProgress(8, 'Generating T-shirt design + 7 styles...');
+      
+      // First generate base T-shirt design
+      const { data: tshirtDesign, error: tshirtError } = await supabase.functions.invoke(
+        'generate-tshirt-design',
+        {
+          body: {
+            albumArtUrl: photoUrl,
+            albumTitle: 'Custom Photo',
+            artistName: 'Custom Artist'
+          }
+        }
+      );
+
+      if (tshirtError) throw tshirtError;
+
+      // Then generate 7 style variants
+      const { data: tshirtVariants, error: variantsError } = await supabase.functions.invoke(
+        'batch-generate-tshirt-styles',
+        {
+          body: {
+            tshirtDesignUrl: tshirtDesign.tshirtDesignUrl,
+            albumTitle: 'Custom Photo',
+            artistName: 'Custom Artist'
+          }
+        }
+      );
+
+      if (variantsError) throw variantsError;
+
+      results.tshirt = {
+        baseDesign: tshirtDesign.tshirtDesignUrl,
+        variants: tshirtVariants.styleVariants || []
+      };
+      
+      await updateProgress(9, 'T-shirt styles completed');
+      console.log(`✅ Generated T-shirt with ${results.tshirt.variants.length} variants`);
+      
+    } catch (error) {
+      console.error('T-shirt generation failed:', error);
+      results.errors.push({ job: 'tshirt', error: error.message });
+    }
+
+    // Job 10: Generate Socks (Pop Art Posterize)
+    try {
+      await updateProgress(9, 'Generating socks design (pop art)...');
+      
+      const { data: socksData, error: socksError } = await supabase.functions.invoke(
+        'generate-sock-design',
+        {
+          body: {
+            albumArtUrl: photoUrl,
+            albumTitle: 'Custom Photo',
+            artistName: 'Custom Artist'
+          }
+        }
+      );
+
+      if (socksError) throw socksError;
+      
+      results.socks = socksData.sockDesignUrl;
+      await updateProgress(10, 'Socks design completed');
+      console.log(`✅ Generated socks design`);
+      
+    } catch (error) {
+      console.error('Socks generation failed:', error);
+      results.errors.push({ job: 'socks', error: error.message });
+    }
+
+    // Mark batch as completed
+    await supabase
+      .from('photo_batch_queue')
+      .update({
+        status: results.errors.length > 0 ? 'completed_with_errors' : 'completed',
+        completed_jobs: 10,
+        current_job: 'All jobs completed',
+        results: results,
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', batchId);
+
+    console.log(`✅ Batch ${batchId} completed with ${results.errors.length} errors`);
+
+  } catch (error) {
+    console.error(`💥 Fatal error in batch ${batchId}:`, error);
+    
+    await supabase
+      .from('photo_batch_queue')
+      .update({
+        status: 'failed',
+        current_job: `Failed: ${error.message}`,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', batchId);
+  }
+}

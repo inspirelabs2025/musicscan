@@ -273,3 +273,6 @@ cron = "0 6 * * *"  # Daily at 6 AM UTC
 
 [functions.curated-artists-monitor]
 verify_jwt = false
+
+[functions.photo-batch-processor]
+verify_jwt = false

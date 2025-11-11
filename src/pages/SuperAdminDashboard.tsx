@@ -17,6 +17,7 @@ import { TestEmailTrigger } from '@/components/TestEmailTrigger';
 import { ArtworkStatusSection } from '@/components/admin/ArtworkStatusSection';
 import { PodcastManagementSection } from '@/components/admin/PodcastManagementSection';
 import { IndexNowMonitor } from '@/components/admin/IndexNowMonitor';
+import { ContentPipelineWarning } from '@/components/admin/ContentPipelineWarning';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 const SuperAdminDashboard: React.FC = () => {
@@ -143,6 +144,11 @@ const SuperAdminDashboard: React.FC = () => {
               Vernieuwen
             </Button>
           </div>
+        </div>
+
+        {/* Content Pipeline Warning */}
+        <div className="mb-8">
+          <ContentPipelineWarning />
         </div>
 
         {/* Quick Stats Cards */}

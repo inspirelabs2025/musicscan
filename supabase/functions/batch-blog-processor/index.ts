@@ -223,31 +223,46 @@ serve(async (req) => {
 
       const maxAttempts = nextItem.max_attempts || 3;
       const newAttempts = nextItem.attempts + 1;
+      const errorMessage = error.message || String(error);
       
-      if (newAttempts >= maxAttempts) {
-        // Mark as failed after max attempts
-        await supabase
-          .from('batch_queue_items')
-          .update({ 
-            status: 'failed',
-            error_message: error.message,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', nextItem.id);
-
-        console.log(`💀 Item failed after ${maxAttempts} attempts`);
-      } else {
-        // Mark as pending for retry
+      // Smart retry logic: Don't retry if error is due to incomplete metadata
+      const shouldRetry = !errorMessage.includes('INCOMPLETE_METADATA') && 
+                         !errorMessage.includes('Missing required metadata') &&
+                         !errorMessage.includes('422') && // Status code for incomplete data
+                         newAttempts < maxAttempts;
+      
+      if (shouldRetry) {
+        // Mark as pending for retry with delay
+        const retryDelay = Math.min(5 * newAttempts, 15); // 5, 10, or 15 minutes
+        const scheduledAt = new Date(Date.now() + retryDelay * 60 * 1000);
+        
         await supabase
           .from('batch_queue_items')
           .update({ 
             status: 'pending',
-            error_message: error.message,
+            error_message: errorMessage,
+            scheduled_at: scheduledAt.toISOString(),
             updated_at: new Date().toISOString()
           })
           .eq('id', nextItem.id);
 
-        console.log(`🔄 Item will retry (attempt ${newAttempts}/${maxAttempts})`);
+        console.log(`🔄 Item will retry in ${retryDelay} minutes (attempt ${newAttempts}/${maxAttempts})`);
+      } else {
+        // Mark as failed - either max attempts reached or incomplete metadata
+        await supabase
+          .from('batch_queue_items')
+          .update({ 
+            status: 'failed',
+            error_message: errorMessage,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', nextItem.id);
+
+        if (errorMessage.includes('INCOMPLETE_METADATA') || errorMessage.includes('422')) {
+          console.log(`💀 Item failed due to incomplete metadata (no retry): ${errorMessage}`);
+        } else {
+          console.log(`💀 Item failed after ${maxAttempts} attempts`);
+        }
       }
 
       // Update batch counters
@@ -255,7 +270,7 @@ serve(async (req) => {
         .from('batch_processing_status')
         .update({ 
           processed_items: (batchStatus.processed_items || 0) + 1,
-          failed_items: (batchStatus.failed_items || 0) + (newAttempts >= maxAttempts ? 1 : 0),
+          failed_items: (batchStatus.failed_items || 0) + (!shouldRetry ? 1 : 0),
           updated_at: new Date().toISOString()
         })
         .eq('id', batchStatus.id);

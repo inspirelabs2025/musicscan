@@ -345,8 +345,28 @@ serve(async (req) => {
   }
 });
 
+// Helper function to check if metadata is valid
+function hasValidMetadata(item: any): boolean {
+  const artist = item.artist?.trim();
+  const title = item.title?.trim();
+  
+  // Filter bad values that indicate incomplete/missing metadata
+  const badValues = ['unknown', 'unknown artist', 'unknown album', 'onbekend', 'untitled', '—', '-', '', 'n/a', 'various'];
+  
+  const hasValidArtist = artist && !badValues.includes(artist.toLowerCase());
+  const hasValidTitle = title && !badValues.includes(title.toLowerCase());
+  
+  if (!hasValidArtist || !hasValidTitle) {
+    console.log(`❌ Skipping item with incomplete metadata: "${artist}" - "${title}"`);
+    return false;
+  }
+  
+  return true;
+}
+
 async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
   const items = [];
+  let totalFiltered = 0;
 
   // Get CD scans without blog posts (using NOT EXISTS for efficiency)
   if (mediaTypes.includes('cd')) {
@@ -369,10 +389,12 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
         .in('album_id', cdIds);
       
       const existingIds = new Set((existingBlogs || []).map(b => b.album_id));
-      cdScans.forEach(scan => {
-        if (!existingIds.has(scan.id)) {
-          items.push({ ...scan, type: 'cd' });
-        }
+      const beforeFilter = cdScans.filter(scan => !existingIds.has(scan.id));
+      const afterFilter = beforeFilter.filter(scan => hasValidMetadata(scan));
+      totalFiltered += (beforeFilter.length - afterFilter.length);
+      
+      afterFilter.forEach(scan => {
+        items.push({ ...scan, type: 'cd' });
       });
     }
   }
@@ -397,10 +419,12 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
         .in('album_id', vinylIds);
       
       const existingIds = new Set((existingBlogs || []).map(b => b.album_id));
-      vinylScans.forEach(scan => {
-        if (!existingIds.has(scan.id)) {
-          items.push({ ...scan, type: 'vinyl' });
-        }
+      const beforeFilter = vinylScans.filter(scan => !existingIds.has(scan.id));
+      const afterFilter = beforeFilter.filter(scan => hasValidMetadata(scan));
+      totalFiltered += (beforeFilter.length - afterFilter.length);
+      
+      afterFilter.forEach(scan => {
+        items.push({ ...scan, type: 'vinyl' });
       });
     }
   }
@@ -425,10 +449,12 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
         .in('album_id', aiIds);
       
       const existingIds = new Set((existingBlogs || []).map(b => b.album_id));
-      aiScans.forEach(scan => {
-        if (!existingIds.has(scan.id)) {
-          items.push({ ...scan, type: scan.media_type || 'cd' });
-        }
+      const beforeFilter = aiScans.filter(scan => !existingIds.has(scan.id));
+      const afterFilter = beforeFilter.filter(scan => hasValidMetadata(scan));
+      totalFiltered += (beforeFilter.length - afterFilter.length);
+      
+      afterFilter.forEach(scan => {
+        items.push({ ...scan, type: scan.media_type || 'cd' });
       });
     }
   }
@@ -454,13 +480,18 @@ async function getItemsToProcess(mediaTypes: string[], minConfidence: number) {
         .in('album_id', productIds);
       
       const existingIds = new Set((existingBlogs || []).map(b => b.album_id));
-      products.forEach(product => {
-        if (!existingIds.has(product.id)) {
-          items.push({ ...product, type: 'product' });
-        }
+      const beforeFilter = products.filter(product => !existingIds.has(product.id));
+      const afterFilter = beforeFilter.filter(product => hasValidMetadata(product));
+      totalFiltered += (beforeFilter.length - afterFilter.length);
+      
+      afterFilter.forEach(product => {
+        items.push({ ...product, type: 'product' });
       });
     }
   }
+
+  console.log(`✅ Filtered ${totalFiltered} items with incomplete metadata`);
+  console.log(`📋 Returning ${items.length} valid items for processing`);
 
   // Sort by priority: product (art), CD, vinyl, then AI by confidence
   return items.sort((a, b) => {

@@ -270,3 +270,6 @@ verify_jwt = false
 
 [[functions.generate-daily-music-history.schedule]]
 cron = "0 6 * * *"  # Daily at 6 AM UTC
+
+[functions.curated-artists-monitor]
+verify_jwt = false

@@ -56,6 +56,7 @@ import TestDiscogsFlow from "./pages/TestDiscogsFlow";
 import TestDiscogsBlogGeneration from "./pages/TestDiscogsBlogGeneration";
 import TestDiscogsIdFinder from "./pages/TestDiscogsIdFinder";
 import DiscogsLookup from "./pages/admin/DiscogsLookup";
+import { AdminLayout } from "./components/admin/AdminLayout";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Podcasts from "./pages/Podcasts";
 import { ShopProducts } from "./pages/admin/ShopProducts";
@@ -282,183 +283,82 @@ const AppContent = () => {
         <Route path="/releases" element={<Releases />} />
         <Route path="/news" element={<Navigate to="/verhalen" replace />} />
         <Route path="/nieuws/:slug" element={<NewsPost />} />
-        <Route path="/test-music-news" element={
+        
+        {/* Test Pages - Redirect to /admin/test/* */}
+        <Route path="/test-music-news" element={<Navigate to="/admin/test/music-news" replace />} />
+        <Route path="/test-news-update" element={<Navigate to="/admin/test/news-update" replace />} />
+        <Route path="/test-news-generation" element={<Navigate to="/admin/test/news-generation" replace />} />
+        <Route path="/test-blog-regeneration" element={<Navigate to="/admin/test/blog-regeneration" replace />} />
+        <Route path="/test-album-cover-backfill" element={<Navigate to="/admin/test/album-cover-backfill" replace />} />
+        <Route path="/test-discogs-flow" element={<Navigate to="/admin/test/discogs-flow" replace />} />
+        <Route path="/test-discogs-blog-generation" element={<Navigate to="/admin/test/discogs-blog-generation" replace />} />
+        <Route path="/test-discogs-id" element={<Navigate to="/admin/test/discogs-id" replace />} />
+        
+        {/* Legacy Admin Redirects */}
+        <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/superadmin-dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+        
+        {/* Admin Routes with Sidebar Layout */}
+        <Route path="/admin/*" element={
           <ProtectedRoute>
-            <TestMusicNews />
+            <AdminLayout>
+              <Routes>
+                <Route index element={<MainAdmin />} />
+                <Route path="dashboard" element={<SuperAdminDashboard />} />
+                
+                {/* Products & Shop */}
+                <Route path="platform-products" element={<PlatformProducts />} />
+                <Route path="shop-products" element={<ShopProducts />} />
+                <Route path="time-machine" element={<TimeMachineManager />} />
+                
+                {/* Content Generators */}
+                <Route path="art-generator" element={<ArtGenerator />} />
+                <Route path="bulk-art-generator" element={<BulkArtGenerator />} />
+                <Route path="sketch-art-generator" element={<SketchArtGenerator />} />
+                <Route path="lyric-poster-generator" element={<LyricPosterGenerator />} />
+                <Route path="sock-generator" element={<SockGenerator />} />
+                <Route path="tshirt-generator" element={<TshirtGenerator />} />
+                <Route path="photo-stylizer" element={<PhotoStylizer />} />
+                
+                {/* Content Management */}
+                <Route path="curated-artists" element={<CuratedArtists />} />
+                <Route path="discogs-lookup" element={<DiscogsLookup />} />
+                <Route path="photo-moderation" element={<PhotoModeration />} />
+                
+                {/* SEO & Analytics */}
+                <Route path="seo-monitoring" element={<SEOMonitoring />} />
+                <Route path="sitemap-management" element={<SitemapManagement />} />
+                <Route path="price-history" element={<PriceHistoryAdmin />} />
+                <Route path="cronjob-monitor" element={<CronjobMonitorPage />} />
+                
+                {/* Maintenance */}
+                <Route path="fix-blog-slugs" element={<FixBlogSlugs />} />
+                <Route path="fix-product-titles" element={<FixProductTitles />} />
+                <Route path="bulk-cleanup" element={<BulkProductCleanup />} />
+                <Route path="auto-cleanup-today" element={<AutoCleanupToday />} />
+                <Route path="backfill-artist-fanwalls" element={<BackfillArtistFanwalls />} />
+                <Route path="create-artist-fanwall" element={<CreateArtistFanwall />} />
+                <Route path="generate-seed" element={<GenerateSeed />} />
+                <Route path="bulk-poster-upload" element={<BulkPosterUpload />} />
+                
+                {/* Testing */}
+                <Route path="test/music-news" element={<TestMusicNews />} />
+                <Route path="test/news-update" element={<TestNewsUpdate />} />
+                <Route path="test/news-generation" element={<TestNewsGeneration />} />
+                <Route path="test/blog-regeneration" element={<TestBlogRegeneration />} />
+                <Route path="test/album-cover-backfill" element={<TestAlbumCoverBackfill />} />
+                <Route path="test/discogs-flow" element={<TestDiscogsFlow />} />
+                <Route path="test/discogs-blog-generation" element={<TestDiscogsBlogGeneration />} />
+                <Route path="test/discogs-id" element={<TestDiscogsIdFinder />} />
+              </Routes>
+            </AdminLayout>
           </ProtectedRoute>
         } />
+        
         <Route path="/plaat-verhaal/:slug" element={<PlaatVerhaal />} />
         <Route path="/time-machine" element={<TimeMachine />} />
         <Route path="/time-machine/:slug" element={<TimeMachineStory />} />
-        <Route path="/test-news-update" element={
-          <ProtectedRoute>
-            <TestNewsUpdate />
-          </ProtectedRoute>
-        } />
-        <Route path="/test-news-generation" element={
-          <ProtectedRoute>
-            <TestNewsGeneration />
-          </ProtectedRoute>
-        } />
-        <Route path="/test-blog-regeneration" element={
-          <ProtectedRoute>
-            <TestBlogRegeneration />
-          </ProtectedRoute>
-        } />
-        <Route path="/test-album-cover-backfill" element={
-          <ProtectedRoute>
-            <TestAlbumCoverBackfill />
-          </ProtectedRoute>
-        } />
-        <Route path="/test-discogs-flow" element={
-          <ProtectedRoute>
-            <TestDiscogsFlow />
-          </ProtectedRoute>
-        } />
-        <Route path="/test-discogs-blog-generation" element={
-          <ProtectedRoute>
-            <TestDiscogsBlogGeneration />
-          </ProtectedRoute>
-        } />
-        <Route path="/test-discogs-id" element={
-          <ProtectedRoute>
-            <TestDiscogsIdFinder />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/discogs-lookup" element={
-          <ProtectedRoute>
-            <DiscogsLookup />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin" element={
-          <ProtectedRoute>
-            <MainAdmin />
-          </ProtectedRoute>
-        } />
-        <Route path="/superadmin" element={<SuperAdminDashboard />} />
-        <Route path="/superadmin-dashboard" element={<SuperAdminDashboard />} />
-        <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
         <Route path="/podcasts" element={<Podcasts />} />
-        <Route path="/admin/price-history" element={
-          <ProtectedRoute>
-            <PriceHistoryAdmin />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/shop-products" element={
-          <ProtectedRoute>
-            <ShopProducts />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/platform-products" element={
-          <ProtectedRoute>
-            <PlatformProducts />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/art-generator" element={
-          <ProtectedRoute>
-            <ArtGenerator />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/bulk-art-generator" element={
-          <ProtectedRoute>
-            <BulkArtGenerator />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/sketch-art-generator" element={
-          <ProtectedRoute>
-            <SketchArtGenerator />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/lyric-poster-generator" element={
-          <ProtectedRoute>
-            <LyricPosterGenerator />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/sock-generator" element={
-          <ProtectedRoute>
-            <SockGenerator />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/tshirt-generator" element={
-          <ProtectedRoute>
-            <TshirtGenerator />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/photo-stylizer" element={
-          <ProtectedRoute>
-            <PhotoStylizer />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/photo-moderation" element={
-          <ProtectedRoute>
-            <PhotoModeration />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/generate-seed" element={
-          <ProtectedRoute>
-            <GenerateSeed />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/bulk-poster-upload" element={
-          <ProtectedRoute>
-            <BulkPosterUpload />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/auto-cleanup-today" element={
-          <ProtectedRoute>
-            <AutoCleanupToday />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/fix-product-titles" element={
-          <ProtectedRoute>
-            <FixProductTitles />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/bulk-cleanup" element={
-          <ProtectedRoute>
-            <BulkProductCleanup />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/fix-blog-slugs" element={
-          <ProtectedRoute>
-            <FixBlogSlugs />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/backfill-artist-fanwalls" element={
-          <ProtectedRoute>
-            <BackfillArtistFanwalls />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/create-artist-fanwall" element={
-          <ProtectedRoute>
-            <CreateArtistFanwall />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/sitemap-management" element={
-          <ProtectedRoute>
-            <SitemapManagement />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/seo-monitoring" element={
-          <ProtectedRoute>
-            <SEOMonitoring />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/cronjob-monitor" element={
-          <ProtectedRoute>
-            <CronjobMonitorPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/curated-artists" element={
-          <ProtectedRoute>
-            <CuratedArtists />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/time-machine" element={
-          <ProtectedRoute>
-            <TimeMachineManager />
-          </ProtectedRoute>
-        } />
         <Route path="/art-shop" element={<ArtShop />} />
         <Route path="/metaalprints" element={<ArtShop />} />
         <Route path="/posters" element={<PosterShop />} />

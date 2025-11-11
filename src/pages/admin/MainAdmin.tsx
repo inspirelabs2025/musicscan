@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  TrendingUp, 
-  Search, 
-  Palette, 
-  Package, 
+import {
+  LayoutDashboard,
+  TrendingUp,
+  Search,
+  Palette,
+  Package,
   Wand2,
   Music,
   Database,
@@ -25,7 +25,8 @@ import {
   Newspaper,
   RefreshCw,
   Link as LinkIcon,
-  Users
+  Users,
+  Image
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -140,6 +141,14 @@ const adminPages: AdminPage[] = [
     badge: "New"
   },
   {
+    title: "Time Machine Manager",
+    description: "Beheer Time Machine concert posters en events",
+    path: "/admin/time-machine",
+    icon: Clock,
+    category: "products",
+    badge: "Events"
+  },
+  {
     title: "Photo Art Stylizer",
     description: "Transform foto's naar posters en canvas doeken met AI stijlen",
     path: "/admin/photo-stylizer",
@@ -162,6 +171,13 @@ const adminPages: AdminPage[] = [
     description: "Zoek en verifieer Discogs release informatie",
     path: "/admin/discogs-lookup",
     icon: Database,
+    category: "content"
+  },
+  {
+    title: "Photo Moderation",
+    description: "Modereer en beheer ingediende foto's",
+    path: "/admin/photo-moderation",
+    icon: Image,
     category: "content"
   },
 
@@ -218,12 +234,26 @@ const adminPages: AdminPage[] = [
     category: "maintenance",
     badge: "New"
   },
+  {
+    title: "Generate Seed",
+    description: "Genereer seed data voor testing en development",
+    path: "/admin/generate-seed",
+    icon: Settings,
+    category: "maintenance"
+  },
+  {
+    title: "Bulk Poster Upload",
+    description: "Bulk upload posters en album covers",
+    path: "/admin/bulk-poster-upload",
+    icon: Image,
+    category: "maintenance"
+  },
 
   // Test Pages
   {
     title: "Test Music News",
     description: "Test music news generatie",
-    path: "/test-music-news",
+    path: "/admin/test/music-news",
     icon: Newspaper,
     category: "testing",
     testOnly: true
@@ -231,15 +261,23 @@ const adminPages: AdminPage[] = [
   {
     title: "Test News Update",
     description: "Test news update functionaliteit",
-    path: "/test-news-update",
+    path: "/admin/test/news-update",
     icon: RefreshCw,
+    category: "testing",
+    testOnly: true
+  },
+  {
+    title: "Test News Generation",
+    description: "Test news generatie proces",
+    path: "/admin/test/news-generation",
+    icon: Newspaper,
     category: "testing",
     testOnly: true
   },
   {
     title: "Test Blog Regeneration",
     description: "Test blog regeneratie proces",
-    path: "/test-blog-regeneration",
+    path: "/admin/test/blog-regeneration",
     icon: FileText,
     category: "testing",
     testOnly: true
@@ -247,8 +285,32 @@ const adminPages: AdminPage[] = [
   {
     title: "Test Discogs Flow",
     description: "Test Discogs integratie workflow",
-    path: "/test-discogs-flow",
+    path: "/admin/test/discogs-flow",
     icon: Disc,
+    category: "testing",
+    testOnly: true
+  },
+  {
+    title: "Test Discogs Blog Gen",
+    description: "Test Discogs blog generatie",
+    path: "/admin/test/discogs-blog-generation",
+    icon: FileText,
+    category: "testing",
+    testOnly: true
+  },
+  {
+    title: "Test Discogs ID Finder",
+    description: "Test Discogs ID finder functionaliteit",
+    path: "/admin/test/discogs-id",
+    icon: Database,
+    category: "testing",
+    testOnly: true
+  },
+  {
+    title: "Test Album Cover Backfill",
+    description: "Test album cover backfill proces",
+    path: "/admin/test/album-cover-backfill",
+    icon: Image,
     category: "testing",
     testOnly: true
   },

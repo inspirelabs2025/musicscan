@@ -58,9 +58,15 @@ Draag je favoriete album met trots op dit comfortabele T-shirt!`;
         description: standardDescription,
         price: 24.95,
         image_url: base_design_url,
-        category: 'tshirts',
+        primary_image: base_design_url,
+        images: [base_design_url],
+        artist: artist_name,
+        media_type: 'merchandise',
+        categories: ['tshirts', 'music-merch', 'album-inspired', 'apparel'],
         tags: ['tshirts', 'music-merch', 'album-inspired', 'apparel', genre].filter(Boolean),
         is_featured: false,
+        status: 'active',
+        published_at: new Date().toISOString(),
         metadata: {
           album_title,
           artist_name,
@@ -81,7 +87,10 @@ Draag je favoriete album met trots op dit comfortabele T-shirt!`;
     // Update T-shirt record with product ID
     await supabase
       .from('album_tshirts')
-      .update({ product_id: standardProduct.id })
+      .update({ 
+        product_id: standardProduct.id,
+        is_published: true
+      })
       .eq('id', tshirtId);
 
     const result: any = {
@@ -111,9 +120,15 @@ Kies uit ${styleVariants.length} unieke styles: ${styleVariants.map((v: any) => 
           description: premiumDescription,
           price: 29.95,
           image_url: styleVariants[0].url,
-          category: 'tshirts',
+          primary_image: styleVariants[0].url,
+          images: styleVariants.map((v: any) => v.url),
+          artist: artist_name,
+          media_type: 'merchandise',
+          categories: ['tshirts', 'premium', 'music-merch', 'album-inspired', 'style-collection'],
           tags: ['tshirts', 'premium', 'music-merch', 'album-inspired', 'style-collection', genre].filter(Boolean),
           is_featured: true,
+          status: 'active',
+          published_at: new Date().toISOString(),
           metadata: {
             album_title,
             artist_name,

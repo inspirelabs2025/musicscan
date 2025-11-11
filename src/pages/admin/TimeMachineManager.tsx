@@ -188,6 +188,11 @@ export default function TimeMachineManager() {
                   <Package className="w-16 h-16 text-muted-foreground" />
                 </div>
               )}
+              <div className="absolute top-2 left-2">
+                <Badge variant={event.poster_source === 'original' ? 'default' : 'secondary'}>
+                  {event.poster_source === 'original' ? '📜 Origineel' : '🤖 AI'}
+                </Badge>
+              </div>
               <div className="absolute top-2 right-2 flex gap-2">
                 <Badge variant={event.is_published ? 'default' : 'secondary'}>
                   {event.is_published ? 'Published' : 'Draft'}
@@ -238,23 +243,31 @@ export default function TimeMachineManager() {
                   </Button>
                 </div>
 
-                {autoGeneratePosterForEvent === event.id && !event.poster_image_url ? (
-                  <div className="w-full py-3 px-4 bg-primary/10 border border-primary/20 rounded-md">
-                    <div className="flex items-center gap-2 text-sm text-primary">
-                      <Wand2 className="w-4 h-4 animate-pulse" />
-                      <span>Poster wordt gegenereerd… (30-60s)</span>
+                {event.poster_source === 'ai' ? (
+                  autoGeneratePosterForEvent === event.id && !event.poster_image_url ? (
+                    <div className="w-full py-3 px-4 bg-primary/10 border border-primary/20 rounded-md">
+                      <div className="flex items-center gap-2 text-sm text-primary">
+                        <Wand2 className="w-4 h-4 animate-pulse" />
+                        <span>Poster wordt gegenereerd… (30-60s)</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleGeneratePoster(event.id)}
+                      disabled={isGenerating}
+                    >
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      {event.poster_image_url ? 'Regenereer AI Poster' : 'Genereer AI Poster'}
+                    </Button>
+                  )
                 ) : (
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={() => handleGeneratePoster(event.id)}
-                    disabled={isGenerating}
-                  >
-                    <Wand2 className="w-4 h-4 mr-2" />
-                    {event.poster_image_url ? 'Regenereer Poster' : 'Genereer Poster'}
-                  </Button>
+                  <div className="w-full py-2 px-3 bg-muted rounded-md text-center">
+                    <p className="text-sm text-muted-foreground">
+                      📜 Gebruikt originele poster
+                    </p>
+                  </div>
                 )}
 
                 <Button

@@ -4593,7 +4593,10 @@ export type Database = {
           meta_description: string | null
           meta_title: string | null
           metal_print_image_url: string | null
+          original_poster_metadata: Json | null
+          original_poster_url: string | null
           poster_image_url: string | null
+          poster_source: string | null
           poster_style: string | null
           press_reviews: Json | null
           price_metal: number | null
@@ -4634,7 +4637,10 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           metal_print_image_url?: string | null
+          original_poster_metadata?: Json | null
+          original_poster_url?: string | null
           poster_image_url?: string | null
+          poster_source?: string | null
           poster_style?: string | null
           press_reviews?: Json | null
           price_metal?: number | null
@@ -4675,7 +4681,10 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           metal_print_image_url?: string | null
+          original_poster_metadata?: Json | null
+          original_poster_url?: string | null
           poster_image_url?: string | null
+          poster_source?: string | null
           poster_style?: string | null
           press_reviews?: Json | null
           price_metal?: number | null

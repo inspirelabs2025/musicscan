@@ -37,6 +37,13 @@ export interface TimeMachineEvent {
   poster_image_url?: string;
   metal_print_image_url?: string;
   qr_code_url?: string;
+  original_poster_url?: string;
+  poster_source?: 'ai' | 'original';
+  original_poster_metadata?: {
+    year?: string;
+    source?: string;
+    condition?: string;
+  };
   edition_size?: number;
   price_poster?: number;
   price_metal?: number;

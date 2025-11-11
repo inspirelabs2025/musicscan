@@ -1,10 +1,13 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import {
   Form,
   FormControl,
@@ -15,7 +18,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useCreateTimeMachineEvent, useUpdateTimeMachineEvent, TimeMachineEvent } from '@/hooks/useTimeMachineEvents';
-import { Loader2 } from 'lucide-react';
+import { useUploadOriginalPoster } from '@/hooks/useUploadOriginalPoster';
+import { Loader2, Upload, Image as ImageIcon } from 'lucide-react';
 
 const eventFormSchema = z.object({
   event_title: z.string().min(3, 'Titel moet minimaal 3 karakters zijn'),
@@ -54,6 +58,15 @@ interface TimeMachineEventFormProps {
 export function TimeMachineEventForm({ event, onSuccess, onCancel }: TimeMachineEventFormProps) {
   const { mutate: createEvent, isPending: isCreating } = useCreateTimeMachineEvent();
   const { mutate: updateEvent, isPending: isUpdating } = useUpdateTimeMachineEvent();
+  const { mutate: uploadPoster, isPending: isUploading } = useUploadOriginalPoster();
+
+  const [posterSource, setPosterSource] = useState<'ai' | 'original'>(event?.poster_source as 'ai' | 'original' || 'ai');
+  const [originalPosterFile, setOriginalPosterFile] = useState<File | null>(null);
+  const [originalPosterPreview, setOriginalPosterPreview] = useState<string | null>(event?.original_poster_url || null);
+  const [posterMetadata, setPosterMetadata] = useState({
+    year: event?.original_poster_metadata?.year || '',
+    source: event?.original_poster_metadata?.source || '',
+  });
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
@@ -84,29 +97,72 @@ export function TimeMachineEventForm({ event, onSuccess, onCancel }: TimeMachine
     },
   });
 
+  const handleOriginalPosterUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setOriginalPosterFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setOriginalPosterPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const onSubmit = (values: EventFormValues) => {
     const tagsArray = values.tags ? values.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
     
     const eventData = {
       ...values,
       tags: tagsArray,
+      poster_source: posterSource,
+    };
+
+    const handleSuccess = (eventId?: string) => {
+      // If original poster is selected and file is uploaded, upload it
+      if (posterSource === 'original' && originalPosterFile && eventId) {
+        uploadPoster({
+          eventId: eventId,
+          imageFile: originalPosterFile,
+          metadata: posterMetadata.year || posterMetadata.source ? posterMetadata : undefined,
+        }, {
+          onSuccess: () => onSuccess?.(eventId),
+          onError: () => onSuccess?.(eventId), // Still call success even if upload fails
+        });
+      } else {
+        onSuccess?.(eventId);
+      }
     };
 
     if (event?.id) {
-      updateEvent({ ...eventData, id: event.id } as any, {
-        onSuccess: () => onSuccess?.(),
-      });
+      // For updates, if original poster file is selected, upload it first
+      if (posterSource === 'original' && originalPosterFile) {
+        uploadPoster({
+          eventId: event.id,
+          imageFile: originalPosterFile,
+          metadata: posterMetadata.year || posterMetadata.source ? posterMetadata : undefined,
+        }, {
+          onSuccess: () => {
+            updateEvent({ ...eventData, id: event.id } as any, {
+              onSuccess: () => onSuccess?.(),
+            });
+          },
+        });
+      } else {
+        updateEvent({ ...eventData, id: event.id } as any, {
+          onSuccess: () => onSuccess?.(),
+        });
+      }
     } else {
       createEvent(eventData as any, {
         onSuccess: (data: any) => {
-          // Pass the created event ID to parent
-          onSuccess?.(data?.id);
+          handleSuccess(data?.id);
         },
       });
     }
   };
 
-  const isPending = isCreating || isUpdating;
+  const isPending = isCreating || isUpdating || isUploading;
 
   return (
     <Form {...form}>
@@ -398,6 +454,89 @@ export function TimeMachineEventForm({ event, onSuccess, onCancel }: TimeMachine
             </FormItem>
           )}
         />
+
+        {/* Poster Source Selection */}
+        <div className="space-y-4 border rounded-lg p-6 bg-muted/30">
+          <Label className="text-base font-semibold">Poster Type</Label>
+          <RadioGroup value={posterSource} onValueChange={(v) => setPosterSource(v as 'ai' | 'original')}>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="ai" id="ai" />
+              <Label htmlFor="ai" className="font-normal cursor-pointer">
+                🤖 AI Gegenereerde Poster
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="original" id="original" />
+              <Label htmlFor="original" className="font-normal cursor-pointer">
+                📜 Originele Concertposter Uploaden
+              </Label>
+            </div>
+          </RadioGroup>
+
+          {posterSource === 'original' && (
+            <div className="space-y-4 mt-4 pt-4 border-t">
+              <div>
+                <Label htmlFor="poster-upload" className="mb-2 block">Upload Originele Poster</Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    id="poster-upload"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleOriginalPosterUpload}
+                    className="flex-1"
+                  />
+                  {originalPosterPreview && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setOriginalPosterFile(null);
+                        setOriginalPosterPreview(null);
+                      }}
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Max 10MB · JPG, PNG of WebP · Min 1500x2100px
+                </p>
+              </div>
+
+              {originalPosterPreview && (
+                <div className="relative aspect-[3/4] w-48 rounded-lg overflow-hidden border">
+                  <img 
+                    src={originalPosterPreview} 
+                    alt="Preview" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="poster-year" className="text-sm">Poster Jaar (optioneel)</Label>
+                  <Input
+                    id="poster-year"
+                    placeholder="1975"
+                    value={posterMetadata.year}
+                    onChange={(e) => setPosterMetadata({...posterMetadata, year: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="poster-source" className="text-sm">Bron/Collectie (optioneel)</Label>
+                  <Input
+                    id="poster-source"
+                    placeholder="Privé collectie"
+                    value={posterMetadata.source}
+                    onChange={(e) => setPosterMetadata({...posterMetadata, source: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="flex gap-6">
           <FormField

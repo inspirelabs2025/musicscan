@@ -31,9 +31,16 @@ serve(async (req) => {
       throw new Error(`Event not found: ${eventError?.message}`);
     }
 
-    if (!event.poster_image_url) {
-      throw new Error('Event must have a poster_image_url to create products');
+    // Determine which poster to use based on poster_source
+    const posterImageUrl = event.poster_source === 'original' 
+      ? event.original_poster_url 
+      : event.poster_image_url;
+
+    if (!posterImageUrl) {
+      throw new Error('Event must have a poster (AI or original) to create products');
     }
+
+    console.log(`Using ${event.poster_source === 'original' ? 'original' : 'AI'} poster:`, posterImageUrl);
 
     const products = [];
 
@@ -80,13 +87,13 @@ Elk Time Machine poster vertelt het verhaal van een iconisch concert. Scan de QR
         artist: event.artist_name,
         description: fineArtDescription,
         price: event.price_poster || 149.00,
-        primary_image: event.poster_image_url,
+        primary_image: posterImageUrl,
         media_type: 'poster',
         categories: ['time-machine', 'fine-art-print', 'concert-posters'],
         stock_quantity: event.edition_size || 100,
         status: 'active',
         published_at: new Date().toISOString(),
-        images: [event.poster_image_url]
+        images: [posterImageUrl]
       })
       .select()
       .single();
@@ -138,13 +145,13 @@ Elk Time Machine poster vertelt het verhaal van een iconisch concert. Scan de QR
         artist: event.artist_name,
         description: metalDescription,
         price: event.price_metal || 299.00,
-        primary_image: event.metal_print_image_url || event.poster_image_url,
+        primary_image: event.metal_print_image_url || posterImageUrl,
         media_type: 'metal-print',
         categories: ['time-machine', 'metal-print', 'premium', 'concert-posters'],
         stock_quantity: 100,
         status: 'active',
         published_at: new Date().toISOString(),
-        images: [event.metal_print_image_url || event.poster_image_url]
+        images: [event.metal_print_image_url || posterImageUrl]
       })
       .select()
       .single();

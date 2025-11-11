@@ -67,6 +67,7 @@ export function TimeMachineEventForm({ event, onSuccess, onCancel }: TimeMachine
     year: event?.original_poster_metadata?.year || '',
     source: event?.original_poster_metadata?.source || '',
   });
+  const [autoUpscale, setAutoUpscale] = useState(true);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
@@ -125,6 +126,7 @@ export function TimeMachineEventForm({ event, onSuccess, onCancel }: TimeMachine
           eventId: eventId,
           imageFile: originalPosterFile,
           metadata: posterMetadata.year || posterMetadata.source ? posterMetadata : undefined,
+          autoUpscale,
         }, {
           onSuccess: () => onSuccess?.(eventId),
           onError: () => onSuccess?.(eventId), // Still call success even if upload fails
@@ -141,6 +143,7 @@ export function TimeMachineEventForm({ event, onSuccess, onCancel }: TimeMachine
           eventId: event.id,
           imageFile: originalPosterFile,
           metadata: posterMetadata.year || posterMetadata.source ? posterMetadata : undefined,
+          autoUpscale,
         }, {
           onSuccess: () => {
             updateEvent({ ...eventData, id: event.id } as any, {
@@ -503,6 +506,20 @@ export function TimeMachineEventForm({ event, onSuccess, onCancel }: TimeMachine
                   Max 10MB · JPG, PNG of WebP · Min 1500x2100px
                 </p>
               </div>
+
+              <div className="flex items-center space-x-2 pt-2 pb-3 border-b">
+                <Switch
+                  id="autoUpscale"
+                  checked={autoUpscale}
+                  onCheckedChange={setAutoUpscale}
+                />
+                <Label htmlFor="autoUpscale" className="cursor-pointer font-normal">
+                  🎨 Automatisch upscalen met AI indien nodig (aanbevolen)
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground -mt-2">
+                AI verhoogt de resolutie zonder de poster te veranderen. Duurt 10-20 seconden bij lage resolutie.
+              </p>
 
               {originalPosterPreview && (
                 <div className="relative aspect-[3/4] w-48 rounded-lg overflow-hidden border">

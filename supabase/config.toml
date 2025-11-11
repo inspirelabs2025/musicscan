@@ -1,5 +1,11 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.upscale-image]
+verify_jwt = false
+
+[functions.upload-original-poster]
+verify_jwt = false
+
 [functions.bulk-upload-posters]
 verify_jwt = false
 

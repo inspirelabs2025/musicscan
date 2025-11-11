@@ -10,6 +10,7 @@ interface UploadOriginalPosterParams {
     source?: string;
     condition?: string;
   };
+  autoUpscale?: boolean;
 }
 
 const fileToBase64 = (file: File): Promise<string> => {
@@ -26,7 +27,7 @@ export const useUploadOriginalPoster = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ eventId, imageFile, metadata }: UploadOriginalPosterParams) => {
+    mutationFn: async ({ eventId, imageFile, metadata, autoUpscale = false }: UploadOriginalPosterParams) => {
       // Validate file size (max 10MB)
       if (imageFile.size > 10 * 1024 * 1024) {
         throw new Error('Bestand te groot. Maximaal 10MB toegestaan.');
@@ -38,17 +39,15 @@ export const useUploadOriginalPoster = () => {
         throw new Error('Ongeldig bestandstype. Alleen JPG, PNG en WebP zijn toegestaan.');
       }
 
-      // Validate resolution
+      // Load and validate resolution
       const img = new Image();
       const imageUrl = URL.createObjectURL(imageFile);
+      let base64 = '';
       
-      await new Promise((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         img.onload = () => {
           URL.revokeObjectURL(imageUrl);
-          if (img.width < 1500 || img.height < 2100) {
-            reject(new Error('Resolutie te laag. Minimaal 1500x2100px vereist voor print kwaliteit.'));
-          }
-          resolve(true);
+          resolve();
         };
         img.onerror = () => {
           URL.revokeObjectURL(imageUrl);
@@ -57,8 +56,42 @@ export const useUploadOriginalPoster = () => {
         img.src = imageUrl;
       });
 
+      const needsUpscaling = img.width < 1500 || img.height < 2100;
+
       // Convert file to base64
-      const base64 = await fileToBase64(imageFile);
+      base64 = await fileToBase64(imageFile);
+
+      // If resolution is too low and auto-upscale is enabled, upscale first
+      if (needsUpscaling && autoUpscale) {
+        toast({
+          title: "🎨 AI Upscaling...",
+          description: `Verhogen resolutie van ${img.width}x${img.height} naar minimaal 1500x2100px`,
+        });
+
+        const targetWidth = Math.max(1500, img.width * 2);
+        const targetHeight = Math.max(2100, img.height * 2);
+
+        const { data: upscaleData, error: upscaleError } = await supabase.functions.invoke('upscale-image', {
+          body: { 
+            imageBase64: base64,
+            targetWidth,
+            targetHeight
+          },
+        });
+
+        if (upscaleError || !upscaleData?.success) {
+          throw new Error(upscaleData?.error || 'AI upscaling mislukt');
+        }
+
+        base64 = upscaleData.upscaledImageBase64;
+        
+        toast({
+          title: "✅ Upscaling Voltooid",
+          description: "Afbeelding succesvol vergroot met AI",
+        });
+      } else if (needsUpscaling && !autoUpscale) {
+        throw new Error(`Resolutie te laag (${img.width}x${img.height}px). Schakel "Automatisch upscalen" in of upload een hogere resolutie.`);
+      }
 
       // Call edge function
       const { data, error } = await supabase.functions.invoke('upload-original-poster', {

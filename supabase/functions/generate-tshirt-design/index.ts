@@ -66,23 +66,42 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const prompt = `Place this album artwork directly onto a high-quality T-shirt.
+    const prompt = `Create a photorealistic T-shirt product image featuring this album artwork.
 
-**Requirements:**
-- Show T-shirt flat lay or on mannequin, front view
-- The ORIGINAL album artwork should be prominently displayed on the chest area
-- Center placement, sized appropriately for T-shirt print (medium size, not too large or small)
-- Keep the artwork recognizable and clear
-- White, black, or matching color T-shirt base
-- Clean background
-- Professional product photography look
-- The album art should be the main design element - DO NOT create abstract patterns
+**T-SHIRT PRESENTATION:**
+- Show T-shirt standing upright on invisible mannequin or ghost mannequin
+- Front view with natural 3D form and realistic fabric draping
+- Premium cotton/blend material with subtle texture visible
+- Natural wrinkles and folds where fabric bends (shoulders, sides)
+- Realistic lighting with soft shadows to show depth and dimension
+- Studio photography setup with professional lighting
 
-**Style:**
-- Modern, wearable music merchandise
-- The album artwork should be immediately recognizable
-- High-quality apparel photography aesthetic
-- Ultra high resolution`;
+**ALBUM ARTWORK PLACEMENT:**
+- Print the album artwork prominently on the chest area
+- Center placement, appropriately sized (not too large or overwhelming)
+- Artwork should look PRINTED ON the fabric, not floating or flat
+- Follow the natural contours and folds of the T-shirt
+- Subtle distortion/wrapping where fabric curves
+- The print should have slight texture matching the fabric
+
+**T-SHIRT STYLE:**
+- Classic crew neck or V-neck style
+- Choose base color that complements the artwork: white, black, heather grey, or a color from the album palette
+- Clean, modern fit (not baggy or oversized)
+- High-quality blank apparel aesthetic
+
+**BACKGROUND & COMPOSITION:**
+- Clean solid background (white, light grey, or subtle gradient)
+- Professional product photography composition
+- Sharp focus on the shirt, soft background
+- Centered framing with slight space around edges
+
+**QUALITY REQUIREMENTS:**
+- Ultra high resolution (suitable for print)
+- Photorealistic rendering
+- Professional e-commerce product photography quality
+- The result should look like real merchandise photography, not a mockup
+- Ensure the album artwork remains clear and recognizable`;
 
     console.log('🎨 Calling AI for T-shirt design with album artwork...');
 

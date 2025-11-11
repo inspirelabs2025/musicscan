@@ -38,28 +38,132 @@ export const usePlatformProductDetail = (slug: string) => {
   return query;
 };
 
-export const useSimilarProducts = (productId: string, category?: string, limit = 4) => {
+export const useSimilarProducts = (
+  productId: string, 
+  category?: string, 
+  artist?: string,
+  limit = 4
+) => {
   return useQuery({
-    queryKey: ['similar-products', productId, category],
+    queryKey: ['similar-products', productId, category, artist],
     queryFn: async () => {
-      let query = supabase
-        .from('platform_products')
-        .select('*')
-        .eq('status', 'active')
-        .not('published_at', 'is', null)
-        .gt('stock_quantity', 0)
-        .neq('id', productId);
+      const results: PlatformProduct[] = [];
+      const resultIds = new Set<string>();
       
-      if (category) {
-        query = query.contains('categories', [category]);
+      // TIER 1: Same artist + category (most relevant)
+      if (artist && category) {
+        const { data } = await supabase
+          .from('platform_products')
+          .select('*')
+          .eq('status', 'active')
+          .not('published_at', 'is', null)
+          .gt('stock_quantity', 0)
+          .neq('id', productId)
+          .ilike('artist', `%${artist}%`)
+          .contains('categories', [category])
+          .limit(limit * 2);
+        
+        if (data && data.length > 0) {
+          // Shuffle and take limit
+          const shuffled = data.sort(() => Math.random() - 0.5).slice(0, limit);
+          shuffled.forEach(item => {
+            results.push(item);
+            resultIds.add(item.id);
+          });
+        }
       }
       
-      const { data, error } = await query
-        .order('view_count', { ascending: false })
-        .limit(limit);
+      // TIER 2: Same category, different artists
+      if (results.length < limit && category) {
+        const remaining = limit - results.length;
+        const excludeIds = Array.from(resultIds);
+        
+        let query = supabase
+          .from('platform_products')
+          .select('*')
+          .eq('status', 'active')
+          .not('published_at', 'is', null)
+          .gt('stock_quantity', 0)
+          .neq('id', productId)
+          .contains('categories', [category])
+          .limit(remaining * 2);
+        
+        if (excludeIds.length > 0) {
+          query = query.not('id', 'in', `(${excludeIds.join(',')})`);
+        }
+        
+        const { data } = await query;
+        
+        if (data && data.length > 0) {
+          const shuffled = data.sort(() => Math.random() - 0.5).slice(0, remaining);
+          shuffled.forEach(item => {
+            results.push(item);
+            resultIds.add(item.id);
+          });
+        }
+      }
       
-      if (error) throw error;
-      return data as PlatformProduct[];
+      // TIER 3: Same artist, different categories
+      if (results.length < limit && artist) {
+        const remaining = limit - results.length;
+        const excludeIds = Array.from(resultIds);
+        
+        let query = supabase
+          .from('platform_products')
+          .select('*')
+          .eq('status', 'active')
+          .not('published_at', 'is', null)
+          .gt('stock_quantity', 0)
+          .neq('id', productId)
+          .ilike('artist', `%${artist}%`)
+          .limit(remaining * 2);
+        
+        if (excludeIds.length > 0) {
+          query = query.not('id', 'in', `(${excludeIds.join(',')})`);
+        }
+        
+        const { data } = await query;
+        
+        if (data && data.length > 0) {
+          const shuffled = data.sort(() => Math.random() - 0.5).slice(0, remaining);
+          shuffled.forEach(item => {
+            results.push(item);
+            resultIds.add(item.id);
+          });
+        }
+      }
+      
+      // TIER 4: Random popular products (fallback)
+      if (results.length < limit) {
+        const remaining = limit - results.length;
+        const excludeIds = Array.from(resultIds);
+        
+        let query = supabase
+          .from('platform_products')
+          .select('*')
+          .eq('status', 'active')
+          .not('published_at', 'is', null)
+          .gt('stock_quantity', 0)
+          .neq('id', productId)
+          .order('view_count', { ascending: false })
+          .limit(remaining * 3);
+        
+        if (excludeIds.length > 0) {
+          query = query.not('id', 'in', `(${excludeIds.join(',')})`);
+        }
+        
+        const { data } = await query;
+        
+        if (data && data.length > 0) {
+          const shuffled = data.sort(() => Math.random() - 0.5).slice(0, remaining);
+          shuffled.forEach(item => {
+            results.push(item);
+            resultIds.add(item.id);
+          });
+        }
+      }
+      
+      return results;
     },
     enabled: !!productId,
   });

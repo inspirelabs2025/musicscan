@@ -37,21 +37,33 @@ export const RelatedContent: React.FC<RelatedContentProps> = ({
 
       // Priority: same artist > same genre > similar year
       if (artist) {
-        const { data } = await query.ilike('artist', `%${artist}%`);
-        if (data && data.length > 0) return data;
+        const { data } = await query
+          .ilike('artist', `%${artist}%`)
+          .limit(limit * 2);
+        if (data && data.length > 0) {
+          // Shuffle and take limit
+          return data.sort(() => Math.random() - 0.5).slice(0, limit);
+        }
       }
 
       if (genre) {
-        const { data } = await query.ilike('genre', `%${genre}%`);
-        if (data && data.length > 0) return data;
+        const { data } = await query
+          .ilike('genre', `%${genre}%`)
+          .limit(limit * 2);
+        if (data && data.length > 0) {
+          return data.sort(() => Math.random() - 0.5).slice(0, limit);
+        }
       }
 
       if (year) {
         const yearNum = typeof year === 'string' ? parseInt(year) : year;
         const { data } = await query
           .gte('year', yearNum - 2)
-          .lte('year', yearNum + 2);
-        if (data) return data;
+          .lte('year', yearNum + 2)
+          .limit(limit * 2);
+        if (data && data.length > 0) {
+          return data.sort(() => Math.random() - 0.5).slice(0, limit);
+        }
       }
 
       return [];

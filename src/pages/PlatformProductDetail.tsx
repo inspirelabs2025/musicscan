@@ -24,6 +24,7 @@ export default function PlatformProductDetail() {
   const { data: similarProducts = [] } = useSimilarProducts(
     product?.id || "",
     product?.categories?.[0],
+    product?.artist,
     4
   );
   const { addToCart, isInCart } = useCart();

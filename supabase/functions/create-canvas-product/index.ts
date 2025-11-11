@@ -129,6 +129,9 @@ Transform your space with this stunning ${style} canvas artwork of ${cleanArtist
 - Ready to hang
 - Museum-quality print
 
+📐 Afmetingen: 50x70cm
+🚚 Levertijd: 3-4 werkdagen
+
 🎨 Style: ${style}
 👤 Subject: ${cleanArtist}
     `.trim();

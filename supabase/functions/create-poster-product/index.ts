@@ -128,6 +128,9 @@ Transform your space with this stunning ${style} artwork of ${cleanArtist}.
 - Perfect for home decor or collectors
 - Museum-quality poster
 
+📐 Afmetingen: 50x70cm
+🚚 Levertijd: 3-4 werkdagen
+
 🎨 Style: ${style}
 👤 Subject: ${cleanArtist}
     `.trim();

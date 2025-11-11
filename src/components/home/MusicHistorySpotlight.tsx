@@ -18,10 +18,11 @@ interface MusicHistoryData {
 }
 
 export const MusicHistorySpotlight = () => {
-  const { data: historyData, isLoading } = useQuery({
+  const { data: historyData, isLoading, error } = useQuery({
     queryKey: ['music-history-today'],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
+      console.log('🎵 Fetching music history for date:', today);
       
       const { data, error } = await supabase
         .from('music_history_events')
@@ -29,10 +30,17 @@ export const MusicHistorySpotlight = () => {
         .eq('event_date', today)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching music history:', error);
+        throw error;
+      }
+      
+      console.log('✅ Music history data:', data);
       return data as MusicHistoryData | null;
     }
   });
+
+  console.log('MusicHistorySpotlight render:', { isLoading, hasData: !!historyData, error });
 
   if (isLoading || !historyData || !historyData.events || historyData.events.length === 0) {
     return null;

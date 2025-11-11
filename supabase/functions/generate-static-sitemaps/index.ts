@@ -74,11 +74,25 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch art products: ${productsError.message}`);
     }
 
+    // Fetch all active T-shirt products (merchandise)
+    const { data: tshirtProducts, error: tshirtsError } = await supabase
+      .from('platform_products')
+      .select('slug, updated_at, primary_image, title, artist, tags, categories')
+      .eq('media_type', 'merchandise')
+      .contains('categories', ['tshirts'])
+      .eq('status', 'active')
+      .not('published_at', 'is', null)
+      .order('updated_at', { ascending: false });
+
+    if (tshirtsError) {
+      throw new Error(`Failed to fetch T-shirt products: ${tshirtsError.message}`);
+    }
+
     // Separate POSTER products from other art products
     const posterProducts = (artProducts || []).filter(p => p.categories?.includes('POSTER'));
     const metalPrintProducts = (artProducts || []).filter(p => !p.categories?.includes('POSTER'));
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, ${posterProducts?.length || 0} posters, and ${metalPrintProducts?.length || 0} metal prints`);
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, and ${tshirtProducts?.length || 0} t-shirts`);
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
@@ -86,24 +100,28 @@ Deno.serve(async (req) => {
     const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal');
     const metalPrintsSitemapXml = generateSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product');
     const postersSitemapXml = generatePosterSitemapXml(posterProducts || []);
+    const tshirtsSitemapXml = generateSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product');
 
     // Image sitemaps
     const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
     const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal', 'artwork_url');
     const metalPrintsImageSitemapXml = generateImageSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product', 'primary_image');
     const postersImageSitemapXml = generatePosterImageSitemapXml(posterProducts || []);
+    const tshirtsImageSitemapXml = generateImageSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product', 'primary_image');
 
-    // Build uploads list (11 files total - added poster sitemaps)
+    // Build uploads list (13 files total - added poster and t-shirt sitemaps)
     const uploads = [
       { name: 'sitemap-static.xml', data: staticSitemapXml },
       { name: 'sitemap-blog.xml', data: blogSitemapXml },
       { name: 'sitemap-music-stories.xml', data: storiesSitemapXml },
       { name: 'sitemap-metal-prints.xml', data: metalPrintsSitemapXml },
       { name: 'sitemap-posters.xml', data: postersSitemapXml },
+      { name: 'sitemap-tshirts.xml', data: tshirtsSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
       { name: 'sitemap-images-stories.xml', data: storiesImageSitemapXml },
       { name: 'sitemap-images-metal-prints.xml', data: metalPrintsImageSitemapXml },
       { name: 'sitemap-images-posters.xml', data: postersImageSitemapXml },
+      { name: 'sitemap-images-tshirts.xml', data: tshirtsImageSitemapXml },
     ];
 
     for (const upload of uploads) {
@@ -229,6 +247,7 @@ for (const sitemapName of allSitemaps) {
           musicStories: musicStories?.length || 0,
           posterProducts: posterProducts?.length || 0,
           metalPrintProducts: metalPrintProducts?.length || 0,
+          tshirtProducts: tshirtProducts?.length || 0,
           sitemaps: uploads.map(u => ({
             name: u.name,
             url: `${supabaseUrl}/storage/v1/object/public/sitemaps/${u.name}`

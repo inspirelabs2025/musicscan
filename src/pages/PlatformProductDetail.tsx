@@ -113,7 +113,8 @@ export default function PlatformProductDetail() {
     );
   }
 
-  const allImages = [product.primary_image, ...(product.images || [])].filter(Boolean);
+  // Remove duplicates from images array using Set
+  const allImages = [...new Set([product.primary_image, ...(product.images || [])].filter(Boolean))];
   const displayImage = selectedImage || product.primary_image;
   
   // For T-shirts, generate cart_key with all options
@@ -122,11 +123,11 @@ export default function PlatformProductDetail() {
     : product.id;
   const inCart = isInCart(cartKey);
 
-  // T-shirt designs from images
+  // T-shirt designs from images (deduplicated)
   const tshirtDesigns = isTShirt ? allImages.map((img, idx) => {
     // Extract style name from URL if possible
     const styleMatch = img.match(/(vintage|neon|pastel|monochrome|watercolor|grunge|minimalist)/i);
-    const styleName = styleMatch ? styleMatch[1] : `Design ${idx + 1}`;
+    const styleName = styleMatch ? styleMatch[1].charAt(0).toUpperCase() + styleMatch[1].slice(1) : `Design ${idx + 1}`;
     return { url: img, label: styleName };
   }) : [];
 

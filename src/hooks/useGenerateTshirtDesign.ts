@@ -50,8 +50,12 @@ export const useGenerateTshirtDesign = () => {
       );
 
       if (colorError) {
+        const errorMsg = colorError.message || String(colorError);
+        if (errorMsg.includes('credits') || errorMsg.includes('INSUFFICIENT_CREDITS')) {
+          throw new Error('INSUFFICIENT_CREDITS: Not enough Lovable AI credits. Add credits at Settings → Workspace → Usage.');
+        }
         console.error('❌ Step 1 failed - Color extraction:', colorError);
-        throw new Error(`Color extraction failed: ${colorError.message}`);
+        throw new Error(`Color extraction failed: ${errorMsg}`);
       }
       console.log('✅ Step 1 complete - Colors extracted');
 
@@ -81,8 +85,12 @@ export const useGenerateTshirtDesign = () => {
       );
 
       if (designError) {
+        const errorMsg = designError.message || String(designError);
+        if (errorMsg.includes('credits') || errorMsg.includes('INSUFFICIENT_CREDITS')) {
+          throw new Error('INSUFFICIENT_CREDITS: Not enough Lovable AI credits. Add credits at Settings → Workspace → Usage.');
+        }
         console.error('❌ Step 2 failed - Design generation:', designError);
-        throw new Error(`Design generation failed: ${designError.message}`);
+        throw new Error(`Design generation failed: ${errorMsg}`);
       }
       console.log('✅ Step 2 complete - Base design created:', designData.tshirt_id);
 
@@ -106,6 +114,10 @@ export const useGenerateTshirtDesign = () => {
         );
 
         if (styleError) {
+          const errorMsg = styleError.message || String(styleError);
+          if (errorMsg.includes('credits') || errorMsg.includes('INSUFFICIENT_CREDITS')) {
+            throw new Error('INSUFFICIENT_CREDITS: Not enough Lovable AI credits. Add credits at Settings → Workspace → Usage.');
+          }
           console.error('⚠️ Step 3 failed - Style variants (continuing):', styleError);
         } else if (styleData) {
           console.log('✅ Step 3 complete - Style variants created:', styleData.styleVariants?.length || 0);
@@ -153,11 +165,22 @@ export const useGenerateTshirtDesign = () => {
     },
     onError: (error) => {
       console.error('T-shirt generation error:', error);
-      toast({
-        title: "Error Generating T-Shirts",
-        description: error instanceof Error ? error.message : "Failed to generate T-shirt design",
-        variant: "destructive",
-      });
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      
+      if (errorMsg.includes('INSUFFICIENT_CREDITS') || errorMsg.includes('credits')) {
+        toast({
+          title: "⚠️ Not Enough AI Credits",
+          description: "Your workspace has run out of Lovable AI credits. Add credits at Settings → Workspace → Usage to continue.",
+          variant: "destructive",
+          duration: 10000,
+        });
+      } else {
+        toast({
+          title: "Error Generating T-Shirts",
+          description: errorMsg,
+          variant: "destructive",
+        });
+      }
     },
   });
 };

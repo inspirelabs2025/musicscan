@@ -118,6 +118,18 @@ serve(async (req) => {
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error('AI API error:', aiResponse.status, errorText);
+      
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Not enough Lovable AI credits. Please add credits to your workspace at Settings → Workspace → Usage.',
+            errorType: 'INSUFFICIENT_CREDITS',
+            success: false 
+          }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       throw new Error(`AI generation failed: ${aiResponse.status} ${errorText}`);
     }
 

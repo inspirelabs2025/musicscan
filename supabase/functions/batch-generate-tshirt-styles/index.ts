@@ -7,75 +7,117 @@ const corsHeaders = {
 };
 
 const STYLE_PROMPTS = {
-  vintage: `Transform into a vintage-style T-shirt with these characteristics:
-- Faded, worn-in look with slightly muted colors
-- Subtle distressed texture on the print (small cracks, fading)
-- Retro color palette with warm, desaturated tones
-- Vintage wash T-shirt base (cream, faded black, or heather)
-- The print should look slightly weathered and aged
-- Maintain 80s/90s concert tee aesthetic
-- Keep album artwork recognizable but with vintage patina
-- Professional product photography with nostalgic feel`,
+  vintage: `Transform the design into a vintage-style aesthetic:
+- Apply faded, worn-in look to the DESIGN elements (slightly muted colors)
+- Subtle distressed texture on the print pattern (small cracks, weathering)
+- Retro color palette with warm, desaturated tones in the design
+- Keep BLACK T-shirt base but give it a slightly vintage wash look
+- The all-over design should look aged and weathered
+- Maintain 80s/90s streetwear aesthetic
+- Album artwork elements still recognizable but with vintage patina
 
-  neon: `Transform into a bold neon-style T-shirt:
-- Vibrant, fluorescent colors (hot pink, electric blue, lime green, neon yellow)
-- High contrast black or dark T-shirt base
-- The album artwork reimagined with neon glow effects
-- Bright, eye-catching pop art style
-- Colors should appear to "pop" off the shirt
+**MAINTAIN BASE DESIGN:**
+- Keep the BLACK T-shirt base
+- Maintain the all-over integrated design composition
+- Design flows throughout entire T-shirt (collar to hem)
+- Photorealistic product photography with 3D form
+- No cropping - complete T-shirt visible`,
+
+  neon: `Transform the design into a bold neon-style aesthetic:
+- Vibrant, fluorescent colors in the design (hot pink, electric blue, lime green, neon yellow)
+- Keep BLACK T-shirt base for high contrast
+- The all-over design pattern reimagined with neon glow effects
+- Bright, eye-catching pop art style integrated throughout
+- Colors should appear to "pop" off the black fabric
 - Modern streetwear aesthetic
-- Sharp, bold print quality
-- Professional studio lighting emphasizing the brightness`,
+- Sharp, bold print quality flowing across entire shirt
 
-  pastel: `Transform into a soft pastel-style T-shirt:
-- Dreamy pastel color palette (soft pink, baby blue, mint, lavender, peach)
-- Light-colored T-shirt base (white, cream, or light grey)
-- The album artwork reimagined with gentle, muted tones
-- Soft, aesthetic vibe with romantic feel
-- Subtle gradients and soft edges
-- Modern, Instagram-worthy style
+**MAINTAIN BASE DESIGN:**
+- Keep the BLACK T-shirt base
+- Maintain the all-over integrated design composition
+- Design flows throughout entire T-shirt
+- Photorealistic product photography with 3D form
+- No cropping - complete T-shirt visible`,
+
+  pastel: `Transform the design into a soft pastel-style aesthetic:
+- Dreamy pastel color palette in the design (soft pink, baby blue, mint, lavender, peach)
+- Keep BLACK T-shirt base for beautiful contrast with pastels
+- The all-over design pattern reimagined with gentle, muted tones
+- Soft, aesthetic vibe with romantic feel throughout the shirt
+- Subtle gradients and soft edges in the pattern
+- Modern, Instagram-worthy style integrated into fabric
 - Keep artwork recognizable but softened
-- Professional photography with soft, diffused lighting`,
 
-  monochrome: `Transform into a high-contrast monochrome T-shirt:
-- Strict black and white color scheme
-- High contrast print with deep blacks and bright whites
-- Grey heather or light grey T-shirt base
-- The album artwork converted to bold B&W graphic
-- Sharp, clean lines with strong visual impact
+**MAINTAIN BASE DESIGN:**
+- Keep the BLACK T-shirt base
+- Maintain the all-over integrated design composition
+- Design flows throughout entire T-shirt
+- Photorealistic product photography with 3D form
+- No cropping - complete T-shirt visible`,
+
+  monochrome: `Transform the design into a high-contrast monochrome aesthetic:
+- Strict black, white, and grey color scheme in the design pattern
+- Keep BLACK T-shirt base
+- High contrast print with bright whites and greys flowing throughout
+- The all-over design converted to bold B&W graphic elements
+- Sharp, clean lines with strong visual impact across entire shirt
 - Modern minimalist aesthetic
-- Graphic design poster style
-- Professional product photography with dramatic lighting`,
+- Graphic design poster style integrated into fabric
 
-  watercolor: `Transform into an artistic watercolor-style T-shirt:
-- Hand-painted watercolor aesthetic with soft edges
-- Cream or natural white T-shirt base
-- The album artwork reimagined as watercolor painting
-- Flowing colors with organic bleeds and gradients
-- Artistic, gallery-quality feel
-- Visible brush strokes and paint texture
+**MAINTAIN BASE DESIGN:**
+- Keep the BLACK T-shirt base
+- Maintain the all-over integrated design composition
+- Design flows throughout entire T-shirt
+- Photorealistic product photography with 3D form
+- No cropping - complete T-shirt visible`,
+
+  watercolor: `Transform the design into an artistic watercolor-style aesthetic:
+- Hand-painted watercolor aesthetic with soft edges in the pattern
+- Keep BLACK T-shirt base for dramatic watercolor contrast
+- The all-over design reimagined as watercolor painting throughout shirt
+- Flowing colors with organic bleeds and gradients across fabric
+- Artistic, gallery-quality feel integrated into the garment
+- Visible brush strokes and paint texture in the pattern
 - Contemporary art wear style
-- Professional photography emphasizing artistic quality`,
 
-  grunge: `Transform into an edgy grunge-style T-shirt:
-- Distressed, raw aesthetic with rough textures
-- Dark T-shirt base (black, charcoal, or dark grey)
-- The album artwork with grungy, weathered treatment
-- Rough edges, paint splatters, scratches
-- Underground music scene vibe
-- Rebellious, alternative style
-- Heavy distressing but artwork still clear
-- Professional photography with moody, dark lighting`,
+**MAINTAIN BASE DESIGN:**
+- Keep the BLACK T-shirt base
+- Maintain the all-over integrated design composition
+- Design flows throughout entire T-shirt
+- Photorealistic product photography with 3D form
+- No cropping - complete T-shirt visible`,
 
-  minimalist: `Transform into a clean minimalist-style T-shirt:
-- Ultra-simple, refined design approach
-- White or light-colored premium T-shirt
-- The album artwork simplified to essential elements
-- Clean lines, ample negative space
-- Modern Scandinavian aesthetic
-- Understated elegance
+  grunge: `Transform the design into an edgy grunge-style aesthetic:
+- Distressed, raw aesthetic with rough textures in the pattern
+- Keep BLACK T-shirt base (perfect for grunge aesthetic)
+- The all-over design with grungy, weathered treatment throughout
+- Rough edges, paint splatters, scratches in the pattern
+- Underground music scene vibe integrated across entire shirt
+- Rebellious, alternative style flowing from collar to hem
+- Heavy distressing but artwork still recognizable
+
+**MAINTAIN BASE DESIGN:**
+- Keep the BLACK T-shirt base
+- Maintain the all-over integrated design composition
+- Design flows throughout entire T-shirt
+- Photorealistic product photography with 3D form
+- No cropping - complete T-shirt visible`,
+
+  minimalist: `Transform the design into a clean minimalist-style aesthetic:
+- Ultra-simple, refined design approach with essential elements only
+- Keep BLACK T-shirt base for modern minimal contrast
+- The all-over design simplified to key visual elements flowing throughout
+- Clean lines, strategic negative space across the shirt
+- Modern Scandinavian aesthetic integrated into fabric
+- Understated elegance with subtle pattern distribution
 - High-quality, boutique fashion feel
-- Professional photography with pristine, bright lighting`
+
+**MAINTAIN BASE DESIGN:**
+- Keep the BLACK T-shirt base
+- Maintain the all-over integrated design composition
+- Design flows throughout entire T-shirt
+- Photorealistic product photography with 3D form
+- No cropping - complete T-shirt visible`
 };
 
 serve(async (req) => {

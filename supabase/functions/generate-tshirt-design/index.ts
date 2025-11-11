@@ -66,56 +66,44 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const prompt = `Create a photorealistic T-shirt product image featuring this album artwork.
+    const prompt = `Create premium black T-shirts with a creative, all-over design inspired by this album artwork. The design should be INTEGRATED into the T-shirt fabric, not just placed on top.
 
-**T-SHIRT PRESENTATION:**
-- Show T-shirt standing upright on invisible mannequin or ghost mannequin
-- Front view with natural 3D form and realistic fabric draping
-- Premium cotton/blend material with subtle texture visible
-- Natural wrinkles and folds where fabric bends (shoulders, sides)
-- Realistic lighting with soft shadows to show depth and dimension
-- Studio photography setup with professional lighting
+**CRITICAL DESIGN REQUIREMENTS:**
+- Base: Premium BLACK T-shirts (crew neck or V-neck, not white/colored - BLACK)
+- Design Integration: The album artwork elements should flow creatively THROUGHOUT the entire T-shirt
+- Coverage: Design elements from collar to hem, across chest, back, and sleeves
+- Style: Deconstructed, abstract interpretation that remains RECOGNIZABLE to the original album
+- The artwork's key visual elements, colors, and iconic details must be identifiable
+- Think: all-over print fashion, high-end streetwear, not just a chest logo
+
+**COMPOSITION:**
+- Show T-shirt standing upright on invisible mannequin/ghost mannequin
+- 3D perspective showing form, natural fabric draping, and subtle wrinkles
+- Design should follow the T-shirt's contours naturally (wrapping around curves)
+- Front, chest, shoulders, sides all feature integrated design elements
+- Professional product photography with studio lighting creating depth and shadows
+
+**DESIGN STYLE:**
+- Photorealistic merchandise photography (NOT flat mockup)
+- The album's visual DNA is woven into the fabric pattern
+- Creative reinterpretation: break down iconic elements and flow them across the shirt
+- Maintain recognizability: someone should say "oh, that's [album name]!"
+- Premium, wearable streetwear aesthetic
+- Clean white or light grey background
+- Ultra high resolution
 
 **CRITICAL COMPOSITION RULES - NO CROPPING:**
 - The COMPLETE T-shirt must be visible (collar to bottom hem)
-- DO NOT CROP the top (collar area must be fully visible)
+- DO NOT CROP the top (collar/neck area must be fully visible)
 - DO NOT CROP the sides or bottom
-- Leave adequate space around the entire shirt (minimum 5% margin)
-- If there's a person/mannequin, ensure head/neck area is FULLY VISIBLE
-- Full frame composition with the entire product within boundaries
-- Safe zones: Top 8%, Bottom 5%, Sides 5%
+- Full frame composition with entire product within boundaries
+- Safe zones: Top 8%, Bottom 15%, Sides 5%
 
-**ALBUM ARTWORK PLACEMENT:**
-- Print the album artwork prominently on the chest area
-- Center placement, appropriately sized (not too large or overwhelming)
-- Artwork should look PRINTED ON the fabric, not floating or flat
-- Follow the natural contours and folds of the T-shirt
-- Subtle distortion/wrapping where fabric curves
-- The print should have slight texture matching the fabric
-- Artwork should be COMPLETE and not cropped at edges
-- Ensure the artwork fits fully on the chest area without cutoff
-
-**T-SHIRT STYLE:**
-- Classic crew neck or V-neck style
-- Choose base color that complements the artwork: white, black, heather grey, or a color from the album palette
-- Clean, modern fit (not baggy or oversized)
-- High-quality blank apparel aesthetic
-
-**BACKGROUND & COMPOSITION:**
-- Clean solid background (white, light grey, or subtle gradient)
-- Professional product photography composition
-- Sharp focus on the shirt, soft background
-- Centered framing with slight space around edges
-
-**QUALITY REQUIREMENTS:**
-- Ultra high resolution (suitable for print)
-- Photorealistic rendering
-- Professional e-commerce product photography quality
-- The result should look like real merchandise photography, not a mockup
-- Ensure the album artwork remains clear and recognizable
-- COMPLETE PRODUCT SHOT - nothing cropped
-- Entire T-shirt visible from collar to hem
-- Professional framing with adequate margins`;
+**EXAMPLE APPROACH:**
+If the album cover has geometric shapes → distribute those shapes across the shirt
+If it has a color palette → use those colors in an all-over pattern
+If it has iconic imagery → abstract and repeat those elements creatively
+The result should feel like custom designer streetwear, not just "album cover printed on chest"`;
 
     console.log('🎨 Calling AI for T-shirt design with album artwork...');
 

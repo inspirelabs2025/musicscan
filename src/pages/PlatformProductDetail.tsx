@@ -25,6 +25,8 @@ export default function PlatformProductDetail() {
     product?.id || "",
     product?.categories?.[0],
     product?.artist,
+    product?.media_type,
+    product?.tags,
     4
   );
   const { addToCart, isInCart } = useCart();

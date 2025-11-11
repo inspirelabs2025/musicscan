@@ -11,9 +11,13 @@ export const MetalPrintSpotlight = () => {
     limit: 6 
   });
 
-  // Filter out posters and canvas - only show metal prints
+  // Filter: only show metal prints (exclude posters, canvas, and t-shirts)
   const artProducts = allArtProducts?.filter(product => 
-    !product.tags?.includes('poster') && !product.tags?.includes('canvas')
+    !product.tags?.includes('poster') && 
+    !product.tags?.includes('canvas') &&
+    !product.tags?.includes('tshirts') &&
+    !product.categories?.includes('POSTER') &&
+    !product.categories?.includes('CANVAS')
   );
 
   const displayProduct = artProducts?.[0];

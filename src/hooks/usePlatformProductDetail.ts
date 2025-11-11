@@ -42,17 +42,44 @@ export const useSimilarProducts = (
   productId: string, 
   category?: string, 
   artist?: string,
+  mediaType?: string,
+  productTags?: string[],
   limit = 4
 ) => {
   return useQuery({
-    queryKey: ['similar-products', productId, category, artist],
+    queryKey: ['similar-products', productId, category, artist, mediaType, productTags],
     queryFn: async () => {
       const results: PlatformProduct[] = [];
       const resultIds = new Set<string>();
       
+      // Determine product type for filtering
+      const isCanvas = productTags?.includes('canvas') || category?.toLowerCase() === 'canvas';
+      const isPoster = productTags?.includes('poster') || category?.toLowerCase() === 'poster';
+      const isMetalPrint = !isCanvas && !isPoster && (mediaType === 'metal-print' || mediaType === 'art');
+      
+      console.log('🔍 Finding similar products:', { isCanvas, isPoster, isMetalPrint, productTags, category, mediaType });
+      
+      // Helper function to apply type-specific filters
+      const applyTypeFilter = (query: any) => {
+        if (isCanvas) {
+          // Canvas: only show other canvas products
+          return query.contains('tags', ['canvas']);
+        } else if (isPoster) {
+          // Poster: only show other posters
+          return query.or('tags.cs.{poster},categories.cs.{POSTER}');
+        } else if (isMetalPrint) {
+          // Metal print: exclude canvas and posters
+          return query
+            .not('tags', 'cs', '{canvas}')
+            .not('tags', 'cs', '{poster}')
+            .not('categories', 'cs', '{POSTER,CANVAS}');
+        }
+        return query;
+      };
+      
       // TIER 1: Same artist + category (most relevant)
       if (artist && category) {
-        const { data } = await supabase
+        let query = supabase
           .from('platform_products')
           .select('*')
           .eq('status', 'active')
@@ -63,8 +90,10 @@ export const useSimilarProducts = (
           .contains('categories', [category])
           .limit(limit * 2);
         
+        query = applyTypeFilter(query);
+        const { data } = await query;
+        
         if (data && data.length > 0) {
-          // Shuffle and take limit
           const shuffled = data.sort(() => Math.random() - 0.5).slice(0, limit);
           shuffled.forEach(item => {
             results.push(item);
@@ -92,6 +121,7 @@ export const useSimilarProducts = (
           query = query.not('id', 'in', `(${excludeIds.join(',')})`);
         }
         
+        query = applyTypeFilter(query);
         const { data } = await query;
         
         if (data && data.length > 0) {
@@ -103,7 +133,7 @@ export const useSimilarProducts = (
         }
       }
       
-      // TIER 3: Same artist, different categories
+      // TIER 3: Same artist, different categories (but same type)
       if (results.length < limit && artist) {
         const remaining = limit - results.length;
         const excludeIds = Array.from(resultIds);
@@ -122,6 +152,7 @@ export const useSimilarProducts = (
           query = query.not('id', 'in', `(${excludeIds.join(',')})`);
         }
         
+        query = applyTypeFilter(query);
         const { data } = await query;
         
         if (data && data.length > 0) {
@@ -133,7 +164,7 @@ export const useSimilarProducts = (
         }
       }
       
-      // TIER 4: Random popular products (fallback)
+      // TIER 4: Random popular products of same type (fallback)
       if (results.length < limit) {
         const remaining = limit - results.length;
         const excludeIds = Array.from(resultIds);
@@ -152,6 +183,7 @@ export const useSimilarProducts = (
           query = query.not('id', 'in', `(${excludeIds.join(',')})`);
         }
         
+        query = applyTypeFilter(query);
         const { data } = await query;
         
         if (data && data.length > 0) {
@@ -163,6 +195,7 @@ export const useSimilarProducts = (
         }
       }
       
+      console.log('✅ Found similar products:', results.length);
       return results;
     },
     enabled: !!productId,

@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { usePhotoStylizer, StyleType } from '@/hooks/usePhotoStylizer';
 import { usePosterProductCreator } from '@/hooks/usePosterProductCreator';
+import { useCanvasProductCreator } from '@/hooks/useCanvasProductCreator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Download, RefreshCw, Sparkles, ShoppingBag, Check } from 'lucide-react';
@@ -22,7 +23,8 @@ const STYLE_OPTIONS = [
   { value: 'watercolor' as StyleType, label: 'Watercolor', emoji: '💧', description: 'Soft and flowing' },
   { value: 'pencilSketch' as StyleType, label: 'Pencil Sketch', emoji: '✏️', description: 'Detailed drawing' },
   { value: 'comicBook' as StyleType, label: 'Comic Book', emoji: '💥', description: 'Bold outlines' },
-  { value: 'abstract' as StyleType, label: 'Abstract Art', emoji: '🌈', description: 'Geometric shapes' }
+  { value: 'abstract' as StyleType, label: 'Abstract Art', emoji: '🌈', description: 'Geometric shapes' },
+  { value: 'warmGrayscale' as StyleType, label: 'Warm Grayscale', emoji: '🖤', description: 'Elegant B&W with warm tones' }
 ];
 
 export default function PhotoStylizer() {
@@ -31,6 +33,7 @@ export default function PhotoStylizer() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<StyleType>('vectorCartoon');
   const [showProductDialog, setShowProductDialog] = useState(false);
+  const [productType, setProductType] = useState<'poster' | 'canvas'>('poster');
   const [productMetadata, setProductMetadata] = useState({
     artist: '',
     title: '',
@@ -47,6 +50,7 @@ export default function PhotoStylizer() {
   
   const { isProcessing, originalImage, stylizedImage, stylizePhoto, reset, downloadImage } = usePhotoStylizer();
   const { createPosterProduct, isCreating } = usePosterProductCreator();
+  const { createCanvasProduct, isCreating: isCreatingCanvas } = useCanvasProductCreator();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -146,6 +150,7 @@ export default function PhotoStylizer() {
 
     try {
       if (allStyleVariants.length > 0) {
+        // Batch mode - always create as POSTER
         const result = await createPosterProduct({
           stylizedImage: allStyleVariants[0].url,
           artist: productMetadata.artist,
@@ -153,23 +158,38 @@ export default function PhotoStylizer() {
           description: productMetadata.description,
           style: 'multi-style' as StyleType,
           price: productMetadata.price,
-          styleVariants: allStyleVariants.slice(1) // Exclude first variant (used as primary)
+          styleVariants: allStyleVariants.slice(1)
         });
         
         setShowProductDialog(false);
         navigate(`/product/${result.product_slug}`);
       } else {
-        const result = await createPosterProduct({
-          stylizedImage,
-          artist: productMetadata.artist,
-          title: productMetadata.title,
-          description: productMetadata.description,
-          style: selectedStyle,
-          price: productMetadata.price
-        });
-        
-        setShowProductDialog(false);
-        navigate(`/product/${result.product_slug}`);
+        // Single style mode - can be POSTER or CANVAS
+        if (productType === 'canvas') {
+          const result = await createCanvasProduct({
+            stylizedImage,
+            artist: productMetadata.artist,
+            title: productMetadata.title,
+            description: productMetadata.description,
+            style: selectedStyle,
+            price: productMetadata.price
+          });
+          
+          setShowProductDialog(false);
+          navigate(`/product/${result.product_slug}`);
+        } else {
+          const result = await createPosterProduct({
+            stylizedImage,
+            artist: productMetadata.artist,
+            title: productMetadata.title,
+            description: productMetadata.description,
+            style: selectedStyle,
+            price: productMetadata.price
+          });
+          
+          setShowProductDialog(false);
+          navigate(`/product/${result.product_slug}`);
+        }
       }
     } catch (error) {
       console.error('Failed to create product:', error);
@@ -269,9 +289,29 @@ export default function PhotoStylizer() {
                       <Download className="w-4 h-4 mr-2" />
                       Download
                     </Button>
-                    <Button onClick={() => setShowProductDialog(true)} variant="secondary" className="flex-1">
+                    <Button 
+                      onClick={() => {
+                        setProductType('poster');
+                        setProductMetadata(prev => ({ ...prev, price: 49.95 }));
+                        setShowProductDialog(true);
+                      }} 
+                      variant="secondary" 
+                      className="flex-1"
+                    >
                       <ShoppingBag className="w-4 h-4 mr-2" />
                       Save as POSTER
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        setProductType('canvas');
+                        setProductMetadata(prev => ({ ...prev, price: 79.95 }));
+                        setShowProductDialog(true);
+                      }} 
+                      variant="outline" 
+                      className="flex-1"
+                    >
+                      <ShoppingBag className="w-4 h-4 mr-2" />
+                      Save as CANVAS
                     </Button>
                   </div>
                 </div>
@@ -465,15 +505,15 @@ export default function PhotoStylizer() {
         </Card>
       )}
 
-      {/* Create POSTER Product Dialog */}
+      {/* Create Product Dialog */}
       <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              🖼️ Create POSTER Product
+              {productType === 'canvas' ? '🖼️ Create CANVAS Product' : '🖼️ Create POSTER Product'}
             </DialogTitle>
             <DialogDescription>
-              Add this stylized artwork to your ART SHOP as a POSTER product
+              Add this stylized artwork to your ART SHOP as a {productType.toUpperCase()} product
             </DialogDescription>
           </DialogHeader>
 
@@ -485,7 +525,7 @@ export default function PhotoStylizer() {
                 placeholder="e.g., Freddie Mercury"
                 value={productMetadata.artist}
                 onChange={(e) => setProductMetadata({ ...productMetadata, artist: e.target.value })}
-                disabled={isCreating}
+                disabled={isCreating || isCreatingCanvas}
               />
             </div>
 
@@ -496,7 +536,7 @@ export default function PhotoStylizer() {
                 placeholder="e.g., Pop Art Portrait"
                 value={productMetadata.title}
                 onChange={(e) => setProductMetadata({ ...productMetadata, title: e.target.value })}
-                disabled={isCreating}
+                disabled={isCreating || isCreatingCanvas}
               />
             </div>
 
@@ -508,7 +548,7 @@ export default function PhotoStylizer() {
                 value={productMetadata.description}
                 onChange={(e) => setProductMetadata({ ...productMetadata, description: e.target.value })}
                 rows={3}
-                disabled={isCreating}
+                disabled={isCreating || isCreatingCanvas}
               />
             </div>
 
@@ -521,7 +561,7 @@ export default function PhotoStylizer() {
                 min="0"
                 value={productMetadata.price}
                 onChange={(e) => setProductMetadata({ ...productMetadata, price: parseFloat(e.target.value) || 0 })}
-                disabled={isCreating}
+                disabled={isCreating || isCreatingCanvas}
               />
             </div>
 
@@ -532,7 +572,7 @@ export default function PhotoStylizer() {
               </p>
               <p className="flex items-center gap-2">
                 <span className="font-medium">Category:</span>
-                <span className="text-muted-foreground">POSTER (ART)</span>
+                <span className="text-muted-foreground">{productType.toUpperCase()} (ART)</span>
               </p>
               <p className="flex items-center gap-2">
                 <span className="font-medium">Media Type:</span>
@@ -545,15 +585,15 @@ export default function PhotoStylizer() {
             <Button 
               variant="outline" 
               onClick={() => setShowProductDialog(false)}
-              disabled={isCreating}
+              disabled={isCreating || isCreatingCanvas}
             >
               Cancel
             </Button>
             <Button 
               onClick={handleCreateProduct}
-              disabled={!productMetadata.artist || !productMetadata.title || isCreating}
+              disabled={!productMetadata.artist || !productMetadata.title || isCreating || isCreatingCanvas}
             >
-              {isCreating ? (
+              {(isCreating || isCreatingCanvas) ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   Creating...

@@ -12,7 +12,8 @@ const STYLE_PRESETS = {
   watercolor: "Convert to a soft watercolor painting with flowing colors, white paper texture, and delicate edges.",
   pencilSketch: "Transform into a detailed pencil sketch drawing with fine hatching, shading, and realistic pencil textures.",
   comicBook: "Convert to comic book style with bold outlines, halftone dots, dramatic shadows, and vibrant flat colors.",
-  abstract: "Transform into abstract geometric art with bold shapes, striking colors, and modern artistic interpretation."
+  abstract: "Transform into abstract geometric art with bold shapes, striking colors, and modern artistic interpretation.",
+  warmGrayscale: "Transform this photo into a sophisticated warm grayscale artwork with subtle sepia tones. Create a timeless black and white image with delicate beige, brown, and cream undertones that add warmth and depth. Use smooth tonal gradients from deep charcoal blacks through warm mid-tone grays (with subtle brown/beige hints) to soft cream highlights. Emphasize elegant contrast and rich texture while maintaining a cohesive warm monochrome palette. The style should evoke vintage fine art photography with a contemporary twist - sophisticated, elegant, and museum-worthy. High resolution with subtle grain texture for canvas print quality."
 };
 
 serve(async (req) => {

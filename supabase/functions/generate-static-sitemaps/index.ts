@@ -88,11 +88,25 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch T-shirt products: ${tshirtsError.message}`);
     }
 
+    // Fetch all active Canvas products
+    const { data: canvasProducts, error: canvasError } = await supabase
+      .from('platform_products')
+      .select('slug, updated_at, primary_image, title, artist, tags, categories')
+      .eq('media_type', 'art')
+      .contains('categories', ['CANVAS'])
+      .eq('status', 'active')
+      .not('published_at', 'is', null)
+      .order('updated_at', { ascending: false });
+
+    if (canvasError) {
+      throw new Error(`Failed to fetch canvas products: ${canvasError.message}`);
+    }
+
     // Separate POSTER products from other art products
     const posterProducts = (artProducts || []).filter(p => p.categories?.includes('POSTER'));
     const metalPrintProducts = (artProducts || []).filter(p => !p.categories?.includes('POSTER'));
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, and ${tshirtProducts?.length || 0} t-shirts`);
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, and ${canvasProducts?.length || 0} canvas doeken`);
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
@@ -101,6 +115,7 @@ Deno.serve(async (req) => {
     const metalPrintsSitemapXml = generateSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product');
     const postersSitemapXml = generatePosterSitemapXml(posterProducts || []);
     const tshirtsSitemapXml = generateSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product');
+    const canvasSitemapXml = generateSitemapXml(canvasProducts || [], 'https://www.musicscan.app/product');
 
     // Image sitemaps
     const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
@@ -108,8 +123,9 @@ Deno.serve(async (req) => {
     const metalPrintsImageSitemapXml = generateImageSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product', 'primary_image');
     const postersImageSitemapXml = generatePosterImageSitemapXml(posterProducts || []);
     const tshirtsImageSitemapXml = generateImageSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product', 'primary_image');
+    const canvasImageSitemapXml = generateImageSitemapXml(canvasProducts || [], 'https://www.musicscan.app/product', 'primary_image');
 
-    // Build uploads list (13 files total - added poster and t-shirt sitemaps)
+    // Build uploads list (15 files total - added canvas sitemaps)
     const uploads = [
       { name: 'sitemap-static.xml', data: staticSitemapXml },
       { name: 'sitemap-blog.xml', data: blogSitemapXml },
@@ -117,11 +133,13 @@ Deno.serve(async (req) => {
       { name: 'sitemap-metal-prints.xml', data: metalPrintsSitemapXml },
       { name: 'sitemap-posters.xml', data: postersSitemapXml },
       { name: 'sitemap-tshirts.xml', data: tshirtsSitemapXml },
+      { name: 'sitemap-canvas.xml', data: canvasSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
       { name: 'sitemap-images-stories.xml', data: storiesImageSitemapXml },
       { name: 'sitemap-images-metal-prints.xml', data: metalPrintsImageSitemapXml },
       { name: 'sitemap-images-posters.xml', data: postersImageSitemapXml },
       { name: 'sitemap-images-tshirts.xml', data: tshirtsImageSitemapXml },
+      { name: 'sitemap-images-canvas.xml', data: canvasImageSitemapXml },
     ];
 
     for (const upload of uploads) {
@@ -248,6 +266,7 @@ for (const sitemapName of allSitemaps) {
           posterProducts: posterProducts?.length || 0,
           metalPrintProducts: metalPrintProducts?.length || 0,
           tshirtProducts: tshirtProducts?.length || 0,
+          canvasProducts: canvasProducts?.length || 0,
           sitemaps: uploads.map(u => ({
             name: u.name,
             url: `${supabaseUrl}/storage/v1/object/public/sitemaps/${u.name}`

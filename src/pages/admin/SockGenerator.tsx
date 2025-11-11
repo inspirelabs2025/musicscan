@@ -13,7 +13,6 @@ export default function SockGenerator() {
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
   const [customAlbumCover, setCustomAlbumCover] = useState("");
   const [customArtist, setCustomArtist] = useState("");
-  const [customAlbum, setCustomAlbum] = useState("");
   const [patternType, setPatternType] = useState("auto");
   const [designTheme, setDesignTheme] = useState("auto");
   const [generateProducts, setGenerateProducts] = useState(true);
@@ -26,11 +25,11 @@ export default function SockGenerator() {
   const handleGenerate = () => {
     const albumData = selectedAlbum || {
       artist: customArtist,
-      title: customAlbum,
+      title: `${customArtist} Sokken`,
       cover_image: customAlbumCover,
     };
 
-    if (!albumData.artist || !albumData.title || !albumData.cover_image) {
+    if (!albumData.artist || !albumData.cover_image) {
       return;
     }
 
@@ -103,11 +102,6 @@ export default function SockGenerator() {
                   placeholder="Artist name"
                   value={customArtist}
                   onChange={(e) => setCustomArtist(e.target.value)}
-                />
-                <Input
-                  placeholder="Album title"
-                  value={customAlbum}
-                  onChange={(e) => setCustomAlbum(e.target.value)}
                 />
                 <Input
                   placeholder="Album cover URL"
@@ -206,7 +200,7 @@ export default function SockGenerator() {
 
               <Button
                 onClick={handleGenerate}
-                disabled={isPending || (!selectedAlbum && (!customArtist || !customAlbum || !customAlbumCover))}
+                disabled={isPending || (!selectedAlbum && (!customArtist || !customAlbumCover))}
                 className="w-full"
                 size="lg"
               >

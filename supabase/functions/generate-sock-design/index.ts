@@ -148,8 +148,10 @@ The result should feel like custom designer socks, not just "album cover printed
     const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, '');
     const imageBlob = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
-    const slug = generateSlug(artistName, albumTitle);
-    const filename = `${slug}-${Date.now()}.png`;
+    const timestamp = Date.now();
+    const baseSlug = generateSlug(artistName, albumTitle);
+    const slug = `${baseSlug}-${timestamp}`;
+    const filename = `${slug}.png`;
 
     const { error: uploadError } = await supabase.storage
       .from('time-machine-posters')

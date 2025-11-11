@@ -36,29 +36,11 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Generate slug
-    const slug = generateSlug(artistName, albumTitle);
+    // Generate unique slug with timestamp
+    const timestamp = Date.now();
+    const baseSlug = generateSlug(artistName, albumTitle);
+    const slug = `${baseSlug}-${timestamp}`;
     console.log('📝 Generated slug:', slug);
-
-    // Check if design already exists
-    const { data: existingDesign } = await supabase
-      .from('album_tshirts')
-      .select('id, slug, base_design_url')
-      .eq('slug', slug)
-      .maybeSingle();
-
-    if (existingDesign) {
-      console.log('✅ T-shirt design already exists, returning existing design');
-      return new Response(
-        JSON.stringify({
-          tshirt_id: existingDesign.id,
-          slug: existingDesign.slug,
-          base_design_url: existingDesign.base_design_url,
-          color_palette: colorPalette
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
 
     // Call Lovable AI for T-shirt design generation
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -167,7 +149,7 @@ The result should feel like custom designer streetwear, not just "album cover pr
     const base64Data = generatedImageUrl.replace(/^data:image\/\w+;base64,/, '');
     const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
-    const fileName = `${slug}-${Date.now()}.png`;
+    const fileName = `${slug}.png`;
     const filePath = `tshirts/${fileName}`;
 
     console.log('📤 Uploading to storage:', filePath);

@@ -85,7 +85,7 @@ export const ShoppingCartWidget = () => {
             <>
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 {items.map((item) => (
-                  <Card key={item.id} className="p-3">
+                  <Card key={item.cart_key || item.id} className="p-3">
                     <div className="flex items-start gap-3">
                       {item.image && (
                         <img 
@@ -109,13 +109,23 @@ export const ShoppingCartWidget = () => {
                               {item.selected_style}
                             </Badge>
                           )}
+                          {item.selected_size && (
+                            <Badge variant="default" className="text-xs bg-secondary">
+                              {item.selected_size}
+                            </Badge>
+                          )}
+                          {item.selected_color && (
+                            <Badge variant="default" className="text-xs bg-accent">
+                              {item.selected_color}
+                            </Badge>
+                          )}
                         </div>
                         <p className="font-semibold mt-1">{formatPrice(item.price)}</p>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item.cart_key || item.id)}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="w-4 h-4" />

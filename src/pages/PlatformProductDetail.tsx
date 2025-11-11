@@ -28,6 +28,8 @@ export default function PlatformProductDetail() {
   const { addToCart, isInCart } = useCart();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   
   // Find related blog post
   const { data: blogPost } = useBlogPostByProduct(
@@ -38,6 +40,7 @@ export default function PlatformProductDetail() {
   );
 
   const isPoster = product?.categories?.includes('POSTER');
+  const isTShirt = product?.categories?.includes('tshirts') || product?.tags?.includes('tshirts');
   const posterStyle = product?.tags?.find(t => 
     ['posterize', 'vectorcartoon', 'oilpainting', 'watercolor', 'pencilsketch', 'comicbook', 'abstract'].includes(t.toLowerCase())
   );
@@ -112,9 +115,40 @@ export default function PlatformProductDetail() {
 
   const allImages = [product.primary_image, ...(product.images || [])].filter(Boolean);
   const displayImage = selectedImage || product.primary_image;
-  const inCart = isInCart(product.id);
+  
+  // For T-shirts, generate cart_key with all options
+  const cartKey = isTShirt 
+    ? `${product.id}_${selectedStyle || 'default'}_${selectedSize || 'NA'}_${selectedColor || 'NA'}`
+    : product.id;
+  const inCart = isInCart(cartKey);
+
+  // T-shirt designs from images
+  const tshirtDesigns = isTShirt ? allImages.map((img, idx) => {
+    // Extract style name from URL if possible
+    const styleMatch = img.match(/(vintage|neon|pastel|monochrome|watercolor|grunge|minimalist)/i);
+    const styleName = styleMatch ? styleMatch[1] : `Design ${idx + 1}`;
+    return { url: img, label: styleName };
+  }) : [];
+
+  // Available sizes and colors for T-shirts
+  const tshirtSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+  const tshirtColors = [
+    { name: 'Black', hex: '#000000' },
+    { name: 'White', hex: '#FFFFFF' },
+    { name: 'Cream', hex: '#F5F5DC' },
+    { name: 'Grey', hex: '#808080' },
+    { name: 'Navy', hex: '#000080' }
+  ];
+
+  // Check if T-shirt options are complete
+  const canAddToCart = !isTShirt || (selectedStyle && selectedSize && selectedColor);
 
   const handleAddToCart = () => {
+    if (isTShirt && !canAddToCart) {
+      toast.error("Kies design, maat en kleur voor je T-shirt");
+      return;
+    }
+
     const styleLabel = styleVariants.find((v: any) => v.style === selectedStyle)?.label;
     addToCart({
       id: product.id,
@@ -126,8 +160,15 @@ export default function PlatformProductDetail() {
       seller_id: "platform",
       image: selectedImage || product.primary_image || undefined,
       selected_style: selectedStyle || product.metadata?.default_style,
+      selected_size: selectedSize || undefined,
+      selected_color: selectedColor || undefined,
     });
-    toast.success(`Toegevoegd: ${styleLabel || selectedStyle || 'Standaard'} style`);
+    
+    if (isTShirt) {
+      toast.success(`T-shirt toegevoegd: ${selectedStyle || 'Design'} | ${selectedSize} | ${selectedColor}`);
+    } else {
+      toast.success(`Toegevoegd: ${styleLabel || selectedStyle || 'Standaard'} style`);
+    }
   };
 
   // Structured data for Product schema
@@ -341,7 +382,7 @@ export default function PlatformProductDetail() {
                 size="lg"
                 className="w-full"
                 onClick={handleAddToCart}
-                disabled={inCart}
+                disabled={inCart || (isTShirt && !canAddToCart)}
               >
                 {inCart ? (
                   <>
@@ -356,10 +397,96 @@ export default function PlatformProductDetail() {
                 )}
               </Button>
             )}
+            
+            {isTShirt && !canAddToCart && (
+              <p className="text-sm text-muted-foreground text-center">
+                Kies design, maat en kleur om toe te voegen
+              </p>
+            )}
           </Card>
 
-          {/* Style Selector - only for products with style options */}
-          {hasStyleOptions && styleVariants.length > 0 && (
+          {/* T-Shirt Options */}
+          {isTShirt && (
+            <Card className="p-6 space-y-6">
+              <h3 className="font-semibold text-lg">T-Shirt opties</h3>
+              
+              {/* Design Selector */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Design</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {tshirtDesigns.map((design, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setSelectedImage(design.url);
+                        setSelectedStyle(design.label);
+                      }}
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedStyle === design.label
+                          ? 'border-primary ring-2 ring-primary'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <img src={design.url} alt={design.label} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+                {selectedStyle && (
+                  <p className="text-sm text-muted-foreground">Gekozen: {selectedStyle}</p>
+                )}
+              </div>
+
+              {/* Size Selector */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Maat</label>
+                <div className="flex gap-2">
+                  {tshirtSizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`px-4 py-2 rounded-md border-2 font-medium transition-all ${
+                        selectedSize === size
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color Selector */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Kleur</label>
+                <div className="flex gap-2">
+                  {tshirtColors.map((color) => (
+                    <button
+                      key={color.name}
+                      onClick={() => setSelectedColor(color.name)}
+                      className={`relative w-12 h-12 rounded-full border-2 transition-all ${
+                        selectedColor === color.name
+                          ? 'border-primary ring-2 ring-primary'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      style={{ backgroundColor: color.hex }}
+                      title={color.name}
+                    >
+                      {selectedColor === color.name && (
+                        <Check className="absolute inset-0 m-auto h-5 w-5 text-white drop-shadow-lg" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {selectedColor && (
+                  <p className="text-sm text-muted-foreground">Gekozen: {selectedColor}</p>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {/* Style Selector - only for products with style options (non-T-shirts) */}
+          {!isTShirt && hasStyleOptions && styleVariants.length > 0 && (
             <Card className="p-6">
               <PosterStyleSelector
                 styleVariants={styleVariants}

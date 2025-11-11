@@ -11,6 +11,9 @@ export interface CartItem {
   seller_id: string;
   image?: string;
   selected_style?: string;
+  selected_size?: string;
+  selected_color?: string;
+  cart_key?: string;
 }
 
 interface CartContextType {
@@ -53,16 +56,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addToCart = (item: CartItem) => {
     setItems(prevItems => {
-      const existingItem = prevItems.find(cartItem => cartItem.id === item.id);
+      // Generate cart_key for variant tracking
+      const cart_key = `${item.id}_${item.selected_style || 'default'}_${item.selected_size || 'NA'}_${item.selected_color || 'NA'}`;
+      const itemWithKey = { ...item, cart_key };
+      
+      // Check if this exact variant exists
+      const existingItem = prevItems.find(cartItem => cartItem.cart_key === cart_key);
       if (existingItem) {
         return prevItems;
       }
-      return [...prevItems, item];
+      return [...prevItems, itemWithKey];
     });
   };
 
-  const removeFromCart = (itemId: string) => {
-    setItems(prevItems => prevItems.filter(item => item.id !== itemId));
+  const removeFromCart = (itemKeyOrId: string) => {
+    setItems(prevItems => prevItems.filter(item => item.cart_key !== itemKeyOrId && item.id !== itemKeyOrId));
   };
 
   const clearCart = () => {
@@ -78,8 +86,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     return items.length;
   };
 
-  const isInCart = (itemId: string) => {
-    return items.some(item => item.id === itemId);
+  const isInCart = (itemKeyOrId: string) => {
+    return items.some(item => item.cart_key === itemKeyOrId || item.id === itemKeyOrId);
   };
 
   const checkout = async (shippingAddress?: any, buyerName?: string) => {
@@ -99,7 +107,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         items: items.map(item => ({
           id: item.id,
           type: item.media_type,
-          selected_style: item.selected_style
+          selected_style: item.selected_style,
+          selected_size: item.selected_size,
+          selected_color: item.selected_color
         })),
         shippingAddress,
         buyerName

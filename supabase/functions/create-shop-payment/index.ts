@@ -45,7 +45,11 @@ serve(async (req) => {
     const orderItems = [];
 
     for (const item of items) {
-      console.log(`Processing item ${item.id} of type ${item.type}`);
+      console.log(`Processing item ${item.id} of type ${item.type}`, {
+        selected_style: item.selected_style,
+        selected_size: item.selected_size,
+        selected_color: item.selected_color
+      });
       
       let itemData, tableName;
       
@@ -115,7 +119,14 @@ serve(async (req) => {
         item_type: item.type,
         price: itemPrice + shippingCost,
         quantity: 1,
-        item_data: itemData
+        item_data: {
+          ...itemData,
+          selected_options: {
+            style: item.selected_style,
+            size: item.selected_size,
+            color: item.selected_color
+          }
+        }
       });
     }
 
@@ -185,9 +196,19 @@ serve(async (req) => {
         itemName = `${item.item_data.artist || 'Unknown'} - ${item.item_data.title || 'Unknown'}`;
       }
       
-      const itemDescription = item.item_type === 'product'
+      let itemDescription = item.item_type === 'product'
         ? item.item_data.description || 'Shop product'
         : `${item.item_data.format || 'Album'} - ${item.item_data.condition_grade || 'Good'}`;
+      
+      // Add selected options to description if present
+      const opts = item.item_data.selected_options;
+      if (opts && (opts.style || opts.size || opts.color)) {
+        const optionParts = [];
+        if (opts.style) optionParts.push(`Design: ${opts.style}`);
+        if (opts.size) optionParts.push(`Size: ${opts.size}`);
+        if (opts.color) optionParts.push(`Color: ${opts.color}`);
+        itemDescription += ` (${optionParts.join(' | ')})`;
+      }
       
       return {
         price_data: {

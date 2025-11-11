@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Send, Loader2, Music2, Sparkles, Heart, BookOpen, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import echoAvatar from '@/assets/echo-avatar.png';
 
 interface EchoMessage {
   id: string;
@@ -134,9 +135,11 @@ export default function Echo() {
             {/* Echo Logo/Symbol */}
             <div className="flex justify-center mb-6">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center animate-echo-pulse">
-                  <Music2 className="w-12 h-12 text-white" />
-                </div>
+                <img 
+                  src={echoAvatar}
+                  alt="Echo - AI Muziekexpert"
+                  className="w-32 h-32 rounded-full border-4 border-echo-lavender/50 shadow-2xl animate-echo-pulse"
+                />
                 {/* Resonantie rings */}
                 <div className="absolute inset-0 rounded-full border-2 border-echo-lavender animate-ping"></div>
                 <div className="absolute inset-0 rounded-full border-2 border-echo-gold animate-ping delay-500"></div>
@@ -228,7 +231,11 @@ export default function Echo() {
                   >
                     {msg.sender_type === 'echo' && (
                       <div className="flex items-center gap-2 mb-2">
-                        <Music2 className="w-4 h-4 text-echo-lavender" />
+                        <img 
+                          src={echoAvatar} 
+                          alt="Echo" 
+                          className="w-6 h-6 rounded-full border border-echo-lavender/30"
+                        />
                         <span className="text-xs font-semibold text-echo-lavender">Echo</span>
                       </div>
                     )}

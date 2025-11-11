@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Music2, Sparkles, Heart, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import echoAvatar from '@/assets/echo-avatar.png';
 
 export function EchoSpotlight() {
   return (
@@ -59,8 +60,12 @@ export function EchoSpotlight() {
               {/* Info Card */}
               <Card className="bg-card p-6 border-2 border-echo-lavender/30">
                 <div className="flex items-start gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center flex-shrink-0">
-                    <Music2 className="w-6 h-6 text-white" />
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={echoAvatar} 
+                      alt="Echo - AI Muziekexpert" 
+                      className="w-12 h-12 rounded-full border-2 border-echo-lavender/50 shadow-lg"
+                    />
                   </div>
                   <div>
                     <h3 className="font-bold text-lg mb-1">4 Verschillende Modes</h3>
@@ -95,8 +100,12 @@ export function EchoSpotlight() {
               <Card className="border-2 border-echo-lavender/30 hover:border-echo-lavender/50 transition-all">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center flex-shrink-0">
-                      <Music2 className="w-5 h-5 text-white" />
+                    <div className="flex-shrink-0">
+                      <img 
+                        src={echoAvatar} 
+                        alt="Echo" 
+                        className="w-10 h-10 rounded-full border-2 border-echo-lavender/50 shadow-md"
+                      />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-echo-lavender mb-1">Echo</p>
@@ -116,8 +125,12 @@ export function EchoSpotlight() {
               <Card className="border-2 border-echo-gold/30 hover:border-echo-gold/50 transition-all">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-gold to-echo-lavender flex items-center justify-center flex-shrink-0">
-                      <Music2 className="w-5 h-5 text-white" />
+                    <div className="flex-shrink-0">
+                      <img 
+                        src={echoAvatar} 
+                        alt="Echo" 
+                        className="w-10 h-10 rounded-full border-2 border-echo-gold/50 shadow-md"
+                      />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-echo-gold mb-1">Echo</p>
@@ -137,8 +150,12 @@ export function EchoSpotlight() {
               <Card className="border-2 border-vinyl-purple/30 hover:border-vinyl-purple/50 transition-all">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center flex-shrink-0">
-                      <Heart className="w-5 h-5 text-white" />
+                    <div className="flex-shrink-0">
+                      <img 
+                        src={echoAvatar} 
+                        alt="Echo" 
+                        className="w-10 h-10 rounded-full border-2 border-vinyl-purple/50 shadow-md"
+                      />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-vinyl-purple mb-1">Echo</p>

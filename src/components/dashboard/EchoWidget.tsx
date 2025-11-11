@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Music2, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import echoAvatar from '@/assets/echo-avatar.png';
 
 export function EchoWidget() {
   return (
@@ -9,10 +10,12 @@ export function EchoWidget() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <div className="relative">
-            <Music2 className="w-6 h-6 text-echo-turquoise" />
-            <div className="absolute inset-0 animate-ping">
-              <Music2 className="w-6 h-6 text-echo-turquoise opacity-30" />
-            </div>
+            <img 
+              src={echoAvatar} 
+              alt="Echo" 
+              className="w-8 h-8 rounded-full border-2 border-echo-turquoise/50 shadow-md"
+            />
+            <div className="absolute inset-0 rounded-full border border-echo-turquoise animate-ping opacity-30"></div>
           </div>
           <span>Echo 🎵</span>
         </CardTitle>

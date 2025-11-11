@@ -66,23 +66,37 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const prompt = `Place this album artwork directly onto a pair of stylish crew socks.
+    const prompt = `Create premium black crew socks with a creative, all-over design inspired by this album artwork. The design should be INTEGRATED into the sock fabric, not just placed on top.
 
-**Requirements:**
-- Show 2 socks side by side, flat lay view
-- The ORIGINAL album artwork should be prominently displayed on the socks
-- Place the artwork on the calf/shin area of the socks (main visible area)
-- Keep the artwork recognizable and clear
-- White or neutral sock base color
+**CRITICAL DESIGN REQUIREMENTS:**
+- Base: Premium BLACK crew socks (not white, not neutral - BLACK)
+- Design Integration: The album artwork elements should flow creatively THROUGHOUT the entire sock
+- Coverage: Design elements from toe to cuff, wrapping around the entire circumference
+- Style: Deconstructed, abstract interpretation that remains RECOGNIZABLE to the original album
+- The artwork's key visual elements, colors, and iconic details must be identifiable
+- Think: all-over print fashion, not just a logo placement
+
+**COMPOSITION:**
+- Show 2 black socks side by side, standing upright on invisible mannequin/legs
+- 3D perspective showing form, natural fabric draping, and subtle wrinkles
+- Design should follow the sock's contours naturally (wrapping around curves)
+- Toe, heel, ankle, calf areas all feature integrated design elements
+- Professional product photography with studio lighting creating depth and shadows
+
+**DESIGN STYLE:**
+- Photorealistic merchandise photography (NOT flat mockup)
+- The album's visual DNA is woven into the fabric pattern
+- Creative reinterpretation: break down iconic elements and flow them across the sock
+- Maintain recognizability: someone should say "oh, that's [album name]!"
+- Premium, wearable streetwear aesthetic
 - Clean white background
-- Professional product photography look
-- The album art should be the main design element - DO NOT create abstract patterns
+- Ultra high resolution
 
-**Style:**
-- Modern, wearable music merchandise
-- The album artwork should be immediately recognizable
-- High-quality product photography aesthetic
-- Ultra high resolution`;
+**EXAMPLE APPROACH:**
+If the album cover has geometric shapes → distribute those shapes across the sock
+If it has a color palette → use those colors in an all-over pattern
+If it has iconic imagery → abstract and repeat those elements creatively
+The result should feel like custom designer socks, not just "album cover printed on sock"`;
 
     console.log('🎨 Calling AI for sock design with album artwork...');
 

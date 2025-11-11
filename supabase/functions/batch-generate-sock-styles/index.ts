@@ -178,15 +178,31 @@ serve(async (req) => {
 });
 
 function getStylePrompt(styleKey: string, label: string): string {
+  const baseInstructions = `
+CRITICAL: Maintain the BLACK sock base and all-over integrated design composition.
+- Keep the 3D form, standing upright perspective with natural fabric draping
+- Design must flow throughout the ENTIRE sock (toe to cuff, all-around)
+- The transformation applies to the DESIGN PATTERN, not the sock structure
+- Preserve recognizability of the original album artwork elements
+- Professional product photography aesthetic
+- Clean white background
+- Ultra high resolution`;
+
   const prompts: Record<string, string> = {
-    vectorIllustration: 'Transform this into a clean vector illustration style with smooth gradients and sharp edges. Ultra high resolution.',
-    watercolorPaint: 'Apply a watercolor paint effect with soft edges, color bleeding, and artistic brush strokes. Ultra high resolution.',
-    retroKnit: 'Recreate with a vintage knitted texture pattern, showing fabric weave and yarn texture details. Ultra high resolution.',
-    neonGlow: 'Transform into a vibrant neon glow style with fluorescent colors and light effects. Ultra high resolution.',
-    minimalistLine: 'Convert to minimalist line art with clean contours and essential elements only. Ultra high resolution.',
-    popArt: 'Apply a bold pop art style with halftone dots, high contrast, and comic book aesthetics. Ultra high resolution.',
-    metallicShine: 'Add metallic shine and glossy finish with reflective highlights and luxurious appearance. Ultra high resolution.'
+    vectorIllustration: `Transform the integrated sock design into clean vector illustration style with smooth gradients, sharp edges, and bold flat colors. The album-inspired pattern should have a modern graphic design aesthetic flowing across the black sock.${baseInstructions}`,
+    
+    watercolorPaint: `Apply a watercolor paint effect to the integrated design pattern - soft edges, color bleeding, and artistic brush strokes. The album elements should look hand-painted onto the black sock fabric with organic, flowing aesthetics.${baseInstructions}`,
+    
+    retroKnit: `Transform the design into a vintage knitted texture pattern as if the album artwork elements are actually knitted/woven into the black sock. Show realistic yarn texture, fabric weave details, and traditional Nordic/Fair Isle knitting style across the entire sock.${baseInstructions}`,
+    
+    neonGlow: `Transform the integrated pattern into vibrant neon glow style - fluorescent colors, light effects, and electric energy. The album-inspired elements should appear to glow against the black sock fabric like LED/neon lights in the dark.${baseInstructions}`,
+    
+    minimalistLine: `Convert the all-over design to minimalist line art - clean contours, essential elements only, single-weight lines. The album artwork should be deconstructed to its most iconic line elements flowing across the black sock.${baseInstructions}`,
+    
+    popArt: `Apply bold pop art style to the integrated pattern - halftone dots, high contrast, comic book aesthetics, Ben-Day dots. The album elements should have a Warhol/Lichtenstein treatment flowing across the black sock.${baseInstructions}`,
+    
+    metallicShine: `Add metallic shine and glossy finish to the design elements - reflective highlights, luxurious appearance, chrome/silver/gold accents. The album-inspired pattern should have a premium metallic sheen against the black sock fabric.${baseInstructions}`
   };
 
-  return prompts[styleKey] || `Apply ${label} style effect to this design. Ultra high resolution.`;
+  return prompts[styleKey] || `Apply ${label} style effect to the integrated sock design pattern while maintaining the black sock base and all-over composition. Ultra high resolution.`;
 }

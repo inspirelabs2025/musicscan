@@ -23,6 +23,7 @@ const shopMenuItems = [
   { title: "Art Prints", url: "/art-shop", icon: Images },
   { title: "Metal Prints", url: "/metaalprints", icon: Images },
   { title: "Posters", url: "/posters", icon: Images },
+  { title: "T-shirts", url: "/tshirts", icon: Package },
   { title: "Sokken", url: "/socks", icon: Package },
   { title: "Alle Winkels", url: "/shops", icon: Store },
   { title: "Marktplaats", url: "/marketplace", icon: ShoppingCart },

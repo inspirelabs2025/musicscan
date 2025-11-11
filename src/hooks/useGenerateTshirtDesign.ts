@@ -49,7 +49,11 @@ export const useGenerateTshirtDesign = () => {
         }
       );
 
-      if (colorError) throw colorError;
+      if (colorError) {
+        console.error('❌ Step 1 failed - Color extraction:', colorError);
+        throw new Error(`Color extraction failed: ${colorError.message}`);
+      }
+      console.log('✅ Step 1 complete - Colors extracted');
 
       toast({
         title: "👕 Generating T-Shirt Design",
@@ -76,7 +80,11 @@ export const useGenerateTshirtDesign = () => {
         }
       );
 
-      if (designError) throw designError;
+      if (designError) {
+        console.error('❌ Step 2 failed - Design generation:', designError);
+        throw new Error(`Design generation failed: ${designError.message}`);
+      }
+      console.log('✅ Step 2 complete - Base design created:', designData.tshirt_id);
 
       let result: GenerateTshirtResponse = designData;
 
@@ -97,7 +105,10 @@ export const useGenerateTshirtDesign = () => {
           }
         );
 
-        if (!styleError && styleData) {
+        if (styleError) {
+          console.error('⚠️ Step 3 failed - Style variants (continuing):', styleError);
+        } else if (styleData) {
+          console.log('✅ Step 3 complete - Style variants created:', styleData.styleVariants?.length || 0);
           result = { ...result, style_variants: styleData.styleVariants };
         }
       }
@@ -119,7 +130,10 @@ export const useGenerateTshirtDesign = () => {
           }
         );
 
-        if (!productError && productData) {
+        if (productError) {
+          console.error('⚠️ Step 4 failed - Product creation (continuing):', productError);
+        } else if (productData) {
+          console.log('✅ Step 4 complete - Products created:', productData);
           result = { ...result, ...productData };
         }
       }

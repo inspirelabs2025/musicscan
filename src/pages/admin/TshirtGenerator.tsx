@@ -13,7 +13,6 @@ import { Loader2 } from "lucide-react";
 const TshirtGenerator = () => {
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
   const [customArtist, setCustomArtist] = useState("");
-  const [customTitle, setCustomTitle] = useState("");
   const [customCoverUrl, setCustomCoverUrl] = useState("");
   const [patternType, setPatternType] = useState("auto");
   const [designTheme, setDesignTheme] = useState("auto");
@@ -27,17 +26,17 @@ const TshirtGenerator = () => {
   const handleGenerate = () => {
     const albumData = selectedAlbum || {
       artist: customArtist,
-      title: customTitle,
+      title: `${customArtist} T-Shirt`,
       cover_image: customCoverUrl,
     };
 
-    if (!albumData.artist || !albumData.title || !albumData.cover_image) {
+    if (!albumData.artist || !albumData.cover_image) {
       return;
     }
 
     generateTshirt({
       artistName: albumData.artist,
-      albumTitle: albumData.title,
+      albumTitle: albumData.title || `${albumData.artist} T-Shirt`,
       albumCoverUrl: albumData.cover_image,
       discogsId: albumData.discogs_id,
       releaseYear: albumData.year,
@@ -87,7 +86,7 @@ const TshirtGenerator = () => {
           </Card>
 
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Or Enter Custom Album</h2>
+            <h2 className="text-xl font-semibold mb-4">Enter Custom Album</h2>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="artist">Artist Name</Label>
@@ -99,18 +98,6 @@ const TshirtGenerator = () => {
                     setSelectedAlbum(null);
                   }}
                   placeholder="Pink Floyd"
-                />
-              </div>
-              <div>
-                <Label htmlFor="title">Album Title</Label>
-                <Input
-                  id="title"
-                  value={customTitle}
-                  onChange={(e) => {
-                    setCustomTitle(e.target.value);
-                    setSelectedAlbum(null);
-                  }}
-                  placeholder="The Dark Side of the Moon"
                 />
               </div>
               <div>
@@ -128,7 +115,7 @@ const TshirtGenerator = () => {
             </div>
           </Card>
 
-          {(selectedAlbum || (customArtist && customTitle && customCoverUrl)) && (
+          {(selectedAlbum || (customArtist && customCoverUrl)) && (
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Preview</h3>
               <img
@@ -138,9 +125,9 @@ const TshirtGenerator = () => {
               />
               <div className="mt-4">
                 <p className="font-medium">{selectedAlbum?.artist || customArtist}</p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedAlbum?.title || customTitle}
-                </p>
+                {selectedAlbum?.title && (
+                  <p className="text-sm text-muted-foreground">{selectedAlbum.title}</p>
+                )}
               </div>
             </Card>
           )}
@@ -246,7 +233,7 @@ const TshirtGenerator = () => {
             onClick={handleGenerate}
             disabled={
               isPending ||
-              (!selectedAlbum && (!customArtist || !customTitle || !customCoverUrl))
+              (!selectedAlbum && (!customArtist || !customCoverUrl))
             }
           >
             {isPending ? (

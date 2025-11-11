@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTimeMachineEvents, useDeleteTimeMachineEvent } from '@/hooks/useTimeMachineEvents';
 import { useGenerateTimeMachinePoster } from '@/hooks/useGenerateTimeMachinePoster';
 import { useGenerateTimeMachineEvent } from '@/hooks/useGenerateTimeMachineEvent';
@@ -29,11 +29,18 @@ export default function TimeMachineManager() {
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState('');
   const [autoGeneratePosterForEvent, setAutoGeneratePosterForEvent] = useState<string | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
   
   const { data: events, isLoading, error } = useTimeMachineEvents({ published: undefined });
   const { mutate: generatePoster, isPending: isGenerating } = useGenerateTimeMachinePoster();
   const { mutate: deleteEvent, isPending: isDeleting } = useDeleteTimeMachineEvent();
   const { mutate: generateEvent, isPending: isGeneratingEvent } = useGenerateTimeMachineEvent();
+
+  useEffect(() => {
+    if (showCreateForm) {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [showCreateForm]);
 
   const handleGeneratePoster = (eventId: string) => {
     setAutoGeneratePosterForEvent(eventId);
@@ -142,35 +149,37 @@ export default function TimeMachineManager() {
       </Card>
 
       {showCreateForm && (
-        <Card className="mb-8 border-primary">
-          <CardHeader>
-            <CardTitle>{editingEvent ? 'Event Bewerken' : 'Nieuw Time Machine Event'}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TimeMachineEventForm
-              event={editingEvent}
-              onSuccess={(createdEventId?: string) => {
-                setShowCreateForm(false);
-                
-                // Auto-generate poster for newly created AI events
-                if (createdEventId && !editingEvent?.id) {
-                  setAutoGeneratePosterForEvent(createdEventId);
-                  generatePoster({ 
-                    eventId: createdEventId, 
-                    generateMetal: true,
-                    createProducts: true 
-                  });
-                }
-                
-                setEditingEvent(null);
-              }}
-              onCancel={() => {
-                setShowCreateForm(false);
-                setEditingEvent(null);
-              }}
-            />
-          </CardContent>
-        </Card>
+        <div ref={formRef}>
+          <Card className="mb-8 border-primary">
+            <CardHeader>
+              <CardTitle>{editingEvent ? 'Event Bewerken' : 'Nieuw Time Machine Event'}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TimeMachineEventForm
+                event={editingEvent}
+                onSuccess={(createdEventId?: string) => {
+                  setShowCreateForm(false);
+                  
+                  // Auto-generate poster for newly created AI events
+                  if (createdEventId && !editingEvent?.id) {
+                    setAutoGeneratePosterForEvent(createdEventId);
+                    generatePoster({ 
+                      eventId: createdEventId, 
+                      generateMetal: true,
+                      createProducts: true 
+                    });
+                  }
+                  
+                  setEditingEvent(null);
+                }}
+                onCancel={() => {
+                  setShowCreateForm(false);
+                  setEditingEvent(null);
+                }}
+              />
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

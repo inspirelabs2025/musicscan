@@ -4,13 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, Share2, Eye, Music, BookOpen, Sparkles } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Eye, Music, BookOpen, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useSEO } from '@/hooks/useSEO';
 import { ArticleStructuredData } from '@/components/SEO/StructuredData';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { ReviewSchema, FAQSchema } from '@/components/SEO/ReviewSchema';
 import { useToast } from '@/hooks/use-toast';
+import { ShareButtons } from '@/components/ShareButtons';
+import { Helmet } from 'react-helmet';
 import { formatDate } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -53,27 +55,27 @@ export const MuziekVerhaal: React.FC = () => {
   const [hasIncrementedView, setHasIncrementedView] = useState(false);
   const { toast } = useToast();
 
+  // Define URLs and images for SEO and sharing
+  const currentUrl = `https://www.musicscan.app/muziek-verhaal/${slug}`;
+  const storyImage = story?.artwork_url || 'https://www.musicscan.app/placeholder.svg';
+  const storyDescription = story?.meta_description || story?.story_content?.slice(0, 160).replace(/[#*]/g, '') || 'Ontdek het verhaal achter de muziek';
+
   // Enhanced SEO setup
-  const seoDescription = story?.story_content 
-    ? story.story_content.slice(0, 160).replace(/[#*]/g, '')
-    : `Ontdek het fascinerende verhaal van ${story?.query || 'muziek'}. Een interactief muziekverhaal vol interessante achtergrondinformatie en verhalen.`;
-  
   const seoKeywords = [
-    story?.query,
-    'muziekverhaal',
-    'music story',
-    'digitaal verhaal',
-    'muziekgeschiedenis',
-    'album verhaal',
-    'muziek informatie'
+    story?.artist,
+    story?.single_name,
+    story?.album,
+    story?.genre,
+    ...(story?.tags || [])
   ].filter(Boolean).join(', ');
 
   useSEO({
-    title: story?.title ? `${story.title} | Muziekverhalen` : 'Muziekverhaal | MusicScan',
-    description: seoDescription,
+    title: story?.meta_title || `${story?.title} | MusicScan Muziekverhalen`,
+    description: storyDescription,
     keywords: seoKeywords,
+    image: storyImage,
     type: 'article',
-    canonicalUrl: `https://www.musicscan.app/muziek-verhaal/${slug}`
+    canonicalUrl: currentUrl
   });
 
   useEffect(() => {
@@ -148,27 +150,6 @@ export const MuziekVerhaal: React.FC = () => {
     }
   }, [story, hasIncrementedView]);
 
-  const handleShare = async () => {
-    const shareData = {
-      title: story?.title || 'Muziekverhaal',
-      text: `Ontdek dit fascinerende muziekverhaal: ${story?.title}`,
-      url: window.location.href
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (error) {
-        console.log('Share cancelled');
-      }
-    } else {
-      await navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`);
-      toast({
-        title: "Link gekopieerd!",
-        description: "De link is naar je klembord gekopieerd.",
-      });
-    }
-  };
 
   if (!slug) {
     navigate('/dashboard');
@@ -251,9 +232,48 @@ export const MuziekVerhaal: React.FC = () => {
 
   return (
     <>
+      <Helmet>
+        {/* Article-specific Open Graph tags */}
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={currentUrl} />
+        <meta property="og:title" content={story?.meta_title || story?.title} />
+        <meta property="og:description" content={storyDescription} />
+        <meta property="og:image" content={storyImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={story?.title} />
+        
+        {/* Article metadata */}
+        <meta property="article:published_time" content={story?.created_at} />
+        <meta property="article:modified_time" content={story?.updated_at} />
+        {story?.artist && <meta property="article:author" content={story.artist} />}
+        {story?.genre && <meta property="article:section" content={story.genre} />}
+        {story?.tags?.map((tag) => (
+          <meta key={tag} property="article:tag" content={tag} />
+        ))}
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={story?.meta_title || story?.title} />
+        <meta name="twitter:description" content={storyDescription} />
+        <meta name="twitter:image" content={storyImage} />
+        {story?.reading_time && (
+          <>
+            <meta name="twitter:label1" content="Leestijd" />
+            <meta name="twitter:data1" content={`${story.reading_time} min`} />
+          </>
+        )}
+        {story?.views_count && (
+          <>
+            <meta name="twitter:label2" content="Views" />
+            <meta name="twitter:data2" content={story.views_count.toString()} />
+          </>
+        )}
+      </Helmet>
+      
       <ArticleStructuredData
         title={story.title}
-        description={seoDescription}
+        description={storyDescription}
         publishDate={story.created_at}
         author="MusicScan AI"
         image={story.artwork_url}
@@ -366,15 +386,11 @@ export const MuziekVerhaal: React.FC = () => {
                       <Calendar className="w-4 h-4" />
                       Gepubliceerd op {publishedDate}
                     </span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={handleShare}
-                      className="h-auto p-0 text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      <Share2 className="w-4 h-4 mr-1" />
-                      Delen
-                    </Button>
+                    <ShareButtons 
+                      url={currentUrl}
+                      title={story.title}
+                      description={storyDescription}
+                    />
                   </div>
                 </div>
               </div>

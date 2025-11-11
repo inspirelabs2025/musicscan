@@ -16,6 +16,7 @@ import { PosterStructuredData } from "@/components/SEO/PosterStructuredData";
 import { generatePosterAltTag } from "@/utils/generateAltTag";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 import { PosterStyleSelector } from "@/components/timemachine/PosterStyleSelector";
+import { ShareButtons } from "@/components/ShareButtons";
 
 export default function PlatformProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -30,6 +31,8 @@ export default function PlatformProductDetail() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  
+  const currentUrl = `https://www.musicscan.app/product/${slug}`;
   
   // Find related blog post
   const { data: blogPost } = useBlogPostByProduct(
@@ -63,26 +66,23 @@ export default function PlatformProductDetail() {
     }
   }, [product, styleVariants, selectedStyle]);
 
-  // Generate POSTER-specific meta description
-  const generateMetaDescription = () => {
-    if (!product) return 'Bekijk productdetails in onze shop';
-    
-    if (isPoster) {
-      const styleText = posterStyle ? ` in ${posterStyle} stijl` : '';
-      return `Koop ${product.artist} - ${product.title}${styleText}. Premium kunst poster. Museum kwaliteit. Gratis verzending vanaf €50. Nu beschikbaar voor €${product.price}`;
-    }
-    
-    return `${product.title}${product.artist ? ` van ${product.artist}` : ''} - ${product.description || 'Bekijk details en bestel eenvoudig.'} Prijs: €${product.price}`;
-  };
+  // Generate product-specific meta description
+  const productDescription = product ? (
+    isPoster 
+      ? `Koop ${product.artist} - ${product.title}${posterStyle ? ` in ${posterStyle} stijl` : ''}. Premium kunst poster. Museum kwaliteit. Gratis verzending vanaf €50. Nu beschikbaar voor €${product.price}`
+      : `${product.title}${product.artist ? ` van ${product.artist}` : ''} - ${product.description || 'Bekijk details en bestel eenvoudig.'} Prijs: €${product.price}`
+  ) : 'Bekijk productdetails in onze shop';
+  
+  const productImage = product?.primary_image || 'https://www.musicscan.app/placeholder.svg';
 
   // SEO optimization for product page
   useSEO({
     title: product ? `${product.title}${product.artist ? ` - ${product.artist}` : ''}${isPoster ? ' | Premium Art Poster' : ''} | MusicScan Shop` : 'Product | MusicScan Shop',
-    description: generateMetaDescription(),
+    description: productDescription,
     keywords: product ? `${product.title}, ${product.artist || ''}, ${isPoster ? 'poster, AI art, kunstposter, wanddecoratie,' : ''} ${product.media_type || ''}, muziek, shop, kopen, ${product.tags?.join(', ') || ''}, ${product.categories?.join(', ') || ''}`.replace(/,\s*,/g, ',').replace(/^,|,$/g, '') : 'muziek shop, producten',
-    canonicalUrl: `https://www.musicscan.app/product/${slug}`,
-    image: product?.primary_image,
-    type: isPoster ? 'product.item' : 'product'
+    canonicalUrl: currentUrl,
+    image: productImage,
+    type: 'product'
   });
 
   if (isLoading) {
@@ -198,9 +198,38 @@ export default function PlatformProductDetail() {
   } : null;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Breadcrumb Navigation */}
-      <BreadcrumbNavigation items={[
+    <>
+      <Helmet>
+        {/* Product-specific Open Graph tags */}
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={currentUrl} />
+        <meta property="og:title" content={`${product.artist} - ${product.title}`} />
+        <meta property="og:description" content={productDescription} />
+        <meta property="og:image" content={productImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="1200" />
+        <meta property="og:image:alt" content={`${product.artist} - ${product.title}`} />
+        
+        {/* Product details */}
+        <meta property="product:price:amount" content={product.price.toString()} />
+        <meta property="product:price:currency" content="EUR" />
+        <meta property="product:availability" content={product.stock_quantity > 0 ? "in stock" : "out of stock"} />
+        {product.categories?.[0] && <meta property="product:category" content={product.categories[0]} />}
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${product.artist} - ${product.title}`} />
+        <meta name="twitter:description" content={productDescription} />
+        <meta name="twitter:image" content={productImage} />
+        <meta name="twitter:label1" content="Prijs" />
+        <meta name="twitter:data1" content={`€${product.price}`} />
+        <meta name="twitter:label2" content="Voorraad" />
+        <meta name="twitter:data2" content={product.stock_quantity > 0 ? "Op voorraad" : "Uitverkocht"} />
+      </Helmet>
+      
+      <div className="container mx-auto px-4 py-8">
+        {/* Breadcrumb Navigation */}
+        <BreadcrumbNavigation items={[
         { name: "Home", url: "/" },
         ...(isPoster ? [
           { name: "Posters", url: "/posters" }
@@ -381,24 +410,31 @@ export default function PlatformProductDetail() {
             </div>
 
             {product.stock_quantity > 0 && (
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={handleAddToCart}
-                disabled={inCart || (isTShirt && !canAddToCart)}
-              >
-                {inCart ? (
-                  <>
-                    <Check className="h-5 w-5 mr-2" />
-                    In winkelwagen
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="h-5 w-5 mr-2" />
-                    Toevoegen aan winkelwagen
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  size="lg"
+                  className="flex-1"
+                  onClick={handleAddToCart}
+                  disabled={inCart || (isTShirt && !canAddToCart)}
+                >
+                  {inCart ? (
+                    <>
+                      <Check className="h-5 w-5 mr-2" />
+                      In winkelwagen
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="h-5 w-5 mr-2" />
+                      Toevoegen aan winkelwagen
+                    </>
+                  )}
+                </Button>
+                <ShareButtons 
+                  url={currentUrl}
+                  title={`${product.artist} - ${product.title}`}
+                  description={productDescription}
+                />
+              </div>
             )}
             
             {isTShirt && !canAddToCart && (
@@ -602,5 +638,6 @@ export default function PlatformProductDetail() {
         </div>
       )}
     </div>
+    </>
   );
 }

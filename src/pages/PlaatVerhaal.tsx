@@ -10,6 +10,8 @@ import { useSEO } from '@/hooks/useSEO';
 import { ArticleStructuredData } from '@/components/SEO/StructuredData';
 import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { useToast } from '@/hooks/use-toast';
+import { ShareButtons } from '@/components/ShareButtons';
+import { Helmet } from 'react-helmet';
 import { ReviewsSection } from '@/components/blog/ReviewsSection';
 import { CommentsSection } from '@/components/blog/CommentsSection';
 import { RelatedArticles } from '@/components/SEO/RelatedArticles';
@@ -44,6 +46,7 @@ export const PlaatVerhaal: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const { toast } = useToast();
+  const currentUrl = `https://www.musicscan.app/plaat-verhaal/${slug}`;
 
   const frontmatter = blog?.yaml_frontmatter || {};
   const title = frontmatter.title || 'Plaat & Verhaal';
@@ -80,13 +83,15 @@ export const PlaatVerhaal: React.FC = () => {
     year && `${year} muziek`
   ].filter(Boolean).join(', ');
 
+  const blogImage = blog?.album_cover_url || frontmatter.og_image || 'https://www.musicscan.app/placeholder.svg';
+
   useSEO({
     title: frontmatter.meta_title || `${artist} - ${album} | Plaat & Verhaal`,
     description: seoDescription,
     keywords: seoKeywords,
-    image: blog?.album_cover_url || frontmatter.og_image || '/placeholder.svg',
+    image: blogImage,
     type: 'article',
-    canonicalUrl: blog ? `https://www.musicscan.app/plaat-verhaal/${blog.slug}` : `https://www.musicscan.app/plaat-verhaal/${slug}`
+    canonicalUrl: currentUrl
   });
 
   useEffect(() => {
@@ -184,27 +189,6 @@ export const PlaatVerhaal: React.FC = () => {
     fetchBlog();
   }, [slug]);
 
-  const handleShare = async () => {
-    const shareData = {
-      title: `${artist} - ${album}`,
-      text: blog?.social_post || `Check deze review van ${artist} - ${album}!`,
-      url: window.location.href
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (error) {
-        console.log('Share cancelled');
-      }
-    } else {
-      await navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`);
-      toast({
-        title: "Link gekopieerd!",
-        description: "De link is naar je klembord gekopieerd.",
-      });
-    }
-  };
 
   if (loading) {
     return (
@@ -292,6 +276,44 @@ export const PlaatVerhaal: React.FC = () => {
 
   return (
     <>
+      <Helmet>
+        {/* Article-specific Open Graph tags */}
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={currentUrl} />
+        <meta property="og:title" content={frontmatter.meta_title || `${artist} - ${album}`} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:image" content={blogImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={`${artist} - ${album} album cover`} />
+        
+        {/* Article metadata */}
+        <meta property="article:published_time" content={blog?.published_at || blog?.created_at} />
+        {artist && <meta property="article:author" content={artist} />}
+        {genre && <meta property="article:section" content={genre} />}
+        {tags.map((tag: string) => (
+          <meta key={tag} property="article:tag" content={tag} />
+        ))}
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={frontmatter.meta_title || `${artist} - ${album}`} />
+        <meta name="twitter:description" content={seoDescription} />
+        <meta name="twitter:image" content={blogImage} />
+        {readingTime && (
+          <>
+            <meta name="twitter:label1" content="Leestijd" />
+            <meta name="twitter:data1" content={`${readingTime} min`} />
+          </>
+        )}
+        {price > 0 && (
+          <>
+            <meta name="twitter:label2" content="Prijs" />
+            <meta name="twitter:data2" content={`€${price}`} />
+          </>
+        )}
+      </Helmet>
+      
       <ArticleStructuredData
         title={title}
         description={frontmatter.meta_description || `Het verhaal achter ${artist} - ${album}`}
@@ -481,15 +503,11 @@ export const PlaatVerhaal: React.FC = () => {
                         day: 'numeric'
                       })}
                     </span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={handleShare}
-                      className="h-auto p-0 text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      <Share2 className="w-4 h-4 mr-1" />
-                      Delen
-                    </Button>
+                    <ShareButtons 
+                      url={currentUrl}
+                      title={`${artist} - ${album}`}
+                      description={blog?.social_post || `Check deze review van ${artist} - ${album}!`}
+                    />
                     {artist && album && (
                       <SpotifyAlbumLink
                         artist={artist}
@@ -624,15 +642,11 @@ export const PlaatVerhaal: React.FC = () => {
                     "{blog.social_post}"
                   </p>
                   <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleShare}
-                      className="hover:bg-primary/10 border-primary/30"
-                    >
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Delen
-                    </Button>
+                    <ShareButtons 
+                      url={currentUrl}
+                      title={`${artist} - ${album}`}
+                      description={blog?.social_post || `Check deze review van ${artist} - ${album}!`}
+                    />
                     <Button
                       variant="ghost"
                       size="sm"

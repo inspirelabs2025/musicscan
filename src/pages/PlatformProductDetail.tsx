@@ -277,7 +277,7 @@ export default function PlatformProductDetail() {
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         {/* Image Gallery */}
         <div className="space-y-4">
-          <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+          <div className={`bg-muted rounded-lg overflow-hidden ${isTShirt ? 'aspect-[3/4]' : 'aspect-square'}`}>
             {displayImage ? (
               <img
                 src={displayImage}
@@ -289,7 +289,7 @@ export default function PlatformProductDetail() {
                     )
                   : product.title
                 }
-                className="w-full h-full object-cover"
+                className={`w-full h-full ${isTShirt ? 'object-contain' : 'object-cover'}`}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -304,7 +304,9 @@ export default function PlatformProductDetail() {
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(image)}
-                  className={`aspect-square bg-muted rounded overflow-hidden border-2 transition-colors ${
+                  className={`bg-muted rounded overflow-hidden border-2 transition-colors ${
+                    isTShirt ? 'aspect-[3/4]' : 'aspect-square'
+                  } ${
                     (selectedImage || product.primary_image) === image
                       ? "border-primary"
                       : "border-transparent"
@@ -313,7 +315,7 @@ export default function PlatformProductDetail() {
                   <img
                     src={image}
                     alt={`${product.title} ${idx + 1}`}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full ${isTShirt ? 'object-contain' : 'object-cover'}`}
                   />
                 </button>
               ))}
@@ -422,13 +424,13 @@ export default function PlatformProductDetail() {
                         setSelectedImage(design.url);
                         setSelectedStyle(design.label);
                       }}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      className={`aspect-[3/4] rounded-lg overflow-hidden border-2 transition-all bg-muted ${
                         selectedStyle === design.label
                           ? 'border-primary ring-2 ring-primary'
                           : 'border-border hover:border-primary/50'
                       }`}
                     >
-                      <img src={design.url} alt={design.label} className="w-full h-full object-cover" />
+                      <img src={design.url} alt={design.label} className="w-full h-full object-contain" />
                     </button>
                   ))}
                 </div>

@@ -210,13 +210,16 @@ serve(async (req) => {
       );
     }
 
-    console.log('Podcast manager action:', action, 'params:', params);
+    // Support both { params: {...} } and top-level body fields
+    const p = (params && typeof params === 'object') ? params : requestBody;
+
+    console.log('Podcast manager action:', action, 'params:', p);
 
     const accessToken = await getSpotifyAccessToken();
 
     switch (action) {
       case 'search_shows': {
-        const { query } = params;
+        const { query } = p;
         const shows = await searchSpotifyShows(query, accessToken);
         
         return new Response(JSON.stringify({ shows }), {
@@ -225,15 +228,15 @@ serve(async (req) => {
       }
 
       case 'add_curated_show': {
-        const { spotify_show_id, category, curator_notes } = params;
+        const { spotify_show_id, category, curator_notes } = p;
         
-// Get show details from Spotify
-const showResponse = await fetch(
-  `https://api.spotify.com/v1/shows/${spotify_show_id}?market=NL`,
-  {
-    headers: { 'Authorization': `Bearer ${accessToken}` }
-  }
-);
+        // Get show details from Spotify
+        const showResponse = await fetch(
+          `https://api.spotify.com/v1/shows/${spotify_show_id}?market=NL`,
+          {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          }
+        );
 
 if (!showResponse.ok) {
   const text = await showResponse.text().catch(() => '');
@@ -277,7 +280,7 @@ const show = await showResponse.json();
       }
 
       case 'add_curated_show_by_url': {
-        const { spotify_url, category, curator_notes } = params;
+        const { spotify_url, category, curator_notes } = p;
         
         // Extract show ID from URL
         const showId = extractSpotifyShowId(spotify_url);
@@ -350,7 +353,7 @@ const show = await showResponse.json();
       }
 
       case 'sync_episodes': {
-        const { show_id } = params;
+        const { show_id } = p;
         
         // Get show from database
         const { data: show, error: showError } = await supabase
@@ -430,7 +433,7 @@ if (validEpisodes.length === 0) {
       }
 
       case 'toggle_featured_episode': {
-        const { episode_id, is_featured } = params;
+        const { episode_id, is_featured } = p;
         
         const { data, error } = await supabase
           .from('spotify_show_episodes')
@@ -452,7 +455,7 @@ if (validEpisodes.length === 0) {
       }
 
       case 'remove_curated_show': {
-        const { show_id } = params;
+        const { show_id } = p;
         
         const { error } = await supabase
           .from('spotify_curated_shows')
@@ -473,7 +476,7 @@ if (validEpisodes.length === 0) {
 
       case 'add_individual_episode': {
         console.log('🎵 Processing add_individual_episode action');
-        const { spotify_url, category = 'General', curator_notes } = params;
+        const { spotify_url, category = 'General', curator_notes } = p;
         
         console.log(`📝 Parameters: spotify_url=${spotify_url}, category=${category}, curator_notes=${curator_notes}`);
         
@@ -578,7 +581,7 @@ if (validEpisodes.length === 0) {
       }
 
       case 'toggle_featured_individual_episode': {
-        const { episode_id: indivEpisodeId } = params;
+        const { episode_id: indivEpisodeId } = p;
         if (!indivEpisodeId) {
           return new Response(
             JSON.stringify({ error: 'Missing episode_id parameter' }),
@@ -625,7 +628,7 @@ if (validEpisodes.length === 0) {
       }
 
       case 'remove_individual_episode': {
-        const { episode_id: removeEpisodeId } = params;
+        const { episode_id: removeEpisodeId } = p;
         if (!removeEpisodeId) {
           return new Response(
             JSON.stringify({ error: 'Missing episode_id parameter' }),

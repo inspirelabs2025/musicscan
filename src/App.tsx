@@ -119,6 +119,7 @@ import UploadPhoto from "./pages/UploadPhoto";
 import MyPhotos from "./pages/MyPhotos";
 import LikedPhotos from "./pages/LikedPhotos";
 import MusicHistory from "./pages/MusicHistory";
+import UserManagement from "./pages/admin/UserManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -306,6 +307,9 @@ const AppContent = () => {
               <Routes>
                 <Route index element={<MainAdmin />} />
                 <Route path="dashboard" element={<SuperAdminDashboard />} />
+                
+                {/* User Management */}
+                <Route path="users" element={<UserManagement />} />
                 
                 {/* Products & Shop */}
                 <Route path="products" element={<AllProducts />} />

@@ -7,6 +7,55 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper function to strip featured artists from song titles
+function stripFeaturedArtists(title: string): string {
+  return title
+    .replace(/\(feat\.?\s+.+?\)/gi, '')
+    .replace(/\[feat\.?\s+.+?\]/gi, '')
+    .replace(/featuring\s+.+/gi, '')
+    .replace(/ft\.?\s+.+/gi, '')
+    .trim();
+}
+
+// Helper function for fuzzy string matching (simple Levenshtein distance)
+function calculateSimilarity(str1: string, str2: string): number {
+  const longer = str1.length > str2.length ? str1 : str2;
+  const shorter = str1.length > str2.length ? str2 : str1;
+  
+  if (longer.length === 0) return 100;
+  
+  const editDistance = levenshteinDistance(longer, shorter);
+  return ((longer.length - editDistance) / longer.length) * 100;
+}
+
+function levenshteinDistance(str1: string, str2: string): number {
+  const matrix: number[][] = [];
+  
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  
+  return matrix[str2.length][str1.length];
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -90,10 +139,18 @@ serve(async (req) => {
       try {
         // For singles, search songs first, then albums as fallback
         const entityType = media_type === 'single' ? 'song' : 'album';
-        console.log(`🍎 Searching iTunes for ${entityType}:`, artist, '-', title);
         
-        const itunesQuery = encodeURIComponent(`${artist} ${title}`);
-        const itunesUrl = `https://itunes.apple.com/search?term=${itunesQuery}&entity=${entityType}&limit=10`;
+        // Strip featured artists for better matching
+        const cleanTitle = stripFeaturedArtists(title);
+        const originalTitle = title;
+        
+        console.log(`🍎 Searching iTunes for ${entityType}:`, artist, '-', cleanTitle);
+        if (cleanTitle !== originalTitle) {
+          console.log('📝 Stripped featured artists:', originalTitle, '→', cleanTitle);
+        }
+        
+        const itunesQuery = encodeURIComponent(`${artist} ${cleanTitle}`);
+        const itunesUrl = `https://itunes.apple.com/search?term=${itunesQuery}&entity=${entityType}&limit=15`;
         
         const itunesResponse = await fetch(itunesUrl);
         if (itunesResponse.ok) {
@@ -102,50 +159,96 @@ serve(async (req) => {
           if (itunesData.results && itunesData.results.length > 0) {
             // Improved matching: normalize and compare both artist and title
             const normalizedArtist = artist.toLowerCase().trim();
-            const normalizedTitle = title.toLowerCase().trim();
+            const normalizedTitle = cleanTitle.toLowerCase().trim();
             
-            // Score each result based on match quality
-            const scoredResults = itunesData.results.map((r: any) => {
-              const resultArtist = (r.artistName || '').toLowerCase().trim();
-              const resultTitle = (r.trackName || r.collectionName || '').toLowerCase().trim();
-              
-              // Calculate match score
-              let score = 0;
-              
-              // Artist match (most important)
-              if (resultArtist.includes(normalizedArtist) || normalizedArtist.includes(resultArtist)) {
-                score += 50;
-              }
-              
-              // Title match
-              if (resultTitle.includes(normalizedTitle) || normalizedTitle.includes(resultTitle)) {
-                score += 40;
-              }
-              
-              // Bonus for exact matches
-              if (resultArtist === normalizedArtist) score += 10;
-              if (resultTitle === normalizedTitle) score += 10;
-              
-              return { result: r, score };
-            });
+            // Filter and score results
+            const scoredResults = itunesData.results
+              .filter((r: any) => {
+                // For singles, require trackName (not just collectionName)
+                if (media_type === 'single') {
+                  return r.wrapperType === 'track' && r.trackName;
+                }
+                return true;
+              })
+              .map((r: any) => {
+                const resultArtist = (r.artistName || '').toLowerCase().trim();
+                const resultTitle = (r.trackName || r.collectionName || '').toLowerCase().trim();
+                
+                // Calculate match score
+                let score = 0;
+                let matchDetails: string[] = [];
+                
+                // Exact artist match (very important)
+                if (resultArtist === normalizedArtist) {
+                  score += 40;
+                  matchDetails.push('exact artist');
+                } else {
+                  // Fuzzy artist match
+                  const artistSimilarity = calculateSimilarity(resultArtist, normalizedArtist);
+                  if (artistSimilarity > 80) {
+                    score += Math.floor(artistSimilarity / 2.5);
+                    matchDetails.push(`fuzzy artist (${artistSimilarity.toFixed(0)}%)`);
+                  }
+                }
+                
+                // Exact title match (very important)
+                if (resultTitle === normalizedTitle) {
+                  score += 40;
+                  matchDetails.push('exact title');
+                } else {
+                  // Fuzzy title match
+                  const titleSimilarity = calculateSimilarity(resultTitle, normalizedTitle);
+                  if (titleSimilarity > 80) {
+                    score += Math.floor(titleSimilarity / 2.5);
+                    matchDetails.push(`fuzzy title (${titleSimilarity.toFixed(0)}%)`);
+                  }
+                }
+                
+                // Bonus for single-specific validation
+                if (media_type === 'single' && r.trackCount === 1) {
+                  score += 10;
+                  matchDetails.push('single release');
+                }
+                
+                // Bonus for higher resolution artwork
+                if (r.artworkUrl100 && r.artworkUrl100.includes('1200x1200')) {
+                  score += 5;
+                  matchDetails.push('high-res artwork');
+                }
+                
+                return { 
+                  result: r, 
+                  score, 
+                  matchDetails,
+                  isSingle: r.trackCount === 1 || r.wrapperType === 'track'
+                };
+              });
             
             // Sort by score and pick best match
             scoredResults.sort((a, b) => b.score - a.score);
-            const bestMatch = scoredResults[0];
             
-            console.log(`🎯 Best iTunes match (score: ${bestMatch.score}):`, 
-              bestMatch.result.artistName, '-', 
-              bestMatch.result.trackName || bestMatch.result.collectionName);
-            
-            // Only use if score is reasonable (at least 50 for artist match)
-            if (bestMatch.score >= 50 && bestMatch.result.artworkUrl100) {
-              artworkUrl = bestMatch.result.artworkUrl100
-                .replace('100x100bb', '1200x1200bb')
-                .replace('100x100', '1200x1200');
-              artworkSource = 'itunes';
-              console.log('✅ Found iTunes artwork:', artworkUrl);
-            } else {
-              console.log('⚠️ No good iTunes match found (score too low)');
+            if (scoredResults.length > 0) {
+              const bestMatch = scoredResults[0];
+              
+              console.log(`🎯 Best iTunes match (score: ${bestMatch.score}):`, 
+                bestMatch.result.artistName, '-', 
+                bestMatch.result.trackName || bestMatch.result.collectionName);
+              console.log(`📊 Match details:`, bestMatch.matchDetails.join(', '));
+              console.log(`🎵 Type: ${bestMatch.isSingle ? 'Single' : 'Album'}`);
+              
+              // Require minimum score of 90 for quality matches (both artist + title must match well)
+              if (bestMatch.score >= 90 && bestMatch.result.artworkUrl100) {
+                artworkUrl = bestMatch.result.artworkUrl100
+                  .replace('100x100bb', '1200x1200bb')
+                  .replace('100x100', '1200x1200');
+                artworkSource = 'itunes';
+                console.log('✅ Found iTunes artwork (high confidence):', artworkUrl);
+              } else if (bestMatch.score >= 70) {
+                console.log(`⚠️ iTunes match found but score too low (${bestMatch.score}/90 needed)`);
+                console.log(`💡 Consider: Artist="${bestMatch.result.artistName}", Title="${bestMatch.result.trackName || bestMatch.result.collectionName}"`);
+              } else {
+                console.log('⚠️ No good iTunes match found (score too low)');
+              }
             }
           }
         }
@@ -199,9 +302,13 @@ serve(async (req) => {
         
         // For singles, search recordings first
         if (media_type === 'single') {
-          console.log('🔍 Searching MusicBrainz recordings for single:', artist, '-', title);
+          const cleanTitle = stripFeaturedArtists(title);
+          console.log('🔍 Searching MusicBrainz recordings for single:', artist, '-', cleanTitle);
+          if (cleanTitle !== title) {
+            console.log('📝 Stripped featured artists for MusicBrainz:', title, '→', cleanTitle);
+          }
           
-          const recordingQuery = encodeURIComponent(`artist:"${artist}" AND recording:"${title}"`);
+          const recordingQuery = encodeURIComponent(`artist:"${artist}" AND recording:"${cleanTitle}"`);
           const mbRecordingUrl = `https://musicbrainz.org/ws/2/recording?query=${recordingQuery}&fmt=json&limit=5&inc=releases+artist-credits`;
           
           const mbResponse = await fetch(mbRecordingUrl, {

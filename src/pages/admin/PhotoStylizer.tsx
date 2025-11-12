@@ -9,11 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePhotoStylizer, StyleType } from '@/hooks/usePhotoStylizer';
 import { usePosterProductCreator } from '@/hooks/usePosterProductCreator';
 import { useCanvasProductCreator } from '@/hooks/useCanvasProductCreator';
 import { usePhotoBatchProcessor } from '@/hooks/usePhotoBatchProcessor';
+import { useBulkPhotoBatchProcessor } from '@/hooks/useBulkPhotoBatchProcessor';
 import { PhotoBatchProgress } from '@/components/admin/PhotoBatchProgress';
+import { BulkPhotoBatchUploader } from '@/components/admin/BulkPhotoBatchUploader';
+import { BulkPhotoBatchProgress } from '@/components/admin/BulkPhotoBatchProgress';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Download, RefreshCw, Sparkles, ShoppingBag, Check, Zap } from 'lucide-react';
@@ -60,6 +64,7 @@ export default function PhotoStylizer() {
   const { createPosterProduct, isCreating } = usePosterProductCreator();
   const { createCanvasProduct, isCreating: isCreatingCanvas } = useCanvasProductCreator();
   const { startBatch, isProcessing: isBatchProcessing, batchStatus, progress } = usePhotoBatchProcessor();
+  const { batchStatus: bulkBatchStatus } = useBulkPhotoBatchProcessor();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -276,16 +281,28 @@ export default function PhotoStylizer() {
           🎨 Photo Art Stylizer
         </h1>
         <p className="text-muted-foreground">
-          Upload a photo to automatically generate all product variants (posters, canvas, T-shirts, socks)
+          Upload photos to automatically generate product variants (posters, canvas, T-shirts, socks)
         </p>
       </div>
 
-      {/* Batch Progress Monitor */}
-      {batchStatus && (
-        <div className="mb-6">
-          <PhotoBatchProgress batchStatus={batchStatus} progress={progress} />
-        </div>
-      )}
+      <Tabs defaultValue="single" className="w-full">
+        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+          <TabsTrigger value="single" className="flex items-center gap-2">
+            📷 Single Photo
+          </TabsTrigger>
+          <TabsTrigger value="bulk" className="flex items-center gap-2">
+            📦 Bulk Upload (10 photos)
+          </TabsTrigger>
+        </TabsList>
+
+        {/* SINGLE PHOTO MODE */}
+        <TabsContent value="single" className="space-y-6">
+          {/* Batch Progress Monitor */}
+          {batchStatus && (
+            <div className="mb-6">
+              <PhotoBatchProgress batchStatus={batchStatus} progress={progress} />
+            </div>
+          )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Upload Section */}
@@ -554,19 +571,30 @@ export default function PhotoStylizer() {
         </div>
       )}
 
-      {isProcessing && (
-        <Card className="mt-6">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>Processing your photo...</span>
-                <span className="text-muted-foreground">This may take 3-5 seconds</span>
-              </div>
-              <Progress value={undefined} className="w-full" />
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          {isProcessing && (
+            <Card className="mt-6">
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Processing your photo...</span>
+                    <span className="text-muted-foreground">This may take 3-5 seconds</span>
+                  </div>
+                  <Progress value={undefined} className="w-full" />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* BULK UPLOAD MODE */}
+        <TabsContent value="bulk" className="space-y-6">
+          <BulkPhotoBatchUploader />
+          
+          {bulkBatchStatus && (
+            <BulkPhotoBatchProgress batchStatus={bulkBatchStatus} />
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Batch Metadata Dialog */}
       <Dialog open={showBatchFormDialog} onOpenChange={setShowBatchFormDialog}>

@@ -276,3 +276,6 @@ verify_jwt = false
 
 [functions.photo-batch-processor]
 verify_jwt = false
+
+[functions.bulk-photo-batch-processor]
+verify_jwt = false

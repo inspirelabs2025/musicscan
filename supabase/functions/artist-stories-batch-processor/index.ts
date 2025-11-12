@@ -16,8 +16,164 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { action } = await req.json();
+    // Try to parse body for action, but default to 'tick' for cron jobs
+    let action = 'tick';
+    try {
+      const body = await req.json();
+      action = body.action || 'tick';
+    } catch {
+      // No body = cron job, use 'tick'
+      action = 'tick';
+    }
+    
     console.log(`🎵 Artist stories batch processor - action: ${action}`);
+
+    // Handle 'tick' action (called by cron job) - process next item
+    if (action === 'tick' || action === 'process_next') {
+      // Get active batch
+      const { data: activeBatch, error: batchError } = await supabase
+        .from('batch_processing_status')
+        .select('*')
+        .eq('process_type', 'artist_story_generation')
+        .eq('status', 'processing')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (batchError) {
+        console.error('❌ Error fetching active batch:', batchError);
+        throw batchError;
+      }
+
+      if (!activeBatch) {
+        console.log('✅ No active batch found');
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'No active batch'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Get next pending item
+      const { data: nextItem, error: itemError } = await supabase
+        .from('batch_queue_items')
+        .select('*')
+        .eq('batch_id', activeBatch.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (itemError) {
+        console.error('❌ Error fetching next item:', itemError);
+        throw itemError;
+      }
+
+      if (!nextItem) {
+        console.log('⏸️ No pending items found, checking if batch is complete...');
+        
+        const { data: queueStats } = await supabase
+          .from('batch_queue_items')
+          .select('status')
+          .eq('batch_id', activeBatch.id);
+
+        const pending = queueStats?.filter(s => s.status === 'pending').length || 0;
+        const processing = queueStats?.filter(s => s.status === 'processing').length || 0;
+
+        if (pending === 0 && processing === 0) {
+          console.log('✅ Batch completed');
+          await supabase
+            .from('batch_processing_status')
+            .update({ 
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+              last_heartbeat: new Date().toISOString()
+            })
+            .eq('id', activeBatch.id);
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: pending === 0 && processing === 0 ? 'Batch completed' : 'Waiting for items',
+          pending,
+          processing
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Mark as processing
+      await supabase
+        .from('batch_queue_items')
+        .update({ status: 'processing' })
+        .eq('id', nextItem.id);
+
+      console.log(`🎤 Processing: ${nextItem.metadata.artist_name}`);
+
+      try {
+        const { data: storyData, error: storyError } = await supabase.functions.invoke('generate-artist-story', {
+          body: { artistName: nextItem.metadata.artist_name }
+        });
+
+        if (storyError) throw storyError;
+
+        await supabase
+          .from('batch_queue_items')
+          .update({ 
+            status: 'completed',
+            processed_at: new Date().toISOString()
+          })
+          .eq('id', nextItem.id);
+
+        await supabase
+          .from('batch_processing_status')
+          .update({
+            processed_items: activeBatch.processed_items + 1,
+            successful_items: activeBatch.successful_items + 1,
+            last_heartbeat: new Date().toISOString()
+          })
+          .eq('id', activeBatch.id);
+
+        console.log(`✅ Success: ${nextItem.metadata.artist_name}`);
+
+        return new Response(JSON.stringify({
+          success: true,
+          artist: nextItem.metadata.artist_name
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+
+      } catch (error: any) {
+        console.error(`❌ Failed: ${nextItem.metadata.artist_name}`, error);
+
+        await supabase
+          .from('batch_queue_items')
+          .update({ 
+            status: 'failed',
+            error_message: error.message,
+            processed_at: new Date().toISOString(),
+            attempts: (nextItem.attempts || 0) + 1
+          })
+          .eq('id', nextItem.id);
+
+        await supabase
+          .from('batch_processing_status')
+          .update({
+            processed_items: activeBatch.processed_items + 1,
+            failed_items: activeBatch.failed_items + 1,
+            last_heartbeat: new Date().toISOString()
+          })
+          .eq('id', activeBatch.id);
+
+        return new Response(JSON.stringify({
+          success: false,
+          error: error.message
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
 
     if (action === 'start') {
       // Get all unique artists from discogs_import_log that don't have stories yet
@@ -105,162 +261,7 @@ serve(async (req) => {
       });
     }
 
-    if (action === 'process_next') {
-      // Get active batch
-      const { data: activeBatch, error: batchError } = await supabase
-        .from('batch_processing_status')
-        .select('*')
-        .eq('process_type', 'artist_story_generation')
-        .eq('status', 'processing')
-        .order('started_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (batchError || !activeBatch) {
-        console.log('❌ No active batch found');
-        return new Response(JSON.stringify({
-          success: false,
-          message: 'No active batch'
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      // Get next pending item
-      const { data: nextItem, error: itemError } = await supabase
-        .from('batch_queue_items')
-        .select('*')
-        .eq('batch_id', activeBatch.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .single();
-
-      if (itemError || !nextItem) {
-        console.log('⏸️ No pending items found, checking if batch is truly complete...');
-        
-        // Count pending and processing items
-        const { data: queueStats } = await supabase
-          .from('batch_queue_items')
-          .select('status')
-          .eq('batch_id', activeBatch.id);
-
-        const pending = queueStats?.filter(s => s.status === 'pending').length || 0;
-        const processing = queueStats?.filter(s => s.status === 'processing').length || 0;
-
-        console.log(`📊 Batch ${activeBatch.id}: pending=${pending}, processing=${processing}`);
-
-        // Only mark completed if both pending AND processing are 0
-        if (pending === 0 && processing === 0) {
-          console.log('✅ Batch truly completed - marking as completed');
-          
-          await supabase
-            .from('batch_processing_status')
-            .update({ 
-              status: 'completed',
-              completed_at: new Date().toISOString(),
-              last_heartbeat: new Date().toISOString()
-            })
-            .eq('id', activeBatch.id);
-
-          return new Response(JSON.stringify({
-            success: true,
-            message: 'Batch completed'
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        } else {
-          console.log('⏳ Batch still has items in progress, waiting...');
-          return new Response(JSON.stringify({
-            success: true,
-            message: 'Waiting for items to complete',
-            pending,
-            processing
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
-      }
-
-      // Mark item as processing
-      await supabase
-        .from('batch_queue_items')
-        .update({ status: 'processing' })
-        .eq('id', nextItem.id);
-
-      console.log(`🎤 Processing artist: ${nextItem.metadata.artist_name}`);
-
-      try {
-        const { data: storyData, error: storyError } = await supabase.functions.invoke('generate-artist-story', {
-          body: { 
-            artistName: nextItem.metadata.artist_name
-          }
-        });
-
-        if (storyError) throw storyError;
-
-        // Mark item as completed
-        await supabase
-          .from('batch_queue_items')
-          .update({ 
-            status: 'completed',
-            processed_at: new Date().toISOString()
-          })
-          .eq('id', nextItem.id);
-
-        // Update batch counters
-        await supabase
-          .from('batch_processing_status')
-          .update({
-            processed_items: activeBatch.processed_items + 1,
-            successful_items: activeBatch.successful_items + 1,
-            last_heartbeat: new Date().toISOString()
-          })
-          .eq('id', activeBatch.id);
-
-        console.log(`✅ Successfully generated story for ${nextItem.metadata.artist_name}`);
-
-        return new Response(JSON.stringify({
-          success: true,
-          artist: nextItem.metadata.artist_name,
-          story_id: storyData.id
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-
-      } catch (error: any) {
-        console.error(`❌ Failed to generate story for ${nextItem.metadata.artist_name}:`, error);
-
-        // Mark item as failed
-        await supabase
-          .from('batch_queue_items')
-          .update({ 
-            status: 'failed',
-            error_message: error.message,
-            processed_at: new Date().toISOString(),
-            attempts: nextItem.attempts + 1
-          })
-          .eq('id', nextItem.id);
-
-        // Update batch counters
-        await supabase
-          .from('batch_processing_status')
-          .update({
-            processed_items: activeBatch.processed_items + 1,
-            failed_items: activeBatch.failed_items + 1,
-            last_heartbeat: new Date().toISOString()
-          })
-          .eq('id', activeBatch.id);
-
-        return new Response(JSON.stringify({
-          success: false,
-          error: error.message,
-          artist: nextItem.metadata.artist_name
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-    }
+    // Remove the old 'process_next' action since it's now handled by 'tick'
 
     if (action === 'retry_failed') {
       console.log('🔄 Retrying failed items...');
@@ -350,9 +351,14 @@ serve(async (req) => {
         .eq('process_type', 'artist_story_generation')
         .order('started_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (batchError || !latestBatch) {
+      if (batchError) {
+        console.error('❌ Error fetching batch:', batchError);
+        throw batchError;
+      }
+
+      if (!latestBatch) {
         return new Response(JSON.stringify({
           success: false,
           message: 'No batch found'

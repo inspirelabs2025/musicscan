@@ -65,15 +65,12 @@ const ArtistStoriesGenerator = () => {
 
       toast({
         title: "Batch Processing Gestart",
-        description: `${data.total} artiesten worden verwerkt...`,
+        description: `${data.total} artiesten worden automatisch verwerkt door de cron job (1 per minuut)`,
       });
 
       // Start polling for status updates
       const id = setInterval(loadBatchStatus, 5000);
       setIntervalId(id);
-
-      // Start processing items
-      processNextBatch();
 
     } catch (error: any) {
       console.error('Error starting batch:', error);
@@ -83,25 +80,6 @@ const ArtistStoriesGenerator = () => {
         variant: "destructive"
       });
       setIsProcessing(false);
-    }
-  };
-
-  const processNextBatch = async () => {
-    try {
-      for (let i = 0; i < 5; i++) {
-        await supabase.functions.invoke('artist-stories-batch-processor', {
-          body: { action: 'process_next' }
-        });
-        
-        // Wait 12 seconds between items (5 per minute)
-        await new Promise(resolve => setTimeout(resolve, 12000));
-      }
-
-      // Check if more items to process
-      await loadBatchStatus();
-      
-    } catch (error: any) {
-      console.error('Error processing batch:', error);
     }
   };
 

@@ -304,6 +304,9 @@ verify_jwt = false
 [functions.generate-artist-story]
 verify_jwt = false
 
+[functions.backfill-singles-artwork]
+verify_jwt = false
+
 [functions.artist-stories-batch-processor]
 verify_jwt = false
 

@@ -77,6 +77,7 @@ const menuItems = [
       { title: "Socks Designer", url: "/admin/sock-generator", icon: Brush },
       { title: "T-Shirt Designer", url: "/admin/tshirt-generator", icon: Brush },
       { title: "Photo Stylizer", url: "/admin/photo-stylizer", icon: Wand2 },
+      { title: "Singles Importer", url: "/admin/singles-importer", icon: Music },
     ]
   },
   {

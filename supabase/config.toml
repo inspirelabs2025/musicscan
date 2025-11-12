@@ -285,3 +285,18 @@ verify_jwt = true
 
 [functions.init-bulk-photo-batch]
 verify_jwt = true
+
+[functions.import-singles-batch]
+verify_jwt = true
+
+[functions.singles-batch-generator]
+verify_jwt = false
+
+[functions.singles-batch-processor]
+verify_jwt = false
+
+[[functions.singles-batch-processor.schedule]]
+cron = "* * * * *"  # Every minute
+
+[functions.generate-single-story]
+verify_jwt = false

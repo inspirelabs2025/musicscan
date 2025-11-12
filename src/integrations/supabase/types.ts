@@ -4031,6 +4031,95 @@ export type Database = {
           },
         ]
       }
+      singles_import_queue: {
+        Row: {
+          album: string | null
+          artist: string
+          artwork_url: string | null
+          attempts: number | null
+          batch_id: string
+          catalog: string | null
+          created_at: string | null
+          discogs_id: number | null
+          discogs_url: string | null
+          error_message: string | null
+          genre: string | null
+          id: string
+          label: string | null
+          max_attempts: number | null
+          music_story_id: string | null
+          priority: number | null
+          processed_at: string | null
+          single_name: string
+          status: string
+          styles: string[] | null
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string
+          year: number | null
+        }
+        Insert: {
+          album?: string | null
+          artist: string
+          artwork_url?: string | null
+          attempts?: number | null
+          batch_id: string
+          catalog?: string | null
+          created_at?: string | null
+          discogs_id?: number | null
+          discogs_url?: string | null
+          error_message?: string | null
+          genre?: string | null
+          id?: string
+          label?: string | null
+          max_attempts?: number | null
+          music_story_id?: string | null
+          priority?: number | null
+          processed_at?: string | null
+          single_name: string
+          status?: string
+          styles?: string[] | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id: string
+          year?: number | null
+        }
+        Update: {
+          album?: string | null
+          artist?: string
+          artwork_url?: string | null
+          attempts?: number | null
+          batch_id?: string
+          catalog?: string | null
+          created_at?: string | null
+          discogs_id?: number | null
+          discogs_url?: string | null
+          error_message?: string | null
+          genre?: string | null
+          id?: string
+          label?: string | null
+          max_attempts?: number | null
+          music_story_id?: string | null
+          priority?: number | null
+          processed_at?: string | null
+          single_name?: string
+          status?: string
+          styles?: string[] | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "singles_import_queue_music_story_id_fkey"
+            columns: ["music_story_id"]
+            isOneToOne: false
+            referencedRelation: "music_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sitemap_logs: {
         Row: {
           created_at: string | null

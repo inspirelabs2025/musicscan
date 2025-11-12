@@ -109,6 +109,7 @@ import TimeMachineManager from "./pages/admin/TimeMachineManager";
 import LyricPosterGenerator from "./pages/admin/LyricPosterGenerator";
 import SockGenerator from "./pages/admin/SockGenerator";
 import TshirtGenerator from "./pages/admin/TshirtGenerator";
+import SinglesImporterPage from "./pages/admin/SinglesImporterPage";
 import SocksShop from "./pages/SocksShop";
 import TshirtsShop from "./pages/TshirtsShop";
 import MerchandiseShop from "./pages/MerchandiseShop";
@@ -329,6 +330,7 @@ const AppContent = () => {
                 <Route path="sock-generator" element={<SockGenerator />} />
                 <Route path="tshirt-generator" element={<TshirtGenerator />} />
                 <Route path="photo-stylizer" element={<PhotoStylizer />} />
+                <Route path="singles-importer" element={<SinglesImporterPage />} />
                 
                 {/* Content Management */}
                 <Route path="curated-artists" element={<CuratedArtists />} />

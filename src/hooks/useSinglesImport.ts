@@ -30,6 +30,7 @@ interface ImportResult {
 export const useSinglesImport = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  const [isBackfilling, setIsBackfilling] = useState(false);
   const { toast } = useToast();
 
   const importSingles = async (singles: SingleImport[]): Promise<ImportResult | null> => {
@@ -251,6 +252,40 @@ export const useSinglesImport = () => {
     }
   };
 
+  const backfillArtwork = async () => {
+    try {
+      setIsBackfilling(true);
+      
+      const { data, error } = await supabase.functions.invoke('backfill-singles-artwork');
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Artwork backfill failed",
+          description: error.message
+        });
+        return null;
+      }
+      
+      toast({
+        title: "Artwork backfill complete!",
+        description: `${data.successful}/${data.total_singles} singles now have artwork`
+      });
+      
+      return data;
+    } catch (error) {
+      console.error('Backfill error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to backfill artwork"
+      });
+      return null;
+    } finally {
+      setIsBackfilling(false);
+    }
+  };
+
   return {
     importSingles,
     startBatchProcessing,
@@ -258,7 +293,9 @@ export const useSinglesImport = () => {
     getBatchStatus,
     retryFailed,
     clearQueue,
+    backfillArtwork,
     isImporting,
     isBatchProcessing,
+    isBackfilling,
   };
 };

@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Play, Pause, RotateCcw, FileText, Music, Trash2 } from 'lucide-react';
+import { Upload, Play, Pause, RotateCcw, FileText, Music, Trash2, ExternalLink } from 'lucide-react';
 import { useSinglesImport } from '@/hooks/useSinglesImport';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -218,7 +218,7 @@ Optioneel: (Jaar) en/of [Album]`}
                   </div>
                 </AlertDescription>
               </Alert>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {!activeBatch || activeBatch.status !== 'running' ? (
                   <Button onClick={handleStartBatch} disabled={isBatchProcessing}>
                     <Play className="h-4 w-4 mr-2" />
@@ -247,6 +247,33 @@ Optioneel: (Jaar) en/of [Album]`}
                     Clear Queue
                   </Button>
                 )}
+              </div>
+              {/* Logs Monitoring */}
+              <div className="flex gap-2 pt-2 border-t">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.open('https://supabase.com/dashboard/project/ssxbpyqnjfiyubsuonar/functions/import-singles-batch/logs', '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 mr-2" />
+                  View Import Logs
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.open('https://supabase.com/dashboard/project/ssxbpyqnjfiyubsuonar/functions/singles-batch-processor/logs', '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 mr-2" />
+                  View Processor Logs
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.open('https://supabase.com/dashboard/project/ssxbpyqnjfiyubsuonar/functions/generate-single-story/logs', '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 mr-2" />
+                  View Generator Logs
+                </Button>
               </div>
             </div>
           )}

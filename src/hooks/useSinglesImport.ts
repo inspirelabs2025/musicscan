@@ -165,7 +165,24 @@ export const useSinglesImport = () => {
         return null;
       }
 
-      return data;
+      // Map to UI expected structure
+      const { pending, processing, completed, failed, total } = data;
+      
+      return {
+        queue_stats: {
+          pending,
+          completed,
+          failed
+        },
+        batch: {
+          status: processing > 0 ? 'running' : 'idle',
+          total_items: total,
+          processed_items: completed + failed,
+          successful_items: completed,
+          failed_items: failed,
+          current_items: null
+        }
+      };
     } catch (error) {
       console.error('Status error:', error);
       return null;
@@ -175,7 +192,7 @@ export const useSinglesImport = () => {
   const retryFailed = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('singles-batch-generator', {
-        body: { action: 'retry_failed' }
+        body: { action: 'retry' }
       });
 
       if (error) {

@@ -263,7 +263,7 @@ cron = "0 */6 * * *"  # Every 6 hours
 verify_jwt = false
 
 [[functions.daily-anecdote-generator.schedule]]
-cron = "0 6 * * *"  # Daily at 6 AM UTC
+cron = "5 6 * * *"  # Daily at 6:05 AM UTC
 
 [functions.generate-daily-music-history]
 verify_jwt = false

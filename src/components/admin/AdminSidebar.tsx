@@ -24,7 +24,8 @@ import {
   Users,
   Disc,
   Newspaper,
-  Shield
+  Shield,
+  BookOpen
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -118,6 +119,7 @@ const menuItems = [
       { title: "Discogs Blog Gen", url: "/admin/test/discogs-blog-generation", icon: FileText },
       { title: "Discogs ID Finder", url: "/admin/test/discogs-id", icon: Database },
       { title: "Album Cover Backfill", url: "/admin/test/album-cover-backfill", icon: Image },
+      { title: "Anekdote Generatie", url: "/admin/test/anecdote-generation", icon: BookOpen },
     ]
   }
 ];

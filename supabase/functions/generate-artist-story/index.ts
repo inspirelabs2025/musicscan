@@ -139,11 +139,8 @@ serve(async (req) => {
       }
     }
     
-    // For batch processing, use a system user ID if no user provided
     if (!userId) {
-      // Use a fixed system user ID for batch-generated stories
-      userId = '00000000-0000-0000-0000-000000000000';
-      console.log('⚙️ Using system user ID for batch processing');
+      console.log('⚙️ Geen userId beschikbaar; verhaal wordt opgeslagen zonder gekoppelde user');
     }
 
     console.log('🎸 Generating artist story with Lovable AI for:', artistName);
@@ -227,25 +224,29 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-    // Save to database
+    // Prepare insert payload (omit user_id if not available)
+    const insertPayload: Record<string, unknown> = {
+      artist_name: artistName,
+      slug,
+      story_content: story,
+      biography,
+      music_style: extractedData.music_style,
+      notable_albums: extractedData.notable_albums,
+      artwork_url: artworkUrl,
+      is_published: true,
+      published_at: new Date().toISOString(),
+      reading_time: readingTime,
+      word_count: wordCount,
+      meta_title: `${title} | MusicScan`,
+      meta_description: biography.substring(0, 160),
+    };
+    if (userId) {
+      (insertPayload as any).user_id = userId;
+    }
+
     const { data: artistStory, error: saveError } = await supabase
       .from('artist_stories')
-      .insert({
-        user_id: userId,
-        artist_name: artistName,
-        slug,
-        story_content: story,
-        biography,
-        music_style: extractedData.music_style,
-        notable_albums: extractedData.notable_albums,
-        artwork_url: artworkUrl,
-        is_published: true,
-        published_at: new Date().toISOString(),
-        reading_time: readingTime,
-        word_count: wordCount,
-        meta_title: `${title} | MusicScan`,
-        meta_description: biography.substring(0, 160)
-      })
+      .insert(insertPayload)
       .select()
       .single();
 

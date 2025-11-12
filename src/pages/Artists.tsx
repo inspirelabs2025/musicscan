@@ -22,13 +22,17 @@ const Artists = () => {
   const [selectedGenre, setSelectedGenre] = useState<string>('');
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'alphabetical'>('newest');
 
-  const { data: stories, isLoading } = useArtistStories({
+  const { data: stories, isLoading, error } = useArtistStories({
     search,
     genre: selectedGenre || undefined,
     sortBy
   });
 
-  const { data: stats } = useArtistStoriesStats();
+  const { data: stats, error: statsError } = useArtistStoriesStats();
+
+  if (error || statsError) {
+    console.error('Error loading artist stories:', error || statsError);
+  }
 
   const handleStoryClick = (slug: string) => {
     navigate(`/artists/${slug}`);
@@ -138,7 +142,18 @@ const Artists = () => {
         <section className="py-12">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
-              {isLoading ? (
+              {error || statsError ? (
+                <div className="text-center py-12">
+                  <Music className="w-16 h-16 mx-auto mb-4 text-red-500/20" />
+                  <h3 className="text-xl font-semibold mb-2">Er is een fout opgetreden</h3>
+                  <p className="text-muted-foreground mb-4">
+                    We konden de artiesten niet laden. Probeer de pagina opnieuw te laden.
+                  </p>
+                  <Button onClick={() => window.location.reload()}>
+                    Opnieuw laden
+                  </Button>
+                </div>
+              ) : isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[...Array(6)].map((_, i) => (
                     <Card key={i}>

@@ -398,6 +398,7 @@ const AppContent = () => {
         <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
         <Route path="/singles" element={<Singles />} />
         <Route path="/singles/:slug" element={<SingleDetail />} />
+        <Route path="/artist" element={<Navigate to="/artists" replace />} />
         <Route path="/artists" element={<Artists />} />
         <Route path="/artists/:slug" element={<ArtistDetail />} />
         <Route path="/fanwall" element={<ArtistFanWallOverview />} />

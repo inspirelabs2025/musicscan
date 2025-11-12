@@ -23,6 +23,7 @@ serve(async (req) => {
       action = body.action || 'tick';
     } catch {
       // No body = cron job, use 'tick'
+      console.log('⏰ Cron job triggered - defaulting to tick action');
       action = 'tick';
     }
     

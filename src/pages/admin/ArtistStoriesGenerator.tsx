@@ -47,6 +47,17 @@ const ArtistStoriesGenerator = () => {
       if (data) {
         setBatchStatus(data);
         setIsProcessing(data.status === 'processing');
+        
+        // Auto-trigger if there are pending items but nothing processing
+        if (data.status === 'processing' && 
+            data.queue_stats?.pending > 0 && 
+            data.queue_stats?.processing === 0) {
+          console.log('⚡ Auto-triggering processor - items pending but nothing processing');
+          // Trigger processing in background
+          supabase.functions.invoke('artist-stories-batch-processor', {
+            body: { action: 'tick' }
+          }).then(() => console.log('✅ Auto-trigger sent'));
+        }
       }
     } catch (error: any) {
       console.error('Error loading batch status:', error);

@@ -28,58 +28,72 @@ serve(async (req) => {
       .eq('status', 'running')
       .maybeSingle();
 
-    // Auto-recovery: if no active batch but pending items exist, reactivate correct batch
+    // Auto-recovery: if no active batch but pending items exist, reactivate ONLY blog batches
     if (!batchStatus) {
-      console.log('📴 No active batch found, checking for recoverable batch...');
+      console.log('📴 No active blog batch found, checking for recoverable blog batch...');
       
-      const { data: pendingItems } = await supabase
-        .from('batch_queue_items')
-        .select('batch_id')
-        .eq('status', 'pending')
-        .limit(1);
+      // Get recent blog_generation batches only
+      const { data: recentBlogBatches } = await supabase
+        .from('batch_processing_status')
+        .select('id')
+        .eq('process_type', 'blog_generation')
+        .order('started_at', { ascending: false })
+        .limit(10);
+
+      if (recentBlogBatches && recentBlogBatches.length > 0) {
+        const blogBatchIds = recentBlogBatches.map(b => b.id);
         
-      if (pendingItems && pendingItems.length > 0) {
-        console.log('🔄 Found pending items, reactivating batch with pending items...');
-        
-        // Find the batch that actually has pending items, not just the most recent
-        const { data: batchWithPendingItems } = await supabase
-          .from('batch_processing_status')
-          .select('*')
-          .eq('process_type', 'blog_generation')
-          .eq('id', pendingItems[0].batch_id)
-          .maybeSingle();
+        // Check for pending items only in these blog batches
+        const { data: pendingBlogItems } = await supabase
+          .from('batch_queue_items')
+          .select('batch_id')
+          .in('batch_id', blogBatchIds)
+          .eq('status', 'pending')
+          .limit(1);
           
-        if (batchWithPendingItems) {
-          await supabase
+        if (pendingBlogItems && pendingBlogItems.length > 0) {
+          console.log('🔄 Found pending blog items, reactivating batch...');
+          
+          // Find the blog batch that actually has pending items
+          const { data: batchWithPendingItems } = await supabase
             .from('batch_processing_status')
-            .update({ 
-              status: 'running',
-              completed_at: null,
-              last_heartbeat: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', batchWithPendingItems.id);
-          
-          batchStatus = { ...batchWithPendingItems, status: 'running' };
-          console.log('✅ Reactivated batch:', batchStatus.id);
-        } else {
-          // Orphaned queue items - batch status record is missing
-          console.log('💀 Found orphaned queue items - cleaning up');
-          await supabase
-            .from('batch_queue_items')
-            .update({ 
-              status: 'failed',
-              error_message: 'Missing batch_status record - orphaned item',
-              updated_at: new Date().toISOString()
-            })
-            .eq('batch_id', pendingItems[0].batch_id)
-            .eq('status', 'pending');
+            .select('*')
+            .eq('process_type', 'blog_generation')
+            .eq('id', pendingBlogItems[0].batch_id)
+            .maybeSingle();
+            
+          if (batchWithPendingItems) {
+            await supabase
+              .from('batch_processing_status')
+              .update({ 
+                status: 'running',
+                completed_at: null,
+                last_heartbeat: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', batchWithPendingItems.id);
+            
+            batchStatus = { ...batchWithPendingItems, status: 'running' };
+            console.log('✅ Reactivated blog batch:', batchStatus.id);
+          } else {
+            // Orphaned queue items - but only clean up if batch truly missing (not another process type)
+            console.log('💀 Found orphaned blog queue items - cleaning up');
+            await supabase
+              .from('batch_queue_items')
+              .update({ 
+                status: 'failed',
+                error_message: 'Missing blog batch_status record - orphaned item',
+                updated_at: new Date().toISOString()
+              })
+              .eq('batch_id', pendingBlogItems[0].batch_id)
+              .eq('status', 'pending');
+          }
         }
       }
       
       if (!batchStatus) {
-        console.log('📴 No recoverable batch found');
-        return new Response(JSON.stringify({ message: 'No active batch' }), {
+        console.log('📴 No recoverable blog batch found');
+        return new Response(JSON.stringify({ message: 'No active blog batch' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }

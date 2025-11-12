@@ -119,11 +119,34 @@ const ArtistStoriesGenerator = () => {
   };
 
   const retryFailed = async () => {
-    toast({
-      title: "Retry Gestart",
-      description: "Gefaalde items worden opnieuw verwerkt...",
-    });
-    // Implementation would reset failed items to pending
+    try {
+      toast({
+        title: "Retry Gestart",
+        description: "Gefaalde items worden opnieuw verwerkt...",
+      });
+
+      const { data, error } = await supabase.functions.invoke('artist-stories-batch-processor', {
+        body: { action: 'retry_failed' }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Retry Succesvol",
+        description: `${data.resetCount} items zijn teruggezet naar pending`,
+      });
+
+      // Reload status
+      await loadBatchStatus();
+
+    } catch (error: any) {
+      console.error('Error retrying failed items:', error);
+      toast({
+        title: "Fout",
+        description: error.message || "Kon gefaalde items niet opnieuw proberen",
+        variant: "destructive"
+      });
+    }
   };
 
   const progress = batchStatus 

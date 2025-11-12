@@ -28,9 +28,16 @@ serve(async (req) => {
 
       if (importError) throw importError;
 
-      // Get unique artist names
-      const uniqueArtists = [...new Set(importArtists.map(item => item.artist))];
-      console.log(`📊 Found ${uniqueArtists.length} unique artists in import log`);
+      // Get unique artist names and filter out invalid/empty names
+      const uniqueArtists = [...new Set(
+        importArtists
+          .map(item => item.artist)
+          .filter(artist => 
+            typeof artist === 'string' && 
+            artist.trim().length >= 2
+          )
+      )];
+      console.log(`📊 Found ${uniqueArtists.length} valid unique artists in import log`);
 
       // Check which artists already have stories
       const { data: existingStories, error: storiesError } = await supabase
@@ -130,22 +137,49 @@ serve(async (req) => {
         .single();
 
       if (itemError || !nextItem) {
-        // No more items, mark batch as completed
-        await supabase
-          .from('batch_processing_status')
-          .update({ 
-            status: 'completed',
-            last_heartbeat: new Date().toISOString()
-          })
-          .eq('id', activeBatch.id);
+        console.log('⏸️ No pending items found, checking if batch is truly complete...');
+        
+        // Count pending and processing items
+        const { data: queueStats } = await supabase
+          .from('batch_queue_items')
+          .select('status')
+          .eq('batch_id', activeBatch.id);
 
-        console.log('✅ Batch completed - no more items');
-        return new Response(JSON.stringify({
-          success: true,
-          message: 'Batch completed'
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        const pending = queueStats?.filter(s => s.status === 'pending').length || 0;
+        const processing = queueStats?.filter(s => s.status === 'processing').length || 0;
+
+        console.log(`📊 Batch ${activeBatch.id}: pending=${pending}, processing=${processing}`);
+
+        // Only mark completed if both pending AND processing are 0
+        if (pending === 0 && processing === 0) {
+          console.log('✅ Batch truly completed - marking as completed');
+          
+          await supabase
+            .from('batch_processing_status')
+            .update({ 
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+              last_heartbeat: new Date().toISOString()
+            })
+            .eq('id', activeBatch.id);
+
+          return new Response(JSON.stringify({
+            success: true,
+            message: 'Batch completed'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } else {
+          console.log('⏳ Batch still has items in progress, waiting...');
+          return new Response(JSON.stringify({
+            success: true,
+            message: 'Waiting for items to complete',
+            pending,
+            processing
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
       }
 
       // Mark item as processing
@@ -228,6 +262,86 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
+    }
+
+    if (action === 'retry_failed') {
+      console.log('🔄 Retrying failed items...');
+      
+      const { batchId } = await req.json();
+      
+      // If no batchId provided, get the latest artist_story_generation batch
+      let targetBatchId = batchId;
+      if (!targetBatchId) {
+        const { data: latestBatch } = await supabase
+          .from('batch_processing_status')
+          .select('id')
+          .eq('process_type', 'artist_story_generation')
+          .order('started_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        targetBatchId = latestBatch?.id;
+      }
+
+      if (!targetBatchId) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: 'No batch found to retry'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Reset failed items to pending
+      const { data: resetItems, error: resetError } = await supabase
+        .from('batch_queue_items')
+        .update({ 
+          status: 'pending',
+          attempts: 0,
+          error_message: null,
+          processed_at: null
+        })
+        .eq('batch_id', targetBatchId)
+        .eq('status', 'failed')
+        .select();
+
+      if (resetError) {
+        throw new Error(`Failed to reset items: ${resetError.message}`);
+      }
+
+      const resetCount = resetItems?.length || 0;
+      console.log(`✅ Reset ${resetCount} failed items to pending`);
+
+      // Update batch status to reactivate processing
+      if (resetCount > 0) {
+        // Recalculate counters
+        const { data: allItems } = await supabase
+          .from('batch_queue_items')
+          .select('status')
+          .eq('batch_id', targetBatchId);
+
+        const failed = allItems?.filter(s => s.status === 'failed').length || 0;
+        const completed = allItems?.filter(s => s.status === 'completed').length || 0;
+
+        await supabase
+          .from('batch_processing_status')
+          .update({
+            status: 'processing',
+            failed_items: failed,
+            processed_items: completed,
+            last_heartbeat: new Date().toISOString()
+          })
+          .eq('id', targetBatchId);
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: `Reset ${resetCount} failed items to pending`,
+        batchId: targetBatchId,
+        resetCount
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     if (action === 'status') {

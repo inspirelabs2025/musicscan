@@ -19,12 +19,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 const Artists = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState<string>('');
+  const [selectedGenre, setSelectedGenre] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'alphabetical'>('newest');
 
   const { data: stories, isLoading, error } = useArtistStories({
     search,
-    genre: selectedGenre || undefined,
+    genre: selectedGenre === 'all' ? undefined : selectedGenre,
     sortBy
   });
 
@@ -113,7 +113,7 @@ const Artists = () => {
                     <SelectValue placeholder="Alle Genres" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle Genres</SelectItem>
+                    <SelectItem value="all">Alle Genres</SelectItem>
                     {stats?.genres.map(genre => (
                       <SelectItem key={genre} value={genre}>
                         {genre.charAt(0).toUpperCase() + genre.slice(1)}

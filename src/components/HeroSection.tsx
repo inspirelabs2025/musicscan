@@ -34,7 +34,7 @@ export const HeroSection = () => {
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <Badge variant="secondary" className="px-4 py-2 text-sm">
               <Brain className="w-4 h-4 mr-2" />
-              AI Muziekanalyse
+              Muziekanalyse
             </Badge>
             <Badge variant="secondary" className="px-4 py-2 text-sm">
               <Users className="w-4 h-4 mr-2" />

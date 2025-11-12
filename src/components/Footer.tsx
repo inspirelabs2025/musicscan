@@ -31,7 +31,7 @@ export const Footer = () => {
                 Music Scanner
               </Link>
               <Link to="/ai-analysis" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
-                AI Analyse
+                Muziek Analyse
               </Link>
               <Link to="/collection-chat" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 Collectie Chat

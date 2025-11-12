@@ -520,9 +520,9 @@ const AIScanOverview = () => {
           {/* Header */}
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold">AI Scan Overzicht</h1>
+              <h1 className="text-3xl font-bold">Smart Scan Overzicht</h1>
               <p className="text-muted-foreground mt-2">
-                Beheer en analyseer alle AI-gestuurde foto scans
+                Beheer en analyseer alle foto scans
               </p>
             </div>
             <Button onClick={exportToCSV} disabled={!allScans.length}>

@@ -30,7 +30,7 @@ export const AppStructuredData = () => (
     type="MobileApplication"
     data={{
       name: 'MusicScan',
-      description: 'AI-powered vinyl and CD scanner for music collectors',
+      description: 'Smart vinyl and CD scanner for music collectors',
       applicationCategory: 'MusicApplication',
       operatingSystem: 'Web Browser',
       offers: {
@@ -49,7 +49,7 @@ export const AppStructuredData = () => (
         ratingCount: '1247'
       },
       features: [
-        'AI-powered vinyl record identification',
+        'Smart vinyl record identification',
         'CD scanning and recognition',
         'Real-time price valuations',
         'Digital collection management',
@@ -66,7 +66,7 @@ export const OrganizationStructuredData = () => (
       name: 'MusicScan',
       url: 'https://www.musicscan.app',
       logo: 'https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png',
-      description: 'MusicScan helps music collectors identify, value, and manage their vinyl and CD collections using AI technology.',
+      description: 'MusicScan helps music collectors identify, value, and manage their vinyl and CD collections using smart technology.',
       foundingDate: '2024',
       contactPoint: {
         '@type': 'ContactPoint',
@@ -153,7 +153,7 @@ export const ArticleStructuredData = ({ title, description, publishDate, author,
       dateModified: publishDate,
       author: {
         '@type': 'Organization',
-        name: author || 'MusicScan AI'
+        name: author || 'MusicScan'
       },
       publisher: {
         '@type': 'Organization',

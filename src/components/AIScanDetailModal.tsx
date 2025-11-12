@@ -148,7 +148,7 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card-dark text-card-dark-foreground">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-card-dark-foreground">
-            AI Scan Details
+            Smart Scan Details
             <Badge className={getStatusColor(scan.status)}>
               {scan.status}
             </Badge>
@@ -269,7 +269,7 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
 
             <Card variant="purple">
               <CardHeader>
-                <CardTitle className="text-lg">Analysis Results</CardTitle>
+                <CardTitle className="text-lg">Analyse Resultaten</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {scan.confidence_score !== null && (
@@ -306,7 +306,7 @@ export const AIScanDetailModal = ({ scan, open, onOpenChange }: AIScanDetailModa
           {scan.ai_description && (
             <Card variant="dark">
               <CardHeader>
-                <CardTitle className="text-lg">AI Analysis</CardTitle>
+                <CardTitle className="text-lg">Analyse Details</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="bg-muted/20 p-4 rounded-lg border border-muted/30">

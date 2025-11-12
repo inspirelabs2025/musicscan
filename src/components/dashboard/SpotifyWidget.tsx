@@ -50,7 +50,7 @@ export function SpotifyWidget() {
             <div className="mb-4">
               <Music className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">
-                Koppel je Spotify account voor verbeterde AI analyses en quiz vragen
+                Koppel je Spotify account voor verbeterde analyses en quiz vragen
               </p>
             </div>
             <Button 

@@ -27,7 +27,7 @@ export const QuickDiscoveryBar = () => {
     },
     {
       icon: MessageCircle,
-      label: 'Vraag AI',
+      label: 'Stel een Vraag',
       href: user ? '/collection-chat' : '/auth',
       gradient: 'from-accent to-primary'
     }

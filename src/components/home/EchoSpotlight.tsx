@@ -63,7 +63,7 @@ export function EchoSpotlight() {
                   <div className="flex-shrink-0">
                     <img 
                       src={echoAvatar} 
-                      alt="Echo - AI Muziekexpert" 
+                      alt="Echo - Muziekexpert" 
                       className="w-12 h-12 rounded-full border-2 border-echo-lavender/50 shadow-lg"
                     />
                   </div>

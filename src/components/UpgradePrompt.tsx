@@ -29,10 +29,10 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
       case 'usage_limit':
         return {
           icon: <Zap className="h-12 w-12 text-orange-500" />,
-          title: 'AI Scan Limiet Bereikt',
+          title: 'Smart Scan Limiet Bereikt',
           description: usageInfo 
-            ? `Je hebt ${usageInfo.current} van je ${usageInfo.limit} AI scans gebruikt deze maand. Upgrade je plan voor meer scans.`
-            : 'Je hebt je maandelijkse AI scan limiet bereikt. Upgrade je plan om door te gaan.',
+            ? `Je hebt ${usageInfo.current} van je ${usageInfo.limit} smart scans gebruikt deze maand. Upgrade je plan voor meer scans.`
+            : 'Je hebt je maandelijkse smart scan limiet bereikt. Upgrade je plan om door te gaan.',
           recommendedPlans: currentPlan === 'free' ? ['basic', 'plus'] : ['plus', 'pro']
         };
       
@@ -48,7 +48,7 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
         return {
           icon: <Crown className="h-12 w-12 text-blue-500" />,
           title: 'Upgrade je Plan',
-          description: 'Krijg toegang tot meer AI scans, geavanceerde features en priority support met een betaald abonnement.',
+          description: 'Krijg toegang tot meer smart scans, geavanceerde features en priority support met een betaald abonnement.',
           recommendedPlans: ['basic', 'plus']
         };
     }
@@ -60,21 +60,21 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
     basic: {
       name: 'BASIC - Collection Builder',
       price: '€3,95/maand',
-      highlights: ['50 AI scans/maand', '20 AI chat queries', 'Email support'],
+      highlights: ['50 smart scans/maand', '20 chat queries', 'Email support'],
       color: 'bg-blue-500',
       popular: false
     },
     plus: {
       name: 'PLUS - Music Enthusiast',
       price: '€7,95/maand',
-      highlights: ['200 AI scans/maand', 'Onbeperkte AI chat', 'Marketplace toegang'],
+      highlights: ['200 smart scans/maand', 'Onbeperkte chat', 'Marketplace toegang'],
       color: 'bg-purple-500',
       popular: true
     },
     pro: {
       name: 'PRO - Serious Collector',
       price: '€14,95/maand',
-      highlights: ['Onbeperkte AI scans', 'Bulk upload (50 foto\'s)', 'API toegang'],
+      highlights: ['Onbeperkte smart scans', 'Bulk upload (50 foto\'s)', 'API toegang'],
       color: 'bg-gold-500',
       popular: false
     }

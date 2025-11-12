@@ -17,13 +17,13 @@ const heroVariants = [
   },
   {
     id: 'ai',
-    title: 'AI-Powered Muziek Discovery',
+    title: 'Slimme Muziek Discovery',
     description: 'Praat met je collectie, genereer verhalen en ontdek je muziek DNA.',
     icon: Sparkles,
-    cta: 'Probeer AI Chat',
+    cta: 'Probeer Chat',
     ctaLink: '/collection-chat',
     gradient: 'from-accent/20 to-primary/20',
-    stats: '500+ AI analyses'
+    stats: '500+ analyses'
   },
   {
     id: 'story',

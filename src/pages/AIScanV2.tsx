@@ -274,11 +274,11 @@ export default function AIScanV2() {
             <h1 className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
               <Brain className="h-8 w-8" />
               <Sparkles className="h-6 w-6 text-yellow-500" />
-              AI Foto Analyse V2
+              Smart Foto Analyse V2
               <Badge variant="secondary" className="ml-2">BETA</Badge>
             </h1>
             <p className="text-muted-foreground">
-              Ontdek supersnel de juiste release ID - verbeterde AI-analyse met GPT-4.1 en multi-pass technologie
+              Ontdek supersnel de juiste release ID - verbeterde analyse met GPT-4.1 en multi-pass technologie
             </p>
             {user && (
               <p className="text-sm text-muted-foreground">
@@ -421,7 +421,7 @@ export default function AIScanV2() {
                     <>
                       <Brain className="mr-2 h-4 w-4" />
                       <Sparkles className="mr-1 h-4 w-4" />
-                      Start V2 AI Analyse
+                      Start V2 Analyse
                     </>
                   )}
                 </Button>

@@ -20,7 +20,7 @@ export default function AIAnalysis() {
                 Terug
               </Button>
               <div className="text-center sm:text-left">
-                <h1 className="text-2xl sm:text-3xl font-bold">AI Muziek Analyse</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">Muziek Analyse</h1>
                 <p className="text-sm sm:text-base text-muted-foreground">Ontdek je muzikale DNA en krijg persoonlijke inzichten</p>
               </div>
             </div>

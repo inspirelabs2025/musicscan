@@ -55,7 +55,7 @@ export const ChatWidget = () => {
             <div className="text-sm font-medium text-muted-foreground mb-2">🕒 Laatste gesprek:</div>
             <div className="bg-accent/10 p-3 rounded-lg">
               <div className="text-xs text-muted-foreground mb-1">
-                {messages[0].sender_type === 'user' ? '👤 Jij' : '🤖 AI'}
+                {messages[0].sender_type === 'user' ? '👤 Jij' : '🤖 Assistant'}
               </div>
               <div className="text-sm line-clamp-2">
                 {messages[0].message}

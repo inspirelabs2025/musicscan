@@ -177,7 +177,7 @@ export default function AIScan() {
 
       if (data.success) {
         toast({
-          title: "AI Analyse Voltooid",
+          title: "Analyse Voltooid",
           description: `Release gevonden met ${Math.round((data.result?.confidence_score || 0) * 100)}% zekerheid`,
           variant: "default"
         });
@@ -230,10 +230,10 @@ export default function AIScan() {
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
               <Brain className="h-8 w-8" />
-              Ontdek supersnel de juiste release ID
+              Smart Foto Analyse
             </h1>
             <p className="text-muted-foreground">
-              Upload foto's van je LP of CD en laat AI het release identificeren
+              Upload foto's van je LP of CD en laat het systeem het release identificeren
             </p>
           </div>
 
@@ -378,12 +378,12 @@ export default function AIScan() {
                 {isAnalyzing ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    AI Analyseert...
+                    Analyseert...
                   </>
                 ) : (
                   <>
                     <Brain className="mr-2 h-5 w-5" />
-                    Start AI Analyse
+                    Start Analyse
                   </>
                 )}
               </Button>

@@ -77,9 +77,9 @@ export function EnhancedAIAnalysisTab() {
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse rounded-full"></div>
           </div>
           <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            AI analyseert je collectie...
+            Je collectie wordt geanalyseerd...
           </h3>
-          <p className="text-muted-foreground mb-6">Dit kan even duren terwijl onze AI je muziekcollectie onderzoekt</p>
+          <p className="text-muted-foreground mb-6">Dit kan even duren terwijl we je muziekcollectie onderzoeken</p>
           <div className="max-w-md mx-auto space-y-3">
             <Progress value={75} className="h-2" />
             <p className="text-sm text-muted-foreground">Patronen herkennen en inzichten genereren...</p>
@@ -113,7 +113,7 @@ export function EnhancedAIAnalysisTab() {
         <Card variant="dark" className="border-destructive bg-destructive/5">\
           <CardContent className="p-8 text-center">
             <AlertCircle className="h-16 w-16 mx-auto mb-4 text-destructive" />
-            <h3 className="text-xl font-semibold mb-3">AI Analyse Heeft Meer Data Nodig</h3>
+            <h3 className="text-xl font-semibold mb-3">Analyse Heeft Meer Data Nodig</h3>
             <p className="text-muted-foreground mb-6">
               Je collectie mist belangrijke metadata (genres, labels, landen). 
               Laten we dit verrijken met Discogs data voor betere analyses!
@@ -203,10 +203,10 @@ export function EnhancedAIAnalysisTab() {
             </div>
           </div>
           <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            🤖 AI Collectie Analyse
+            🤖 Collectie Analyse
           </h2>
           <p className="text-lg text-muted-foreground mb-6">
-            AI-gestuurde inzichten in je unieke muziekcollectie
+            Slimme inzichten in je unieke muziekcollectie
           </p>
           
           <div className="flex flex-wrap gap-3 justify-center">
@@ -354,7 +354,7 @@ export function EnhancedAIAnalysisTab() {
                 <div className="text-center p-4 bg-gradient-to-r from-primary/10 to-green-500/10 rounded-lg border border-primary/20">
                   <p className="text-muted-foreground">
                     Je luisterpatronen tonen interessante verschillen tussen wat je <strong>bezit</strong> en wat je <strong>luistert</strong>. 
-                    De AI analyse hieronder verkent deze fascinerende muziekpersoonlijkheid!
+                    De analyse hieronder verkent deze fascinerende muziekpersoonlijkheid!
                   </p>
                 </div>
               </CardContent>
@@ -741,7 +741,7 @@ export function EnhancedAIAnalysisTab() {
       {/* Generation Info */}
       <div className="text-center text-sm text-muted-foreground border-t pt-6">
         <p>Analyse gegenereerd op {new Date(data.generatedAt).toLocaleString('nl-NL')}</p>
-        <p className="mt-1">🤖 Powered by AI • 🎵 Voor muziekliefhebbers • 💰 Met waardeanalyse</p>
+        <p className="mt-1">🤖 Powered by Smart Technology • 🎵 Voor muziekliefhebbers • 💰 Met waardeanalyse</p>
       </div>
     </div>
   );

@@ -18,8 +18,8 @@ export const MusicScanningSection = () => {
     },
     {
       number: "2", 
-      title: "AI Analyse",
-      description: "Onze geavanceerde AI analyseert je foto's en herkent automatisch artiest, titel, label, catalogusnummer en andere belangrijke details.",
+      title: "Smart Analyse",
+      description: "Ons systeem analyseert je foto's en herkent automatisch artiest, titel, label, catalogusnummer en andere belangrijke details.",
       icon: Brain,
       color: "bg-purple-500",
     },
@@ -57,7 +57,7 @@ export const MusicScanningSection = () => {
             Scannen van je Muziek
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-12">
-            Ontdek de waarde van je muziekcollectie met onze geavanceerde AI-technologie
+            Ontdek de waarde van je muziekcollectie met onze geavanceerde technologie
           </p>
         </div>
 

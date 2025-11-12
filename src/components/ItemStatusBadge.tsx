@@ -15,7 +15,7 @@ export const ItemStatusBadge = ({ item, showMultiple = false }: ItemStatusBadgeP
     return (
       <Badge variant="secondary" className="text-xs">
         <Scan className="w-3 h-3 mr-1" />
-        AI Scan
+        Smart Scan
       </Badge>
     );
   }

@@ -46,18 +46,18 @@ const verhalenMenuItems = [
 // SCAN & COLLECTIE MENU ITEMS (Logged in only)
 const scanCollectionMenuItems = [
   { title: "Scanner", url: "/scanner", icon: ScanLine },
-  { title: "AI Scan", url: "/ai-scan-v2", icon: Brain },
+  { title: "Smart Scan", url: "/ai-scan-v2", icon: Brain },
   { title: "Mijn Collectie", url: "/my-collection", icon: Music },
   { title: "Collectie Inzicht", url: "/collection-overview", icon: BarChart3 },
   { title: "Alle Scans", url: "/unified-scan-overview", icon: Archive }
 ];
 
-// AI TOOLS MENU ITEMS (Logged in only)
+// SLIMME TOOLS MENU ITEMS (Logged in only)
 const aiToolsMenuItems = [
   { title: "Echo 🎵", url: "/echo", icon: Music },
   { title: "Chat met Collectie", url: "/collection-chat", icon: MessageCircle },
   { title: "Prijscheck", url: "/quick-price-check", icon: DollarSign },
-  { title: "AI Analyse", url: "/ai-analysis", icon: Brain },
+  { title: "Muziek Analyse", url: "/ai-analysis", icon: Brain },
   { title: "Spotify Profiel", url: "/spotify-profile", icon: Music },
   { title: "Quiz", url: "/quiz", icon: Trophy }
 ];
@@ -228,14 +228,14 @@ export function Navigation() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
-                {/* AI Tools Dropdown */}
+                {/* Slimme Tools Dropdown */}
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className={cn(
                     "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
                     isAiToolsPageActive && "bg-accent text-accent-foreground"
                   )}>
                     <Brain className="h-4 w-4 mr-2" />
-                    AI Tools
+                    Slimme Tools
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="grid w-[300px] gap-1 p-4 bg-popover">

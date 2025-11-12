@@ -85,7 +85,7 @@ export function SpotifyConnect() {
           </div>
           <CardTitle className="text-2xl">Koppel je Spotify Account</CardTitle>
           <CardDescription className="text-lg">
-            Verbind je Spotify account om je muziekprofiel te verrijken en betere AI analyses te krijgen
+            Verbind je Spotify account om je muziekprofiel te verrijken en betere analyses te krijgen
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

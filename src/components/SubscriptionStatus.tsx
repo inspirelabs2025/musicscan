@@ -142,7 +142,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
             <div className="flex justify-between text-sm">
               <span className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
-                AI Scans deze maand
+                Smart Scans deze maand
               </span>
               <span className={isAiScanNearLimit ? 'text-orange-500 font-medium' : ''}>
                 {aiScansUsed}/{currentPlan.aiScanLimit}
@@ -157,7 +157,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
             {isAiScanNearLimit && (
               <div className="flex items-center gap-2 text-sm text-orange-600">
                 <AlertCircle className="h-4 w-4" />
-                <span>AI Scans: Je nadert je maandelijkse limiet</span>
+                <span>Smart Scans: Je nadert je maandelijkse limiet</span>
               </div>
             )}
           </div>
@@ -169,7 +169,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
             <div className="flex justify-between text-sm">
               <span className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                AI Chat deze maand
+                Chat deze maand
               </span>
               <span className={isAiChatNearLimit ? 'text-orange-500 font-medium' : ''}>
                 {aiChatUsed}/{currentPlan.aiChatLimit}
@@ -184,7 +184,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
             {isAiChatNearLimit && (
               <div className="flex items-center gap-2 text-sm text-orange-600">
                 <AlertCircle className="h-4 w-4" />
-                <span>AI Chat: Je nadert je maandelijkse limiet</span>
+                <span>Chat: Je nadert je maandelijkse limiet</span>
               </div>
             )}
           </div>
@@ -223,13 +223,13 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
             {!currentPlan.aiScanLimit && (
               <div className="flex items-center gap-2 text-green-600">
                 <Crown className="h-4 w-4" />
-                <span className="text-sm font-medium">Onbeperkte AI scans</span>
+                <span className="text-sm font-medium">Onbeperkte smart scans</span>
               </div>
             )}
             {!currentPlan.aiChatLimit && (
               <div className="flex items-center gap-2 text-green-600">
                 <Crown className="h-4 w-4" />
-                <span className="text-sm font-medium">Onbeperkte AI chat</span>
+                <span className="text-sm font-medium">Onbeperkte chat</span>
               </div>
             )}
             {currentPlan.bulkUploadLimit === null && (
@@ -252,7 +252,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({ compact 
         {!subscription?.subscribed && (
           <div className="pt-2 border-t">
             <p className="text-sm text-muted-foreground mb-2">
-              Upgrade voor meer AI scans, chat queries en bulk upload features
+              Upgrade voor meer smart scans, chat queries en bulk upload features
             </p>
             <Link to="/pricing">
               <Button className="w-full">

@@ -27,7 +27,7 @@ export const MediaTypeSelector = React.memo(({ onSelectMediaType, onSelectDiscog
             Wat ga je scannen?
           </CardTitle>
           <CardDescription className="text-lg max-w-2xl mx-auto">
-            Kies het type media dat je wilt scannen en waarderen. Onze AI herkent automatisch alle belangrijke details.
+            Kies het type media dat je wilt scannen en waarderen. Ons systeem herkent automatisch alle belangrijke details.
           </CardDescription>
         </CardHeader>
         <CardContent className="pb-8">

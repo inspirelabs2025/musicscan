@@ -34,7 +34,7 @@ export const QuickScanOptions = React.memo(({ context = 'collection', className 
     }
     return {
       title: 'Voeg Items toe aan Collectie',
-      description: 'Scan nieuwe items met AI-herkenning en directe waarde berekening.'
+      description: 'Scan nieuwe items met smart herkenning en directe waarde berekening.'
     };
   };
 

@@ -15,10 +15,10 @@ export const AIInsightsWidget = () => {
     return (
       <Card className="border-2 hover:border-vinyl-purple/50 transition-all duration-300">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-vinyl-purple" />
-            🧠 AI Muziek Inzichten
-          </CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Brain className="w-5 h-5 text-vinyl-purple" />
+          🧠 Muziek Inzichten
+        </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -51,7 +51,7 @@ export const AIInsightsWidget = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-vinyl-purple animate-pulse" />
-          🧠 AI Muziek Inzichten
+          🧠 Muziek Inzichten
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -111,7 +111,7 @@ export const AIInsightsWidget = () => {
           <div className="text-center py-4">
             <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" />
             <p className="text-sm text-muted-foreground mb-3">
-              Voeg albums toe om AI-inzichten te krijgen!
+              Voeg albums toe om inzichten te krijgen!
             </p>
             <Button asChild size="sm">
               <Link to="/scanner">

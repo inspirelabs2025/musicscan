@@ -70,6 +70,28 @@ const generateSEOFriendlySlug = (text: string): string => {
     .substring(0, 80);
 };
 
+// Helper function to extract JSON from markdown code blocks
+const extractJSON = (text: string): any => {
+  // Try to find JSON in markdown code fences
+  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[1].trim());
+    } catch (e) {
+      console.error('Failed to parse JSON from code fence:', e);
+    }
+  }
+  
+  // Try direct JSON parse
+  try {
+    return JSON.parse(text.trim());
+  } catch (e) {
+    // Last resort: return null to trigger fallback
+    return null;
+  }
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -171,20 +193,21 @@ Maak het interessant en informatief!`;
     const aiData = await aiResponse.json();
     const generatedText = aiData.choices[0].message.content;
 
-    // Parse response - try to extract JSON first, fallback to raw text
-    let anecdoteData;
-    try {
-      anecdoteData = JSON.parse(generatedText);
-    } catch {
+    // Parse response - extract JSON from markdown if present
+    let anecdoteData = extractJSON(generatedText);
+
+    if (!anecdoteData || !anecdoteData.title || !anecdoteData.content) {
       // Fallback: use raw text
-      const lines = generatedText.split('\n');
+      console.warn('Could not parse JSON, using fallback parsing');
+      const lines = generatedText.split('\n').filter(l => l.trim());
       anecdoteData = {
-        title: lines[0].replace(/^#+\s*/, '').trim(),
-        content: generatedText,
+        title: lines[0].replace(/^#+\s*/, '').replace(/```json/g, '').trim(),
+        content: generatedText.replace(/```json/g, '').replace(/```/g, '').trim(),
         source: null
       };
     }
 
+    console.log('Parsed anecdote title:', anecdoteData.title);
     console.log('Generating extended content for:', subjectName);
 
     // Generate extended content with second AI call
@@ -221,15 +244,17 @@ Maak het uitgebreider en diepgaander!`
     const extendedAiData = await extendedResponse.json();
     const extendedText = extendedAiData.choices[0].message.content;
 
-    let extendedData;
-    try {
-      extendedData = JSON.parse(extendedText);
-    } catch {
+    let extendedData = extractJSON(extendedText);
+
+    if (!extendedData || !extendedData.content) {
+      console.warn('Could not parse extended JSON, using fallback');
       extendedData = {
-        content: extendedText,
-        reading_time: Math.ceil(extendedText.length / 1000)
+        content: extendedText.replace(/```json/g, '').replace(/```/g, '').trim(),
+        reading_time: Math.ceil(extendedText.replace(/```json/g, '').replace(/```/g, '').length / 1000)
       };
     }
+
+    console.log('Extended content length:', extendedData.content.length, 'chars');
 
     // Generate SEO-friendly slug
     const slug = generateSEOFriendlySlug(anecdoteData.title) + '-' + Date.now().toString().slice(-6);

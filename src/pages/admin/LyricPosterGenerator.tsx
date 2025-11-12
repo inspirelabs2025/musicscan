@@ -294,7 +294,7 @@ export default function LyricPosterGenerator() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Recent Gegenereerde Posters</CardTitle>
+                <CardTitle>Nieuwste items</CardTitle>
                 <CardDescription>
                   {postersLoading ? 'Laden...' : `${posters?.length || 0} posters`}
                 </CardDescription>

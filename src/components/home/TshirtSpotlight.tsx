@@ -148,7 +148,7 @@ export const TshirtSpotlight = () => {
           {/* Recent T-shirts Grid */}
           {tshirtProducts && tshirtProducts.length > 0 && (
             <div>
-              <h3 className="text-xl font-bold mb-6 text-center">Recent Gegenereerd</h3>
+              <h3 className="text-xl font-bold mb-6 text-center">Nieuwste items</h3>
               <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
                 {tshirtProducts.map((product) => (
                   <Link key={product.id} to={`/product/${product.slug}`}>

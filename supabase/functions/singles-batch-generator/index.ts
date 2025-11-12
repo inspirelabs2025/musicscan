@@ -106,7 +106,25 @@ serve(async (req) => {
       });
     }
 
-    throw new Error('Invalid action. Use: start, stop, status, or retry');
+    if (action === 'clear') {
+      console.log('🗑️ Clearing pending queue...');
+      
+      const { error: clearError } = await supabase
+        .from('singles_import_queue')
+        .delete()
+        .eq('status', 'pending');
+
+      if (clearError) throw clearError;
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Pending queue cleared'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    throw new Error('Invalid action. Use: start, stop, status, retry, or clear');
 
   } catch (error) {
     console.error('❌ Error:', error);

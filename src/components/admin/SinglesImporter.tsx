@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Play, Pause, RotateCcw, FileText, Music } from 'lucide-react';
+import { Upload, Play, Pause, RotateCcw, FileText, Music, Trash2 } from 'lucide-react';
 import { useSinglesImport } from '@/hooks/useSinglesImport';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -34,6 +34,7 @@ export const SinglesImporter = () => {
     stopBatchProcessing,
     getBatchStatus,
     retryFailed,
+    clearQueue,
     isImporting,
     isBatchProcessing,
   } = useSinglesImport();
@@ -233,6 +234,17 @@ Optioneel: (Jaar) en/of [Album]`}
                   <Button onClick={handleRetryFailed} variant="outline">
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Retry Failed
+                  </Button>
+                )}
+                {queueStats.pending > 0 && (
+                  <Button onClick={async () => {
+                    const success = await clearQueue();
+                    if (success) {
+                      setBatchStatus(await getBatchStatus());
+                    }
+                  }} variant="outline">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear Queue
                   </Button>
                 )}
               </div>

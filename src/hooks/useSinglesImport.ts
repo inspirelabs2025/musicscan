@@ -189,12 +189,44 @@ export const useSinglesImport = () => {
     }
   };
 
+  const clearQueue = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('singles-batch-generator', {
+        body: { action: 'clear' }
+      });
+
+      if (error) {
+        toast({
+          title: "Clear Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      toast({
+        title: "Queue Cleared",
+        description: "All pending singles removed from queue",
+      });
+
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   return {
     importSingles,
     startBatchProcessing,
     stopBatchProcessing,
     getBatchStatus,
     retryFailed,
+    clearQueue,
     isImporting,
     isBatchProcessing,
   };

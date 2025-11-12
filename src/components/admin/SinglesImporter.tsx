@@ -80,7 +80,7 @@ export const SinglesImporter = () => {
       // "Artist - Song (Year)"
       // "Artist - Song [Album]"
       // "Artist - Song (Year) [Album]"
-      const match = line.match(/^(.+?)\s*-\s*(.+?)(?:\s*\((\d{4})\))?(?:\s*\[(.+?)\])?$/);
+      const match = line.match(/^(.+?)\s*[-—–]\s*(.+?)(?:\s*\((\d{4})\))?(?:\s*\[(.+?)\])?$/);
       
       if (match) {
         const [, artist, song, year, album] = match;

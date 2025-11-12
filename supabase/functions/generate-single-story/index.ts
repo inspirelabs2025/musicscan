@@ -157,11 +157,48 @@ Vermeld interessante feiten en anekdotes.`;
 
     console.log(`✅ Story created with ID: ${newStory.id}`);
 
+    // Fetch artwork for the single
+    let artworkUrl = null;
+    try {
+      console.log('🎨 Fetching artwork for single...');
+      const artworkResponse = await fetch(`${supabaseUrl}/functions/v1/fetch-album-artwork`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          artist,
+          title: single_name,
+          discogs_url: discogs_id ? `https://www.discogs.com/release/${discogs_id}` : null,
+          media_type: 'single',
+          item_id: newStory.id,
+          item_type: 'music_stories'
+        })
+      });
+
+      if (artworkResponse.ok) {
+        const artworkData = await artworkResponse.json();
+        if (artworkData.success && artworkData.artwork_url) {
+          artworkUrl = artworkData.artwork_url;
+          console.log('✅ Artwork fetched:', artworkUrl);
+        } else {
+          console.log('⚠️ No artwork found');
+        }
+      } else {
+        console.log('⚠️ Artwork fetch failed:', artworkResponse.status);
+      }
+    } catch (error) {
+      console.error('❌ Artwork fetch error:', error);
+      // Don't fail the whole request for artwork errors
+    }
+
     return new Response(JSON.stringify({
       success: true,
       music_story_id: newStory.id,
       slug: newStory.slug,
       title: newStory.title,
+      artwork_url: artworkUrl,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

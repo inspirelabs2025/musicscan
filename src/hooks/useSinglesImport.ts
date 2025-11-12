@@ -252,11 +252,19 @@ export const useSinglesImport = () => {
     }
   };
 
-  const backfillArtwork = async () => {
+  const backfillArtwork = async (refetchAll: boolean = false) => {
     try {
       setIsBackfilling(true);
       
-      const { data, error } = await supabase.functions.invoke('backfill-singles-artwork');
+      const mode = refetchAll ? 'refetch all' : 'missing only';
+      toast({
+        title: `Starting artwork ${refetchAll ? 'refetch' : 'backfill'}...`,
+        description: `Processing singles (${mode} mode)`
+      });
+      
+      const { data, error } = await supabase.functions.invoke('backfill-singles-artwork', {
+        body: { refetch_all: refetchAll }
+      });
       
       if (error) {
         toast({
@@ -267,9 +275,16 @@ export const useSinglesImport = () => {
         return null;
       }
       
+      const stats = [
+        data.new_artwork && `${data.new_artwork} new`,
+        data.improved_artwork && `${data.improved_artwork} improved`,
+        data.unchanged && `${data.unchanged} unchanged`,
+        data.failed && `${data.failed} failed`
+      ].filter(Boolean).join(', ');
+      
       toast({
         title: "Artwork backfill complete!",
-        description: `${data.successful}/${data.total_singles} singles now have artwork`
+        description: `Processed ${data.processed} singles: ${stats}`
       });
       
       return data;

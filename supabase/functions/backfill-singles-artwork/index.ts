@@ -16,7 +16,11 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('🎨 Starting singles artwork backfill...');
+    // Parse request body for options
+    const { refetch_all = false } = await req.json().catch(() => ({}));
+    
+    const mode = refetch_all ? '🔄 REFETCH ALL' : '🎨 MISSING ONLY';
+    console.log(`${mode} - Starting singles artwork backfill...`);
 
     // Get all singles without artwork or with failed artwork
     const { data: singles, error: fetchError } = await supabase
@@ -35,27 +39,36 @@ serve(async (req) => {
         message: 'No singles found to process',
         processed: 0,
         updated: 0,
-        failed: 0
+        failed: 0,
+        skipped: 0
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Filter singles that need artwork (no artwork or placeholder)
-    const singlesNeedingArtwork = singles.filter(s => 
-      !s.artwork_url || 
-      s.artwork_url.includes('placeholder') ||
-      s.artwork_url.includes('default')
-    );
+    // Filter singles based on mode
+    const singlesNeedingArtwork = refetch_all 
+      ? singles // Process ALL singles when refetch_all is true
+      : singles.filter(s => 
+          !s.artwork_url || 
+          s.artwork_url.includes('placeholder') ||
+          s.artwork_url.includes('default')
+        );
 
-    console.log(`📊 Found ${singles.length} total singles, ${singlesNeedingArtwork.length} need artwork`);
+    console.log(`📊 Found ${singles.length} total singles, ${singlesNeedingArtwork.length} to process (mode: ${refetch_all ? 'REFETCH ALL' : 'MISSING ONLY'})`);
 
     let updated = 0;
     let failed = 0;
+    let skipped = 0;
+    let improved = 0;
 
     for (const single of singlesNeedingArtwork) {
       try {
+        const oldArtwork = single.artwork_url;
         console.log(`🎵 Processing: ${single.artist} - ${single.single_name}`);
+        if (oldArtwork) {
+          console.log(`   Old artwork: ${oldArtwork.substring(0, 80)}...`);
+        }
 
         // Extract discogs_id from yaml_frontmatter if available
         const discogsId = single.yaml_frontmatter?.discogs_id;
@@ -81,8 +94,20 @@ serve(async (req) => {
         if (artworkResponse.ok) {
           const artworkData = await artworkResponse.json();
           if (artworkData.success && artworkData.artwork_url) {
-            updated++;
-            console.log(`✅ Updated artwork for: ${single.artist} - ${single.single_name}`);
+            const newArtwork = artworkData.artwork_url;
+            
+            // Check if artwork actually changed
+            if (oldArtwork && oldArtwork !== newArtwork) {
+              improved++;
+              console.log(`🔄 Improved artwork for: ${single.artist} - ${single.single_name}`);
+              console.log(`   New artwork: ${newArtwork.substring(0, 80)}...`);
+            } else if (!oldArtwork) {
+              updated++;
+              console.log(`✅ Added artwork for: ${single.artist} - ${single.single_name}`);
+            } else {
+              skipped++;
+              console.log(`⏭️ Artwork unchanged for: ${single.artist} - ${single.single_name}`);
+            }
           } else {
             console.log(`⚠️ No artwork found for: ${single.artist} - ${single.single_name}`);
           }
@@ -100,15 +125,18 @@ serve(async (req) => {
       }
     }
 
-    console.log(`✅ Backfill complete: ${updated} updated, ${failed} failed`);
+    console.log(`✅ Backfill complete: ${updated} new, ${improved} improved, ${skipped} unchanged, ${failed} failed`);
 
     return new Response(JSON.stringify({
       success: true,
       message: 'Backfill completed',
+      mode: refetch_all ? 'refetch_all' : 'missing_only',
       total_singles: singles.length,
       needed_artwork: singlesNeedingArtwork.length,
       processed: singlesNeedingArtwork.length,
-      successful: updated,
+      new_artwork: updated,
+      improved_artwork: improved,
+      unchanged: skipped,
       failed
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

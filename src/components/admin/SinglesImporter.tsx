@@ -150,8 +150,8 @@ export const SinglesImporter = () => {
     setTimeout(() => getBatchStatus(), 1000);
   };
 
-  const handleBackfillArtwork = async () => {
-    const result = await backfillArtwork();
+  const handleBackfillArtwork = async (refetchAll: boolean = false) => {
+    const result = await backfillArtwork(refetchAll);
     if (result) {
       // Refresh artwork stats after backfill
       const { count } = await supabase
@@ -194,18 +194,31 @@ export const SinglesImporter = () => {
               </AlertDescription>
             </Alert>
             
-            <Button 
-              onClick={handleBackfillArtwork} 
-              disabled={isBackfilling}
-              className="w-full"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
-              {isBackfilling ? 'Artwork ophalen...' : 'Fix Missing Artwork'}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => handleBackfillArtwork(false)} 
+                disabled={isBackfilling}
+                className="flex-1"
+                variant="default"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
+                {isBackfilling ? 'Bezig...' : 'Fix Missing Only'}
+              </Button>
+              
+              <Button 
+                onClick={() => handleBackfillArtwork(true)} 
+                disabled={isBackfilling}
+                className="flex-1"
+                variant="secondary"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
+                {isBackfilling ? 'Bezig...' : 'Refetch All Artwork'}
+              </Button>
+            </div>
 
             {isBackfilling && (
               <div className="text-sm text-muted-foreground text-center">
-                Artwork wordt opgehaald voor {missingArtworkCount} singles...
+                Artwork wordt opgehaald...
                 <br />
                 Dit kan enkele minuten duren.
               </div>

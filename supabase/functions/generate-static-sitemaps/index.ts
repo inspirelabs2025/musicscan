@@ -50,15 +50,28 @@ Deno.serve(async (req) => {
       to += pageSize;
     }
 
-    // Fetch all published music stories with images
+    // Fetch all published music stories (albums only - exclude singles)
     const { data: musicStories, error: storiesError } = await supabase
       .from('music_stories')
       .select('slug, updated_at, artwork_url, yaml_frontmatter, artist, album, title')
       .eq('is_published', true)
+      .is('single_name', null)
       .order('updated_at', { ascending: false });
 
     if (storiesError) {
       throw new Error(`Failed to fetch music stories: ${storiesError.message}`);
+    }
+
+    // Fetch all published singles
+    const { data: singles, error: singlesError } = await supabase
+      .from('music_stories')
+      .select('slug, updated_at, artwork_url, artist, single_name, title')
+      .eq('is_published', true)
+      .not('single_name', 'is', null)
+      .order('updated_at', { ascending: false });
+
+    if (singlesError) {
+      throw new Error(`Failed to fetch singles: ${singlesError.message}`);
     }
 
     // Fetch all active music anecdotes
@@ -117,7 +130,7 @@ Deno.serve(async (req) => {
     const posterProducts = (artProducts || []).filter(p => p.categories?.includes('POSTER'));
     const metalPrintProducts = (artProducts || []).filter(p => !p.categories?.includes('POSTER'));
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, and ${canvasProducts?.length || 0} canvas doeken`);
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, and ${canvasProducts?.length || 0} canvas doeken`);
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
@@ -130,6 +143,7 @@ Deno.serve(async (req) => {
       'https://www.musicscan.app/anekdotes'
     );
     const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal');
+    const singlesSitemapXml = generateSitemapXml(singles || [], 'https://www.musicscan.app/singles');
     const metalPrintsSitemapXml = generateSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product');
     const postersSitemapXml = generatePosterSitemapXml(posterProducts || []);
     const tshirtsSitemapXml = generateSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product');
@@ -138,23 +152,26 @@ Deno.serve(async (req) => {
     // Image sitemaps
     const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
     const storiesImageSitemapXml = generateImageSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal', 'artwork_url');
+    const singlesImageSitemapXml = generateImageSitemapXml(singles || [], 'https://www.musicscan.app/singles', 'artwork_url');
     const metalPrintsImageSitemapXml = generateImageSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product', 'primary_image');
     const postersImageSitemapXml = generatePosterImageSitemapXml(posterProducts || []);
     const tshirtsImageSitemapXml = generateImageSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product', 'primary_image');
     const canvasImageSitemapXml = generateImageSitemapXml(canvasProducts || [], 'https://www.musicscan.app/product', 'primary_image');
 
-    // Build uploads list (16 files total - added anecdotes sitemap)
+    // Build uploads list (18 files total - added singles sitemaps)
     const uploads = [
       { name: 'sitemap-static.xml', data: staticSitemapXml },
       { name: 'sitemap-blog.xml', data: blogSitemapXml },
       { name: 'sitemap-anecdotes.xml', data: anecdotesSitemapXml },
       { name: 'sitemap-music-stories.xml', data: storiesSitemapXml },
+      { name: 'sitemap-singles.xml', data: singlesSitemapXml },
       { name: 'sitemap-metal-prints.xml', data: metalPrintsSitemapXml },
       { name: 'sitemap-posters.xml', data: postersSitemapXml },
       { name: 'sitemap-tshirts.xml', data: tshirtsSitemapXml },
       { name: 'sitemap-canvas.xml', data: canvasSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
       { name: 'sitemap-images-stories.xml', data: storiesImageSitemapXml },
+      { name: 'sitemap-images-singles.xml', data: singlesImageSitemapXml },
       { name: 'sitemap-images-metal-prints.xml', data: metalPrintsImageSitemapXml },
       { name: 'sitemap-images-posters.xml', data: postersImageSitemapXml },
       { name: 'sitemap-images-tshirts.xml', data: tshirtsImageSitemapXml },
@@ -282,6 +299,7 @@ for (const sitemapName of allSitemaps) {
         stats: {
           blogPosts: blogPosts?.length || 0,
           musicStories: musicStories?.length || 0,
+          singles: singles?.length || 0,
           posterProducts: posterProducts?.length || 0,
           metalPrintProducts: metalPrintProducts?.length || 0,
           tshirtProducts: tshirtProducts?.length || 0,

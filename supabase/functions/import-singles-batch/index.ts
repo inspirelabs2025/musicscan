@@ -6,22 +6,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-interface SingleImport {
+interface SingleImportItem {
   artist: string;
   single_name: string;
   album?: string;
   year?: number;
   label?: string;
   catalog?: string;
-  discogs_id?: number;
-  discogs_url?: string;
-  artwork_url?: string;
   genre?: string;
   styles?: string[];
-  tags?: string[];
+  discogs_id?: string;
 }
 
 serve(async (req) => {
@@ -30,98 +24,99 @@ serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
+
+    // Get authenticated user from JWT
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('Missing authorization header');
+      throw new Error('No authorization header');
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
+    const supabaseClient = createClient(
+      supabaseUrl,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) {
       throw new Error('Unauthorized');
     }
 
-    const { singles } = await req.json() as { singles: SingleImport[] };
+    const { singles } = await req.json();
 
     if (!singles || !Array.isArray(singles) || singles.length === 0) {
-      throw new Error('No singles provided');
+      throw new Error('Invalid or empty singles array');
     }
 
-    console.log(`📥 Importing ${singles.length} singles for user ${user.id}`);
+    if (singles.length > 250) {
+      throw new Error('Maximum 250 singles per batch');
+    }
 
-    // Generate batch ID
+    console.log(`📥 Importing ${singles.length} singles to queue...`);
+
+    // Generate a batch_id for this import
     const batchId = crypto.randomUUID();
+    console.log(`📦 Batch ID: ${batchId}`);
 
-    // Validate and filter singles
-    const badValues = ['unknown', 'onbekend', '—', '-', 'n/a', ''];
-    const validSingles: any[] = [];
-    const invalidSingles: any[] = [];
+    const validSingles: SingleImportItem[] = [];
+    const errors: string[] = [];
 
-    singles.forEach((single, index) => {
-      const artist = single.artist?.trim() || '';
-      const singleName = single.single_name?.trim() || '';
-
-      // Check if required fields are present and valid
-      if (!artist || !singleName || 
-          badValues.includes(artist.toLowerCase()) || 
-          badValues.includes(singleName.toLowerCase())) {
-        invalidSingles.push({
-          index,
-          reason: 'Missing or invalid artist/single_name',
-          data: single
-        });
+    singles.forEach((single: any, index: number) => {
+      if (!single.artist || !single.single_name) {
+        errors.push(`Row ${index + 1}: Missing required fields (artist, single_name)`);
         return;
       }
 
       validSingles.push({
-        user_id: user.id,
-        batch_id: batchId,
-        artist: single.artist,
-        single_name: single.single_name,
-        album: single.album || null,
-        year: single.year || null,
-        label: single.label || null,
-        catalog: single.catalog || null,
-        discogs_id: single.discogs_id || null,
-        discogs_url: single.discogs_url || null,
-        artwork_url: single.artwork_url || null,
-        genre: single.genre || null,
-        styles: single.styles || null,
-        tags: single.tags || null,
-        status: 'pending',
-        attempts: 0,
-        max_attempts: 3,
-        priority: 0,
+        artist: single.artist.trim(),
+        single_name: single.single_name.trim(),
+        album: single.album?.trim() || null,
+        year: single.year ? parseInt(single.year) : null,
+        label: single.label?.trim() || null,
+        catalog: single.catalog?.trim() || null,
+        genre: single.genre?.trim() || null,
+        styles: Array.isArray(single.styles) ? single.styles : 
+                single.styles ? [single.styles] : null,
+        discogs_id: single.discogs_id?.trim() || null,
       });
     });
 
-    console.log(`✅ ${validSingles.length} valid singles, ❌ ${invalidSingles.length} invalid`);
-
-    // Insert valid singles into queue
-    if (validSingles.length > 0) {
-      const { data: insertedSingles, error: insertError } = await supabase
-        .from('singles_import_queue')
-        .insert(validSingles)
-        .select();
-
-      if (insertError) {
-        console.error('Insert error:', insertError);
-        throw new Error(`Failed to insert singles: ${insertError.message}`);
-      }
-
-      console.log(`✅ Successfully imported ${insertedSingles.length} singles to queue`);
+    if (errors.length > 0) {
+      console.warn('⚠️ Validation errors:', errors);
     }
+
+    if (validSingles.length === 0) {
+      throw new Error('No valid singles to import');
+    }
+
+    const { data: insertedSingles, error: insertError } = await supabase
+      .from('singles_import_queue')
+      .insert(validSingles.map(single => ({
+        ...single,
+        user_id: user.id,
+        batch_id: batchId,
+        status: 'pending',
+        attempts: 0,
+        max_attempts: 3
+      })))
+      .select();
+
+    if (insertError) {
+      console.error('❌ Insert error:', insertError);
+      throw insertError;
+    }
+
+    console.log(`✅ Imported ${insertedSingles.length} singles to queue`);
 
     return new Response(JSON.stringify({
       success: true,
       batch_id: batchId,
-      imported: validSingles.length,
-      invalid: invalidSingles.length,
-      invalid_items: invalidSingles,
-      message: `Successfully imported ${validSingles.length} singles to queue`
+      imported: insertedSingles.length,
+      errors: errors.length > 0 ? errors : null,
+      message: `Successfully imported ${insertedSingles.length} singles to processing queue`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -130,7 +125,7 @@ serve(async (req) => {
     console.error('❌ Import error:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
-      details: error.toString()
+      success: false 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

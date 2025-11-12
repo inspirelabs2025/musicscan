@@ -82,9 +82,6 @@ const Home = () => {
       {/* Featured Photos from FanWall */}
       <FeaturedPhotos />
 
-      {/* Socks Spotlight */}
-      <SocksSpotlight />
-
       {/* T-shirts Spotlight */}
       <TshirtSpotlight />
 

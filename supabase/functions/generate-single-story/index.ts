@@ -50,8 +50,8 @@ serve(async (req) => {
       });
     }
 
-    // Prepare AI prompt
-    const prompt = `Genereer een boeiend muziekverhaal in het Nederlands voor de single "${single_name}" van ${artist}.
+    // Prepare AI prompt with deep storytelling focus
+    const prompt = `Genereer een rijk, gedetailleerd muziekverhaal in het Nederlands voor de single "${single_name}" van ${artist}.
 
 Context:
 - Artiest: ${artist}
@@ -61,16 +61,74 @@ ${label ? `- Label: ${label}` : ''}
 ${genre ? `- Genre: ${genre}` : ''}
 ${styles && styles.length > 0 ? `- Stijlen: ${styles.join(', ')}` : ''}
 
-Schrijf een verhaal van 300-500 woorden dat ingaat op:
-1. De achtergrond van deze single release
-2. Chart prestaties en commercieel succes  
-3. Culturele impact en erfenis
-4. Muzikale stijl en innovaties
-5. B-kant tracks (indien relevant voor de tijd)
+BELANGRIJK: Schrijf een verhaal van 500-700 woorden met ECHTE DIEPGANG. Ga verder dan oppervlakkige feiten.
 
-Gebruik een informatieve maar boeiende toon voor muziekliefhebbers.
-Schrijf in duidelijke paragrafen.
-Vermeld interessante feiten en anekdotes.`;
+VERPLICHTE ELEMENTEN (indien beschikbaar):
+
+1. **Studio & Productie**
+   - In welke studio werd de single opgenomen?
+   - Wie was de producer en wat was hun visie?
+   - Welke opnametechnieken werden gebruikt?
+   - Bijzonderheden over mixing en mastering
+   - Opnamebudget en tijdsduur (indien bekend)
+
+2. **Muzikanten & Credits**
+   - Wie speelde welke instrumenten?
+   - Gastmuzikanten of special guests
+   - Backing vocals en koorpartijen
+   - Strijkers, blazers of andere speciale bezettingen
+   - Technische crew (engineers, assistenten)
+
+3. **Samenwerkingen & Songwriting**
+   - Wie schreef de song? (credits)
+   - Co-writers en hun bijdragen
+   - Ontstaan van de songwriting sessie
+   - Features of gastoptredens
+   - Invloed van andere artiesten
+
+4. **Verhaal Achter de Single**
+   - Wat inspireerde de artiest om dit nummer te schrijven?
+   - Persoonlijke verhalen of gebeurtenissen
+   - Anekdotes uit de studio
+   - Problemen of uitdagingen tijdens opnames
+   - Breakthrough momenten
+
+5. **Visuele Elementen**
+   - Videoclip: regisseur, concept, locaties
+   - Artwork en hoes ontwerp
+   - Fotografen en visual artists
+   - Controverses of opmerkelijke visuele keuzes
+
+6. **Impact & Ontvangst**
+   - Chart prestaties (specifieke posities en landen)
+   - Radiospel en streaming cijfers
+   - Recensies van critici (citeer indien mogelijk)
+   - Awards en nominaties
+   - Cover versies door andere artiesten
+
+7. **Culturele Context**
+   - Wat gebeurde er in de muziekwereld toen dit uitkwam?
+   - Hoe paste dit in de tijdsgeest?
+   - Invloed op andere artiesten
+   - Blijvende erfenis en relevantie
+
+8. **B-kant & Bonus Tracks**
+   - Wat stond er op de B-kant?
+   - Verschillen tussen vinyl/CD/streaming versies
+   - Demo versies of alternate takes
+   - Remix versies en hun producers
+
+SCHRIJFSTIJL:
+- Begin met een pakkende opening die de lezer meteen in het verhaal trekt
+- Gebruik levendige, concrete details (niet "er waren muzikanten" maar "gitarist John Smith speelde een vintage Fender Stratocaster")
+- Citeer mensen waar mogelijk ("Volgens producer X...")
+- Verweef technische details natuurlijk in het verhaal
+- Eindig met reflectie op blijvende betekenis
+- Gebruik storytelling technieken: span, conflict, oplossing
+- Maak het persoonlijk en menselijk, niet klinisch
+
+Vermijd vage termen zoals "populair", "succesvol", "bekend" zonder concrete voorbeelden.
+Geef ALTIJD specifieke details wanneer je iets beweert.`;
 
     console.log('🤖 Calling AI to generate story...');
 

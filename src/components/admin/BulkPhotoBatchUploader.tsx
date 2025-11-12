@@ -20,6 +20,7 @@ export const BulkPhotoBatchUploader = () => {
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editMetadata, setEditMetadata] = useState<PhotoMetadata>({
+    name: '',
     artist: '',
     title: '',
     description: ''
@@ -31,10 +32,11 @@ export const BulkPhotoBatchUploader = () => {
     const remainingSlots = 10 - photos.length;
     const filesToAdd = acceptedFiles.slice(0, remainingSlots);
 
-    const newPhotos = filesToAdd.map(file => ({
+    const newPhotos = filesToAdd.map((file, index) => ({
       file,
       preview: URL.createObjectURL(file),
       metadata: {
+        name: `Photo ${photos.length + index + 1}`,
         artist: '',
         title: file.name.replace(/\.[^/.]+$/, ''),
         description: ''
@@ -79,7 +81,7 @@ export const BulkPhotoBatchUploader = () => {
   };
 
   const canStartBatch = photos.length > 0 && 
-    photos.every(p => p.metadata.artist && p.metadata.title) &&
+    photos.every(p => p.metadata.name && p.metadata.artist && p.metadata.title) &&
     !isProcessing;
 
   const handleStartBatch = async () => {
@@ -174,7 +176,7 @@ export const BulkPhotoBatchUploader = () => {
                   {/* Status indicator */}
                   <div className="absolute top-2 right-2 w-3 h-3 rounded-full border-2 border-white shadow-sm"
                     style={{
-                      backgroundColor: photo.metadata.artist && photo.metadata.title 
+                      backgroundColor: photo.metadata.name && photo.metadata.artist && photo.metadata.title 
                         ? 'hsl(var(--success))' 
                         : 'hsl(var(--warning))'
                     }}
@@ -182,6 +184,9 @@ export const BulkPhotoBatchUploader = () => {
 
                   {/* Metadata preview */}
                   <div className="mt-2 text-xs space-y-1">
+                    <p className="font-semibold truncate text-primary" title={photo.metadata.name}>
+                      {photo.metadata.name || 'No name'}
+                    </p>
                     <p className="font-medium truncate" title={photo.metadata.title}>
                       {photo.metadata.title || 'No title'}
                     </p>
@@ -218,7 +223,7 @@ export const BulkPhotoBatchUploader = () => {
               
               {!canStartBatch && photos.length > 0 && !isProcessing && (
                 <p className="text-sm text-warning text-center mt-2">
-                  ⚠️ All photos must have artist and title filled in
+                  ⚠️ All photos must have name, artist and title filled in
                 </p>
               )}
             </div>
@@ -232,11 +237,21 @@ export const BulkPhotoBatchUploader = () => {
           <DialogHeader>
             <DialogTitle>Edit Photo Metadata</DialogTitle>
             <DialogDescription>
-              Provide artist and title for this photo
+              Provide name, artist and title for this photo
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="name">Photo Name *</Label>
+              <Input
+                id="name"
+                value={editMetadata.name}
+                onChange={(e) => setEditMetadata(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g., Photo 1, Vinyl Collection, etc."
+              />
+            </div>
+
             <div>
               <Label htmlFor="artist">Artist Name *</Label>
               <Input
@@ -275,7 +290,7 @@ export const BulkPhotoBatchUploader = () => {
             </Button>
             <Button 
               onClick={saveMetadata}
-              disabled={!editMetadata.artist || !editMetadata.title}
+              disabled={!editMetadata.name || !editMetadata.artist || !editMetadata.title}
             >
               Save Metadata
             </Button>

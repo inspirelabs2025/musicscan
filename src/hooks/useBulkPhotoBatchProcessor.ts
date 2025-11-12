@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface PhotoMetadata {
+  name: string;
   artist: string;
   title: string;
   description?: string;

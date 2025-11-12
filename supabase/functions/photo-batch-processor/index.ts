@@ -98,6 +98,9 @@ async function processPhotoBatch(
           updated_at: new Date().toISOString()
         })
         .eq('id', batchId);
+      
+      // Sync to batch_queue_items after each progress update
+      await syncBatchQueueStatus(batchId, supabase);
     };
 
     const results: any = {
@@ -356,6 +359,9 @@ async function processPhotoBatch(
       .eq('id', batchId);
 
     console.log(`✅ Batch ${batchId} completed with ${results.errors.length} errors`);
+    
+    // Sync final status to batch_queue_items
+    await syncBatchQueueStatus(batchId, supabase);
 
   } catch (error) {
     console.error(`💥 Fatal error in batch ${batchId}:`, error);
@@ -368,5 +374,55 @@ async function processPhotoBatch(
         updated_at: new Date().toISOString()
       })
       .eq('id', batchId);
+    
+    // Sync failed status
+    await syncBatchQueueStatus(batchId, supabase);
+  }
+}
+
+// Sync status between photo_batch_queue and batch_queue_items
+async function syncBatchQueueStatus(batchId: string, supabase: any) {
+  try {
+    // Get photo_batch_queue status
+    const { data: photoBatch } = await supabase
+      .from('photo_batch_queue')
+      .select('status, completed_jobs, total_jobs, results')
+      .eq('id', batchId)
+      .single();
+
+    if (!photoBatch) return;
+
+    // Find parent batch_queue_item
+    const { data: queueItems } = await supabase
+      .from('batch_queue_items')
+      .select('id, metadata')
+      .eq('metadata->>photo_batch_id', batchId)
+      .limit(1);
+
+    if (queueItems && queueItems.length > 0) {
+      const queueItem = queueItems[0];
+      
+      // Update batch_queue_item status
+      await supabase
+        .from('batch_queue_items')
+        .update({
+          status: photoBatch.status,
+          processed_at: photoBatch.status === 'completed' || photoBatch.status === 'completed_with_errors' || photoBatch.status === 'failed'
+            ? new Date().toISOString()
+            : null,
+          results: photoBatch.results,
+          metadata: {
+            ...queueItem.metadata,
+            completed_jobs: photoBatch.completed_jobs,
+            total_jobs: photoBatch.total_jobs,
+            progress: Math.round((photoBatch.completed_jobs / photoBatch.total_jobs) * 100)
+          }
+        })
+        .eq('id', queueItem.id);
+
+      console.log(`🔄 Synced status to batch_queue_item: ${queueItem.id}`);
+    }
+  } catch (error) {
+    console.error('Failed to sync batch queue status:', error);
   }
 }

@@ -16,6 +16,9 @@ export interface PhotoItem {
   results?: any;
   error?: string;
   progress?: number;
+  completedJobs?: number;
+  totalJobs?: number;
+  currentJob?: string;
 }
 
 export interface BulkBatchStatus {
@@ -191,7 +194,21 @@ export const useBulkPhotoBatchProcessor = () => {
           filter: `batch_id=eq.${batchId}`
         },
         (payload) => {
+          console.log('📩 batch_queue_items update:', payload.new);
           updatePhotoStatus(payload.new);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'photo_batch_queue'
+        },
+        (payload) => {
+          console.log('📩 photo_batch_queue update (sub-progress):', payload.new);
+          // Update sub-progress for individual photo batches
+          updatePhotoSubProgress(payload.new);
         }
       )
       .on(
@@ -203,6 +220,7 @@ export const useBulkPhotoBatchProcessor = () => {
           filter: `id=eq.${batchId}`
         },
         (payload) => {
+          console.log('📩 batch_uploads update:', payload.new);
           updateBatchStatus(payload.new);
         }
       )
@@ -216,7 +234,7 @@ export const useBulkPhotoBatchProcessor = () => {
       if (!prev) return prev;
 
       const photoIndex = prev.photos.findIndex(
-        p => p.metadata.title === queueItem.metadata?.title
+        p => p.url === queueItem.metadata?.photo_url
       );
 
       if (photoIndex === -1) return prev;
@@ -225,8 +243,15 @@ export const useBulkPhotoBatchProcessor = () => {
       updatedPhotos[photoIndex] = {
         ...updatedPhotos[photoIndex],
         status: queueItem.status,
-        results: queueItem.results,
-        error: queueItem.error_message
+        results: {
+          ...updatedPhotos[photoIndex].results,
+          ...queueItem.results,
+          batchId: queueItem.metadata?.photo_batch_id || updatedPhotos[photoIndex].results?.batchId
+        },
+        error: queueItem.error_message,
+        progress: queueItem.metadata?.progress,
+        completedJobs: queueItem.metadata?.completed_jobs,
+        totalJobs: queueItem.metadata?.total_jobs
       };
 
       const completedPhotos = updatedPhotos.filter(
@@ -242,6 +267,33 @@ export const useBulkPhotoBatchProcessor = () => {
         completedPhotos,
         failedPhotos,
         overallProgress: Math.round((completedPhotos / prev.totalPhotos) * 100)
+      };
+    });
+  };
+
+  const updatePhotoSubProgress = (photoBatch: any) => {
+    setBatchStatus(prev => {
+      if (!prev) return prev;
+
+      const updatedPhotos = prev.photos.map(photo => {
+        // Check if this photo_batch_queue entry belongs to this photo
+        // The batchId is stored in results after the photo batch starts
+        const photoBatchId = photo.results?.batchId;
+        if (photoBatchId === photoBatch.id) {
+          return {
+            ...photo,
+            progress: Math.round((photoBatch.completed_jobs / photoBatch.total_jobs) * 100),
+            completedJobs: photoBatch.completed_jobs,
+            totalJobs: photoBatch.total_jobs,
+            currentJob: photoBatch.current_job
+          };
+        }
+        return photo;
+      });
+
+      return {
+        ...prev,
+        photos: updatedPhotos
       };
     });
   };

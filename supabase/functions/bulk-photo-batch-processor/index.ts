@@ -52,23 +52,119 @@ serve(async (req) => {
   }
 });
 
+// Retry logic for network errors
+async function invokeWithRetry(
+  supabase: any,
+  functionName: string,
+  body: any,
+  maxRetries: number = 3
+) {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const { data, error } = await supabase.functions.invoke(functionName, { body });
+      
+      if (error) {
+        // Check if error is retryable (network/timeout)
+        if (error.message?.includes('timeout') || 
+            error.message?.includes('network') ||
+            error.message?.includes('ECONNREFUSED')) {
+          console.log(`⚠️ Retryable error on attempt ${attempt}/${maxRetries}: ${error.message}`);
+          lastError = error;
+          
+          // Exponential backoff: 5s, 10s, 20s
+          const delay = 5000 * Math.pow(2, attempt - 1);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        } else {
+          // Non-retryable error (e.g., invalid data)
+          throw error;
+        }
+      }
+      
+      return { data, error: null };
+    } catch (error) {
+      lastError = error;
+      if (attempt === maxRetries) {
+        throw lastError;
+      }
+    }
+  }
+  
+  throw lastError;
+}
+
+// Monitor batch completion in background
+async function monitorBatchCompletion(
+  supabase: any,
+  batchId: string,
+  totalPhotos: number
+) {
+  const maxChecks = 120; // 2 hours max (60s intervals)
+  let checks = 0;
+
+  while (checks < maxChecks) {
+    await new Promise(resolve => setTimeout(resolve, 60000)); // 1 minute interval
+    checks++;
+
+    // Check how many photos are complete
+    const { data: queueItems } = await supabase
+      .from('batch_queue_items')
+      .select('status')
+      .eq('batch_id', batchId);
+
+    if (!queueItems) continue;
+
+    const completed = queueItems.filter(
+      (item: any) => item.status === 'completed'
+    ).length;
+    const failed = queueItems.filter(
+      (item: any) => item.status === 'failed'
+    ).length;
+    const processing = queueItems.filter(
+      (item: any) => item.status === 'processing'
+    ).length;
+
+    console.log(`📊 Batch ${batchId} progress: ${completed}/${totalPhotos} completed, ${failed} failed, ${processing} processing`);
+
+    // If all photos are done (completed or failed), update batch status
+    if (completed + failed === totalPhotos) {
+      const finalStatus = failed === totalPhotos ? 'failed' : 
+                         failed > 0 ? 'completed_with_errors' : 'completed';
+
+      await supabase
+        .from('batch_uploads')
+        .update({
+          status: finalStatus,
+          processing_results: {
+            totalPhotos,
+            completedPhotos: completed,
+            failedPhotos: failed
+          },
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', batchId);
+
+      console.log(`✅ Batch ${batchId} monitoring complete: ${finalStatus}`);
+      break;
+    }
+  }
+}
+
 async function processAllPhotos(
   supabase: any,
   batchId: string,
   photoUrls: string[],
   metadata: any[]
 ) {
-  console.log(`📸 Processing ${photoUrls.length} photos sequentially`);
-
-  const results = [];
-  let completedCount = 0;
-  let failedCount = 0;
+  console.log(`📸 Starting ${photoUrls.length} photo batches (background processing)`);
 
   for (let i = 0; i < photoUrls.length; i++) {
     const photoUrl = photoUrls[i];
     const photoMetadata = metadata[i];
 
-    console.log(`\n🎨 [${i + 1}/${photoUrls.length}] Processing: ${photoMetadata.title}`);
+    console.log(`\n🎨 [${i + 1}/${photoUrls.length}] Starting batch: ${photoMetadata.title}`);
 
     try {
       // Get corresponding queue item
@@ -92,78 +188,36 @@ async function processAllPhotos(
           .eq('id', queueItemId);
       }
 
-      // Call existing photo-batch-processor for this photo
-      const { data: batchResult, error: batchError } = await supabase.functions.invoke(
+      // Call existing photo-batch-processor with retry logic
+      const { data: batchResult, error: batchError } = await invokeWithRetry(
+        supabase,
         'photo-batch-processor',
         {
-          body: {
-            action: 'start',
-            photoUrl,
-            artist: photoMetadata.artist,
-            title: photoMetadata.title,
-            description: photoMetadata.description || ''
-          }
+          action: 'start',
+          photoUrl,
+          artist: photoMetadata.artist,
+          title: photoMetadata.title,
+          description: photoMetadata.description || ''
         }
       );
 
       if (batchError) throw batchError;
 
       const photoBatchId = batchResult.batchId;
-      console.log(`  ↳ Photo batch started: ${photoBatchId}`);
+      console.log(`  ↳ Photo batch started: ${photoBatchId}, continuing to next photo...`);
 
-      // Poll until photo batch completes (max 5 minutes)
-      const maxAttempts = 60; // 5 minutes with 5-second intervals
-      let attempts = 0;
-      let photoBatchComplete = false;
-
-      while (attempts < maxAttempts && !photoBatchComplete) {
-        await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
-
-        const { data: statusResult } = await supabase.functions.invoke(
-          'photo-batch-processor',
-          {
-            body: {
-              action: 'status',
-              batchId: photoBatchId
+      // Update queue item with batch ID for tracking
+      if (queueItemId) {
+        await supabase
+          .from('batch_queue_items')
+          .update({ 
+            metadata: {
+              ...photoMetadata,
+              photo_batch_id: photoBatchId,
+              photo_url: photoUrl
             }
-          }
-        );
-
-        if (statusResult?.status === 'completed' || statusResult?.status === 'failed') {
-          photoBatchComplete = true;
-          
-          if (statusResult.status === 'completed') {
-            console.log(`  ✅ Photo ${i + 1} completed successfully`);
-            completedCount++;
-
-            // Update queue item with results
-            if (queueItemId) {
-              await supabase
-                .from('batch_queue_items')
-                .update({ 
-                  status: 'completed',
-                  processed_at: new Date().toISOString(),
-                  results: statusResult.results
-                })
-                .eq('id', queueItemId);
-            }
-
-            results.push({
-              photoUrl,
-              metadata: photoMetadata,
-              status: 'completed',
-              results: statusResult.results
-            });
-          } else {
-            throw new Error(statusResult.error || 'Photo batch processing failed');
-          }
-        }
-
-        attempts++;
-      }
-
-      if (!photoBatchComplete) {
-        throw new Error('Photo batch processing timeout');
+          })
+          .eq('id', queueItemId);
       }
 
       // 5 second delay before next photo to avoid rate limits
@@ -173,8 +227,7 @@ async function processAllPhotos(
       }
 
     } catch (error) {
-      console.error(`  ❌ Photo ${i + 1} failed:`, error.message);
-      failedCount++;
+      console.error(`  ❌ Photo ${i + 1} failed to start:`, error.message);
 
       // Update queue item as failed
       const { data: queueItems } = await supabase
@@ -196,34 +249,26 @@ async function processAllPhotos(
           })
           .eq('id', queueItemId);
       }
-
-      results.push({
-        photoUrl,
-        metadata: photoMetadata,
-        status: 'failed',
-        error: error.message
-      });
     }
   }
 
-  // Update final batch status
-  const finalStatus = failedCount === photoUrls.length ? 'failed' : 
-                     failedCount > 0 ? 'completed_with_errors' : 'completed';
-
+  // Update batch status to 'processing' after all batches started
   await supabase
     .from('batch_uploads')
     .update({ 
-      status: finalStatus,
+      status: 'processing',
       processing_results: {
         totalPhotos: photoUrls.length,
-        completedPhotos: completedCount,
-        failedPhotos: failedCount,
-        results
+        startedPhotos: photoUrls.length,
+        message: 'All photo batches started, processing in background...'
       },
-      completed_at: new Date().toISOString()
+      updated_at: new Date().toISOString()
     })
     .eq('id', batchId);
 
-  console.log(`\n✅ Bulk batch processing complete!`);
-  console.log(`   Total: ${photoUrls.length} | Completed: ${completedCount} | Failed: ${failedCount}`);
+  console.log(`\n✅ Bulk batch started all ${photoUrls.length} photo batches!`);
+  console.log(`   Photo batches are now processing independently in background.`);
+
+  // Start background monitor for final status
+  EdgeRuntime.waitUntil(monitorBatchCompletion(supabase, batchId, photoUrls.length));
 }

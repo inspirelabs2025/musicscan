@@ -32,7 +32,25 @@ serve(async (req) => {
           completed_jobs: 0
         });
 
-      if (batchError) throw batchError;
+      if (batchError) {
+        console.error('❌ photo_batch_queue insert failed:', {
+          message: batchError.message,
+          code: batchError.code,
+          details: batchError.details,
+          hint: batchError.hint
+        });
+        
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: batchError.message,
+          code: batchError.code,
+          details: batchError.details,
+          hint: batchError.hint
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
       console.log(`🚀 Started batch ${newBatchId} for photo: ${photoUrl}`);
 

@@ -95,53 +95,34 @@ export const useBulkPhotoBatchProcessor = () => {
 
       toast({
         title: "✅ Upload complete",
-        description: "Starting batch processing..."
+        description: "Initializing batch processing..."
       });
 
-      // Get current user ID for RLS policy
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
+      // Call edge function to initialize batch (bypasses RLS issues)
+      const { data, error: functionError } = await supabase.functions.invoke(
+        'init-bulk-photo-batch',
+        {
+          body: {
+            photoUrls,
+            metadata
+          }
+        }
+      );
+
+      if (functionError) {
+        console.error('❌ init-bulk-photo-batch failed:', {
+          message: functionError.message,
+          context: functionError.context,
+          raw: JSON.stringify(functionError)
+        });
+        throw new Error(`Failed to initialize batch: ${functionError.message}`);
       }
 
-      // Create batch record with all required fields
-      const { data: batchData, error: batchError } = await supabase
-        .from('batch_uploads')
-        .insert({
-          user_id: user.id,
-          photo_urls: photoUrls,
-          photo_metadata: {
-            photos: metadata
-          },
-          image_count: files.length,
-          media_type: 'photo_batch',
-          condition_grade: 'NM',
-          status: 'queued',
-          file_paths: []
-        })
-        .select()
-        .single();
+      if (!data?.success || !data?.batchId) {
+        throw new Error(data?.error || 'Failed to initialize batch');
+      }
 
-      if (batchError) throw batchError;
-
-      const batchId = batchData.id;
-
-      // Create queue items for each photo
-      const queueItems = photoUrls.map((url, index) => ({
-        batch_id: batchId,
-        item_type: 'photo_batch',
-        status: 'pending',
-        metadata: {
-          photo_url: url,
-          ...metadata[index]
-        }
-      }));
-
-      const { error: queueError } = await supabase
-        .from('batch_queue_items')
-        .insert(queueItems);
-
-      if (queueError) throw queueError;
+      const batchId = data.batchId;
 
       // Initialize batch status
       setBatchStatus({
@@ -162,20 +143,6 @@ export const useBulkPhotoBatchProcessor = () => {
       // Subscribe to real-time updates
       subscribeToUpdates(batchId);
 
-      // Start background processing
-      const { error: functionError } = await supabase.functions.invoke(
-        'bulk-photo-batch-processor',
-        {
-          body: {
-            batchId,
-            photoUrls,
-            metadata
-          }
-        }
-      );
-
-      if (functionError) throw functionError;
-
       toast({
         title: "🚀 Batch processing started",
         description: `Processing ${photoUrls.length} photos in the background`
@@ -183,12 +150,19 @@ export const useBulkPhotoBatchProcessor = () => {
 
       return batchId;
     } catch (error: any) {
-      console.error('Bulk batch start failed:', error);
+      console.error('❌ Bulk batch start failed:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        raw: JSON.stringify(error)
+      });
+      
       toast({
         title: "❌ Failed to start batch",
-        description: error.message,
+        description: error.message || 'Unknown error occurred',
         variant: "destructive"
       });
+      
       setIsProcessing(false);
       throw error;
     }

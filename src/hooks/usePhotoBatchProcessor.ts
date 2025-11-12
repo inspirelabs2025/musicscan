@@ -68,12 +68,20 @@ export const usePhotoBatchProcessor = () => {
 
       return batchId;
     } catch (error: any) {
-      console.error('Failed to start batch:', error);
+      console.error('❌ Failed to start batch:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        cause: error.cause,
+        raw: JSON.stringify(error)
+      });
+      
       toast({
         title: "❌ Failed to start batch",
-        description: error.message,
+        description: error.message || 'Unknown error occurred',
         variant: "destructive"
       });
+      
       setIsProcessing(false);
       throw error;
     }

@@ -400,6 +400,75 @@ export type Database = {
         }
         Relationships: []
       }
+      artist_stories: {
+        Row: {
+          artist_name: string
+          artwork_url: string | null
+          biography: string | null
+          created_at: string
+          cultural_impact: string | null
+          discogs_artist_id: number | null
+          id: string
+          is_published: boolean | null
+          meta_description: string | null
+          meta_title: string | null
+          music_style: string[] | null
+          notable_albums: string[] | null
+          published_at: string | null
+          reading_time: number | null
+          slug: string
+          story_content: string
+          updated_at: string
+          user_id: string | null
+          views_count: number | null
+          word_count: number | null
+        }
+        Insert: {
+          artist_name: string
+          artwork_url?: string | null
+          biography?: string | null
+          created_at?: string
+          cultural_impact?: string | null
+          discogs_artist_id?: number | null
+          id?: string
+          is_published?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          music_style?: string[] | null
+          notable_albums?: string[] | null
+          published_at?: string | null
+          reading_time?: number | null
+          slug: string
+          story_content: string
+          updated_at?: string
+          user_id?: string | null
+          views_count?: number | null
+          word_count?: number | null
+        }
+        Update: {
+          artist_name?: string
+          artwork_url?: string | null
+          biography?: string | null
+          created_at?: string
+          cultural_impact?: string | null
+          discogs_artist_id?: number | null
+          id?: string
+          is_published?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          music_style?: string[] | null
+          notable_albums?: string[] | null
+          published_at?: string | null
+          reading_time?: number | null
+          slug?: string
+          story_content?: string
+          updated_at?: string
+          user_id?: string | null
+          views_count?: number | null
+          word_count?: number | null
+        }
+        Relationships: []
+      }
       batch_processing_status: {
         Row: {
           auto_mode: boolean | null

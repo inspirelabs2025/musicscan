@@ -110,6 +110,7 @@ import LyricPosterGenerator from "./pages/admin/LyricPosterGenerator";
 import SockGenerator from "./pages/admin/SockGenerator";
 import TshirtGenerator from "./pages/admin/TshirtGenerator";
 import SinglesImporterPage from "./pages/admin/SinglesImporterPage";
+import ArtistStoriesGenerator from "./pages/admin/ArtistStoriesGenerator";
 import SocksShop from "./pages/SocksShop";
 import TshirtsShop from "./pages/TshirtsShop";
 import MerchandiseShop from "./pages/MerchandiseShop";
@@ -127,6 +128,8 @@ import MusicHistory from "./pages/MusicHistory";
 import UserManagement from "./pages/admin/UserManagement";
 import Singles from "./pages/Singles";
 import SingleDetail from "./pages/SingleDetail";
+import Artists from "./pages/Artists";
+import ArtistDetail from "./pages/ArtistDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -333,6 +336,7 @@ const AppContent = () => {
                 <Route path="tshirt-generator" element={<TshirtGenerator />} />
                 <Route path="photo-stylizer" element={<PhotoStylizer />} />
                 <Route path="singles-importer" element={<SinglesImporterPage />} />
+                <Route path="artist-stories-generator" element={<ArtistStoriesGenerator />} />
                 
                 {/* Content Management */}
                 <Route path="curated-artists" element={<CuratedArtists />} />
@@ -394,6 +398,8 @@ const AppContent = () => {
         <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
         <Route path="/singles" element={<Singles />} />
         <Route path="/singles/:slug" element={<SingleDetail />} />
+        <Route path="/artists" element={<Artists />} />
+        <Route path="/artists/:slug" element={<ArtistDetail />} />
         <Route path="/fanwall" element={<ArtistFanWallOverview />} />
         <Route path="/fanwall/:slug" element={<ArtistFanWall />} />
         <Route path="/photo/:slug" element={<PhotoDetail />} />

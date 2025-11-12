@@ -48,7 +48,7 @@ serve(async (req) => {
           photos: metadata
         },
         image_count: photoUrls.length,
-        media_type: 'photo_batch',
+        media_type: 'photo',
         condition_grade: 'NM',
         status: 'queued',
         file_paths: []

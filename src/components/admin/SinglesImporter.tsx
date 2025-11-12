@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -50,60 +50,50 @@ export const SinglesImporter = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const parseInput = () => {
-    try {
-      // Try JSON first
-      const data = JSON.parse(inputText);
-      if (Array.isArray(data)) {
-        setParsedSingles(data);
-        toast({
-          title: "Parsed Successfully",
-          description: `Found ${data.length} singles`,
-        });
-        return;
-      }
-    } catch (e) {
-      // Try CSV parsing
-      const lines = inputText.trim().split('\n');
-      if (lines.length < 2) {
-        toast({
-          title: "Parse Error",
-          description: "No data found",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-      const singles: SingleData[] = [];
-
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-        const single: any = {};
-
-        headers.forEach((header, index) => {
-          const value = values[index];
-          if (header === 'year' || header === 'discogs_id') {
-            single[header] = value ? parseInt(value) : undefined;
-          } else if (header === 'styles') {
-            single[header] = value ? value.split(';') : [];
-          } else {
-            single[header] = value || undefined;
-          }
-        });
-
-        if (single.artist && single.single_name) {
-          singles.push(single);
-        }
-      }
-
-      setParsedSingles(singles);
-      toast({
-        title: "Parsed Successfully",
-        description: `Found ${singles.length} singles`,
-      });
+  // Auto-parse with debounce
+  useEffect(() => {
+    if (!inputText.trim()) {
+      setParsedSingles([]);
+      return;
     }
-  };
+
+    const timer = setTimeout(() => {
+      parseInput();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [inputText]);
+
+  const parseInput = useCallback(() => {
+    const lines = inputText.trim().split('\n').filter(line => line.trim());
+    if (lines.length === 0) {
+      setParsedSingles([]);
+      return;
+    }
+
+    const singles: SingleData[] = [];
+
+    for (const line of lines) {
+      // Parse formats:
+      // "Artist - Song"
+      // "Artist - Song (Year)"
+      // "Artist - Song [Album]"
+      // "Artist - Song (Year) [Album]"
+      const match = line.match(/^(.+?)\s*-\s*(.+?)(?:\s*\((\d{4})\))?(?:\s*\[(.+?)\])?$/);
+      
+      if (match) {
+        const [, artist, song, year, album] = match;
+        singles.push({
+          artist: artist.trim(),
+          single_name: song.trim(),
+          year: year ? parseInt(year) : undefined,
+          album: album?.trim()
+        });
+      }
+    }
+
+    setParsedSingles(singles);
+  }, [inputText]);
 
   const handleImport = async () => {
     if (parsedSingles.length === 0) {
@@ -161,33 +151,37 @@ export const SinglesImporter = () => {
           <div className="space-y-2">
             <h3 className="font-semibold flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Stap 1: Plak JSON of CSV Data
+              Stap 1: Plak Singles (één per regel)
             </h3>
             <Textarea
-              placeholder='JSON: [{"artist":"Madonna","single_name":"Like a Prayer","year":1989}]\nof CSV:\nartist,single_name,album,year\n"Madonna","Like a Prayer","Like a Prayer",1989'
+              placeholder={`Plak hier je singles, één per regel:
+
+The Beatles - Hey Jude
+Queen - Bohemian Rhapsody (1975)
+Madonna - Like a Prayer [Like a Prayer]
+Prince - Purple Rain (1984) [Purple Rain]
+
+Format: Artist - Song
+Optioneel: (Jaar) en/of [Album]`}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              rows={8}
+              rows={12}
               className="font-mono text-sm"
             />
-            <Button onClick={parseInput} disabled={!inputText}>
-              <Upload className="h-4 w-4 mr-2" />
-              Parse Data
-            </Button>
+            {parsedSingles.length > 0 && (
+              <div className="text-sm text-muted-foreground">
+                ✓ {parsedSingles.length} singles herkend
+              </div>
+            )}
           </div>
 
           {/* Step 2: Preview */}
           {parsedSingles.length > 0 && (
             <div className="space-y-2">
-              <h3 className="font-semibold">Stap 2: Preview & Validatie</h3>
+              <h3 className="font-semibold">Stap 2: Preview</h3>
               <Alert>
                 <AlertDescription>
-                  <div className="flex items-center gap-4">
-                    <Badge variant="default">{parsedSingles.length} singles gevonden</Badge>
-                    <span className="text-sm text-muted-foreground">
-                      Verplicht: artist + single_name
-                    </span>
-                  </div>
+                  <Badge variant="default">{parsedSingles.length} singles klaar voor import</Badge>
                 </AlertDescription>
               </Alert>
               <div className="max-h-60 overflow-y-auto border rounded-md p-4 space-y-2">
@@ -280,30 +274,35 @@ export const SinglesImporter = () => {
       {/* Format Help */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Data Formaat Hulp</CardTitle>
+          <CardTitle className="text-base">Formaat Voorbeelden</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h4 className="font-semibold text-sm mb-2">JSON Formaat:</h4>
+            <h4 className="font-semibold text-sm mb-2">Basis formaat:</h4>
             <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
-{`[
-  {
-    "artist": "Madonna",
-    "single_name": "Like a Prayer",
-    "album": "Like a Prayer",
-    "year": 1989,
-    "label": "Sire",
-    "genre": "Pop"
-  }
-]`}
+{`The Beatles - Hey Jude
+Queen - Bohemian Rhapsody`}
             </pre>
           </div>
           <div>
-            <h4 className="font-semibold text-sm mb-2">CSV Formaat:</h4>
+            <h4 className="font-semibold text-sm mb-2">Met jaar:</h4>
             <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
-{`artist,single_name,album,year,label,genre
-"Madonna","Like a Prayer","Like a Prayer",1989,"Sire","Pop"
-"Prince","Purple Rain","Purple Rain",1984,"Warner Bros.","Rock"`}
+{`Queen - Bohemian Rhapsody (1975)
+Prince - Purple Rain (1984)`}
+            </pre>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Met album:</h4>
+            <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
+{`Madonna - Like a Prayer [Like a Prayer]
+Prince - Purple Rain [Purple Rain]`}
+            </pre>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Compleet (jaar + album):</h4>
+            <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
+{`Prince - Purple Rain (1984) [Purple Rain]
+Michael Jackson - Billie Jean (1983) [Thriller]`}
             </pre>
           </div>
         </CardContent>

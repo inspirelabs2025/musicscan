@@ -110,6 +110,7 @@ import SockGenerator from "./pages/admin/SockGenerator";
 import TshirtGenerator from "./pages/admin/TshirtGenerator";
 import SocksShop from "./pages/SocksShop";
 import TshirtsShop from "./pages/TshirtsShop";
+import MerchandiseShop from "./pages/MerchandiseShop";
 import Echo from "./pages/Echo";
 import FanWall from "./pages/FanWall";
 import ArtistFanWallOverview from "./pages/ArtistFanWallOverview";
@@ -374,6 +375,9 @@ const AppContent = () => {
         <Route path="/socks" element={<SocksShop />} />
         <Route path="/shirts" element={<TshirtsShop />} />
         <Route path="/tshirts" element={<TshirtsShop />} />
+        <Route path="/merchandise" element={<MerchandiseShop />} />
+        <Route path="/merch" element={<MerchandiseShop />} />
+        <Route path="/merchandise-shop" element={<MerchandiseShop />} />
         <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
         <Route path="/fanwall" element={<ArtistFanWallOverview />} />
         <Route path="/fanwall/:slug" element={<ArtistFanWall />} />

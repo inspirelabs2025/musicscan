@@ -404,41 +404,34 @@ async function syncBatchQueueStatus(batchId: string, supabase: any) {
     // Get photo_batch_queue status
     const { data: photoBatch } = await supabase
       .from('photo_batch_queue')
-      .select('status, completed_jobs, total_jobs, results')
+      .select('status')
       .eq('id', batchId)
       .single();
 
     if (!photoBatch) return;
 
-    // Find parent batch_queue_item
-    const { data: queueItems } = await supabase
+    // Find batch_queue_item by item_id (which is the photo_batch_queue.id)
+    const { data: queueItem } = await supabase
       .from('batch_queue_items')
-      .select('id, metadata')
-      .eq('metadata->>photo_batch_id', batchId)
-      .limit(1);
+      .select('id')
+      .eq('item_id', batchId)
+      .single();
 
-    if (queueItems && queueItems.length > 0) {
-      const queueItem = queueItems[0];
+    if (queueItem) {
+      // Map completed_with_errors to completed for batch_queue_items
+      const mappedStatus = photoBatch.status === 'completed_with_errors' ? 'completed' : photoBatch.status;
+      const isTerminal = mappedStatus === 'completed' || mappedStatus === 'failed';
       
-      // Update batch_queue_item status
+      // Update batch_queue_item status (only status and processed_at)
       await supabase
         .from('batch_queue_items')
         .update({
-          status: photoBatch.status,
-          processed_at: photoBatch.status === 'completed' || photoBatch.status === 'completed_with_errors' || photoBatch.status === 'failed'
-            ? new Date().toISOString()
-            : null,
-          results: photoBatch.results,
-          metadata: {
-            ...queueItem.metadata,
-            completed_jobs: photoBatch.completed_jobs,
-            total_jobs: photoBatch.total_jobs,
-            progress: Math.round((photoBatch.completed_jobs / photoBatch.total_jobs) * 100)
-          }
+          status: mappedStatus,
+          processed_at: isTerminal ? new Date().toISOString() : null
         })
         .eq('id', queueItem.id);
 
-      console.log(`🔄 Synced status to batch_queue_item: ${queueItem.id}`);
+      console.log(`🔄 Synced status to batch_queue_item: ${queueItem.id} (${mappedStatus})`);
     }
   } catch (error) {
     console.error('Failed to sync batch queue status:', error);

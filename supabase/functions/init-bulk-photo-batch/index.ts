@@ -38,86 +38,35 @@ serve(async (req) => {
 
     console.log(`✅ User authenticated: ${user.id}`);
 
-    // Create batch record with service role (bypasses RLS). Try allowed media_type values if constraint fails
-    const candidates = ['photo', 'ai', 'art'];
-    let batchData: any = null;
-    let lastErr: any = null;
-    let chosenMediaType: string | null = null;
+    // Create batch record with service role (bypasses RLS)
+    const { data: batchData, error: batchError } = await supabase
+      .from('batch_uploads')
+      .insert({
+        user_id: user.id,
+        photo_urls: photoUrls,
+        photo_metadata: { photos: metadata },
+        image_count: photoUrls.length,
+        media_type: 'vinyl', // Use valid media_type for photos
+        condition_grade: 'NM',
+        status: 'pending'
+      })
+      .select()
+      .single();
 
-    for (const mt of candidates) {
-      const attempt = await supabase
-        .from('batch_uploads')
-        .insert({
-          user_id: user.id,
-          photo_urls: photoUrls,
-          photo_metadata: { photos: metadata },
-          image_count: photoUrls.length,
-          media_type: mt,
-          condition_grade: 'NM',
-          status: 'queued',
-          file_paths: []
-        })
-        .select()
-        .single();
-
-      if (!attempt.error) {
-        batchData = attempt.data;
-        chosenMediaType = mt;
-        break;
-      }
-
-      lastErr = attempt.error;
-      console.warn(`⚠️ batch_uploads insert failed for media_type='${mt}':`, {
-        code: attempt.error.code,
-        message: attempt.error.message,
-        details: attempt.error.details,
+    if (batchError) {
+      console.error('❌ batch_uploads insert failed:', {
+        code: batchError.code,
+        message: batchError.message,
+        details: batchError.details,
+        hint: batchError.hint
       });
-
-      // If it's not the media_type check constraint, stop trying
-      if (attempt.error.code && attempt.error.code !== '23514') {
-        break;
-      }
+      throw new Error(`batch_uploads insert failed: ${batchError.message} (code: ${batchError.code})`);
     }
 
-    if (!batchData) {
-      console.error('❌ batch_uploads insert failed after trying candidates', {
-        tried: candidates,
-        code: lastErr?.code,
-        message: lastErr?.message,
-        details: lastErr?.details,
-        hint: lastErr?.hint,
-      });
-      throw new Error(`batch_uploads insert failed: ${lastErr?.message} (code: ${lastErr?.code})`);
-    }
+    const batchId = batchData.id;
+    console.log(`✅ Batch record created: ${batchId}`);
 
-    console.log(`✅ Batch record created with media_type='${chosenMediaType}': ${batchData.id}`);
-
-    // Create queue items for each photo
-    const queueItems = photoUrls.map((url: string, index: number) => ({
-      batch_id: batchId,
-      item_type: 'photo_batch',
-      status: 'pending',
-      metadata: {
-        photo_url: url,
-        ...metadata[index]
-      }
-    }));
-
-    const { error: queueError } = await supabase
-      .from('batch_queue_items')
-      .insert(queueItems);
-
-    if (queueError) {
-      console.error('❌ batch_queue_items insert failed:', {
-        message: queueError.message,
-        code: queueError.code,
-        details: queueError.details,
-        hint: queueError.hint
-      });
-      throw new Error(`batch_queue_items insert failed: ${queueError.message} (code: ${queueError.code})`);
-    }
-
-    console.log(`✅ Created ${queueItems.length} queue items`);
+    // Queue items will be created by bulk-photo-batch-processor
 
     // Start bulk processing (fire-and-forget)
     const { error: functionError } = await supabase.functions.invoke(

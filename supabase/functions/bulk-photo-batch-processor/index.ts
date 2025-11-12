@@ -167,28 +167,7 @@ async function processAllPhotos(
     console.log(`\n🎨 [${i + 1}/${photoUrls.length}] Starting batch: ${photoMetadata.title}`);
 
     try {
-      // Get corresponding queue item
-      const { data: queueItems } = await supabase
-        .from('batch_queue_items')
-        .select('id')
-        .eq('batch_id', batchId)
-        .eq('metadata->photo_url', photoUrl)
-        .limit(1);
-
-      const queueItemId = queueItems?.[0]?.id;
-
-      if (queueItemId) {
-        // Update status to processing
-        await supabase
-          .from('batch_queue_items')
-          .update({ 
-            status: 'processing',
-            started_at: new Date().toISOString()
-          })
-          .eq('id', queueItemId);
-      }
-
-      // Call existing photo-batch-processor with retry logic
+      // Call existing photo-batch-processor with retry logic to start the batch
       const { data: batchResult, error: batchError } = await invokeWithRetry(
         supabase,
         'photo-batch-processor',
@@ -204,21 +183,17 @@ async function processAllPhotos(
       if (batchError) throw batchError;
 
       const photoBatchId = batchResult.batchId;
-      console.log(`  ↳ Photo batch started: ${photoBatchId}, continuing to next photo...`);
+      console.log(`  ↳ Photo batch started: ${photoBatchId}`);
 
-      // Update queue item with batch ID for tracking
-      if (queueItemId) {
-        await supabase
-          .from('batch_queue_items')
-          .update({ 
-            metadata: {
-              ...photoMetadata,
-              photo_batch_id: photoBatchId,
-              photo_url: photoUrl
-            }
-          })
-          .eq('id', queueItemId);
-      }
+      // Create queue item now that we have the photo batch ID
+      await supabase
+        .from('batch_queue_items')
+        .insert({
+          batch_id: batchId,
+          item_id: photoBatchId,
+          item_type: 'ai',
+          status: 'processing'
+        });
 
       // 5 second delay before next photo to avoid rate limits
       if (i < photoUrls.length - 1) {
@@ -229,26 +204,17 @@ async function processAllPhotos(
     } catch (error) {
       console.error(`  ❌ Photo ${i + 1} failed to start:`, error.message);
 
-      // Update queue item as failed
-      const { data: queueItems } = await supabase
+      // Insert failed queue item (no photo_batch_id available)
+      await supabase
         .from('batch_queue_items')
-        .select('id')
-        .eq('batch_id', batchId)
-        .eq('metadata->photo_url', photoUrl)
-        .limit(1);
-
-      const queueItemId = queueItems?.[0]?.id;
-      
-      if (queueItemId) {
-        await supabase
-          .from('batch_queue_items')
-          .update({ 
-            status: 'failed',
-            processed_at: new Date().toISOString(),
-            error_message: error.message
-          })
-          .eq('id', queueItemId);
-      }
+        .insert({
+          batch_id: batchId,
+          item_id: `failed-${Date.now()}-${i}`, // Temp ID for failed items
+          item_type: 'ai',
+          status: 'failed',
+          error_message: error.message,
+          processed_at: new Date().toISOString()
+        });
     }
   }
 

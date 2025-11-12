@@ -104,20 +104,28 @@ serve(async (req) => {
 
     console.log('Starting daily anecdote generation...');
 
-    // Check if anecdote already exists for today
-    const today = new Date().toISOString().split('T')[0];
-    const { data: existing } = await supabase
-      .from('music_anecdotes')
-      .select('id')
-      .eq('anecdote_date', today)
-      .single();
+    // Get request body to check for force flag
+    const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
+    const forceGenerate = body.force === true;
 
-    if (existing) {
-      console.log('Anecdote already exists for today');
-      return new Response(
-        JSON.stringify({ message: 'Anecdote already generated for today', id: existing.id }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Check if anecdote already exists for today (skip if force=true)
+    const today = new Date().toISOString().split('T')[0];
+    if (!forceGenerate) {
+      const { data: existing } = await supabase
+        .from('music_anecdotes')
+        .select('id')
+        .eq('anecdote_date', today)
+        .single();
+
+      if (existing) {
+        console.log('Anecdote already exists for today');
+        return new Response(
+          JSON.stringify({ message: 'Anecdote already generated for today', id: existing.id }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else {
+      console.log('Force generation enabled - generating additional anecdote for today');
     }
 
     // Select random subject from unified_scans or releases

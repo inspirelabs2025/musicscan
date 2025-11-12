@@ -13,7 +13,7 @@ export const TestAnecdoteGeneration = () => {
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('daily-anecdote-generator', {
-        body: {}
+        body: { force: true }  // Force generation for admin testing
       });
 
       if (error) throw error;
@@ -24,7 +24,7 @@ export const TestAnecdoteGeneration = () => {
 
       toast({
         title: "Anekdote Gegenereerd!",
-        description: data.message || "De dagelijkse anekdote is succesvol aangemaakt.",
+        description: data.message || "Een nieuwe anekdote is succesvol aangemaakt.",
       });
     } catch (error) {
       console.error('Error generating anecdote:', error);
@@ -44,7 +44,7 @@ export const TestAnecdoteGeneration = () => {
         <div>
           <h3 className="text-lg font-semibold mb-2">Test Anekdote Generatie</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Genereer handmatig een nieuwe dagelijkse muziek-anekdote. Dit overschrijft niet de bestaande anekdote van vandaag als die er al is.
+            Genereer handmatig extra anekdotes voor vandaag. Je kunt meerdere anekdotes per dag genereren via deze test interface.
           </p>
         </div>
         
@@ -70,7 +70,8 @@ export const TestAnecdoteGeneration = () => {
           <p>• Gebruikt Lovable AI (google/gemini-2.5-flash)</p>
           <p>• Selecteert willekeurig album uit database</p>
           <p>• Slaat op in music_anecdotes tabel</p>
-          <p>• Automatisch zichtbaar op homepage</p>
+          <p>• Cronjob genereert 1x per dag om 6:05 UTC</p>
+          <p>• Via admin kun je meerdere per dag genereren</p>
         </div>
       </div>
     </Card>

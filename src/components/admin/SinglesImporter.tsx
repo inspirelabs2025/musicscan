@@ -5,10 +5,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Play, Pause, RotateCcw, FileText, Music, Trash2, ExternalLink } from 'lucide-react';
+import { Upload, Play, Pause, RotateCcw, FileText, Music, Trash2, ExternalLink, RefreshCw, ImageIcon } from 'lucide-react';
 import { useSinglesImport } from '@/hooks/useSinglesImport';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SingleData {
   artist: string;
@@ -27,6 +28,7 @@ export const SinglesImporter = () => {
   const [parsedSingles, setParsedSingles] = useState<SingleData[]>([]);
   const [batchId, setBatchId] = useState<string | null>(null);
   const [batchStatus, setBatchStatus] = useState<any>(null);
+  const [missingArtworkCount, setMissingArtworkCount] = useState(0);
   const { toast } = useToast();
   const {
     importSingles,
@@ -35,8 +37,10 @@ export const SinglesImporter = () => {
     getBatchStatus,
     retryFailed,
     clearQueue,
+    backfillArtwork,
     isImporting,
     isBatchProcessing,
+    isBackfilling,
   } = useSinglesImport();
 
   // Poll batch status every 5 seconds when there's an active batch
@@ -48,6 +52,23 @@ export const SinglesImporter = () => {
 
     pollStatus();
     const interval = setInterval(pollStatus, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Load artwork stats
+  useEffect(() => {
+    const loadArtworkStats = async () => {
+      const { count } = await supabase
+        .from('music_stories')
+        .select('*', { count: 'exact', head: true })
+        .not('single_name', 'is', null)
+        .is('artwork_url', null);
+      
+      setMissingArtworkCount(count || 0);
+    };
+    
+    loadArtworkStats();
+    const interval = setInterval(loadArtworkStats, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -129,6 +150,19 @@ export const SinglesImporter = () => {
     setTimeout(() => getBatchStatus(), 1000);
   };
 
+  const handleBackfillArtwork = async () => {
+    const result = await backfillArtwork();
+    if (result) {
+      // Refresh artwork stats after backfill
+      const { count } = await supabase
+        .from('music_stories')
+        .select('*', { count: 'exact', head: true })
+        .not('single_name', 'is', null)
+        .is('artwork_url', null);
+      setMissingArtworkCount(count || 0);
+    }
+  };
+
   const activeBatch = batchStatus?.batch;
   const queueStats = batchStatus?.queue_stats || { pending: 0, completed: 0, failed: 0 };
   const totalItems = activeBatch?.total_items || 0;
@@ -137,6 +171,49 @@ export const SinglesImporter = () => {
 
   return (
     <div className="space-y-6">
+      {/* Artwork Maintenance Card */}
+      {missingArtworkCount > 0 && (
+        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-900 dark:text-amber-100">
+              <ImageIcon className="h-5 w-5" />
+              🎨 Artwork Maintenance
+            </CardTitle>
+            <CardDescription>
+              Automatisch artwork toevoegen aan singles zonder afbeelding
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert className="border-amber-300 dark:border-amber-800">
+              <AlertDescription className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-amber-500 text-amber-700 dark:text-amber-300">
+                    {missingArtworkCount} singles zonder artwork
+                  </Badge>
+                </div>
+              </AlertDescription>
+            </Alert>
+            
+            <Button 
+              onClick={handleBackfillArtwork} 
+              disabled={isBackfilling}
+              className="w-full"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
+              {isBackfilling ? 'Artwork ophalen...' : 'Fix Missing Artwork'}
+            </Button>
+
+            {isBackfilling && (
+              <div className="text-sm text-muted-foreground text-center">
+                Artwork wordt opgehaald voor {missingArtworkCount} singles...
+                <br />
+                Dit kan enkele minuten duren.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

@@ -28,10 +28,21 @@ serve(async (req) => {
 
       if (countError) throw countError;
 
+      // Trigger first processing tick
+      console.log('🔄 Triggering first processing tick...');
+      const { data: tickData, error: tickError } = await supabase.functions.invoke('singles-batch-processor');
+      
+      if (tickError) {
+        console.error('⚠️ Tick trigger error:', tickError);
+      } else {
+        console.log('✅ First tick triggered:', tickData);
+      }
+
       return new Response(JSON.stringify({
         success: true,
-        message: 'Batch processing started',
-        pending_count: count || 0
+        message: 'Batch processing started, first tick triggered',
+        pending_count: count || 0,
+        tick_triggered: !tickError
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -76,15 +87,29 @@ serve(async (req) => {
         statusCounts[item.status as keyof typeof statusCounts]++;
       });
 
+      // If there are pending items and nothing is processing, trigger a tick
+      let tickTriggered = false;
+      if (statusCounts.pending > 0 && statusCounts.processing === 0) {
+        console.log('🔄 Auto-triggering tick (pending items, nothing processing)...');
+        const { error: tickError } = await supabase.functions.invoke('singles-batch-processor');
+        if (!tickError) {
+          tickTriggered = true;
+          console.log('✅ Status tick triggered');
+        } else {
+          console.error('⚠️ Status tick error:', tickError);
+        }
+      }
+
       return new Response(JSON.stringify({
         success: true,
-        ...statusCounts
+        ...statusCounts,
+        tick_triggered: tickTriggered
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    if (action === 'retry') {
+    if (action === 'retry' || action === 'retry_failed') {
       console.log('🔄 Retrying failed items...');
       
       const { error: retryError } = await supabase

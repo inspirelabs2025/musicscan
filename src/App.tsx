@@ -125,6 +125,8 @@ import MyPhotos from "./pages/MyPhotos";
 import LikedPhotos from "./pages/LikedPhotos";
 import MusicHistory from "./pages/MusicHistory";
 import UserManagement from "./pages/admin/UserManagement";
+import Singles from "./pages/Singles";
+import SingleDetail from "./pages/SingleDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {

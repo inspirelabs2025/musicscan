@@ -35,19 +35,32 @@ export const useSinglesImport = () => {
   const importSingles = async (singles: SingleImport[]): Promise<ImportResult | null> => {
     setIsImporting(true);
     try {
+      console.log('🚀 Importing singles:', singles.length);
       const { data, error } = await supabase.functions.invoke('import-singles-batch', {
         body: { singles }
       });
 
       if (error) {
+        console.error('❌ Import function error:', error);
         toast({
           title: "Import Failed",
-          description: error.message,
+          description: error.message || 'Unknown error during import',
           variant: "destructive",
         });
         return null;
       }
 
+      if (data?.error) {
+        console.error('❌ Import data error:', data.error);
+        toast({
+          title: "Import Failed",
+          description: data.error,
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      console.log('✅ Import successful:', data);
       toast({
         title: "Import Successful",
         description: `${data.imported} singles imported to queue`,
@@ -55,9 +68,10 @@ export const useSinglesImport = () => {
 
       return data as ImportResult;
     } catch (error: any) {
+      console.error('❌ Import exception:', error);
       toast({
         title: "Import Error",
-        description: error.message,
+        description: error.message || 'Network error or authentication failed',
         variant: "destructive",
       });
       return null;

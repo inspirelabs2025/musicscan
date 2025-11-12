@@ -117,27 +117,33 @@ serve(async (req) => {
   }
 
   try {
-    const { artistName } = await req.json();
+    const { artistName, userId: providedUserId } = await req.json();
     
     if (!artistName) {
       throw new Error("Artist name is required");
     }
 
-    // Get user ID from JWT header
-    let userId = null;
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      try {
-        const token = authHeader.replace('Bearer ', '');
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        userId = payload.sub;
-      } catch (e) {
-        console.error('Failed to parse JWT:', e);
+    // Get user ID from JWT header OR from request body (for batch processing)
+    let userId = providedUserId;
+    
+    if (!userId) {
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader) {
+        try {
+          const token = authHeader.replace('Bearer ', '');
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          userId = payload.sub;
+        } catch (e) {
+          console.error('Failed to parse JWT:', e);
+        }
       }
     }
     
+    // For batch processing, use a system user ID if no user provided
     if (!userId) {
-      throw new Error("Authentication required");
+      // Use a fixed system user ID for batch-generated stories
+      userId = '00000000-0000-0000-0000-000000000000';
+      console.log('⚙️ Using system user ID for batch processing');
     }
 
     console.log('🎸 Generating artist story with Lovable AI for:', artistName);

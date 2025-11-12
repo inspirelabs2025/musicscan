@@ -156,10 +156,13 @@ serve(async (req) => {
 
       console.log(`🎤 Processing artist: ${nextItem.metadata.artist_name}`);
 
-      // Call generate-artist-story function
+      // Call generate-artist-story function with system user ID for batch processing
       try {
         const { data: storyData, error: storyError } = await supabase.functions.invoke('generate-artist-story', {
-          body: { artist_name: nextItem.metadata.artist_name }
+          body: { 
+            artistName: nextItem.metadata.artist_name,
+            userId: '00000000-0000-0000-0000-000000000000' // System user for batch processing
+          }
         });
 
         if (storyError) throw storyError;

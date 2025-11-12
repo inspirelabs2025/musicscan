@@ -39,13 +39,17 @@ export const DailyAnecdote = () => {
 
   if (isLoading) {
     return (
-      <section className="py-12 bg-gradient-to-br from-vinyl-purple/10 via-accent/5 to-background">
+      <section className="py-6 bg-gradient-to-br from-vinyl-purple/10 via-accent/5 to-background">
         <div className="container mx-auto px-4">
-          <Card className="max-w-4xl mx-auto p-8 animate-pulse">
-            <div className="h-8 bg-muted rounded w-3/4 mb-4"></div>
-            <div className="h-4 bg-muted rounded w-full mb-2"></div>
-            <div className="h-4 bg-muted rounded w-full mb-2"></div>
-            <div className="h-4 bg-muted rounded w-2/3"></div>
+          <Card className="max-w-6xl mx-auto p-4 md:p-6 animate-pulse">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-muted"></div>
+              <div className="flex-1">
+                <div className="h-6 bg-muted rounded w-2/3 mb-2"></div>
+                <div className="h-4 bg-muted rounded w-full"></div>
+              </div>
+              <div className="w-24 h-10 bg-muted rounded"></div>
+            </div>
           </Card>
         </div>
       </section>
@@ -66,79 +70,45 @@ export const DailyAnecdote = () => {
   };
 
   return (
-    <section className="py-12 bg-gradient-to-br from-vinyl-purple/10 via-accent/5 to-background">
+    <section className="py-6 bg-gradient-to-br from-vinyl-purple/10 via-accent/5 to-background">
       <div className="container mx-auto px-4">
-        <Card className="max-w-4xl mx-auto p-8 md:p-12 border-2 border-vinyl-purple/20 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-          {/* Header */}
-          <div className="flex items-start gap-4 mb-6">
+        <Card className="max-w-6xl mx-auto p-4 md:p-6 border-2 border-vinyl-purple/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            {/* Icon */}
             <div className="flex-shrink-0">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center">
-                <Sparkles className="w-8 h-8 text-white" />
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-white" />
               </div>
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+
+            {/* Content */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-2 text-xs text-muted-foreground mb-1">
                 <span>{formatDate(anecdote.anecdote_date)}</span>
-                <Badge variant="outline" className="ml-2">
+                <Badge variant="outline" className="text-xs">
                   {anecdote.subject_type}
                 </Badge>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">
                 {anecdote.anecdote_title}
               </h2>
-              {anecdote.subject_details && (
-                <p className="text-lg text-muted-foreground">
-                  {anecdote.subject_details.artist && (
-                    <span className="font-medium text-vinyl-purple">
-                      {anecdote.subject_details.artist}
-                    </span>
-                  )}
-                  {anecdote.subject_details.title && anecdote.subject_details.artist && ' - '}
-                  {anecdote.subject_details.title}
-                  {anecdote.subject_details.year && (
-                    <span className="text-muted-foreground ml-2">
-                      ({anecdote.subject_details.year})
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Content Preview */}
-          <div className="prose prose-lg max-w-none text-foreground/90 leading-relaxed mb-4">
-            <p>{anecdote.anecdote_content}</p>
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-border flex-wrap gap-4">
-            <Button
-              variant="default"
-              onClick={() => navigate(`/anekdotes/${anecdote.slug}`)}
-              className="gap-2"
-            >
-              Lees het volledige verhaal
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/anekdotes')}
-              className="text-primary hover:text-primary/80"
-            >
-              Alle anekdotes →
-            </Button>
-          </div>
-
-          {/* Source Reference */}
-          {anecdote.source_reference && (
-            <div className="mt-4">
-              <p className="text-xs text-muted-foreground italic">
-                Bron: {anecdote.source_reference}
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {anecdote.anecdote_content}
               </p>
             </div>
-          )}
+
+            {/* CTA */}
+            <div className="flex-shrink-0">
+              <Button
+                variant="default"
+                onClick={() => navigate(`/anekdotes/${anecdote.slug}`)}
+                className="gap-2"
+              >
+                Lees meer
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </Card>
       </div>
     </section>

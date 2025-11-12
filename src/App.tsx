@@ -61,6 +61,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Podcasts from "./pages/Podcasts";
 import { ShopProducts } from "./pages/admin/ShopProducts";
 import PlatformProducts from "./pages/admin/PlatformProducts";
+import AllProducts from "./pages/admin/AllProducts";
 import ArtGenerator from "./pages/admin/ArtGenerator";
 import BulkArtGenerator from "./pages/admin/BulkArtGenerator";
 import SketchArtGenerator from "./pages/admin/SketchArtGenerator";
@@ -307,6 +308,7 @@ const AppContent = () => {
                 <Route path="dashboard" element={<SuperAdminDashboard />} />
                 
                 {/* Products & Shop */}
+                <Route path="products" element={<AllProducts />} />
                 <Route path="platform-products" element={<PlatformProducts />} />
                 <Route path="shop-products" element={<ShopProducts />} />
                 <Route path="time-machine" element={<TimeMachineManager />} />

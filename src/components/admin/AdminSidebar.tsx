@@ -1,6 +1,7 @@
 import { 
   LayoutDashboard, 
   Package, 
+  LayoutGrid,
   Wand2,
   Music,
   Globe,
@@ -52,6 +53,7 @@ const menuItems = [
   {
     title: "Products & Shop",
     items: [
+      { title: "All Products", url: "/admin/products", icon: LayoutGrid },
       { title: "Platform Products", url: "/admin/platform-products", icon: Package },
       { title: "Shop Products", url: "/admin/shop-products", icon: ShoppingBag },
       { title: "Time Machine", url: "/admin/time-machine", icon: Clock },

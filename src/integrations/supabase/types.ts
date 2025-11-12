@@ -542,6 +542,7 @@ export type Database = {
           item_id: string
           item_type: string
           max_attempts: number
+          metadata: Json | null
           priority: number
           processed_at: string | null
           status: string
@@ -556,6 +557,7 @@ export type Database = {
           item_id: string
           item_type: string
           max_attempts?: number
+          metadata?: Json | null
           priority?: number
           processed_at?: string | null
           status?: string
@@ -570,6 +572,7 @@ export type Database = {
           item_id?: string
           item_type?: string
           max_attempts?: number
+          metadata?: Json | null
           priority?: number
           processed_at?: string | null
           status?: string

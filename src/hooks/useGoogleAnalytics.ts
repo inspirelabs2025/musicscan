@@ -4,33 +4,20 @@ import { useLocation } from 'react-router-dom';
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
 /**
- * Initialize Google Analytics by loading the script dynamically
+ * Check if Google Analytics is ready (loaded via HTML script tag)
  */
 const initializeGA = () => {
-  if (!GA_MEASUREMENT_ID || window.gtag) {
-    return; // Already initialized or no ID
+  if (!GA_MEASUREMENT_ID) {
+    console.warn('⚠️ GA Measurement ID not found');
+    return;
   }
-
-  // Load gtag script
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-  document.head.appendChild(script);
-
-  // Initialize dataLayer and gtag
-  window.dataLayer = window.dataLayer || [];
-  function gtag(...args: any[]) {
-    window.dataLayer!.push(args);
-  }
-  window.gtag = gtag as any;
   
-  // Configure GA
-  gtag('js', new Date());
-  gtag('config', GA_MEASUREMENT_ID, { 
-    send_page_view: false // We handle this manually
-  });
-
-  console.log('📊 Google Analytics initialized:', GA_MEASUREMENT_ID);
+  if (!window.gtag) {
+    console.warn('⚠️ Google Analytics script not loaded');
+    return;
+  }
+  
+  console.log('✅ Google Analytics ready:', GA_MEASUREMENT_ID);
 };
 
 /**
@@ -80,7 +67,17 @@ export const useGoogleAnalytics = () => {
       return;
     }
 
-    sendPageView(location.pathname + location.search);
+    // Wait for gtag to be available (in case script is still loading)
+    const sendPageViewWhenReady = () => {
+      if (window.gtag) {
+        sendPageView(location.pathname + location.search);
+      } else {
+        // Retry after 100ms if gtag not ready yet
+        setTimeout(sendPageViewWhenReady, 100);
+      }
+    };
+    
+    sendPageViewWhenReady();
   }, [location]);
 
   return { sendPageView, sendGAEvent };

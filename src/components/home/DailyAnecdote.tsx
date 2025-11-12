@@ -92,10 +92,10 @@ export const DailyAnecdote = () => {
                 </Badge>
               </div>
               <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">
-                {anecdote.anecdote_title}
+                Anekdote
               </h2>
               <p className="text-sm text-muted-foreground line-clamp-2">
-                {anecdote.anecdote_content}
+                <span className="font-semibold">{anecdote.anecdote_title}:</span> {anecdote.anecdote_content}
               </p>
             </div>
 

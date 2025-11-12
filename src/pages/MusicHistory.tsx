@@ -238,7 +238,7 @@ const MusicHistory = () => {
                         {event.source && (
                           <div className="text-xs bg-primary/10 text-primary px-2 py-1 rounded mt-2">
                             {event.source === 'discogs' ? '🎵 Discogs' : 
-                             event.source === 'perplexity' ? '🌐 Web' : '🤖 AI'}
+                             event.source === 'perplexity' ? '🌐 Web' : '🤖 Gegenereerd'}
                           </div>
                         )}
                       </div>

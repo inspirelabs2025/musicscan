@@ -35,6 +35,7 @@ const shopMenuItems = [
 // VERHALEN MENU ITEMS
 const verhalenMenuItems = [
   { title: "Plaat Verhalen", url: "/verhalen", icon: Music },
+  { title: "Singles", url: "/singles", icon: Music },
   { title: "Anekdotes", url: "/anekdotes", icon: BookOpen },
   { title: "Nieuws", url: "/nieuws", icon: Newspaper },
   { title: "Nieuwe Releases", url: "/releases", icon: Music },

@@ -208,8 +208,48 @@ const ArtistDetail = () => {
         <section className="py-12">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
-              <article className="prose prose-lg dark:prose-invert max-w-none">
-                <ReactMarkdown>{story.story_content}</ReactMarkdown>
+              <article className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:text-foreground prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4 prose-h3:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-6">
+                <ReactMarkdown
+                  components={{
+                    h1: ({children}) => (
+                      <h1 className="text-4xl font-bold mb-8 mt-8 text-foreground border-b pb-4">
+                        {children}
+                      </h1>
+                    ),
+                    h2: ({children}) => (
+                      <h2 className="text-3xl font-bold mb-6 mt-12 text-foreground">
+                        {children}
+                      </h2>
+                    ),
+                    h3: ({children}) => (
+                      <h3 className="text-xl font-semibold mb-4 mt-8 text-foreground">
+                        {children}
+                      </h3>
+                    ),
+                    p: ({children}) => (
+                      <p className="text-muted-foreground leading-relaxed mb-6">
+                        {children}
+                      </p>
+                    ),
+                    ul: ({children}) => (
+                      <ul className="list-disc list-inside mb-6 space-y-2 text-muted-foreground">
+                        {children}
+                      </ul>
+                    ),
+                    ol: ({children}) => (
+                      <ol className="list-decimal list-inside mb-6 space-y-2 text-muted-foreground">
+                        {children}
+                      </ol>
+                    ),
+                    strong: ({children}) => (
+                      <strong className="font-bold text-foreground">
+                        {children}
+                      </strong>
+                    ),
+                  }}
+                >
+                  {story.story_content}
+                </ReactMarkdown>
               </article>
             </div>
           </div>

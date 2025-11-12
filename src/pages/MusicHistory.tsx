@@ -235,12 +235,6 @@ const MusicHistory = () => {
                         <div className="text-xs text-muted-foreground mt-1 text-center">
                           {getCategoryLabel(event.category)}
                         </div>
-                        {event.source && (
-                          <div className="text-xs bg-primary/10 text-primary px-2 py-1 rounded mt-2">
-                            {event.source === 'discogs' ? '🎵 Discogs' : 
-                             event.source === 'perplexity' ? '🌐 Web' : '🤖 Gegenereerd'}
-                          </div>
-                        )}
                       </div>
 
                       <div className="flex-1">

@@ -105,8 +105,10 @@ serve(async (req) => {
     console.log('Starting daily anecdote generation...');
 
     // Get request body to check for force flag
+    const url = new URL(req.url);
+    const forceParam = url.searchParams.get('force');
     const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
-    const forceGenerate = body.force === true;
+    const forceGenerate = body.force === true || forceParam === 'true' || forceParam === '1';
 
     // Check if anecdote already exists for today (skip if force=true)
     const today = new Date().toISOString().split('T')[0];

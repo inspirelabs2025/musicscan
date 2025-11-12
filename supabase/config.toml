@@ -306,3 +306,6 @@ verify_jwt = false
 
 [functions.artist-stories-batch-processor]
 verify_jwt = false
+
+[[functions.artist-stories-batch-processor.schedule]]
+cron = "* * * * *"  # Every minute

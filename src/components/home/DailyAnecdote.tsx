@@ -18,7 +18,9 @@ export const DailyAnecdote = () => {
         .select('*')
         .eq('anecdote_date', today)
         .eq('is_active', true)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;

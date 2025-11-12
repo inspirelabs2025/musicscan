@@ -156,6 +156,14 @@ const adminPages: AdminPage[] = [
     category: "products",
     badge: "Canvas"
   },
+  {
+    title: "Singles Importer",
+    description: "Bulk import van singles met automatische story generatie",
+    path: "/admin/singles-importer",
+    icon: Music,
+    category: "products",
+    badge: "Batch"
+  },
 
   // Discogs & Content
   {

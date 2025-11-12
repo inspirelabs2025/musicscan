@@ -97,15 +97,26 @@ export const useBulkPhotoBatchProcessor = () => {
         description: "Starting batch processing..."
       });
 
-      // Create batch record with metadata
+      // Get current user ID for RLS policy
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Create batch record with all required fields
       const { data: batchData, error: batchError } = await supabase
         .from('batch_uploads')
         .insert({
+          user_id: user.id,
           photo_urls: photoUrls,
           photo_metadata: {
             photos: metadata
           },
-          status: 'queued'
+          image_count: files.length,
+          media_type: 'photo_batch',
+          condition_grade: 'NM',
+          status: 'queued',
+          file_paths: []
         })
         .select()
         .single();

@@ -35,9 +35,11 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
       const products: UnifiedProduct[] = [];
 
       // Fetch Platform Products (posters, canvas, metal prints)
+      // Exclude merchandise items - they're in album_tshirts/album_socks tables
       let platformQuery = supabase
         .from('platform_products')
-        .select('*');
+        .select('*')
+        .neq('media_type', 'merchandise');
 
       if (filters?.search) {
         platformQuery = platformQuery.or(
@@ -76,6 +78,15 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
         );
       }
 
+      // Apply status filter for T-shirts
+      if (filters?.status) {
+        if (filters.status === 'published') {
+          tshirtsQuery = tshirtsQuery.eq('is_published', true);
+        } else if (filters.status === 'draft') {
+          tshirtsQuery = tshirtsQuery.eq('is_published', false);
+        }
+      }
+
       if (filters?.dateFrom) {
         tshirtsQuery = tshirtsQuery.gte('created_at', filters.dateFrom);
       }
@@ -95,6 +106,15 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
         );
       }
 
+      // Apply status filter for Socks
+      if (filters?.status) {
+        if (filters.status === 'published') {
+          socksQuery = socksQuery.eq('is_published', true);
+        } else if (filters.status === 'draft') {
+          socksQuery = socksQuery.eq('is_published', false);
+        }
+      }
+
       if (filters?.dateFrom) {
         socksQuery = socksQuery.gte('created_at', filters.dateFrom);
       }
@@ -110,16 +130,34 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
         socksQuery
       ]);
 
+      // Debug logging
+      console.log('📊 All Products Query Results:', {
+        platform_products: platformResult.data?.length || 0,
+        album_tshirts: tshirtsResult.data?.length || 0,
+        album_socks: socksResult.data?.length || 0,
+        errors: {
+          platform: platformResult.error,
+          tshirts: tshirtsResult.error,
+          socks: socksResult.error
+        }
+      });
+
       // Process Platform Products
       if (platformResult.data) {
         platformResult.data.forEach(item => {
-          // Determine product type based on media_type or tags
+          // Determine product type - check in priority order (most specific first)
           let productType: UnifiedProduct['type'] = 'poster';
-          if (item.media_type === 'art' && item.tags?.includes('metal-print')) {
-            productType = 'metal_print';
-          } else if (item.media_type === 'art' && item.tags?.includes('canvas')) {
+          
+          // Check canvas first (highest priority for specific types)
+          if (item.tags?.includes('canvas') || item.categories?.includes('CANVAS')) {
             productType = 'canvas';
-          } else if (item.media_type === 'art' && item.tags?.includes('poster')) {
+          }
+          // Then metal-print
+          else if (item.tags?.includes('metal-print')) {
+            productType = 'metal_print';
+          }
+          // Then poster (explicit check or fallback for art)
+          else if (item.tags?.includes('poster') || item.media_type === 'art') {
             productType = 'poster';
           }
 

@@ -15,6 +15,7 @@ serve(async (req) => {
     const { batchId, photoUrls, metadata } = await req.json();
 
     console.log(`🚀 Starting bulk batch processing for ${photoUrls.length} photos`);
+    console.log('ℹ️ bulk-photo-batch-processor version: v2025-11-12-1');
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

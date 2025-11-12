@@ -15,6 +15,7 @@ serve(async (req) => {
     const { photoUrls, metadata } = await req.json();
 
     console.log(`🚀 Initializing bulk batch for ${photoUrls.length} photos`);
+    console.log('ℹ️ init-bulk-photo-batch version: v2025-11-12-2');
 
     // Get user from Authorization header
     const authHeader = req.headers.get('Authorization');
@@ -46,7 +47,7 @@ serve(async (req) => {
         photo_urls: photoUrls,
         photo_metadata: { photos: metadata },
         image_count: photoUrls.length,
-        media_type: 'vinyl', // Use valid media_type for photos
+        media_type: 'vinyl', // must be 'vinyl' or 'cd' per CHECK constraint
         condition_grade: 'NM',
         status: 'pending'
       })

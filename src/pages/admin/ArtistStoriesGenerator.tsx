@@ -65,8 +65,19 @@ const ArtistStoriesGenerator = () => {
 
       toast({
         title: "Batch Processing Gestart",
-        description: `${data.total} artiesten worden automatisch verwerkt door de cron job (1 per minuut)`,
+        description: `${data.total} artiesten worden automatisch verwerkt (kickstarting background processing...)`,
       });
+
+      // Kickstart background processing by manually triggering a few cycles
+      console.log('🚀 Kickstarting background processing...');
+      for (let i = 0; i < 5; i++) {
+        setTimeout(async () => {
+          console.log(`⚡ Triggering processing cycle ${i + 1}/5`);
+          await supabase.functions.invoke('artist-stories-batch-processor', {
+            body: { action: 'tick' }
+          });
+        }, i * 3000); // Trigger every 3 seconds for first 5 items
+      }
 
       // Start polling for status updates
       const id = setInterval(loadBatchStatus, 5000);

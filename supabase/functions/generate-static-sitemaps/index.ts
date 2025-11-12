@@ -61,6 +61,17 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch music stories: ${storiesError.message}`);
     }
 
+    // Fetch all active music anecdotes
+    const { data: anecdotes, error: anecdotesError } = await supabase
+      .from('music_anecdotes')
+      .select('slug, created_at, anecdote_date, anecdote_title')
+      .eq('is_active', true)
+      .order('anecdote_date', { ascending: false });
+
+    if (anecdotesError) {
+      throw new Error(`Failed to fetch anecdotes: ${anecdotesError.message}`);
+    }
+
     // Fetch all active art products (metal prints) with images
     const { data: artProducts, error: productsError } = await supabase
       .from('platform_products')
@@ -106,11 +117,18 @@ Deno.serve(async (req) => {
     const posterProducts = (artProducts || []).filter(p => p.categories?.includes('POSTER'));
     const metalPrintProducts = (artProducts || []).filter(p => !p.categories?.includes('POSTER'));
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts, ${musicStories?.length || 0} music stories, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, and ${canvasProducts?.length || 0} canvas doeken`);
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, and ${canvasProducts?.length || 0} canvas doeken`);
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
     const blogSitemapXml = generateSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal');
+    const anecdotesSitemapXml = generateSitemapXml(
+      (anecdotes || []).map(a => ({
+        slug: a.slug,
+        updated_at: a.created_at
+      })),
+      'https://www.musicscan.app/anekdotes'
+    );
     const storiesSitemapXml = generateSitemapXml(musicStories || [], 'https://www.musicscan.app/muziek-verhaal');
     const metalPrintsSitemapXml = generateSitemapXml(metalPrintProducts || [], 'https://www.musicscan.app/product');
     const postersSitemapXml = generatePosterSitemapXml(posterProducts || []);
@@ -125,10 +143,11 @@ Deno.serve(async (req) => {
     const tshirtsImageSitemapXml = generateImageSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product', 'primary_image');
     const canvasImageSitemapXml = generateImageSitemapXml(canvasProducts || [], 'https://www.musicscan.app/product', 'primary_image');
 
-    // Build uploads list (15 files total - added canvas sitemaps)
+    // Build uploads list (16 files total - added anecdotes sitemap)
     const uploads = [
       { name: 'sitemap-static.xml', data: staticSitemapXml },
       { name: 'sitemap-blog.xml', data: blogSitemapXml },
+      { name: 'sitemap-anecdotes.xml', data: anecdotesSitemapXml },
       { name: 'sitemap-music-stories.xml', data: storiesSitemapXml },
       { name: 'sitemap-metal-prints.xml', data: metalPrintsSitemapXml },
       { name: 'sitemap-posters.xml', data: postersSitemapXml },

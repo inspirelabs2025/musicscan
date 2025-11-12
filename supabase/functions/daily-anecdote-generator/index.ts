@@ -40,6 +40,36 @@ RESPONSE FORMAT (JSON):
   "source": "Optionele bronvermelding"
 }`;
 
+const EXTENDED_PROMPT = `Je bent een muziek-historicus die diepgaande artikelen schrijft.
+
+INSTRUCTIES:
+- Schrijf een uitgebreid verhaal van 500-800 woorden
+- Duik dieper in de context, achtergrond, en impact
+- Voeg interessante details, quotes, en anekdotes toe
+- Gebruik subkopjes (## Markdown) voor structuur
+- Maak het toegankelijk maar informatief
+- Eindig met een reflectie of legacy paragraaf
+
+FORMATTING:
+- Gebruik Markdown met koppen (##, ###)
+- Voeg quotes toe met > blockquotes
+- Gebruik **bold** voor belangrijke namen/termen
+- Structuur: Intro → Context → Verhaal → Impact → Legacy
+
+RESPONSE FORMAT (JSON):
+{
+  "content": "Volledige uitgebreide inhoud in markdown...",
+  "reading_time": 3
+}`;
+
+const generateSEOFriendlySlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .substring(0, 80);
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -155,7 +185,57 @@ Maak het interessant en informatief!`;
       };
     }
 
-    // Insert into database
+    console.log('Generating extended content for:', subjectName);
+
+    // Generate extended content with second AI call
+    const extendedResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: EXTENDED_PROMPT },
+          { 
+            role: 'user', 
+            content: `Schrijf een uitgebreid artikel over: ${subjectContext}${release.year ? ` uit ${release.year}` : ''}
+
+Korte samenvatting als basis:
+${anecdoteData.content}
+
+Maak het uitgebreider en diepgaander!` 
+          }
+        ],
+        temperature: 0.8,
+        max_tokens: 2000,
+      }),
+    });
+
+    if (!extendedResponse.ok) {
+      console.error('Extended content generation failed:', extendedResponse.status);
+      throw new Error(`Extended content AI error: ${extendedResponse.statusText}`);
+    }
+
+    const extendedAiData = await extendedResponse.json();
+    const extendedText = extendedAiData.choices[0].message.content;
+
+    let extendedData;
+    try {
+      extendedData = JSON.parse(extendedText);
+    } catch {
+      extendedData = {
+        content: extendedText,
+        reading_time: Math.ceil(extendedText.length / 1000)
+      };
+    }
+
+    // Generate SEO-friendly slug
+    const slug = generateSEOFriendlySlug(anecdoteData.title) + '-' + Date.now().toString().slice(-6);
+    const metaDescription = anecdoteData.content.slice(0, 155) + '...';
+
+    // Insert into database with extended content and SEO fields
     const { data: newAnecdote, error: insertError } = await supabase
       .from('music_anecdotes')
       .insert({
@@ -170,8 +250,14 @@ Maak het interessant en informatief!`;
         },
         anecdote_title: anecdoteData.title,
         anecdote_content: anecdoteData.content,
+        extended_content: extendedData.content,
+        slug: slug,
+        meta_title: `${anecdoteData.title} | MusicScan Muziek Anekdotes`,
+        meta_description: metaDescription,
+        reading_time: extendedData.reading_time || Math.ceil(extendedData.content.length / 1000),
         source_reference: anecdoteData.source,
-        is_active: true
+        is_active: true,
+        views_count: 0
       })
       .select()
       .single();

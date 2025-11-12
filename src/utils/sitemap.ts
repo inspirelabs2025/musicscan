@@ -25,12 +25,18 @@ export const getStaticRoutes = (): SitemapEntry[] => {
   const baseUrl = 'https://www.musicscan.app';
   const currentDate = new Date().toISOString().split('T')[0];
   
-  return [
+  const staticRoutes: SitemapEntry[] = [
     {
-      url: baseUrl,
+      url: `${baseUrl}/`,
       lastmod: currentDate,
       changefreq: 'daily',
-      priority: 1.0
+      priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/anekdotes`,
+      lastmod: currentDate,
+      changefreq: 'daily',
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/scanner`,
@@ -69,6 +75,8 @@ export const getStaticRoutes = (): SitemapEntry[] => {
       priority: 0.6
     }
   ];
+  
+  return staticRoutes;
 };
 
 // Get blog posts for sitemap
@@ -97,6 +105,36 @@ export const getBlogPostRoutes = async (): Promise<SitemapEntry[]> => {
     }));
   } catch (error) {
     console.error('Error generating blog post sitemap entries:', error);
+    return [];
+  }
+};
+
+// Get music anecdotes for sitemap
+export const getMusicAnecdoteRoutes = async (): Promise<SitemapEntry[]> => {
+  const { supabase } = await import('@/integrations/supabase/client');
+  
+  try {
+    const { data: anecdotes, error } = await supabase
+      .from('music_anecdotes')
+      .select('slug, anecdote_date, created_at')
+      .eq('is_active', true)
+      .order('anecdote_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching anecdotes for sitemap:', error);
+      return [];
+    }
+
+    const baseUrl = 'https://www.musicscan.app';
+    
+    return anecdotes.map((anecdote) => ({
+      url: `${baseUrl}/anekdotes/${anecdote.slug}`,
+      lastmod: anecdote.created_at || new Date().toISOString().split('T')[0],
+      changefreq: 'monthly' as const,
+      priority: 0.6
+    }));
+  } catch (error) {
+    console.error('Error generating anecdote sitemap entries:', error);
     return [];
   }
 };
@@ -154,6 +192,7 @@ Crawl-delay: 2
 # Sitemaps
 Sitemap: https://www.musicscan.app/sitemap.xml
 Sitemap: https://www.musicscan.app/sitemap-blog.xml
+Sitemap: https://www.musicscan.app/sitemap-anecdotes.xml
 Sitemap: https://www.musicscan.app/sitemap-music-stories.xml
 
 # Disallow admin and internal paths

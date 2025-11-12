@@ -111,6 +111,8 @@ import TshirtGenerator from "./pages/admin/TshirtGenerator";
 import SocksShop from "./pages/SocksShop";
 import TshirtsShop from "./pages/TshirtsShop";
 import MerchandiseShop from "./pages/MerchandiseShop";
+import AnecdotesOverview from "./pages/AnecdotesOverview";
+import AnecdoteDetail from "./pages/AnecdoteDetail";
 import Echo from "./pages/Echo";
 import FanWall from "./pages/FanWall";
 import ArtistFanWallOverview from "./pages/ArtistFanWallOverview";
@@ -378,6 +380,11 @@ const AppContent = () => {
         <Route path="/merchandise" element={<MerchandiseShop />} />
         <Route path="/merch" element={<MerchandiseShop />} />
         <Route path="/merchandise-shop" element={<MerchandiseShop />} />
+        
+        {/* Anecdotes Routes */}
+        <Route path="/anekdotes" element={<AnecdotesOverview />} />
+        <Route path="/anekdotes/:slug" element={<AnecdoteDetail />} />
+        
         <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
         <Route path="/fanwall" element={<ArtistFanWallOverview />} />
         <Route path="/fanwall/:slug" element={<ArtistFanWall />} />

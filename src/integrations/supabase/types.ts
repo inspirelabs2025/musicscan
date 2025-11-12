@@ -2211,8 +2211,13 @@ export type Database = {
           anecdote_date: string
           anecdote_title: string
           created_at: string
+          extended_content: string | null
           id: string
           is_active: boolean | null
+          meta_description: string | null
+          meta_title: string | null
+          reading_time: number | null
+          slug: string | null
           source_reference: string | null
           subject_details: Json | null
           subject_name: string
@@ -2224,8 +2229,13 @@ export type Database = {
           anecdote_date: string
           anecdote_title: string
           created_at?: string
+          extended_content?: string | null
           id?: string
           is_active?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          reading_time?: number | null
+          slug?: string | null
           source_reference?: string | null
           subject_details?: Json | null
           subject_name: string
@@ -2237,8 +2247,13 @@ export type Database = {
           anecdote_date?: string
           anecdote_title?: string
           created_at?: string
+          extended_content?: string | null
           id?: string
           is_active?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          reading_time?: number | null
+          slug?: string | null
           source_reference?: string | null
           subject_details?: Json | null
           subject_name?: string

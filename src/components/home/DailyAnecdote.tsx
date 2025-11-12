@@ -1,10 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import { Music2, Calendar } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Sparkles, ArrowRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 export const DailyAnecdote = () => {
+  const navigate = useNavigate();
   const { data: anecdote, isLoading } = useQuery({
     queryKey: ['daily-anecdote'],
     queryFn: async () => {
@@ -70,16 +73,15 @@ export const DailyAnecdote = () => {
           <div className="flex items-start gap-4 mb-6">
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center">
-                <Music2 className="w-8 h-8 text-white" />
+                <Sparkles className="w-8 h-8 text-white" />
               </div>
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                <Calendar className="w-4 h-4" />
                 <span>{formatDate(anecdote.anecdote_date)}</span>
-                <span className="ml-2 px-2 py-1 bg-vinyl-purple/10 text-vinyl-purple rounded-md text-xs font-medium">
+                <Badge variant="outline" className="ml-2">
                   {anecdote.subject_type}
-                </span>
+                </Badge>
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
                 {anecdote.anecdote_title}
@@ -103,28 +105,40 @@ export const DailyAnecdote = () => {
             </div>
           </div>
 
-          {/* Content */}
-          <div className="prose prose-lg max-w-none text-foreground/90 leading-relaxed">
-            <ReactMarkdown>{anecdote.anecdote_content}</ReactMarkdown>
+          {/* Content Preview */}
+          <div className="prose prose-lg max-w-none text-foreground/90 leading-relaxed mb-4">
+            <p>{anecdote.anecdote_content}</p>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="flex items-center justify-between mt-6 pt-6 border-t border-border flex-wrap gap-4">
+            <Button
+              variant="default"
+              onClick={() => navigate(`/anekdotes/${anecdote.slug}`)}
+              className="gap-2"
+            >
+              Lees het volledige verhaal
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/anekdotes')}
+              className="text-primary hover:text-primary/80"
+            >
+              Alle anekdotes →
+            </Button>
           </div>
 
           {/* Source Reference */}
           {anecdote.source_reference && (
-            <div className="mt-6 pt-6 border-t border-border">
-              <p className="text-sm text-muted-foreground italic">
+            <div className="mt-4">
+              <p className="text-xs text-muted-foreground italic">
                 Bron: {anecdote.source_reference}
               </p>
             </div>
           )}
-
-          {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              <span className="font-semibold text-vinyl-purple">Dagelijkse Muziek Anekdote</span>
-              <span className="mx-2">•</span>
-              <span>{anecdote.views_count || 0} weergaven</span>
-            </div>
-          </div>
         </Card>
       </div>
     </section>

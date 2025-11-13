@@ -151,15 +151,34 @@ export const SinglesImporter = () => {
   };
 
   const handleBackfillArtwork = async (refetchAll: boolean = false) => {
-    const result = await backfillArtwork(refetchAll);
-    if (result) {
-      // Refresh artwork stats after backfill
-      const { count } = await supabase
-        .from('music_stories')
-        .select('*', { count: 'exact', head: true })
-        .not('single_name', 'is', null)
-        .is('artwork_url', null);
-      setMissingArtworkCount(count || 0);
+    console.log('🖼️ [COMPONENT] handleBackfillArtwork called with refetchAll:', refetchAll);
+    console.log('🖼️ [COMPONENT] Current missing count:', missingArtworkCount);
+    
+    try {
+      console.log('🖼️ [COMPONENT] Calling backfillArtwork hook...');
+      const result = await backfillArtwork(refetchAll);
+      console.log('🖼️ [COMPONENT] backfillArtwork returned:', result);
+      
+      if (result) {
+        console.log('🖼️ [COMPONENT] Refreshing artwork stats...');
+        // Refresh artwork stats after backfill
+        const { count } = await supabase
+          .from('music_stories')
+          .select('*', { count: 'exact', head: true })
+          .not('single_name', 'is', null)
+          .is('artwork_url', null);
+        console.log('🖼️ [COMPONENT] New missing count:', count);
+        setMissingArtworkCount(count || 0);
+      } else {
+        console.warn('⚠️ [COMPONENT] backfillArtwork returned null/falsy result');
+      }
+    } catch (error) {
+      console.error('❌ [COMPONENT] Exception in handleBackfillArtwork:', error);
+      toast({
+        variant: "destructive",
+        title: "Component Error",
+        description: "Unexpected error in artwork handler"
+      });
     }
   };
 

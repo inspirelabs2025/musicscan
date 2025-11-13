@@ -253,27 +253,55 @@ export const useSinglesImport = () => {
   };
 
   const backfillArtwork = async (refetchAll: boolean = false) => {
+    console.log('🎨 [BACKFILL] Function called with refetchAll:', refetchAll);
+    
     try {
       setIsBackfilling(true);
+      console.log('🎨 [BACKFILL] State set to isBackfilling=true');
       
       const mode = refetchAll ? 'refetch all' : 'missing only';
+      const requestBody = { refetch_all: refetchAll };
+      console.log('🎨 [BACKFILL] Request body:', JSON.stringify(requestBody));
+      
       toast({
         title: `Starting artwork ${refetchAll ? 'refetch' : 'backfill'}...`,
         description: `Processing singles (${mode} mode)`
       });
       
+      console.log('🎨 [BACKFILL] Invoking edge function: backfill-singles-artwork');
       const { data, error } = await supabase.functions.invoke('backfill-singles-artwork', {
-        body: { refetch_all: refetchAll }
+        body: requestBody
       });
       
+      console.log('🎨 [BACKFILL] Edge function response:', { data, error });
+      
       if (error) {
+        console.error('❌ [BACKFILL] Edge function returned error:', error);
+        console.error('❌ [BACKFILL] Error details:', {
+          message: error.message,
+          status: error.status,
+          statusText: error.statusText,
+          full: error
+        });
         toast({
           variant: "destructive",
           title: "Artwork backfill failed",
-          description: error.message
+          description: error.message || 'Unknown error occurred'
         });
         return null;
       }
+      
+      if (!data) {
+        console.error('❌ [BACKFILL] No data received from edge function');
+        toast({
+          variant: "destructive",
+          title: "Artwork backfill failed",
+          description: "No response from server"
+        });
+        return null;
+      }
+      
+      console.log('✅ [BACKFILL] Success! Data received:', data);
       
       const stats = [
         data.new_artwork && `${data.new_artwork} new`,
@@ -288,15 +316,21 @@ export const useSinglesImport = () => {
       });
       
       return data;
-    } catch (error) {
-      console.error('Backfill error:', error);
+    } catch (error: any) {
+      console.error('❌ [BACKFILL] Exception caught:', error);
+      console.error('❌ [BACKFILL] Exception type:', error?.constructor?.name);
+      console.error('❌ [BACKFILL] Exception message:', error?.message);
+      console.error('❌ [BACKFILL] Exception stack:', error?.stack);
+      console.error('❌ [BACKFILL] Full exception object:', JSON.stringify(error, null, 2));
+      
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to backfill artwork"
+        description: error?.message || "Failed to backfill artwork - check console for details"
       });
       return null;
     } finally {
+      console.log('🎨 [BACKFILL] Cleanup: setting isBackfilling=false');
       setIsBackfilling(false);
     }
   };

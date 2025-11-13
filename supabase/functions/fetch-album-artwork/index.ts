@@ -99,9 +99,12 @@ serve(async (req) => {
             
             // Strip featured artists for better matching
             const cleanTitle = stripFeaturedArtists(title);
+            console.log('🎤 Original title:', title);
+            console.log('🧹 Cleaned title:', cleanTitle);
             
             // Search for track
             const searchQuery = encodeURIComponent(`track:${cleanTitle} artist:${artist}`);
+            console.log('🔍 Spotify query:', `track:${cleanTitle} artist:${artist}`);
             const spotifyUrl = `https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=10`;
             
             const searchResponse = await fetch(spotifyUrl, {
@@ -203,7 +206,7 @@ serve(async (req) => {
                     }
                   }
                   
-                  if (score > bestScore && score >= 95) {
+                  if (score > bestScore && score >= 85) { // Lowered from 95 to 85
                     bestScore = score;
                     bestMatch = track;
                     console.log('🎯 New best match:', albumName, 'score:', score, 'type:', albumType);
@@ -213,7 +216,9 @@ serve(async (req) => {
                 if (bestMatch?.album?.images?.[0]?.url) {
                   artworkUrl = bestMatch.album.images[0].url;
                   artworkSource = 'spotify';
-                  console.log('✅ Found Spotify artwork (score:', bestScore, '):', artworkUrl);
+                  console.log('✅ Found Spotify artwork (score:', bestScore, 'threshold: 85):', artworkUrl);
+                } else {
+                  console.log('❌ No Spotify match found with score >= 85');
                 }
               }
             }

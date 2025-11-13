@@ -122,6 +122,47 @@ serve(async (req) => {
                 for (const track of searchData.tracks.items) {
                   const trackArtist = track.artists[0]?.name.toLowerCase().trim() || '';
                   const trackName = track.name.toLowerCase().trim();
+                  const albumName = track.album?.name?.toLowerCase() || '';
+                  const albumArtists = track.album?.artists || [];
+                  const albumType = track.album?.album_type || '';
+                  
+                  // FILTER 1: Skip compilation albums
+                  if (albumType === 'compilation') {
+                    console.log('⏭️ Skipping compilation album:', albumName);
+                    continue;
+                  }
+                  
+                  // FILTER 2: Skip "Various Artists" albums
+                  const isVariousArtists = albumArtists.some(a => 
+                    a.name.toLowerCase().includes('various')
+                  );
+                  if (isVariousArtists) {
+                    console.log('⏭️ Skipping Various Artists album:', albumName);
+                    continue;
+                  }
+                  
+                  // FILTER 3: Skip obvious compilation names
+                  const compilationKeywords = [
+                    'greatest hits', 'best of', 'collection', 'anthology',
+                    'number ones', 'top hits', 'ultimate', 'essential',
+                    'mixed by', 'dj', 'party hits', 'verzameling', 'hitzone',
+                    'top 40', 'now that', 'compilation'
+                  ];
+                  
+                  const isCompilationName = compilationKeywords.some(keyword => 
+                    albumName.includes(keyword)
+                  );
+                  if (isCompilationName) {
+                    console.log('⏭️ Skipping compilation by name:', albumName);
+                    continue;
+                  }
+                  
+                  // FILTER 4: Album artist should match track artist (not compilations)
+                  const albumArtist = albumArtists[0]?.name.toLowerCase().trim() || '';
+                  if (albumArtist !== trackArtist) {
+                    console.log('⏭️ Skipping mismatched album artist:', albumArtist, 'vs track artist:', trackArtist);
+                    continue;
+                  }
                   
                   let score = 0;
                   
@@ -143,9 +184,29 @@ serve(async (req) => {
                     }
                   }
                   
+                  // BONUS: Prefer original album releases over singles
+                  if (albumType === 'album') {
+                    score += 10; // Highest priority for original studio albums
+                    console.log('✨ Album type bonus: +10 for', albumName);
+                  } else if (albumType === 'single') {
+                    score += 5; // Lower bonus for single releases
+                    console.log('✨ Single type bonus: +5 for', albumName);
+                  }
+                  
+                  // Optional: Prefer albums from 1990-2010 (likely original releases)
+                  const albumReleaseYear = track.album?.release_date?.substring(0, 4);
+                  if (albumReleaseYear) {
+                    const year = parseInt(albumReleaseYear);
+                    if (year >= 1990 && year <= 2010) {
+                      score += 2;
+                      console.log('✨ Release year bonus: +2 for year', year);
+                    }
+                  }
+                  
                   if (score > bestScore && score >= 95) {
                     bestScore = score;
                     bestMatch = track;
+                    console.log('🎯 New best match:', albumName, 'score:', score, 'type:', albumType);
                   }
                 }
                 

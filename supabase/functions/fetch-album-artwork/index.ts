@@ -74,7 +74,96 @@ serve(async (req) => {
     let artworkUrl = null;
     let artworkSource = null;
 
-    // Strategy 1: Try Master ID first (best quality, official artwork)
+    // Strategy 1: Try Spotify first (best accuracy for singles)
+    if (!artworkUrl && artist && title) {
+      try {
+        console.log('🎵 Searching Spotify for artwork:', artist, '-', title);
+        
+        // Get Spotify access token
+        const spotifyClientId = Deno.env.get('SPOTIFY_CLIENT_ID');
+        const spotifyClientSecret = Deno.env.get('SPOTIFY_CLIENT_SECRET');
+        
+        if (spotifyClientId && spotifyClientSecret) {
+          const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Authorization': 'Basic ' + btoa(`${spotifyClientId}:${spotifyClientSecret}`)
+            },
+            body: 'grant_type=client_credentials'
+          });
+          
+          if (tokenResponse.ok) {
+            const tokenData = await tokenResponse.json();
+            const accessToken = tokenData.access_token;
+            
+            // Strip featured artists for better matching
+            const cleanTitle = stripFeaturedArtists(title);
+            
+            // Search for track
+            const searchQuery = encodeURIComponent(`track:${cleanTitle} artist:${artist}`);
+            const spotifyUrl = `https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=10`;
+            
+            const searchResponse = await fetch(spotifyUrl, {
+              headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            
+            if (searchResponse.ok) {
+              const searchData = await searchResponse.json();
+              
+              if (searchData.tracks?.items?.length > 0) {
+                // Score results to find best match
+                const normalizedArtist = artist.toLowerCase().trim();
+                const normalizedTitle = cleanTitle.toLowerCase().trim();
+                
+                let bestMatch = null;
+                let bestScore = 0;
+                
+                for (const track of searchData.tracks.items) {
+                  const trackArtist = track.artists[0]?.name.toLowerCase().trim() || '';
+                  const trackName = track.name.toLowerCase().trim();
+                  
+                  let score = 0;
+                  
+                  // CRITICAL: Exact artist match required (no fuzzy)
+                  if (trackArtist === normalizedArtist) {
+                    score += 50;
+                  } else {
+                    // Reject if not exact artist match
+                    continue;
+                  }
+                  
+                  // Exact title match
+                  if (trackName === normalizedTitle) {
+                    score += 50;
+                  } else {
+                    const titleSim = calculateSimilarity(trackName, normalizedTitle);
+                    if (titleSim >= 90) {
+                      score += Math.floor(titleSim / 2);
+                    }
+                  }
+                  
+                  if (score > bestScore && score >= 95) {
+                    bestScore = score;
+                    bestMatch = track;
+                  }
+                }
+                
+                if (bestMatch?.album?.images?.[0]?.url) {
+                  artworkUrl = bestMatch.album.images[0].url;
+                  artworkSource = 'spotify';
+                  console.log('✅ Found Spotify artwork (score:', bestScore, '):', artworkUrl);
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Error fetching from Spotify:', error.message);
+      }
+    }
+
+    // Strategy 2: Try Master ID (best quality, official artwork)
     if (master_id) {
       try {
         console.log('🎯 Using Master ID for artwork (highest priority):', master_id);
@@ -100,7 +189,7 @@ serve(async (req) => {
       }
     }
 
-    // Strategy 2: For products with discogs_url, try Discogs Release (fallback)
+    // Strategy 3: For products with discogs_url, try Discogs Release (fallback)
     const hasDiscogsUrl = discogs_url && discogs_url.includes('/release/');
     
     if (!artworkUrl && hasDiscogsUrl) {
@@ -134,7 +223,7 @@ serve(async (req) => {
       }
     }
 
-    // Try iTunes Search API as fallback (or first if no Discogs URL)
+    // Strategy 4: Try iTunes Search API with strict filtering (fallback)
     if (!artworkUrl && artist && title) {
       try {
         // For singles, search songs first, then albums as fallback
@@ -161,53 +250,92 @@ serve(async (req) => {
             const normalizedArtist = artist.toLowerCase().trim();
             const normalizedTitle = cleanTitle.toLowerCase().trim();
             
-            // Filter and score results
+            // Filter and score results with STRICT compilation/various artists rejection
             const scoredResults = itunesData.results
               .filter((r: any) => {
-                // For singles, require trackName (not just collectionName)
+                // For singles, require trackName and track wrapper type
                 if (media_type === 'single') {
-                  return r.wrapperType === 'track' && r.trackName;
+                  if (r.wrapperType !== 'track' || !r.trackName) return false;
+                  
+                  // Validate single-specific metadata
+                  if (r.trackCount && r.trackCount > 1) return false;
+                  if (r.trackNumber && r.trackNumber > 1) return false;
                 }
+                
+                // CRITICAL: Filter out compilations and various artists
+                const artistName = (r.artistName || '').toLowerCase();
+                const collectionName = (r.collectionName || '').toLowerCase();
+                
+                // Reject "Various Artists" releases
+                if (artistName.includes('various') || artistName === 'various artists') {
+                  console.log('❌ Rejected: Various Artists -', collectionName);
+                  return false;
+                }
+                
+                // Reject obvious compilations
+                const compilationKeywords = [
+                  'greatest hits', 'best of', 'collection', 'anthology',
+                  'number ones', 'top hits', 'ultimate', 'essential',
+                  'mixed', 'mixed by', 'dj', 'compilation', 'verzameling',
+                  'now that', 'hitzone', 'top 40', 'de afrekening'
+                ];
+                
+                for (const keyword of compilationKeywords) {
+                  if (collectionName.includes(keyword)) {
+                    console.log('❌ Rejected compilation:', collectionName);
+                    return false;
+                  }
+                }
+                
+                // CRITICAL: Artist name MUST closely match the search artist (minimum 85%)
+                const normalizedSearchArtist = artist.toLowerCase().trim();
+                const similarity = calculateSimilarity(artistName, normalizedSearchArtist);
+                
+                if (similarity < 85) {
+                  console.log(`❌ Rejected: Low artist similarity (${similarity.toFixed(0)}%) - "${r.artistName}" vs "${artist}"`);
+                  return false;
+                }
+                
                 return true;
               })
               .map((r: any) => {
                 const resultArtist = (r.artistName || '').toLowerCase().trim();
                 const resultTitle = (r.trackName || r.collectionName || '').toLowerCase().trim();
                 
-                // Calculate match score
+                // Calculate match score with HIGHER THRESHOLDS
                 let score = 0;
                 let matchDetails: string[] = [];
                 
-                // Exact artist match (very important)
+                // CRITICAL: Exact artist match REQUIRED (no fuzzy artist matching)
                 if (resultArtist === normalizedArtist) {
-                  score += 40;
-                  matchDetails.push('exact artist');
+                  score += 50; // Increased from 40
+                  matchDetails.push('EXACT ARTIST');
                 } else {
-                  // Fuzzy artist match
-                  const artistSimilarity = calculateSimilarity(resultArtist, normalizedArtist);
-                  if (artistSimilarity > 80) {
-                    score += Math.floor(artistSimilarity / 2.5);
-                    matchDetails.push(`fuzzy artist (${artistSimilarity.toFixed(0)}%)`);
-                  }
+                  // NO fuzzy artist match accepted - too risky for singles
+                  console.log(`⚠️ Skipping non-exact artist match: "${resultArtist}" vs "${normalizedArtist}"`);
+                  return { result: r, score: 0, matchDetails: [], isSingle: false };
                 }
                 
                 // Exact title match (very important)
                 if (resultTitle === normalizedTitle) {
-                  score += 40;
-                  matchDetails.push('exact title');
+                  score += 50; // Increased from 40
+                  matchDetails.push('EXACT TITLE');
                 } else {
-                  // Fuzzy title match
+                  // High similarity title match only
                   const titleSimilarity = calculateSimilarity(resultTitle, normalizedTitle);
-                  if (titleSimilarity > 80) {
-                    score += Math.floor(titleSimilarity / 2.5);
+                  if (titleSimilarity >= 90) { // Stricter: 90% minimum
+                    score += Math.floor(titleSimilarity / 2);
                     matchDetails.push(`fuzzy title (${titleSimilarity.toFixed(0)}%)`);
+                  } else {
+                    // Reject low similarity title matches
+                    return { result: r, score: 0, matchDetails: [], isSingle: false };
                   }
                 }
                 
                 // Bonus for single-specific validation
-                if (media_type === 'single' && r.trackCount === 1) {
-                  score += 10;
-                  matchDetails.push('single release');
+                if (media_type === 'single' && (r.trackCount === 1 || r.trackNumber === 1)) {
+                  score += 15; // Increased from 10
+                  matchDetails.push('VERIFIED SINGLE');
                 }
                 
                 // Bonus for higher resolution artwork
@@ -236,18 +364,18 @@ serve(async (req) => {
               console.log(`📊 Match details:`, bestMatch.matchDetails.join(', '));
               console.log(`🎵 Type: ${bestMatch.isSingle ? 'Single' : 'Album'}`);
               
-              // Require minimum score of 90 for quality matches (both artist + title must match well)
-              if (bestMatch.score >= 90 && bestMatch.result.artworkUrl100) {
+              // Require minimum score of 95 for quality matches (strict requirement)
+              if (bestMatch.score >= 95 && bestMatch.result.artworkUrl100) {
                 artworkUrl = bestMatch.result.artworkUrl100
                   .replace('100x100bb', '1200x1200bb')
                   .replace('100x100', '1200x1200');
                 artworkSource = 'itunes';
                 console.log('✅ Found iTunes artwork (high confidence):', artworkUrl);
-              } else if (bestMatch.score >= 70) {
-                console.log(`⚠️ iTunes match found but score too low (${bestMatch.score}/90 needed)`);
-                console.log(`💡 Consider: Artist="${bestMatch.result.artistName}", Title="${bestMatch.result.trackName || bestMatch.result.collectionName}"`);
+              } else if (bestMatch.score >= 80) {
+                console.log(`⚠️ iTunes match found but score too low (${bestMatch.score}/95 needed - STRICT threshold)`);
+                console.log(`💡 Rejected: Artist="${bestMatch.result.artistName}", Title="${bestMatch.result.trackName || bestMatch.result.collectionName}"`);
               } else {
-                console.log('⚠️ No good iTunes match found (score too low)');
+                console.log('⚠️ No good iTunes match found (score too low for strict threshold)');
               }
             }
           }
@@ -294,7 +422,7 @@ serve(async (req) => {
       }
     }
 
-    // Fallback: Search MusicBrainz + Cover Art Archive
+    // Strategy 5: Try MusicBrainz + Cover Art Archive as last resort
     if (!artworkUrl && artist && title) {
       try {
         const normalizedArtist = artist.toLowerCase().trim();

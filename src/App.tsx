@@ -92,6 +92,7 @@ import MainAdmin from "./pages/admin/MainAdmin";
 import CronjobMonitorPage from "./pages/admin/CronjobMonitorPage";
 import Quiz from "./pages/Quiz";
 import Pricing from "./pages/Pricing";
+import About from "./pages/About";
 import Prestaties from "./pages/Prestaties";
 import SpotifyProfile from "./pages/SpotifyProfile";
 import SpotifyCallback from "./pages/SpotifyCallback";
@@ -235,6 +236,7 @@ const AppContent = () => {
           </ProtectedRoute>
         } />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/about" element={<About />} />
         <Route path="/prestaties" element={
           <ProtectedRoute>
             <Prestaties />

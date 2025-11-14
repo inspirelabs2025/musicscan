@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles, Save, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useGenerateSpotlight, useUpdateSpotlight, useArtistSpotlight } from "@/hooks/useArtistSpotlight";
+import { useGenerateSpotlight, useUpdateSpotlight, useArtistSpotlightById } from "@/hooks/useArtistSpotlight";
 import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 
@@ -27,7 +27,7 @@ export const ArtistSpotlightEditor = () => {
   const [generatedStoryId, setGeneratedStoryId] = useState<string | null>(null);
 
   // Only fetch existing story if we're editing (id exists)
-  const { data: existingStory, isLoading: loadingStory } = useArtistSpotlight(id || "", {
+  const { data: existingStory, isLoading: loadingStory } = useArtistSpotlightById(id || "", {
     enabled: isEditing
   });
   const generateMutation = useGenerateSpotlight();
@@ -58,6 +58,21 @@ export const ArtistSpotlightEditor = () => {
       { artistName, initialText },
       {
         onSuccess: (data) => {
+          // Handle duplicate detection
+          if (data?.success === false && data?.code === 'DUPLICATE') {
+            toast({
+              title: "Spotlight bestaat al",
+              description: `Er bestaat al een spotlight voor ${artistName}.`,
+              variant: "default",
+            });
+            // Navigate to existing spotlight for editing
+            if (data.existing_id) {
+              navigate(`/admin/artist-spotlight/edit/${data.existing_id}`);
+            }
+            return;
+          }
+
+          // Normal success flow
           if (data.story) {
             setStoryContent(data.story.story_content);
             setSpotlightDescription(data.story.spotlight_description);
@@ -69,10 +84,14 @@ export const ArtistSpotlightEditor = () => {
             });
           }
         },
-        onError: (error) => {
+        onError: (error: any) => {
+          // Try to parse error context for better messages
+          const errorBody = error?.context?.body;
+          const errorMessage = errorBody?.error || error.message || "Er is een fout opgetreden bij het genereren.";
+          
           toast({
             title: "Generatie mislukt",
-            description: error.message,
+            description: errorMessage,
             variant: "destructive",
           });
         },

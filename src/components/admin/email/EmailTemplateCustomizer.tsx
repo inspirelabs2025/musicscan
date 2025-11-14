@@ -262,26 +262,60 @@ export const EmailTemplateCustomizer = () => {
     });
   };
 
-  const handleAIContentGenerated = (generatedContent: any) => {
-    console.log('Applying AI generated content:', generatedContent);
-    setConfig((prev: any) => {
-      const newConfig = {
+  // Normalize and validate AI-generated content for the target template type
+  const normalizeGeneratedContent = (generated: any, targetType: 'daily_digest' | 'weekly_discussion') => {
+    const normalized: any = {};
+    
+    if (targetType === 'daily_digest') {
+      // Daily digest requires: introText, outroText, ctaButtonText
+      normalized.introText = generated.introText || 'Welkom bij je dagelijkse update.';
+      normalized.outroText = generated.outroText || 'Bedankt voor het lezen!';
+      normalized.ctaButtonText = generated.ctaButtonText || 'Bekijk Nu';
+    } else {
+      // Weekly discussion requires: headerText, ctaButtonText
+      normalized.headerText = generated.headerText || generated.introText?.substring(0, 60) || 'Nieuwe Discussie';
+      normalized.ctaButtonText = generated.ctaButtonText || 'Doe Mee';
+    }
+    
+    return normalized;
+  };
+
+  const handleAIContentGenerated = (generatedContent: any, targetType: 'daily_digest' | 'weekly_discussion') => {
+    console.log('AI generated content received:', generatedContent, 'for type:', targetType);
+    
+    // Normalize content for the target type
+    const normalized = normalizeGeneratedContent(generatedContent, targetType);
+    console.log('Normalized content:', normalized);
+    
+    // If target type differs from current, switch template type
+    if (targetType !== templateType) {
+      console.log(`Switching from ${templateType} to ${targetType}`);
+      setTemplateType(targetType);
+      setConfig({
+        ...defaultConfig[targetType],
+        content: {
+          ...defaultConfig[targetType].content,
+          ...normalized
+        }
+      });
+      toast({
+        title: 'Template type gewijzigd',
+        description: `Overgezet naar ${targetType === 'daily_digest' ? 'Daily Digest' : 'Weekly Discussion'} met AI content`,
+      });
+    } else {
+      // Same type, just merge content
+      setConfig((prev: any) => ({
         ...prev,
         content: {
           ...prev.content,
-          ...generatedContent
+          ...normalized
         }
-      };
-      console.log('New config after AI generation:', newConfig);
-      return newConfig;
-    });
-    
-    // Show what was updated
-    const updatedFields = Object.keys(generatedContent).join(', ');
-    toast({
-      title: 'Content bijgewerkt',
-      description: `AI heeft ${updatedFields} gegenereerd en toegepast`,
-    });
+      }));
+      toast({
+        title: 'Content bijgewerkt',
+        description: `AI heeft ${Object.keys(normalized).join(', ')} gegenereerd`,
+      });
+    }
   };
 
   return (

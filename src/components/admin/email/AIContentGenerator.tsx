@@ -13,11 +13,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface AIContentGeneratorProps {
   templateType: 'daily_digest' | 'weekly_discussion';
   currentConfig: any;
-  onContentGenerated: (content: any) => void;
+  onContentGenerated: (content: any, targetType: 'daily_digest' | 'weekly_discussion') => void;
 }
 
 export const AIContentGenerator = ({ 
@@ -29,6 +36,7 @@ export const AIContentGenerator = ({
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [targetType, setTargetType] = useState<'daily_digest' | 'weekly_discussion'>(templateType);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -45,7 +53,7 @@ export const AIContentGenerator = ({
       const { data, error } = await supabase.functions.invoke('generate-email-content', {
         body: {
           prompt: prompt.trim(),
-          templateType,
+          templateType: targetType,
           currentConfig
         }
       });
@@ -54,7 +62,7 @@ export const AIContentGenerator = ({
 
       if (data?.content) {
         console.log('AI generated content received:', data.content);
-        onContentGenerated(data.content);
+        onContentGenerated(data.content, targetType);
         setIsOpen(false);
         setPrompt('');
       } else {
@@ -93,6 +101,23 @@ export const AIContentGenerator = ({
         </DialogHeader>
         <div className="space-y-4 pt-4">
           <div>
+            <Label>Doel Template Type</Label>
+            <Select value={targetType} onValueChange={(value: 'daily_digest' | 'weekly_discussion') => setTargetType(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily_digest">Daily Digest</SelectItem>
+                <SelectItem value="weekly_discussion">Weekly Discussion</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground mt-1">
+              {targetType === 'daily_digest' 
+                ? "Genereert: introText, outroText, ctaButtonText"
+                : "Genereert: headerText, ctaButtonText"}
+            </p>
+          </div>
+          <div>
             <Label>Content Prompt</Label>
             <Input
               placeholder="Bijv: Maak een enthousiaste intro over nieuwe jazz releases"
@@ -104,11 +129,6 @@ export const AIContentGenerator = ({
                 }
               }}
             />
-            <p className="text-sm text-muted-foreground mt-2">
-              {templateType === 'daily_digest' 
-                ? "Genereert: introText, outroText, ctaButtonText"
-                : "Genereert: headerText, ctaButtonText"}
-            </p>
           </div>
           <Button
             onClick={handleGenerate}

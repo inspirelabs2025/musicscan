@@ -63,12 +63,7 @@ Deno.serve(async (req) => {
     // Fetch all shop orders with related data
     const { data: orders, error } = await supabaseAdmin
       .from('shop_orders')
-      .select(`
-        *,
-        shop_order_items (*),
-        buyer:profiles!shop_orders_buyer_id_fkey (user_id, first_name, email, avatar_url),
-        seller:profiles!shop_orders_seller_id_fkey (user_id, first_name, email, avatar_url)
-      `)
+      .select('*, shop_order_items (*)')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -79,8 +74,49 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fetch buyer and seller profiles separately
+    const buyerIds = orders?.map(o => o.buyer_id).filter(Boolean) || [];
+    const sellerIds = orders?.map(o => o.seller_id).filter(Boolean) || [];
+    const allUserIds = [...new Set([...buyerIds, ...sellerIds])];
+
+    const { data: profiles, error: profilesError } = await supabaseAdmin
+      .from('profiles')
+      .select('user_id, first_name, avatar_url')
+      .in('user_id', allUserIds);
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+    }
+
+    // Get emails from auth.users
+    const { data: { users: authUsers }, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (authError) {
+      console.error('Error fetching auth users:', authError);
+    }
+
+    // Combine data
+    const ordersWithProfiles = orders?.map(order => {
+      const buyerProfile = profiles?.find(p => p.user_id === order.buyer_id);
+      const sellerProfile = profiles?.find(p => p.user_id === order.seller_id);
+      const buyerAuth = authUsers?.find(u => u.id === order.buyer_id);
+      const sellerAuth = authUsers?.find(u => u.id === order.seller_id);
+
+      return {
+        ...order,
+        buyer: buyerProfile ? {
+          ...buyerProfile,
+          email: buyerAuth?.email || order.buyer_email,
+        } : null,
+        seller: sellerProfile ? {
+          ...sellerProfile,
+          email: sellerAuth?.email || '',
+        } : null,
+      };
+    });
+
     return new Response(
-      JSON.stringify({ orders }),
+      JSON.stringify({ orders: ordersWithProfiles }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

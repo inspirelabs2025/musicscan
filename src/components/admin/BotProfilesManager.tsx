@@ -7,6 +7,7 @@ import { User } from "lucide-react";
 interface BotProfile {
   user_id: string;
   first_name: string;
+  last_name?: string;
   is_bot: boolean;
   created_at: string;
 }
@@ -23,7 +24,7 @@ export function BotProfilesManager() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, first_name, is_bot, created_at')
+        .select('user_id, first_name, last_name, is_bot, created_at')
         .eq('is_bot', true)
         .order('created_at', { ascending: false });
 
@@ -75,7 +76,10 @@ export function BotProfilesManager() {
                 <User className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{bot.first_name}</p>
+                <p className="text-sm font-medium truncate">
+                  {bot.first_name}
+                  {bot.last_name && ` ${bot.last_name}`}
+                </p>
                 <Badge variant="secondary" className="text-xs">
                   Bot
                 </Badge>

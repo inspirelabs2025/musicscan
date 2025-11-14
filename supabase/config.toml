@@ -175,6 +175,9 @@ verify_jwt = false
 [functions.create-bot-users]
 verify_jwt = false
 
+[functions.fix-bot-user-names]
+verify_jwt = false
+
 [functions.generate-ai-comment]
 verify_jwt = false
 

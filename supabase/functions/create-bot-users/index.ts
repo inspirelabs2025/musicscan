@@ -66,10 +66,15 @@ serve(async (req) => {
           continue;
         }
 
-        // Update profile to mark as bot
+        // Update profile to mark as bot and ensure name is set
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ is_bot: true, is_public: false })
+          .update({ 
+            is_bot: true, 
+            is_public: false,
+            first_name: botName.split(' ')[0],
+            last_name: botName.split(' ')[1] || null
+          })
           .eq('user_id', authData.user.id);
 
         if (profileError) {

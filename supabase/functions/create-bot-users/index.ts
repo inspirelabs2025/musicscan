@@ -72,8 +72,7 @@ serve(async (req) => {
           .update({ 
             is_bot: true, 
             is_public: false,
-            first_name: botName.split(' ')[0],
-            last_name: botName.split(' ')[1] || null
+            first_name: botName.split(' ')[0]
           })
           .eq('user_id', authData.user.id);
 

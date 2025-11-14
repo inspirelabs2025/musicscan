@@ -138,37 +138,93 @@ Schrijf in het Nederlands en maak het rijk aan details en verhaal.`;
     const storyData = JSON.parse(toolCall.function.arguments);
     console.log('Generated story structure:', Object.keys(storyData));
 
-    // Fetch album artwork from Discogs
+    // Fetch multiple album artworks from Discogs and generate AI artist portrait
     let artworkUrl = null;
     const spotlightImages = [];
+    
+    // 1. Generate AI artist portrait
+    console.log(`Generating AI portrait for: ${artistName}`);
+    try {
+      const imageResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash-image-preview',
+          messages: [{
+            role: 'user',
+            content: `Professional high-quality portrait photo of ${artistName}, music photographer style, realistic, studio lighting, artist portrait`
+          }],
+          modalities: ['image', 'text']
+        })
+      });
 
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json();
+        const artistImageUrl = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        
+        if (artistImageUrl) {
+          spotlightImages.push({
+            url: artistImageUrl,
+            type: 'artist',
+            caption: artistName,
+            alt_text: `${artistName} portrait`
+          });
+          console.log(`Generated AI artist portrait`);
+        }
+      }
+    } catch (error) {
+      console.error('Error generating AI portrait:', error);
+    }
+
+    // 2. Fetch album covers from Discogs (first 5 notable albums)
     if (DISCOGS_TOKEN && storyData.notable_albums?.length > 0) {
-      try {
-        const searchQuery = `${artistName} ${storyData.notable_albums[0]}`;
-        const discogsResponse = await fetch(
-          `https://api.discogs.com/database/search?q=${encodeURIComponent(searchQuery)}&type=release&per_page=1`,
-          {
-            headers: {
-              'Authorization': `Discogs token=${DISCOGS_TOKEN}`,
-              'User-Agent': 'MusicScan/1.0'
+      const albumsToFetch = storyData.notable_albums.slice(0, 5);
+      
+      for (const album of albumsToFetch) {
+        console.log(`Fetching album artwork for: ${album}`);
+        
+        try {
+          const searchQuery = `${artistName} ${album}`;
+          const discogsResponse = await fetch(
+            `https://api.discogs.com/database/search?q=${encodeURIComponent(searchQuery)}&type=release&per_page=1`,
+            {
+              headers: {
+                'Authorization': `Discogs token=${DISCOGS_TOKEN}`,
+                'User-Agent': 'MusicScan/1.0'
+              }
+            }
+          );
+
+          if (discogsResponse.ok) {
+            const discogsData = await discogsResponse.json();
+            if (discogsData.results?.[0]?.cover_image) {
+              const coverUrl = discogsData.results[0].cover_image;
+              // Skip placeholder images
+              if (coverUrl && !coverUrl.includes('spacer.gif')) {
+                spotlightImages.push({
+                  url: coverUrl,
+                  type: 'album',
+                  caption: album,
+                  alt_text: `${artistName} - ${album} album cover`
+                });
+                console.log(`Found album artwork for: ${album}`);
+                
+                // Set first album cover as main artwork
+                if (!artworkUrl) {
+                  artworkUrl = coverUrl;
+                }
+              }
             }
           }
-        );
-
-        if (discogsResponse.ok) {
-          const discogsData = await discogsResponse.json();
-          if (discogsData.results?.[0]?.cover_image) {
-            artworkUrl = discogsData.results[0].cover_image;
-            spotlightImages.push({
-              url: artworkUrl,
-              type: 'album',
-              caption: storyData.notable_albums[0],
-              alt_text: `${artistName} - ${storyData.notable_albums[0]} album cover`
-            });
-          }
+          
+          // Respect Discogs rate limits
+          await new Promise(resolve => setTimeout(resolve, 300));
+        } catch (error) {
+          console.error(`Error fetching album artwork for ${album}:`, error);
         }
-      } catch (error) {
-        console.error('Discogs fetch error:', error);
       }
     }
 

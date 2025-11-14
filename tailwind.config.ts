@@ -139,8 +139,46 @@ export default {
 				'fade-in': 'fade-in 0.6s ease-out',
 				'scan-pulse': 'scan-pulse 2s infinite',
 				'spin-slow': 'spin 3s linear infinite'
-			}
+			},
+			typography: {
+				DEFAULT: {
+					css: {
+						maxWidth: 'none',
+						color: 'inherit',
+						h2: {
+							fontWeight: '700',
+							letterSpacing: '-0.025em',
+							marginTop: '3rem',
+							marginBottom: '1.5rem',
+						},
+						h3: {
+							fontWeight: '600',
+							letterSpacing: '-0.025em',
+							marginTop: '2rem',
+							marginBottom: '1rem',
+						},
+						p: {
+							marginTop: '1rem',
+							marginBottom: '1rem',
+						},
+						strong: {
+							fontWeight: '600',
+							color: 'inherit',
+						},
+						a: {
+							color: 'hsl(var(--primary))',
+							textDecoration: 'none',
+							'&:hover': {
+								textDecoration: 'underline',
+							},
+						},
+					},
+				},
+			},
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		require("@tailwindcss/typography"),
+	],
 } satisfies Config;

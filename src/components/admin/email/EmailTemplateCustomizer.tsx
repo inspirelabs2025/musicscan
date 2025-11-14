@@ -263,13 +263,25 @@ export const EmailTemplateCustomizer = () => {
   };
 
   const handleAIContentGenerated = (generatedContent: any) => {
-    setConfig((prev: any) => ({
-      ...prev,
-      content: {
-        ...prev.content,
-        ...generatedContent
-      }
-    }));
+    console.log('Applying AI generated content:', generatedContent);
+    setConfig((prev: any) => {
+      const newConfig = {
+        ...prev,
+        content: {
+          ...prev.content,
+          ...generatedContent
+        }
+      };
+      console.log('New config after AI generation:', newConfig);
+      return newConfig;
+    });
+    
+    // Show what was updated
+    const updatedFields = Object.keys(generatedContent).join(', ');
+    toast({
+      title: 'Content bijgewerkt',
+      description: `AI heeft ${updatedFields} gegenereerd en toegepast`,
+    });
   };
 
   return (

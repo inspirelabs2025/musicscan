@@ -53,13 +53,16 @@ export const AIContentGenerator = ({
       if (error) throw error;
 
       if (data?.content) {
+        console.log('AI generated content received:', data.content);
         onContentGenerated(data.content);
-        toast({
-          title: "Content gegenereerd",
-          description: "AI heeft nieuwe email content aangemaakt",
-        });
         setIsOpen(false);
         setPrompt('');
+      } else {
+        toast({
+          title: "Geen content ontvangen",
+          description: "AI heeft geen content gegenereerd",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       console.error('Error generating content:', error);

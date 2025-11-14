@@ -26,7 +26,12 @@ serve(async (req) => {
 Genereer email content met deze structuur:
 - introText: Korte, pakkende intro (max 100 woorden)
 - outroText: Warme afsluiting (max 50 woorden)
-- ctaButtonText: Krachtige CTA button tekst (max 5 woorden)
+- ctaButtonText: Krachtige CTA button tekst (max 4 woorden, geen "en" of extra tekst)
+
+BELANGRIJK voor ctaButtonText:
+- Maximum 4 woorden
+- Geen voegwoorden zoals "en"
+- Voorbeelden: "Bekijk Nieuwe Releases", "Ontdek Nu", "Start Je Reis"
 
 Stijl: Enthousiast, vriendelijk, muziek-gepassioneerd. Spreek de lezer direct aan.
 Focus: Community, ontdekking, delen van muziekervaringen.`
@@ -34,7 +39,12 @@ Focus: Community, ontdekking, delen van muziekervaringen.`
 
 Genereer email content met deze structuur:
 - headerText: Pakkende kop over het discussie onderwerp (max 60 tekens)
-- ctaButtonText: Krachtige CTA button tekst (max 5 woorden)
+- ctaButtonText: Krachtige CTA button tekst (max 4 woorden)
+
+BELANGRIJK voor ctaButtonText:
+- Maximum 4 woorden
+- Geen voegwoorden
+- Voorbeelden: "Doe Nu Mee", "Deel Je Mening", "Join Discussie"
 
 Stijl: Uitnodigend, nieuwsgierig makend, community-gericht.
 Focus: Discussie stimuleren, engagement, muziek-kennis delen.`;

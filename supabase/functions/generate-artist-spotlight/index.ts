@@ -162,10 +162,13 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
     }
 
     const aiData = await aiResponse.json();
+    console.log('AI Response:', JSON.stringify(aiData, null, 2));
+    
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     
     if (!toolCall) {
-      throw new Error('No tool call in AI response');
+      console.error('No tool call found. AI response:', JSON.stringify(aiData));
+      throw new Error('AI did not return structured data. Please try again.');
     }
 
     const storyData = JSON.parse(toolCall.function.arguments);
@@ -313,6 +316,17 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
     const musicStyleArray = Array.isArray(storyData.music_style) 
       ? storyData.music_style 
       : [storyData.music_style];
+
+    // Check if spotlight already exists for this artist
+    const { data: existingSpotlight } = await supabase
+      .from('artist_stories')
+      .select('id, artist_name')
+      .eq('artist_name', artistName)
+      .single();
+
+    if (existingSpotlight) {
+      throw new Error(`Er bestaat al een spotlight voor ${artistName}. Verwijder eerst de bestaande spotlight of kies een andere artiest.`);
+    }
 
     // Insert into database
     const { data: insertedStory, error: insertError } = await supabase

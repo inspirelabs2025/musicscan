@@ -73,6 +73,28 @@ export const useArtistSpotlight = (slug: string, options?: { enabled?: boolean }
   });
 };
 
+export const useArtistSpotlightById = (id: string, options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: ['artist-spotlight-by-id', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('artist_stories')
+        .select('*')
+        .eq('id', id)
+        .eq('is_spotlight', true)
+        .single();
+
+      if (error) {
+        console.error('Error fetching spotlight by id:', error);
+        throw error;
+      }
+
+      return data as ArtistStory;
+    },
+    enabled: options?.enabled !== false && !!id,
+  });
+};
+
 export const useGenerateSpotlight = () => {
   const queryClient = useQueryClient();
 
@@ -81,6 +103,14 @@ export const useGenerateSpotlight = () => {
       const { data, error } = await supabase.functions.invoke('generate-artist-spotlight', {
         body: { artistName, initialText }
       });
+
+      // Handle 409 duplicate gracefully - return the payload instead of throwing
+      if (error && (error as any).context?.res?.status === 409) {
+        const body = (error as any).context?.body;
+        if (body && body.code === 'DUPLICATE') {
+          return body; // Return { success: false, code: 'DUPLICATE', existing_id, error }
+        }
+      }
 
       if (error) throw error;
       return data;

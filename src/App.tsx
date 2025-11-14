@@ -90,6 +90,7 @@ import SEOMonitoring from "./pages/admin/SEOMonitoring";
 import CuratedArtists from "./pages/admin/CuratedArtists";
 import MainAdmin from "./pages/admin/MainAdmin";
 import CronjobMonitorPage from "./pages/admin/CronjobMonitorPage";
+import EmailNotificationsPage from "./pages/admin/EmailNotificationsPage";
 import Quiz from "./pages/Quiz";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
@@ -326,6 +327,7 @@ const AppContent = () => {
                 
                 {/* User Management */}
                 <Route path="users" element={<UserManagement />} />
+                <Route path="email-notifications" element={<EmailNotificationsPage />} />
                 
                 {/* Products & Shop */}
                 <Route path="products" element={<AllProducts />} />

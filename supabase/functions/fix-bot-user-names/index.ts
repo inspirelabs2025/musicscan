@@ -64,17 +64,13 @@ serve(async (req) => {
         }
 
         const firstName = authUser.user.user_metadata?.first_name;
-        const fullName = authUser.user.user_metadata?.full_name;
 
         // Only update if we have a name and the profile doesn't have a first_name
         if (firstName && !profile.first_name) {
-          const lastName = fullName ? fullName.split(' ').slice(1).join(' ') : null;
-
           const { error: updateError } = await supabase
             .from('profiles')
             .update({
-              first_name: firstName,
-              last_name: lastName
+              first_name: firstName
             })
             .eq('user_id', profile.user_id);
 
@@ -86,8 +82,7 @@ serve(async (req) => {
 
           updated.push({
             user_id: profile.user_id,
-            first_name: firstName,
-            last_name: lastName
+            first_name: firstName
           });
 
           console.log(`✅ Updated bot profile: ${firstName}`);

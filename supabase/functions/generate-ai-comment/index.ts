@@ -80,10 +80,23 @@ Schrijf een korte, natuurlijke comment (50-150 woorden) die:
 - Authentiek Nederlands klinkt (niet te formeel, geen AI-achtige frases)
 - Natuurlijk overkomt alsof een echte fan schrijft
 
+BELANGRIJK voor variatie:
+- Wissel af tussen verschillende openingsstijlen (emotioneel, vraagstellend, feitelijk, anekdotisch)
+- Begin NIET altijd op dezelfde manier
+- Vermijd cliché openingszinnen zoals: "Ah...", "Oh...", "Tja...", "Nou...", "Tsja...", "Hmmm..."
+- Wees spontaan en natuurlijk, alsof je een vriend vertelt over de muziek
+
 Voorbeelden van goede comments:
 - "Dit nummer kwam ik voor het eerst tegen op MTV in 2004, die gitaarriff bleef dagenlang in mijn hoofd hangen! Wat een tijd was dat."
-- "Herinner me nog goed dat ik dit album kocht bij de Free Record Shop. Die overgangen tussen de tracks zijn zo smooth, blijft genieten."
-- "De productie op dit album is echt next level. Die drumcomputer beats klinken nog steeds fris."
+- "Wie kent deze klassieker niet? Op elk feestje draaide dit nummer. Die keyboard intro is zo herkenbaar."
+- "Jaren '90 nostalgie! Deze cd stond altijd in de wisselaar in de auto van mijn ouders. Die vocalen zijn echt tijdloos."
+- "Die bas op track 3 is echt fenomenaal. Je hoort het vakmanschap in elke noot. Pure klasse."
+- "Mijn broer had dit album op cassette en draaide het helemaal grijs. Nu snap ik waarom - wat een productie!"
+- "Free Record Shop had dit in de aanbieding, beste aankoop ooit. Die drumcomputer beats zijn iconisch."
+- "Track 5 blijft mijn favoriet, ook na 25 jaar. Die gitaarsolo geeft me nog steeds kippenvel."
+- "In de lijn van vergelijkbare artiesten, maar toch uniek. Deze plaat verdient veel meer erkenning."
+- "Geweldig album! Die overgang tussen track 2 en 3 is zo smooth, blijft genieten elke keer."
+- "Wat een vondst bij de kringloop! Voor 2 euro. Die productie klinkt nog steeds fris en modern."
 
 Schrijf alleen de comment zelf, geen extra tekst of uitleg.`;
 
@@ -100,14 +113,14 @@ Schrijf alleen de comment zelf, geen extra tekst of uitleg.`;
             messages: [
               {
                 role: 'system',
-                content: 'Je bent een ervaren Nederlandse muziekliefhebber die authentieke, persoonlijke comments schrijft over muziek. Je schrijft natuurlijk en spontaan, zoals een echte fan zou doen.'
+                content: 'Je bent een ervaren Nederlandse muziekliefhebber die authentieke, persoonlijke comments schrijft over muziek. Je schrijft natuurlijk en spontaan, zoals een echte fan zou doen. Je varieert altijd in je openingsstijl en vermijdt clichématige beginzinnen.'
               },
               {
                 role: 'user',
                 content: prompt
               }
             ],
-            temperature: 0.9,
+            temperature: 1.0,
             max_tokens: 300
           })
         });

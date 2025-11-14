@@ -20,7 +20,16 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get blog posts without AI-generated comments
-    const { data: posts, error: postsError } = await supabase
+    // First, get all blog post IDs that already have AI comments
+    const { data: postsWithComments } = await supabase
+      .from('blog_comments')
+      .select('blog_post_id')
+      .eq('is_ai_generated', true);
+
+    const postIdsWithComments = postsWithComments?.map(c => c.blog_post_id) || [];
+
+    // Then get published posts that don't have AI comments yet
+    let query = supabase
       .from('blog_posts')
       .select(`
         id,
@@ -32,7 +41,14 @@ serve(async (req) => {
         is_published
       `)
       .eq('is_published', true)
-      .limit(batch_size);
+      .order('created_at', { ascending: false });
+
+    // Exclude posts that already have AI comments
+    if (postIdsWithComments.length > 0) {
+      query = query.not('id', 'in', `(${postIdsWithComments.join(',')})`);
+    }
+
+    const { data: posts, error: postsError } = await query.limit(batch_size);
 
     if (postsError) {
       throw new Error(`Failed to fetch blog posts: ${postsError.message}`);
@@ -62,22 +78,6 @@ serve(async (req) => {
 
     for (const post of posts) {
       try {
-        // Check if post already has AI comments
-        const { data: existingComments } = await supabase
-          .from('blog_comments')
-          .select('id')
-          .eq('blog_post_id', post.id)
-          .eq('is_ai_generated', true);
-
-        if (existingComments && existingComments.length > 0) {
-          console.log(`⏭️  Post ${post.slug} already has AI comments, skipping`);
-          results.details.push({
-            slug: post.slug,
-            status: 'skipped',
-            reason: 'already_has_comments'
-          });
-          continue;
-        }
 
         // Extract metadata from yaml_frontmatter
         const frontmatter = post.yaml_frontmatter || {};

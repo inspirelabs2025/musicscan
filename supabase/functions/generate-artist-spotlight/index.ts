@@ -141,8 +141,9 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
                   description: 'Array of 5-8 notable album names'
                 },
                 music_style: {
-                  type: 'string',
-                  description: 'Primary music style/genre'
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Array of music styles/genres (e.g., ["Jazz", "Bebop", "Cool Jazz"])'
                 }
               },
               required: ['story_content', 'spotlight_description', 'notable_albums', 'music_style'],
@@ -308,6 +309,11 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
     const wordCount = storyData.story_content.split(/\s+/).length;
     const readingTime = Math.ceil(wordCount / 200);
 
+    // Ensure music_style is an array
+    const musicStyleArray = Array.isArray(storyData.music_style) 
+      ? storyData.music_style 
+      : [storyData.music_style];
+
     // Insert into database
     const { data: insertedStory, error: insertError } = await supabase
       .from('artist_stories')
@@ -317,7 +323,7 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
         story_content: storyData.story_content,
         spotlight_description: storyData.spotlight_description,
         notable_albums: storyData.notable_albums,
-        music_style: storyData.music_style,
+        music_style: musicStyleArray,
         spotlight_images: spotlightImages,
         featured_products: featuredProducts,
         artwork_url: artworkUrl,

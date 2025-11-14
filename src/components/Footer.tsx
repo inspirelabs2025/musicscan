@@ -65,6 +65,9 @@ export const Footer = () => {
           <div className="space-y-4">
             <h3 className="font-semibold text-foreground">Support</h3>
             <div className="space-y-2">
+              <Link to="/about" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+                Over MusicScan
+              </Link>
               <Link to="/pricing" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 Prijzen
               </Link>

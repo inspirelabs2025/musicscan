@@ -14,7 +14,6 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useDiscogsNews } from '@/hooks/useNewsCache';
-import { useMuziekVerhalen } from '@/hooks/useMuziekVerhalen';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 

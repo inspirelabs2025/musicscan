@@ -144,7 +144,8 @@ export const useFeaturedEpisodes = (limit = 6) => {
   return useQuery({
     queryKey: ['featured-episodes', limit],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First try to get featured episodes
+      const { data: featuredData, error: featuredError } = await supabase
         .from('spotify_show_episodes')
         .select(`
           *,
@@ -155,8 +156,26 @@ export const useFeaturedEpisodes = (limit = 6) => {
         .order('release_date', { ascending: false })
         .limit(limit);
 
-      if (error) throw error;
-      return data;
+      if (featuredError) throw featuredError;
+      
+      // If we have featured episodes, return them
+      if (featuredData && featuredData.length > 0) {
+        return featuredData;
+      }
+
+      // Otherwise, get the most recent episodes from active shows
+      const { data: recentData, error: recentError } = await supabase
+        .from('spotify_show_episodes')
+        .select(`
+          *,
+          spotify_curated_shows!inner(*)
+        `)
+        .eq('spotify_curated_shows.is_active', true)
+        .order('release_date', { ascending: false })
+        .limit(limit);
+
+      if (recentError) throw recentError;
+      return recentData;
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
   });

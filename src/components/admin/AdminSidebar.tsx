@@ -28,7 +28,8 @@ import {
   Shield,
   BookOpen,
   MessageSquare,
-  Mail
+  Mail,
+  Sparkles
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -84,6 +85,7 @@ const menuItems = [
       { title: "Photo Stylizer", url: "/admin/photo-stylizer", icon: Wand2 },
       { title: "Singles Importer", url: "/admin/singles-importer", icon: Music },
       { title: "Artist Stories", url: "/admin/artist-stories-generator", icon: Users },
+      { title: "Artist Spotlights", url: "/admin/artist-spotlights", icon: Sparkles },
     ]
   },
   {

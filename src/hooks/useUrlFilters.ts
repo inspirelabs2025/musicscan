@@ -44,7 +44,7 @@ export function useUrlFilters(initialFilters: Partial<FilterState> = {}) {
     } else {
       newParams.delete(key === 'search' ? 'q' : key);
     }
-    setSearchParams(newParams);
+    setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
   const resetFilters = useCallback(() => {
@@ -60,7 +60,7 @@ export function useUrlFilters(initialFilters: Partial<FilterState> = {}) {
       status: 'all',
       albumType: 'all'
     });
-    setSearchParams({});
+    setSearchParams({}, { replace: true });
   }, [setSearchParams]);
 
   const getActiveFilterCount = useCallback(() => {

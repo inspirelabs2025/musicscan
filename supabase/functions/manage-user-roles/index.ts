@@ -46,7 +46,8 @@ serve(async (req) => {
     );
 
     // Verify user is authenticated
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    const token = (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader) as string;
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     console.log('User retrieved:', user ? user.email : 'null', 'Error:', userError?.message);
     
     if (userError || !user) {

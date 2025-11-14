@@ -23,12 +23,12 @@ export const useUserManagement = () => {
     try {
       setLoading(true);
       
-      const params = new URLSearchParams();
-      if (searchQuery) params.append('search', searchQuery);
-      if (roleFilter && roleFilter !== 'all') params.append('role', roleFilter);
+      const requestBody: any = { action: 'list' };
+      if (searchQuery) requestBody.search = searchQuery;
+      if (roleFilter && roleFilter !== 'all') requestBody.role = roleFilter;
 
       const { data, error } = await supabase.functions.invoke('manage-user-roles', {
-        method: 'GET',
+        body: requestBody,
       });
 
       if (error) throw error;
@@ -58,8 +58,7 @@ export const useUserManagement = () => {
   const assignRole = async (userId: string, role: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('manage-user-roles', {
-        method: 'POST',
-        body: { userId, role },
+        body: { action: 'assign', userId, role },
       });
 
       if (error) throw error;
@@ -87,8 +86,7 @@ export const useUserManagement = () => {
   const removeRole = async (userId: string, role: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('manage-user-roles', {
-        method: 'DELETE',
-        body: { userId, role },
+        body: { action: 'remove', userId, role },
       });
 
       if (error) throw error;

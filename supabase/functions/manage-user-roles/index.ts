@@ -76,10 +76,15 @@ serve(async (req) => {
     );
 
     const url = new URL(req.url);
-    const method = req.method;
+    
+    // Parse request body for action
+    const body = req.method === 'POST' ? await req.json() : {};
+    const action = body.action || 'list';
+    
+    console.log('Action:', action, 'Body:', body);
 
-    // GET - Fetch all users with their roles
-    if (method === 'GET') {
+    // LIST - Fetch all users with their roles
+    if (action === 'list') {
       const searchQuery = url.searchParams.get('search') || '';
       const roleFilter = url.searchParams.get('role') || '';
 
@@ -145,9 +150,9 @@ serve(async (req) => {
       );
     }
 
-    // POST - Assign role to user
-    if (method === 'POST') {
-      const { userId, role } = await req.json();
+    // ASSIGN - Assign role to user
+    if (action === 'assign') {
+      const { userId, role } = body;
 
       if (!userId || !role) {
         return new Response(
@@ -187,9 +192,9 @@ serve(async (req) => {
       );
     }
 
-    // DELETE - Remove role from user
-    if (method === 'DELETE') {
-      const { userId, role } = await req.json();
+    // REMOVE - Remove role from user
+    if (action === 'remove') {
+      const { userId, role } = body;
 
       if (!userId || !role) {
         return new Response(

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from "react-markdown";
 import { MusicGroupStructuredData } from "@/components/SEO/MusicGroupStructuredData";
+import { ImageGallery } from "@/components/spotlight/ImageGallery";
 
 const ArtistSpotlight = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -136,8 +137,26 @@ const ArtistSpotlight = () => {
 
                 <Separator className="mb-8" />
 
-                {/* Story Content */}
-                <div className="prose prose-lg dark:prose-invert max-w-none">
+                {/* Image Gallery */}
+                {spotlight.spotlight_images && spotlight.spotlight_images.length > 0 && (
+                  <div className="mb-8">
+                    <ImageGallery 
+                      images={spotlight.spotlight_images} 
+                      artistName={spotlight.artist_name}
+                    />
+                  </div>
+                )}
+
+                {/* Story Content with Enhanced Typography */}
+                <div className="prose prose-lg dark:prose-invert max-w-none
+                  prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-foreground
+                  prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6
+                  prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4
+                  prose-p:text-base prose-p:leading-relaxed prose-p:mb-4 prose-p:text-foreground
+                  prose-strong:font-semibold prose-strong:text-foreground
+                  prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                  prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4
+                  prose-li:text-foreground prose-li:my-2">
                   <ReactMarkdown>{spotlight.story_content}</ReactMarkdown>
                 </div>
               </div>

@@ -14,6 +14,7 @@ import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
 import Home from "./pages/Home";
+import ArtistSearchResults from "./pages/ArtistSearchResults";
 import Scanner from "./pages/Scanner";
 import Scan from "./pages/Scan";
 import QuickPriceCheck from "./pages/QuickPriceCheck";
@@ -163,6 +164,7 @@ const AppContent = () => {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<Home />} />
+        <Route path="/search/artist" element={<ArtistSearchResults />} />
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />

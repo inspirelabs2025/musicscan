@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePlatformProducts } from "@/hooks/usePlatformProducts";
+import { usePlatformProductCounts } from "@/hooks/usePlatformProductCounts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Sparkles, Eye, Palette } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
@@ -26,6 +27,9 @@ export default function PosterShop() {
     featured: showFeatured || undefined,
     onSale: showOnSale || undefined,
   });
+
+  // Get accurate counts from database
+  const { data: productCounts } = usePlatformProductCounts();
 
   // Filter only POSTER products
   const posterProducts = allProducts?.filter(product => 
@@ -70,17 +74,6 @@ export default function PosterShop() {
     ? Math.round(posterProducts.reduce((sum, p) => sum + p.price, 0) / posterProducts.length) 
     : 0;
 
-  // Calculate prices for category navigation
-  const metalPrintsMinPrice = metalProducts?.length 
-    ? Math.min(...metalProducts.map(p => p.price))
-    : 0;
-  const postersMinPrice = posterProducts?.length 
-    ? Math.min(...posterProducts.map(p => p.price))
-    : 0;
-  const canvasMinPrice = canvasProducts?.length 
-    ? Math.min(...canvasProducts.map(p => p.price))
-    : 0;
-
   return (
     <>
       <Helmet>
@@ -117,12 +110,12 @@ export default function PosterShop() {
           {/* Category Navigation */}
           <CategoryNavigation
             currentCategory="poster"
-            metalPrintsCount={metalProducts?.length || 0}
-            postersCount={posterProducts?.length || 0}
-            canvasCount={canvasProducts?.length || 0}
-            metalPrintsMinPrice={metalPrintsMinPrice}
-            postersMinPrice={postersMinPrice}
-            canvasMinPrice={canvasMinPrice}
+            metalPrintsCount={productCounts?.metalPrintsCount || 0}
+            postersCount={productCounts?.postersCount || 0}
+            canvasCount={productCounts?.canvasCount || 0}
+            metalPrintsMinPrice={productCounts?.metalPrintsMinPrice || 0}
+            postersMinPrice={productCounts?.postersMinPrice || 0}
+            canvasMinPrice={productCounts?.canvasMinPrice || 0}
           />
 
           {/* Hero Header */}
@@ -143,7 +136,7 @@ export default function PosterShop() {
               {/* Stats Row */}
               <div className="flex flex-wrap gap-6 pt-4">
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold">{posterProducts?.length || 0}</div>
+                  <div className="text-3xl font-bold">{productCounts?.postersCount || 0}</div>
                   <div className="text-sm text-white/80">Posters</div>
                 </div>
                 <div className="space-y-1">

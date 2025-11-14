@@ -15,6 +15,8 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const authHeader = req.headers.get('Authorization');
 
+    console.log('Authorization header present:', !!authHeader);
+
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),

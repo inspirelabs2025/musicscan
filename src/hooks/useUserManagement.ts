@@ -16,7 +16,7 @@ export const useUserManagement = () => {
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
   const { toast } = useToast();
 
   const fetchUsers = async () => {
@@ -25,7 +25,7 @@ export const useUserManagement = () => {
       
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
-      if (roleFilter) params.append('role', roleFilter);
+      if (roleFilter && roleFilter !== 'all') params.append('role', roleFilter);
 
       const { data, error } = await supabase.functions.invoke('manage-user-roles', {
         method: 'GET',

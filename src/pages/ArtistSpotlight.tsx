@@ -141,7 +141,11 @@ const ArtistSpotlight = () => {
                 {spotlight.spotlight_images && spotlight.spotlight_images.length > 0 && (
                   <div className="mb-8">
                     <ImageGallery 
-                      images={spotlight.spotlight_images} 
+                      images={spotlight.spotlight_images.filter((img: any) => 
+                        img.url && 
+                        img.url.startsWith('http') && 
+                        img.url.length < 1000
+                      )} 
                       artistName={spotlight.artist_name}
                     />
                   </div>

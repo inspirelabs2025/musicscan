@@ -163,19 +163,40 @@ export const useFeaturedEpisodes = (limit = 6) => {
         return featuredData;
       }
 
-      // Otherwise, get the most recent episodes from active shows
-      const { data: recentData, error: recentError } = await supabase
-        .from('spotify_show_episodes')
-        .select(`
-          *,
-          spotify_curated_shows!inner(*)
-        `)
-        .eq('spotify_curated_shows.is_active', true)
-        .order('release_date', { ascending: false })
-        .limit(limit);
+      // Otherwise, get diverse episodes from different shows
+      // First get all active shows
+      const { data: shows, error: showsError } = await supabase
+        .from('spotify_curated_shows')
+        .select('id')
+        .eq('is_active', true);
 
-      if (recentError) throw recentError;
-      return recentData;
+      if (showsError) throw showsError;
+      if (!shows || shows.length === 0) return [];
+
+      // Get 1-2 recent episodes from each show
+      const episodesPerShow = Math.ceil(limit / shows.length);
+      const episodePromises = shows.map(show =>
+        supabase
+          .from('spotify_show_episodes')
+          .select(`
+            *,
+            spotify_curated_shows!inner(*)
+          `)
+          .eq('show_id', show.id)
+          .eq('spotify_curated_shows.is_active', true)
+          .order('release_date', { ascending: false })
+          .limit(episodesPerShow)
+      );
+
+      const results = await Promise.all(episodePromises);
+      
+      // Combine all episodes and shuffle for variety
+      const allEpisodes = results
+        .flatMap(result => result.data || [])
+        .sort(() => Math.random() - 0.5) // Shuffle
+        .slice(0, limit); // Take only the requested limit
+
+      return allEpisodes;
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
   });

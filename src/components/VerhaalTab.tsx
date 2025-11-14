@@ -54,10 +54,10 @@ export const VerhaalTab: React.FC = () => {
 
   const debouncedSearch = useDebounceSearch(searchInput, 300);
   
-  // Update URL filter when debounced search changes
-  React.useEffect(() => {
-    updateFilter('search', debouncedSearch);
-  }, [debouncedSearch]);
+  // No URL updates on typing to avoid reloads
+  // React.useEffect(() => {
+  //   updateFilter('search', debouncedSearch);
+  // }, [debouncedSearch]);
   
   // Album stories (existing blog posts)
   const {
@@ -208,6 +208,7 @@ export const VerhaalTab: React.FC = () => {
               placeholder="Zoek in verhalen..." 
               value={searchInput} 
               onChange={e => setSearchInput(e.target.value)} 
+              onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
               className="pl-10" 
             />
           </div>

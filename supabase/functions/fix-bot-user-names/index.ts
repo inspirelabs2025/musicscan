@@ -25,7 +25,7 @@ serve(async (req) => {
     // Get all bot profiles
     const { data: botProfiles, error: profileError } = await supabase
       .from('profiles')
-      .select('user_id, first_name, last_name, is_bot')
+      .select('user_id, first_name, is_bot')
       .eq('is_bot', true);
 
     if (profileError) {
@@ -68,13 +68,10 @@ serve(async (req) => {
 
         // Only update if we have a name and the profile doesn't have a first_name
         if (firstName && !profile.first_name) {
-          const lastName = fullName ? fullName.split(' ').slice(1).join(' ') : null;
-
           const { error: updateError } = await supabase
             .from('profiles')
             .update({
-              first_name: firstName,
-              last_name: lastName
+              first_name: firstName
             })
             .eq('user_id', profile.user_id);
 
@@ -86,8 +83,7 @@ serve(async (req) => {
 
           updated.push({
             user_id: profile.user_id,
-            first_name: firstName,
-            last_name: lastName
+            first_name: firstName
           });
 
           console.log(`✅ Updated bot profile: ${firstName}`);

@@ -19,6 +19,10 @@ export interface ArtistStory {
   meta_description?: string;
   created_at: string;
   published_at?: string;
+  is_spotlight: boolean;
+  spotlight_images?: any[];
+  spotlight_description?: string;
+  featured_products?: string[];
 }
 
 interface UseArtistStoriesOptions {

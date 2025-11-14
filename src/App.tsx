@@ -135,6 +135,10 @@ import Singles from "./pages/Singles";
 import SingleDetail from "./pages/SingleDetail";
 import Artists from "./pages/Artists";
 import ArtistDetail from "./pages/ArtistDetail";
+import ArtistSpotlights from "./pages/ArtistSpotlights";
+import ArtistSpotlight from "./pages/ArtistSpotlight";
+import ArtistSpotlightsAdmin from "./pages/admin/ArtistSpotlights";
+import { ArtistSpotlightEditor } from "./components/admin/ArtistSpotlightEditor";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -302,6 +306,9 @@ const AppContent = () => {
         <Route path="/releases" element={<Releases />} />
         <Route path="/news" element={<Navigate to="/verhalen" replace />} />
         <Route path="/nieuws/:slug" element={<NewsPost />} />
+        <Route path="/artist/:slug" element={<ArtistDetail />} />
+        <Route path="/artist-spotlights" element={<ArtistSpotlights />} />
+        <Route path="/artist-spotlight/:slug" element={<ArtistSpotlight />} />
         
         {/* Test Pages - Redirect to /admin/test/* */}
         <Route path="/test-music-news" element={<Navigate to="/admin/test/music-news" replace />} />
@@ -346,6 +353,9 @@ const AppContent = () => {
                 <Route path="photo-stylizer" element={<PhotoStylizer />} />
                 <Route path="singles-importer" element={<SinglesImporterPage />} />
                 <Route path="artist-stories-generator" element={<ArtistStoriesGenerator />} />
+                <Route path="artist-spotlights" element={<ArtistSpotlightsAdmin />} />
+                <Route path="artist-spotlight/new" element={<ArtistSpotlightEditor />} />
+                <Route path="artist-spotlight/edit/:id" element={<ArtistSpotlightEditor />} />
                 
                 {/* Content Management */}
                 <Route path="curated-artists" element={<CuratedArtists />} />

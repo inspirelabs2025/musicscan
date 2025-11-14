@@ -408,8 +408,10 @@ export type Database = {
           created_at: string
           cultural_impact: string | null
           discogs_artist_id: number | null
+          featured_products: string[] | null
           id: string
           is_published: boolean | null
+          is_spotlight: boolean | null
           meta_description: string | null
           meta_title: string | null
           music_style: string[] | null
@@ -417,6 +419,8 @@ export type Database = {
           published_at: string | null
           reading_time: number | null
           slug: string
+          spotlight_description: string | null
+          spotlight_images: Json | null
           story_content: string
           updated_at: string
           user_id: string | null
@@ -430,8 +434,10 @@ export type Database = {
           created_at?: string
           cultural_impact?: string | null
           discogs_artist_id?: number | null
+          featured_products?: string[] | null
           id?: string
           is_published?: boolean | null
+          is_spotlight?: boolean | null
           meta_description?: string | null
           meta_title?: string | null
           music_style?: string[] | null
@@ -439,6 +445,8 @@ export type Database = {
           published_at?: string | null
           reading_time?: number | null
           slug: string
+          spotlight_description?: string | null
+          spotlight_images?: Json | null
           story_content: string
           updated_at?: string
           user_id?: string | null
@@ -452,8 +460,10 @@ export type Database = {
           created_at?: string
           cultural_impact?: string | null
           discogs_artist_id?: number | null
+          featured_products?: string[] | null
           id?: string
           is_published?: boolean | null
+          is_spotlight?: boolean | null
           meta_description?: string | null
           meta_title?: string | null
           music_style?: string[] | null
@@ -461,6 +471,8 @@ export type Database = {
           published_at?: string | null
           reading_time?: number | null
           slug?: string
+          spotlight_description?: string | null
+          spotlight_images?: Json | null
           story_content?: string
           updated_at?: string
           user_id?: string | null

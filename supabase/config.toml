@@ -103,6 +103,9 @@ verify_jwt = false
 [functions.generate-email-content]
 verify_jwt = true
 
+[functions.generate-artist-spotlight]
+verify_jwt = false
+
 [functions.test-email-notification]
 verify_jwt = false
 

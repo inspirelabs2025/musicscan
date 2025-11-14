@@ -1745,6 +1745,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          config: Json
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          preview_html: string | null
+          template_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          preview_html?: string | null
+          template_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          preview_html?: string | null
+          template_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       forum_post_votes: {
         Row: {
           created_at: string

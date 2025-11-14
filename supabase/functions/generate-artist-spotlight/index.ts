@@ -36,7 +36,7 @@ serve(async (req) => {
       const { data: existingByName } = await supabase
         .from('artist_stories')
         .select('id')
-        .ilike('artist_name', artistName)
+        .eq('artist_name', artistName)
         .maybeSingle();
 
       if (existingByName) {
@@ -342,15 +342,24 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
       ? storyData.music_style 
       : [storyData.music_style];
 
-    // Check if spotlight already exists for this artist
+    // Late duplicate guard (race condition safe)
     const { data: existingSpotlight } = await supabase
       .from('artist_stories')
       .select('id, artist_name')
       .eq('artist_name', artistName)
-      .single();
+      .maybeSingle();
 
     if (existingSpotlight) {
-      throw new Error(`Er bestaat al een spotlight voor ${artistName}. Verwijder eerst de bestaande spotlight of kies een andere artiest.`);
+      console.warn(`Duplicate detected post-generation for ${artistName}, aborting insert.`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Er bestaat al een spotlight voor ${artistName}.`,
+          code: 'DUPLICATE',
+          existing_id: existingSpotlight.id
+        }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Insert into database

@@ -13,7 +13,7 @@ import { LatestReleasesSection } from '@/components/home/LatestReleasesSection';
 import { NewsAndStoriesSection } from '@/components/home/NewsAndStoriesSection';
 import { AIFeaturesCompact } from '@/components/home/AIFeaturesCompact';
 import { CommunityStats } from '@/components/home/CommunityStats';
-import { ConditionalFooter } from '@/components/ConditionalFooter';
+
 import { FeaturedPhotos } from '@/components/FeaturedPhotos';
 import { DailyAnecdote } from '@/components/home/DailyAnecdote';
 import { MusicHistorySpotlight } from '@/components/home/MusicHistorySpotlight';
@@ -130,7 +130,7 @@ const Home = () => {
         </div>
       </section>
 
-      <ConditionalFooter />
+      
     </div>
   );
 };

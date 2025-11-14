@@ -1,7 +1,6 @@
 import { useSEO } from '@/hooks/useSEO';
 import { Music, Heart, Sparkles, Headphones } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ConditionalFooter } from '@/components/ConditionalFooter';
 
 const About = () => {
   useSEO({
@@ -137,7 +136,7 @@ const About = () => {
         </div>
       </section>
 
-      <ConditionalFooter />
+      
     </div>
   );
 };

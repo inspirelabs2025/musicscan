@@ -34,11 +34,20 @@ export const useUserManagement = () => {
       if (error) throw error;
 
       setUsers(data.users || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching users:', error);
+      
+      let errorMessage = 'Failed to fetch users';
+      
+      if (error.message?.includes('Unauthorized')) {
+        errorMessage = 'Je bent niet ingelogd. Log in als admin gebruiker.';
+      } else if (error.message?.includes('Forbidden')) {
+        errorMessage = 'Je hebt geen admin rechten. Vraag een admin om je de admin rol te geven.';
+      }
+      
       toast({
         title: 'Error',
-        description: 'Failed to fetch users',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

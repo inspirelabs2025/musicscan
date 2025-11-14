@@ -27,20 +27,28 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Verify user has admin role
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
+    // Verify user has admin role - extract token and pass explicitly
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    console.log('User retrieved:', user ? user.email : 'null', 'Error:', userError?.message);
+    
+    if (userError || !user) {
+      console.error('User authentication failed:', userError);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized: Invalid or expired token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Check if user has admin role
-    const { data: hasAdminRole } = await supabaseClient
+    const { data: hasAdminRole, error: roleError } = await supabaseClient
       .rpc('has_role', { _user_id: user.id, _role: 'admin' });
 
-    if (!hasAdminRole) {
+    console.log('Admin check:', hasAdminRole, 'Error:', roleError?.message);
+
+    if (roleError || !hasAdminRole) {
+      console.error('Admin check failed:', roleError);
       return new Response(
         JSON.stringify({ error: 'Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { ArtistStory } from "./useArtistStories";
 
 interface GenerateSpotlightParams {
@@ -104,11 +105,17 @@ export const useGenerateSpotlight = () => {
         body: { artistName, initialText }
       });
 
-      // Handle 409 duplicate gracefully - return the payload instead of throwing
-      if (error && (error as any).context?.res?.status === 409) {
-        const body = (error as any).context?.body;
-        if (body && body.code === 'DUPLICATE') {
-          return body; // Return { success: false, code: 'DUPLICATE', existing_id, error }
+      // Handle 409 duplicate gracefully
+      if (error instanceof FunctionsHttpError) {
+        try {
+          const errorBody = await error.context.json();
+          // If it's a duplicate, return the payload instead of throwing
+          if (errorBody?.code === 'DUPLICATE') {
+            return errorBody; // { success: false, code: 'DUPLICATE', existing_id, error }
+          }
+        } catch (jsonError) {
+          // If we can't parse JSON, throw original error
+          throw error;
         }
       }
 

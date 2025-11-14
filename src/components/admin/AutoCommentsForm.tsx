@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BotProfilesManager } from "./BotProfilesManager";
-import { Users, MessageSquare, Play, BarChart3, ExternalLink, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Users, MessageSquare, Play, BarChart3, ExternalLink, CheckCircle2, XCircle, AlertCircle, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export function AutoCommentsForm() {
@@ -54,6 +54,37 @@ export function AutoCommentsForm() {
       console.error('Error creating bot users:', error);
       toast({
         title: "Fout bij aanmaken bot gebruikers",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleFixBotUserNames = async () => {
+    try {
+      setIsProcessing(true);
+      toast({
+        title: "Bot gebruikers namen herstellen...",
+        description: "Namen worden toegevoegd aan bot profiles",
+      });
+
+      const { data, error } = await supabase.functions.invoke('fix-bot-user-names');
+
+      if (error) throw error;
+
+      toast({
+        title: "✅ Bot namen hersteld!",
+        description: `${data.updated_count} bot gebruikers geupdate`,
+      });
+
+      // Reload stats
+      loadStats();
+    } catch (error: any) {
+      console.error('Error fixing bot names:', error);
+      toast({
+        title: "Fout bij herstellen namen",
         description: error.message,
         variant: "destructive",
       });
@@ -407,6 +438,15 @@ export function AutoCommentsForm() {
             >
               <Users className="w-4 h-4 mr-2" />
               Bot Gebruikers Aanmaken
+            </Button>
+
+            <Button 
+              onClick={handleFixBotUserNames}
+              disabled={isProcessing}
+              variant="outline"
+            >
+              <Wrench className="w-4 h-4 mr-2" />
+              Namen Herstellen
             </Button>
 
             <BotProfilesManager />

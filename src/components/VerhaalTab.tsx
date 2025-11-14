@@ -49,8 +49,15 @@ export const VerhaalTab: React.FC = () => {
     updateFilter,
     resetFilters
   } = useUrlFilters();
+  
+  const [searchInput, setSearchInput] = useState(filters.search || '');
 
-  const debouncedSearch = useDebounceSearch(filters.search || '', 300);
+  const debouncedSearch = useDebounceSearch(searchInput, 300);
+  
+  // Update URL filter when debounced search changes
+  React.useEffect(() => {
+    updateFilter('search', debouncedSearch);
+  }, [debouncedSearch]);
   
   // Album stories (existing blog posts)
   const {
@@ -91,6 +98,11 @@ export const VerhaalTab: React.FC = () => {
       refetchStories();
     }
   }, [activeTab, refetchBlogs, refetchStories]);
+
+  const handleReset = useCallback(() => {
+    setSearchInput('');
+    resetFilters();
+  }, [resetFilters]);
 
   const handleViewBlog = (blog: any) => {
     navigate(`/plaat-verhaal/${blog.slug}`);
@@ -194,8 +206,8 @@ export const VerhaalTab: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input 
               placeholder="Zoek in verhalen..." 
-              value={filters.search || ''} 
-              onChange={e => updateFilter('search', e.target.value)} 
+              value={searchInput} 
+              onChange={e => setSearchInput(e.target.value)} 
               className="pl-10" 
             />
           </div>
@@ -326,7 +338,7 @@ export const VerhaalTab: React.FC = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={resetFilters}
+                onClick={handleReset}
               >
                 <RotateCcw className="w-3 h-3 mr-1" />
                 Reset

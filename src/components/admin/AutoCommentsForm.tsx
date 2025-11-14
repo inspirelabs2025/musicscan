@@ -300,7 +300,7 @@ export function AutoCommentsForm() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <a
-                                  href={`/plaat-verhaal/${detail.slug}`}
+                                  href={`https://musicscan.app/plaat-verhaal/${detail.slug}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-sm font-medium hover:text-primary truncate flex items-center gap-1"

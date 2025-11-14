@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BotProfilesManager } from "./BotProfilesManager";
-import { Users, MessageSquare, Play, BarChart3 } from "lucide-react";
+import { Users, MessageSquare, Play, BarChart3, ExternalLink, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export function AutoCommentsForm() {
   const { toast } = useToast();
@@ -224,21 +225,92 @@ export function AutoCommentsForm() {
           <Card>
             <CardHeader>
               <CardTitle>Laatste Batch Resultaten</CardTitle>
+              <CardDescription>
+                {batchResult.processed} posts verwerkt
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Verwerkt:</span>
-                  <span className="font-medium">{batchResult.processed}</span>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="text-2xl font-bold">{batchResult.processed}</div>
+                    <div className="text-sm text-muted-foreground">Verwerkt</div>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">{batchResult.successful}</div>
+                    <div className="text-sm text-green-600">Succesvol</div>
+                  </div>
+                  <div className="text-center p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
+                    <div className="text-2xl font-bold text-red-600">{batchResult.failed}</div>
+                    <div className="text-sm text-red-600">Gefaald</div>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-green-600">Succesvol:</span>
-                  <span className="font-medium text-green-600">{batchResult.successful}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-red-600">Gefaald:</span>
-                  <span className="font-medium text-red-600">{batchResult.failed}</span>
-                </div>
+
+                {batchResult.details && batchResult.details.length > 0 && (
+                  <div className="space-y-2 mt-6">
+                    <h4 className="font-semibold text-sm mb-3">Verwerkte Posts</h4>
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {batchResult.details.map((detail: any, index: number) => (
+                        <div 
+                          key={index} 
+                          className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            {detail.status === 'success' && (
+                              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                            )}
+                            {detail.status === 'failed' && (
+                              <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                            )}
+                            {detail.status === 'skipped' && (
+                              <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                            )}
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <a
+                                  href={`/plaat-verhaal/${detail.slug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm font-medium hover:text-primary truncate flex items-center gap-1"
+                                >
+                                  {detail.slug}
+                                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                </a>
+                              </div>
+                              {detail.status === 'success' && detail.comments_generated && (
+                                <p className="text-xs text-muted-foreground">
+                                  {detail.comments_generated} comment{detail.comments_generated !== 1 ? 's' : ''} gegenereerd
+                                </p>
+                              )}
+                              {detail.status === 'failed' && detail.error && (
+                                <p className="text-xs text-red-600">{detail.error}</p>
+                              )}
+                              {detail.status === 'skipped' && detail.reason && (
+                                <p className="text-xs text-orange-600">
+                                  {detail.reason === 'already_has_comments' ? 'Heeft al comments' : detail.reason}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <Badge 
+                            variant={
+                              detail.status === 'success' ? 'default' : 
+                              detail.status === 'failed' ? 'destructive' : 
+                              'secondary'
+                            }
+                            className="ml-2 flex-shrink-0"
+                          >
+                            {detail.status === 'success' ? 'Success' : 
+                             detail.status === 'failed' ? 'Failed' : 
+                             'Skipped'}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

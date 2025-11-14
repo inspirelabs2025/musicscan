@@ -660,11 +660,14 @@ export type Database = {
       }
       blog_comments: {
         Row: {
+          ai_model: string | null
           blog_post_id: string
           content: string
           created_at: string
           downvotes: number | null
+          generation_cost_tokens: number | null
           id: string
+          is_ai_generated: boolean | null
           is_flagged: boolean | null
           parent_comment_id: string | null
           updated_at: string
@@ -672,11 +675,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_model?: string | null
           blog_post_id: string
           content: string
           created_at?: string
           downvotes?: number | null
+          generation_cost_tokens?: number | null
           id?: string
+          is_ai_generated?: boolean | null
           is_flagged?: boolean | null
           parent_comment_id?: string | null
           updated_at?: string
@@ -684,11 +690,14 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_model?: string | null
           blog_post_id?: string
           content?: string
           created_at?: string
           downvotes?: number | null
+          generation_cost_tokens?: number | null
           id?: string
+          is_ai_generated?: boolean | null
           is_flagged?: boolean | null
           parent_comment_id?: string | null
           updated_at?: string
@@ -1020,6 +1029,36 @@ export type Database = {
           tokens_used?: number | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      comment_generation_stats: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_run_at: string | null
+          total_comments_generated: number | null
+          total_posts_processed: number | null
+          total_tokens_used: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_run_at?: string | null
+          total_comments_generated?: number | null
+          total_posts_processed?: number | null
+          total_tokens_used?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_run_at?: string | null
+          total_comments_generated?: number | null
+          total_posts_processed?: number | null
+          total_tokens_used?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1661,6 +1700,48 @@ export type Database = {
           tone_preference?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      email_logs: {
+        Row: {
+          created_at: string
+          email_type: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          resend_id: string | null
+          sent_at: string
+          status: string
+          subject: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_type: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          resend_id?: string | null
+          sent_at?: string
+          status?: string
+          subject?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          resend_id?: string | null
+          sent_at?: string
+          status?: string
+          subject?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -3535,6 +3616,7 @@ export type Database = {
           email_notifications: boolean | null
           first_name: string
           id: string
+          is_bot: boolean | null
           is_public: boolean | null
           last_active_at: string | null
           last_onboarding_at: string | null
@@ -3567,6 +3649,7 @@ export type Database = {
           email_notifications?: boolean | null
           first_name: string
           id?: string
+          is_bot?: boolean | null
           is_public?: boolean | null
           last_active_at?: string | null
           last_onboarding_at?: string | null
@@ -3599,6 +3682,7 @@ export type Database = {
           email_notifications?: boolean | null
           first_name?: string
           id?: string
+          is_bot?: boolean | null
           is_public?: boolean | null
           last_active_at?: string | null
           last_onboarding_at?: string | null
@@ -5698,6 +5782,18 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_stats: {
+        Row: {
+          last_updated: string | null
+          read_count: number | null
+          this_week_count: number | null
+          today_count: number | null
+          total_count: number | null
+          type: string | null
+          unread_count: number | null
+        }
+        Relationships: []
+      }
       unified_scans: {
         Row: {
           ai_description: string | null
@@ -5821,6 +5917,7 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_random_bot_user: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -5852,6 +5949,7 @@ export type Database = {
         }[]
       }
       refresh_featured_photos: { Args: never; Returns: undefined }
+      refresh_notification_stats: { Args: never; Returns: undefined }
       search_platform_products: {
         Args: {
           p_category?: string

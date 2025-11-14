@@ -27,7 +27,8 @@ import {
   Newspaper,
   Shield,
   BookOpen,
-  MessageSquare
+  MessageSquare,
+  Mail
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -52,6 +53,7 @@ const menuItems = [
       { title: "Overview", url: "/admin", icon: LayoutDashboard, end: true },
       { title: "SuperAdmin Stats", url: "/admin/dashboard", icon: BarChart3 },
       { title: "Cronjob Monitor", url: "/admin/cronjob-monitor", icon: Clock },
+      { title: "Email & Notifications", url: "/admin/email-notifications", icon: Mail },
     ]
   },
   {

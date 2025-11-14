@@ -29,6 +29,20 @@ interface BlogFilters {
 
 const ITEMS_PER_PAGE = 24;
 
+// Helper functions for search
+const sanitizeSearch = (search: string) => search.trim().replace(/[(),]/g, ' ').replace(/\s+/g, ' ');
+
+const buildOrSearch = (term: string) => {
+  const sanitized = sanitizeSearch(term);
+  const cols = [
+    "yaml_frontmatter->>title",
+    "yaml_frontmatter->>artist", 
+    "yaml_frontmatter->>album",
+    "yaml_frontmatter->>genre"
+  ];
+  return cols.map(c => `${c}.ilike.%${sanitized}%`).join(',');
+};
+
 export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
   const { user } = useAuth();
   const [hasManuallyFetched, setHasManuallyFetched] = useState(false);
@@ -49,8 +63,7 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
         created_at,
         updated_at,
         album_cover_url
-      `)
-      .range(pageParam * ITEMS_PER_PAGE, (pageParam + 1) * ITEMS_PER_PAGE - 1);
+      `);
 
     // Note: No user filter applied - show all published blogs to everyone
 
@@ -94,14 +107,9 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
       query = query.gte("created_at", dateFrom.toISOString());
     }
 
-    // Apply search filter - server-side text search
-    if (filters.search) {
-      query = query.or(`
-        yaml_frontmatter->>title.ilike.%${filters.search}%,
-        yaml_frontmatter->>artist.ilike.%${filters.search}%,
-        yaml_frontmatter->>album.ilike.%${filters.search}%,
-        yaml_frontmatter->>genre.ilike.%${filters.search}%
-      `);
+    // Apply search filter - server-side text search (min length 2, single-line)
+    if (filters.search && filters.search.trim().length >= 2) {
+      query = query.or(buildOrSearch(filters.search));
     }
 
     // Apply sorting
@@ -115,6 +123,9 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
     } else if (sortField === 'updated_at') {
       query = query.order('updated_at', { ascending: sortOrder === 'asc' });
     }
+
+    // Apply range AFTER order for stable pagination
+    query = query.range(pageParam * ITEMS_PER_PAGE, (pageParam + 1) * ITEMS_PER_PAGE - 1);
 
     // Build count query with same filters
     let countQuery = supabase
@@ -159,13 +170,8 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
       countQuery = countQuery.gte("created_at", dateFrom.toISOString());
     }
 
-    if (filters.search) {
-      countQuery = countQuery.or(`
-        yaml_frontmatter->>title.ilike.%${filters.search}%,
-        yaml_frontmatter->>artist.ilike.%${filters.search}%,
-        yaml_frontmatter->>album.ilike.%${filters.search}%,
-        yaml_frontmatter->>genre.ilike.%${filters.search}%
-      `);
+    if (filters.search && filters.search.trim().length >= 2) {
+      countQuery = countQuery.or(buildOrSearch(filters.search));
     }
 
     // Get total count for pagination

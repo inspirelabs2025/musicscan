@@ -10,7 +10,9 @@ import { EmailTemplateSelector } from './EmailTemplateSelector';
 import { TemplateConfigForm } from './TemplateConfigForm';
 import { EmailTemplatePreview } from './EmailTemplatePreview';
 import { generatePreviewHTML } from './EmailPreviewGenerator';
-import { Mail, Save, Check, RotateCcw, Eye } from 'lucide-react';
+import { Mail, Save, Check, RotateCcw, Eye, Copy } from 'lucide-react';
+import { AIContentGenerator } from './AIContentGenerator';
+import { EmailTriggerConfig } from './EmailTriggerConfig';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
@@ -94,6 +96,22 @@ export const EmailTemplateCustomizer = () => {
   const [config, setConfig] = useState<any>(defaultConfig[templateType]);
   const [previewHtml, setPreviewHtml] = useState('');
   const [testEmail, setTestEmail] = useState('');
+  const [triggerConfig, setTriggerConfig] = useState<{
+    enabled: boolean;
+    schedule?: {
+      frequency: 'daily' | 'weekly' | 'manual';
+      time?: string;
+      dayOfWeek?: number;
+    };
+    conditions?: {
+      minContentItems?: number;
+      requireNewContent?: boolean;
+    };
+  }>({
+    enabled: false,
+    schedule: { frequency: 'manual' },
+    conditions: {}
+  });
 
   // Fetch active template when template type changes
   const { data: activeTemplate } = useQuery({
@@ -235,6 +253,25 @@ export const EmailTemplateCustomizer = () => {
     });
   };
 
+  const handleDuplicate = () => {
+    setSelectedTemplateId(undefined);
+    setTemplateName(`${templateName} (kopie)`);
+    toast({
+      title: 'Template gedupliceerd',
+      description: 'Template is gekopieerd. Pas de naam aan en sla op.',
+    });
+  };
+
+  const handleAIContentGenerated = (generatedContent: any) => {
+    setConfig((prev: any) => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        ...generatedContent
+      }
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -265,20 +302,28 @@ export const EmailTemplateCustomizer = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Configuration Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Aanpassingen</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[600px] pr-4">
-              <TemplateConfigForm
-                config={config}
-                onChange={setConfig}
-                templateType={templateType}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Aanpassingen</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[600px] pr-4">
+                <TemplateConfigForm
+                  config={config}
+                  onChange={setConfig}
+                  templateType={templateType}
+                />
+              </ScrollArea>
+            </CardContent>
+          </Card>
+
+          <EmailTriggerConfig
+            templateType={templateType}
+            config={triggerConfig}
+            onChange={setTriggerConfig}
+          />
+        </div>
 
         {/* Preview */}
         <div>
@@ -300,6 +345,21 @@ export const EmailTemplateCustomizer = () => {
               <Mail className="mr-2 h-4 w-4" />
               Nieuwe Template
             </Button>
+
+            <Button
+              variant="outline"
+              onClick={handleDuplicate}
+              disabled={!selectedTemplateId}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Dupliceer
+            </Button>
+
+            <AIContentGenerator
+              templateType={templateType}
+              currentConfig={config}
+              onContentGenerated={handleAIContentGenerated}
+            />
 
             <Dialog>
               <DialogTrigger asChild>

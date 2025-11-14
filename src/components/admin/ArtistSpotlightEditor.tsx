@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,12 +26,15 @@ export const ArtistSpotlightEditor = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [generatedStoryId, setGeneratedStoryId] = useState<string | null>(null);
 
-  const { data: existingStory, isLoading: loadingStory } = useArtistSpotlight(id || "");
+  // Only fetch existing story if we're editing (id exists)
+  const { data: existingStory, isLoading: loadingStory } = useArtistSpotlight(id || "", {
+    enabled: isEditing
+  });
   const generateMutation = useGenerateSpotlight();
   const updateMutation = useUpdateSpotlight();
 
   // Load existing story if editing
-  useState(() => {
+  useEffect(() => {
     if (existingStory) {
       setArtistName(existingStory.artist_name);
       setStoryContent(existingStory.story_content);
@@ -39,7 +42,7 @@ export const ArtistSpotlightEditor = () => {
       setIsPublished(existingStory.is_published);
       setGeneratedStoryId(existingStory.id);
     }
-  });
+  }, [existingStory]);
 
   const handleGenerate = async () => {
     if (!artistName.trim()) {

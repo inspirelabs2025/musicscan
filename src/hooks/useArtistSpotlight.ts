@@ -43,7 +43,7 @@ export const useArtistSpotlights = (options: {
   });
 };
 
-export const useArtistSpotlight = (slug: string) => {
+export const useArtistSpotlight = (slug: string, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ['artist-spotlight', slug],
     queryFn: async () => {
@@ -69,6 +69,7 @@ export const useArtistSpotlight = (slug: string) => {
 
       return data as ArtistStory;
     },
+    enabled: options?.enabled !== false && !!slug,
   });
 };
 

@@ -77,14 +77,19 @@ export const FeaturedPodcasts = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {featuredEpisodes.map((episode) => (
-            <EpisodeCard
-              key={episode.id}
-              episode={episode}
-              showName={(episode as any).spotify_curated_shows?.name}
-              compact={true}
-            />
-          ))}
+          {featuredEpisodes.map((episode) => {
+            const showImage = (episode as any).spotify_curated_shows?.image_url;
+            const showName = (episode as any).spotify_curated_shows?.name;
+            
+            return (
+              <EpisodeCard
+                key={episode.id}
+                episode={episode}
+                showName={showName}
+                compact={true}
+              />
+            );
+          })}
         </div>
       </CardContent>
     </Card>

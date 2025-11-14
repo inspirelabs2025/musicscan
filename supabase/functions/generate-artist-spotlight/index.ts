@@ -34,45 +34,76 @@ serve(async (req) => {
     // Generate spotlight content with AI
     const systemPrompt = `Je bent een gepassioneerde muziekjournalist die uitgebreide spotlight verhalen schrijft over artiesten. 
     
-KRITIEKE INSTRUCTIE - TOON:
-- Schrijf in een persoonlijke, verhaalvertellende stijl
+KRITIEKE INSTRUCTIE - LENGTE EN DIEPGANG:
+- Schrijf een UITGEBREID artikel van 3000-4000 woorden
+- Verdeel over minimaal 15-20 paragrafen
+- Elke sectie moet rijk zijn aan details en verhaal
+- Gebruik markdown voor structuur (## voor hoofdstukken, **bold** voor nadruk)
+
+SCHRIJFSTIJL:
+- Persoonlijke, verhaalvertellende toon
 - Gebruik anekdotes en quotes waar mogelijk
 - Focus op het verhaal achter de muziek
 - Maak het toegankelijk en boeiend voor muziekliefhebbers
-- Gebruik markdown voor structuur (## voor hoofdstukken, **bold** voor nadruk)
-- Minimum 2000 woorden, verdeeld over meerdere secties
 
-STRUCTUUR (gebruik deze secties als ## headers):
+STRUCTUUR (gebruik deze secties als ## headers met uitgebreide inhoud):
 ## Beginjaren en Doorbraak
-- Hoe begon de artiest
-- Eerste releases en erkenning
-- Belangrijke momenten
+- Vroege jeugd en muzikale opvoeding
+- Eerste stappen in de muziek
+- Doorbraak moment en eerste releases
+- Belangrijke samenwerkingen en invloeden
 
 ## Muzikale Evolutie
-- Ontwikkeling door de jaren
-- Experimenteren met stijlen
-- Belangrijkste albums en hun impact
+- Ontwikkeling door verschillende periodes
+- Experimenteren met stijlen en genres
+- Belangrijkste albums en hun context
+- Productietechnieken en vernieuwingen
 
-## Culturele Impact
-- Invloed op andere artiesten
-- Maatschappelijke betekenis
-- Legacy en doorwerking
+## Culturele Impact en Legacy
+- Invloed op andere artiesten en genres
+- Maatschappelijke betekenis en impact
+- Awards en erkenning
+- Doorwerking tot vandaag
 
-## Persoonlijk Verhaal
-- Anekdotes en verhalen
-- Interessante feiten
-- Quotes (als beschikbaar)
+## Persoonlijk Verhaal en Anekdotes
+- Interessante verhalen achter de schermen
+- Persoonlijke uitdagingen en triomfen
+- Quotes van de artiest
+- Bijzondere momenten in hun carrière
 
 ## Discografie Hoogtepunten
-- Must-have albums
-- Hidden gems
-- Collectible releases
+- Must-have albums met gedetailleerde beschrijvingen
+- Hidden gems en ondergewaardeerde werken
+- Collectible releases en zeldzame opnames
+- Live albums en speciale uitgaves
 
-Schrijf in het Nederlands en maak het rijk aan details en verhaal.`;
+Schrijf in het Nederlands. Gebruik een narratieve stijl met veel details, context en achtergrondverhalen. Maak elk hoofdstuk substantieel en informatief.`;
 
     const userPrompt = initialText 
-      ? `Schrijf een uitgebreid spotlight verhaal over ${artistName}. Gebruik deze initiële tekst als startpunt:\n\n${initialText}\n\nBouw dit verder uit met diepgaande informatie over hun carrière, muzikale evolutie en impact.`
-      : `Schrijf een uitgebreid spotlight verhaal over ${artistName}. Focus op hun volledige carrière, muzikale evolutie, culturele impact en belangrijkste albums.`;
+      ? `Schrijf een UITGEBREID en GEDETAILLEERD spotlight verhaal van 3000-4000 woorden over ${artistName}. 
+
+Gebruik deze initiële tekst als startpunt:
+${initialText}
+
+Bouw dit verder uit met diepgaande informatie over:
+- Hun volledige carrière van begin tot heden
+- Muzikale evolutie en verschillende periodes
+- Culturele impact en invloed
+- Persoonlijke verhalen en anekdotes
+- Uitgebreide discografie analyse
+
+Zorg ervoor dat elk hoofdstuk rijk is aan details en verhaal.`
+      : `Schrijf een UITGEBREID en GEDETAILLEERD spotlight verhaal van 3000-4000 woorden over ${artistName}.
+
+Focus op:
+- Volledige carrièreoverzicht van begin tot heden
+- Muzikale evolutie door verschillende periodes
+- Belangrijkste albums met gedetailleerde context
+- Culturele impact en legacy
+- Persoonlijke verhalen en anekdotes
+- Discografie hoogtepunten
+
+Maak elk hoofdstuk rijk aan informatie en verhaal.`;
 
     // Use tool calling for structured output
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -87,17 +118,18 @@ Schrijf in het Nederlands en maak het rijk aan details en verhaal.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
+        max_tokens: 8000,
         tools: [{
           type: 'function',
           function: {
             name: 'create_spotlight_story',
-            description: 'Create a structured spotlight story for an artist',
+            description: 'Create a comprehensive structured spotlight story for an artist',
             parameters: {
               type: 'object',
               properties: {
                 story_content: {
                   type: 'string',
-                  description: 'Full markdown story content with sections'
+                  description: 'Full markdown story content with detailed sections (3000-4000 words)'
                 },
                 spotlight_description: {
                   type: 'string',
@@ -106,15 +138,15 @@ Schrijf in het Nederlands en maak het rijk aan details en verhaal.`;
                 notable_albums: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'Array of notable album names'
+                  description: 'Array of 5-8 notable album names'
                 },
                 music_style: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  description: 'Array of music genres/styles'
+                  type: 'string',
+                  description: 'Primary music style/genre'
                 }
               },
-              required: ['story_content', 'spotlight_description', 'notable_albums', 'music_style']
+              required: ['story_content', 'spotlight_description', 'notable_albums', 'music_style'],
+              additionalProperties: false
             }
           }
         }],
@@ -142,7 +174,13 @@ Schrijf in het Nederlands en maak het rijk aan details en verhaal.`;
     let artworkUrl = null;
     const spotlightImages = [];
     
-    // 1. Generate AI artist portrait
+    // Generate slug early for filename
+    const slug = artistName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    
+    // 1. Generate AI artist portrait and upload to storage
     console.log(`Generating AI portrait for: ${artistName}`);
     try {
       const imageResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -155,7 +193,7 @@ Schrijf in het Nederlands en maak het rijk aan details en verhaal.`;
           model: 'google/gemini-2.5-flash-image-preview',
           messages: [{
             role: 'user',
-            content: `Professional high-quality portrait photo of ${artistName}, music photographer style, realistic, studio lighting, artist portrait`
+            content: `Professional high-quality portrait photo of ${artistName}, music photographer style, realistic, studio lighting, artist portrait, 512x512`
           }],
           modalities: ['image', 'text']
         })
@@ -165,18 +203,43 @@ Schrijf in het Nederlands en maak het rijk aan details en verhaal.`;
         const imageData = await imageResponse.json();
         const artistImageUrl = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
         
-        if (artistImageUrl) {
-          spotlightImages.push({
-            url: artistImageUrl,
-            type: 'artist',
-            caption: artistName,
-            alt_text: `${artistName} portrait`
-          });
-          console.log(`Generated AI artist portrait`);
+        if (artistImageUrl && artistImageUrl.startsWith('data:image')) {
+          // Upload base64 image to Supabase Storage
+          console.log('Uploading AI portrait to storage...');
+          const base64Data = artistImageUrl.replace(/^data:image\/\w+;base64,/, '');
+          const binaryString = atob(base64Data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          
+          const fileName = `${slug}-portrait-${Date.now()}.jpg`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('artist-spotlights')
+            .upload(fileName, bytes, {
+              contentType: 'image/jpeg',
+              upsert: false
+            });
+
+          if (uploadError) {
+            console.error('Storage upload error:', uploadError);
+          } else if (uploadData) {
+            const { data: publicUrlData } = supabase.storage
+              .from('artist-spotlights')
+              .getPublicUrl(fileName);
+            
+            spotlightImages.push({
+              url: publicUrlData.publicUrl,
+              type: 'artist',
+              caption: artistName,
+              alt_text: `${artistName} portrait`
+            });
+            console.log(`AI portrait uploaded to storage: ${fileName}`);
+          }
         }
       }
     } catch (error) {
-      console.error('Error generating AI portrait:', error);
+      console.error('Error generating/uploading AI portrait:', error);
     }
 
     // 2. Fetch album covers from Discogs (first 5 notable albums)
@@ -239,11 +302,7 @@ Schrijf in het Nederlands en maak het rijk aan details en verhaal.`;
 
     const featuredProducts = products?.map(p => p.id) || [];
 
-    // Generate slug
-    const slug = artistName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
+    // Slug already generated earlier for filename
 
     // Calculate reading time and word count
     const wordCount = storyData.story_content.split(/\s+/).length;

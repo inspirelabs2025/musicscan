@@ -31,6 +31,31 @@ serve(async (req) => {
 
     console.log(`Generating spotlight for artist: ${artistName}`);
 
+    // Early duplicate check to avoid heavy AI calls and return a friendly 409
+    try {
+      const { data: existingByName } = await supabase
+        .from('artist_stories')
+        .select('id')
+        .ilike('artist_name', artistName)
+        .maybeSingle();
+
+      if (existingByName) {
+        console.warn(`Spotlight already exists for ${artistName}, aborting.`);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Er bestaat al een spotlight voor ${artistName}.`,
+            code: 'DUPLICATE',
+            existing_id: existingByName.id
+          }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch (e) {
+      // If the check fails for any reason, continue (insert will still be guarded below)
+      console.warn('Duplicate pre-check failed, will rely on insert handling.');
+    }
+
     // Generate spotlight content with AI
     const systemPrompt = `Je bent een gepassioneerde muziekjournalist die uitgebreide spotlight verhalen schrijft over artiesten. 
     
@@ -352,6 +377,19 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
       .single();
 
     if (insertError) {
+      // Handle duplicate gracefully (unique constraint on artist_name)
+      const code = (insertError as any)?.code;
+      if (code === '23505') {
+        console.warn(`Duplicate spotlight for ${artistName} prevented by unique constraint.`);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Er bestaat al een spotlight voor ${artistName}.`,
+            code: 'DUPLICATE'
+          }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       console.error('Insert error:', insertError);
       throw insertError;
     }

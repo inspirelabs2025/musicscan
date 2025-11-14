@@ -22,6 +22,7 @@ serve(async (req) => {
   }
 
   try {
+    // Create anon client to verify user auth
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -53,6 +54,12 @@ serve(async (req) => {
       );
     }
 
+    // Create service role client for admin operations
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     const url = new URL(req.url);
     const method = req.method;
 
@@ -62,14 +69,14 @@ serve(async (req) => {
       const roleFilter = url.searchParams.get('role') || '';
 
       // Fetch all users from auth.users via admin API
-      const { data: authUsers, error: authError } = await supabaseClient.auth.admin.listUsers();
+      const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
       
       if (authError) {
         throw new Error(`Failed to fetch users: ${authError.message}`);
       }
 
       // Fetch all profiles
-      const { data: profiles, error: profilesError } = await supabaseClient
+      const { data: profiles, error: profilesError } = await supabaseAdmin
         .from('profiles')
         .select('user_id, first_name, avatar_url');
 
@@ -78,7 +85,7 @@ serve(async (req) => {
       }
 
       // Fetch all user roles
-      const { data: userRoles, error: rolesError } = await supabaseClient
+      const { data: userRoles, error: rolesError } = await supabaseAdmin
         .from('user_roles')
         .select('user_id, role');
 
@@ -144,7 +151,7 @@ serve(async (req) => {
       }
 
       // Insert role (unique constraint will prevent duplicates)
-      const { error: insertError } = await supabaseClient
+      const { error: insertError } = await supabaseAdmin
         .from('user_roles')
         .insert({ user_id: userId, role });
 
@@ -176,7 +183,7 @@ serve(async (req) => {
         );
       }
 
-      const { error: deleteError } = await supabaseClient
+      const { error: deleteError } = await supabaseAdmin
         .from('user_roles')
         .delete()
         .eq('user_id', userId)

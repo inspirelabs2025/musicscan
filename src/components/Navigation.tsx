@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionStatus } from "@/components/SubscriptionStatus";
 import { ShoppingCartWidget } from "@/components/ShoppingCartWidget";
-import { CompactArtistSearch } from "@/components/CompactArtistSearch";
 
 // SHOP MENU ITEMS
 const shopMenuItems = [
@@ -128,17 +127,12 @@ export function Navigation() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center px-4">
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-4 w-full">
+        <div className="hidden md:flex items-center gap-6 w-full">
           <Link to="/" className="flex-shrink-0">
             <img src="/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png" alt="MusicScan" className="h-[58px] cursor-pointer" />
           </Link>
           
-          {/* Artist Search */}
-          <div className="flex-1 max-w-xl">
-            <CompactArtistSearch />
-          </div>
-          
-          <NavigationMenu className="flex-shrink-0">
+          <NavigationMenu className="flex-1">
           <NavigationMenuList className="gap-1">
             {/* Home */}
             <NavigationMenuItem>
@@ -404,10 +398,7 @@ export function Navigation() {
                 </Button>
               </div>
               
-              {/* Mobile Search */}
-              <div className="p-4 border-b">
-                <CompactArtistSearch />
-              </div>
+              {/* Mobile Search - REMOVED */}
               
                <nav className="flex flex-col flex-1 p-4 space-y-1 overflow-y-auto">
                  {/* Home */}

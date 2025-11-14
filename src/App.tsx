@@ -57,6 +57,7 @@ import TestDiscogsBlogGeneration from "./pages/TestDiscogsBlogGeneration";
 import TestDiscogsIdFinder from "./pages/TestDiscogsIdFinder";
 import TestAnecdoteGeneration from "./pages/admin/TestAnecdoteGeneration";
 import DiscogsLookup from "./pages/admin/DiscogsLookup";
+import AutoComments from "./pages/admin/AutoComments";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Podcasts from "./pages/Podcasts";

@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { SubscriptionStatus } from "@/components/SubscriptionStatus";
 import { ShoppingCartWidget } from "@/components/ShoppingCartWidget";
+import { CompactArtistSearch } from "@/components/CompactArtistSearch";
 
 // SHOP MENU ITEMS
 const shopMenuItems = [
@@ -364,6 +365,9 @@ export function Navigation() {
           </NavigationMenuList>
         </NavigationMenu>
         
+        {/* Artist Search */}
+        <CompactArtistSearch />
+        
         {/* Notifications Bell - Only show when logged in */}
         {user && <NotificationsDropdown />}
         
@@ -393,6 +397,12 @@ export function Navigation() {
                   <X className="h-4 w-4" />
                 </Button>
               </div>
+              
+              {/* Mobile Search */}
+              <div className="p-4 border-b">
+                <CompactArtistSearch />
+              </div>
+              
                <nav className="flex flex-col flex-1 p-4 space-y-1 overflow-y-auto">
                  {/* Home */}
                  <NavLink item={{ title: "Home", url: "/", icon: Home }} mobile />

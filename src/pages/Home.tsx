@@ -1,5 +1,4 @@
 import { SimpleHero } from '@/components/home/SimpleHero';
-import { ArtistSearchHero } from '@/components/home/ArtistSearchHero';
 import { QuickDiscoveryBar } from '@/components/home/QuickDiscoveryBar';
 import { EchoSpotlight } from '@/components/home/EchoSpotlight';
 import { MetalPrintSpotlight } from '@/components/home/MetalPrintSpotlight';
@@ -29,9 +28,6 @@ const Home = () => {
     <div className="min-h-screen">
       {/* Hero Section - Simple with 3 CTAs */}
       <SimpleHero />
-
-      {/* Artist Search Hero */}
-      <ArtistSearchHero />
 
       {/* Quick Discovery Bar */}
       <QuickDiscoveryBar />

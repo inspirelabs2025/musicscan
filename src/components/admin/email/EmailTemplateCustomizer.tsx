@@ -225,6 +225,16 @@ export const EmailTemplateCustomizer = () => {
     });
   };
 
+  const handleCreateNew = () => {
+    setSelectedTemplateId(undefined);
+    setConfig(defaultConfig[templateType]);
+    setTemplateName(`Nieuwe ${templateType === 'daily_digest' ? 'Daily Digest' : 'Weekly Discussion'} Template`);
+    toast({
+      title: 'Nieuwe template',
+      description: 'Start met een lege template',
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -283,6 +293,14 @@ export const EmailTemplateCustomizer = () => {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-wrap items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={handleCreateNew}
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Nieuwe Template
+            </Button>
+
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline">

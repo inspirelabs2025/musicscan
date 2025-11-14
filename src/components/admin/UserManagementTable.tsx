@@ -36,6 +36,7 @@ interface UserManagementTableProps {
   users: UserWithRoles[];
   onAssignRole: (userId: string, role: string) => Promise<boolean>;
   onRemoveRole: (userId: string, role: string) => Promise<boolean>;
+  onUserClick?: (user: UserWithRoles) => void;
 }
 
 const ROLE_COLORS = {
@@ -46,7 +47,12 @@ const ROLE_COLORS = {
 
 const AVAILABLE_ROLES = ['admin', 'moderator', 'user'] as const;
 
-export function UserManagementTable({ users, onAssignRole, onRemoveRole }: UserManagementTableProps) {
+export function UserManagementTable({ 
+  users, 
+  onAssignRole, 
+  onRemoveRole,
+  onUserClick 
+}: UserManagementTableProps) {
   const [actionDialog, setActionDialog] = useState<{
     open: boolean;
     action: 'assign' | 'remove';
@@ -110,7 +116,11 @@ export function UserManagementTable({ users, onAssignRole, onRemoveRole }: UserM
               </TableRow>
             ) : (
               users.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow 
+                  key={user.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => onUserClick?.(user)}
+                >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
@@ -151,7 +161,7 @@ export function UserManagementTable({ users, onAssignRole, onRemoveRole }: UserM
                       ? formatDistanceToNow(new Date(user.last_sign_in_at), { addSuffix: true })
                       : 'Never'}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">

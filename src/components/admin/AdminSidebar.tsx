@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Clock,
   ShoppingBag,
+  ShoppingCart,
   Palette,
   Database,
   BarChart3,
@@ -65,6 +66,7 @@ const menuItems = [
       { title: "All Products", url: "/admin/products", icon: LayoutGrid },
       { title: "Platform Products", url: "/admin/platform-products", icon: Package },
       { title: "Shop Products", url: "/admin/shop-products", icon: ShoppingBag },
+      { title: "Shop Orders", url: "/admin/shop-orders", icon: ShoppingCart },
       { title: "Time Machine", url: "/admin/time-machine", icon: Clock },
     ]
   },

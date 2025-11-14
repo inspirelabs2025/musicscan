@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { UserManagementTable } from '@/components/admin/UserManagementTable';
+import { UserDetailDialog } from '@/components/admin/UserDetailDialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +27,14 @@ export default function UserManagement() {
     removeRole,
     refetch,
   } = useUserManagement();
+
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleUserClick = (user: any) => {
+    setSelectedUser(user);
+    setDialogOpen(true);
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -141,6 +151,7 @@ export default function UserManagement() {
               users={users}
               onAssignRole={assignRole}
               onRemoveRole={removeRole}
+              onUserClick={handleUserClick}
             />
           )}
         </CardContent>

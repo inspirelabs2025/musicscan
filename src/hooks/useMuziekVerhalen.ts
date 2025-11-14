@@ -31,9 +31,16 @@ interface MusicStory {
   artwork_url?: string;
 }
 
-export const useMuziekVerhalen = (userId?: string) => {
+interface MuziekVerhalenOptions {
+  userId?: string;
+  search?: string;
+}
+
+export const useMuziekVerhalen = (options: MuziekVerhalenOptions = {}) => {
+  const { userId, search } = options;
+  
   return useQuery({
-    queryKey: ['music-stories', userId],
+    queryKey: ['music-stories', userId, search],
     queryFn: async () => {
       let query = supabase
         .from('music_stories')
@@ -43,6 +50,10 @@ export const useMuziekVerhalen = (userId?: string) => {
 
       if (userId) {
         query = query.eq('user_id', userId);
+      }
+
+      if (search && search.trim()) {
+        query = query.or(`title.ilike.%${search}%,artist.ilike.%${search}%,single_name.ilike.%${search}%,story_content.ilike.%${search}%,genre.ilike.%${search}%`);
       }
 
       const { data, error } = await query;

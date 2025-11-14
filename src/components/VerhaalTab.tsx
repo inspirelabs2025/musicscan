@@ -83,7 +83,7 @@ export const VerhaalTab: React.FC = () => {
     data: musicStories = [], 
     isLoading: isLoadingStories, 
     refetch: refetchStories 
-  } = useMuziekVerhalen();
+  } = useMuziekVerhalen({ search: debouncedSearch });
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

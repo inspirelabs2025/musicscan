@@ -5,7 +5,8 @@ import { NotificationStatsOverview } from '@/components/admin/email/Notification
 import { UserEmailPreferences } from '@/components/admin/email/UserEmailPreferences';
 import { EmailLogsTable } from '@/components/admin/email/EmailLogsTable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Bell, Users, FileText } from 'lucide-react';
+import { Mail, Bell, Users, FileText, Palette } from 'lucide-react';
+import { EmailTemplateCustomizer } from '@/components/admin/email/EmailTemplateCustomizer';
 
 const EmailNotificationsPage = () => {
   return (
@@ -19,10 +20,14 @@ const EmailNotificationsPage = () => {
         </div>
 
         <Tabs defaultValue="email-control" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="email-control" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
               Email Control
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              Templates
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="h-4 w-4" />
@@ -43,6 +48,10 @@ const EmailNotificationsPage = () => {
               <EmailDigestControl />
               <WeeklyDiscussionControl />
             </div>
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-6">
+            <EmailTemplateCustomizer />
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">

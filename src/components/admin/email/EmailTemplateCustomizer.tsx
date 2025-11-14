@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { EmailTemplateSelector } from './EmailTemplateSelector';
 import { TemplateConfigForm } from './TemplateConfigForm';
 import { EmailTemplatePreview } from './EmailTemplatePreview';
+import { generatePreviewHTML } from './EmailPreviewGenerator';
 import { Mail, Save, Check, RotateCcw, Eye } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -124,6 +125,14 @@ export const EmailTemplateCustomizer = () => {
       setTemplateName(`Default ${templateType === 'daily_digest' ? 'Daily Digest' : 'Weekly Discussion'}`);
     }
   }, [activeTemplate, templateType]);
+
+  // Generate preview HTML whenever config changes
+  useEffect(() => {
+    if (config) {
+      const html = generatePreviewHTML(config, templateType);
+      setPreviewHtml(html);
+    }
+  }, [config, templateType]);
 
   // Save template mutation
   const saveMutation = useMutation({

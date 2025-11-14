@@ -42,54 +42,59 @@ export const PodcastSpotlight = () => {
                 </Card>
               ))
             ) : displayEpisodes.length > 0 ? (
-              displayEpisodes.map((episode) => (
-                <Card key={episode.id} className="p-4 hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-green-500">
-                  <div className="relative mb-4">
-                    <div className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-green-500/20 to-primary/20">
-                      {episode.image_url ? (
-                        <img 
-                          src={episode.image_url} 
-                          alt={episode.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Headphones className="w-16 h-16 text-muted-foreground" />
+              displayEpisodes.map((episode) => {
+                const showImage = (episode as any).spotify_curated_shows?.image_url;
+                const episodeName = episode.name;
+                const showName = (episode as any).spotify_curated_shows?.name;
+                
+                return (
+                  <Card key={episode.id} className="p-4 hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-green-500">
+                    <div className="relative mb-4">
+                      <div className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-green-500/20 to-primary/20">
+                        {showImage ? (
+                          <img 
+                            src={showImage} 
+                            alt={episodeName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Headphones className="w-16 h-16 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      {/* Play button overlay */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
+                          <Play className="w-8 h-8 text-green-600 fill-green-600" />
                         </div>
-                      )}
-                    </div>
-                    {/* Play button overlay */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                      <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
-                        <Play className="w-8 h-8 text-green-600 fill-green-600" />
                       </div>
                     </div>
-                  </div>
-                  
-                  <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
-                    {episode.title}
-                  </h3>
-                  
-                  {episode.show_name && (
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {episode.show_name}
-                    </p>
-                  )}
-                  
-                  {episode.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {episode.description}
-                    </p>
-                  )}
-                  
-                  {episode.duration_minutes && (
-                    <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                      <Headphones className="w-3 h-3" />
-                      <span>{episode.duration_minutes} min</span>
-                    </div>
-                  )}
-                </Card>
-              ))
+                    
+                    <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
+                      {episodeName}
+                    </h3>
+                    
+                    {showName && (
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {showName}
+                      </p>
+                    )}
+                    
+                    {episode.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {episode.description}
+                      </p>
+                    )}
+                    
+                    {episode.duration_ms && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
+                        <span>{Math.floor(episode.duration_ms / 60000)} min</span>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })
             ) : (
               // Placeholder cards
               Array(3).fill(0).map((_, i) => (

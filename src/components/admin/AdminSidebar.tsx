@@ -25,7 +25,8 @@ import {
   Disc,
   Newspaper,
   Shield,
-  BookOpen
+  BookOpen,
+  MessageSquare
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -87,6 +88,7 @@ const menuItems = [
       { title: "Curated Artists", url: "/admin/curated-artists", icon: Music },
       { title: "Discogs Lookup", url: "/admin/discogs-lookup", icon: Database },
       { title: "Photo Moderation", url: "/admin/photo-moderation", icon: Image },
+      { title: "Auto Comments", url: "/admin/auto-comments", icon: MessageSquare },
     ]
   },
   {

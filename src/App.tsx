@@ -343,6 +343,7 @@ const AppContent = () => {
                 <Route path="curated-artists" element={<CuratedArtists />} />
                 <Route path="discogs-lookup" element={<DiscogsLookup />} />
                 <Route path="photo-moderation" element={<PhotoModeration />} />
+                <Route path="auto-comments" element={<AutoComments />} />
                 
                 {/* SEO & Analytics */}
                 <Route path="seo-monitoring" element={<SEOMonitoring />} />

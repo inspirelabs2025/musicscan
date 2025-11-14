@@ -172,6 +172,15 @@ verify_jwt = false
 [functions.indexnow-cron]
 verify_jwt = false
 
+[functions.create-bot-users]
+verify_jwt = false
+
+[functions.generate-ai-comment]
+verify_jwt = false
+
+[functions.backfill-blog-comments]
+verify_jwt = false
+
 [[functions.indexnow-cron.schedule]]
 cron = "*/15 * * * *"  # Every 15 minutes
 

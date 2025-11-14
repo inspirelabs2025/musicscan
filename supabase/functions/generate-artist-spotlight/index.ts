@@ -143,7 +143,7 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 8000,
+        max_tokens: 16000,
         tools: [{
           type: 'function',
           function: {

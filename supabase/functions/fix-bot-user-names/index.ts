@@ -25,7 +25,7 @@ serve(async (req) => {
     // Get all bot profiles
     const { data: botProfiles, error: profileError } = await supabase
       .from('profiles')
-      .select('user_id, first_name, last_name, is_bot')
+      .select('user_id, first_name, is_bot')
       .eq('is_bot', true);
 
     if (profileError) {

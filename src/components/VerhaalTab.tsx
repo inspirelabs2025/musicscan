@@ -52,7 +52,7 @@ export const VerhaalTab: React.FC = () => {
   
   const [searchInput, setSearchInput] = useState(filters.search || '');
 
-  const debouncedSearch = useDebounceSearch(searchInput, 300);
+  const debouncedSearch = useDebounceSearch(searchInput, 500);
   
   // No URL updates on typing to avoid reloads
   // React.useEffect(() => {
@@ -203,7 +203,11 @@ export const VerhaalTab: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            {isFetchingBlogs && debouncedSearch ? (
+              <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 animate-spin text-primary" />
+            ) : (
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            )}
             <Input 
               placeholder="Zoek in verhalen..." 
               value={searchInput} 
@@ -211,6 +215,11 @@ export const VerhaalTab: React.FC = () => {
               onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
               className="pl-10" 
             />
+            {searchInput && searchInput !== debouncedSearch && (
+              <Badge variant="outline" className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs">
+                Zoeken...
+              </Badge>
+            )}
           </div>
 
           {/* Sort */}
@@ -365,26 +374,45 @@ export const VerhaalTab: React.FC = () => {
           </div>
         </div>
 
-        <div className={`grid gap-6 ${
-          filters.viewMode === 'grid' 
-            ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-            : 'grid-cols-1'
-        }`}>
-          {blogs.map((blog) => (
-            <PlaatVerhaalBlogCard
-              key={blog.id}
-              blog={{
-                ...blog,
-                markdown_content: '', // Not needed for card display
-                published_at: blog.published_at || blog.created_at,
-                album_type: (blog.album_type as 'cd' | 'vinyl') || 'cd'
-              }}
-              onView={handleViewBlog}
-              onEdit={handleEdit}
-              viewMode={filters.viewMode as 'grid' | 'list'}
-            />
-          ))}
-        </div>
+        {isFetchingBlogs && searchInput !== debouncedSearch ? (
+          <div className={`grid gap-6 ${
+            filters.viewMode === 'grid' 
+              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
+              : 'grid-cols-1'
+          }`}>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <Skeleton className="aspect-square w-full" />
+                <CardContent className="p-4 space-y-2">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className={`grid gap-6 transition-all duration-300 ${
+            filters.viewMode === 'grid' 
+              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
+              : 'grid-cols-1'
+          }`}>
+            {blogs.map((blog, index) => (
+              <div 
+                key={blog.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <PlaatVerhaalBlogCard
+                  blog={blog as any}
+                  onView={handleViewBlog}
+                  onEdit={handleEdit}
+                  viewMode={filters.viewMode as 'grid' | 'list'}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         {hasNextPage && (
           <div className="flex justify-center mt-8">
@@ -441,15 +469,16 @@ export const VerhaalTab: React.FC = () => {
           </div>
         </div>
 
-        <div className={`grid gap-6 ${
+        <div className={`grid gap-6 transition-all duration-300 ${
           filters.viewMode === 'grid' 
             ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
             : 'grid-cols-1'
         }`}>
-          {musicStories.map((story) => (
+          {musicStories.map((story, index) => (
             <Card 
               key={story.id} 
-              className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
+              className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden animate-fade-in"
+              style={{ animationDelay: `${index * 0.05}s` }}
               onClick={() => handleViewStory(story)}
             >
               {/* Album Cover */}

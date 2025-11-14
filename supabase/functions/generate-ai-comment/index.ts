@@ -183,16 +183,25 @@ Schrijf alleen de comment zelf, geen extra tekst of uitleg.`;
     if (generatedComments.length > 0) {
       const totalTokens = generatedComments.reduce((sum, c) => sum + c.tokens_used, 0);
       
-      await supabase
+      // Get current stats
+      const { data: currentStats } = await supabase
         .from('comment_generation_stats')
-        .update({
-          total_comments_generated: supabase.sql`total_comments_generated + ${generatedComments.length}`,
-          total_posts_processed: supabase.sql`total_posts_processed + 1`,
-          total_tokens_used: supabase.sql`total_tokens_used + ${totalTokens}`,
-          last_run_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', '00000000-0000-0000-0000-000000000001');
+        .select('*')
+        .eq('id', '00000000-0000-0000-0000-000000000001')
+        .single();
+      
+      if (currentStats) {
+        await supabase
+          .from('comment_generation_stats')
+          .update({
+            total_comments_generated: currentStats.total_comments_generated + generatedComments.length,
+            total_posts_processed: currentStats.total_posts_processed + 1,
+            total_tokens_used: currentStats.total_tokens_used + totalTokens,
+            last_run_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', '00000000-0000-0000-0000-000000000001');
+      }
     }
 
     return new Response(

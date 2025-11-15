@@ -192,6 +192,24 @@ Style: Artistic, evocative, high quality photograph or illustration that capture
           if (uploadResponse.ok) {
             const publicUrl = `${supabaseUrl}/storage/v1/object/public/artist-images/${filename}`;
             
+            // Save to spotlight_images table
+            const { error: insertError } = await supabaseClient
+              .from('spotlight_images')
+              .insert({
+                spotlight_id: spotlightId,
+                image_url: publicUrl,
+                image_source: 'ai',
+                title: suggestion.title,
+                context: suggestion.context,
+                insertion_point: suggestion.insertion_point,
+                display_order: suggestion.index,
+                is_inserted: false,
+              });
+
+            if (insertError) {
+              console.error('Error saving image to database:', insertError);
+            }
+            
             generatedImages.push({
               index: suggestion.index,
               title: suggestion.title,
@@ -200,7 +218,7 @@ Style: Artistic, evocative, high quality photograph or illustration that capture
               insertion_point: suggestion.insertion_point,
             });
             
-            console.log(`✓ Image ${suggestion.index} uploaded`);
+            console.log(`✓ Image ${suggestion.index} uploaded and saved to database`);
           }
         } catch (error) {
           console.error(`Upload failed for image ${suggestion.index}:`, error);

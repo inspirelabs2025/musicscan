@@ -23,6 +23,9 @@ export interface ArtistStory {
   spotlight_images?: any[];
   spotlight_description?: string;
   featured_products?: string[];
+  discogs_artist_id?: number;
+  user_id?: string;
+  updated_at?: string;
 }
 
 interface UseArtistStoriesOptions {

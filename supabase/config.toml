@@ -106,6 +106,9 @@ verify_jwt = true
 [functions.generate-artist-spotlight]
 verify_jwt = false
 
+[functions.format-spotlight-text]
+verify_jwt = true
+
 [functions.test-email-notification]
 verify_jwt = false
 

@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles, Save, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useGenerateSpotlight, useUpdateSpotlight, useArtistSpotlightById } from "@/hooks/useArtistSpotlight";
+import { useGenerateSpotlight, useUpdateSpotlight, useArtistSpotlightById, useFormatSpotlight } from "@/hooks/useArtistSpotlight";
 import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 
@@ -25,6 +25,7 @@ export const ArtistSpotlightEditor = () => {
   const [isPublished, setIsPublished] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [generatedStoryId, setGeneratedStoryId] = useState<string | null>(null);
+  const [wordCount, setWordCount] = useState(0);
 
   // Only fetch existing story if we're editing (id exists)
   const { data: existingStory, isLoading: loadingStory } = useArtistSpotlightById(id || "", {
@@ -32,6 +33,13 @@ export const ArtistSpotlightEditor = () => {
   });
   const generateMutation = useGenerateSpotlight();
   const updateMutation = useUpdateSpotlight();
+  const formatMutation = useFormatSpotlight();
+
+  // Update word count when text changes
+  useEffect(() => {
+    const words = initialText.trim().split(/\s+/).filter(w => w.length > 0).length;
+    setWordCount(words);
+  }, [initialText]);
 
   // Load existing story if editing
   useEffect(() => {
@@ -91,6 +99,63 @@ export const ArtistSpotlightEditor = () => {
           
           toast({
             title: "Generatie mislukt",
+            description: errorMessage,
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
+  const handleFormatAndSave = async () => {
+    if (!artistName.trim()) {
+      toast({
+        title: "Artiest naam vereist",
+        description: "Voer een artiest naam in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (wordCount < 100) {
+      toast({
+        title: "Tekst te kort",
+        description: "De tekst moet minimaal 100 woorden bevatten.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    formatMutation.mutate(
+      { artistName, fullText: initialText },
+      {
+        onSuccess: (data) => {
+          // Handle duplicate
+          if (data?.success === false && data?.code === 'DUPLICATE') {
+            toast({
+              title: "Spotlight bestaat al",
+              description: `Er bestaat al een spotlight voor ${artistName}.`,
+              variant: "default",
+            });
+            if (data.existing_id) {
+              navigate(`/admin/artist-spotlight/edit/${data.existing_id}`);
+            }
+            return;
+          }
+
+          // Success - navigate to edit
+          if (data?.story) {
+            toast({
+              title: "✅ Spotlight aangemaakt",
+              description: "Tekst is opgemaakt en opgeslagen. Je kunt nu bekijken en publiceren.",
+            });
+            navigate(`/admin/artist-spotlight/edit/${data.story.id}`);
+          }
+        },
+        onError: (error: any) => {
+          const errorMessage = error?.message || "Er is een fout opgetreden bij het opslaan.";
+          toast({
+            title: "Opslaan mislukt",
             description: errorMessage,
             variant: "destructive",
           });
@@ -190,35 +255,64 @@ export const ArtistSpotlightEditor = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="initialText">Initiële Tekst (optioneel)</Label>
+              <Label htmlFor="initialText">Volledige tekst</Label>
               <Textarea
                 id="initialText"
-                placeholder="Een starttekst of specifieke informatie die je wilt meenemen..."
+                placeholder="Plak hier je volledige tekst (minimaal 100 woorden)..."
                 value={initialText}
                 onChange={(e) => setInitialText(e.target.value)}
-                disabled={generateMutation.isPending}
-                rows={6}
+                disabled={isEditing || generateMutation.isPending || formatMutation.isPending}
+                rows={20}
+                className="resize-y"
               />
+              <p className="text-sm text-muted-foreground">
+                {wordCount} {wordCount === 1 ? 'woord' : 'woorden'}
+                {wordCount < 100 && wordCount > 0 && (
+                  <span className="text-destructive ml-2">
+                    (minimaal 100 woorden vereist)
+                  </span>
+                )}
+              </p>
             </div>
 
-            <Button 
-              onClick={handleGenerate} 
-              disabled={generateMutation.isPending}
-              className="w-full"
-              size="lg"
-            >
-              {generateMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Genereren... (30-60 sec)
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Genereer Spotlight met AI
-                </>
-              )}
-            </Button>
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                onClick={handleGenerate} 
+                disabled={!artistName.trim() || generateMutation.isPending || formatMutation.isPending || isEditing}
+                variant="outline"
+                size="lg"
+              >
+                {generateMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    AI genereert...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Genereer spotlight
+                  </>
+                )}
+              </Button>
+
+              <Button
+                onClick={handleFormatAndSave}
+                disabled={!artistName.trim() || wordCount < 100 || formatMutation.isPending || generateMutation.isPending || isEditing}
+                size="lg"
+              >
+                {formatMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Formatteer tekst...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Formatteer en opslaan
+                  </>
+                )}
+              </Button>
+            </div>
 
             {generatedStoryId && (
               <>

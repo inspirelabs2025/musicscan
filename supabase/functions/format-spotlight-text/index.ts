@@ -60,6 +60,20 @@ serve(async (req) => {
 
     console.log(`Formatting text for ${artistName} (${wordCount} words)...`);
 
+    // Generate slug first (needed for image uploads)
+    const generateSlug = (name: string): string => {
+      return name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+    };
+
+    const slug = generateSlug(artistName);
+
     // Generate AI portrait for the artist
     console.log(`Generating AI portrait for ${artistName}...`);
     let artistPortraitUrl = null;
@@ -208,20 +222,6 @@ KRITIEKE INSTRUCTIES:
 
     const aiData = await aiResponse.json();
     const formattedContent = aiData.choices[0].message.content;
-
-    // Generate slug
-    const generateSlug = (name: string): string => {
-      return name
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
-    };
-
-    const slug = generateSlug(artistName);
 
     // Calculate reading time (avg 200 words per minute)
     const readingTime = Math.ceil(wordCount / 200);

@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles, Save, Eye, Trash2, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useGenerateSpotlight, useUpdateSpotlight, useArtistSpotlightById, useFormatSpotlight, useDeleteSpotlight, useAddImagesToSpotlight } from "@/hooks/useArtistSpotlight";
+import { useGenerateSpotlight, useUpdateSpotlight, useArtistSpotlightById, useFormatSpotlight, useDeleteSpotlight, useGenerateSpotlightImages, useInsertImagesToSpotlight } from "@/hooks/useArtistSpotlight";
 import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 
@@ -26,6 +26,8 @@ export const ArtistSpotlightEditor = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [generatedStoryId, setGeneratedStoryId] = useState<string | null>(null);
   const [wordCount, setWordCount] = useState(0);
+  const [generatedImages, setGeneratedImages] = useState<any[]>([]);
+  const [showImagePreview, setShowImagePreview] = useState(false);
 
   // Only fetch existing story if we're editing (id exists)
   const { data: existingStory, isLoading: loadingStory } = useArtistSpotlightById(id || "", {
@@ -35,7 +37,8 @@ export const ArtistSpotlightEditor = () => {
   const updateMutation = useUpdateSpotlight();
   const formatMutation = useFormatSpotlight();
   const deleteMutation = useDeleteSpotlight();
-  const addImagesMutation = useAddImagesToSpotlight();
+  const generateImagesMutation = useGenerateSpotlightImages();
+  const insertImagesMutation = useInsertImagesToSpotlight();
 
   // Update word count when text changes
   useEffect(() => {
@@ -229,30 +232,55 @@ export const ArtistSpotlightEditor = () => {
     });
   };
 
-  const handleAddImages = async () => {
+  const handleGenerateImages = async () => {
     if (!generatedStoryId) return;
 
-    const confirmed = window.confirm(
-      "Dit voegt afbeeldingen toe aan de spotlight. De tekstinhoud blijft ongewijzigd, alleen de opmaak wordt uitgebreid met relevante afbeeldingen. Doorgaan?"
-    );
-    if (!confirmed) return;
-
-    addImagesMutation.mutate(generatedStoryId, {
+    generateImagesMutation.mutate(generatedStoryId, {
       onSuccess: (data) => {
-        setStoryContent(data.story.story_content);
+        setGeneratedImages(data.images);
+        setShowImagePreview(true);
         toast({
-          title: "✨ Afbeeldingen toegevoegd!",
-          description: `${data.story.images_added} contextual images zijn toegevoegd.`,
+          title: "✨ Afbeeldingen gegenereerd!",
+          description: `${data.images.length} contextual images zijn klaar om toe te voegen.`,
         });
       },
       onError: (error: any) => {
         toast({
-          title: "Fout bij toevoegen afbeeldingen",
+          title: "Fout bij genereren afbeeldingen",
           description: error.message || "Er is een fout opgetreden.",
           variant: "destructive",
         });
       },
     });
+  };
+
+  const handleInsertImages = async (selectedImages?: any[]) => {
+    if (!generatedStoryId) return;
+
+    const imagesToInsert = selectedImages || generatedImages;
+    if (imagesToInsert.length === 0) return;
+
+    insertImagesMutation.mutate(
+      { spotlightId: generatedStoryId, images: imagesToInsert },
+      {
+        onSuccess: (data) => {
+          setStoryContent(data.story_content);
+          setGeneratedImages([]);
+          setShowImagePreview(false);
+          toast({
+            title: "✨ Afbeeldingen toegevoegd!",
+            description: `${imagesToInsert.length} afbeeldingen zijn toegevoegd aan de spotlight.`,
+          });
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Fout bij toevoegen afbeeldingen",
+            description: error.message || "Er is een fout opgetreden.",
+            variant: "destructive",
+          });
+        },
+      }
+    );
   };
 
   if (loadingStory && isEditing) {
@@ -289,16 +317,16 @@ export const ArtistSpotlightEditor = () => {
               Verwijderen
             </Button>
             <Button 
-              onClick={handleAddImages}
-              disabled={addImagesMutation.isPending}
+              onClick={handleGenerateImages}
+              disabled={generateImagesMutation.isPending}
               variant="outline"
             >
-              {addImagesMutation.isPending ? (
+              {generateImagesMutation.isPending ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Image className="w-4 h-4 mr-2" />
               )}
-              Voeg Afbeeldingen Toe
+              Genereer Afbeeldingen
             </Button>
             <Button onClick={handleSave} disabled={updateMutation.isPending}>
               {updateMutation.isPending ? (
@@ -435,6 +463,64 @@ export const ArtistSpotlightEditor = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Image Preview Section */}
+        {showImagePreview && generatedImages.length > 0 && (
+          <Card className="col-span-2">
+            <CardHeader>
+              <CardTitle>Gegenereerde Afbeeldingen</CardTitle>
+              <CardDescription>
+                Bekijk de gegenereerde afbeeldingen en voeg ze toe aan de spotlight
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {generatedImages.map((image) => (
+                    <Card key={image.index} className="overflow-hidden">
+                      <div className="aspect-video relative">
+                        <img 
+                          src={image.url} 
+                          alt={image.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <CardContent className="p-4">
+                        <h4 className="font-semibold mb-1">{image.title}</h4>
+                        <p className="text-sm text-muted-foreground mb-2">{image.context}</p>
+                        <p className="text-xs text-muted-foreground italic">
+                          Wordt ingevoegd bij: "{image.insertion_point.substring(0, 50)}..."
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    onClick={() => {
+                      setGeneratedImages([]);
+                      setShowImagePreview(false);
+                    }}
+                    variant="outline"
+                  >
+                    Annuleer
+                  </Button>
+                  <Button
+                    onClick={() => handleInsertImages()}
+                    disabled={insertImagesMutation.isPending}
+                  >
+                    {insertImagesMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Image className="w-4 h-4 mr-2" />
+                    )}
+                    Voeg Alle Afbeeldingen Toe
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Preview/Edit Section */}
         <Card>

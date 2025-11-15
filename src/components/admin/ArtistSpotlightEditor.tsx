@@ -233,7 +233,7 @@ export const ArtistSpotlightEditor = () => {
     if (!generatedStoryId) return;
 
     const confirmed = window.confirm(
-      "Dit zal contextual images toevoegen aan de spotlight. De tekst wordt aangepast. Doorgaan?"
+      "Dit voegt afbeeldingen toe aan de spotlight. De tekstinhoud blijft ongewijzigd, alleen de opmaak wordt uitgebreid met relevante afbeeldingen. Doorgaan?"
     );
     if (!confirmed) return;
 

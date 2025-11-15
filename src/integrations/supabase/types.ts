@@ -4766,6 +4766,56 @@ export type Database = {
         }
         Relationships: []
       }
+      spotlight_images: {
+        Row: {
+          context: string | null
+          created_at: string | null
+          discogs_release_id: number | null
+          display_order: number | null
+          id: string
+          image_source: string
+          image_url: string
+          insertion_point: string | null
+          is_inserted: boolean | null
+          spotlight_id: string | null
+          title: string | null
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string | null
+          discogs_release_id?: number | null
+          display_order?: number | null
+          id?: string
+          image_source: string
+          image_url: string
+          insertion_point?: string | null
+          is_inserted?: boolean | null
+          spotlight_id?: string | null
+          title?: string | null
+        }
+        Update: {
+          context?: string | null
+          created_at?: string | null
+          discogs_release_id?: number | null
+          display_order?: number | null
+          id?: string
+          image_source?: string
+          image_url?: string
+          insertion_point?: string | null
+          is_inserted?: boolean | null
+          spotlight_id?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spotlight_images_spotlight_id_fkey"
+            columns: ["spotlight_id"]
+            isOneToOne: false
+            referencedRelation: "artist_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_events: {
         Row: {
           created_at: string

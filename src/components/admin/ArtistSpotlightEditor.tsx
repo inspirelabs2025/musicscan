@@ -6,9 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Sparkles, Save, Eye, Trash2 } from "lucide-react";
+import { Loader2, Sparkles, Save, Eye, Trash2, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useGenerateSpotlight, useUpdateSpotlight, useArtistSpotlightById, useFormatSpotlight, useDeleteSpotlight } from "@/hooks/useArtistSpotlight";
+import { useGenerateSpotlight, useUpdateSpotlight, useArtistSpotlightById, useFormatSpotlight, useDeleteSpotlight, useAddImagesToSpotlight } from "@/hooks/useArtistSpotlight";
 import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 
@@ -35,6 +35,7 @@ export const ArtistSpotlightEditor = () => {
   const updateMutation = useUpdateSpotlight();
   const formatMutation = useFormatSpotlight();
   const deleteMutation = useDeleteSpotlight();
+  const addImagesMutation = useAddImagesToSpotlight();
 
   // Update word count when text changes
   useEffect(() => {
@@ -228,6 +229,32 @@ export const ArtistSpotlightEditor = () => {
     });
   };
 
+  const handleAddImages = async () => {
+    if (!generatedStoryId) return;
+
+    const confirmed = window.confirm(
+      "Dit zal contextual images toevoegen aan de spotlight. De tekst wordt aangepast. Doorgaan?"
+    );
+    if (!confirmed) return;
+
+    addImagesMutation.mutate(generatedStoryId, {
+      onSuccess: (data) => {
+        setStoryContent(data.story.story_content);
+        toast({
+          title: "✨ Afbeeldingen toegevoegd!",
+          description: `${data.story.images_added} contextual images zijn toegevoegd.`,
+        });
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Fout bij toevoegen afbeeldingen",
+          description: error.message || "Er is een fout opgetreden.",
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
   if (loadingStory && isEditing) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -260,6 +287,18 @@ export const ArtistSpotlightEditor = () => {
                 <Trash2 className="w-4 h-4 mr-2" />
               )}
               Verwijderen
+            </Button>
+            <Button 
+              onClick={handleAddImages}
+              disabled={addImagesMutation.isPending}
+              variant="outline"
+            >
+              {addImagesMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Image className="w-4 h-4 mr-2" />
+              )}
+              Voeg Afbeeldingen Toe
             </Button>
             <Button onClick={handleSave} disabled={updateMutation.isPending}>
               {updateMutation.isPending ? (

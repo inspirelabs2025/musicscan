@@ -45,6 +45,13 @@ serve(async (req) => {
 
     let content = spotlights[0].story_content;
 
+    if (!content) {
+      return new Response(
+        JSON.stringify({ error: 'Spotlight has no story content' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Insert images at their specified insertion points
     // Sort by insertion_point length (longer = more specific = insert first to avoid shifting positions)
     const sortedImages = [...images].sort((a, b) => 
@@ -52,7 +59,13 @@ serve(async (req) => {
     );
 
     for (const image of sortedImages) {
-      const imageMarkdown = `\n\n![${image.title}](${image.url})\n\n`;
+      // Skip images without proper data
+      if (!image.url || !image.insertion_point) {
+        console.warn(`Skipping image with missing data:`, image);
+        continue;
+      }
+
+      const imageMarkdown = `\n\n![${image.title || 'Image'}](${image.url})\n\n`;
       
       // Find the insertion point in the content
       const insertionIndex = content.indexOf(image.insertion_point);

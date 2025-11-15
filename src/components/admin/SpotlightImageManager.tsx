@@ -89,19 +89,20 @@ export const SpotlightImageManager = ({
   };
 
   const handleFetchDiscogs = async () => {
-    if (!discogsId) {
+    if (!discogsId && !artistName) {
       toast({
-        title: "Geen Discogs ID",
-        description: "Deze spotlight heeft geen Discogs ID.",
+        title: "Geen Discogs gegevens",
+        description: "Deze spotlight mist een Discogs ID en artiestnaam.",
         variant: "destructive",
       });
       return;
     }
 
-    // Fetch artist releases
+    // Fetch artist releases (by ID if present, else by name)
     try {
       const releases = await fetchArtistReleasesMutation.mutateAsync({
         artistId: discogsId,
+        artistName,
       });
       setAvailableAlbums(releases);
       setShowAlbumDialog(true);

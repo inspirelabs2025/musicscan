@@ -22,13 +22,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { artistId } = await req.json();
+    const { artistId, artistName } = await req.json();
     
-    if (!artistId) {
-      throw new Error('Artist ID is required');
+    if (!artistId && !artistName) {
+      throw new Error('Artist ID or artistName is required');
     }
 
-    console.log(`[fetch-artist-releases] Fetching releases for artist: ${artistId}`);
+    console.log(`[fetch-artist-releases] Fetching releases for artist: id=${artistId} name=${artistName}`);
 
     // Get Discogs credentials
     const discogsToken =
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     // Fetch artist releases from Discogs
     const headers: Record<string, string> = {
-      'User-Agent': 'MusicScanApp/1.0',
+      'User-Agent': 'MusicScanApp/1.0 (+https://www.musicscan.app)',
       'Accept': 'application/json'
     };
 
@@ -59,34 +59,64 @@ Deno.serve(async (req) => {
       headers['Authorization'] = `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`;
     }
 
-    const url = `https://api.discogs.com/artists/${artistId}/releases?per_page=50&sort=year&sort_order=desc`;
-    console.log(`[fetch-artist-releases] Fetching from: ${url}`);
+    let releases: Array<{ id: number; title: string; year: number; thumb: string; coverImage?: string; type: string }>;    
+    let usedFallback = false;
 
-    const response = await fetch(url, { headers });
+    if (artistId) {
+      const url = `https://api.discogs.com/artists/${artistId}/releases?per_page=50&sort=year&sort_order=desc`;
+      console.log(`[fetch-artist-releases] Fetching from: ${url}`);
 
-    if (!response.ok) {
-      throw new Error(`Discogs API error: ${response.status} ${response.statusText}`);
+      const response = await fetch(url, { headers });
+
+      if (response.ok) {
+        const data = await response.json();
+        releases = (data.releases || [])
+          .filter((release: DiscogsRelease) => 
+            release.type === 'master' || 
+            (release.role === 'Main' && release.type === 'release')
+          )
+          .map((release: DiscogsRelease) => ({
+            id: release.id,
+            title: release.title,
+            year: release.year,
+            thumb: release.thumb,
+            coverImage: release.cover_image,
+            type: release.type
+          }))
+          .slice(0, 30);
+      } else if (response.status === 404 && artistName) {
+        console.warn(`[fetch-artist-releases] Artist ${artistId} not found, falling back to search by name: ${artistName}`);
+        usedFallback = true;
+      } else {
+        throw new Error(`Discogs API error: ${response.status} ${response.statusText}`);
+      }
     }
 
-    const data = await response.json();
-    
-    // Filter and format releases (only albums/EPs, not compilations/appearances)
-    const releases = (data.releases || [])
-      .filter((release: DiscogsRelease) => 
-        release.type === 'master' || 
-        (release.role === 'Main' && release.type === 'release')
-      )
-      .map((release: DiscogsRelease) => ({
-        id: release.id,
-        title: release.title,
-        year: release.year,
-        thumb: release.thumb,
-        coverImage: release.cover_image,
-        type: release.type
-      }))
-      .slice(0, 30); // Limit to 30 most recent releases
+    if (!releases || releases.length === 0) {
+      // Fallback: search by artist name
+      if (!artistName) {
+        throw new Error('No releases found and no artistName provided for fallback search');
+      }
+      const searchUrl = `https://api.discogs.com/database/search?type=release&artist=${encodeURIComponent(artistName)}&per_page=50&sort=year&sort_order=desc`;
+      console.log(`[fetch-artist-releases] Fallback search: ${searchUrl}`);
+      const searchResp = await fetch(searchUrl, { headers });
+      if (!searchResp.ok) {
+        throw new Error(`Discogs search error: ${searchResp.status} ${searchResp.statusText}`);
+      }
+      const searchData = await searchResp.json();
+      releases = (searchData.results || [])
+        .filter((r: any) => r.type === 'release')
+        .map((r: any) => ({
+          id: r.id,
+          title: r.title,
+          year: r.year,
+          thumb: r.thumb,
+          type: r.type
+        }))
+        .slice(0, 30);
+    }
 
-    console.log(`[fetch-artist-releases] Found ${releases.length} releases`);
+    console.log(`[fetch-artist-releases] Found ${releases.length} releases${usedFallback ? ' (fallback)' : ''}`);
 
     return new Response(
       JSON.stringify({

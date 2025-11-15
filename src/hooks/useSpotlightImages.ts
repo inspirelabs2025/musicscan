@@ -87,11 +87,11 @@ export const useUploadSpotlightImage = () => {
 
 export const useFetchArtistReleases = () => {
   return useMutation({
-    mutationFn: async ({ artistId }: { artistId: number }) => {
+    mutationFn: async ({ artistId, artistName }: { artistId?: number; artistName: string }) => {
       const { data, error } = await supabase.functions.invoke(
         "fetch-artist-discogs-releases",
         {
-          body: { artistId },
+          body: { artistId, artistName },
         }
       );
 

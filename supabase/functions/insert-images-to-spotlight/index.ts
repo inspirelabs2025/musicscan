@@ -48,7 +48,7 @@ serve(async (req) => {
     // Insert images at their specified insertion points
     // Sort by insertion_point length (longer = more specific = insert first to avoid shifting positions)
     const sortedImages = [...images].sort((a, b) => 
-      b.insertion_point.length - a.insertion_point.length
+      (b.insertion_point?.length || 0) - (a.insertion_point?.length || 0)
     );
 
     for (const image of sortedImages) {

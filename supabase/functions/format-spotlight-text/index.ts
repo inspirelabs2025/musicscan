@@ -60,6 +60,99 @@ serve(async (req) => {
 
     console.log(`Formatting text for ${artistName} (${wordCount} words)...`);
 
+    // Generate AI portrait for the artist
+    console.log(`Generating AI portrait for ${artistName}...`);
+    let artistPortraitUrl = null;
+    
+    try {
+      const imageResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash-image-preview',
+          messages: [{
+            role: 'user',
+            content: `Generate a professional artistic portrait of ${artistName}, the musician. Style: artistic, professional, music-themed.`
+          }],
+          modalities: ['image', 'text']
+        })
+      });
+
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json();
+        const base64Image = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        
+        if (base64Image) {
+          // Upload to Supabase Storage
+          const fileName = `${slug}-portrait-${Date.now()}.png`;
+          const imageBuffer = Uint8Array.from(atob(base64Image.split(',')[1]), c => c.charCodeAt(0));
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('artist-images')
+            .upload(fileName, imageBuffer, {
+              contentType: 'image/png',
+              cacheControl: '3600'
+            });
+
+          if (!uploadError && uploadData) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('artist-images')
+              .getPublicUrl(fileName);
+            artistPortraitUrl = publicUrl;
+            console.log(`✅ Portrait generated and uploaded: ${publicUrl}`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error generating portrait:', error);
+      // Continue without portrait if generation fails
+    }
+
+    // Try to fetch album artwork from Discogs
+    console.log(`Fetching album artwork from Discogs for ${artistName}...`);
+    const albumArtworks: any[] = [];
+    const DISCOGS_TOKEN = Deno.env.get('DISCOGS_TOKEN');
+    
+    if (DISCOGS_TOKEN) {
+      try {
+        const discogsUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(artistName)}&type=master&per_page=5`;
+        const discogsResponse = await fetch(discogsUrl, {
+          headers: { 'Authorization': `Discogs token=${DISCOGS_TOKEN}` }
+        });
+
+        if (discogsResponse.ok) {
+          const discogsData = await discogsResponse.json();
+          for (const result of discogsData.results?.slice(0, 5) || []) {
+            if (result.cover_image && result.cover_image !== '') {
+              albumArtworks.push({
+                url: result.cover_image,
+                title: result.title,
+                year: result.year,
+                type: 'album_cover'
+              });
+            }
+          }
+          console.log(`✅ Found ${albumArtworks.length} album covers from Discogs`);
+        }
+      } catch (error) {
+        console.error('Error fetching from Discogs:', error);
+      }
+    }
+
+    // Build spotlight images array
+    const spotlightImages = [];
+    if (artistPortraitUrl) {
+      spotlightImages.push({
+        url: artistPortraitUrl,
+        type: 'portrait',
+        description: `AI-generated portrait of ${artistName}`
+      });
+    }
+    spotlightImages.push(...albumArtworks);
+
     // Call Lovable AI to format the text
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -142,7 +235,7 @@ KRITIEKE INSTRUCTIES:
       userId = user?.id;
     }
 
-    // Insert into database
+    // Insert into database with images
     const { data: newSpotlight, error: insertError } = await supabase
       .from('artist_stories')
       .insert({
@@ -154,6 +247,8 @@ KRITIEKE INSTRUCTIES:
         word_count: wordCount,
         reading_time: readingTime,
         user_id: userId,
+        artwork_url: artistPortraitUrl,
+        spotlight_images: spotlightImages.length > 0 ? spotlightImages : null,
       })
       .select()
       .single();
@@ -174,6 +269,9 @@ KRITIEKE INSTRUCTIES:
           word_count: newSpotlight.word_count,
           reading_time: newSpotlight.reading_time,
           slug: newSpotlight.slug,
+          artwork_url: newSpotlight.artwork_url,
+          spotlight_images: newSpotlight.spotlight_images,
+          images_generated: spotlightImages.length,
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

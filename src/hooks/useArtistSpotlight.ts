@@ -173,3 +173,38 @@ export const useDeleteSpotlight = () => {
     },
   });
 };
+
+interface FormatSpotlightParams {
+  artistName: string;
+  fullText: string;
+}
+
+export const useFormatSpotlight = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ artistName, fullText }: FormatSpotlightParams) => {
+      const { data, error } = await supabase.functions.invoke('format-spotlight-text', {
+        body: { artistName, fullText }
+      });
+
+      // Handle 409 duplicate
+      if (error instanceof FunctionsHttpError) {
+        try {
+          const errorBody = await error.context.json();
+          if (errorBody?.code === 'DUPLICATE') {
+            return errorBody;
+          }
+        } catch (jsonError) {
+          throw error;
+        }
+      }
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['artist-spotlights'] });
+    },
+  });
+};

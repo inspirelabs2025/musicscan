@@ -193,6 +193,38 @@ export const useAddImagesToSpotlight = () => {
   });
 };
 
+export const useGenerateSpotlightImages = () => {
+  return useMutation({
+    mutationFn: async (spotlightId: string) => {
+      const { data, error } = await supabase.functions.invoke('generate-spotlight-images', {
+        body: { spotlightId }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
+export const useInsertImagesToSpotlight = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ spotlightId, images }: { spotlightId: string; images: any[] }) => {
+      const { data, error } = await supabase.functions.invoke('insert-images-to-spotlight', {
+        body: { spotlightId, images }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['artist-spotlight'] });
+      queryClient.invalidateQueries({ queryKey: ['artist-spotlight-by-id'] });
+    },
+  });
+};
+
 interface FormatSpotlightParams {
   artistName: string;
   fullText: string;

@@ -112,6 +112,12 @@ verify_jwt = true
 [functions.add-images-to-spotlight]
 verify_jwt = true
 
+[functions.generate-spotlight-images]
+verify_jwt = true
+
+[functions.insert-images-to-spotlight]
+verify_jwt = true
+
 [functions.test-email-notification]
 verify_jwt = false
 

@@ -18,10 +18,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { spotlightId, discogsId } = await req.json();
+    const { spotlightId, discogsIds } = await req.json();
 
-    if (!spotlightId || !discogsId) {
-      throw new Error('spotlightId and discogsId are required');
+    if (!spotlightId || !discogsIds || !Array.isArray(discogsIds)) {
+      throw new Error('Spotlight ID and array of Discogs IDs are required');
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -62,45 +62,66 @@ Deno.serve(async (req) => {
       headers['Authorization'] = `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`;
     }
 
-    console.log(`Fetching Discogs release ${discogsId}`);
-    const discogsResponse = await fetch(
-      `https://api.discogs.com/releases/${discogsId}`,
-      { headers }
-    );
+    console.log(`[fetch-discogs-images] Fetching images for ${discogsIds.length} releases`);
 
-    if (!discogsResponse.ok) {
-      throw new Error(`Discogs API error: ${discogsResponse.status}`);
+    const allImageRecords = [];
+    
+    // Fetch all releases
+    for (const discogsId of discogsIds) {
+      try {
+        console.log(`Fetching release ${discogsId}`);
+        const discogsResponse = await fetch(
+          `https://api.discogs.com/releases/${discogsId}`,
+          { headers }
+        );
+
+        if (!discogsResponse.ok) {
+          console.error(`Failed to fetch release ${discogsId}: ${discogsResponse.status}`);
+          continue;
+        }
+
+        const releaseData = await discogsResponse.json();
+        const images: DiscogsImage[] = releaseData.images || [];
+
+        console.log(`Found ${images.length} images for release ${discogsId}`);
+
+        // Save images to spotlight_images table
+        const imageRecords = images.map((img, index) => ({
+          spotlight_id: spotlightId,
+          image_url: img.uri,
+          image_source: 'discogs',
+          title: `${releaseData.artists?.[0]?.name || 'Unknown'} - ${releaseData.title}`,
+          context: img.type === 'primary' ? 'Album Cover' : `Additional Image ${index}`,
+          discogs_release_id: discogsId,
+          display_order: allImageRecords.length + index,
+          is_inserted: false,
+        }));
+
+        allImageRecords.push(...imageRecords);
+        
+        // Rate limiting: wait 1 second between requests
+        if (discogsIds.indexOf(discogsId) < discogsIds.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      } catch (error) {
+        console.error(`Error fetching release ${discogsId}:`, error);
+      }
     }
 
-    const releaseData = await discogsResponse.json();
-    const images: DiscogsImage[] = releaseData.images || [];
-
-    if (images.length === 0) {
+    if (allImageRecords.length === 0) {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'No images found for this release',
+          message: 'No images found for selected releases',
           images: [],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Save images to spotlight_images table
-    const imageRecords = images.map((img, index) => ({
-      spotlight_id: spotlightId,
-      image_url: img.uri,
-      image_source: 'discogs',
-      title: `${releaseData.artists?.[0]?.name || 'Unknown'} - ${releaseData.title}`,
-      context: img.type === 'primary' ? 'Album Cover' : `Additional Image ${index}`,
-      discogs_release_id: discogsId,
-      display_order: index,
-      is_inserted: false,
-    }));
-
     const { data: insertedImages, error: insertError } = await supabase
       .from('spotlight_images')
-      .insert(imageRecords)
+      .insert(allImageRecords)
       .select();
 
     if (insertError) {
@@ -108,7 +129,7 @@ Deno.serve(async (req) => {
       throw insertError;
     }
 
-    console.log(`Successfully saved ${insertedImages.length} Discogs images`);
+    console.log(`Successfully saved ${insertedImages.length} Discogs images from ${discogsIds.length} releases`);
 
     return new Response(
       JSON.stringify({

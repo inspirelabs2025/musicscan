@@ -10,10 +10,12 @@ import {
   useSpotlightImages,
   useUploadSpotlightImage,
   useFetchDiscogsImages,
+  useFetchArtistReleases,
   useDeleteSpotlightImage,
   SpotlightImage,
 } from "@/hooks/useSpotlightImages";
 import { cn } from "@/lib/utils";
+import { AlbumSelectionDialog } from "./AlbumSelectionDialog";
 
 interface SpotlightImageManagerProps {
   spotlightId: string;
@@ -35,10 +37,13 @@ export const SpotlightImageManager = ({
   const { toast } = useToast();
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("all");
+  const [showAlbumDialog, setShowAlbumDialog] = useState(false);
+  const [availableAlbums, setAvailableAlbums] = useState<any[]>([]);
 
   const { data: images = [], isLoading } = useSpotlightImages(spotlightId);
   const uploadMutation = useUploadSpotlightImage();
   const fetchDiscogsMutation = useFetchDiscogsImages();
+  const fetchArtistReleasesMutation = useFetchArtistReleases();
   const deleteMutation = useDeleteSpotlightImage();
 
   const aiImages = images.filter((img) => img.image_source === "ai");
@@ -93,9 +98,22 @@ export const SpotlightImageManager = ({
       return;
     }
 
+    // Fetch artist releases
+    try {
+      const releases = await fetchArtistReleasesMutation.mutateAsync({
+        artistId: discogsId,
+      });
+      setAvailableAlbums(releases);
+      setShowAlbumDialog(true);
+    } catch (error) {
+      console.error("Error fetching releases:", error);
+    }
+  };
+
+  const handleConfirmAlbums = async (selectedIds: number[]) => {
     await fetchDiscogsMutation.mutateAsync({
       spotlightId,
-      discogsId,
+      discogsIds: selectedIds,
     });
   };
 
@@ -263,6 +281,14 @@ export const SpotlightImageManager = ({
             )}
           </TabsContent>
         </Tabs>
+
+        <AlbumSelectionDialog
+          open={showAlbumDialog}
+          onOpenChange={setShowAlbumDialog}
+          albums={availableAlbums}
+          isLoading={fetchArtistReleasesMutation.isPending}
+          onConfirm={handleConfirmAlbums}
+        />
 
         {/* Insert Button */}
         {selectedImages.length > 0 && (

@@ -109,6 +109,9 @@ verify_jwt = false
 [functions.format-spotlight-text]
 verify_jwt = true
 
+[functions.add-images-to-spotlight]
+verify_jwt = true
+
 [functions.test-email-notification]
 verify_jwt = false
 

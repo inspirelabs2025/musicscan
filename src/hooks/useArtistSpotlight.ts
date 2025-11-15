@@ -174,6 +174,25 @@ export const useDeleteSpotlight = () => {
   });
 };
 
+export const useAddImagesToSpotlight = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (spotlightId: string) => {
+      const { data, error } = await supabase.functions.invoke('add-images-to-spotlight', {
+        body: { spotlightId }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['artist-spotlight'] });
+      queryClient.invalidateQueries({ queryKey: ['artist-spotlight-by-id'] });
+    },
+  });
+};
+
 interface FormatSpotlightParams {
   artistName: string;
   fullText: string;

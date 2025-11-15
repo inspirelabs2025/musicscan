@@ -28,24 +28,37 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get Discogs credentials (consistent with other functions)
-    const discogsToken = Deno.env.get('DISCOGS_TOKEN');
-    const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
-    const discogsConsumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET');
+    // Get Discogs credentials (support multiple env names)
+    const discogsToken =
+      Deno.env.get('DISCOGS_TOKEN') ||
+      Deno.env.get('DISCOGS_USER_TOKEN');
 
-    if (!discogsToken && !discogsConsumerKey) {
+    const discogsConsumerKey =
+      Deno.env.get('DISCOGS_CONSUMER_KEY') ||
+      Deno.env.get('DISCOGS_API_KEY');
+
+    const discogsConsumerSecret =
+      Deno.env.get('DISCOGS_CONSUMER_SECRET') ||
+      Deno.env.get('DISCOGS_API_SECRET');
+
+    console.log(
+      `[discogs-auth] presence -> token:${!!discogsToken}, consumerKey:${!!discogsConsumerKey}, consumerSecret:${!!discogsConsumerSecret}`
+    );
+
+    if (!discogsToken && !(discogsConsumerKey && discogsConsumerSecret)) {
       throw new Error('Discogs credentials not configured');
     }
 
     // Fetch release data from Discogs
     const headers: Record<string, string> = {
       'User-Agent': 'MusicScanApp/1.0',
+      'Accept': 'application/json'
     };
 
     // Prefer personal token over consumer key/secret
     if (discogsToken) {
       headers['Authorization'] = `Discogs token=${discogsToken}`;
-    } else if (discogsConsumerKey && discogsConsumerSecret) {
+    } else {
       headers['Authorization'] = `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}`;
     }
 

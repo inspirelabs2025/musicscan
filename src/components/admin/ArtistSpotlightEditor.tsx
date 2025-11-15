@@ -6,9 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Sparkles, Save, Eye } from "lucide-react";
+import { Loader2, Sparkles, Save, Eye, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useGenerateSpotlight, useUpdateSpotlight, useArtistSpotlightById, useFormatSpotlight } from "@/hooks/useArtistSpotlight";
+import { useGenerateSpotlight, useUpdateSpotlight, useArtistSpotlightById, useFormatSpotlight, useDeleteSpotlight } from "@/hooks/useArtistSpotlight";
 import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 
@@ -34,6 +34,7 @@ export const ArtistSpotlightEditor = () => {
   const generateMutation = useGenerateSpotlight();
   const updateMutation = useUpdateSpotlight();
   const formatMutation = useFormatSpotlight();
+  const deleteMutation = useDeleteSpotlight();
 
   // Update word count when text changes
   useEffect(() => {
@@ -202,6 +203,31 @@ export const ArtistSpotlightEditor = () => {
     );
   };
 
+  const handleDelete = async () => {
+    if (!generatedStoryId) return;
+
+    if (!confirm(`Weet je zeker dat je de spotlight voor ${artistName} wilt verwijderen?`)) {
+      return;
+    }
+
+    deleteMutation.mutate(generatedStoryId, {
+      onSuccess: () => {
+        toast({
+          title: "✅ Verwijderd",
+          description: "Spotlight is succesvol verwijderd.",
+        });
+        navigate('/admin/artist-spotlights');
+      },
+      onError: (error) => {
+        toast({
+          title: "Verwijderen mislukt",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
   if (loadingStory && isEditing) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -222,14 +248,28 @@ export const ArtistSpotlightEditor = () => {
           </p>
         </div>
         {generatedStoryId && (
-          <Button onClick={handleSave} disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
-            )}
-            Opslaan
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleDelete} 
+              disabled={deleteMutation.isPending}
+              variant="destructive"
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4 mr-2" />
+              )}
+              Verwijderen
+            </Button>
+            <Button onClick={handleSave} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Opslaan
+            </Button>
+          </div>
         )}
       </div>
 

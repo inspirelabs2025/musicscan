@@ -85,21 +85,43 @@ export const useUploadSpotlightImage = () => {
   });
 };
 
+export const useFetchArtistReleases = () => {
+  return useMutation({
+    mutationFn: async ({ artistId }: { artistId: number }) => {
+      const { data, error } = await supabase.functions.invoke(
+        "fetch-artist-discogs-releases",
+        {
+          body: { artistId },
+        }
+      );
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      return data.releases;
+    },
+    onError: (error: Error) => {
+      console.error("Artist releases fetch error:", error);
+      toast.error(`Kon releases niet ophalen: ${error.message}`);
+    },
+  });
+};
+
 export const useFetchDiscogsImages = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
       spotlightId,
-      discogsId,
+      discogsIds,
     }: {
       spotlightId: string;
-      discogsId: number;
+      discogsIds: number[];
     }) => {
       const { data, error } = await supabase.functions.invoke(
         "fetch-discogs-images",
         {
-          body: { spotlightId, discogsId },
+          body: { spotlightId, discogsIds },
         }
       );
 

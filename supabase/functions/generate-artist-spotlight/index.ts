@@ -138,12 +138,12 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-pro',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 16000,
+        max_tokens: 24000,
         tools: [{
           type: 'function',
           function: {

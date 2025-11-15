@@ -167,8 +167,9 @@ serve(async (req) => {
     }
     spotlightImages.push(...albumArtworks);
 
-    // Call Lovable AI to format the text
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // PHASE 1: Format text and identify image moments
+    console.log('📝 Phase 1: Formatting text and identifying image moments...');
+    const phase1Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -179,49 +180,149 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Je bent een markdown formatter. Je taak is om tekst op te maken als nette markdown.
+            content: `Je bent een markdown formatter en content analyzer. Je moet:
+1. De tekst opmaken als nette markdown (## en ### headers, **bold**, etc.)
+2. 3-5 sleutelmomenten identificeren waar een afbeelding het verhaal versterkt
 
-KRITIEKE INSTRUCTIES:
-- Wijzig GEEN inhoudelijke tekst, ALLEEN formatting
-- Behoud ALLE content exact zoals die is
-- Voeg markdown headers toe waar logisch (##, ###)
-- Gebruik ** voor bold waar gepast
-- Maak paragrafen visueel duidelijk
-- Voeg GEEN nieuwe content toe
-- Verwijder GEEN bestaande content
-- Alleen formatting aanpassen, niets meer`
+RETURN VALID JSON met deze exacte structuur:
+{
+  "formatted_content": "markdown text with {{IMAGE_1}}, {{IMAGE_2}} placeholders at natural break points",
+  "image_suggestions": [
+    {
+      "placeholder": "IMAGE_1",
+      "section_title": "Korte titel van de sectie",
+      "prompt": "Zeer specifieke beschrijving voor afbeelding generatie. Beschrijf compositie, stijl, onderwerp in detail.",
+      "position_description": "Waar in de tekst (bijv. 'na introductie', 'bij doorbraak moment')"
+    }
+  ]
+}
+
+AFBEELDING RICHTLIJNEN:
+- Spreidt 3-5 afbeeldingen gelijkmatig door de tekst
+- Diverse types: portretten, instrumenten, concert scenes, historische context
+- Plaats {{PLACEHOLDER}} op natuurlijke onderbrekingsmomenten
+- Specifieke prompts: stijl (fotorealistisch/artistiek), compositie, tijdperk, sfeer
+
+MARKDOWN REGELS:
+- Wijzig GEEN inhoudelijke tekst
+- Alleen formatting toevoegen
+- Headers voor nieuwe secties
+- Bold voor nadruk`
           },
           {
             role: 'user',
-            content: `Artiest: ${artistName}\n\nMaak deze tekst op als nette markdown, wijzig GEEN inhoud:\n\n${fullText}`
+            content: `Artiest: ${artistName}\n\nFormat deze tekst als markdown en identificeer 3-5 afbeeldingsmomenten:\n\n${fullText}`
           }
         ],
-        temperature: 0.3, // Lower temperature for consistent formatting
+        temperature: 0.3,
       }),
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
+    if (!phase1Response.ok) {
+      const errorText = await phase1Response.text();
+      console.error('Phase 1 AI API error:', phase1Response.status, errorText);
       
-      if (aiResponse.status === 429) {
+      if (phase1Response.status === 429) {
         return new Response(
           JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      if (aiResponse.status === 402) {
+      if (phase1Response.status === 402) {
         return new Response(
           JSON.stringify({ error: 'Insufficient credits. Please add credits to your Lovable AI workspace.' }),
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      throw new Error(`AI API error: ${aiResponse.status}`);
+      throw new Error(`Phase 1 AI API error: ${phase1Response.status}`);
     }
 
-    const aiData = await aiResponse.json();
-    const formattedContent = aiData.choices[0].message.content;
+    const phase1Data = await phase1Response.json();
+    const aiMessage = phase1Data.choices?.[0]?.message?.content || '';
+    
+    // Parse JSON response
+    let formattedContent = '';
+    let imageSuggestions: any[] = [];
+    
+    try {
+      // Extract JSON from markdown code blocks if present
+      const jsonMatch = aiMessage.match(/```json\n?(.*?)\n?```/s) || aiMessage.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : aiMessage;
+      const parsedResponse = JSON.parse(jsonStr);
+      
+      formattedContent = parsedResponse.formatted_content || aiMessage;
+      imageSuggestions = parsedResponse.image_suggestions || [];
+      
+      console.log(`✅ Phase 1 complete: ${imageSuggestions.length} image moments identified`);
+    } catch (parseError) {
+      console.error('Failed to parse JSON response, using raw content:', parseError);
+      formattedContent = aiMessage;
+      imageSuggestions = [];
+    }
+
+    // PHASE 2: Generate contextual images
+    console.log(`🎨 Phase 2: Generating ${imageSuggestions.length} contextual images...`);
+    
+    for (let i = 0; i < imageSuggestions.length; i++) {
+      const suggestion = imageSuggestions[i];
+      
+      try {
+        console.log(`  Generating image ${i + 1}/${imageSuggestions.length}: ${suggestion.section_title}`);
+        
+        const imageGenResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash-image-preview',
+            messages: [{
+              role: 'user',
+              content: `${suggestion.prompt}. Context: ${artistName} spotlight story. Style: professional, music-themed, artistic.`
+            }],
+            modalities: ['image', 'text']
+          })
+        });
+
+        if (imageGenResponse.ok) {
+          const imageData = await imageGenResponse.json();
+          const base64Image = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+          
+          if (base64Image) {
+            const fileName = `${slug}-image-${i + 1}-${Date.now()}.png`;
+            const imageBuffer = Uint8Array.from(atob(base64Image.split(',')[1]), c => c.charCodeAt(0));
+            
+            const { error: uploadError } = await supabase.storage
+              .from('artist-images')
+              .upload(fileName, imageBuffer, {
+                contentType: 'image/png',
+                cacheControl: '3600'
+              });
+
+            if (!uploadError) {
+              const { data: { publicUrl } } = supabase.storage
+                .from('artist-images')
+                .getPublicUrl(fileName);
+              
+              // Replace placeholder with actual image markdown
+              const imageMarkdown = `\n\n![${suggestion.section_title}](${publicUrl})\n*${suggestion.section_title}*\n\n`;
+              formattedContent = formattedContent.replace(
+                `{{${suggestion.placeholder}}}`,
+                imageMarkdown
+              );
+              
+              console.log(`  ✅ Image ${i + 1} generated and inserted`);
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`  ❌ Failed to generate image ${i + 1}:`, error);
+        // Remove placeholder if image generation fails
+        formattedContent = formattedContent.replace(`{{${suggestion.placeholder}}}`, '');
+      }
+    }
 
     // Calculate reading time (avg 200 words per minute)
     const readingTime = Math.ceil(wordCount / 200);
@@ -271,7 +372,8 @@ KRITIEKE INSTRUCTIES:
           slug: newSpotlight.slug,
           artwork_url: newSpotlight.artwork_url,
           spotlight_images: newSpotlight.spotlight_images,
-          images_generated: spotlightImages.length,
+        images_generated: spotlightImages.length,
+        contextual_images: imageSuggestions.length,
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -188,19 +188,32 @@ export const useFormatSpotlight = () => {
         body: { artistName, fullText }
       });
 
-      // Handle 409 duplicate
-      if (error instanceof FunctionsHttpError) {
-        try {
-          const errorBody = await error.context.json();
-          if (errorBody?.code === 'DUPLICATE') {
-            return errorBody;
+      // Handle 409 duplicate - check error context first
+      if (error) {
+        if (error instanceof FunctionsHttpError) {
+          const status = error.context?.status;
+          
+          // Handle 409 Conflict (duplicate)
+          if (status === 409) {
+            try {
+              const errorBody = await error.context.json();
+              if (errorBody?.code === 'DUPLICATE') {
+                return {
+                  success: false,
+                  code: 'DUPLICATE',
+                  existing_id: errorBody.existing_id
+                };
+              }
+            } catch (jsonError) {
+              console.error('Failed to parse 409 response:', jsonError);
+            }
           }
-        } catch (jsonError) {
-          throw error;
         }
+        
+        // For all other errors, throw
+        throw error;
       }
 
-      if (error) throw error;
       return data;
     },
     onSuccess: () => {

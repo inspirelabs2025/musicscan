@@ -28,6 +28,7 @@ export const ArtistSpotlightEditor = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [generatedStoryId, setGeneratedStoryId] = useState<string | null>(null);
   const [wordCount, setWordCount] = useState(0);
+  const [discogsArtistId, setDiscogsArtistId] = useState<number | undefined>();
 
   // Only fetch existing story if we're editing (id exists)
   const { data: existingStory, isLoading: loadingStory } = useArtistSpotlightById(id || "", {
@@ -53,6 +54,7 @@ export const ArtistSpotlightEditor = () => {
       setStoryContent(existingStory.story_content);
       setSpotlightDescription(existingStory.spotlight_description || "");
       setIsPublished(existingStory.is_published);
+      setDiscogsArtistId(existingStory.discogs_artist_id || undefined);
       setGeneratedStoryId(existingStory.id);
     }
   }, [existingStory]);
@@ -186,6 +188,7 @@ export const ArtistSpotlightEditor = () => {
           story_content: storyContent,
           spotlight_description: spotlightDescription,
           is_published: isPublished,
+          discogs_artist_id: discogsArtistId,
         },
       },
       {
@@ -350,6 +353,20 @@ export const ArtistSpotlightEditor = () => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="discogsArtistId">Discogs Artist ID (optioneel)</Label>
+              <Input
+                id="discogsArtistId"
+                type="number"
+                value={discogsArtistId || ''}
+                onChange={(e) => setDiscogsArtistId(e.target.value ? Number(e.target.value) : undefined)}
+                placeholder="bijv. 30041 voor Miles Davis"
+              />
+              <p className="text-xs text-muted-foreground">
+                Voer het Discogs Artist ID in om album covers op te kunnen halen
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="initialText">Volledige tekst</Label>
               <Textarea
                 id="initialText"
@@ -454,13 +471,14 @@ export const ArtistSpotlightEditor = () => {
 
         {/* Image Manager - New Multi-Source System */}
         {generatedStoryId && (
-          <SpotlightImageManager
-            spotlightId={generatedStoryId}
-            artistName={artistName}
-            onGenerateAI={handleGenerateImages}
-            onInsertSelected={handleInsertImages}
-            isGeneratingAI={generateImagesMutation.isPending}
-          />
+            <SpotlightImageManager
+              spotlightId={generatedStoryId}
+              artistName={artistName}
+              discogsId={discogsArtistId}
+              onGenerateAI={handleGenerateImages}
+              onInsertSelected={handleInsertImages}
+              isGeneratingAI={generateImagesMutation.isPending}
+            />
         )}
 
         {/* Preview/Edit Section */}

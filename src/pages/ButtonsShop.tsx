@@ -95,53 +95,112 @@ export default function ButtonsShop() {
             { name: "Buttons Shop", url: "/buttons" }
           ]} />
 
-          {/* Hero Section */}
+          {/* Hero Section with Visual Examples */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-12 text-white">
-            <div className="relative z-10 max-w-3xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Pin className="h-12 w-12" />
-                <h1 className="text-5xl font-bold">Artist Buttons</h1>
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                  <Pin className="h-12 w-12" />
+                  <h1 className="text-5xl font-bold">Artist Buttons</h1>
+                </div>
+                <p className="text-xl mb-6 text-blue-50">
+                  Speld je favoriete artiesten! Unieke buttons en badges met iconische muzikanten.
+                </p>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  <Badge variant="secondary" className="text-base py-2 px-4">
+                    📌 {buttonProducts?.length || 0} Buttons
+                  </Badge>
+                  <Badge variant="secondary" className="text-base py-2 px-4">
+                    💰 Vanaf €4,50
+                  </Badge>
+                  <Badge variant="secondary" className="text-base py-2 px-4">
+                    📏 3.5cm - 4cm
+                  </Badge>
+                </div>
               </div>
-              <p className="text-xl mb-6 text-blue-50">
-                Speld je favoriete artiesten! Unieke buttons en badges met iconische muzikanten.
-              </p>
-              <div className="flex flex-wrap gap-4 text-sm">
-                <Badge variant="secondary" className="text-base py-2 px-4">
-                  📌 {buttonProducts?.length || 0} Buttons
-                </Badge>
-                <Badge variant="secondary" className="text-base py-2 px-4">
-                  💰 Vanaf €4,50
-                </Badge>
-                <Badge variant="secondary" className="text-base py-2 px-4">
-                  📏 3.5cm - 4cm
-                </Badge>
+              
+              {/* Visual Size Examples */}
+              <div className="relative z-10 flex items-center justify-center gap-8">
+                <div className="text-center">
+                  <div className="relative mx-auto mb-3">
+                    <div 
+                      className="w-[140px] h-[140px] rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/40 flex items-center justify-center font-bold text-2xl shadow-2xl"
+                      style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+                    >
+                      <div className="w-full h-full rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                        <Pin className="h-12 w-12 text-white" />
+                      </div>
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                      <Pin className="h-4 w-4 text-gray-700" />
+                    </div>
+                  </div>
+                  <p className="text-sm font-semibold text-white/90">3.5cm</p>
+                  <p className="text-xs text-white/70">Compact</p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="relative mx-auto mb-3">
+                    <div 
+                      className="w-[160px] h-[160px] rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/40 flex items-center justify-center font-bold text-2xl shadow-2xl"
+                      style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+                    >
+                      <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center">
+                        <Pin className="h-16 w-16 text-white" />
+                      </div>
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                      <Pin className="h-4 w-4 text-gray-700" />
+                    </div>
+                  </div>
+                  <p className="text-sm font-semibold text-white/90">4cm</p>
+                  <p className="text-xs text-white/70">Standaard</p>
+                </div>
               </div>
             </div>
             <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
             <div className="absolute -left-20 -top-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
           </div>
 
-          {/* Size Info Banner */}
+          {/* Size Info Banner with Visual Reference */}
           <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-2">
             <CardContent className="pt-6">
-              <div className="flex items-center gap-8">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                    3.5
+                  <div className="relative">
+                    <div 
+                      className="w-[56px] h-[56px] rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg"
+                      style={{ boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)' }}
+                    >
+                      3.5
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                      <Pin className="h-2 w-2 text-gray-600 dark:text-gray-300" />
+                    </div>
                   </div>
                   <div>
-                    <p className="font-semibold">3.5cm - Compact</p>
-                    <p className="text-sm text-muted-foreground">Perfect voor caps & tassen</p>
+                    <p className="font-semibold text-lg">3.5cm - Compact</p>
+                    <p className="text-sm text-muted-foreground">Perfect voor caps, tassen & hoedjes</p>
+                    <p className="text-xs text-muted-foreground mt-1">📍 Subtiel maar opvallend</p>
                   </div>
                 </div>
-                <div className="h-12 w-px bg-border" />
+                
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                    4
+                  <div className="relative">
+                    <div 
+                      className="w-[64px] h-[64px] rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg"
+                      style={{ boxShadow: '0 4px 12px rgba(168, 85, 247, 0.4)' }}
+                    >
+                      4
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                      <Pin className="h-2 w-2 text-gray-600 dark:text-gray-300" />
+                    </div>
                   </div>
                   <div>
-                    <p className="font-semibold">4cm - Standaard</p>
-                    <p className="text-sm text-muted-foreground">Beste zichtbaarheid op jackets</p>
+                    <p className="font-semibold text-lg">4cm - Standaard</p>
+                    <p className="text-sm text-muted-foreground">Ideaal voor jackets & rugzakken</p>
+                    <p className="text-xs text-muted-foreground mt-1">⭐ Beste zichtbaarheid</p>
                   </div>
                 </div>
               </div>
@@ -206,17 +265,31 @@ export default function ButtonsShop() {
                   <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 h-full">
                     <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-900 dark:to-gray-800">
                       {product.primary_image ? (
-                        <div className="p-8 h-full flex items-center justify-center">
-                          <img
-                            src={product.primary_image}
-                            alt={generateButtonAltTag(
-                              product.artist || '',
-                              product.title,
-                              product.format || '4cm'
-                            )}
-                            className="w-full h-full object-contain rounded-full shadow-xl group-hover:scale-110 transition-transform duration-300"
-                            loading="lazy"
-                          />
+                        <div className="p-6 h-full flex items-center justify-center relative">
+                          {/* Button with realistic shadow and pin */}
+                          <div className="relative w-3/4 h-3/4">
+                            <img
+                              src={product.primary_image}
+                              alt={generateButtonAltTag(
+                                product.artist || '',
+                                product.title,
+                                product.format || '4cm'
+                              )}
+                              className="w-full h-full object-cover rounded-full shadow-2xl group-hover:scale-110 transition-transform duration-300 border-4 border-white dark:border-gray-700"
+                              style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.3)' }}
+                              loading="lazy"
+                            />
+                            {/* Safety pin indicator */}
+                            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-600">
+                              <Pin className="h-3 w-3 text-gray-600 dark:text-gray-300" />
+                            </div>
+                          </div>
+                          {/* Size indicator */}
+                          {product.format && (
+                            <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                              {product.format}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="flex items-center justify-center h-full">

@@ -60,6 +60,96 @@ serve(async (req) => {
     }
     const baseImageBase64 = btoa(binary);
 
+    // STEP 1: Create circular base design first
+    console.log('🎨 Creating circular base button design...');
+
+    const circularPrompt = `Transform this image into a perfect circular button design.
+CRITICAL REQUIREMENTS:
+- Create a PERFECT CIRCLE (not oval, not rounded square)
+- Crop/compose the image to fit beautifully in a circular format
+- Focus on the most important visual elements
+- Ensure all edges are smooth and circular
+- Professional button badge quality
+- Keep the composition balanced and centered
+- High contrast and clarity for small button size (35-45mm diameter)
+- This will be the base for other style variations`;
+
+    const circularResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: circularPrompt },
+                  {
+                    type: 'image_url',
+                    image_url: { url: `data:image/png;base64,${circularBase64ForStyles}` }
+                  }
+            ]
+          }
+        ],
+        modalities: ['image', 'text']
+      })
+    });
+
+    if (!circularResponse.ok) {
+      const errorText = await circularResponse.text();
+      console.error('Circular base creation error:', errorText);
+      throw new Error(`Failed to create circular base: ${circularResponse.status}`);
+    }
+
+    const circularData = await circularResponse.json();
+    const circularImageUrl = circularData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    if (!circularImageUrl) {
+      throw new Error('No circular base image generated');
+    }
+
+    // Upload circular base
+    const circularBase64 = circularImageUrl.replace(/^data:image\/\w+;base64,/, '');
+    const circularBuffer = Uint8Array.from(atob(circularBase64), c => c.charCodeAt(0));
+    const circularFileName = `button-${buttonId}-circular-base-${Date.now()}.png`;
+
+    const { error: circularUploadError } = await supabase.storage
+      .from('time-machine-posters')
+      .upload(circularFileName, circularBuffer, {
+        contentType: 'image/png',
+        cacheControl: '31536000'
+      });
+
+    if (circularUploadError) {
+      console.error('Circular base upload error:', circularUploadError);
+      throw circularUploadError;
+    }
+
+    const { data: { publicUrl: circularBaseUrl } } = supabase.storage
+      .from('time-machine-posters')
+      .getPublicUrl(circularFileName);
+
+    console.log(`✅ Created circular base: ${circularBaseUrl}`);
+
+    // Download circular base and convert to base64 for style variants
+    const circularBaseResponse = await fetch(circularBaseUrl);
+    if (!circularBaseResponse.ok) {
+      throw new Error(`Failed to fetch circular base: ${circularBaseResponse.statusText}`);
+    }
+    const circularBaseBlob = await circularBaseResponse.blob();
+    const circularBaseBuffer = await circularBaseBlob.arrayBuffer();
+    const circularBytes = new Uint8Array(circularBaseBuffer);
+    let circularBinary = '';
+    for (let i = 0; i < circularBytes.length; i += chunkSize) {
+      const chunk = circularBytes.subarray(i, Math.min(i + chunkSize, circularBytes.length));
+      circularBinary += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+    const circularBase64ForStyles = btoa(circularBinary);
+
+    // STEP 2: Generate 7 style variants from the circular base
     for (const [styleKey, { label, emoji }] of Object.entries(STYLE_CONFIG)) {
       console.log(`🎨 Generating ${label} style...`);
 

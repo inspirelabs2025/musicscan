@@ -369,30 +369,13 @@ async function processPhotoBatch(
     try {
       await updateProgress(10, 'Generating button design + 7 styles...');
       
-      // First create base button design (circular crop of photo)
-      const { data: buttonStyle, error: buttonError } = await supabase.functions.invoke(
-        'stylize-photo',
-        {
-          body: {
-            imageUrl: photoUrl,
-            style: 'original',
-            preserveComposition: true,
-            outputFormat: 'circular' // This would need to be added to stylize-photo or we use the original
-          }
-        }
-      );
-
-      if (buttonError) throw buttonError;
-      
-      const baseButtonUrl = buttonStyle?.stylizedImageUrl || photoUrl;
-      results.buttons.baseDesign = baseButtonUrl;
-
-      // Generate 7 style variants
+      // Generate circular base + 7 style variants directly
+      // The batch-generate-button-styles function will create the circular base first
       const { data: buttonVariants, error: variantsError } = await supabase.functions.invoke(
         'batch-generate-button-styles',
         {
           body: {
-            baseDesignUrl: baseButtonUrl,
+            baseDesignUrl: photoUrl, // Send original photo, function will make it circular
             buttonId: `batch-${batchId}`
           }
         }

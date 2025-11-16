@@ -114,11 +114,13 @@ import TimeMachineManager from "./pages/admin/TimeMachineManager";
 import LyricPosterGenerator from "./pages/admin/LyricPosterGenerator";
 import SockGenerator from "./pages/admin/SockGenerator";
 import TshirtGenerator from "./pages/admin/TshirtGenerator";
+import ButtonGenerator from "./pages/admin/ButtonGenerator";
 import SinglesImporterPage from "./pages/admin/SinglesImporterPage";
 import ArtistStoriesGenerator from "./pages/admin/ArtistStoriesGenerator";
 import SocksShop from "./pages/SocksShop";
 import TshirtsShop from "./pages/TshirtsShop";
 import MerchandiseShop from "./pages/MerchandiseShop";
+import ButtonsShop from "./pages/ButtonsShop";
 import AnecdotesOverview from "./pages/AnecdotesOverview";
 import AnecdoteDetail from "./pages/AnecdoteDetail";
 import Echo from "./pages/Echo";
@@ -350,6 +352,7 @@ const AppContent = () => {
                 <Route path="lyric-poster-generator" element={<LyricPosterGenerator />} />
                 <Route path="sock-generator" element={<SockGenerator />} />
                 <Route path="tshirt-generator" element={<TshirtGenerator />} />
+                <Route path="button-generator" element={<ButtonGenerator />} />
                 <Route path="photo-stylizer" element={<PhotoStylizer />} />
                 <Route path="singles-importer" element={<SinglesImporterPage />} />
                 <Route path="artist-stories-generator" element={<ArtistStoriesGenerator />} />
@@ -407,6 +410,9 @@ const AppContent = () => {
         <Route path="/socks" element={<SocksShop />} />
         <Route path="/shirts" element={<TshirtsShop />} />
         <Route path="/tshirts" element={<TshirtsShop />} />
+        <Route path="/buttons" element={<ButtonsShop />} />
+        <Route path="/speldjes" element={<ButtonsShop />} />
+        <Route path="/badges" element={<ButtonsShop />} />
         <Route path="/merchandise" element={<MerchandiseShop />} />
         <Route path="/merch" element={<MerchandiseShop />} />
         <Route path="/merchandise-shop" element={<MerchandiseShop />} />

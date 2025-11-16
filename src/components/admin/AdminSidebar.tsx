@@ -82,6 +82,7 @@ const menuItems = [
       { title: "Lyric Posters", url: "/admin/lyric-poster-generator", icon: Music },
       { title: "Socks Designer", url: "/admin/sock-generator", icon: Brush },
       { title: "T-Shirt Designer", url: "/admin/tshirt-generator", icon: Brush },
+      { title: "Button Designer", url: "/admin/button-generator", icon: Disc },
       { title: "Photo Stylizer", url: "/admin/photo-stylizer", icon: Wand2 },
       { title: "Singles Importer", url: "/admin/singles-importer", icon: Music },
       { title: "Artist Stories", url: "/admin/artist-stories-generator", icon: Users },

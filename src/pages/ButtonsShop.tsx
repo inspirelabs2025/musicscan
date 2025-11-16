@@ -268,17 +268,24 @@ export default function ButtonsShop() {
                         <div className="p-6 h-full flex items-center justify-center relative">
                           {/* Button with realistic shadow and pin */}
                           <div className="relative w-3/4 h-3/4">
-                            <img
-                              src={product.primary_image}
-                              alt={generateButtonAltTag(
-                                product.artist || '',
-                                product.title,
-                                product.format || '4cm'
-                              )}
-                              className="w-full h-full object-cover rounded-full shadow-2xl group-hover:scale-110 transition-transform duration-300 border-4 border-white dark:border-gray-700"
-                              style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.3)' }}
-                              loading="lazy"
-                            />
+                            <div className="relative w-full h-full rounded-full overflow-hidden">
+                              <img
+                                src={product.primary_image}
+                                alt={generateButtonAltTag(
+                                  product.artist || '',
+                                  product.title,
+                                  product.format || '4cm'
+                                )}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                loading="lazy"
+                              />
+                              {/* Glossy overlay effect */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-black/30 pointer-events-none" />
+                              {/* Top highlight */}
+                              <div className="absolute top-0 left-1/4 right-1/4 h-1/3 bg-gradient-to-b from-white/50 to-transparent blur-sm pointer-events-none" />
+                            </div>
+                            {/* 3D shadow ring */}
+                            <div className="absolute inset-0 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.6),inset_0_1px_2px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.2)]" />
                             {/* Safety pin indicator */}
                             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-600">
                               <Pin className="h-3 w-3 text-gray-600 dark:text-gray-300" />

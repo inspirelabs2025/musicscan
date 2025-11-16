@@ -86,3 +86,14 @@ export const generatePosterAltTag = (
   
   return `${artist} - ${title} | ${styleLabel} ${mediaLabel} | MusicScan Art`;
 };
+
+/**
+ * Generate SEO-optimized alt tag for BUTTON products
+ */
+export const generateButtonAltTag = (
+  artist: string,
+  title: string,
+  size: string = '4cm'
+): string => {
+  return `${artist} button badge ${size} - ${title} speld muziek merchandise`;
+};

@@ -65,7 +65,7 @@ serve(async (req) => {
         description: description || `Hoogwaardige button badge van ${artist} - ${title}. Professionele kwaliteit met veiligheidspin op de achterkant. Diameter: ${size}.`,
         price,
         primary_image: baseDesignUrl,
-        media_type: 'button',
+        media_type: 'merchandise',
         categories: ['buttons', 'badges', 'merchandise'],
         stock_quantity: 100,
         status: 'active',

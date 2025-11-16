@@ -3430,6 +3430,7 @@ export type Database = {
           media_type: string
           meta_description: string | null
           meta_title: string | null
+          metadata: Json | null
           price: number
           primary_image: string | null
           published_at: string | null
@@ -3480,6 +3481,7 @@ export type Database = {
           media_type: string
           meta_description?: string | null
           meta_title?: string | null
+          metadata?: Json | null
           price: number
           primary_image?: string | null
           published_at?: string | null
@@ -3530,6 +3532,7 @@ export type Database = {
           media_type?: string
           meta_description?: string | null
           meta_title?: string | null
+          metadata?: Json | null
           price?: number
           primary_image?: string | null
           published_at?: string | null

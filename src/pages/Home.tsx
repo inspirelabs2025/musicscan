@@ -13,6 +13,7 @@ import { LatestReleasesSection } from '@/components/home/LatestReleasesSection';
 import { NewsAndStoriesSection } from '@/components/home/NewsAndStoriesSection';
 import { AIFeaturesCompact } from '@/components/home/AIFeaturesCompact';
 import { CommunityStats } from '@/components/home/CommunityStats';
+import { ArtistSpotlightsSection } from '@/components/home/ArtistSpotlightsSection';
 
 import { FeaturedPhotos } from '@/components/FeaturedPhotos';
 import { DailyAnecdote } from '@/components/home/DailyAnecdote';
@@ -79,6 +80,9 @@ const Home = () => {
 
       {/* News & Stories Section with Tabs */}
       <NewsAndStoriesSection />
+
+      {/* Artist Spotlights - Compact Section */}
+      <ArtistSpotlightsSection />
 
       {/* Music History - Today in Music History */}
       <MusicHistorySpotlight />

@@ -35,28 +35,20 @@ export const extractSpotlightIntro = (spotlight: ArtistStory): string => {
   return intro || 'Ontdek het verhaal van deze legendarische artiest.';
 };
 
-// Helper to pick the best available image URL
+// Helper to pick image URL from story_content only (not uploads/artwork_url)
 export const getSpotlightImageUrl = (spotlight: ArtistStory): string | null => {
-  const imagesAny = spotlight.spotlight_images as unknown as any;
-
-  const candidates: Array<string | undefined> = [
-    spotlight.artwork_url || undefined,
-    // spotlight_images can be a string[], object with images/urls, or array of objects
-    Array.isArray(imagesAny) && typeof imagesAny[0] === 'string' ? imagesAny[0] : undefined,
-    imagesAny?.images?.[0],
-    imagesAny?.urls?.[0],
-    imagesAny?.[0]?.url,
-  ];
-
-  // Try to extract from markdown in story_content
   const md = spotlight.story_content || '';
+  
+  // Try markdown image syntax: ![alt](url)
   const mdImg = md.match(/!\[[^\]]*\]\(([^)]+)\)/);
-  if (mdImg?.[1]) candidates.push(mdImg[1]);
+  if (mdImg?.[1]?.startsWith('http')) return mdImg[1];
+  
+  // Try plain URLs ending in image extensions
   const plainImg = md.match(/https?:[^\s)]+\.(png|jpg|jpeg|webp|gif)/i);
-  if (plainImg?.[0]) candidates.push(plainImg[0]);
-
-  const url = candidates.find((u) => typeof u === 'string' && !!u?.startsWith('http'));
-  return url || null;
+  if (plainImg?.[0]) return plainImg[0];
+  
+  // No image found in text - return null (show fallback)
+  return null;
 };
 
 export const useArtistSpotlights = (options: { 

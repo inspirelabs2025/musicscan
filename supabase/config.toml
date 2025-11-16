@@ -253,6 +253,12 @@ verify_jwt = false
 [functions.create-tshirt-products]
 verify_jwt = false
 
+[functions.batch-generate-button-styles]
+verify_jwt = false
+
+[functions.create-button-products]
+verify_jwt = false
+
 [functions.generate-time-machine-poster]
 verify_jwt = false
 

@@ -28,7 +28,7 @@ serve(async (req) => {
           id: newBatchId,
           photo_url: photoUrl,
           status: 'processing',
-          total_jobs: 10, // 7 posters + 1 canvas + 1 tshirt + 1 socks
+          total_jobs: 11, // 7 posters + 1 canvas + 1 tshirt + 1 socks + 1 buttons
           completed_jobs: 0
         });
 
@@ -126,6 +126,7 @@ async function processPhotoBatch(
       canvas: { imageUrl: null, productId: null },
       tshirt: { baseDesign: null, variants: [], productIds: [] },
       socks: { imageUrl: null, productId: null },
+      buttons: { baseDesign: null, variants: [], productIds: [] },
       errors: []
     };
 
@@ -364,12 +365,81 @@ async function processPhotoBatch(
       results.errors.push({ job: 'socks', error: error.message });
     }
 
+    // Job 11: Generate Buttons + 7 style variants
+    try {
+      await updateProgress(10, 'Generating button design + 7 styles...');
+      
+      // First create base button design (circular crop of photo)
+      const { data: buttonStyle, error: buttonError } = await supabase.functions.invoke(
+        'stylize-photo',
+        {
+          body: {
+            imageUrl: photoUrl,
+            style: 'original',
+            preserveComposition: true,
+            outputFormat: 'circular' // This would need to be added to stylize-photo or we use the original
+          }
+        }
+      );
+
+      if (buttonError) throw buttonError;
+      
+      const baseButtonUrl = buttonStyle?.stylizedImageUrl || photoUrl;
+      results.buttons.baseDesign = baseButtonUrl;
+
+      // Generate 7 style variants
+      const { data: buttonVariants, error: variantsError } = await supabase.functions.invoke(
+        'batch-generate-button-styles',
+        {
+          body: {
+            baseDesignUrl: baseButtonUrl,
+            buttonId: `batch-${batchId}`
+          }
+        }
+      );
+
+      if (variantsError) throw variantsError;
+
+      results.buttons.variants = buttonVariants.styleVariants || [];
+      
+      await updateProgress(11, 'Button styles completed, creating products...');
+      console.log(`✅ Generated buttons with ${results.buttons.variants.length} variants`);
+
+      // Create button products
+      try {
+        const { data: buttonProducts, error: productError } = await supabase.functions.invoke(
+          'create-button-products',
+          {
+            body: {
+              baseDesignUrl: baseButtonUrl,
+              artist: artist,
+              title: title,
+              description: description,
+              styleVariants: buttonVariants.styleVariants
+            }
+          }
+        );
+
+        if (!productError && buttonProducts?.product_ids) {
+          results.buttons.productIds = buttonProducts.product_ids;
+          console.log(`✅ Created ${results.buttons.productIds.length} button products`);
+        }
+      } catch (productError) {
+        console.error('Button product creation failed:', productError);
+        results.errors.push({ job: 'button-products', error: productError.message });
+      }
+      
+    } catch (error) {
+      console.error('Button generation failed:', error);
+      results.errors.push({ job: 'buttons', error: error.message });
+    }
+
     // Mark batch as completed
     await supabase
       .from('photo_batch_queue')
       .update({
         status: results.errors.length > 0 ? 'completed_with_errors' : 'completed',
-        completed_jobs: 10,
+        completed_jobs: 11,
         current_job: 'All jobs completed',
         results: results,
         completed_at: new Date().toISOString()

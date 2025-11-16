@@ -306,27 +306,39 @@ export const ArtistSpotlightEditor = () => {
           </p>
         </div>
         {generatedStoryId && (
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleDelete} 
-              disabled={deleteMutation.isPending}
-              variant="destructive"
-            >
-              {deleteMutation.isPending ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4 mr-2" />
-              )}
-              Verwijderen
-            </Button>
-            <Button onClick={handleSave} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              Opslaan
-            </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-muted/50">
+              <Label htmlFor="publish-header" className="cursor-pointer">
+                Publiceren
+              </Label>
+              <Switch
+                id="publish-header"
+                checked={isPublished}
+                onCheckedChange={setIsPublished}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleDelete} 
+                disabled={deleteMutation.isPending}
+                variant="destructive"
+              >
+                {deleteMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
+                Verwijderen
+              </Button>
+              <Button onClick={handleSave} disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                Opslaan
+              </Button>
+            </div>
           </div>
         )}
       </div>
@@ -438,20 +450,6 @@ export const ArtistSpotlightEditor = () => {
                       value={spotlightDescription}
                       onChange={(e) => setSpotlightDescription(e.target.value)}
                       rows={3}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="publish">Publiceren</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Maak spotlight zichtbaar voor bezoekers
-                      </p>
-                    </div>
-                    <Switch
-                      id="publish"
-                      checked={isPublished}
-                      onCheckedChange={setIsPublished}
                     />
                   </div>
 

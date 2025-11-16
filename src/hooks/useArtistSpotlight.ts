@@ -8,6 +8,31 @@ interface GenerateSpotlightParams {
   initialText?: string;
 }
 
+// Helper function to extract a clean intro from biography or story content
+export const extractSpotlightIntro = (spotlight: ArtistStory): string => {
+  // Use spotlight_description if available
+  if (spotlight.spotlight_description?.trim()) {
+    return spotlight.spotlight_description;
+  }
+
+  // Fall back to biography
+  const text = spotlight.biography || spotlight.story_content || '';
+  
+  // Remove markdown headers
+  const cleaned = text.replace(/^#+\s+/gm, '').trim();
+  
+  // Get first 2-3 sentences (up to 200 chars)
+  const sentences = cleaned.match(/[^.!?]+[.!?]+/g) || [];
+  let intro = sentences.slice(0, 2).join(' ').trim();
+  
+  // If still too long, truncate at 200 chars
+  if (intro.length > 200) {
+    intro = intro.substring(0, 197) + '...';
+  }
+  
+  return intro || 'Ontdek het verhaal van deze legendarische artiest.';
+};
+
 export const useArtistSpotlights = (options: { 
   published?: boolean;
   limit?: number;

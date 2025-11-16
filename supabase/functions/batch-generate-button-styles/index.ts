@@ -89,7 +89,7 @@ CRITICAL REQUIREMENTS:
               { type: 'text', text: circularPrompt },
                   {
                     type: 'image_url',
-                    image_url: { url: `data:image/png;base64,${circularBase64ForStyles}` }
+                    image_url: { url: `data:image/png;base64,${baseImageBase64}` }
                   }
             ]
           }
@@ -149,6 +149,14 @@ CRITICAL REQUIREMENTS:
     }
     const circularBase64ForStyles = btoa(circularBinary);
 
+    // Add circular base as first variant
+    styleVariants.push({
+      style: 'original',
+      label: 'Original Circular',
+      emoji: '⭕',
+      url: circularBaseUrl
+    });
+
     // STEP 2: Generate 7 style variants from the circular base
     for (const [styleKey, { label, emoji }] of Object.entries(STYLE_CONFIG)) {
       console.log(`🎨 Generating ${label} style...`);
@@ -171,7 +179,7 @@ CRITICAL REQUIREMENTS:
                   { type: 'text', text: prompt },
                   {
                     type: 'image_url',
-                    image_url: { url: `data:image/png;base64,${baseImageBase64}` }
+                    image_url: { url: `data:image/png;base64,${circularBase64ForStyles}` }
                   }
                 ]
               }

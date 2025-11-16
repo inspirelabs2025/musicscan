@@ -385,6 +385,11 @@ async function processPhotoBatch(
 
       results.buttons.variants = buttonVariants.styleVariants || [];
       
+      // Extract the circular base URL (first variant with style 'original')
+      const circularBase = buttonVariants.styleVariants?.find(v => v.style === 'original');
+      const baseButtonUrl = circularBase?.url || photoUrl;
+      results.buttons.baseDesign = baseButtonUrl;
+      
       await updateProgress(11, 'Button styles completed, creating products...');
       console.log(`✅ Generated buttons with ${results.buttons.variants.length} variants`);
 
@@ -398,7 +403,7 @@ async function processPhotoBatch(
               artist: artist,
               title: title,
               description: description,
-              styleVariants: buttonVariants.styleVariants
+              styleVariants: buttonVariants.styleVariants || []
             }
           }
         );

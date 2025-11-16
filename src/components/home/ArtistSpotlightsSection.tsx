@@ -66,7 +66,7 @@ export const ArtistSpotlightsSection = () => {
           </Button>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-6">
+        <div className="space-y-6">
           {spotlights.slice(0, 3).map((spotlight) => {
             const intro = extractSpotlightIntro(spotlight);
             const imageUrl = getSpotlightImageUrl(spotlight);
@@ -75,69 +75,73 @@ export const ArtistSpotlightsSection = () => {
               <Link 
                 key={spotlight.id} 
                 to={`/artist-spotlight/${spotlight.slug}`}
-                className="group"
+                className="group block"
               >
-                <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-2 bg-card/80 backdrop-blur-sm border border-border/60">
-                  {imageUrl ? (
-                    <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-                      <img
-                        src={imageUrl}
-                        alt={`${spotlight.artist_name} spotlight afbeelding`}
-                        className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-                      <Badge 
-                        className="absolute top-4 right-4 bg-primary/90 text-primary-foreground backdrop-blur-sm shadow-lg"
-                      >
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        Spotlight
-                      </Badge>
-                    </div>
-                  ) : (
-                    <div className="relative aspect-[4/3] bg-gradient-to-br from-primary/20 via-accent/10 to-primary/10 flex items-center justify-center">
-                      <Sparkles className="w-16 h-16 text-primary/40" />
-                      <Badge 
-                        className="absolute top-4 right-4 bg-primary/90 text-primary-foreground backdrop-blur-sm shadow-lg"
-                      >
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        Spotlight
-                      </Badge>
-                    </div>
-                  )}
-                  <CardHeader className="space-y-3 pb-4">
-                    <CardTitle className="text-2xl font-bold leading-tight group-hover:text-primary transition-colors">
-                      {spotlight.artist_name}
-                    </CardTitle>
-                    {intro && (
-                      <CardDescription className="line-clamp-3 text-base leading-relaxed">
-                        {intro}
-                      </CardDescription>
+                <Card className="overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 bg-card/80 backdrop-blur-sm border border-border/60">
+                  <div className="grid md:grid-cols-[400px_1fr] gap-0">
+                    {imageUrl ? (
+                      <div className="relative aspect-[4/3] md:aspect-auto overflow-hidden bg-muted">
+                        <img
+                          src={imageUrl}
+                          alt={`${spotlight.artist_name} spotlight afbeelding`}
+                          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/10 to-black/40" />
+                      </div>
+                    ) : (
+                      <div className="relative aspect-[4/3] md:aspect-auto bg-gradient-to-br from-primary/20 via-accent/10 to-primary/10 flex items-center justify-center min-h-[280px]">
+                        <Sparkles className="w-20 h-20 text-primary/40" />
+                      </div>
                     )}
-                  </CardHeader>
-                  <CardContent className="pt-0 pb-5">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      {spotlight.reading_time && (
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-4 h-4" />
-                          <span>{spotlight.reading_time} min</span>
+                    
+                    <div className="flex flex-col justify-between p-8">
+                      <div className="space-y-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <CardTitle className="text-3xl md:text-4xl font-bold leading-tight group-hover:text-primary transition-colors">
+                            {spotlight.artist_name}
+                          </CardTitle>
+                          <Badge 
+                            className="shrink-0 bg-primary/90 text-primary-foreground backdrop-blur-sm shadow-lg px-3 py-1"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                            Spotlight
+                          </Badge>
                         </div>
-                      )}
-                      {spotlight.views_count && spotlight.views_count > 0 && (
-                        <div className="flex items-center gap-1.5">
-                          <Eye className="w-4 h-4" />
-                          <span>{spotlight.views_count} views</span>
+                        
+                        {intro && (
+                          <CardDescription className="text-lg leading-relaxed line-clamp-3">
+                            {intro}
+                          </CardDescription>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-6 text-sm text-muted-foreground mt-6 pt-4 border-t border-border/40">
+                        {spotlight.reading_time && (
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            <span>{spotlight.reading_time} min lezen</span>
+                          </div>
+                        )}
+                        {spotlight.views_count && spotlight.views_count > 0 && (
+                          <div className="flex items-center gap-2">
+                            <Eye className="w-4 h-4" />
+                            <span>{spotlight.views_count} views</span>
+                          </div>
+                        )}
+                        <div className="ml-auto">
+                          <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
               </Link>
             );
           })}
         </div>
 
-        <div className="text-center md:hidden">
+        <div className="text-center mt-8 md:hidden">
           <Button asChild variant="outline" className="w-full group">
             <Link to="/artist-spotlights">
               Alle Spotlights

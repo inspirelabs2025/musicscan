@@ -18,12 +18,8 @@ export default function ButtonGenerator() {
   const [artistName, setArtistName] = useState("");
   const [buttonTitle, setButtonTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("4.50");
-  const [size, setSize] = useState<"3.5cm" | "4cm">("3.5cm");
-  const [pinType, setPinType] = useState<"safety_pin" | "butterfly">("safety_pin");
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
-  const [stock, setStock] = useState("100");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -57,12 +53,12 @@ export default function ButtonGenerator() {
         throw new Error("Vul alle verplichte velden in");
       }
 
-      // Upload image to Supabase Storage
+      // STAP 1: Upload originele image naar storage
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `button-designs/${fileName}`;
 
-      const { error: uploadError, data: uploadData } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('product-images')
         .upload(filePath, imageFile);
 
@@ -72,49 +68,47 @@ export default function ButtonGenerator() {
         .from('product-images')
         .getPublicUrl(filePath);
 
-      // Generate slug
-      const slug = `button-${artistName.toLowerCase().replace(/\s+/g, '-')}-${buttonTitle.toLowerCase().replace(/\s+/g, '-')}-${size}`;
+      console.log('📤 Original image uploaded:', publicUrl);
 
-      // Create product in platform_products
-      const { data, error } = await supabase
-        .from('platform_products')
-        .insert({
-          title: buttonTitle,
-          artist: artistName,
-          description: description || `${artistName} button - ${buttonTitle}`,
-          long_description: `Draag je favoriete artiest met stijl! Deze ${size} button/badge met ${artistName} artwork is perfect voor op je jacket, rugzak, tas of hoed. Hoogwaardige print op duurzaam materiaal met ${pinType === 'safety_pin' ? 'veiligheidsspeld' : 'vlindersluiting'}.`,
-          media_type: 'merchandise',
-          categories: ['buttons', 'badges'],
-          format: size,
-          price: parseFloat(price),
-          currency: 'EUR',
-          stock_quantity: parseInt(stock),
-          low_stock_threshold: 10,
-          images: [publicUrl],
-          primary_image: publicUrl,
-          slug: slug,
-          tags: tags,
-          is_featured: false,
-          is_on_sale: false,
-          is_new: true,
-          status: 'active',
-          published_at: new Date().toISOString(),
-          metadata: {
-            size_cm: parseFloat(size),
-            pin_type: pinType,
-            product_type: 'button'
+      // STAP 2: Generate circular base + 7 style variants
+      const { data: stylesData, error: stylesError } = await supabase.functions.invoke(
+        'batch-generate-button-styles',
+        {
+          body: {
+            baseDesignUrl: publicUrl,
+            buttonId: `manual-${Date.now()}`
           }
-        })
-        .select()
-        .single();
+        }
+      );
 
-      if (error) throw error;
-      return data;
+      if (stylesError) throw stylesError;
+
+      const styleVariants = stylesData.styleVariants || [];
+      console.log(`✅ Generated ${styleVariants.length} style variants`);
+
+      // STAP 3: Create 2 button products (35mm + 45mm) with style variants
+      const { data: productsData, error: productsError } = await supabase.functions.invoke(
+        'create-button-products',
+        {
+          body: {
+            baseDesignUrl: styleVariants.find(v => v.style === 'original')?.url || publicUrl,
+            artist: artistName,
+            title: buttonTitle,
+            description: description || undefined,
+            styleVariants: styleVariants
+          }
+        }
+      );
+
+      if (productsError) throw productsError;
+
+      console.log('✅ Created button products:', productsData.product_slugs);
+      return productsData;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
-        title: "✅ Button aangemaakt!",
-        description: `${buttonTitle} is toegevoegd aan de shop`,
+        title: "✅ Buttons aangemaakt!",
+        description: `${buttonTitle} (35mm + 45mm) met 7 styles toegevoegd`,
       });
       
       queryClient.invalidateQueries({ queryKey: ['platform-products'] });
@@ -125,11 +119,7 @@ export default function ButtonGenerator() {
       setArtistName("");
       setButtonTitle("");
       setDescription("");
-      setPrice("4.50");
-      setSize("3.5cm");
-      setPinType("safety_pin");
       setTags([]);
-      setStock("100");
     },
     onError: (error: Error) => {
       toast({
@@ -209,7 +199,10 @@ export default function ButtonGenerator() {
           <Card>
             <CardHeader>
               <CardTitle>📝 Product Details</CardTitle>
-              <CardDescription>Vul de button informatie in</CardDescription>
+              <CardDescription>
+                Upload een design, AI genereert automatisch een circulaire base + 7 artistieke styles. 
+                Creëert 2 producten: 35mm (€4.50) en 45mm (€5.50).
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -241,57 +234,6 @@ export default function ButtonGenerator() {
                   placeholder="Optionele beschrijving..."
                   rows={3}
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price">Prijs (€)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.50"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="stock">Voorraad</Label>
-                  <Input
-                    id="stock"
-                    type="number"
-                    value={stock}
-                    onChange={(e) => setStock(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Formaat</Label>
-                <RadioGroup value={size} onValueChange={(v) => setSize(v as "3.5cm" | "4cm")}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="3.5cm" id="size-small" />
-                    <Label htmlFor="size-small">3.5cm (klein)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="4cm" id="size-standard" />
-                    <Label htmlFor="size-standard">4cm (standaard) - Aanbevolen</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Pin Type</Label>
-                <RadioGroup value={pinType} onValueChange={(v) => setPinType(v as "safety_pin" | "butterfly")}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="safety_pin" id="pin-safety" />
-                    <Label htmlFor="pin-safety">Veiligheidsspeld (Safety Pin)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="butterfly" id="pin-butterfly" />
-                    <Label htmlFor="pin-butterfly">Vlindersluiting (Butterfly Clasp)</Label>
-                  </div>
-                </RadioGroup>
               </div>
 
               <div className="space-y-2">
@@ -326,12 +268,12 @@ export default function ButtonGenerator() {
                 {createButtonMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Button aanmaken...
+                    Circulaire base + 7 styles genereren...
                   </>
                 ) : (
                   <>
                     <Upload className="mr-2 h-4 w-4" />
-                    Button Aanmaken
+                    Buttons Aanmaken (35mm + 45mm)
                   </>
                 )}
               </Button>

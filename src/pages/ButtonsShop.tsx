@@ -268,7 +268,7 @@ export default function ButtonsShop() {
                         <div className="p-6 h-full flex items-center justify-center relative">
                           {/* Button with realistic shadow and pin */}
                           <div className="relative w-3/4 h-3/4">
-                            <div className="relative w-full h-full rounded-full overflow-hidden">
+                            <div className="relative w-full h-full rounded-full overflow-hidden border-[3px] border-black/20 dark:border-white/10">
                               <img
                                 src={product.primary_image}
                                 alt={generateButtonAltTag(
@@ -280,14 +280,14 @@ export default function ButtonsShop() {
                                 loading="lazy"
                               />
                               {/* Glossy overlay effect */}
-                              <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-black/30 pointer-events-none" />
-                              {/* Top highlight */}
-                              <div className="absolute top-0 left-1/4 right-1/4 h-1/3 bg-gradient-to-b from-white/50 to-transparent blur-sm pointer-events-none" />
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/50 via-transparent to-black/40 pointer-events-none" />
+                              {/* Top highlight - more pronounced */}
+                              <div className="absolute top-0 left-1/4 right-1/4 h-2/5 bg-gradient-to-b from-white/70 to-transparent blur-md pointer-events-none" />
                             </div>
-                            {/* 3D shadow ring */}
-                            <div className="absolute inset-0 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.6),inset_0_1px_2px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.2)]" />
+                            {/* Enhanced 3D shadow ring with multiple layers */}
+                            <div className="absolute inset-0 rounded-full shadow-[0_15px_50px_rgba(0,0,0,0.7),0_5px_15px_rgba(0,0,0,0.5),inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-3px_6px_rgba(0,0,0,0.3)]" />
                             {/* Safety pin indicator */}
-                            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-600">
+                            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg border-2 border-gray-300 dark:border-gray-600">
                               <Pin className="h-3 w-3 text-gray-600 dark:text-gray-300" />
                             </div>
                           </div>

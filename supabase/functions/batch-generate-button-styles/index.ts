@@ -49,7 +49,16 @@ serve(async (req) => {
     }
     const baseImageBlob = await baseImageResponse.blob();
     const baseImageBuffer = await baseImageBlob.arrayBuffer();
-    const baseImageBase64 = btoa(String.fromCharCode(...new Uint8Array(baseImageBuffer)));
+    
+    // Convert to base64 without stack overflow
+    const bytes = new Uint8Array(baseImageBuffer);
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+    const baseImageBase64 = btoa(binary);
 
     for (const [styleKey, { label, emoji }] of Object.entries(STYLE_CONFIG)) {
       console.log(`🎨 Generating ${label} style...`);

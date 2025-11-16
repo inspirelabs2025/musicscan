@@ -10,27 +10,53 @@ interface GenerateSpotlightParams {
 
 // Helper function to extract a clean intro from biography or story content
 export const extractSpotlightIntro = (spotlight: ArtistStory): string => {
-  // Use spotlight_description if available
-  if (spotlight.spotlight_description?.trim()) {
-    return spotlight.spotlight_description;
-  }
+  if (spotlight.spotlight_description?.trim()) return spotlight.spotlight_description.trim();
 
-  // Fall back to biography
-  const text = spotlight.biography || spotlight.story_content || '';
-  
-  // Remove markdown headers
-  const cleaned = text.replace(/^#+\s+/gm, '').trim();
-  
-  // Get first 2-3 sentences (up to 200 chars)
-  const sentences = cleaned.match(/[^.!?]+[.!?]+/g) || [];
+  const raw = (spotlight.biography || spotlight.story_content || '').trim();
+  if (!raw) return 'Ontdek het verhaal van deze legendarische artiest.';
+
+  // Strip common markdown artifacts
+  const noMd = raw
+    .replace(/^#+\s+/gm, '') // headers
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // bold
+    .replace(/\*([^*]+)\*/g, '$1') // italic
+    .replace(/_([^_]+)_/g, '$1') // italic alt
+    .replace(/`([^`]+)`/g, '$1') // inline code
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // images
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1') // links
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // First 2 sentences or max 220 chars
+  const sentences = noMd.match(/[^.!?]+[.!?]+/g) || [noMd];
   let intro = sentences.slice(0, 2).join(' ').trim();
-  
-  // If still too long, truncate at 200 chars
-  if (intro.length > 200) {
-    intro = intro.substring(0, 197) + '...';
-  }
-  
+  if (intro.length > 220) intro = intro.slice(0, 217) + '...';
+
   return intro || 'Ontdek het verhaal van deze legendarische artiest.';
+};
+
+// Helper to pick the best available image URL
+export const getSpotlightImageUrl = (spotlight: ArtistStory): string | null => {
+  const imagesAny = spotlight.spotlight_images as unknown as any;
+
+  const candidates: Array<string | undefined> = [
+    spotlight.artwork_url || undefined,
+    // spotlight_images can be a string[], object with images/urls, or array of objects
+    Array.isArray(imagesAny) && typeof imagesAny[0] === 'string' ? imagesAny[0] : undefined,
+    imagesAny?.images?.[0],
+    imagesAny?.urls?.[0],
+    imagesAny?.[0]?.url,
+  ];
+
+  // Try to extract from markdown in story_content
+  const md = spotlight.story_content || '';
+  const mdImg = md.match(/!\[[^\]]*\]\(([^)]+)\)/);
+  if (mdImg?.[1]) candidates.push(mdImg[1]);
+  const plainImg = md.match(/https?:[^\s)]+\.(png|jpg|jpeg|webp|gif)/i);
+  if (plainImg?.[0]) candidates.push(plainImg[0]);
+
+  const url = candidates.find((u) => typeof u === 'string' && !!u?.startsWith('http'));
+  return url || null;
 };
 
 export const useArtistSpotlights = (options: { 

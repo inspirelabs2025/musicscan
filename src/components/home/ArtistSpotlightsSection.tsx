@@ -3,7 +3,7 @@ import { Sparkles, ArrowRight, Clock, Eye } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useArtistSpotlights, extractSpotlightIntro } from "@/hooks/useArtistSpotlight";
+import { useArtistSpotlights, extractSpotlightIntro, getSpotlightImageUrl } from "@/hooks/useArtistSpotlight";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const ArtistSpotlightsSection = () => {
@@ -69,6 +69,7 @@ export const ArtistSpotlightsSection = () => {
         <div className="grid md:grid-cols-3 gap-6 mb-6">
           {spotlights.slice(0, 3).map((spotlight) => {
             const intro = extractSpotlightIntro(spotlight);
+            const imageUrl = getSpotlightImageUrl(spotlight);
             
             return (
               <Link 
@@ -77,12 +78,13 @@ export const ArtistSpotlightsSection = () => {
                 className="group"
               >
                 <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-2 bg-card/80 backdrop-blur-sm border border-border/60">
-                  {spotlight.artwork_url ? (
+                  {imageUrl ? (
                     <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                       <img
-                        src={spotlight.artwork_url}
-                        alt={spotlight.artist_name}
+                        src={imageUrl}
+                        alt={`${spotlight.artist_name} spotlight afbeelding`}
                         className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                       <Badge 

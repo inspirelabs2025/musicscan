@@ -52,19 +52,20 @@ serve(async (req) => {
       );
     }
 
-    // Insert images at their specified insertion points
+    // Separate images into two groups
+    const imagesWithPoints = images.filter(img => img.url && img.insertion_point);
+    const imagesWithoutPoints = images.filter(img => img.url && !img.insertion_point);
+
+    console.log(`Processing ${imagesWithPoints.length} images with insertion points`);
+    console.log(`Processing ${imagesWithoutPoints.length} images without insertion points`);
+
+    // Step 1: Insert images with specific insertion points
     // Sort by insertion_point length (longer = more specific = insert first to avoid shifting positions)
-    const sortedImages = [...images].sort((a, b) => 
+    const sortedImagesWithPoints = [...imagesWithPoints].sort((a, b) => 
       (b.insertion_point?.length || 0) - (a.insertion_point?.length || 0)
     );
 
-    for (const image of sortedImages) {
-      // Skip images without proper data
-      if (!image.url || !image.insertion_point) {
-        console.warn(`Skipping image with missing data:`, image);
-        continue;
-      }
-
+    for (const image of sortedImagesWithPoints) {
       const imageMarkdown = `\n\n![${image.title || 'Image'}](${image.url})\n\n`;
       
       // Find the insertion point in the content
@@ -73,9 +74,47 @@ serve(async (req) => {
       if (insertionIndex !== -1) {
         // Insert image right before the insertion point
         content = content.slice(0, insertionIndex) + imageMarkdown + content.slice(insertionIndex);
-        console.log(`Inserted image: ${image.title}`);
+        console.log(`✓ Inserted image at insertion point: ${image.title}`);
       } else {
         console.warn(`Could not find insertion point for: ${image.title}`);
+      }
+    }
+
+    // Step 2: Smart placement for images without insertion points
+    if (imagesWithoutPoints.length > 0) {
+      // Split content into paragraphs (separated by double newlines)
+      const paragraphs = content.split(/\n\n+/);
+      
+      if (paragraphs.length > 1) {
+        // Calculate interval for even distribution
+        const interval = Math.floor(paragraphs.length / (imagesWithoutPoints.length + 1));
+        
+        console.log(`Distributing ${imagesWithoutPoints.length} images across ${paragraphs.length} paragraphs (interval: ${interval})`);
+        
+        // Insert images after specific paragraphs
+        for (let i = 0; i < imagesWithoutPoints.length; i++) {
+          const image = imagesWithoutPoints[i];
+          const paragraphIndex = Math.min(
+            (i + 1) * interval,
+            paragraphs.length - 1
+          );
+          
+          const imageMarkdown = `![${image.title || 'Album Cover'}](${image.url})`;
+          paragraphs[paragraphIndex] += '\n\n' + imageMarkdown;
+          
+          console.log(`✓ Placed '${image.title}' after paragraph ${paragraphIndex + 1}`);
+        }
+        
+        // Rejoin paragraphs
+        content = paragraphs.join('\n\n');
+      } else {
+        // No paragraphs detected, add all images to the end
+        console.log(`No paragraphs detected, adding ${imagesWithoutPoints.length} images to end`);
+        for (const image of imagesWithoutPoints) {
+          const imageMarkdown = `\n\n![${image.title || 'Album Cover'}](${image.url})`;
+          content += imageMarkdown;
+          console.log(`✓ Added '${image.title}' to end of content`);
+        }
       }
     }
 

@@ -36,7 +36,7 @@ const categories = [
 
 export function ShopByCategorySection() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
       {categories.map((cat) => (
         <Link key={cat.slug} to={cat.slug === 'art' ? '/art-shop' : cat.slug === 'merchandise' ? '/merchandise' : cat.slug === 'buttons' ? '/buttons' : `/shop?category=${cat.slug}`}>
           <Card className="p-8 hover:shadow-2xl transition-all hover:scale-105 cursor-pointer group border-2 hover:border-primary h-full">

@@ -52,22 +52,25 @@ export default function PlatformProductDetail() {
   );
 
   // Check for style options
-  const hasStyleOptions = product?.metadata?.has_style_options === true;
-  const styleVariants = product?.metadata?.style_variants || [];
+  const rawStyleVariants = product?.metadata?.style_variants || [];
+  const visibleStyleVariants = rawStyleVariants.filter((v: any) => v.style !== 'original');
+  const showStyleSelector = !isTShirt && visibleStyleVariants.length > 0;
 
   // Set default style when product loads
   useEffect(() => {
-    if (product && !selectedStyle && styleVariants.length > 0) {
-      const defaultStyle = product.metadata?.default_style || styleVariants[0]?.style;
+    if (product && !selectedStyle && visibleStyleVariants.length > 0) {
+      const defaultStyle = product.metadata?.default_style && product.metadata.default_style !== 'original'
+        ? product.metadata.default_style
+        : visibleStyleVariants[0]?.style;
       if (defaultStyle) {
         setSelectedStyle(defaultStyle);
-        const defaultVariant = styleVariants.find((v: any) => v.style === defaultStyle);
+        const defaultVariant = visibleStyleVariants.find((v: any) => v.style === defaultStyle);
         if (defaultVariant?.url) {
           setSelectedImage(defaultVariant.url);
         }
       }
     }
-  }, [product, styleVariants, selectedStyle]);
+  }, [product, visibleStyleVariants, selectedStyle]);
 
   // Generate product-specific meta description
   const productDescription = product ? (
@@ -153,7 +156,7 @@ export default function PlatformProductDetail() {
       return;
     }
 
-    const styleLabel = styleVariants.find((v: any) => v.style === selectedStyle)?.label;
+    const styleLabel = (rawStyleVariants.find((v: any) => v.style === selectedStyle) || visibleStyleVariants.find((v: any) => v.style === selectedStyle))?.label;
     addToCart({
       id: product.id,
       media_type: 'product',
@@ -528,11 +531,11 @@ export default function PlatformProductDetail() {
           )}
 
           {/* Style Selector - only for products with style options (non-T-shirts) */}
-          {!isTShirt && hasStyleOptions && styleVariants.length > 0 && (
+          {showStyleSelector && (
             <Card className="p-6">
               <PosterStyleSelector
-                styleVariants={styleVariants}
-                currentStyle={selectedStyle || product.metadata?.default_style}
+                styleVariants={visibleStyleVariants}
+                currentStyle={selectedStyle}
                 onStyleSelect={(url, style) => {
                   setSelectedImage(url);
                   setSelectedStyle(style);

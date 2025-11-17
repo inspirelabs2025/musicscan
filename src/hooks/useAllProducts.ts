@@ -68,7 +68,8 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
       // Fetch T-Shirts
       let tshirtsQuery = supabase
         .from('album_tshirts')
-        .select('*, product:platform_products(*)');
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (filters?.search) {
         tshirtsQuery = tshirtsQuery.or(
@@ -96,7 +97,8 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
       // Fetch Socks
       let socksQuery = supabase
         .from('album_socks')
-        .select('*, product:platform_products(*)');
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (filters?.search) {
         socksQuery = socksQuery.or(
@@ -200,15 +202,13 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
           if (filters?.type && filters.type !== 'all' && filters.type !== 'tshirt') {
             return;
           }
-
-          const linkedProduct = item.product as any;
           
           products.push({
             id: item.id,
             type: 'tshirt',
             title: item.album_title,
             artist: item.artist_name,
-            price: linkedProduct?.price || 24.95,
+            price: 24.95,
             image: item.mockup_url || item.base_design_url || '',
             status: item.is_published ? 'published' : 'draft',
             created_at: item.created_at,
@@ -227,14 +227,12 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
             return;
           }
 
-          const linkedProduct = item.product as any;
-
           products.push({
             id: item.id,
             type: 'sock',
             title: item.album_title,
             artist: item.artist_name,
-            price: linkedProduct?.price || 14.95,
+            price: 24.95,
             image: item.mockup_url || item.base_design_url || '',
             status: item.is_published ? 'published' : 'draft',
             created_at: item.created_at,

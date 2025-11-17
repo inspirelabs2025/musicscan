@@ -39,6 +39,11 @@ serve(async (req) => {
       { size: '4cm', price: 5.50, label: '45mm' }
     ];
 
+    // Prepare visible variants (exclude 'original' from display)
+    const visibleVariants = (styleVariants || []).filter((v: any) => v.style !== 'original');
+    const defaultStyle = visibleVariants[0]?.style || 'vector';
+    const images = visibleVariants.map((v: any) => v.url);
+
     for (const { size, price, label } of sizes) {
       // Generate unique slug
       const baseSlug = `button-${artist.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${label}`;
@@ -65,6 +70,7 @@ serve(async (req) => {
         description: description || `Hoogwaardige button badge van ${artist} - ${title}. Professionele kwaliteit met veiligheidspin op de achterkant. Diameter: ${size}.`,
         price,
         primary_image: baseDesignUrl,
+        images,
         media_type: 'merchandise',
         categories: ['buttons', 'badges', 'merchandise'],
         stock_quantity: 100,
@@ -73,6 +79,8 @@ serve(async (req) => {
         metadata: {
           size,
           pin_type: 'safety_pin',
+          has_style_options: true,
+          default_style: defaultStyle,
           style_variants: styleVariants,
           original_artist: artist,
           original_title: title,

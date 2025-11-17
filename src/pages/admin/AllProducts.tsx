@@ -149,6 +149,7 @@ export default function AllProducts() {
       case 'metal_print': return 'bg-gray-500';
       case 'tshirt': return 'bg-green-500';
       case 'sock': return 'bg-orange-500';
+      case 'button': return 'bg-yellow-500';
       default: return 'bg-gray-500';
     }
   };
@@ -160,6 +161,7 @@ export default function AllProducts() {
       case 'metal_print': return 'Metal Print';
       case 'tshirt': return 'T-Shirt';
       case 'sock': return 'Sock';
+      case 'button': return 'Button';
       default: return type;
     }
   };
@@ -236,6 +238,7 @@ export default function AllProducts() {
               <SelectItem value="metal_print">Metal Prints</SelectItem>
               <SelectItem value="tshirt">T-Shirts</SelectItem>
               <SelectItem value="sock">Socks</SelectItem>
+              <SelectItem value="button">Buttons</SelectItem>
             </SelectContent>
           </Select>
 

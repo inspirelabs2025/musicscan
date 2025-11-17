@@ -114,10 +114,11 @@ CRITICAL REQUIREMENTS:
     // Upload circular base
     const circularBase64 = circularImageUrl.replace(/^data:image\/\w+;base64,/, '');
     const circularBuffer = Uint8Array.from(atob(circularBase64), c => c.charCodeAt(0));
-    const circularFileName = `button-${buttonId}-circular-base-${Date.now()}.png`;
+    const folder = `buttons/${buttonId}`;
+    const circularFileName = `${folder}/base-${Date.now()}.png`;
 
     const { error: circularUploadError } = await supabase.storage
-      .from('time-machine-posters')
+      .from('product-images')
       .upload(circularFileName, circularBuffer, {
         contentType: 'image/png',
         cacheControl: '31536000'
@@ -129,7 +130,7 @@ CRITICAL REQUIREMENTS:
     }
 
     const { data: { publicUrl: circularBaseUrl } } = supabase.storage
-      .from('time-machine-posters')
+      .from('product-images')
       .getPublicUrl(circularFileName);
 
     console.log(`✅ Created circular base: ${circularBaseUrl}`);
@@ -205,9 +206,9 @@ CRITICAL REQUIREMENTS:
         const base64Data = generatedImageUrl.replace(/^data:image\/\w+;base64,/, '');
         const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
-        const fileName = `button-${buttonId}-${styleKey}-${Date.now()}.png`;
+        const fileName = `${folder}/${styleKey}-${Date.now()}.png`;
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('time-machine-posters')
+          .from('product-images')
           .upload(fileName, imageBuffer, {
             contentType: 'image/png',
             cacheControl: '31536000'
@@ -219,7 +220,7 @@ CRITICAL REQUIREMENTS:
         }
 
         const { data: { publicUrl } } = supabase.storage
-          .from('time-machine-posters')
+          .from('product-images')
           .getPublicUrl(fileName);
 
         styleVariants.push({
@@ -237,7 +238,18 @@ CRITICAL REQUIREMENTS:
       }
     }
 
-    console.log(`✅ Generated ${styleVariants.length} button style variants`);
+    const totalExpected = Object.keys(STYLE_CONFIG).length;
+    const generatedCount = styleVariants.filter((s: any) => s.style !== 'original').length;
+    if (generatedCount < totalExpected) {
+      const msg = `Generated ${generatedCount}/${totalExpected} styles. Some styles failed.`;
+      console.error(msg);
+      return new Response(
+        JSON.stringify({ error: msg, styleVariants }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`✅ Generated ${generatedCount}/${totalExpected} styles (+ original)`);
 
     return new Response(
       JSON.stringify({ styleVariants }),

@@ -84,6 +84,11 @@ export default function ButtonGenerator() {
       if (stylesError) throw stylesError;
 
       const styleVariants = stylesData.styleVariants || [];
+      const expected = 8; // 1 original + 7 styles
+      if (!styleVariants || styleVariants.length < expected) {
+        const got = Math.max((styleVariants?.length || 0) - 1, 0);
+        throw new Error(`Onvoldoende styles gegenereerd (${got}/7). Probeer opnieuw.`);
+      }
       console.log(`✅ Generated ${styleVariants.length} style variants`);
 
       // STAP 3: Create 2 button products (35mm + 45mm) with style variants

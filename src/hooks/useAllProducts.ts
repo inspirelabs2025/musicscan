@@ -37,7 +37,8 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
       // Fetch Platform Products (posters, canvas, metal prints, buttons)
       let platformQuery = supabase
         .from('platform_products')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (filters?.search) {
         platformQuery = platformQuery.or(
@@ -145,31 +146,41 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
       // Process Platform Products
       if (platformResult.data) {
         platformResult.data.forEach(item => {
+          // Normalize categories and tags to lowercase for case-insensitive matching
+          const cats = (item.categories || []).map((c: string) => c.toLowerCase());
+          const tags = (item.tags || []).map((t: string) => t.toLowerCase());
+          
           // Determine product type - check in priority order (most specific first)
           let productType: UnifiedProduct['type'] = 'poster';
           
-          // Check buttons first
-          if (item.categories?.includes('buttons') || item.categories?.includes('badges')) {
+          // Check buttons first (broad detection)
+          if (
+            cats.includes('buttons') || 
+            cats.includes('badges') ||
+            tags.includes('button') ||
+            tags.includes('buttons') ||
+            item.title?.toLowerCase().includes('button')
+          ) {
             productType = 'button';
           }
           // Check canvas
-          else if (item.tags?.includes('canvas') || item.categories?.includes('CANVAS')) {
+          else if (tags.includes('canvas') || cats.includes('canvas')) {
             productType = 'canvas';
           }
           // Then metal-print
-          else if (item.tags?.includes('metal-print')) {
+          else if (tags.includes('metal-print')) {
             productType = 'metal_print';
           }
           // Skip T-shirt collection products (already in album_tshirts)
-          else if (item.categories?.includes('tshirts')) {
+          else if (cats.includes('tshirts')) {
             return; // Skip duplicate
           }
           // Skip Sock products (already in album_socks)
-          else if (item.categories?.includes('socks')) {
+          else if (cats.includes('socks')) {
             return; // Skip duplicate
           }
           // Then poster (explicit check or fallback for art)
-          else if (item.tags?.includes('poster') || item.media_type === 'art') {
+          else if (tags.includes('poster') || item.media_type === 'art') {
             productType = 'poster';
           }
 
@@ -246,6 +257,17 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
 
       // Sort by created_at descending
       products.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      // Debug logging - type counts
+      console.log('📊 Product type counts:', {
+        buttons: products.filter(p => p.type === 'button').length,
+        posters: products.filter(p => p.type === 'poster').length,
+        canvas: products.filter(p => p.type === 'canvas').length,
+        metal_print: products.filter(p => p.type === 'metal_print').length,
+        tshirts: products.filter(p => p.type === 'tshirt').length,
+        socks: products.filter(p => p.type === 'sock').length,
+        total: products.length
+      });
 
       return products;
     },

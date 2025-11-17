@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface UnifiedProduct {
   id: string;
-  type: 'poster' | 'canvas' | 'metal_print' | 'tshirt' | 'sock';
+  type: 'poster' | 'canvas' | 'metal_print' | 'tshirt' | 'sock' | 'button';
   title: string;
   artist: string | null;
   price: number;
@@ -34,12 +34,10 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
     queryFn: async () => {
       const products: UnifiedProduct[] = [];
 
-      // Fetch Platform Products (posters, canvas, metal prints)
-      // Exclude merchandise items - they're in album_tshirts/album_socks tables
+      // Fetch Platform Products (posters, canvas, metal prints, buttons)
       let platformQuery = supabase
         .from('platform_products')
-        .select('*')
-        .neq('media_type', 'merchandise');
+        .select('*');
 
       if (filters?.search) {
         platformQuery = platformQuery.or(
@@ -148,13 +146,25 @@ export const useAllProducts = (filters?: UseAllProductsFilters) => {
           // Determine product type - check in priority order (most specific first)
           let productType: UnifiedProduct['type'] = 'poster';
           
-          // Check canvas first (highest priority for specific types)
-          if (item.tags?.includes('canvas') || item.categories?.includes('CANVAS')) {
+          // Check buttons first
+          if (item.categories?.includes('buttons') || item.categories?.includes('badges')) {
+            productType = 'button';
+          }
+          // Check canvas
+          else if (item.tags?.includes('canvas') || item.categories?.includes('CANVAS')) {
             productType = 'canvas';
           }
           // Then metal-print
           else if (item.tags?.includes('metal-print')) {
             productType = 'metal_print';
+          }
+          // Skip T-shirt collection products (already in album_tshirts)
+          else if (item.categories?.includes('tshirts')) {
+            return; // Skip duplicate
+          }
+          // Skip Sock products (already in album_socks)
+          else if (item.categories?.includes('socks')) {
+            return; // Skip duplicate
           }
           // Then poster (explicit check or fallback for art)
           else if (item.tags?.includes('poster') || item.media_type === 'art') {

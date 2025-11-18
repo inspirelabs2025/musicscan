@@ -310,30 +310,55 @@ async function processPhotoBatch(
       results.errors.push({ job: 'tshirt', error: error.message });
     }
 
-    // Job 10: Generate Socks (Pop Art Posterize)
+    // Job 10: Generate Socks (Pop Art Posterize) with retry logic
     try {
       await updateProgress(9, 'Generating socks design (pop art)...');
       
-      const { data: socksData, error: socksError } = await supabase.functions.invoke(
-        'generate-sock-design',
-        {
-          body: {
-            albumCoverUrl: photoUrl,
-            artistName: artist,
-            albumTitle: title,
-            colorPalette: {
-              primary_color: '#000000',
-              secondary_color: '#FFFFFF',
-              accent_color: '#808080',
-              design_theme: 'custom-photo',
-              color_palette: ['#000000', '#FFFFFF', '#808080'],
-              pattern_type: 'custom-photo'
+      let socksData = null;
+      let socksError = null;
+      const maxRetries = 3;
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        console.log(`🧦 Socks generation attempt ${attempt}/${maxRetries}`);
+        
+        const response = await supabase.functions.invoke(
+          'generate-sock-design',
+          {
+            body: {
+              albumCoverUrl: photoUrl,
+              artistName: artist,
+              albumTitle: title,
+              colorPalette: {
+                primary_color: '#000000',
+                secondary_color: '#FFFFFF',
+                accent_color: '#808080',
+                design_theme: 'custom-photo',
+                color_palette: ['#000000', '#FFFFFF', '#808080'],
+                pattern_type: 'custom-photo'
+              }
             }
           }
+        );
+        
+        socksData = response.data;
+        socksError = response.error;
+        
+        if (!socksError && socksData?.base_design_url) {
+          console.log(`✅ Socks generated successfully on attempt ${attempt}`);
+          break;
         }
-      );
+        
+        console.error(`❌ Socks attempt ${attempt} failed:`, socksError?.message || 'No image generated');
+        
+        if (attempt < maxRetries) {
+          console.log(`⏳ Waiting 5 seconds before retry...`);
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      }
 
-      if (socksError) throw socksError;
+      if (socksError || !socksData?.base_design_url) {
+        throw new Error(socksError?.message || 'No image generated after 3 attempts');
+      }
       
       results.socks.imageUrl = socksData.base_design_url;
       await updateProgress(10, 'Socks design completed, creating product...');

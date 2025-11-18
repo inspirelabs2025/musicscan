@@ -12,15 +12,72 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+# LLM Crawlers - Expliciet toestaan voor training/indexering
+User-agent: GPTBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: ChatGPT-User
+Allow: /
+Crawl-delay: 1
+
+User-agent: Google-Extended
+Allow: /
+Crawl-delay: 1
+
+User-agent: Claude-Web
+Allow: /
+Crawl-delay: 1
+
+User-agent: anthropic-ai
+Allow: /
+Crawl-delay: 1
+
+User-agent: Applebot-Extended
+Allow: /
+Crawl-delay: 1
+
+User-agent: PerplexityBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Diffbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bytespider
+Allow: /
+Crawl-delay: 2
+
+# Prioritize content for LLM training
+Allow: /artists
+Allow: /artists/*
+Allow: /singles
+Allow: /singles/*
+Allow: /muziek-verhaal
+Allow: /muziek-verhaal/*
+Allow: /plaat-verhaal
+Allow: /plaat-verhaal/*
+Allow: /anekdotes
+Allow: /anekdotes/*
+Allow: /nieuws
+Allow: /nieuws/*
+Allow: /vandaag-in-de-muziekgeschiedenis
+
+# General crawlers
 User-agent: *
 Allow: /
 Crawl-delay: 2
 
 # Sitemaps - All served from musicscan.app domain
 Sitemap: https://www.musicscan.app/sitemap.xml
+Sitemap: https://www.musicscan.app/sm/sitemap-artists.xml
+Sitemap: https://www.musicscan.app/sm/sitemap-singles.xml
+Sitemap: https://www.musicscan.app/sm/sitemap-music-stories.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-posters.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-metal-prints.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-blog.xml
+Sitemap: https://www.musicscan.app/sm/sitemap-anecdotes.xml
 
 # IndexNow Key
 Sitemap: https://www.musicscan.app/indexnow-key.txt
@@ -36,12 +93,8 @@ Allow: /public-catalog
 Allow: /public-shops-overview
 Allow: /music-news
 Allow: /scanner
-Allow: /plaat-verhaal
-Allow: /muziek-verhaal
 
 # Encourage indexing of key content
-Allow: /plaat-verhaal/*
-Allow: /muziek-verhaal/*
 Allow: /release/*
 Allow: /collection/*
 Allow: /shop/*

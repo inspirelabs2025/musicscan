@@ -79,12 +79,15 @@ export const Footer = () => {
               >
                 Contact
               </a>
-              <a href="/privacy" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link to="/privacy" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 Privacy
-              </a>
-              <a href="/terms" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+              </Link>
+              <Link to="/voorwaarden" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 Voorwaarden
-              </a>
+              </Link>
+              <Link to="/retourbeleid" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
+                Retourbeleid
+              </Link>
             </div>
           </div>
         </div>

@@ -66,29 +66,28 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const prompt = `Create premium black crew socks with a creative, all-over design inspired by this album artwork. The design should be INTEGRATED into the sock fabric, not just placed on top.
+    const prompt = `Create premium black crew socks featuring a bold design panel inspired by this album artwork.
 
 **CRITICAL DESIGN REQUIREMENTS:**
-- Base: Premium BLACK crew socks (not white, not neutral - BLACK)
-- Design Integration: The album artwork elements should flow creatively THROUGHOUT the entire sock
-- Coverage: Design elements from toe to cuff, wrapping around the entire circumference
-- Style: Deconstructed, abstract interpretation that remains RECOGNIZABLE to the original album
-- The artwork's key visual elements, colors, and iconic details must be identifiable
-- Think: all-over print fashion, not just a logo placement
+- Base: Premium BLACK crew socks (crew neck length)
+- Design Placement: Central design panel on the front/visible side of the sock
+- Design should be integrated into the sock fabric appearance (not a flat overlay)
+- Key visual elements from the album should be recognizable
+- Style: Pop art posterized effect with bold colors and graphic elements
 
 **COMPOSITION:**
 - Show 2 black socks side by side, standing upright on invisible mannequin/legs
-- 3D perspective showing form, natural fabric draping, and subtle wrinkles
-- Design should follow the sock's contours naturally (wrapping around curves)
-- Toe, heel, ankle, calf areas all feature integrated design elements
-- Professional product photography with studio lighting creating depth and shadows
+- 3D perspective showing natural sock form with subtle fabric draping
+- Professional product photography with clean studio lighting
+- Design panel clearly visible on the front-facing side of each sock
+- Natural shadows and depth to show dimensionality
 
 **DESIGN STYLE:**
 - Photorealistic merchandise photography (NOT flat mockup)
-- The album's visual DNA is woven into the fabric pattern
-- Creative reinterpretation: break down iconic elements and flow them across the sock
-- Maintain recognizability: someone should say "oh, that's [album name]!"
-- Premium, wearable streetwear aesthetic
+- Pop art posterized aesthetic with bold graphic elements
+- Album's iconic visual elements featured prominently in the design panel
+- High contrast, vibrant colors against black sock base
+- Premium streetwear aesthetic
 - Clean white background
 - Ultra high resolution
 

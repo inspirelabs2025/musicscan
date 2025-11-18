@@ -11,7 +11,7 @@ const STYLE_CONFIG: Record<string, { label: string; emoji: string }> = {
   watercolor: { label: "Watercolor Paint", emoji: "💧" },
   retro: { label: "Retro Style", emoji: "🕹️" },
   neon: { label: "Neon Glow", emoji: "💡" },
-  minimalist: { label: "Minimalist Line", emoji: "✏️" },
+  sketch: { label: "Sketch Art", emoji: "✏️" },
   popart: { label: "Pop Art", emoji: "💥" },
   metallic: { label: "Metallic Shine", emoji: "✨" }
 };
@@ -296,11 +296,11 @@ Style: ${label}`;
 - Electric, vibrant color palette
 - Futuristic neon sign aesthetic`,
 
-    minimalist: `${basePrompt}
-- Convert to clean line art style
-- Simple, essential lines only
-- Monochromatic or limited color palette
-- Modern minimalist design`,
+    sketch: `${basePrompt}
+- Transform into hand-drawn sketch artwork
+- Use pencil/charcoal sketch technique with visible strokes
+- Add artistic shading and cross-hatching details
+- Authentic sketch aesthetic with organic, expressive lines`,
 
     popart: `${basePrompt}
 - Bold pop art style with high contrast

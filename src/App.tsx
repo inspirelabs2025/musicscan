@@ -94,6 +94,7 @@ import EmailNotificationsPage from "./pages/admin/EmailNotificationsPage";
 import Quiz from "./pages/Quiz";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
+import ReturnPolicy from "./pages/ReturnPolicy";
 import Prestaties from "./pages/Prestaties";
 import SpotifyProfile from "./pages/SpotifyProfile";
 import SpotifyCallback from "./pages/SpotifyCallback";
@@ -244,6 +245,7 @@ const AppContent = () => {
         } />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<About />} />
+        <Route path="/retourbeleid" element={<ReturnPolicy />} />
         <Route path="/prestaties" element={
           <ProtectedRoute>
             <Prestaties />

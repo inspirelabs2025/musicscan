@@ -47,6 +47,8 @@ export default function PlatformProductDetail() {
 
   const isPoster = product?.categories?.includes('POSTER');
   const isTShirt = product?.categories?.includes('tshirts') || product?.tags?.includes('tshirts');
+  const isButton = product?.categories?.includes('buttons') || 
+                   (product?.media_type === 'merchandise' && product?.metadata?.product_type === 'button');
   const posterStyle = product?.tags?.find(t => 
     ['posterize', 'vectorcartoon', 'oilpainting', 'watercolor', 'pencilsketch', 'comicbook', 'abstract'].includes(t.toLowerCase())
   );
@@ -55,6 +57,11 @@ export default function PlatformProductDetail() {
   const rawStyleVariants = product?.metadata?.style_variants || [];
   const visibleStyleVariants = rawStyleVariants.filter((v: any) => v.style !== 'original');
   const showStyleSelector = !isTShirt && visibleStyleVariants.length > 0;
+
+  // Button sizes
+  const buttonSizes = isButton && product?.metadata?.size_options 
+    ? product.metadata.size_options 
+    : [];
 
   // Set default style when product loads
   useEffect(() => {
@@ -70,7 +77,13 @@ export default function PlatformProductDetail() {
         }
       }
     }
-  }, [product, visibleStyleVariants, selectedStyle]);
+
+    // Set default size for buttons
+    if (product && isButton && !selectedSize && buttonSizes.length > 0) {
+      const defaultSize = product.metadata?.default_size || buttonSizes[0].size;
+      setSelectedSize(defaultSize);
+    }
+  }, [product, visibleStyleVariants, selectedStyle, isButton, buttonSizes, selectedSize]);
 
   // Generate product-specific meta description
   const productDescription = product ? (
@@ -123,9 +136,11 @@ export default function PlatformProductDetail() {
   const allImages = [...new Set([product.primary_image, ...(product.images || [])].filter(Boolean))];
   const displayImage = selectedImage || product.primary_image;
   
-  // For T-shirts, generate cart_key with all options
+  // For T-shirts and buttons, generate cart_key with all options
   const cartKey = isTShirt 
     ? `${product.id}_${selectedStyle || 'default'}_${selectedSize || 'NA'}_${selectedColor || 'NA'}`
+    : isButton
+    ? `${product.id}_${selectedStyle || 'default'}_${selectedSize || 'NA'}`
     : product.id;
   const inCart = isInCart(cartKey);
 
@@ -147,13 +162,29 @@ export default function PlatformProductDetail() {
     { name: 'Navy', hex: '#000080' }
   ];
 
-  // Check if T-shirt options are complete
-  const canAddToCart = !isTShirt || (selectedStyle && selectedSize && selectedColor);
+  // Check if options are complete
+  const canAddToCart = 
+    (!isTShirt || (selectedStyle && selectedSize && selectedColor)) &&
+    (!isButton || (selectedStyle && selectedSize));
 
   const handleAddToCart = () => {
     if (isTShirt && !canAddToCart) {
       toast.error("Kies design, maat en kleur voor je T-shirt");
       return;
+    }
+    
+    if (isButton && !selectedSize) {
+      toast.error("Kies een maat voor je button");
+      return;
+    }
+
+    // Dynamic price for buttons based on selected size
+    let finalPrice = product.price;
+    if (isButton && selectedSize) {
+      const sizeOption = buttonSizes.find((s: any) => s.size === selectedSize);
+      if (sizeOption) {
+        finalPrice = sizeOption.price;
+      }
     }
 
     const styleLabel = (rawStyleVariants.find((v: any) => v.style === selectedStyle) || visibleStyleVariants.find((v: any) => v.style === selectedStyle))?.label;
@@ -162,7 +193,7 @@ export default function PlatformProductDetail() {
       media_type: 'product',
       artist: product.artist || "",
       title: product.title,
-      price: product.price,
+      price: finalPrice,
       condition_grade: "Nieuw",
       seller_id: "platform",
       image: selectedImage || product.primary_image || undefined,
@@ -171,7 +202,9 @@ export default function PlatformProductDetail() {
       selected_color: selectedColor || undefined,
     });
     
-    if (isTShirt) {
+    if (isButton) {
+      toast.success(`Button toegevoegd: ${styleLabel || selectedStyle} | ${selectedSize}`);
+    } else if (isTShirt) {
       toast.success(`T-shirt toegevoegd: ${selectedStyle || 'Design'} | ${selectedSize} | ${selectedColor}`);
     } else {
       toast.success(`Toegevoegd: ${styleLabel || selectedStyle || 'Standaard'} style`);
@@ -421,7 +454,7 @@ export default function PlatformProductDetail() {
                   size="lg"
                   className="flex-1"
                   onClick={handleAddToCart}
-                  disabled={inCart || (isTShirt && !canAddToCart)}
+                  disabled={inCart || (isTShirt && !canAddToCart) || (isButton && !canAddToCart)}
                 >
                   {inCart ? (
                     <>
@@ -446,6 +479,12 @@ export default function PlatformProductDetail() {
             {isTShirt && !canAddToCart && (
               <p className="text-sm text-muted-foreground text-center">
                 Kies design, maat en kleur om toe te voegen
+              </p>
+            )}
+            
+            {isButton && !canAddToCart && (
+              <p className="text-sm text-muted-foreground text-center">
+                Kies style en maat om toe te voegen
               </p>
             )}
           </Card>
@@ -525,6 +564,40 @@ export default function PlatformProductDetail() {
                 </div>
                 {selectedColor && (
                   <p className="text-sm text-muted-foreground">Gekozen: {selectedColor}</p>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {/* Button Size Selector */}
+          {isButton && buttonSizes.length > 0 && (
+            <Card className="p-6 space-y-4">
+              <h3 className="font-semibold text-lg">Button opties</h3>
+              
+              {/* Size Selector */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Kies je maat</label>
+                <div className="flex gap-3">
+                  {buttonSizes.map((sizeOption: any) => (
+                    <button
+                      key={sizeOption.size}
+                      onClick={() => setSelectedSize(sizeOption.size)}
+                      className={`flex-1 px-4 py-3 rounded-lg border-2 font-medium transition-all ${
+                        selectedSize === sizeOption.size
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="text-sm font-bold">{sizeOption.size}</div>
+                      <div className="text-xs opacity-70">{sizeOption.diameter}</div>
+                      <div className="text-sm font-semibold mt-1">€{sizeOption.price.toFixed(2)}</div>
+                    </button>
+                  ))}
+                </div>
+                {selectedSize && (
+                  <p className="text-sm text-muted-foreground">
+                    Gekozen: {buttonSizes.find((s: any) => s.size === selectedSize)?.label}
+                  </p>
                 )}
               </div>
             </Card>

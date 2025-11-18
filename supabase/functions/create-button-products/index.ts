@@ -29,91 +29,84 @@ serve(async (req) => {
       throw new Error('baseDesignUrl, artist, and title are required');
     }
 
-    console.log('🔘 Creating button products:', { artist, title });
-
-    const products = [];
-
-    // Create products for both sizes (35mm and 45mm)
-    const sizes = [
-      { size: '3.5cm', price: 4.50, label: '35mm' },
-      { size: '4cm', price: 5.50, label: '45mm' }
-    ];
+    console.log('🔘 Creating button product:', { artist, title });
 
     // Prepare visible variants (exclude 'original' from display)
     const visibleVariants = (styleVariants || []).filter((v: any) => v.style !== 'original');
     const defaultStyle = visibleVariants[0]?.style || 'vector';
     const images = visibleVariants.map((v: any) => v.url);
 
-    for (const { size, price, label } of sizes) {
-      // Generate unique slug
-      const baseSlug = `button-${artist.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${label}`;
-      let slug = baseSlug;
-      let counter = 1;
+    // Generate unique slug (no size suffix)
+    const baseSlug = `button-${artist.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    let slug = baseSlug;
+    let counter = 1;
 
-      // Check for uniqueness
-      while (true) {
-        const { data: existing } = await supabase
-          .from('platform_products')
-          .select('id')
-          .eq('slug', slug)
-          .single();
-
-        if (!existing) break;
-        slug = `${baseSlug}-${counter}`;
-        counter++;
-      }
-
-      const productData = {
-        title: `${artist} - ${title} Button (${label})`,
-        slug,
-        artist,
-        description: description || `Hoogwaardige button badge van ${artist} - ${title}. Professionele kwaliteit met veiligheidspin op de achterkant. Diameter: ${size}.`,
-        price,
-        primary_image: baseDesignUrl,
-        images,
-        media_type: 'merchandise',
-        categories: ['buttons', 'badges', 'merchandise'],
-        stock_quantity: 100,
-        status: 'active',
-        published_at: new Date().toISOString(),
-        metadata: {
-          size,
-          pin_type: 'safety_pin',
-          has_style_options: true,
-          default_style: defaultStyle,
-          style_variants: styleVariants,
-          original_artist: artist,
-          original_title: title,
-          product_dimensions: {
-            diameter: size,
-            thickness: '3mm'
-          }
-        }
-      };
-
-      const { data: product, error: productError } = await supabase
+    // Check for uniqueness
+    while (true) {
+      const { data: existing } = await supabase
         .from('platform_products')
-        .insert(productData)
-        .select()
+        .select('id')
+        .eq('slug', slug)
         .single();
 
-      if (productError) {
-        console.error('Error creating product:', productError);
-        throw productError;
-      }
-
-      products.push(product);
-      console.log(`✅ Created button product: ${product.slug}`);
+      if (!existing) break;
+      slug = `${baseSlug}-${counter}`;
+      counter++;
     }
 
-    console.log(`✅ Successfully created ${products.length} button products`);
+    // Create single product with size options
+    const productData = {
+      title: `${artist} - ${title} Button`,
+      slug,
+      artist,
+      description: description || `Hoogwaardige button badge van ${artist} - ${title}. Professionele kwaliteit met veiligheidspin op de achterkant. Verkrijgbaar in 2 maten.`,
+      price: 4.50, // Base price (smallest size)
+      primary_image: baseDesignUrl,
+      images,
+      media_type: 'merchandise',
+      categories: ['buttons', 'badges', 'merchandise'],
+      stock_quantity: 100,
+      status: 'active',
+      published_at: new Date().toISOString(),
+      metadata: {
+        has_style_options: true,
+        default_style: defaultStyle,
+        style_variants: styleVariants,
+        has_size_options: true,
+        size_options: [
+          { size: '35mm', diameter: '3.5cm', price: 4.50, label: '35mm (Standaard)' },
+          { size: '45mm', diameter: '4cm', price: 5.50, label: '45mm (Groot)' }
+        ],
+        default_size: '35mm',
+        pin_type: 'safety_pin',
+        product_type: 'button',
+        original_artist: artist,
+        original_title: title,
+        product_dimensions: {
+          thickness: '3mm'
+        }
+      }
+    };
+
+    const { data: product, error: productError } = await supabase
+      .from('platform_products')
+      .insert(productData)
+      .select()
+      .single();
+
+    if (productError) {
+      console.error('Error creating product:', productError);
+      throw productError;
+    }
+
+    console.log(`✅ Created button product: ${product.slug}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        products,
-        product_ids: products.map(p => p.id),
-        product_slugs: products.map(p => p.slug)
+        product,
+        product_id: product.id,
+        product_slug: product.slug
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

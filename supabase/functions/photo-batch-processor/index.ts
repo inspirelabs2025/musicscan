@@ -408,9 +408,10 @@ async function processPhotoBatch(
           }
         );
 
-        if (!productError && buttonProducts?.product_ids) {
-          results.buttons.productIds = buttonProducts.product_ids;
-          console.log(`✅ Created ${results.buttons.productIds.length} button products`);
+        if (!productError && buttonProducts?.product_id) {
+          results.buttons.productId = buttonProducts.product_id;
+          results.buttons.productSlug = buttonProducts.product_slug;
+          console.log(`✅ Created button product: ${buttonProducts.product_slug}`);
         }
       } catch (productError) {
         console.error('Button product creation failed:', productError);

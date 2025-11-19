@@ -55,7 +55,9 @@ export const PlaatVerhaal: React.FC = () => {
   const year = frontmatter.year || '';
   const genre = frontmatter.genre || '';
   const readingTime = frontmatter.reading_time || 5;
-  const tags = frontmatter.tags || [];
+  const tags = Array.isArray(frontmatter.tags) 
+    ? frontmatter.tags.filter((tag: any) => typeof tag === 'string') 
+    : [];
   const price = frontmatter.price_eur || 0;
   const discogsId = frontmatter.discogs_id ? parseInt(frontmatter.discogs_id) : null;
   const lastPriceUpdate = frontmatter.last_price_update;

@@ -76,7 +76,7 @@ export const PlaatVerhaal: React.FC = () => {
     ? blog.social_post.slice(0, 160)
     : frontmatter.meta_description || `Ontdek het verhaal achter ${artist} - ${album}. Een diepgaande AI-analyse van dit ${genre || 'muziek'} album uit ${year || 'de muziekgeschiedenis'}. Inclusief prijsanalyse en verzamelwaarde.`;
   
-  const seoKeywords = [
+  const rawSeoKeywords = [
     artist,
     album,
     genre,
@@ -89,7 +89,9 @@ export const PlaatVerhaal: React.FC = () => {
     'album verhaal',
     'discogs waarde',
     year && `${year} muziek`
-  ].filter(Boolean).join(', ');
+  ].filter((value) => typeof value === 'string' && value.trim().length > 0);
+
+  const seoKeywords = rawSeoKeywords.join(', ');
 
   // Select blog image with proper absolute URL validation
   const blogImage = isAbsoluteUrl(blog?.album_cover_url)
@@ -304,10 +306,12 @@ export const PlaatVerhaal: React.FC = () => {
         <meta property="article:published_time" content={blog?.published_at || blog?.created_at} />
         {artist && <meta property="article:author" content={artist} />}
         {genre && <meta property="article:section" content={genre} />}
-        {tags.map((tag: string, index: number) => (
-          <meta key={`tag-${index}`} property="article:tag" content={tag} />
-        ))}
-        
+        {tags
+          .filter((tag: unknown): tag is string => typeof tag === 'string')
+          .map((tag, index) => (
+            <meta key={`tag-${index}`} property="article:tag" content={tag} />
+          ))}
+
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={frontmatter.meta_title || `${artist} - ${album}`} />

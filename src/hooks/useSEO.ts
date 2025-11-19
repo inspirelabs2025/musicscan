@@ -102,7 +102,17 @@ export const useSEO = (seoData?: Partial<SEOData>) => {
     }
     hreflangDefault.setAttribute('href', currentUrl);
     
-  }, [seoData, location.pathname]);
+  }, [
+    location.pathname,
+    seoData?.title,
+    seoData?.description,
+    seoData?.keywords,
+    seoData?.image,
+    seoData?.canonicalUrl,
+    seoData?.type,
+    seoData?.siteName,
+    seoData?.locale
+  ]);
 };
 
 // Route-specific SEO configurations

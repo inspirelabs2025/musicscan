@@ -43,31 +43,38 @@ serve(async (req) => {
 
     if (error) {
       console.error('❌ Error fetching products:', error);
-      throw error;
+      // Return empty CSV with headers instead of JSON error
+      const emptyCSV = generateFacebookCSV([]);
+      return new Response(emptyCSV, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/csv; charset=utf-8',
+        },
+      });
     }
 
     console.log(`✅ Found ${products?.length || 0} active products`);
 
-    // Generate CSV feed
+    // Generate CSV feed (even if empty)
     const csv = generateFacebookCSV(products || []);
 
     return new Response(csv, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="facebook-catalog-feed.csv"',
       },
     });
 
   } catch (error: any) {
     console.error('❌ Error generating feed:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    // Return empty CSV with headers on error instead of JSON
+    const emptyCSV = generateFacebookCSV([]);
+    return new Response(emptyCSV, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/csv; charset=utf-8',
+      },
+    });
   }
 });
 

@@ -9,6 +9,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { GuestCheckoutModal } from './GuestCheckoutModal';
+import { trackBeginCheckout } from '@/utils/googleAnalytics';
 
 export const ShoppingCartWidget = () => {
   const { items, removeFromCart, getTotalPrice, getItemCount, checkout, isLoading, clearCart } = useCart();
@@ -18,6 +19,9 @@ export const ShoppingCartWidget = () => {
 
   const handleCheckout = async () => {
     console.log('[ShoppingCartWidget] Checkout button clicked, user:', user ? 'logged in' : 'guest');
+    
+    // Track begin checkout
+    trackBeginCheckout(items, getTotalPrice());
     
     if (user) {
       // Authenticated user checkout

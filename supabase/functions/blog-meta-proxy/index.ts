@@ -32,7 +32,8 @@ function generateBlogHTML(blog: any): string {
   const frontmatter = blog.yaml_frontmatter || {};
   const title = `${frontmatter.artist || 'Unknown Artist'} - ${frontmatter.album || blog.slug} | MusicScan Plaatverhaal`;
   const description = frontmatter.description || `Ontdek het verhaal achter ${frontmatter.album || 'dit album'} van ${frontmatter.artist || 'deze artiest'}. Lees de volledige recensie, geschiedenis, en waardering op MusicScan.`;
-  const image = blog.album_cover_url || frontmatter.image || 'https://www.musicscan.app/lovable-uploads/cc6756c3-36dd-4665-a1c6-3acd9d23370e.png';
+  // Use local fallback image as Discogs images may not be accessible to Facebook crawlers
+  const image = 'https://www.musicscan.app/images/default-product-og.jpg';
   const url = `https://www.musicscan.app/plaat-verhaal/${blog.slug}`;
   const publishDate = blog.published_at || blog.created_at;
   const price = frontmatter.estimated_price || frontmatter.price;

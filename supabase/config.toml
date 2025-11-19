@@ -351,3 +351,9 @@ verify_jwt = false
 
 [[functions.artist-stories-batch-processor.schedule]]
 cron = "* * * * *"  # Every minute
+
+[functions.sync-facebook-catalog]
+verify_jwt = false
+
+[functions.generate-facebook-catalog-feed]
+verify_jwt = false

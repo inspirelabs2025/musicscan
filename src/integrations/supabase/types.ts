@@ -1793,6 +1793,48 @@ export type Database = {
         }
         Relationships: []
       }
+      facebook_sync_log: {
+        Row: {
+          created_at: string | null
+          error_details: Json | null
+          id: string
+          products_failed: number | null
+          products_synced: number | null
+          status: string
+          sync_completed_at: string | null
+          sync_started_at: string
+          sync_type: string | null
+          total_products: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_details?: Json | null
+          id?: string
+          products_failed?: number | null
+          products_synced?: number | null
+          status?: string
+          sync_completed_at?: string | null
+          sync_started_at?: string
+          sync_type?: string | null
+          total_products?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_details?: Json | null
+          id?: string
+          products_failed?: number | null
+          products_synced?: number | null
+          status?: string
+          sync_completed_at?: string | null
+          sync_started_at?: string
+          sync_type?: string | null
+          total_products?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       forum_post_votes: {
         Row: {
           created_at: string

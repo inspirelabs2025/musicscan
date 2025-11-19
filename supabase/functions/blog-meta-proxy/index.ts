@@ -32,8 +32,10 @@ function generateBlogHTML(blog: any): string {
   const frontmatter = blog.yaml_frontmatter || {};
   const title = `${frontmatter.artist || 'Unknown Artist'} - ${frontmatter.album || blog.slug} | MusicScan Plaatverhaal`;
   const description = frontmatter.description || `Ontdek het verhaal achter ${frontmatter.album || 'dit album'} van ${frontmatter.artist || 'deze artiest'}. Lees de volledige recensie, geschiedenis, en waardering op MusicScan.`;
-  // Use local fallback image as Discogs images may not be accessible to Facebook crawlers
-  const image = 'https://www.musicscan.app/images/default-product-og.jpg';
+  // Prefer album cover, but ensure it's a valid URL, otherwise use fallback
+  const image = blog.album_cover_url && blog.album_cover_url.startsWith('http') 
+    ? blog.album_cover_url 
+    : (frontmatter.image || 'https://www.musicscan.app/images/default-product-og.jpg');
   const url = `https://www.musicscan.app/plaat-verhaal/${blog.slug}`;
   const publishDate = blog.published_at || blog.created_at;
   const price = frontmatter.estimated_price || frontmatter.price;
@@ -107,10 +109,13 @@ function generateBlogHTML(blog: any): string {
   <meta name="googlebot" content="index, follow">
   
   <!-- Open Graph -->
+  <meta property="fb:app_id" content="1234567890">
   <meta property="og:type" content="article">
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${description}">
   <meta property="og:image" content="${image}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:url" content="${url}">
   <meta property="og:site_name" content="MusicScan">
   <meta property="article:published_time" content="${publishDate}">

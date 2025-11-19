@@ -15,7 +15,7 @@
     },
     {
       "source": "/plaat-verhaal/:slug",
-      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/crawler-handler/plaat-verhaal/:slug"
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/plaat-verhaal/:slug"
     },
     {
       "source": "/(.*)",

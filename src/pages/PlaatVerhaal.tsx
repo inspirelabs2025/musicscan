@@ -302,8 +302,8 @@ export const PlaatVerhaal: React.FC = () => {
         <meta property="article:published_time" content={blog?.published_at || blog?.created_at} />
         {artist && <meta property="article:author" content={artist} />}
         {genre && <meta property="article:section" content={genre} />}
-        {tags.map((tag: string) => (
-          <meta key={tag} property="article:tag" content={tag} />
+        {tags.map((tag: string, index: number) => (
+          <meta key={`tag-${index}`} property="article:tag" content={tag} />
         ))}
         
         {/* Twitter Card */}

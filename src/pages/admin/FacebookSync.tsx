@@ -2,9 +2,11 @@ import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, RefreshCw, Facebook, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Loader2, RefreshCw, Facebook, CheckCircle2, XCircle, AlertCircle, Key } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 export default function FacebookSync() {
   const { toast } = useToast();
   const [isSyncing, setIsSyncing] = useState(false);
+  const [pageAccessToken, setPageAccessToken] = useState("");
+  const [isSavingToken, setIsSavingToken] = useState(false);
   const [syncProgress, setSyncProgress] = useState<{
     total?: number;
     synced?: number;
@@ -91,6 +95,40 @@ export default function FacebookSync() {
     }
   };
 
+  const saveToken = async () => {
+    if (!pageAccessToken.trim()) {
+      toast({
+        title: "Token vereist",
+        description: "Voer een Facebook Page Access Token in",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsSavingToken(true);
+      
+      // Note: In production, this should save to Supabase secrets
+      // For now, we'll store it in localStorage as a temporary solution
+      localStorage.setItem('FACEBOOK_PAGE_ACCESS_TOKEN', pageAccessToken);
+      
+      toast({
+        title: "Token opgeslagen",
+        description: "Facebook Page Access Token is opgeslagen",
+      });
+      
+    } catch (error) {
+      console.error('Error saving token:', error);
+      toast({
+        title: "Fout bij opslaan",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingToken(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -125,6 +163,50 @@ export default function FacebookSync() {
             Synchroniseer MusicScan producten naar je Facebook Catalog voor Facebook Shop integratie
           </p>
         </div>
+
+        {/* Facebook Credentials */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5" />
+              Facebook Credentials
+            </CardTitle>
+            <CardDescription>
+              Voer je Facebook Page Access Token in voor catalog synchronisatie
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="pageAccessToken">Page Access Token</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="pageAccessToken"
+                  type="password"
+                  placeholder="Plak hier je Facebook Page Access Token..."
+                  value={pageAccessToken}
+                  onChange={(e) => setPageAccessToken(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={saveToken}
+                  disabled={isSavingToken || !pageAccessToken.trim()}
+                >
+                  {isSavingToken ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Opslaan...
+                    </>
+                  ) : (
+                    "Opslaan"
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Genereer een Page Access Token via Facebook Graph API Explorer met de permissions: pages_read_engagement
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Sync Controls */}
         <Card>

@@ -15,6 +15,7 @@ export default function FacebookSync() {
   const { toast } = useToast();
   const [isSyncing, setIsSyncing] = useState(false);
   const [pageAccessToken, setPageAccessToken] = useState("");
+  const [appSecret, setAppSecret] = useState("");
   const [isSavingToken, setIsSavingToken] = useState(false);
   const [syncProgress, setSyncProgress] = useState<{
     total?: number;
@@ -96,10 +97,10 @@ export default function FacebookSync() {
   };
 
   const saveToken = async () => {
-    if (!pageAccessToken.trim()) {
+    if (!pageAccessToken.trim() || !appSecret.trim()) {
       toast({
-        title: "Token vereist",
-        description: "Voer een Facebook Page Access Token in",
+        title: "Credentials vereist",
+        description: "Vul zowel de Page Access Token als App Secret in",
         variant: "destructive"
       });
       return;
@@ -108,26 +109,39 @@ export default function FacebookSync() {
     try {
       setIsSavingToken(true);
       
-      // Save token via edge function to secure database
-      const { data, error } = await supabase.functions.invoke('save-facebook-token', {
-        body: { token: pageAccessToken }
+      // Save Page Access Token
+      const { error: tokenError } = await supabase.functions.invoke('save-facebook-token', {
+        body: { 
+          secret_key: 'FACEBOOK_PAGE_ACCESS_TOKEN',
+          secret_value: pageAccessToken.trim()
+        }
       });
 
-      if (error) throw error;
+      if (tokenError) throw tokenError;
+
+      // Save App Secret
+      const { error: secretError } = await supabase.functions.invoke('save-facebook-token', {
+        body: { 
+          secret_key: 'FACEBOOK_APP_SECRET',
+          secret_value: appSecret.trim()
+        }
+      });
+
+      if (secretError) throw secretError;
       
       toast({
-        title: "✅ Token opgeslagen",
-        description: "Facebook Page Access Token is veilig opgeslagen en kan nu gebruikt worden voor synchronisatie",
+        title: "✅ Credentials opgeslagen",
+        description: "Facebook credentials zijn veilig opgeslagen en kunnen nu gebruikt worden voor synchronisatie",
       });
 
-      // Clear the input field after successful save
       setPageAccessToken("");
+      setAppSecret("");
       
     } catch (error) {
-      console.error('Error saving token:', error);
+      console.error('Error saving credentials:', error);
       toast({
         title: "❌ Fout bij opslaan",
-        description: error.message || "Er is een fout opgetreden bij het opslaan van de token",
+        description: error.message || "Er is een fout opgetreden bij het opslaan van de credentials",
         variant: "destructive"
       });
     } finally {
@@ -178,39 +192,54 @@ export default function FacebookSync() {
               Facebook Credentials
             </CardTitle>
             <CardDescription>
-              Voer je Facebook Page Access Token in voor catalog synchronisatie
+              Configureer je Facebook Page Access Token en App Secret voor veilige API synchronisatie
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="pageAccessToken">Page Access Token</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="pageAccessToken"
-                  type="password"
-                  placeholder="Plak hier je Facebook Page Access Token..."
-                  value={pageAccessToken}
-                  onChange={(e) => setPageAccessToken(e.target.value)}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={saveToken}
-                  disabled={isSavingToken || !pageAccessToken.trim()}
-                >
-                  {isSavingToken ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Opslaan...
-                    </>
-                  ) : (
-                    "Opslaan"
-                  )}
-                </Button>
-              </div>
+              <Label htmlFor="pageAccessToken">Facebook Page Access Token</Label>
+              <Input
+                id="pageAccessToken"
+                type="password"
+                placeholder="Plak hier je Page Access Token..."
+                value={pageAccessToken}
+                onChange={(e) => setPageAccessToken(e.target.value)}
+                disabled={isSavingToken}
+              />
               <p className="text-xs text-muted-foreground">
-                Genereer een Page Access Token via Facebook Graph API Explorer met de permissions: pages_read_engagement
+                Te vinden in: Meta Business Suite → Settings → Business Assets → Page Access Tokens
               </p>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="appSecret">Facebook App Secret</Label>
+              <Input
+                id="appSecret"
+                type="password"
+                placeholder="Plak hier je App Secret..."
+                value={appSecret}
+                onChange={(e) => setAppSecret(e.target.value)}
+                disabled={isSavingToken}
+              />
+              <p className="text-xs text-muted-foreground">
+                Te vinden in: Facebook Developers Console → App Settings → Basic → "App Secret" (klik "Show")
+              </p>
+            </div>
+
+            <Button
+              onClick={saveToken}
+              disabled={isSavingToken || !pageAccessToken.trim() || !appSecret.trim()}
+              className="w-full"
+            >
+              {isSavingToken ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Opslaan...
+                </>
+              ) : (
+                "Credentials Opslaan"
+              )}
+            </Button>
           </CardContent>
         </Card>
 

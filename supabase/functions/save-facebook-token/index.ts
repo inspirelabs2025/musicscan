@@ -17,11 +17,11 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { token } = await req.json();
+    const { secret_key, secret_value } = await req.json();
 
-    if (!token || typeof token !== 'string' || token.trim().length === 0) {
+    if (!secret_key || typeof secret_key !== 'string' || secret_key.trim().length === 0) {
       return new Response(
-        JSON.stringify({ error: 'Valid token is required' }),
+        JSON.stringify({ error: 'Valid secret_key is required' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -29,15 +29,25 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Saving Facebook Page Access Token...');
+    if (!secret_value || typeof secret_value !== 'string' || secret_value.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Valid secret_value is required' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
-    // Upsert the token (insert or update if exists)
+    console.log(`Saving Facebook credential: ${secret_key}`);
+
+    // Upsert the secret (insert or update if exists)
     const { data, error } = await supabaseClient
       .from('app_secrets')
       .upsert({
-        secret_key: 'FACEBOOK_PAGE_ACCESS_TOKEN',
-        secret_value: token.trim(),
-        description: 'Facebook Page Access Token for catalog synchronization',
+        secret_key: secret_key.trim(),
+        secret_value: secret_value.trim(),
+        description: `Facebook credential: ${secret_key}`,
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'secret_key'
@@ -46,11 +56,11 @@ Deno.serve(async (req) => {
       .single();
 
     if (error) {
-      console.error('Failed to save token:', error);
+      console.error('Failed to save secret:', error);
       throw error;
     }
 
-    console.log('Token saved successfully:', data.id);
+    console.log('Secret saved successfully:', data.id);
 
     return new Response(
       JSON.stringify({ 

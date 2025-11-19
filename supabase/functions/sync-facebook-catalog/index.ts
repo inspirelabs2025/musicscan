@@ -158,11 +158,10 @@ Deno.serve(async (req) => {
         };
 
         const response = await fetch(
-          `https://graph.facebook.com/v18.0/${catalogId}/batch`,
+          `https://graph.facebook.com/v18.0/${catalogId}/batch?access_token=${pageAccessToken}&appsecret_proof=${appsecretProof}`,
           {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(requestData)

@@ -14,6 +14,10 @@
       "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/sitemap-proxy?file=:path*"
     },
     {
+      "source": "/plaat-verhaal/:slug",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/crawler-handler/plaat-verhaal/:slug"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

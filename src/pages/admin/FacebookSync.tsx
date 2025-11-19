@@ -108,20 +108,26 @@ export default function FacebookSync() {
     try {
       setIsSavingToken(true);
       
-      // Note: In production, this should save to Supabase secrets
-      // For now, we'll store it in localStorage as a temporary solution
-      localStorage.setItem('FACEBOOK_PAGE_ACCESS_TOKEN', pageAccessToken);
+      // Save token via edge function to secure database
+      const { data, error } = await supabase.functions.invoke('save-facebook-token', {
+        body: { token: pageAccessToken }
+      });
+
+      if (error) throw error;
       
       toast({
-        title: "Token opgeslagen",
-        description: "Facebook Page Access Token is opgeslagen",
+        title: "✅ Token opgeslagen",
+        description: "Facebook Page Access Token is veilig opgeslagen en kan nu gebruikt worden voor synchronisatie",
       });
+
+      // Clear the input field after successful save
+      setPageAccessToken("");
       
     } catch (error) {
       console.error('Error saving token:', error);
       toast({
-        title: "Fout bij opslaan",
-        description: error.message,
+        title: "❌ Fout bij opslaan",
+        description: error.message || "Er is een fout opgetreden bij het opslaan van de token",
         variant: "destructive"
       });
     } finally {

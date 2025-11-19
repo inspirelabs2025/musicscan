@@ -1,5 +1,11 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.save-facebook-token]
+verify_jwt = false
+
+[functions.sync-facebook-catalog]
+verify_jwt = false
+
 [functions.upscale-image]
 verify_jwt = false
 

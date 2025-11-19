@@ -349,6 +349,36 @@ export type Database = {
         }
         Relationships: []
       }
+      app_secrets: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          secret_key: string
+          secret_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          secret_key: string
+          secret_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          secret_key?: string
+          secret_value?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       artist_fanwalls: {
         Row: {
           artist_name: string
@@ -6081,6 +6111,7 @@ export type Database = {
         Args: { p_increment?: number; p_usage_type: string; p_user_id: string }
         Returns: boolean
       }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_conversation_participant: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean

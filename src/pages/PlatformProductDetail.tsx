@@ -98,7 +98,7 @@ export default function PlatformProductDetail() {
       : `${product.title}${product.artist ? ` van ${product.artist}` : ''} - ${product.description || 'Bekijk details en bestel eenvoudig.'} Prijs: €${product.price}`
   ) : 'Bekijk productdetails in onze shop';
   
-  const productImage = product?.primary_image || 'https://www.musicscan.app/placeholder.svg';
+  const productImage = product?.primary_image || 'https://www.musicscan.app/images/default-product-og.jpg';
 
   // SEO optimization for product page
   useSEO({
@@ -254,6 +254,7 @@ export default function PlatformProductDetail() {
       <Helmet>
         {/* Product-specific Open Graph tags */}
         <meta property="og:type" content="product" />
+        <meta property="og:site_name" content="MusicScan" />
         <meta property="og:url" content={currentUrl} />
         <meta property="og:title" content={`${product.artist} - ${product.title}`} />
         <meta property="og:description" content={productDescription} />

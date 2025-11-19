@@ -105,16 +105,16 @@ function generateFacebookCSV(products: Product[]): string {
       escapeCSV(product.id),
       escapeCSV(`${product.artist} - ${product.title}`),
       escapeCSV(product.description || `${product.artist} - ${product.title}`),
-      'in stock',
-      'new',
-      `${product.price.toFixed(2)} EUR`,
-      `${baseUrl}/product/${product.slug}`,
-      product.main_image_url,
-      'MusicScan',
-      category,
-      productType,
-      product.slug, // Group products by slug for variants
-      '' // Additional images could be added here
+      escapeCSV('in stock'),
+      escapeCSV('new'),
+      escapeCSV(`${product.price.toFixed(2)} EUR`),
+      escapeCSV(`${baseUrl}/product/${product.slug}`),
+      escapeCSV(product.main_image_url || ''),
+      escapeCSV('MusicScan'),
+      escapeCSV(category),
+      escapeCSV(productType),
+      escapeCSV(product.slug),
+      '' // Additional images
     ];
   });
 

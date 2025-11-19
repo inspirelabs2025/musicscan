@@ -29,7 +29,8 @@ import {
   BookOpen,
   MessageSquare,
   Mail,
-  Sparkles
+  Sparkles,
+  Facebook
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -117,6 +118,12 @@ const menuItems = [
       { title: "Create FanWall", url: "/admin/create-artist-fanwall", icon: Users },
       { title: "Generate Seed", url: "/admin/generate-seed", icon: Settings },
       { title: "Bulk Poster Upload", url: "/admin/bulk-poster-upload", icon: Image },
+    ]
+  },
+  {
+    title: "Integraties",
+    items: [
+      { title: "Facebook Sync", url: "/admin/facebook-sync", icon: Facebook },
     ]
   },
   {

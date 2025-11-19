@@ -119,6 +119,7 @@ import TshirtGenerator from "./pages/admin/TshirtGenerator";
 import ButtonGenerator from "./pages/admin/ButtonGenerator";
 import SinglesImporterPage from "./pages/admin/SinglesImporterPage";
 import ArtistStoriesGenerator from "./pages/admin/ArtistStoriesGenerator";
+import FacebookSync from "./pages/admin/FacebookSync";
 import SocksShop from "./pages/SocksShop";
 import TshirtsShop from "./pages/TshirtsShop";
 import MerchandiseShop from "./pages/MerchandiseShop";
@@ -361,6 +362,7 @@ const AppContent = () => {
                 <Route path="singles-importer" element={<SinglesImporterPage />} />
                 <Route path="artist-stories-generator" element={<ArtistStoriesGenerator />} />
                 <Route path="artist-spotlights" element={<ArtistSpotlightsAdmin />} />
+                <Route path="facebook-sync" element={<FacebookSync />} />
                 <Route path="artist-spotlight/new" element={<ArtistSpotlightEditor />} />
                 <Route path="artist-spotlight/edit/:id" element={<ArtistSpotlightEditor />} />
                 

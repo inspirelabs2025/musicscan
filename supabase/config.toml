@@ -169,6 +169,9 @@ cron = "0 3 * * *"  # Daily at 3 AM UTC
 [functions.blog-meta-proxy]
 verify_jwt = false
 
+[functions.crawler-handler]
+verify_jwt = false
+
 [functions.indexnow-processor]
 verify_jwt = false
 

@@ -230,6 +230,9 @@ verify_jwt = false
 [functions.sitemaps-proxy]
 verify_jwt = false
 
+[functions.universal-ssr-proxy]
+verify_jwt = false
+
 [functions.time-machine-events]
 verify_jwt = false
 

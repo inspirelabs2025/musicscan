@@ -63,6 +63,12 @@ export const PlaatVerhaal: React.FC = () => {
   // Fetch price trend data
   const { data: priceTrend } = usePriceTrend(discogsId);
 
+  // Helper to check if URL is absolute
+  const isAbsoluteUrl = (url: string | undefined): boolean => {
+    if (!url) return false;
+    return url.startsWith('http://') || url.startsWith('https://');
+  };
+
   // Enhanced SEO setup
   const seoDescription = blog?.social_post 
     ? blog.social_post.slice(0, 160)
@@ -83,7 +89,12 @@ export const PlaatVerhaal: React.FC = () => {
     year && `${year} muziek`
   ].filter(Boolean).join(', ');
 
-  const blogImage = blog?.album_cover_url || frontmatter.og_image || 'https://www.musicscan.app/images/default-product-og.jpg';
+  // Select blog image with proper absolute URL validation
+  const blogImage = isAbsoluteUrl(blog?.album_cover_url)
+    ? blog!.album_cover_url
+    : isAbsoluteUrl(frontmatter.og_image)
+    ? frontmatter.og_image
+    : 'https://www.musicscan.app/images/default-product-og.jpg';
 
   useSEO({
     title: frontmatter.meta_title || `${artist} - ${album} | Plaat & Verhaal`,

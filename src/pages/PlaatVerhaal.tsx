@@ -83,7 +83,7 @@ export const PlaatVerhaal: React.FC = () => {
     year && `${year} muziek`
   ].filter(Boolean).join(', ');
 
-  const blogImage = blog?.album_cover_url || frontmatter.og_image || 'https://www.musicscan.app/placeholder.svg';
+  const blogImage = blog?.album_cover_url || frontmatter.og_image || 'https://www.musicscan.app/images/default-product-og.jpg';
 
   useSEO({
     title: frontmatter.meta_title || `${artist} - ${album} | Plaat & Verhaal`,

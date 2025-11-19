@@ -57,7 +57,7 @@ export const MuziekVerhaal: React.FC = () => {
 
   // Define URLs and images for SEO and sharing
   const currentUrl = `https://www.musicscan.app/muziek-verhaal/${slug}`;
-  const storyImage = story?.artwork_url || 'https://www.musicscan.app/placeholder.svg';
+  const storyImage = story?.artwork_url || 'https://www.musicscan.app/images/default-product-og.jpg';
   const storyDescription = story?.meta_description || story?.story_content?.slice(0, 160).replace(/[#*]/g, '') || 'Ontdek het verhaal achter de muziek';
 
   // Enhanced SEO setup

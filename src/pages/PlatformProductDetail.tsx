@@ -17,6 +17,7 @@ import { generatePosterAltTag } from "@/utils/generateAltTag";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
 import { PosterStyleSelector } from "@/components/timemachine/PosterStyleSelector";
 import { ShareButtons } from "@/components/ShareButtons";
+import { trackProductView, trackAddToCart } from "@/utils/googleAnalytics";
 
 export default function PlatformProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -78,10 +79,15 @@ export default function PlatformProductDetail() {
       }
     }
 
-    // Set default size for buttons
+  // Set default size for buttons
     if (product && isButton && !selectedSize && buttonSizes.length > 0) {
       const defaultSize = product.metadata?.default_size || buttonSizes[0].size;
       setSelectedSize(defaultSize);
+    }
+    
+    // Track product view when product loads
+    if (product) {
+      trackProductView(product);
     }
   }, [product, visibleStyleVariants, selectedStyle, isButton, buttonSizes, selectedSize]);
 
@@ -186,6 +192,13 @@ export default function PlatformProductDetail() {
         finalPrice = sizeOption.price;
       }
     }
+    
+    // Track add to cart event
+    trackAddToCart(
+      { ...product, price: finalPrice }, 
+      selectedStyle || undefined, 
+      selectedSize || undefined
+    );
 
     const styleLabel = (rawStyleVariants.find((v: any) => v.style === selectedStyle) || visibleStyleVariants.find((v: any) => v.style === selectedStyle))?.label;
     addToCart({

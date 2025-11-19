@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import type { CartItem } from "@/contexts/CartContext";
+import { trackBeginCheckout } from "@/utils/googleAnalytics";
 
 interface GuestCheckoutModalProps {
   open: boolean;
@@ -31,6 +32,9 @@ export const GuestCheckoutModal = ({ open, onOpenChange, items, onSuccess }: Gue
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    // Track begin checkout for guest
+    trackBeginCheckout(items, totalPrice);
 
     try {
       const shippingAddress = {

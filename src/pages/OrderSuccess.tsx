@@ -7,6 +7,7 @@ import { CheckCircle, Package, Home, ShoppingBag } from "lucide-react";
 import { useShopOrder } from "@/hooks/useShopOrders";
 import { useGuestOrderTracking } from "@/hooks/useGuestOrderTracking";
 import { useAuth } from "@/contexts/AuthContext";
+import { trackPurchase } from "@/utils/googleAnalytics";
 
 export const OrderSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -35,6 +36,18 @@ export const OrderSuccess = () => {
 
   const order = user ? authOrder : guestOrder;
   const loading = user ? authLoading : guestLoading;
+  
+  // Track purchase conversion when order data is available
+  useEffect(() => {
+    if (order && orderId) {
+      trackPurchase(
+        orderId,
+        order.order_items || [],
+        order.total_amount,
+        order.shipping_cost || 0
+      );
+    }
+  }, [order, orderId]);
 
   if (loading) {
     return (

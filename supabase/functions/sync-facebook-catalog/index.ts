@@ -128,14 +128,46 @@ Deno.serve(async (req) => {
       throw new Error('Facebook Page Access Token not configured. Please save your token first.');
     }
 
-    const accessToken = tokenSecret.secret_value;
-    const catalogId = Deno.env.get('FACEBOOK_CATALOG_ID'); // Catalog ID can remain in env for now
+    const { data: appSecretData, error: appSecretError } = await supabaseClient
+      .from('app_secrets')
+      .select('secret_value')
+      .eq('secret_key', 'FACEBOOK_APP_SECRET')
+      .single();
 
-    if (!accessToken || !catalogId) {
-      throw new Error('Facebook credentials not configured');
+    if (appSecretError || !appSecretData) {
+      console.error('Failed to fetch Facebook App Secret:', appSecretError);
+      throw new Error('Facebook App Secret not configured. Please save it first.');
     }
 
-    console.log('Using Facebook token from database');
+    const pageAccessToken = tokenSecret.secret_value;
+    const appSecret = appSecretData.secret_value;
+    const catalogId = Deno.env.get('FACEBOOK_CATALOG_ID'); // Catalog ID can remain in env for now
+
+    if (!pageAccessToken || !appSecret || !catalogId) {
+      throw new Error('Facebook credentials not fully configured');
+    }
+
+    console.log('Retrieved Facebook credentials from database');
+
+    // Calculate appsecret_proof (HMAC-SHA256 hash of access token with app secret)
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(appSecret);
+    const data = encoder.encode(pageAccessToken);
+    
+    const key = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    
+    const signature = await crypto.subtle.sign("HMAC", key, data);
+    const appsecretProof = Array.from(new Uint8Array(signature))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    console.log('Calculated appsecret_proof for secure API calls');
 
     let successCount = 0;
     let failureCount = 0;

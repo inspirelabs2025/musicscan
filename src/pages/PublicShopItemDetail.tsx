@@ -19,10 +19,11 @@ import {
 } from "lucide-react";
 import { useShopItemDetail } from "@/hooks/useShopItemDetail";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useShoppingCart } from "@/hooks/useShoppingCart";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { trackProductView, trackAddToCart } from "@/utils/googleAnalytics";
 
 export default function PublicShopItemDetail() {
   const { shopSlug, itemId } = useParams<{ shopSlug: string; itemId: string }>();
@@ -32,6 +33,20 @@ export default function PublicShopItemDetail() {
   const [actionLoading, setActionLoading] = useState(false);
   const { addToCart } = useShoppingCart();
   const { toast } = useToast();
+
+  // Track product view
+  useEffect(() => {
+    if (data?.item) {
+      trackProductView({
+        id: data.item.id,
+        artist: data.item.artist,
+        title: data.item.title,
+        price: data.item.marketplace_price || data.item.calculated_advice_price,
+        media_type: data.item.media_type,
+        categories: ['marketplace', data.item.media_type],
+      });
+    }
+  }, [data]);
 
   const getImageUrl = () => {
     if (!data?.item) return null;
@@ -88,6 +103,8 @@ export default function PublicShopItemDetail() {
         seller_id: data.shop.user_id,
         image: getImageUrl() || undefined
       };
+      
+      trackAddToCart(cartItem);
       addToCart(cartItem);
       toast({
         title: "Toegevoegd aan winkelwagen",
@@ -122,6 +139,7 @@ export default function PublicShopItemDetail() {
       image: getImageUrl() || undefined
     };
     
+    trackAddToCart(cartItem);
     addToCart(cartItem);
     toast({
       title: "Toegevoegd aan winkelwagen",

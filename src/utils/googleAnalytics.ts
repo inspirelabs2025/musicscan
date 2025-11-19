@@ -19,7 +19,11 @@ export const formatGA4Item = (product: any, quantity = 1): GA4Item => {
     item_name: `${product.artist} - ${product.title}`,
     item_category: product.categories?.[0] || product.media_type || 'unknown',
     item_category2: product.media_type,
-    item_variant: product.selected_style || product.selected_size || undefined,
+    item_variant: [
+      product.selected_style,
+      product.selected_size,
+      product.selected_color
+    ].filter(Boolean).join(', ') || undefined,
     price: product.price,
     quantity,
   };

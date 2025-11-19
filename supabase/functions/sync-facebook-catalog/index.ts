@@ -116,13 +116,26 @@ Deno.serve(async (req) => {
 
     console.log(`Converted ${catalogItems.length} products to catalog format`);
 
-    // Sync to Facebook in batches
-    const accessToken = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
-    const catalogId = Deno.env.get('FACEBOOK_CATALOG_ID');
+    // Fetch Facebook credentials from database
+    const { data: tokenSecret, error: tokenError } = await supabaseClient
+      .from('app_secrets')
+      .select('secret_value')
+      .eq('secret_key', 'FACEBOOK_PAGE_ACCESS_TOKEN')
+      .single();
+
+    if (tokenError || !tokenSecret) {
+      console.error('Failed to fetch Facebook token:', tokenError);
+      throw new Error('Facebook Page Access Token not configured. Please save your token first.');
+    }
+
+    const accessToken = tokenSecret.secret_value;
+    const catalogId = Deno.env.get('FACEBOOK_CATALOG_ID'); // Catalog ID can remain in env for now
 
     if (!accessToken || !catalogId) {
       throw new Error('Facebook credentials not configured');
     }
+
+    console.log('Using Facebook token from database');
 
     let successCount = 0;
     let failureCount = 0;

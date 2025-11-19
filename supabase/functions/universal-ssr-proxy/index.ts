@@ -353,13 +353,14 @@ Deno.serve(async (req) => {
     }
 
     // Parse the path to determine content type
+    // Use last 2 segments to handle both direct paths and paths with /functions/v1/universal-ssr-proxy prefix
     const pathParts = url.pathname.split('/').filter(Boolean);
     if (pathParts.length < 2) {
       throw new Error('Invalid path format');
     }
 
-    const contentType = pathParts[0]; // 'plaat-verhaal', 'muziek-verhaal', 'product'
-    const rawSlug = pathParts[1];
+    const contentType = pathParts[pathParts.length - 2]; // 'plaat-verhaal', 'muziek-verhaal', 'product'
+    const rawSlug = pathParts[pathParts.length - 1];
     const slug = normalizeSlug(rawSlug);
 
     // Initialize Supabase client

@@ -167,7 +167,7 @@ export default function ReviewDetail() {
                 h3: ({ children }) => <h3 className="text-xl font-semibold mt-6 mb-3">{children}</h3>,
               }}
             >
-              {review.content}
+              {review.content.split('\n').filter(line => line.trim() !== '').join('\n\n')}
             </ReactMarkdown>
           </div>
 

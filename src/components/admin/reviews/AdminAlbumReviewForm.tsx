@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,10 +50,11 @@ export const AdminAlbumReviewForm = ({
   onCancel,
   isSubmitting = false,
 }: AdminAlbumReviewFormProps) => {
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<ReviewFormData>({
-    defaultValues: initialData || {
-      is_published: false,
-      format: "lp",
+  const { register, handleSubmit, watch, setValue, control, formState: { errors } } = useForm<ReviewFormData>({
+    defaultValues: {
+      is_published: initialData?.is_published ?? false,
+      format: initialData?.format ?? "lp",
+      ...initialData,
     },
   });
 
@@ -314,11 +315,20 @@ export const AdminAlbumReviewForm = ({
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Switch 
-                id="is_published"
-                {...register("is_published")}
+              <Controller
+                name="is_published"
+                control={control}
+                render={({ field }) => (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="is_published"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                    <Label htmlFor="is_published">Publiceren</Label>
+                  </div>
+                )}
               />
-              <Label htmlFor="is_published">Publiceren</Label>
             </div>
             
             <div className="flex gap-2">

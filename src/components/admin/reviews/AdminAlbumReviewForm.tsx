@@ -34,7 +34,7 @@ interface ReviewFormData {
   listening_context?: string;
   recommended_for?: string;
   is_published: boolean;
-  published_at?: string;
+  published_at?: string | null;
 }
 
 interface AdminAlbumReviewFormProps {
@@ -75,10 +75,15 @@ export const AdminAlbumReviewForm = ({
   }, [artistName, albumTitle, initialData, setValue]);
 
   const handleFormSubmit = (data: ReviewFormData) => {
+    // Only set published_at if publishing for the first time
+    const published_at = data.is_published 
+      ? (initialData?.published_at || new Date().toISOString())
+      : null;
+    
     onSubmit({
       ...data,
       rating_breakdown: ratingAspects,
-      published_at: data.is_published ? new Date().toISOString() : undefined,
+      published_at,
     });
   };
 

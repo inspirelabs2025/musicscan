@@ -160,7 +160,15 @@ export default function ReviewDetail() {
         {/* Review Content */}
         <div className="container mx-auto max-w-3xl px-4 py-8">
           <div className="prose prose-lg dark:prose-invert max-w-none">
-            <ReactMarkdown>{review.content}</ReactMarkdown>
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <p className="mb-4 leading-relaxed">{children}</p>,
+                h2: ({ children }) => <h2 className="text-2xl font-bold mt-8 mb-4">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-xl font-semibold mt-6 mb-3">{children}</h3>,
+              }}
+            >
+              {review.content}
+            </ReactMarkdown>
           </div>
 
           {/* Spotify Embed */}

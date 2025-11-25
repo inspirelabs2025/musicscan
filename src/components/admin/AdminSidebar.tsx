@@ -93,6 +93,7 @@ const menuItems = [
   {
     title: "Content Management",
     items: [
+      { title: "Album Reviews", url: "/admin/album-reviews", icon: BookOpen },
       { title: "Curated Artists", url: "/admin/curated-artists", icon: Music },
       { title: "Discogs Lookup", url: "/admin/discogs-lookup", icon: Database },
       { title: "Photo Moderation", url: "/admin/photo-moderation", icon: Image },

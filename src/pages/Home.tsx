@@ -11,6 +11,7 @@ import { ShopByCategorySection } from '@/components/shop/ShopByCategorySection';
 import { FeaturedProductsCarousel } from '@/components/shop/FeaturedProductsCarousel';
 import { LatestReleasesSection } from '@/components/home/LatestReleasesSection';
 import { NewsAndStoriesSection } from '@/components/home/NewsAndStoriesSection';
+import { ReviewsSpotlight } from '@/components/home/ReviewsSpotlight';
 import { AIFeaturesCompact } from '@/components/home/AIFeaturesCompact';
 import { CommunityStats } from '@/components/home/CommunityStats';
 import { ArtistSpotlightsSection } from '@/components/home/ArtistSpotlightsSection';
@@ -77,6 +78,9 @@ const Home = () => {
 
       {/* Latest Releases */}
       <LatestReleasesSection />
+
+      {/* Album Reviews Spotlight */}
+      <ReviewsSpotlight />
 
       {/* News & Stories Section with Tabs */}
       <NewsAndStoriesSection />

@@ -144,6 +144,9 @@ import ArtistSpotlights from "./pages/ArtistSpotlights";
 import ArtistSpotlight from "./pages/ArtistSpotlight";
 import ArtistSpotlightsAdmin from "./pages/admin/ArtistSpotlights";
 import { ArtistSpotlightEditor } from "./components/admin/ArtistSpotlightEditor";
+import Reviews from "./pages/Reviews";
+import ReviewDetail from "./pages/ReviewDetail";
+import AdminAlbumReviews from "./pages/admin/AdminAlbumReviews";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -316,6 +319,8 @@ const AppContent = () => {
         <Route path="/artist/:slug" element={<ArtistDetail />} />
         <Route path="/artist-spotlights" element={<ArtistSpotlights />} />
         <Route path="/artist-spotlight/:slug" element={<ArtistSpotlight />} />
+        <Route path="/reviews" element={<Reviews />} />
+        <Route path="/reviews/:slug" element={<ReviewDetail />} />
         
         {/* Test Pages - Redirect to /admin/test/* */}
         <Route path="/test-music-news" element={<Navigate to="/admin/test/music-news" replace />} />
@@ -367,6 +372,7 @@ const AppContent = () => {
                 <Route path="artist-spotlight/edit/:id" element={<ArtistSpotlightEditor />} />
                 
                 {/* Content Management */}
+                <Route path="album-reviews" element={<AdminAlbumReviews />} />
                 <Route path="curated-artists" element={<CuratedArtists />} />
                 <Route path="discogs-lookup" element={<DiscogsLookup />} />
                 <Route path="photo-moderation" element={<PhotoModeration />} />

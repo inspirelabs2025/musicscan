@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_album_reviews: {
+        Row: {
+          album_title: string
+          artist_name: string
+          content: string
+          cover_image_url: string | null
+          created_at: string | null
+          format: string | null
+          genre: string | null
+          id: string
+          is_published: boolean | null
+          label: string | null
+          listening_context: string | null
+          published_at: string | null
+          rating: number | null
+          rating_breakdown: Json | null
+          recommended_for: string | null
+          release_year: number | null
+          slug: string
+          spotify_embed_url: string | null
+          summary: string
+          title: string
+          updated_at: string | null
+          views_count: number | null
+          youtube_embed_url: string | null
+        }
+        Insert: {
+          album_title: string
+          artist_name: string
+          content: string
+          cover_image_url?: string | null
+          created_at?: string | null
+          format?: string | null
+          genre?: string | null
+          id?: string
+          is_published?: boolean | null
+          label?: string | null
+          listening_context?: string | null
+          published_at?: string | null
+          rating?: number | null
+          rating_breakdown?: Json | null
+          recommended_for?: string | null
+          release_year?: number | null
+          slug: string
+          spotify_embed_url?: string | null
+          summary: string
+          title: string
+          updated_at?: string | null
+          views_count?: number | null
+          youtube_embed_url?: string | null
+        }
+        Update: {
+          album_title?: string
+          artist_name?: string
+          content?: string
+          cover_image_url?: string | null
+          created_at?: string | null
+          format?: string | null
+          genre?: string | null
+          id?: string
+          is_published?: boolean | null
+          label?: string | null
+          listening_context?: string | null
+          published_at?: string | null
+          rating?: number | null
+          rating_breakdown?: Json | null
+          recommended_for?: string | null
+          release_year?: number | null
+          slug?: string
+          spotify_embed_url?: string | null
+          summary?: string
+          title?: string
+          updated_at?: string | null
+          views_count?: number | null
+          youtube_embed_url?: string | null
+        }
+        Relationships: []
+      }
       ai_scan_results: {
         Row: {
           ai_description: string | null

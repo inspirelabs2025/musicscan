@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SpotifyAlbumSearch } from "./SpotifyAlbumSearch";
 
 interface ReviewFormData {
   slug: string;
@@ -275,6 +276,15 @@ export const AdminAlbumReviewForm = ({
         </TabsContent>
 
         <TabsContent value="media" className="space-y-4">
+          <SpotifyAlbumSearch
+            onSelect={(coverUrl, spotifyUrl) => {
+              setValue("cover_image_url", coverUrl);
+              setValue("spotify_embed_url", spotifyUrl.replace("album/", "embed/album/"));
+            }}
+            initialArtist={artistName}
+            initialAlbum={albumTitle}
+          />
+
           <Card>
             <CardHeader>
               <CardTitle>Media</CardTitle>

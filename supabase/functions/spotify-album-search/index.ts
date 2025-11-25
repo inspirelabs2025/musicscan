@@ -22,6 +22,8 @@ interface SpotifyAlbum {
   external_urls: {
     spotify: string;
   };
+  images: Array<{ url: string; height: number; width: number }>;
+  release_date?: string;
 }
 
 interface SpotifyArtist {
@@ -65,7 +67,7 @@ async function getSpotifyAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-async function searchSpotifyAlbum(artist: string, album: string, accessToken: string): Promise<string | null> {
+async function searchSpotifyAlbum(artist: string, album: string, accessToken: string): Promise<SpotifyAlbum | null> {
   // Clean up artist and album names for better matching
   const cleanArtist = artist.replace(/[^\w\s]/g, '').trim();
   const cleanAlbum = album.replace(/[^\w\s]/g, '').trim();
@@ -102,7 +104,7 @@ async function searchSpotifyAlbum(artist: string, album: string, accessToken: st
     if (spotifyArtist?.includes(cleanArtist.toLowerCase()) || cleanArtist.toLowerCase().includes(spotifyArtist || '')) {
       if (spotifyAlbumName?.includes(cleanAlbum.toLowerCase()) || cleanAlbum.toLowerCase().includes(spotifyAlbumName || '')) {
         console.log(`Found match: ${spotifyAlbum.name} by ${spotifyAlbum.artists[0]?.name}`);
-        return spotifyAlbum.external_urls.spotify;
+        return spotifyAlbum;
       }
     }
   }
@@ -110,7 +112,7 @@ async function searchSpotifyAlbum(artist: string, album: string, accessToken: st
   // If no perfect match, return the first result as fallback
   const firstResult = data.albums.items[0];
   console.log(`Using first result as fallback: ${firstResult.name} by ${firstResult.artists[0]?.name}`);
-  return firstResult.external_urls.spotify;
+  return firstResult;
 }
 
 async function searchSpotifyArtist(artist: string, accessToken: string): Promise<string | null> {
@@ -182,21 +184,30 @@ serve(async (req) => {
     const accessToken = await getSpotifyAccessToken();
     
     // Search for the album first
-    const albumUrl = await searchSpotifyAlbum(artist, album, accessToken);
+    const albumResult = await searchSpotifyAlbum(artist, album, accessToken);
     
     // If no album found, search for artist as fallback
     let artistUrl = null;
-    if (!albumUrl) {
+    if (!albumResult) {
       artistUrl = await searchSpotifyArtist(artist, accessToken);
+    }
+
+    // Extract cover image (prefer 640x640 or largest available)
+    let coverImage = null;
+    if (albumResult?.images && albumResult.images.length > 0) {
+      const preferred = albumResult.images.find(img => img.height === 640);
+      coverImage = preferred?.url || albumResult.images[0].url;
     }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        albumUrl: albumUrl,
+        albumUrl: albumResult?.external_urls.spotify || null,
+        coverImage,
         artistUrl: artistUrl,
         artist,
-        album 
+        album,
+        releaseDate: albumResult?.release_date
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

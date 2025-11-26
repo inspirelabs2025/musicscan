@@ -150,75 +150,72 @@ serve(async (req) => {
     }
 
     // Process keyword-based duplicates (voor artikelen zonder source_url)
-    const keywordGroups = new Map<string, NewsArticle[]>();
+    const visited = new Set<string>();
 
-    for (const article of noUrlArticles) {
-      const title = article.yaml_frontmatter?.title || article.yaml_frontmatter?.original_title || '';
-      const keywords = extractKeywords(title);
-      
-      if (keywords.length >= 2) {
-        // Gebruik ALLE keywords (gesorteerd) als signature zodat varianten
-        // met dezelfde woorden maar andere volgorde ook samenkomen
-        const signature = keywords.join('|');
-        
-        if (!keywordGroups.has(signature)) {
-          keywordGroups.set(signature, []);
+    console.log(`Checking keyword-based duplicates for ${noUrlArticles.length} artikelen zonder bron-URL`);
+
+    for (let i = 0; i < noUrlArticles.length; i++) {
+      const base = noUrlArticles[i];
+      if (visited.has(base.id)) continue;
+
+      const baseTitle = base.yaml_frontmatter?.title || base.yaml_frontmatter?.original_title || '';
+      const baseKeywords = extractKeywords(baseTitle);
+      if (baseKeywords.length < 2) continue;
+
+      const group: NewsArticle[] = [base];
+
+      for (let j = i + 1; j < noUrlArticles.length; j++) {
+        const candidate = noUrlArticles[j];
+        if (visited.has(candidate.id)) continue;
+
+        const candidateTitle = candidate.yaml_frontmatter?.title || candidate.yaml_frontmatter?.original_title || '';
+        const candidateKeywords = extractKeywords(candidateTitle);
+
+        // Count overlapping keywords
+        const matchCount = baseKeywords.filter(word => candidateKeywords.includes(word)).length;
+
+        // Minstens 3 gedeelde keywords om echt op duplicaat te lijken (bijv. "rob stenders viert mijlpaal")
+        if (matchCount >= 3) {
+          console.log(`Keyword-duplicate match (${matchCount} overlaps): "${baseTitle}" <-> "${candidateTitle}"`);
+          group.push(candidate);
+          visited.add(candidate.id);
         }
-        keywordGroups.get(signature)!.push(article);
       }
-    }
 
-    console.log(`Found ${keywordGroups.size} potential keyword-based duplicate groups`);
-
-    // Process keyword-based duplicates
-    for (const [signature, group] of keywordGroups.entries()) {
       if (group.length > 1) {
-        console.log(`Checking keyword group (${group.length} artikelen) signature: ${signature}`);
-        
-        // Verifieer dat er echt voldoende overlap is in keywords
-        const baseKeywords = extractKeywords(group[0].yaml_frontmatter?.title || group[0].yaml_frontmatter?.original_title || '');
-        const realDuplicates = group.filter(article => {
-          const titleWords = extractKeywords(article.yaml_frontmatter?.title || article.yaml_frontmatter?.original_title || '');
-          const matchCount = baseKeywords.filter(word => titleWords.includes(word)).length;
-          return matchCount >= 2; // minimaal 2 gedeelde keywords
+        report.duplicate_groups++;
+        report.duplicates_found += group.length - 1;
+
+        // Sort: published first, then by views, then by oldest
+        const sorted = group.sort((a, b) => {
+          if (a.is_published !== b.is_published) return a.is_published ? -1 : 1;
+          if (a.views_count !== b.views_count) return b.views_count - a.views_count;
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         });
 
-        if (realDuplicates.length > 1) {
-          console.log(`Found ${realDuplicates.length} keyword-based duplicates with signature: ${signature}`);
-          report.duplicate_groups++;
-          report.duplicates_found += realDuplicates.length - 1;
+        const keep = sorted[0];
+        const toDelete = sorted.slice(1);
 
-          // Sort: published first, then by views, then by oldest
-          const sorted = realDuplicates.sort((a, b) => {
-            if (a.is_published !== b.is_published) return a.is_published ? -1 : 1;
-            if (a.views_count !== b.views_count) return b.views_count - a.views_count;
-            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-          });
+        report.kept_articles.push(keep.slug);
+        console.log(`Keeping (keyword-group): ${keep.slug}`);
 
-          const keep = sorted[0];
-          const toDelete = sorted.slice(1);
+        // Delete duplicates
+        for (const article of toDelete) {
+          try {
+            const { error: deleteError } = await supabase
+              .from('blog_posts')
+              .delete()
+              .eq('id', article.id);
 
-          report.kept_articles.push(keep.slug);
-          console.log(`Keeping: ${keep.slug}`);
-
-          // Delete duplicates
-          for (const article of toDelete) {
-            try {
-              const { error: deleteError } = await supabase
-                .from('blog_posts')
-                .delete()
-                .eq('id', article.id);
-
-              if (deleteError) {
-                report.errors.push(`Failed to delete ${article.slug}: ${deleteError.message}`);
-              } else {
-                report.deleted_articles.push(article.slug);
-                report.duplicates_deleted++;
-                console.log(`Deleted: ${article.slug}`);
-              }
-            } catch (error) {
-              report.errors.push(`Exception deleting ${article.slug}: ${error.message}`);
+            if (deleteError) {
+              report.errors.push(`Failed to delete ${article.slug}: ${deleteError.message}`);
+            } else {
+              report.deleted_articles.push(article.slug);
+              report.duplicates_deleted++;
+              console.log(`Deleted (keyword-duplicate): ${article.slug}`);
             }
+          } catch (error) {
+            report.errors.push(`Exception deleting ${article.slug}: ${error.message}`);
           }
         }
       }

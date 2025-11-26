@@ -6,6 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { ArtistStoryQueueMonitor } from '@/components/admin/ArtistStoryQueueMonitor';
+import { Separator } from '@/components/ui/separator';
 
 interface BatchStatus {
   id: string;
@@ -288,6 +290,14 @@ const ArtistStoriesGenerator = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Queue Monitor */}
+        <Separator className="my-8" />
+        
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-4">Queue Overzicht</h2>
+          <ArtistStoryQueueMonitor />
+        </div>
 
         {/* Info Card */}
         <Card>

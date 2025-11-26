@@ -15,14 +15,35 @@
     },
     {
       "source": "/plaat-verhaal/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot|bot|crawler|spider).*"
+        }
+      ],
       "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/plaat-verhaal/:slug"
     },
     {
       "source": "/product/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot|bot|crawler|spider).*"
+        }
+      ],
       "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/product/:slug"
     },
     {
       "source": "/muziek-verhaal/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot|bot|crawler|spider).*"
+        }
+      ],
       "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/muziek-verhaal/:slug"
     },
     {

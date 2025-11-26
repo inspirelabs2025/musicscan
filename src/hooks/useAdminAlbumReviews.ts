@@ -21,6 +21,7 @@ interface AdminAlbumReview {
   youtube_embed_url?: string;
   listening_context?: string;
   recommended_for?: string;
+  author_name?: string;
   is_published: boolean;
   published_at?: string;
   views_count: number;

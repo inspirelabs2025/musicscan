@@ -34,6 +34,7 @@ interface ReviewFormData {
   youtube_embed_url?: string;
   listening_context?: string;
   recommended_for?: string;
+  author_name?: string;
   is_published: boolean;
   published_at?: string | null;
 }
@@ -122,6 +123,15 @@ export const AdminAlbumReviewForm = ({
                 <Label htmlFor="slug">Slug *</Label>
                 <Input id="slug" {...register("slug", { required: true })} />
                 {errors.slug && <span className="text-sm text-destructive">Verplicht veld</span>}
+              </div>
+
+              <div>
+                <Label htmlFor="author_name">Auteur</Label>
+                <Input 
+                  id="author_name" 
+                  {...register("author_name")}
+                  placeholder="Naam van de recensent"
+                />
               </div>
 
               <div className="grid grid-cols-3 gap-4">

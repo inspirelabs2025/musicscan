@@ -44,35 +44,45 @@ serve(async (req) => {
 
     console.log(`Found ${allArtistNames.length} existing artists (${highPriority.length} high priority)`);
 
-    const prompt = `Je bent een muziek expert die nieuwe artiesten suggereert voor een vinyl/CD catalogus.
+    const prompt = `Je bent een deep-dive muziek expert gespecialiseerd in het ontdekken van ONBEKENDE en NICHE artiesten voor een vinyl/LP catalogus.
 
-BESTAANDE SUCCESVOLLE ARTIESTEN (veel releases gevonden):
-${highPriority.slice(0, 30).map(a => `- ${a.artist_name} (${a.releases_found_count} releases)`).join('\n')}
-
-BESTAANDE MEDIUM ARTIESTEN:
-${mediumPriority.slice(0, 20).map(a => `- ${a.artist_name}`).join('\n')}
-
-ALLE BESTAANDE ARTIESTEN (om duplicaten te vermijden):
+CRUCIALE INSTRUCTIE: De volgende ${allArtistNames.length} artiesten staan AL in onze database en mogen ABSOLUUT NIET herhaald worden:
 ${allArtistNames.join(', ')}
 
-TAAK: Genereer precies ${count} NIEUWE artiesten die:
-1. Vergelijkbaar zijn met de succesvolle artiesten (zelfde genres/periodes)
-2. Populair zijn bij vinylverzamelaars en platenliefhebbers
-3. Veel LP/vinyl releases hebben uitgebracht
-4. NIET al in de bestaande lijst staan
-5. Mix van bekende en niche artiesten
+VOORBEELDEN van succesvolle stijlen in onze catalogus:
+${highPriority.slice(0, 20).map(a => `${a.artist_name}`).join(', ')}
 
-GENRES/STIJLEN waar je op moet focussen:
-- Classic Rock, Progressive Rock, Psychedelic Rock
-- Jazz (alle subgenres), Fusion, Soul, Funk
-- Electronic, Disco, New Wave, Synth-pop
-- Blues, Folk, Singer-Songwriter
-- Reggae, Dub, Ska
-- Krautrock, Space Rock
-- Indie, Alternative, Post-Punk
+TAAK: Genereer precies ${count} TOTAAL NIEUWE artiesten die:
+1. NIET in de bestaande lijst voorkomen (controleer elke naam!)
+2. VERGELIJKBARE stijlen hebben als de succesvolle artiesten
+3. Veel vinyl/LP releases hebben (minstens 5+ albums)
+4. Vooral NICHE en OBSCURE namen - vermijd mainstream bekenden
+5. Mix van: cult heroes, hidden gems, underground legends, forgotten classics
+
+FOCUS STERK OP:
+- B-sides van bekende labels (artiesten die 1-2 hits hadden maar vergeten zijn)
+- Cult artiesten uit de jaren 60-90
+- Europese prog/kraut/psych bands die niet mainstream zijn
+- Jazz fusion artiesten buiten de top 50
+- Underground post-punk/new wave
+- Obscure folk/singer-songwriters
+- Niche electronic pioneers
+- Regional scene heroes (bijv. Canterbury scene, Kosmische Musik, etc.)
+
+GENRES om DIEP in te duiken:
+- Obscure Progressive Rock, Symphonic Rock
+- Krautrock, Kosmische Musik, Space Rock, Berlin School
+- Canterbury Scene, RIO (Rock In Opposition)
+- Obscure Jazz Fusion, Spiritual Jazz, Free Jazz
+- Underground Psych Rock, Acid Rock
+- Minimal Wave, Coldwave, Darkwave
+- Dub Reggae, Roots Reggae obscure labels
+- Avant-Folk, Weird Folk, Free Folk
+- Post-Punk tweede golf, No Wave
+- Library Music artiesten, Soundtrack composers
 
 Geef ALLEEN de artiestnamen, één per regel, zonder nummering of extra tekst.
-Geen uitleg, geen beschrijvingen, alleen namen.`;
+Geen bekende namen, focus op OBSCURE en NICHE artiesten!`;
 
     console.log('🤖 Requesting AI suggestions...');
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -82,15 +92,15 @@ Geen uitleg, geen beschrijvingen, alleen namen.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-pro',
         messages: [
           { 
             role: 'system', 
-            content: 'Je bent een muziek expert. Geef alleen artiestnamen, één per regel, geen extra tekst.' 
+            content: 'Je bent een deep-dive muziek expert. Focus op OBSCURE en NICHE artiesten die weinig mensen kennen. Geef alleen artiestnamen, één per regel, geen extra tekst. Controleer dat je geen namen herhaalt uit de gegeven lijst.' 
           },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.8,
+        temperature: 1.0,
       }),
     });
 

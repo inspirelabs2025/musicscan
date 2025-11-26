@@ -148,6 +148,7 @@ import { ArtistSpotlightEditor } from "./components/admin/ArtistSpotlightEditor"
 import Reviews from "./pages/Reviews";
 import ReviewDetail from "./pages/ReviewDetail";
 import AdminAlbumReviews from "./pages/admin/AdminAlbumReviews";
+import LlmsTxt from "./pages/LlmsTxt";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -178,6 +179,8 @@ const AppContent = () => {
     <>
       <Navigation />
       <Routes>
+        <Route path="/.well-known/llms.txt" element={<LlmsTxt />} />
+        <Route path="/llms.txt" element={<LlmsTxt />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<Home />} />
         <Route path="/search/artist" element={<ArtistSearchResults />} />

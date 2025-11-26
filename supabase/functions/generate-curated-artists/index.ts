@@ -44,45 +44,49 @@ serve(async (req) => {
 
     console.log(`Found ${allArtistNames.length} existing artists (${highPriority.length} high priority)`);
 
-    const prompt = `Je bent een deep-dive muziek expert gespecialiseerd in het ontdekken van ONBEKENDE en NICHE artiesten voor een vinyl/LP catalogus.
+    const prompt = `Je bent een muziek expert gespecialiseerd in CULT HEROES, HIDDEN GEMS en UNDERGROUND LEGENDS voor een vinyl/LP catalogus.
 
 CRUCIALE INSTRUCTIE: De volgende ${allArtistNames.length} artiesten staan AL in onze database en mogen ABSOLUUT NIET herhaald worden:
 ${allArtistNames.join(', ')}
 
-VOORBEELDEN van succesvolle stijlen in onze catalogus:
+SUCCESVOLLE VOORBEELDEN in onze catalogus:
 ${highPriority.slice(0, 20).map(a => `${a.artist_name}`).join(', ')}
 
 TAAK: Genereer precies ${count} TOTAAL NIEUWE artiesten die:
 1. NIET in de bestaande lijst voorkomen (controleer elke naam!)
-2. VERGELIJKBARE stijlen hebben als de succesvolle artiesten
-3. Veel vinyl/LP releases hebben (minstens 5+ albums)
-4. Vooral NICHE en OBSCURE namen - vermijd mainstream bekenden
-5. Mix van: cult heroes, hidden gems, underground legends, forgotten classics
+2. CULT HEROES: Artiesten met een toegewijde fanbase maar geen mainstream succes
+3. HIDDEN GEMS: Vergeten talenten met meerdere albums die herontdekt moeten worden
+4. UNDERGROUND LEGENDS: Invloedrijke artiesten binnen hun niche die veel releases hebben
+5. Minimaal 5+ albums/releases hebben uitgebracht
 
-FOCUS STERK OP:
-- B-sides van bekende labels (artiesten die 1-2 hits hadden maar vergeten zijn)
-- Cult artiesten uit de jaren 60-90
-- Europese prog/kraut/psych bands die niet mainstream zijn
-- Jazz fusion artiesten buiten de top 50
-- Underground post-punk/new wave
-- Obscure folk/singer-songwriters
-- Niche electronic pioneers
-- Regional scene heroes (bijv. Canterbury scene, Kosmische Musik, etc.)
+PRIMAIRE FOCUS - POP/ROCK/SOUL/R&B/RAP:
+- Vergeten Soul & R&B zangers/zangeressen uit de jaren 60-80
+- One-hit wonders met uitgebreide catalogi
+- Underground hip-hop artiesten met klassieke albums
+- Indie rock bands met cult status
+- Singer-songwriters die kritisch succesvol waren maar commercieel flopten
+- Alternatieve R&B artiesten uit de jaren 90-2000s
+- Britpop/Madchester bands tweede garnituur
+- Neo-soul artiesten buiten de mainstream
+- Underground rap crews en producers
+- Post-grunge bands die overschaduwd werden
+- Garage rock revival bands
+- Trip-hop artiesten buiten de grote namen
 
-GENRES om DIEP in te duiken:
-- Obscure Progressive Rock, Symphonic Rock
-- Krautrock, Kosmische Musik, Space Rock, Berlin School
-- Canterbury Scene, RIO (Rock In Opposition)
-- Obscure Jazz Fusion, Spiritual Jazz, Free Jazz
-- Underground Psych Rock, Acid Rock
-- Minimal Wave, Coldwave, Darkwave
-- Dub Reggae, Roots Reggae obscure labels
-- Avant-Folk, Weird Folk, Free Folk
-- Post-Punk tweede golf, No Wave
-- Library Music artiesten, Soundtrack composers
+BELANGRIJKE SUBGENRES:
+- Classic Soul, Northern Soul, Southern Soul
+- Funk, P-Funk, Jazz-Funk
+- Blues Rock, Southern Rock
+- Alternative Rock, College Rock, Indie Rock
+- Underground Hip-Hop, Conscious Rap, Jazz Rap
+- Neo-Soul, Alternative R&B
+- Britpop, Madchester, Baggy
+- Post-Punk, New Wave
+- Garage Rock, Psych Rock
+- Trip-Hop, Downtempo
 
 Geef ALLEEN de artiestnamen, één per regel, zonder nummering of extra tekst.
-Geen bekende namen, focus op OBSCURE en NICHE artiesten!`;
+Focus op CULT HEROES en HIDDEN GEMS uit de top 200 met veel releases!`;
 
     console.log('🤖 Requesting AI suggestions...');
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {

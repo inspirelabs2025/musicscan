@@ -23,13 +23,27 @@ export default function Nieuws() {
     queryKey: ["news-blog-posts"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('news_blog_posts')
-        .select('*')
+        .from('blog_posts')
+        .select('*, yaml_frontmatter')
+        .eq('album_type', 'news')
+        .eq('is_published', true)
         .order('published_at', { ascending: false })
         .limit(100);
       
       if (error) throw error;
-      return data || [];
+      
+      // Transform to match expected structure
+      return (data || []).map(post => ({
+        id: post.id,
+        slug: post.slug,
+        title: post.yaml_frontmatter?.title || '',
+        summary: post.yaml_frontmatter?.description || post.yaml_frontmatter?.excerpt || '',
+        content: post.markdown_content,
+        category: post.yaml_frontmatter?.category || '',
+        image_url: post.album_cover_url || post.yaml_frontmatter?.cover_image,
+        source: post.yaml_frontmatter?.source || '',
+        published_at: post.published_at || post.created_at,
+      }));
     },
     staleTime: 5 * 60 * 1000,
   });

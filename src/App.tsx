@@ -150,6 +150,7 @@ import ReviewDetail from "./pages/ReviewDetail";
 import AdminAlbumReviews from "./pages/admin/AdminAlbumReviews";
 import LlmsTxt from "./pages/LlmsTxt";
 import LlmSitemap from "./pages/LlmSitemap";
+import SEOKeywords from "./pages/admin/SEOKeywords";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -387,6 +388,7 @@ const AppContent = () => {
                 {/* SEO & Analytics */}
                 <Route path="seo-monitoring" element={<SEOMonitoring />} />
                 <Route path="sitemap-management" element={<SitemapManagement />} />
+                <Route path="seo-keywords" element={<SEOKeywords />} />
                 <Route path="price-history" element={<PriceHistoryAdmin />} />
                 <Route path="cronjob-monitor" element={<CronjobMonitorPage />} />
                 

@@ -382,3 +382,6 @@ verify_jwt = false
 
 [functions.generate-llm-sitemap]
 verify_jwt = false
+
+[[functions.generate-llm-sitemap.schedule]]
+cron = "0 4 * * *"  # Daily at 4 AM UTC

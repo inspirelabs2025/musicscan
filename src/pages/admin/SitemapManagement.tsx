@@ -11,6 +11,8 @@ import { Separator } from "@/components/ui/separator";
 
 export default function SitemapManagement() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingLLM, setIsGeneratingLLM] = useState(false);
+  const [llmSitemapInfo, setLlmSitemapInfo] = useState<{ totalUrls?: string; generatedAt?: string } | null>(null);
   const [stats, setStats] = useState<{ blogs: number; stories: number; products: number } | null>(null);
   const [sitemapStatus, setSitemapStatus] = useState<Record<string, { status: number; lastModified?: string; checking?: boolean }>>({});
   const { toast } = useToast();
@@ -81,6 +83,42 @@ export default function SitemapManagement() {
     window.open(url, '_blank');
   };
 
+  const generateLLMSitemap = async () => {
+    setIsGeneratingLLM(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-llm-sitemap');
+      
+      if (error) throw error;
+      
+      // Parse response headers if available
+      if (data) {
+        // Try to extract metadata from the XML
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(data, 'text/xml');
+        const urls = xmlDoc.getElementsByTagName('url');
+        
+        setLlmSitemapInfo({
+          totalUrls: urls.length.toString(),
+          generatedAt: new Date().toISOString()
+        });
+      }
+      
+      toast({
+        title: "LLM Sitemap Gegenereerd",
+        description: "De LLM-geoptimaliseerde sitemap is succesvol ververst.",
+      });
+    } catch (error: any) {
+      console.error('Error generating LLM sitemap:', error);
+      toast({
+        title: "Fout",
+        description: error.message || "Er is een fout opgetreden bij het genereren van de LLM sitemap.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingLLM(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <Breadcrumb className="mb-4">
@@ -119,6 +157,74 @@ export default function SitemapManagement() {
       </Alert>
 
       <StaticHTMLGenerator />
+
+      <Separator className="my-8" />
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>LLM Sitemap Management</CardTitle>
+          <CardDescription>
+            Geoptimaliseerde sitemap voor LLM crawlers (GPTBot, Claude-Web, Google-Extended)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <AlertDescription>
+              <strong>🤖 LLM Indexatie:</strong> Deze sitemap bevat Markdown versies van alle content
+              speciaal geformatteerd voor AI training. Automatisch dagelijks bijgewerkt om 04:00 UTC.
+            </AlertDescription>
+          </Alert>
+
+          {llmSitemapInfo && (
+            <div className="p-4 rounded-lg border bg-muted/50 space-y-2">
+              <div className="text-sm">
+                <span className="font-semibold">Totaal URLs:</span> {llmSitemapInfo.totalUrls}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <span className="font-semibold">Laatst gegenereerd:</span>{' '}
+                {new Date(llmSitemapInfo.generatedAt).toLocaleString('nl-NL')}
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <Button
+              onClick={generateLLMSitemap}
+              disabled={isGeneratingLLM}
+              className="flex-1"
+            >
+              {isGeneratingLLM ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Genereren...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Regenereer Nu
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => window.open('https://www.musicscan.app/sitemap-llm.xml', '_blank')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+          </div>
+
+          <div className="space-y-2 pt-4 border-t">
+            <h4 className="font-semibold text-sm">LLM Endpoints:</h4>
+            <div className="space-y-1 text-xs font-mono text-muted-foreground">
+              <div>• /api/llm/plaat-verhaal/[slug].md</div>
+              <div>• /api/llm/muziek-verhaal/[slug].md</div>
+              <div>• /api/llm/artists/[slug].md</div>
+              <div>• /api/llm/anekdotes/[slug].md</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Separator className="my-8" />
 

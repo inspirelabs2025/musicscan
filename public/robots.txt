@@ -69,6 +69,11 @@ User-agent: *
 Allow: /
 Crawl-delay: 2
 
+# LLM Documentation Files
+# For AI systems to better understand and index our site
+LLMs.txt: https://www.musicscan.app/llms.txt
+LLMs-full.txt: https://www.musicscan.app/llms-full.txt
+
 # Sitemaps - All served from musicscan.app domain
 Sitemap: https://www.musicscan.app/sitemap.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-artists.xml

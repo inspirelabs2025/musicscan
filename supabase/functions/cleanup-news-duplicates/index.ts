@@ -149,7 +149,7 @@ serve(async (req) => {
       }
     }
 
-    // Process keyword-based duplicates (for articles without source_url)
+    // Process keyword-based duplicates (voor artikelen zonder source_url)
     const keywordGroups = new Map<string, NewsArticle[]>();
 
     for (const article of noUrlArticles) {
@@ -157,8 +157,9 @@ serve(async (req) => {
       const keywords = extractKeywords(title);
       
       if (keywords.length >= 2) {
-        // Create signature from first 3 keywords
-        const signature = keywords.slice(0, 3).join('|');
+        // Gebruik ALLE keywords (gesorteerd) als signature zodat varianten
+        // met dezelfde woorden maar andere volgorde ook samenkomen
+        const signature = keywords.join('|');
         
         if (!keywordGroups.has(signature)) {
           keywordGroups.set(signature, []);
@@ -172,12 +173,14 @@ serve(async (req) => {
     // Process keyword-based duplicates
     for (const [signature, group] of keywordGroups.entries()) {
       if (group.length > 1) {
-        // Verify they really are duplicates (at least 2 keywords match)
-        const baseTitleWords = extractKeywords(group[0].yaml_frontmatter?.title || '');
+        console.log(`Checking keyword group (${group.length} artikelen) signature: ${signature}`);
+        
+        // Verifieer dat er echt voldoende overlap is in keywords
+        const baseKeywords = extractKeywords(group[0].yaml_frontmatter?.title || group[0].yaml_frontmatter?.original_title || '');
         const realDuplicates = group.filter(article => {
-          const titleWords = extractKeywords(article.yaml_frontmatter?.title || '');
-          const matchCount = baseTitleWords.filter(word => titleWords.includes(word)).length;
-          return matchCount >= 2;
+          const titleWords = extractKeywords(article.yaml_frontmatter?.title || article.yaml_frontmatter?.original_title || '');
+          const matchCount = baseKeywords.filter(word => titleWords.includes(word)).length;
+          return matchCount >= 2; // minimaal 2 gedeelde keywords
         });
 
         if (realDuplicates.length > 1) {

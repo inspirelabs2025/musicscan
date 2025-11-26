@@ -64,6 +64,10 @@ Allow: /nieuws
 Allow: /nieuws/*
 Allow: /vandaag-in-de-muziekgeschiedenis
 
+# LLM-Optimized Markdown Content
+Allow: /api/llm/
+Allow: /api/llm/*
+
 # General crawlers
 User-agent: *
 Allow: /
@@ -76,6 +80,7 @@ LLMs-full.txt: https://www.musicscan.app/llms-full.txt
 
 # Sitemaps - All served from musicscan.app domain
 Sitemap: https://www.musicscan.app/sitemap.xml
+Sitemap: https://www.musicscan.app/sitemap-llm.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-artists.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-singles.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-music-stories.xml
@@ -106,6 +111,7 @@ Allow: /shop/*
 
 # Disallow admin and internal paths
 Disallow: /admin/
-Disallow: /api/
 Disallow: /_next/
 Disallow: /private/
+# Allow LLM-specific API endpoints
+Allow: /api/llm/

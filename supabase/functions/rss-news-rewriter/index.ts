@@ -64,7 +64,7 @@ function extractKeywords(text: string): string[] {
   return [...new Set(words)];
 }
 
-async function rewriteWithAI(originalTitle: string, originalContent: string): Promise<{ title: string; content: string }> {
+async function rewriteWithAI(originalTitle: string, originalContent: string): Promise<{ title: string; content: string; summary: string }> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
     throw new Error("LOVABLE_API_KEY niet geconfigureerd");
@@ -90,8 +90,9 @@ REGELS:
 - Schrijf alsof Redactie Musicscan dit zelf heeft geschreven
 
 FORMAAT:
-Geef alleen de nieuwe titel en nieuwe inhoud terug in dit format:
+Geef de nieuwe titel, korte samenvatting (2-3 zinnen) en inhoud terug in dit format:
 TITEL: [nieuwe titel]
+SAMENVATTING: [korte pakkende samenvatting van 2-3 zinnen]
 INHOUD: [nieuwe inhoud in markdown format met alinea's]`;
 
   try {
@@ -119,11 +120,13 @@ INHOUD: [nieuwe inhoud in markdown format met alinea's]`;
     const aiResponse = data.choices[0].message.content;
     
     // Parse AI response
-    const titleMatch = aiResponse.match(/TITEL:\s*(.+?)(?=\n|INHOUD:|$)/s);
+    const titleMatch = aiResponse.match(/TITEL:\s*(.+?)(?=\n|SAMENVATTING:|$)/s);
+    const summaryMatch = aiResponse.match(/SAMENVATTING:\s*(.+?)(?=\n|INHOUD:|$)/s);
     const contentMatch = aiResponse.match(/INHOUD:\s*(.+)/s);
     
     return {
       title: titleMatch ? titleMatch[1].trim() : originalTitle,
+      summary: summaryMatch ? summaryMatch[1].trim() : '',
       content: contentMatch ? contentMatch[1].trim() : aiResponse
     };
   } catch (error) {
@@ -239,6 +242,7 @@ serve(async (req) => {
               markdown_content: rewritten.content,
               yaml_frontmatter: {
                 title: rewritten.title,
+                description: rewritten.summary, // Add summary for preview
                 artist: 'Redactie Musicscan',
                 author: 'Redactie Musicscan',
                 category: feed.category || 'Nieuws',

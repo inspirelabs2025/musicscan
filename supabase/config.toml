@@ -395,3 +395,6 @@ cron = "0 3 * * *"  # Daily at 3 AM UTC
 [functions.generate-longtail-keywords]
 verify_jwt = true
 
+[functions.generate-curated-artists]
+verify_jwt = true
+

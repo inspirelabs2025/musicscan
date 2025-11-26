@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Music, Home } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { AIArtistGenerator } from "@/components/admin/AIArtistGenerator";
 
 interface CuratedArtist {
   id: string;
@@ -469,6 +470,10 @@ SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`;
           </div>
         </CardContent>
       </Card>
+
+      <Separator className="my-8" />
+
+      <AIArtistGenerator />
 
       <Separator className="my-8" />
 

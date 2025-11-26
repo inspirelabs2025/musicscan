@@ -339,6 +339,9 @@ Deno.serve(async (req) => {
     
     console.log(`[SSR] Request: ${url.pathname}, UA: ${userAgent}`);
 
+    // Strip /universal-ssr-proxy prefix from pathname if present
+    let cleanPathname = url.pathname.replace(/^\/functions\/v1\/universal-ssr-proxy/, '');
+    
     // If not a crawler, redirect to main app
     if (!isCrawler(userAgent)) {
       console.log('[SSR] Not a crawler, redirecting to app');
@@ -346,7 +349,7 @@ Deno.serve(async (req) => {
         status: 302,
         headers: {
           ...corsHeaders,
-          'Location': `${BASE_URL}${url.pathname}`,
+          'Location': `${BASE_URL}${cleanPathname}`,
           'Cache-Control': 'public, max-age=60'
         }
       });

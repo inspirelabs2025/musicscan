@@ -10,6 +10,7 @@ import { TimeMachineSpotlight } from '@/components/home/TimeMachineSpotlight';
 import { ShopByCategorySection } from '@/components/shop/ShopByCategorySection';
 import { FeaturedProductsCarousel } from '@/components/shop/FeaturedProductsCarousel';
 import { LatestReleasesSection } from '@/components/home/LatestReleasesSection';
+import { SpotifyNewReleasesSection } from '@/components/home/SpotifyNewReleasesSection';
 import { NewsAndStoriesSection } from '@/components/home/NewsAndStoriesSection';
 import { ReviewsSpotlight } from '@/components/home/ReviewsSpotlight';
 import { AIFeaturesCompact } from '@/components/home/AIFeaturesCompact';
@@ -78,6 +79,9 @@ const Home = () => {
 
       {/* Latest Releases */}
       <LatestReleasesSection />
+
+      {/* Spotify New Releases */}
+      <SpotifyNewReleasesSection />
 
       {/* Album Reviews Spotlight */}
       <ReviewsSpotlight />

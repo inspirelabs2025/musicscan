@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.spotify-new-releases]
+verify_jwt = false
+
 [functions.save-facebook-token]
 verify_jwt = false
 

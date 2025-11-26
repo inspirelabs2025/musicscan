@@ -149,6 +149,7 @@ import Reviews from "./pages/Reviews";
 import ReviewDetail from "./pages/ReviewDetail";
 import AdminAlbumReviews from "./pages/admin/AdminAlbumReviews";
 import LlmsTxt from "./pages/LlmsTxt";
+import LlmSitemap from "./pages/LlmSitemap";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -181,6 +182,7 @@ const AppContent = () => {
       <Routes>
         <Route path="/.well-known/llms.txt" element={<LlmsTxt />} />
         <Route path="/llms.txt" element={<LlmsTxt />} />
+        <Route path="/sitemap-llm.xml" element={<LlmSitemap />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<Home />} />
         <Route path="/search/artist" element={<ArtistSearchResults />} />

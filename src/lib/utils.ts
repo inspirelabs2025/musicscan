@@ -7,12 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 
 // Normalize URL for consistent canonical tags
 export function normalizeUrl(path: string): string {
-  // Add trailing slash (except for homepage)
-  let normalized = path.replace(/\/$/, ''); // First remove any existing trailing slash
-  if (normalized === '') {
-    return '/'; // Homepage doesn't need trailing slash
-  }
-  return normalized + '/'; // Add trailing slash to all other paths
+  // Remove trailing slash for consistency with SSR proxy (except homepage)
+  return path.replace(/\/$/, '') || '/';
 }
 
 // Normalize full URL with domain

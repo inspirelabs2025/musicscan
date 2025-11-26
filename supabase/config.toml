@@ -370,3 +370,6 @@ verify_jwt = false
 
 [functions.generate-facebook-catalog-feed]
 verify_jwt = false
+
+[functions.cleanup-duplicate-blogs]
+verify_jwt = false

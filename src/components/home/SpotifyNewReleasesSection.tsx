@@ -34,12 +34,10 @@ export const SpotifyNewReleasesSection = () => {
   return <section className="py-16 bg-gradient-to-br from-muted/20 to-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4 flex items-center justify-center gap-3">Nieuw <Music2 className="w-10 h-10 text-green-500" />
+          <h2 className="text-4xl font-bold mb-4 flex items-center justify-center gap-3">  Nieuwe releases<Music2 className="w-10 h-10 text-green-500" />
             Nieuw op Spotify
           </h2>
-          <p className="text-xl text-muted-foreground">
-            Verse releases rechtstreeks van Spotify
-          </p>
+          <p className="text-xl text-muted-foreground">Verse album releases</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">

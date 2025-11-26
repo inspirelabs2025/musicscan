@@ -263,10 +263,6 @@ export default function PlatformProductDetail() {
         <meta property="og:image:height" content="1200" />
         <meta property="og:image:alt" content={`${product.artist} - ${product.title}`} />
         
-        {/* Product availability */}
-        <meta property="product:availability" content={product.stock_quantity > 0 ? "in stock" : "out of stock"} />
-        {product.categories?.[0] && <meta property="product:category" content={product.categories[0]} />}
-        
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${product.artist} - ${product.title}`} />

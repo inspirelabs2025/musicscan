@@ -396,5 +396,8 @@ cron = "0 3 * * *"  # Daily at 3 AM UTC
 verify_jwt = true
 
 [functions.generate-curated-artists]
-verify_jwt = true
+verify_jwt = false
+
+[[functions.generate-curated-artists.schedule]]
+cron = "0 2 * * *"  # Daily at 2 AM UTC
 

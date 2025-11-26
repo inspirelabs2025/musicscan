@@ -347,6 +347,39 @@ Deno.serve(async (req) => {
     
     console.log(`[SSR] Original pathname: ${url.pathname}, Cleaned: ${cleanPathname}`);
 
+    // Handle sitemap-llm.xml requests
+    if (cleanPathname === '/sitemap-llm.xml') {
+      console.log('[SSR] Serving LLM sitemap, forwarding to edge function');
+      
+      try {
+        const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-llm-sitemap`, {
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch LLM sitemap: ${response.status}`);
+        }
+        
+        const sitemapContent = await response.text();
+        
+        return new Response(sitemapContent, {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600',
+          },
+        });
+      } catch (error) {
+        console.error('[SSR] Error fetching LLM sitemap:', error);
+        return new Response('Error generating sitemap', {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+        });
+      }
+    }
+
     // Handle .well-known/llms.txt requests - serve static content
     if (cleanPathname === '/.well-known/llms.txt' || cleanPathname === '/llms.txt') {
       console.log('[SSR] Serving llms.txt');
@@ -451,7 +484,14 @@ Prioriteit content voor LLM crawlers:
 ---
 
 Last updated: 2025-01
-Version: 1.0`;
+Version: 1.0
+
+## LLM-Optimized Sitemap
+
+Voor een complete lijst van alle content in machine-readable formaat:
+- Sitemap: https://www.musicscan.app/sitemap-llm.xml
+- Bevat Markdown versies van alle content voor optimale LLM indexatie
+`;
       
       return new Response(llmsContent, {
         headers: {

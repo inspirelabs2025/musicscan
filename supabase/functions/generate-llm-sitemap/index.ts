@@ -45,6 +45,9 @@ Deno.serve(async (req) => {
     );
 
     const urls: SitemapUrl[] = [];
+    
+    const now = new Date().toISOString();
+    console.log(`[LLM-Sitemap] Generation started at: ${now}`);
 
     // Add llms.txt discovery file
     urls.push({
@@ -135,14 +138,21 @@ Deno.serve(async (req) => {
     }
 
     console.log(`[LLM-Sitemap] Generated sitemap with ${urls.length} URLs`);
+    console.log(`[LLM-Sitemap] Stats: ${blogs?.length || 0} blogs, ${stories?.length || 0} stories, ${artists?.length || 0} artists, ${anecdotes?.length || 0} anecdotes`);
 
     const sitemapXML = generateSitemapXML(urls);
+
+    // Store generation timestamp for monitoring
+    const generationTime = new Date().toISOString();
+    console.log(`[LLM-Sitemap] Completed at: ${generationTime}`);
 
     return new Response(sitemapXML, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/xml; charset=utf-8',
         'Cache-Control': 'public, max-age=3600',
+        'X-Generated-At': generationTime,
+        'X-Total-URLs': urls.length.toString()
       }
     });
 

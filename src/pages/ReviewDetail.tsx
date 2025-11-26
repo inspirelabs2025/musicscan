@@ -6,7 +6,7 @@ import { RatingDisplay } from "@/components/reviews/RatingDisplay";
 import { RatingBreakdown } from "@/components/reviews/RatingBreakdown";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Music, Tag, ArrowLeft, Share2 } from "lucide-react";
+import { Calendar, Music, Tag, ArrowLeft, Share2, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ReviewDetail() {
@@ -64,7 +64,7 @@ export default function ReviewDetail() {
         <meta property="og:type" content="article" />
         <meta property="og:image" content={review.cover_image_url || ""} />
         <meta property="article:published_time" content={review.published_at || ""} />
-        <meta property="article:author" content="MusicScan" />
+        <meta property="article:author" content={review.author_name || "MusicScan"} />
         {review.genre && <meta property="article:section" content={review.genre} />}
         <link rel="canonical" href={canonicalUrl} />
       </Helmet>
@@ -135,6 +135,13 @@ export default function ReviewDetail() {
                     </Badge>
                   )}
                 </div>
+
+                {review.author_name && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                    <User className="h-4 w-4" />
+                    <span>Door {review.author_name}</span>
+                  </div>
+                )}
 
                 <p className="text-lg text-muted-foreground leading-relaxed">
                   {review.summary}

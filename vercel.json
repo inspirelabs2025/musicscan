@@ -18,6 +18,14 @@
       "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/plaat-verhaal/:slug"
     },
     {
+      "source": "/product/:slug",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/product/:slug"
+    },
+    {
+      "source": "/muziek-verhaal/:slug",
+      "destination": "https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/universal-ssr-proxy/muziek-verhaal/:slug"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

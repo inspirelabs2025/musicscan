@@ -44,7 +44,7 @@ serve(async (req) => {
 
     console.log(`Found ${allArtistNames.length} existing artists (${highPriority.length} high priority)`);
 
-    const prompt = `Je bent een muziek expert gespecialiseerd in CULT HEROES, HIDDEN GEMS en UNDERGROUND LEGENDS voor een vinyl/LP catalogus.
+    const prompt = `Je bent een muziek expert gespecialiseerd in het selecteren van gevestigde, succesvolle artiesten met hoog artistiek gehalte voor een vinyl/LP catalogus.
 
 CRUCIALE INSTRUCTIE: De volgende ${allArtistNames.length} artiesten staan AL in onze database en mogen ABSOLUUT NIET herhaald worden:
 ${allArtistNames.join(', ')}
@@ -54,39 +54,41 @@ ${highPriority.slice(0, 20).map(a => `${a.artist_name}`).join(', ')}
 
 TAAK: Genereer precies ${count} TOTAAL NIEUWE artiesten die:
 1. NIET in de bestaande lijst voorkomen (controleer elke naam!)
-2. CULT HEROES: Artiesten met een toegewijde fanbase maar geen mainstream succes
-3. HIDDEN GEMS: Vergeten talenten met meerdere albums die herontdekt moeten worden
-4. UNDERGROUND LEGENDS: Invloedrijke artiesten binnen hun niche die veel releases hebben
-5. Minimaal 5+ albums/releases hebben uitgebracht
+2. BEKENDE, GEVESTIGDE artiesten zijn uit de top 200-500 van hun genre
+3. Minimaal 5-10 albums hebben uitgebracht
+4. Breed erkend worden voor hun artistieke kwaliteit
+5. Succesvolle carrières hebben met consistente output
 
-PRIMAIRE FOCUS - POP/ROCK/SOUL/R&B/RAP:
-- Vergeten Soul & R&B zangers/zangeressen uit de jaren 60-80
-- One-hit wonders met uitgebreide catalogi
-- Underground hip-hop artiesten met klassieke albums
-- Indie rock bands met cult status
-- Singer-songwriters die kritisch succesvol waren maar commercieel flopten
-- Alternatieve R&B artiesten uit de jaren 90-2000s
-- Britpop/Madchester bands tweede garnituur
-- Neo-soul artiesten buiten de mainstream
-- Underground rap crews en producers
-- Post-grunge bands die overschaduwd werden
-- Garage rock revival bands
-- Trip-hop artiesten buiten de grote namen
+FOCUS OP BEKENDE ARTIESTEN MET HOOG ARTISTIEK GEHALTE:
+- Klassieke rock artiesten met uitgebreide catalogi
+- Gevestigde soul & R&B zangers/zangeressen
+- Succesvolle singer-songwriters met meerdere albums
+- Bekende indie/alternative rock bands
+- Mainstream maar kwalitatief hoogstaande pop artiesten
+- Erkende hip-hop artiesten met klassieker albums
+- Blues legends met veel releases
+- Jazz artiesten met brede bekendheid
+- Folk artiesten met uitgebreide catalogi
 
-BELANGRIJKE SUBGENRES:
-- Classic Soul, Northern Soul, Southern Soul
-- Funk, P-Funk, Jazz-Funk
-- Blues Rock, Southern Rock
-- Alternative Rock, College Rock, Indie Rock
-- Underground Hip-Hop, Conscious Rap, Jazz Rap
-- Neo-Soul, Alternative R&B
-- Britpop, Madchester, Baggy
-- Post-Punk, New Wave
-- Garage Rock, Psych Rock
-- Trip-Hop, Downtempo
+PRIMAIRE GENRES (MAINSTREAM/BEKENDE ARTIESTEN):
+- Classic Rock, Hard Rock, Progressive Rock
+- Soul, R&B, Funk
+- Singer-Songwriter, Folk Rock
+- Alternative Rock, Indie Rock
+- Pop Rock, Soft Rock
+- Hip-Hop, Rap (golden age en daarna)
+- Blues Rock, Blues
+- Jazz (mainstream/bekende namen)
+- Country Rock, Americana
+
+VOORBEELDEN VAN NIVEAU (niet deze namen gebruiken, maar dit niveau):
+- Artiesten zoals Bruce Springsteen, Stevie Wonder, Joni Mitchell niveau
+- Bands zoals Dire Straits, Steely Dan, Fleetwood Mac niveau
+- Soul zoals Marvin Gaye, Aretha Franklin, Curtis Mayfield niveau
+- Rock zoals Neil Young, Tom Petty, Eric Clapton niveau
 
 Geef ALLEEN de artiestnamen, één per regel, zonder nummering of extra tekst.
-Focus op CULT HEROES en HIDDEN GEMS uit de top 200 met veel releases!`;
+Focus op BEKENDE artiesten uit de top 200-500 met veel albums en hoog artistiek gehalte!`;
 
     console.log('🤖 Requesting AI suggestions...');
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {

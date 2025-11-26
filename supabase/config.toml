@@ -376,3 +376,6 @@ verify_jwt = false
 
 [functions.serve-llms-txt]
 verify_jwt = false
+
+[functions.llm-content]
+verify_jwt = false

@@ -51,6 +51,19 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
   }
 }
 
+// Extract keywords from text for duplicate detection
+function extractKeywords(text: string): string[] {
+  // Remove common words and extract meaningful keywords (min 3 chars)
+  const commonWords = ['het', 'de', 'een', 'van', 'in', 'op', 'voor', 'met', 'door', 'aan', 'naar', 'over', 'bij', 'uit', 'als', 'zijn', 'dat', 'die', 'dit', 'en', 'of', 'maar', 'om', 'jaar', 'nieuwe', 'new'];
+  const words = text.toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length >= 3 && !commonWords.includes(word));
+  
+  // Return unique words
+  return [...new Set(words)];
+}
+
 async function rewriteWithAI(originalTitle: string, originalContent: string): Promise<{ title: string; content: string }> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
@@ -162,16 +175,47 @@ serve(async (req) => {
       for (const item of items.slice(0, limit - totalCreated)) {
         totalProcessed++;
         
-        // Check for duplicates based on similar titles
-        const { data: existingPosts } = await supabase
+        // STAP 1: Check for duplicates based on source URL (most reliable)
+        const { data: existingByUrl } = await supabase
           .from('blog_posts')
           .select('id')
-          .ilike('yaml_frontmatter->>title', `%${item.title.slice(0, 30)}%`)
+          .eq('album_type', 'news')
+          .eq('yaml_frontmatter->>source_url', item.link)
           .limit(1);
 
-        if (existingPosts && existingPosts.length > 0) {
-          console.log(`Skipping duplicate: ${item.title}`);
+        if (existingByUrl && existingByUrl.length > 0) {
+          console.log(`Skipping (URL exists): ${item.title}`);
           continue;
+        }
+
+        // STAP 2: Check for duplicates based on keywords in title
+        const keywords = extractKeywords(item.title);
+        console.log(`Keywords for "${item.title}":`, keywords.slice(0, 5));
+        
+        if (keywords.length >= 2) {
+          const { data: recentPosts } = await supabase
+            .from('blog_posts')
+            .select('id, yaml_frontmatter')
+            .eq('album_type', 'news')
+            .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+            .limit(50);
+
+          // Check if multiple keywords match with existing posts
+          const isDuplicate = recentPosts?.some(post => {
+            const existingTitle = (post.yaml_frontmatter?.title || post.yaml_frontmatter?.original_title || '').toLowerCase();
+            const matchCount = keywords.filter(kw => existingTitle.includes(kw)).length;
+            
+            if (matchCount >= 2) {
+              console.log(`Potential duplicate found: "${existingTitle}" matches ${matchCount} keywords`);
+              return true;
+            }
+            return false;
+          });
+
+          if (isDuplicate) {
+            console.log(`Skipping (keyword match): ${item.title}`);
+            continue;
+          }
         }
 
         try {
@@ -200,6 +244,8 @@ serve(async (req) => {
                 category: feed.category || 'Nieuws',
                 tags: ['nieuws', 'muzieknieuws'],
                 source: 'Musicscan',
+                source_url: item.link, // Original RSS link for duplicate detection
+                original_title: item.title, // Original title for debugging
                 published_date: new Date().toISOString()
               },
               is_published: true,

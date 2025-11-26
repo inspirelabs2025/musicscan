@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, RefreshCw, Rss, Search, Filter } from "lucide-react";
+import { Loader2, Plus, Trash2, RefreshCw, Rss, Search, Filter, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -106,6 +106,7 @@ export default function NewsRssManager() {
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCleaning, setIsCleaning] = useState(false);
 
   const generateNewsMutation = useMutation({
     mutationFn: async () => {
@@ -125,6 +126,26 @@ export default function NewsRssManager() {
     onError: (error) => {
       setIsGenerating(false);
       toast.error("Fout bij genereren: " + error.message);
+    },
+  });
+
+  const cleanupDuplicatesMutation = useMutation({
+    mutationFn: async () => {
+      setIsCleaning(true);
+      const { data, error } = await supabase.functions.invoke('cleanup-news-duplicates');
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      setIsCleaning(false);
+      queryClient.invalidateQueries({ queryKey: ['news-articles'] });
+      toast.success(data.message || 'Duplicaten opgeschoond');
+      console.log('Cleanup report:', data.report);
+    },
+    onError: (error) => {
+      setIsCleaning(false);
+      toast.error("Fout bij opschonen: " + error.message);
     },
   });
 
@@ -216,22 +237,41 @@ export default function NewsRssManager() {
             Beheer RSS feeds en genereer herschreven nieuwsartikelen
           </p>
         </div>
-        <Button
-          onClick={() => generateNewsMutation.mutate()}
-          disabled={isGenerating}
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Genereren...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Genereer Nieuws
-            </>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => cleanupDuplicatesMutation.mutate()}
+            disabled={isCleaning}
+            variant="outline"
+          >
+            {isCleaning ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Opschonen...
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="mr-2 h-4 w-4" />
+                Verwijder Duplicaten
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={() => generateNewsMutation.mutate()}
+            disabled={isGenerating}
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Genereren...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Genereer Nieuws
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

@@ -253,7 +253,7 @@ export default function PlatformProductDetail() {
     <>
       <Helmet>
         {/* Product-specific Open Graph tags */}
-        <meta property="og:type" content="product" />
+        <meta property="og:type" content="website" />
         <meta property="og:site_name" content="MusicScan" />
         <meta property="og:url" content={currentUrl} />
         <meta property="og:title" content={`${product.artist} - ${product.title}`} />
@@ -263,9 +263,7 @@ export default function PlatformProductDetail() {
         <meta property="og:image:height" content="1200" />
         <meta property="og:image:alt" content={`${product.artist} - ${product.title}`} />
         
-        {/* Product details */}
-        <meta property="product:price:amount" content={product.price.toString()} />
-        <meta property="product:price:currency" content="EUR" />
+        {/* Product availability */}
         <meta property="product:availability" content={product.stock_quantity > 0 ? "in stock" : "out of stock"} />
         {product.categories?.[0] && <meta property="product:category" content={product.categories[0]} />}
         
@@ -311,12 +309,10 @@ export default function PlatformProductDetail() {
           <meta property="product:brand" content={product.artist || "MusicScan"} />
           <meta property="product:availability" content="in stock" />
           <meta property="product:condition" content="new" />
-          <meta property="product:price:amount" content={product.price.toString()} />
-          <meta property="product:price:currency" content="EUR" />
           <meta property="product:category" content="Posters & Prints" />
           
           {/* Pinterest Rich Pins */}
-          <meta property="og:type" content="product" />
+          <meta property="og:type" content="website" />
           <meta name="pinterest:price:amount" content={product.price.toString()} />
           <meta name="pinterest:price:currency" content="EUR" />
           
@@ -337,7 +333,7 @@ export default function PlatformProductDetail() {
         datePublished={product.published_at || product.created_at}
         reviewUrl={`https://www.musicscan.app/product/${slug}`}
         imageUrl={product.primary_image || undefined}
-        itemType="Product"
+        itemType="MusicAlbum"
       />
       
       {product.view_count > 20 && (

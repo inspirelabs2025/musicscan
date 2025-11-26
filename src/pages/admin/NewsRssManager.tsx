@@ -149,6 +149,21 @@ export default function NewsRssManager() {
     },
   });
 
+  const updateSummariesMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('update-news-summaries');
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['news-articles'] });
+      toast.success(data.message || 'Samenvattingen toegevoegd');
+    },
+    onError: (error) => {
+      toast.error("Fout bij toevoegen samenvattingen: " + error.message);
+    },
+  });
+
   const deleteArticleMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -239,6 +254,23 @@ export default function NewsRssManager() {
         </div>
         <div className="flex gap-2">
           <Button
+            onClick={() => updateSummariesMutation.mutate()}
+            disabled={updateSummariesMutation.isPending}
+            variant="secondary"
+          >
+            {updateSummariesMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Bezig...
+              </>
+            ) : (
+              <>
+                <Rss className="mr-2 h-4 w-4" />
+                Voeg Samenvattingen Toe
+              </>
+            )}
+          </Button>
+          <Button
             onClick={() => cleanupDuplicatesMutation.mutate()}
             disabled={isCleaning}
             variant="outline"
@@ -267,7 +299,7 @@ export default function NewsRssManager() {
             ) : (
               <>
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Genereer Nieuws
+                Haal Nieuws Op
               </>
             )}
           </Button>

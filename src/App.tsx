@@ -77,6 +77,7 @@ import FixProductTitles from "./pages/admin/FixProductTitles";
 import BulkProductCleanup from "./pages/admin/BulkProductCleanup";
 import AutoCleanupToday from "./pages/admin/AutoCleanupToday";
 import FixBlogSlugs from "./pages/admin/FixBlogSlugs";
+import CleanupDuplicateBlogs from "./pages/CleanupDuplicateBlogs";
 import BackfillArtistFanwalls from "./pages/admin/BackfillArtistFanwalls";
 import CreateArtistFanwall from "./pages/admin/CreateArtistFanwall";
 import NotFound from "./pages/NotFound";
@@ -386,6 +387,7 @@ const AppContent = () => {
                 
                 {/* Maintenance */}
                 <Route path="fix-blog-slugs" element={<FixBlogSlugs />} />
+                <Route path="cleanup-duplicate-blogs" element={<CleanupDuplicateBlogs />} />
                 <Route path="fix-product-titles" element={<FixProductTitles />} />
                 <Route path="bulk-cleanup" element={<BulkProductCleanup />} />
                 <Route path="auto-cleanup-today" element={<AutoCleanupToday />} />

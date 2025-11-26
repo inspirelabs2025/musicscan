@@ -262,7 +262,46 @@ serve(async (req) => {
 
     console.log(`Found album data in table: ${actualTableUsed}`);
 
-    // Check if blog already exists
+    // Determine effective artist/title early for checks
+    let discogsArtist = albumData.artist;
+    let discogsTitle = albumData.title?.replace(/\s*\[Metaalprint\]\s*$/, '').replace(/^.*?\s*-\s*/, '');
+    
+    // Parse from title for platform_products without artist
+    if (actualTableUsed === 'platform_products' && !discogsArtist && albumData.title) {
+      const titleParts = albumData.title.replace(/\s*\[Metaalprint\]\s*$/i, '').split(' - ').filter(p => p.trim());
+      if (titleParts.length >= 2) {
+        discogsArtist = titleParts[0].trim() || titleParts[1].trim();
+        discogsTitle = titleParts.slice(1).join(' - ').trim() || titleParts.slice(2).join(' - ').trim();
+      }
+    }
+    
+    const preliminaryArtist = actualTableUsed === 'platform_products' ? discogsArtist : albumData.artist;
+    const preliminaryTitle = actualTableUsed === 'platform_products' ? discogsTitle : albumData.title;
+
+    // PRIORITY 1: Check if blog already exists for this artist+album combo (ignoring year)
+    if (preliminaryArtist && preliminaryTitle) {
+      const { data: existingArtistAlbumBlog } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .ilike('yaml_frontmatter->>artist', preliminaryArtist)
+        .ilike('yaml_frontmatter->>album', preliminaryTitle)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingArtistAlbumBlog && !forceRegenerate) {
+        console.log('Blog already exists for this artist+album, returning cached version');
+        return new Response(
+          JSON.stringify({ 
+            blog: existingArtistAlbumBlog,
+            cached: true,
+            reason: 'artist_album_match'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // PRIORITY 2: Check if blog already exists by album_id + album_type
     const { data: existingBlog } = await supabase
       .from('blog_posts')
       .select('*')
@@ -271,11 +310,12 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existingBlog && !forceRegenerate) {
-      console.log('Blog already exists, returning cached version');
+      console.log('Blog already exists for album_id, returning cached version');
       return new Response(
         JSON.stringify({ 
           blog: existingBlog,
-          cached: true 
+          cached: true,
+          reason: 'album_id_match'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -304,20 +344,7 @@ serve(async (req) => {
       userId = '00000000-0000-0000-0000-000000000000'; // System user placeholder
     }
 
-    // Fetch correct data from Discogs API if available
-    let discogsArtist = albumData.artist;
-    let discogsTitle = albumData.title?.replace(/\s*\[Metaalprint\]\s*$/, '').replace(/^.*?\s*-\s*/, '');
-    
-    // ✅ FIX: Voor platform_products zonder artist, parse uit title
-    if (actualTableUsed === 'platform_products' && !discogsArtist && albumData.title) {
-      // Title format: " - Artist - Album [Metaalprint]" or "Artist - Album [Metaalprint]"
-      const titleParts = albumData.title.replace(/\s*\[Metaalprint\]\s*$/i, '').split(' - ').filter(p => p.trim());
-      if (titleParts.length >= 2) {
-        discogsArtist = titleParts[0].trim() || titleParts[1].trim();
-        discogsTitle = titleParts.slice(1).join(' - ').trim() || titleParts.slice(2).join(' - ').trim();
-        console.log(`✅ Extracted from title: artist="${discogsArtist}", album="${discogsTitle}"`);
-      }
-    }
+    // Fetch correct data from Discogs API if available (reuse variables from earlier check)
     
     if (actualTableUsed === 'platform_products' && albumData.discogs_url && discogsToken) {
       console.log('🎯 Fetching correct data from Discogs RELEASE API...');
@@ -662,8 +689,8 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
       ...(enforcedMasterId ? { master_id: enforcedMasterId } : {}), // ✅ Master ID (optional, for artwork)
     } as Record<string, unknown>;
 
-    // Generate slug using effective artist/title (from Discogs for platform_products)
-    const slug = `${effectiveArtist?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${effectiveTitle?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${effectiveYear || 'unknown'}`.replace(/--+/g, '-');
+    // Generate slug WITHOUT year to prevent duplicates (artist-album only)
+    const slug = `${effectiveArtist?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${effectiveTitle?.toLowerCase().replace(/[^a-z0-9]/g, '-')}`.replace(/--+/g, '-');
     
     console.log('🔗 Generated slug:', slug, { 
       effectiveArtist, 

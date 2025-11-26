@@ -1,0 +1,1 @@
+DELETE FROM news_rss_feeds WHERE feed_name IN ('Heaven Magazine', '3voor12');

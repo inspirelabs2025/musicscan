@@ -1,6 +1,7 @@
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Home } from "lucide-react";
 import { LongTailKeywordGenerator } from "@/components/admin/LongTailKeywordGenerator";
+import { AutoKeywordProcessor } from "@/components/admin/AutoKeywordProcessor";
 
 export default function SEOKeywords() {
   return (
@@ -21,12 +22,13 @@ export default function SEOKeywords() {
       </Breadcrumb>
 
       <div>
-        <h1 className="text-3xl font-bold mb-2">Long-Tail Keyword Generator</h1>
+        <h1 className="text-3xl font-bold mb-2">Long-Tail Keyword Management</h1>
         <p className="text-muted-foreground">
-          Genereer specifieke, minder competitieve zoektermen voor betere SEO prestaties
+          Automatisch systeem dat zichzelf uitbreidt en verbetert op basis van nieuwe content
         </p>
       </div>
 
+      <AutoKeywordProcessor />
       <LongTailKeywordGenerator />
     </div>
   );

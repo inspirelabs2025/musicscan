@@ -187,9 +187,12 @@ const CuratedArtists = () => {
     try {
       const { data, error } = await supabase.functions.invoke('seed-curated-artists');
       if (error) throw error;
+      const inserted = data?.inserted || 0;
       toast({
         title: "✅ Artiesten Toegevoegd",
-        description: `${data?.inserted || 0} nieuw, totaal ${data?.total || ''}`,
+        description: inserted === 0
+          ? "Geen nieuwe seed-artiesten: alle seed-artiesten staan al in de lijst"
+          : `${inserted} nieuw, totaal ${data?.total || ''}`,
       });
       queryClient.invalidateQueries({ queryKey: ['curated-artists'] });
     } catch (error: any) {

@@ -4064,6 +4064,7 @@ export type Database = {
       releases: {
         Row: {
           artist: string
+          artwork_url: string | null
           catalog_number: string | null
           condition_counts: Json | null
           country: string | null
@@ -4087,6 +4088,7 @@ export type Database = {
         }
         Insert: {
           artist: string
+          artwork_url?: string | null
           catalog_number?: string | null
           condition_counts?: Json | null
           country?: string | null
@@ -4110,6 +4112,7 @@ export type Database = {
         }
         Update: {
           artist?: string
+          artwork_url?: string | null
           catalog_number?: string | null
           condition_counts?: Json | null
           country?: string | null
@@ -6116,23 +6119,42 @@ export type Database = {
         Args: { artist_name_input: string }
         Returns: string
       }
-      find_or_create_release: {
-        Args: {
-          p_artist: string
-          p_catalog_number?: string
-          p_country?: string
-          p_discogs_id: number
-          p_discogs_url?: string
-          p_format?: string
-          p_genre?: string
-          p_label?: string
-          p_master_id?: number
-          p_style?: string[]
-          p_title: string
-          p_year?: number
-        }
-        Returns: string
-      }
+      find_or_create_release:
+        | {
+            Args: {
+              p_artist: string
+              p_catalog_number?: string
+              p_country?: string
+              p_discogs_id: number
+              p_discogs_url?: string
+              p_format?: string
+              p_genre?: string
+              p_label?: string
+              p_master_id?: number
+              p_style?: string[]
+              p_title: string
+              p_year?: number
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_artist: string
+              p_artwork_url?: string
+              p_catalog_number?: string
+              p_country?: string
+              p_discogs_id: number
+              p_discogs_url?: string
+              p_format?: string
+              p_genre?: string
+              p_label?: string
+              p_master_id?: number
+              p_style?: string[]
+              p_title: string
+              p_year?: number
+            }
+            Returns: string
+          }
       generate_artist_slug: {
         Args: { artist_name_input: string }
         Returns: string

@@ -468,14 +468,18 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
 
     console.log('Successfully generated blog content');
 
-    // Search for album cover - try Master ID first (better quality), then Release ID
-    let albumCoverUrl = null;
+    // Search for album cover - prioritize stored artwork_url from releases table
+    let albumCoverUrl = albumData.artwork_url || null;
     
-    // ✅ Try Master ID first for artwork (higher quality), fallback to Release ID
+    if (albumCoverUrl) {
+      console.log('✅ Using stored artwork from releases table:', albumCoverUrl);
+    }
+    
+    // ✅ Try Master ID first for artwork (higher quality), then Release ID - only if no stored artwork
     const artworkId = albumData.master_id || albumData.discogs_id;
     const artworkType = albumData.master_id ? 'master' : 'release';
     
-    if (artworkId && discogsToken) {
+    if (!albumCoverUrl && artworkId && discogsToken) {
       try {
         const endpoint = artworkType === 'master' ? 'masters' : 'releases';
         console.log(`🎨 Fetching album cover from Discogs ${artworkType.toUpperCase()} API for ID: ${artworkId}`);

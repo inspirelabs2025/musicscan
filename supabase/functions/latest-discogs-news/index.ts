@@ -280,7 +280,8 @@ Deno.serve(async (req) => {
                 genre: Array.isArray(release.genre) ? release.genre.join(', ') : (release.genre || ''),
                 country: release.country || '',
                 style: release.style || [],
-                discogs_url: `https://www.discogs.com/release/${release.id}`
+                discogs_url: `https://www.discogs.com/release/${release.id}`,
+                artwork_url: release.stored_image || ''
               }
             });
 

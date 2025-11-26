@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     const { 
       discogs_id, artist, title, label, catalog_number, year,
-      format, genre, country, style, discogs_url, master_id 
+      format, genre, country, style, discogs_url, master_id, artwork_url 
     } = await req.json();
 
     // Create a Supabase client
@@ -36,7 +36,8 @@ serve(async (req) => {
       p_country: country,
       p_style: style,
       p_discogs_url: discogs_url,
-      p_master_id: master_id
+      p_master_id: master_id,
+      p_artwork_url: artwork_url
     });
 
     if (error) {

@@ -164,6 +164,21 @@ export default function NewsRssManager() {
     },
   });
 
+  const generateImagesMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('generate-news-images');
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['news-articles'] });
+      toast.success(data.message || 'Afbeeldingen gegenereerd');
+    },
+    onError: (error) => {
+      toast.error("Fout bij genereren afbeeldingen: " + error.message);
+    },
+  });
+
   const deleteArticleMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -253,6 +268,23 @@ export default function NewsRssManager() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            onClick={() => generateImagesMutation.mutate()}
+            disabled={generateImagesMutation.isPending}
+            variant="secondary"
+          >
+            {generateImagesMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Genereren...
+              </>
+            ) : (
+              <>
+                <Rss className="mr-2 h-4 w-4" />
+                Genereer Afbeeldingen
+              </>
+            )}
+          </Button>
           <Button
             onClick={() => updateSummariesMutation.mutate()}
             disabled={updateSummariesMutation.isPending}

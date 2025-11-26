@@ -287,12 +287,15 @@ const generateProductHTML = (product: any): string => {
     "name": "${title}",
     "description": "${description}",
     "image": "${imageUrl}",
+    "sku": "${product.id || product.slug}",
     "brand": { "@type": "Brand", "name": "${artist || 'MusicScan'}" },
     "offers": {
       "@type": "Offer",
       "url": "${BASE_URL}/product/${product.slug}",
       "priceCurrency": "EUR",
       "price": "${price}",
+      "priceValidUntil": "${new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]}",
+      "itemCondition": "https://schema.org/NewCondition",
       "availability": "${product.stock_quantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'}",
       "seller": { "@type": "Organization", "name": "MusicScan" }
     }

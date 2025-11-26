@@ -302,10 +302,6 @@ export default function PlatformProductDetail() {
       {/* Enhanced Social Media Meta Tags for POSTER */}
       {isPoster && (
         <Helmet>
-          <meta property="product:brand" content={product.artist || "MusicScan"} />
-          <meta property="product:availability" content="in stock" />
-          <meta property="product:condition" content="new" />
-          <meta property="product:category" content="Posters & Prints" />
           
           {/* Pinterest Rich Pins */}
           <meta property="og:type" content="website" />

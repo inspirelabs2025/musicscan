@@ -28,6 +28,8 @@ export const AIArtistGenerator = () => {
     setResult(null);
 
     try {
+      console.log('🚀 Starting artist generation with count:', count);
+      
       toast({
         title: "🤖 AI Generator Gestart",
         description: "Analyseren van bestaande artiesten en genereren van suggesties...",
@@ -37,16 +39,27 @@ export const AIArtistGenerator = () => {
         body: { count: parseInt(count) }
       });
 
-      if (error) throw error;
+      console.log('📦 Response received:', { data, error });
 
+      if (error) {
+        console.error('❌ Function error:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.error('❌ No data received');
+        throw new Error('Geen data ontvangen van de functie');
+      }
+
+      console.log('✅ Success:', data);
       setResult(data);
 
       toast({
         title: "✨ Artiesten Gegenereerd",
-        description: `${data.inserted} nieuwe artiesten toegevoegd`,
+        description: `${data.inserted || 0} nieuwe artiesten toegevoegd`,
       });
     } catch (error: any) {
-      console.error('Error:', error);
+      console.error('❌ Error in handleGenerate:', error);
       toast({
         title: "❌ Fout",
         description: error.message || "Kon artiesten niet genereren",

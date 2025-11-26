@@ -339,8 +339,12 @@ Deno.serve(async (req) => {
     
     console.log(`[SSR] Request: ${url.pathname}, UA: ${userAgent}`);
 
-    // Strip /universal-ssr-proxy prefix from pathname if present
-    let cleanPathname = url.pathname.replace(/^\/functions\/v1\/universal-ssr-proxy/, '');
+    // Strip all possible SSR proxy prefixes from pathname
+    let cleanPathname = url.pathname
+      .replace(/^\/functions\/v1\/universal-ssr-proxy/, '')
+      .replace(/^\/universal-ssr-proxy/, '');
+    
+    console.log(`[SSR] Cleaned pathname: ${cleanPathname}`);
     
     // If not a crawler, redirect to main app
     if (!isCrawler(userAgent)) {

@@ -346,18 +346,7 @@ Deno.serve(async (req) => {
     
     console.log(`[SSR] Original pathname: ${url.pathname}, Cleaned: ${cleanPathname}`);
     
-    // If not a crawler, redirect to main app
-    if (!isCrawler(userAgent)) {
-      console.log('[SSR] Not a crawler, redirecting to app');
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': `${BASE_URL}${cleanPathname}`,
-          'Cache-Control': 'public, max-age=60'
-        }
-      });
-    }
+    // Note: Only crawlers reach this function due to Vercel has condition on User-Agent
 
     // Parse the path using cleanPathname (after prefix removal)
     const pathParts = cleanPathname.split('/').filter(Boolean);

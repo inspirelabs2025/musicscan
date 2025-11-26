@@ -401,9 +401,15 @@ verify_jwt = false
 [[functions.generate-curated-artists.schedule]]
 cron = "0 2 * * *"  # Daily at 2 AM UTC
 
-[functions.daily-artist-stories-generator]
-verify_jwt = false
+  [functions.daily-artist-stories-generator]
+  verify_jwt = false
+
+  [functions.rss-news-rewriter]
+  verify_jwt = false
 
 [[functions.daily-artist-stories-generator.schedule]]
 cron = "0 1 * * *"  # Daily at 1 AM UTC - generates 20 artist stories per day
+
+[[functions.rss-news-rewriter.schedule]]
+cron = "0 8,14,20 * * *"  # Daily at 08:00, 14:00, 20:00 UTC - fetch and rewrite RSS news
 

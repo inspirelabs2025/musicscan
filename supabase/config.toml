@@ -385,3 +385,13 @@ verify_jwt = false
 
 [[functions.generate-llm-sitemap.schedule]]
 cron = "0 4 * * *"  # Daily at 4 AM UTC
+
+[functions.auto-generate-keywords]
+verify_jwt = true
+
+[[functions.auto-generate-keywords.schedule]]
+cron = "0 3 * * *"  # Daily at 3 AM UTC
+
+[functions.generate-longtail-keywords]
+verify_jwt = true
+

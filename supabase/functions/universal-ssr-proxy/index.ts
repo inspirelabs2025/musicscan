@@ -264,14 +264,12 @@ const generateProductHTML = (product: any): string => {
   <meta name="description" content="${description || `Bestel ${title} als premium metalen albumcover print. Hoogwaardige kunst voor muziekliefhebbers.`}">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
   
-  <meta property="og:type" content="product">
+  <meta property="og:type" content="website">
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${description}">
   <meta property="og:image" content="${imageUrl}">
   <meta property="og:url" content="${BASE_URL}/product/${product.slug}">
   <meta property="og:site_name" content="MusicScan">
-  <meta property="product:price:amount" content="${price}">
-  <meta property="product:price:currency" content="EUR">
   
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${title}">

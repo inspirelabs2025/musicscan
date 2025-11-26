@@ -121,6 +121,7 @@ import ButtonGenerator from "./pages/admin/ButtonGenerator";
 import SinglesImporterPage from "./pages/admin/SinglesImporterPage";
 import ArtistStoriesGenerator from "./pages/admin/ArtistStoriesGenerator";
 import FacebookSync from "./pages/admin/FacebookSync";
+import NewsRssManager from "./pages/admin/NewsRssManager";
 import SocksShop from "./pages/SocksShop";
 import TshirtsShop from "./pages/TshirtsShop";
 import MerchandiseShop from "./pages/MerchandiseShop";
@@ -373,6 +374,7 @@ const AppContent = () => {
                 <Route path="photo-stylizer" element={<PhotoStylizer />} />
                 <Route path="singles-importer" element={<SinglesImporterPage />} />
                 <Route path="artist-stories-generator" element={<ArtistStoriesGenerator />} />
+                <Route path="news-rss-manager" element={<NewsRssManager />} />
                 <Route path="artist-spotlights" element={<ArtistSpotlightsAdmin />} />
                 <Route path="facebook-sync" element={<FacebookSync />} />
                 <Route path="artist-spotlight/new" element={<ArtistSpotlightEditor />} />

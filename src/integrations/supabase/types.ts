@@ -2844,6 +2844,42 @@ export type Database = {
         }
         Relationships: []
       }
+      news_rss_feeds: {
+        Row: {
+          articles_fetched_count: number | null
+          category: string | null
+          created_at: string | null
+          feed_name: string
+          feed_url: string
+          id: string
+          is_active: boolean | null
+          last_fetched_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          articles_fetched_count?: number | null
+          category?: string | null
+          created_at?: string | null
+          feed_name: string
+          feed_url: string
+          id?: string
+          is_active?: boolean | null
+          last_fetched_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          articles_fetched_count?: number | null
+          category?: string | null
+          created_at?: string | null
+          feed_name?: string
+          feed_url?: string
+          id?: string
+          is_active?: boolean | null
+          last_fetched_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string

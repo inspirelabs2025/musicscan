@@ -5,15 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, RefreshCw, Rss } from "lucide-react";
+import { Loader2, Plus, Trash2, RefreshCw, Rss, Search, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
+import { NewsArticleCard } from "@/components/NewsArticleCard";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function NewsRssManager() {
   const [newFeedUrl, setNewFeedUrl] = useState("");
   const [newFeedName, setNewFeedName] = useState("");
   const [newFeedCategory, setNewFeedCategory] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const queryClient = useQueryClient();
 
   const { data: feeds, isLoading } = useQuery({
@@ -29,15 +34,14 @@ export default function NewsRssManager() {
     },
   });
 
-  const { data: recentArticles } = useQuery({
-    queryKey: ['recent-news-articles'],
+  const { data: newsArticles, isLoading: articlesLoading } = useQuery({
+    queryKey: ['news-articles'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('blog_posts')
-        .select('id, slug, yaml_frontmatter, created_at')
+        .select('id, slug, yaml_frontmatter, album_cover_url, is_published, views_count, created_at, published_at')
         .eq('album_type', 'news')
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data;
@@ -115,7 +119,7 @@ export default function NewsRssManager() {
     },
     onSuccess: (data) => {
       setIsGenerating(false);
-      queryClient.invalidateQueries({ queryKey: ['recent-news-articles'] });
+      queryClient.invalidateQueries({ queryKey: ['news-articles'] });
       toast.success(`${data.created} nieuwe artikelen gegenereerd!`);
     },
     onError: (error) => {
@@ -123,6 +127,77 @@ export default function NewsRssManager() {
       toast.error("Fout bij genereren: " + error.message);
     },
   });
+
+  const deleteArticleMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['news-articles'] });
+      toast.success("Artikel verwijderd");
+    },
+    onError: (error) => {
+      toast.error("Fout bij verwijderen: " + error.message);
+    },
+  });
+
+  const togglePublishMutation = useMutation({
+    mutationFn: async ({ id, currentStatus }: { id: string; currentStatus: boolean }) => {
+      const { error } = await supabase
+        .from('blog_posts')
+        .update({ 
+          is_published: !currentStatus,
+          published_at: !currentStatus ? new Date().toISOString() : null
+        })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['news-articles'] });
+      toast.success("Publicatiestatus gewijzigd");
+    },
+    onError: (error) => {
+      toast.error("Fout bij wijzigen: " + error.message);
+    },
+  });
+
+  // Filter articles
+  const filteredArticles = newsArticles?.filter(article => {
+    const frontmatter = article.yaml_frontmatter || {};
+    const title = frontmatter.title || '';
+    const category = frontmatter.category || '';
+    const description = frontmatter.description || '';
+    
+    // Search filter
+    const matchesSearch = searchTerm === '' || 
+      title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      description.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Category filter
+    const matchesCategory = categoryFilter === 'all' || category === categoryFilter;
+    
+    // Status filter
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'published' && article.is_published) ||
+      (statusFilter === 'draft' && !article.is_published);
+    
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+  // Get unique categories
+  const categories = Array.from(new Set(
+    newsArticles?.map(a => a.yaml_frontmatter?.category).filter(Boolean) || []
+  ));
+
+  // Statistics
+  const publishedCount = newsArticles?.filter(a => a.is_published).length || 0;
+  const draftCount = newsArticles?.filter(a => !a.is_published).length || 0;
 
   if (isLoading) {
     return (
@@ -160,7 +235,7 @@ export default function NewsRssManager() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Actieve Feeds</CardTitle>
@@ -177,16 +252,28 @@ export default function NewsRssManager() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {feeds?.reduce((sum, f) => sum + (f.articles_fetched_count || 0), 0) || 0}
+              {newsArticles?.length || 0}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Recente Artikelen</CardTitle>
+            <CardTitle className="text-sm font-medium">Gepubliceerd</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{recentArticles?.length || 0}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {publishedCount}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Concepten</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">
+              {draftCount}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -284,31 +371,84 @@ export default function NewsRssManager() {
         </CardContent>
       </Card>
 
-      {/* Recent Articles */}
+      {/* News Articles Management */}
       <Card>
         <CardHeader>
-          <CardTitle>Recente Nieuwsartikelen</CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Nieuwsartikelen ({filteredArticles?.length || 0})</CardTitle>
+              <CardDescription>
+                Beheer en bekijk alle gegenereerde nieuwsartikelen
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {recentArticles?.map((article) => (
-              <div key={article.id} className="flex items-center justify-between p-3 border rounded">
-                <div>
-                  <p className="font-medium">{article.yaml_frontmatter?.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(article.created_at), "d MMM yyyy HH:mm", { locale: nl })}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(`/plaat-verhaal/${article.slug}`, '_blank')}
-                >
-                  Bekijk
-                </Button>
-              </div>
-            ))}
+          {/* Filters and Search */}
+          <div className="flex flex-col md:flex-row gap-3 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Zoek in artikelen..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Categorie" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle categorieën</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle status</SelectItem>
+                <SelectItem value="published">Gepubliceerd</SelectItem>
+                <SelectItem value="draft">Concepten</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          {/* Articles Grid */}
+          {articlesLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : filteredArticles && filteredArticles.length > 0 ? (
+            <div className="space-y-4">
+              {filteredArticles.map((article) => (
+                <NewsArticleCard
+                  key={article.id}
+                  article={article}
+                  onDelete={(id) => deleteArticleMutation.mutate(id)}
+                  onTogglePublish={(id, currentStatus) => 
+                    togglePublishMutation.mutate({ id, currentStatus })
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>Geen artikelen gevonden</p>
+              {searchTerm || categoryFilter !== 'all' || statusFilter !== 'all' ? (
+                <p className="text-sm mt-2">Probeer andere filters</p>
+              ) : (
+                <p className="text-sm mt-2">Klik op "Genereer Nieuws" om te beginnen</p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

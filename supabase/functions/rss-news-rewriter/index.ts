@@ -64,6 +64,112 @@ function extractKeywords(text: string): string[] {
   return [...new Set(words)];
 }
 
+// Generate news image with AI
+async function generateNewsImage(
+  title: string, 
+  content: string,
+  lovableApiKey: string,
+  supabaseUrl: string,
+  supabaseKey: string
+): Promise<string | null> {
+  try {
+    // 1. Generate image prompt based on article
+    const promptResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [{
+          role: 'user',
+          content: `Genereer een korte image prompt (max 100 woorden) voor een nieuwsartikel:
+        
+Titel: ${title}
+Inhoud: ${content.slice(0, 500)}
+
+De prompt moet resulteren in een professionele, journalistieke foto die past bij dit muzieknieuws.
+Denk aan: concertfoto, artiest portret, muziekinstrumenten, platenzaak, studio setting, etc.
+Vermijd: tekst, logo's, specifieke gezichten van echte mensen.
+
+Return ALLEEN de image prompt, geen uitleg.`
+        }],
+      }),
+    });
+
+    if (!promptResponse.ok) {
+      console.error('Failed to generate image prompt:', promptResponse.status);
+      return null;
+    }
+
+    const promptData = await promptResponse.json();
+    const imagePrompt = promptData.choices[0].message.content;
+
+    // 2. Generate the image
+    const imageResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [{ 
+          role: 'user', 
+          content: `${imagePrompt}
+
+Style: Professional journalism photography, high quality, 16:9 aspect ratio, editorial style for music news website.`
+        }],
+        modalities: ['image', 'text'],
+      }),
+    });
+
+    if (!imageResponse.ok) {
+      console.error('Failed to generate image:', imageResponse.status);
+      return null;
+    }
+
+    const imageData = await imageResponse.json();
+    const base64Image = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    if (!base64Image) {
+      console.error('No image returned from AI');
+      return null;
+    }
+
+    // 3. Upload to Supabase storage
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+    const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    
+    const filename = `news/${Date.now()}-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50)}.png`;
+    
+    const uploadResponse = await fetch(
+      `${supabaseUrl}/storage/v1/object/news-images/${filename}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'image/png',
+        },
+        body: binaryData,
+      }
+    );
+
+    if (!uploadResponse.ok) {
+      console.error('Failed to upload image to storage:', uploadResponse.status);
+      return null;
+    }
+
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/news-images/${filename}`;
+    console.log(`✅ Image generated and uploaded: ${publicUrl}`);
+    return publicUrl;
+  } catch (error) {
+    console.error('Error generating news image:', error);
+    return null;
+  }
+}
+
 async function rewriteWithAI(originalTitle: string, originalContent: string): Promise<{ title: string; content: string; summary: string }> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
@@ -143,6 +249,7 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { manual, limit = 10 } = await req.json().catch(() => ({ manual: false, limit: 10 }));
@@ -226,6 +333,16 @@ serve(async (req) => {
           const contentToRewrite = item.content || item.description;
           const rewritten = await rewriteWithAI(item.title, contentToRewrite);
           
+          // Generate image for the article
+          console.log(`Generating image for: ${rewritten.title}`);
+          const imageUrl = await generateNewsImage(
+            rewritten.title,
+            rewritten.content,
+            lovableApiKey,
+            supabaseUrl,
+            supabaseKey
+          );
+          
           // Generate slug
           const slug = `nieuws-${Date.now()}-${item.title.toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
@@ -239,6 +356,7 @@ serve(async (req) => {
               album_id: crypto.randomUUID(),
               album_type: 'news',
               slug,
+              album_cover_url: imageUrl,
               markdown_content: rewritten.content,
               yaml_frontmatter: {
                 title: rewritten.title,

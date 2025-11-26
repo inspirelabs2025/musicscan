@@ -344,7 +344,7 @@ Deno.serve(async (req) => {
       .replace(/^\/functions\/v1\/universal-ssr-proxy/, '')
       .replace(/^\/universal-ssr-proxy/, '');
     
-    console.log(`[SSR] Cleaned pathname: ${cleanPathname}`);
+    console.log(`[SSR] Original pathname: ${url.pathname}, Cleaned: ${cleanPathname}`);
     
     // If not a crawler, redirect to main app
     if (!isCrawler(userAgent)) {
@@ -359,16 +359,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Parse the path to determine content type
-    // Use last 2 segments to handle both direct paths and paths with /functions/v1/universal-ssr-proxy prefix
-    const pathParts = url.pathname.split('/').filter(Boolean);
+    // Parse the path using cleanPathname (after prefix removal)
+    const pathParts = cleanPathname.split('/').filter(Boolean);
+    console.log(`[SSR] Path parts:`, pathParts);
+    
     if (pathParts.length < 2) {
+      console.error(`[SSR] Invalid path format: ${cleanPathname}`);
       throw new Error('Invalid path format');
     }
 
     const contentType = pathParts[pathParts.length - 2]; // 'plaat-verhaal', 'muziek-verhaal', 'product'
     const rawSlug = pathParts[pathParts.length - 1];
     const slug = normalizeSlug(rawSlug);
+    
+    console.log(`[SSR] Content type: ${contentType}, slug: ${slug}`);
 
     // Initialize Supabase client
     const supabaseClient = createClient(
@@ -392,7 +396,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`[SSR] Content type: ${contentType}, slug: ${slug}`);
+    // Validate content type
+    const validContentTypes = ['plaat-verhaal', 'muziek-verhaal', 'product'];
+    if (!validContentTypes.includes(contentType)) {
+      console.error(`[SSR] Invalid content type: ${contentType}`);
+      throw new Error(`Unknown content type: ${contentType}`);
+    }
 
     let html = '';
 

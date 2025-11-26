@@ -26,9 +26,11 @@ interface BlogPost {
 
 const fetchBlogPost = async (slug: string): Promise<BlogPost | null> => {
   const { data, error } = await supabase
-    .from('news_blog_posts')
+    .from('blog_posts')
     .select('*')
     .eq('slug', slug)
+    .eq('album_type', 'news')
+    .eq('is_published', true)
     .maybeSingle();
 
   if (error) {
@@ -36,15 +38,28 @@ const fetchBlogPost = async (slug: string): Promise<BlogPost | null> => {
     return null;
   }
 
-  // Increment views count
-  if (data) {
-    await supabase
-      .from('news_blog_posts')
-      .update({ views_count: (data.views_count || 0) + 1 })
-      .eq('id', data.id);
-  }
+  if (!data) return null;
 
-  return data;
+  // Increment views count
+  await supabase
+    .from('blog_posts')
+    .update({ views_count: (data.views_count || 0) + 1 })
+    .eq('id', data.id);
+
+  // Transform to expected format
+  const frontmatter = data.yaml_frontmatter || {};
+  return {
+    id: data.id,
+    title: frontmatter.title || '',
+    content: data.markdown_content || '',
+    summary: frontmatter.description || frontmatter.excerpt || '',
+    source: frontmatter.source || 'MusicScan',
+    published_at: data.published_at || data.created_at,
+    category: frontmatter.category || 'Nieuws',
+    author: frontmatter.author || 'MusicScan AI',
+    views_count: data.views_count || 0,
+    image_url: data.album_cover_url || frontmatter.cover_image
+  };
 };
 
 export const NewsPost = () => {
@@ -63,14 +78,32 @@ export const NewsPost = () => {
       if (!post) return [];
       
       const { data } = await supabase
-        .from('news_blog_posts')
+        .from('blog_posts')
         .select('*')
-        .eq('category', post.category)
+        .eq('album_type', 'news')
+        .eq('is_published', true)
         .neq('id', post.id)
         .order('published_at', { ascending: false })
         .limit(3);
       
-      return data || [];
+      if (!data) return [];
+      
+      // Transform related articles
+      return data
+        .filter((article: any) => {
+          const frontmatter = article.yaml_frontmatter || {};
+          return frontmatter.category === post.category;
+        })
+        .map((article: any) => {
+          const frontmatter = article.yaml_frontmatter || {};
+          return {
+            id: article.id,
+            slug: article.slug,
+            title: frontmatter.title || '',
+            summary: frontmatter.description || frontmatter.excerpt || '',
+            image_url: article.album_cover_url || frontmatter.cover_image,
+          };
+        });
     },
     enabled: !!post,
   });
@@ -126,7 +159,7 @@ export const NewsPost = () => {
   }
 
   if (error || !post) {
-    return <Navigate to="/news" replace />;
+    return <Navigate to="/nieuws" replace />;
   }
 
   return (

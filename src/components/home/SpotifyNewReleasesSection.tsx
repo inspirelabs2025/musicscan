@@ -65,15 +65,6 @@ export const SpotifyNewReleasesSection = () => {
               </div>
             </a>)}
         </div>
-
-        {/* View More on Spotify Link */}
-        <div className="text-center">
-          <a href="https://open.spotify.com/genre/new-releases-page" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-lg font-semibold text-primary hover:underline">
-            <Music2 className="w-5 h-5 text-green-500" />
-            Ontdek meer op Spotify
-            <ExternalLink className="w-4 h-4" />
-          </a>
-        </div>
       </div>
     </section>;
 };

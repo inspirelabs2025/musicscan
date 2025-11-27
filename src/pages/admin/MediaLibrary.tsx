@@ -26,6 +26,7 @@ import { MediaLibraryUploader } from '@/components/admin/MediaLibraryUploader';
 import { MediaLibraryGrid } from '@/components/admin/MediaLibraryGrid';
 import { MediaLibraryDetail } from '@/components/admin/MediaLibraryDetail';
 import { SendToQueueDialog } from '@/components/admin/SendToQueueDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 const productTypes: { key: ProductType; label: string; emoji: string }[] = [
   { key: 'stylizer', label: 'Photo Stylizer', emoji: '✨' },
@@ -147,15 +148,129 @@ const MediaLibrary = () => {
     productType: ProductType,
     options?: { artistName?: string; fanwallId?: string; createNewFanwall?: boolean }
   ) => {
+    // Handle FanWall creation
+    if (productType === 'fanwall' && options?.artistName) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast({
+            title: 'Fout',
+            description: 'Je moet ingelogd zijn om foto\'s toe te voegen aan de FanWall',
+            variant: 'destructive'
+          });
+          return;
+        }
+
+        let fanwallId = options.fanwallId;
+        
+        // Create new fanwall if needed
+        if (options.createNewFanwall) {
+          const slug = options.artistName.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
+          
+          const { data: newFanwall, error: fanwallError } = await supabase
+            .from('artist_fanwalls')
+            .insert({
+              artist_name: options.artistName,
+              slug: slug,
+              photo_count: 0,
+              is_active: true,
+              seo_title: `${options.artistName} FanWall - Fan Photos & Memories | MusicScan`,
+              seo_description: `Ontdek ${options.artistName} fan foto's: live concerten, vinyl collecties, en meer. Deel jouw ${options.artistName} herinneringen!`,
+              canonical_url: `https://www.musicscan.app/fanwall/${slug}`
+            })
+            .select()
+            .single();
+          
+          if (fanwallError) {
+            // Maybe fanwall already exists, try to find it
+            const { data: existingFanwall } = await supabase
+              .from('artist_fanwalls')
+              .select('id')
+              .eq('slug', slug)
+              .single();
+            
+            if (existingFanwall) {
+              fanwallId = existingFanwall.id;
+            } else {
+              throw fanwallError;
+            }
+          } else {
+            fanwallId = newFanwall.id;
+          }
+        }
+
+        // Create photo entries for each selected item
+        let successCount = 0;
+        for (const item of selectedItems) {
+          const photoSlug = `${options.artistName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          
+          const { error: photoError } = await supabase
+            .from('photos')
+            .insert({
+              user_id: user.id,
+              source_type: 'media_library',
+              original_url: item.public_url,
+              display_url: item.thumbnail_url || item.public_url,
+              artist: options.artistName,
+              caption: `${options.artistName} - Uploaded from Media Library`,
+              status: 'published',
+              seo_slug: photoSlug,
+              seo_title: `${options.artistName} Fan Photo | MusicScan FanWall`,
+              seo_description: `${options.artistName} fan foto gedeeld door een MusicScan gebruiker.`,
+              published_at: new Date().toISOString(),
+              license_granted: true,
+              print_allowed: false
+            });
+          
+          if (!photoError) {
+            successCount++;
+          } else {
+            console.error('Failed to create photo:', photoError);
+          }
+        }
+
+        // Update fanwall photo count
+        if (fanwallId) {
+          const { data: currentFanwall } = await supabase
+            .from('artist_fanwalls')
+            .select('photo_count, featured_photo_url')
+            .eq('id', fanwallId)
+            .single();
+          
+          const newCount = (currentFanwall?.photo_count || 0) + successCount;
+          const updateData: any = { photo_count: newCount };
+          
+          // Set featured photo if not set
+          if (!currentFanwall?.featured_photo_url && selectedItems.length > 0) {
+            updateData.featured_photo_url = selectedItems[0].public_url;
+          }
+          
+          await supabase
+            .from('artist_fanwalls')
+            .update(updateData)
+            .eq('id', fanwallId);
+        }
+
+        toast({
+          title: 'FanWall bijgewerkt',
+          description: `${successCount} foto('s) toegevoegd aan de FanWall van ${options.artistName}`
+        });
+      } catch (error) {
+        console.error('FanWall creation error:', error);
+        toast({
+          title: 'Fout',
+          description: 'Er ging iets mis bij het aanmaken van de FanWall',
+          variant: 'destructive'
+        });
+        return;
+      }
+    }
+
+    // Mark items as sent
     await sendToQueue({ items: selectedItems, productType });
     setSelectedIds([]);
-    // TODO: Handle fanwall creation/selection with options
-    if (options?.createNewFanwall && options.artistName) {
-      toast({
-        title: 'FanWall',
-        description: `Nieuwe FanWall voor ${options.artistName} wordt aangemaakt wanneer de foto's worden verwerkt.`
-      });
-    }
   };
 
   // Filter items

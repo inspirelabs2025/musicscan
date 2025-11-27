@@ -114,7 +114,7 @@ const MediaLibrary = () => {
       
       const item = selectedItems[0];
       const artistName = item.manual_artist || item.recognized_artist || 'Onbekende Artiest';
-      const title = item.file_name.replace(/\.[^/.]+$/, ''); // Remove file extension
+      const title = artistName; // Use artist name as title, not filename
       
       try {
         // Start batch processing automatically

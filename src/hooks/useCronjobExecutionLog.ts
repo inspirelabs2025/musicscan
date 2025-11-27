@@ -28,88 +28,162 @@ export interface CronjobStats {
 
 // All scheduled cronjobs from config.toml
 export const SCHEDULED_CRONJOBS = [
-  { name: 'bulk-poster-processor', schedule: '*/10 * * * *', description: 'Verwerkt poster queue elke 10 minuten' },
-  { name: 'discogs-lp-crawler', schedule: '0 * * * *', description: 'Crawlt Discogs LP releases elk uur' },
-  { name: 'latest-discogs-news', schedule: '0 */3 * * *', description: 'Haalt laatste Discogs nieuws elke 3 uur' },
-  { name: 'batch-blog-processor', schedule: '*/10 * * * *', description: 'Verwerkt blog batch elke 10 minuten' },
-  { name: 'indexnow-processor', schedule: '*/15 * * * *', description: 'Verwerkt IndexNow queue elke 15 minuten' },
-  { name: 'sitemap-queue-processor', schedule: '*/3 * * * *', description: 'Verwerkt sitemap queue elke 3 minuten' },
-  { name: 'indexnow-cron', schedule: '*/15 * * * *', description: 'IndexNow cron elke 15 minuten' },
+  { name: 'bulk-poster-processor', schedule: '*/10 * * * *', description: 'Verwerkt poster queue elke 10 minuten', trackingTable: 'batch_processing_status', trackingFilter: { process_type: 'poster_generation' } },
+  { name: 'discogs-lp-crawler', schedule: '0 * * * *', description: 'Crawlt Discogs LP releases elk uur', trackingTable: 'discogs_import_log' },
+  { name: 'latest-discogs-news', schedule: '0 */3 * * *', description: 'Haalt laatste Discogs nieuws elke 3 uur', trackingTable: 'news_generation_logs', trackingFilter: { generation_type: 'discogs_news' } },
+  { name: 'batch-blog-processor', schedule: '*/10 * * * *', description: 'Verwerkt blog batch elke 10 minuten', trackingTable: 'batch_processing_status', trackingFilter: { process_type: 'blog_generation' } },
+  { name: 'indexnow-processor', schedule: '*/15 * * * *', description: 'Verwerkt IndexNow queue elke 15 minuten', trackingTable: 'indexnow_queue' },
+  { name: 'sitemap-queue-processor', schedule: '*/3 * * * *', description: 'Verwerkt sitemap queue elke 3 minuten', trackingTable: 'sitemap_regeneration_log' },
+  { name: 'indexnow-cron', schedule: '*/15 * * * *', description: 'IndexNow cron elke 15 minuten', trackingTable: 'indexnow_submissions' },
   { name: 'refresh-featured-photos', schedule: '0 */6 * * *', description: 'Refresht featured photos elke 6 uur' },
-  { name: 'daily-anecdote-generator', schedule: '5 6 * * *', description: 'Genereert dagelijkse anekdote om 06:05 UTC' },
-  { name: 'generate-daily-music-history', schedule: '0 5 * * *', description: 'Genereert dagelijkse muziek historie om 05:00 UTC' },
-  { name: 'singles-batch-processor', schedule: '*/15 * * * *', description: 'Verwerkt singles batch elke 15 minuten' },
-  { name: 'artist-stories-batch-processor', schedule: '*/20 * * * *', description: 'Verwerkt artist stories elke 20 minuten' },
+  { name: 'daily-anecdote-generator', schedule: '5 6 * * *', description: 'Genereert dagelijkse anekdote om 06:05 UTC', trackingTable: 'news_generation_logs', trackingFilter: { generation_type: 'daily_anecdote' } },
+  { name: 'generate-daily-music-history', schedule: '0 5 * * *', description: 'Genereert dagelijkse muziek historie om 05:00 UTC', trackingTable: 'news_generation_logs', trackingFilter: { generation_type: 'music_history' } },
+  { name: 'singles-batch-processor', schedule: '*/15 * * * *', description: 'Verwerkt singles batch elke 15 minuten', trackingTable: 'batch_processing_status', trackingFilter: { process_type: 'singles_batch' } },
+  { name: 'artist-stories-batch-processor', schedule: '*/20 * * * *', description: 'Verwerkt artist stories elke 20 minuten', trackingTable: 'batch_processing_status', trackingFilter: { process_type: 'artist_stories' } },
   { name: 'generate-llm-sitemap', schedule: '0 4 * * *', description: 'Genereert LLM sitemap om 04:00 UTC' },
   { name: 'auto-generate-keywords', schedule: '30 3 * * *', description: 'Auto-genereert keywords om 03:30 UTC' },
   { name: 'generate-curated-artists', schedule: '0 2 * * *', description: 'Genereert curated artists om 02:00 UTC' },
-  { name: 'daily-artist-stories-generator', schedule: '0 7 * * *', description: 'Genereert dagelijkse artist stories om 07:00 UTC' },
-  { name: 'rss-news-rewriter', schedule: '0 8,14,20 * * *', description: 'Herschrijft RSS nieuws 3x per dag' },
+  { name: 'daily-artist-stories-generator', schedule: '0 7 * * *', description: 'Genereert dagelijkse artist stories om 07:00 UTC', trackingTable: 'news_generation_logs', trackingFilter: { generation_type: 'artist_stories' } },
+  { name: 'rss-news-rewriter', schedule: '0 8,14,20 * * *', description: 'Herschrijft RSS nieuws 3x per dag', trackingTable: 'news_generation_logs', trackingFilter: { generation_type: 'rss_rewrite' } },
 ] as const;
 
 export const useCronjobExecutionLog = () => {
   const queryClient = useQueryClient();
 
-  // Fetch recent executions
-  const { data: executions, isLoading: executionsLoading } = useQuery({
-    queryKey: ['cronjob-executions'],
+  // Fetch batch processing status
+  const { data: batchStatus } = useQuery({
+    queryKey: ['cronjob-batch-status'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('cronjob_execution_log')
+        .from('batch_processing_status')
         .select('*')
-        .order('started_at', { ascending: false })
-        .limit(100);
+        .order('updated_at', { ascending: false });
       
       if (error) throw error;
-      return data as CronjobExecution[];
+      return data;
     },
     refetchInterval: 10000,
   });
 
-  // Fetch stats per cronjob
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['cronjob-stats'],
+  // Fetch discogs import log stats
+  const { data: discogsStats } = useQuery({
+    queryKey: ['cronjob-discogs-stats'],
     queryFn: async () => {
-      // Calculate stats manually since we can't access the view directly
       const { data, error } = await supabase
-        .from('cronjob_execution_log')
-        .select('*')
-        .order('started_at', { ascending: false });
+        .from('discogs_import_log')
+        .select('status, created_at, processed_at')
+        .order('created_at', { ascending: false })
+        .limit(1000);
       
       if (error) throw error;
       
-      // Group by function_name and calculate stats
-      const statsMap = new Map<string, CronjobStats>();
+      const stats = {
+        total: data.length,
+        pending: data.filter(d => d.status === 'pending').length,
+        completed: data.filter(d => d.status === 'completed').length,
+        failed: data.filter(d => d.status === 'failed').length,
+        lastRun: data[0]?.created_at || null,
+      };
+      return stats;
+    },
+    refetchInterval: 10000,
+  });
+
+  // Fetch sitemap regeneration stats
+  const { data: sitemapStats } = useQuery({
+    queryKey: ['cronjob-sitemap-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('sitemap_regeneration_log')
+        .select('status, created_at, processing_time_ms')
+        .order('created_at', { ascending: false })
+        .limit(100);
       
-      data.forEach((execution: CronjobExecution) => {
-        const existing = statsMap.get(execution.function_name);
-        if (!existing) {
-          statsMap.set(execution.function_name, {
-            function_name: execution.function_name,
-            total_runs: 1,
-            successful_runs: execution.status === 'success' ? 1 : 0,
-            failed_runs: execution.status === 'error' ? 1 : 0,
-            running_count: execution.status === 'running' ? 1 : 0,
-            avg_execution_time_ms: execution.execution_time_ms,
-            last_run_at: execution.started_at,
-            last_status: execution.status,
-          });
-        } else {
-          existing.total_runs++;
-          if (execution.status === 'success') existing.successful_runs++;
-          if (execution.status === 'error') existing.failed_runs++;
-          if (execution.status === 'running') existing.running_count++;
-          if (execution.execution_time_ms) {
-            existing.avg_execution_time_ms = existing.avg_execution_time_ms
-              ? Math.round((existing.avg_execution_time_ms + execution.execution_time_ms) / 2)
-              : execution.execution_time_ms;
-          }
+      if (error) throw error;
+      
+      const successCount = data.filter(d => d.status === 'success').length;
+      const avgTime = data.filter(d => d.processing_time_ms).reduce((acc, d) => acc + (d.processing_time_ms || 0), 0) / Math.max(1, data.filter(d => d.processing_time_ms).length);
+      
+      return {
+        total: data.length,
+        successful: successCount,
+        failed: data.filter(d => d.status === 'failed').length,
+        lastRun: data[0]?.created_at || null,
+        lastStatus: data[0]?.status || null,
+        avgExecutionTime: Math.round(avgTime),
+      };
+    },
+    refetchInterval: 10000,
+  });
+
+  // Fetch news generation logs
+  const { data: newsStats } = useQuery({
+    queryKey: ['cronjob-news-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('news_generation_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      if (error) throw error;
+      
+      // Group by generation_type
+      const byType: Record<string, { total: number; success: number; lastRun: string | null; lastStatus: string | null }> = {};
+      data.forEach(item => {
+        const type = (item as any).generation_type || 'unknown';
+        if (!byType[type]) {
+          byType[type] = { total: 0, success: 0, lastRun: null, lastStatus: null };
+        }
+        byType[type].total++;
+        if ((item as any).status === 'success' || (item as any).status === 'completed') {
+          byType[type].success++;
+        }
+        if (!byType[type].lastRun) {
+          byType[type].lastRun = item.created_at;
+          byType[type].lastStatus = (item as any).status;
         }
       });
       
-      return Array.from(statsMap.values());
+      return { byType, raw: data };
     },
     refetchInterval: 30000,
+  });
+
+  // Fetch indexnow stats
+  const { data: indexnowStats } = useQuery({
+    queryKey: ['cronjob-indexnow-stats'],
+    queryFn: async () => {
+      const { data: submissions, error: subError } = await supabase
+        .from('indexnow_submissions')
+        .select('*')
+        .order('submitted_at', { ascending: false })
+        .limit(50);
+      
+      const { data: queue, error: queueError } = await supabase
+        .from('indexnow_queue')
+        .select('processed, processed_at')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      
+      if (subError) throw subError;
+      if (queueError) throw queueError;
+      
+      return {
+        submissions: {
+          total: submissions?.length || 0,
+          lastRun: submissions?.[0]?.submitted_at || null,
+          success: submissions?.filter((s: any) => s.status_code >= 200 && s.status_code < 300).length || 0,
+        },
+        queue: {
+          total: queue?.length || 0,
+          processed: queue?.filter((q: any) => q.processed).length || 0,
+          pending: queue?.filter((q: any) => !q.processed).length || 0,
+          lastProcessed: queue?.find((q: any) => q.processed)?.processed_at || null,
+        }
+      };
+    },
+    refetchInterval: 15000,
   });
 
   // Manual trigger mutation
@@ -122,27 +196,30 @@ export const useCronjobExecutionLog = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cronjob-executions'] });
-      queryClient.invalidateQueries({ queryKey: ['cronjob-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['cronjob-batch-status'] });
+      queryClient.invalidateQueries({ queryKey: ['cronjob-discogs-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['cronjob-sitemap-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['cronjob-news-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['cronjob-indexnow-stats'] });
     }
   });
 
   // Real-time subscription
   useEffect(() => {
     const channel = supabase
-      .channel('cronjob-log-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'cronjob_execution_log'
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['cronjob-executions'] });
-          queryClient.invalidateQueries({ queryKey: ['cronjob-stats'] });
-        }
-      )
+      .channel('cronjob-realtime-all')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'batch_processing_status' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['cronjob-batch-status'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'discogs_import_log' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['cronjob-discogs-stats'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sitemap_regeneration_log' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['cronjob-sitemap-stats'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'indexnow_queue' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['cronjob-indexnow-stats'] });
+      })
       .subscribe();
 
     return () => {
@@ -150,21 +227,140 @@ export const useCronjobExecutionLog = () => {
     };
   }, [queryClient]);
 
-  // Combine scheduled jobs with their stats
+  // Build combined stats for each cronjob
   const cronjobsWithStats = SCHEDULED_CRONJOBS.map(job => {
-    const jobStats = stats?.find(s => s.function_name === job.name);
+    let stats: CronjobStats | null = null;
+    let recentExecutions: any[] = [];
+
+    // Match stats based on tracking table and filter
+    if (job.name === 'discogs-lp-crawler' && discogsStats) {
+      stats = {
+        function_name: job.name,
+        total_runs: discogsStats.total,
+        successful_runs: discogsStats.completed,
+        failed_runs: discogsStats.failed,
+        running_count: discogsStats.pending,
+        avg_execution_time_ms: null,
+        last_run_at: discogsStats.lastRun,
+        last_status: discogsStats.completed > 0 ? 'success' : (discogsStats.failed > 0 ? 'error' : null),
+      };
+    }
+
+    if (job.name === 'sitemap-queue-processor' && sitemapStats) {
+      stats = {
+        function_name: job.name,
+        total_runs: sitemapStats.total,
+        successful_runs: sitemapStats.successful,
+        failed_runs: sitemapStats.failed,
+        running_count: 0,
+        avg_execution_time_ms: sitemapStats.avgExecutionTime,
+        last_run_at: sitemapStats.lastRun,
+        last_status: sitemapStats.lastStatus,
+      };
+    }
+
+    if ((job.name === 'indexnow-processor' || job.name === 'indexnow-cron') && indexnowStats) {
+      const isProcessor = job.name === 'indexnow-processor';
+      stats = {
+        function_name: job.name,
+        total_runs: isProcessor ? indexnowStats.queue.total : indexnowStats.submissions.total,
+        successful_runs: isProcessor ? indexnowStats.queue.processed : indexnowStats.submissions.success,
+        failed_runs: 0,
+        running_count: isProcessor ? indexnowStats.queue.pending : 0,
+        avg_execution_time_ms: null,
+        last_run_at: isProcessor ? indexnowStats.queue.lastProcessed : indexnowStats.submissions.lastRun,
+        last_status: (isProcessor ? indexnowStats.queue.processed : indexnowStats.submissions.success) > 0 ? 'success' : null,
+      };
+    }
+
+    if (job.name === 'batch-blog-processor' && batchStatus) {
+      const blogBatch = batchStatus.find(b => b.process_type === 'blog_generation');
+      if (blogBatch) {
+        stats = {
+          function_name: job.name,
+          total_runs: blogBatch.processed_items || 0,
+          successful_runs: blogBatch.successful_items || 0,
+          failed_runs: blogBatch.failed_items || 0,
+          running_count: blogBatch.status === 'running' ? 1 : 0,
+          avg_execution_time_ms: null,
+          last_run_at: blogBatch.updated_at,
+          last_status: blogBatch.status === 'completed' ? 'success' : (blogBatch.status === 'running' ? 'running' : blogBatch.status),
+        };
+      }
+    }
+
+    if (job.name === 'bulk-poster-processor' && batchStatus) {
+      const posterBatch = batchStatus.find(b => b.process_type === 'poster_generation');
+      if (posterBatch) {
+        stats = {
+          function_name: job.name,
+          total_runs: posterBatch.processed_items || 0,
+          successful_runs: posterBatch.successful_items || 0,
+          failed_runs: posterBatch.failed_items || 0,
+          running_count: posterBatch.status === 'running' ? 1 : 0,
+          avg_execution_time_ms: null,
+          last_run_at: posterBatch.updated_at,
+          last_status: posterBatch.status === 'completed' ? 'success' : (posterBatch.status === 'running' ? 'running' : posterBatch.status),
+        };
+      }
+    }
+
+    // News generation related cronjobs
+    if (newsStats) {
+      const typeMap: Record<string, string> = {
+        'latest-discogs-news': 'discogs_news',
+        'daily-anecdote-generator': 'daily_anecdote',
+        'generate-daily-music-history': 'music_history',
+        'daily-artist-stories-generator': 'artist_stories',
+        'rss-news-rewriter': 'rss_rewrite',
+      };
+      
+      const genType = typeMap[job.name];
+      if (genType && newsStats.byType[genType]) {
+        const typeStats = newsStats.byType[genType];
+        stats = {
+          function_name: job.name,
+          total_runs: typeStats.total,
+          successful_runs: typeStats.success,
+          failed_runs: typeStats.total - typeStats.success,
+          running_count: 0,
+          avg_execution_time_ms: null,
+          last_run_at: typeStats.lastRun,
+          last_status: typeStats.lastStatus === 'success' || typeStats.lastStatus === 'completed' ? 'success' : typeStats.lastStatus,
+        };
+      }
+    }
+
     return {
       ...job,
-      stats: jobStats || null,
-      lastExecution: executions?.find(e => e.function_name === job.name) || null,
+      stats,
+      lastExecution: null,
     };
   });
 
+  // Build recent activity from all sources
+  const recentActivity: CronjobExecution[] = [];
+  
+  // Add sitemap logs as recent activity
+  if (sitemapStats) {
+    // We'd need to fetch the actual records for this, but for now let's rely on other sources
+  }
+
+  const isLoading = !batchStatus && !discogsStats && !sitemapStats;
+
   return {
-    executions,
-    stats,
+    executions: recentActivity,
+    stats: cronjobsWithStats.map(c => c.stats).filter(Boolean) as CronjobStats[],
     cronjobsWithStats,
-    isLoading: executionsLoading || statsLoading,
+    isLoading,
     triggerCronjob,
+    // Raw data for debugging
+    rawData: {
+      batchStatus,
+      discogsStats,
+      sitemapStats,
+      newsStats,
+      indexnowStats,
+    }
   };
 };

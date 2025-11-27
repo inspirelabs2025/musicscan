@@ -58,6 +58,18 @@ const Home = () => {
       {/* Daily Music Anecdote */}
       <DailyAnecdote />
 
+      {/* Spotify New Releases - Always visible */}
+      <SpotifyNewReleasesSection />
+
+      {/* Featured Photos from FanWall - Always visible */}
+      <FeaturedPhotos />
+
+      {/* T-shirts Spotlight - Always visible */}
+      <TshirtSpotlight />
+
+      {/* Podcast Spotlight - Always visible */}
+      <PodcastSpotlight />
+
       {/* Shop Categories - Compact on mobile */}
       <section className={isMobile ? "py-8 bg-muted/30" : "py-16 bg-muted/30"}>
         <div className="container mx-auto px-4">
@@ -95,9 +107,6 @@ const Home = () => {
       {/* Latest Releases */}
       <LatestReleasesSection />
 
-      {/* Spotify New Releases */}
-      <SpotifyNewReleasesSection />
-
       {/* Album Reviews Spotlight */}
       <ReviewsSpotlight />
 
@@ -122,15 +131,6 @@ const Home = () => {
 
           {/* Music History - Today in Music History */}
           <MusicHistorySpotlight />
-
-          {/* Featured Photos from FanWall */}
-          <FeaturedPhotos />
-
-          {/* T-shirts Spotlight */}
-          <TshirtSpotlight />
-
-          {/* Podcast Spotlight */}
-          <PodcastSpotlight />
 
           {/* AI Features - Compact */}
           <AIFeaturesCompact />

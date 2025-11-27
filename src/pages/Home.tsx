@@ -21,8 +21,15 @@ import { FeaturedPhotos } from '@/components/FeaturedPhotos';
 import { DailyAnecdote } from '@/components/home/DailyAnecdote';
 import { MusicHistorySpotlight } from '@/components/home/MusicHistorySpotlight';
 import { useSEO } from '@/hooks/useSEO';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 
 const Home = () => {
+  const isMobile = useIsMobile();
+  const [showMoreFeatures, setShowMoreFeatures] = useState(false);
+  
   useSEO({
     title: "Vinyl Verzamelaar - Scan, Ontdek & Deel je Muziekcollectie",
     description: "Scan je platen en cd's met AI, ontdek prijzen en verhalen, deel met de community. 10.000+ albums gescand. Start gratis!",
@@ -43,35 +50,43 @@ const Home = () => {
       <EchoSpotlight />
 
       {/* Metal Print Spotlight - Prominent ART Section */}
-      <MetalPrintSpotlight />
+      {!isMobile && <MetalPrintSpotlight />}
 
       {/* Time Machine Spotlight */}
       <TimeMachineSpotlight />
 
       {/* Daily Music Anecdote */}
-      <DailyAnecdote />
+      {!isMobile && <DailyAnecdote />}
 
-      {/* Shop Categories - Large Visual Cards */}
-      <section className="py-16 bg-muted/30">
+      {/* Shop Categories - Compact on mobile */}
+      <section className={isMobile ? "py-8 bg-muted/30" : "py-16 bg-muted/30"}>
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">🛍️ Onze Shop - Browse op Categorie</h2>
-            <p className="text-xl text-muted-foreground">
-              Van vintage vinyl tot moderne art prints
-            </p>
+          <div className="text-center mb-6">
+            <h2 className={isMobile ? "text-2xl font-bold mb-2" : "text-4xl font-bold mb-4"}>
+              🛍️ Onze Shop
+            </h2>
+            {!isMobile && (
+              <p className="text-xl text-muted-foreground">
+                Van vintage vinyl tot moderne art prints
+              </p>
+            )}
           </div>
           <ShopByCategorySection />
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-16">
+      {/* Featured Products - Compact on mobile */}
+      <section className={isMobile ? "py-8" : "py-16"}>
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">⭐ Uitgelichte Producten</h2>
-            <p className="text-xl text-muted-foreground">
-              Handpicked items uit onze collectie
-            </p>
+          <div className="text-center mb-6">
+            <h2 className={isMobile ? "text-2xl font-bold mb-2" : "text-4xl font-bold mb-4"}>
+              ⭐ Uitgelichte Producten
+            </h2>
+            {!isMobile && (
+              <p className="text-xl text-muted-foreground">
+                Handpicked items uit onze collectie
+              </p>
+            )}
           </div>
           <FeaturedProductsCarousel />
         </div>
@@ -81,59 +96,78 @@ const Home = () => {
       <LatestReleasesSection />
 
       {/* Spotify New Releases */}
-      <SpotifyNewReleasesSection />
+      {!isMobile && <SpotifyNewReleasesSection />}
 
       {/* Album Reviews Spotlight */}
       <ReviewsSpotlight />
 
-      {/* News & Stories Section with Tabs */}
-      <NewsAndStoriesSection />
+      {/* More Features - Collapsible on mobile */}
+      {isMobile && !showMoreFeatures ? (
+        <div className="py-8 text-center">
+          <button
+            onClick={() => setShowMoreFeatures(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all"
+          >
+            Bekijk Meer Content
+            <ChevronDown className="w-4 h-4" />
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* News & Stories Section with Tabs */}
+          <NewsAndStoriesSection />
 
-      {/* Artist Spotlights - Compact Section */}
-      <ArtistSpotlightsSection />
+          {/* Artist Spotlights - Compact Section */}
+          <ArtistSpotlightsSection />
 
-      {/* Music History - Today in Music History */}
-      <MusicHistorySpotlight />
+          {/* Music History - Today in Music History */}
+          <MusicHistorySpotlight />
 
-      {/* Featured Photos from FanWall */}
-      <FeaturedPhotos />
+          {/* Featured Photos from FanWall */}
+          {!isMobile && <FeaturedPhotos />}
 
-      {/* T-shirts Spotlight */}
-      <TshirtSpotlight />
+          {/* T-shirts Spotlight */}
+          {!isMobile && <TshirtSpotlight />}
 
-      {/* Podcast Spotlight */}
-      <PodcastSpotlight />
+          {/* Podcast Spotlight */}
+          {!isMobile && <PodcastSpotlight />}
 
-      {/* AI Features - Compact */}
-      <AIFeaturesCompact />
+          {/* AI Features - Compact */}
+          <AIFeaturesCompact />
 
-      {/* Community Stats */}
-      <CommunityStats />
+          {/* Community Stats */}
+          <CommunityStats />
+        </>
+      )}
 
-      {/* Final CTA */}
-      <section className="py-16 bg-gradient-to-br from-vinyl-purple/20 via-vinyl-gold/20 to-accent/20">
+      {/* Final CTA - Compact on mobile */}
+      <section className={isMobile ? "py-8 bg-gradient-to-br from-vinyl-purple/20 via-vinyl-gold/20 to-accent/20" : "py-16 bg-gradient-to-br from-vinyl-purple/20 via-vinyl-gold/20 to-accent/20"}>
         <div className="container mx-auto px-4">
-          <div className="text-center space-y-8 max-w-3xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold">Klaar om te Beginnen?</h2>
-            <p className="text-xl text-muted-foreground">
-              Sluit je aan bij duizenden muziekliefhebbers en ontdek wat je collectie waard is
-            </p>
-            <div className="flex gap-4 justify-center flex-wrap">
+          <div className="text-center space-y-6 max-w-3xl mx-auto">
+            <h2 className={isMobile ? "text-2xl md:text-3xl font-bold" : "text-4xl md:text-5xl font-bold"}>
+              Klaar om te Beginnen?
+            </h2>
+            {!isMobile && (
+              <p className="text-xl text-muted-foreground">
+                Sluit je aan bij duizenden muziekliefhebbers en ontdek wat je collectie waard is
+              </p>
+            )}
+            <div className={isMobile ? "flex flex-col gap-3" : "flex gap-4 justify-center flex-wrap"}>
               <a
                 href="/shop"
-                className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-vinyl-gold to-amber-500 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                className={isMobile ? "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-vinyl-gold to-amber-500 px-6 py-3 text-base font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all" : "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-vinyl-gold to-amber-500 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"}
               >
                 🛍️ Browse Shop
               </a>
               <a
                 href="/music-news"
-                className="inline-flex items-center justify-center rounded-lg border-2 border-primary bg-transparent px-8 py-4 text-lg font-semibold text-primary hover:bg-primary/10 transition-all"
+                className={isMobile ? "inline-flex items-center justify-center rounded-lg border-2 border-primary bg-transparent px-6 py-3 text-base font-semibold text-primary hover:bg-primary/10 transition-all" : "inline-flex items-center justify-center rounded-lg border-2 border-primary bg-transparent px-8 py-4 text-lg font-semibold text-primary hover:bg-primary/10 transition-all"}
               >
                 📰 Lees Nieuws
               </a>
               <a
                 href="/auth"
-                className="inline-flex items-center justify-center rounded-lg border-2 border-vinyl-purple bg-transparent px-8 py-4 text-lg font-semibold text-vinyl-purple hover:bg-vinyl-purple/10 transition-all"
+                className={isMobile ? "inline-flex items-center justify-center rounded-lg border-2 border-vinyl-purple bg-transparent px-6 py-3 text-base font-semibold text-vinyl-purple hover:bg-vinyl-purple/10 transition-all" : "inline-flex items-center justify-center rounded-lg border-2 border-vinyl-purple bg-transparent px-8 py-4 text-lg font-semibold text-vinyl-purple hover:bg-vinyl-purple/10 transition-all"}
               >
                 📸 Scan Gratis
               </a>
@@ -141,8 +175,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      
     </div>
   );
 };

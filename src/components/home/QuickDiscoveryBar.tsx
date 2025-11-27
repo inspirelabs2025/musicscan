@@ -35,8 +35,8 @@ export const QuickDiscoveryBar = () => {
 
   return (
     <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+      <div className="container mx-auto px-4 py-2.5">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
           {actions.map((action) => {
             const Icon = action.icon;
             return (
@@ -44,13 +44,12 @@ export const QuickDiscoveryBar = () => {
                 key={action.label}
                 asChild
                 variant="outline"
-                size="sm"
-                className="flex-shrink-0 group relative overflow-hidden hover:border-primary transition-all"
+                className="flex-shrink-0 group relative overflow-hidden hover:border-primary transition-all h-8 px-2.5 text-xs"
               >
                 <Link to={action.href} className="flex items-center gap-1.5">
                   <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity`} />
                   <Icon className="w-3.5 h-3.5 relative z-10" />
-                  <span className="relative z-10 whitespace-nowrap text-xs">{action.label}</span>
+                  <span className="relative z-10 whitespace-nowrap">{action.label}</span>
                 </Link>
               </Button>
             );

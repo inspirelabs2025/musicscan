@@ -24,12 +24,12 @@ interface RSSItem {
   source: string;
 }
 
-// Nederlandse muzieknieuwssites RSS feeds (updated November 2025 - verified working)
+// Nederlandse muzieknieuwssites RSS feeds (updated November 2025 - music-specific only)
 const RSS_FEEDS = [
   { url: 'https://maxazine.nl/feed/', source: 'Maxazine', category: 'Concert nieuws' },
-  { url: 'https://www.entertainmentbusiness.nl/feed/', source: 'Entertainment Business', category: 'Industry' },
-  { url: 'https://www.ad.nl/show/rss.xml', source: 'AD Show', category: 'Artiest nieuws' },
-  { url: 'https://www.nu.nl/rss/Muziek', source: 'NU.nl Muziek', category: 'Algemeen' },
+  { url: 'https://www.rockportaal.nl/feed/', source: 'Rockportaal', category: 'Album reviews' },
+  { url: 'https://www.musicframes.nl/feed/', source: 'Music Frames', category: 'Album reviews' },
+  { url: 'https://www.artiestennieuws.nl/feed/', source: 'Artiesten Nieuws', category: 'Artiest nieuws' },
 ];
 
 // Helper function to create URL-safe slugs

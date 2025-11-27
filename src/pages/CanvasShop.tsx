@@ -22,8 +22,9 @@ export default function CanvasShop() {
   const [showFeatured, setShowFeatured] = useState(false);
   const [showOnSale, setShowOnSale] = useState(false);
 
-  const { data: allProducts, isLoading } = usePlatformProducts({ 
+  const { data: canvasProducts, isLoading } = usePlatformProducts({ 
     mediaType: 'art',
+    categoryContains: 'CANVAS',
     featured: showFeatured || undefined,
     onSale: showOnSale || undefined,
   });
@@ -31,19 +32,7 @@ export default function CanvasShop() {
   // Get accurate counts from database
   const { data: productCounts } = usePlatformProductCounts();
 
-  // Filter only CANVAS products (check if any category contains 'CANVAS')
-  const canvasProducts = allProducts?.filter(product => 
-    product.categories?.some(cat => cat.toUpperCase().includes('CANVAS'))
-  );
-
-  // Get other products for navigation
-  const metalProducts = allProducts?.filter(product => 
-    !product.categories?.some(cat => cat.toUpperCase().includes('POSTER')) && 
-    !product.categories?.some(cat => cat.toUpperCase().includes('CANVAS'))
-  );
-  const posterProducts = allProducts?.filter(product => 
-    product.categories?.some(cat => cat.toUpperCase().includes('POSTER'))
-  );
+  // Products are already filtered by the hook, no need for client-side filtering
 
   // Filter and sort products
   const filteredProducts = canvasProducts

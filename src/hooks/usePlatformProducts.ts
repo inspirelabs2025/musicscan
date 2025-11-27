@@ -53,6 +53,7 @@ export interface PlatformProduct {
 interface UsePlatformProductsFilters {
   mediaType?: string;
   category?: string;
+  categoryContains?: string; // Filter where any category contains this string (case-insensitive)
   featured?: boolean;
   onSale?: boolean;
   isNew?: boolean;
@@ -79,6 +80,11 @@ export const usePlatformProducts = (filters?: UsePlatformProductsFilters) => {
       
       if (filters?.category) {
         query = query.contains('categories', [filters.category]);
+      }
+      
+      // Filter where categories array contains the exact value
+      if (filters?.categoryContains) {
+        query = query.contains('categories', [filters.categoryContains]);
       }
       
       if (filters?.featured) {

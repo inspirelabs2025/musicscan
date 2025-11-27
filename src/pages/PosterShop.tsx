@@ -22,8 +22,9 @@ export default function PosterShop() {
   const [showFeatured, setShowFeatured] = useState(false);
   const [showOnSale, setShowOnSale] = useState(false);
 
-  const { data: allProducts, isLoading } = usePlatformProducts({ 
+  const { data: posterProducts, isLoading } = usePlatformProducts({ 
     mediaType: 'art',
+    categoryContains: 'POSTER',
     featured: showFeatured || undefined,
     onSale: showOnSale || undefined,
   });
@@ -31,19 +32,9 @@ export default function PosterShop() {
   // Get accurate counts from database
   const { data: productCounts } = usePlatformProductCounts();
 
-  // Filter only POSTER products (check if any category contains 'POSTER')
-  const posterProducts = allProducts?.filter(product => 
-    product.categories?.some(cat => cat.toUpperCase().includes('POSTER'))
-  );
-
-  // Get other products for navigation
-  const metalProducts = allProducts?.filter(product => 
-    !product.categories?.some(cat => cat.toUpperCase().includes('POSTER')) && 
-    !product.categories?.some(cat => cat.toUpperCase().includes('CANVAS'))
-  );
-  const canvasProducts = allProducts?.filter(product => 
-    product.categories?.some(cat => cat.toUpperCase().includes('CANVAS'))
-  );
+  // Products are already filtered by the hook, no need for client-side filtering
+  // Get other product counts for navigation (from counts hook)
+  
 
   // Filter and sort products
   const filteredProducts = posterProducts

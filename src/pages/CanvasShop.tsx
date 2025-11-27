@@ -31,17 +31,18 @@ export default function CanvasShop() {
   // Get accurate counts from database
   const { data: productCounts } = usePlatformProductCounts();
 
-  // Filter only CANVAS products
+  // Filter only CANVAS products (check if any category contains 'CANVAS')
   const canvasProducts = allProducts?.filter(product => 
-    product.categories?.includes('CANVAS')
+    product.categories?.some(cat => cat.toUpperCase().includes('CANVAS'))
   );
 
   // Get other products for navigation
   const metalProducts = allProducts?.filter(product => 
-    !product.categories?.includes('POSTER') && !product.categories?.includes('CANVAS')
+    !product.categories?.some(cat => cat.toUpperCase().includes('POSTER')) && 
+    !product.categories?.some(cat => cat.toUpperCase().includes('CANVAS'))
   );
   const posterProducts = allProducts?.filter(product => 
-    product.categories?.includes('POSTER')
+    product.categories?.some(cat => cat.toUpperCase().includes('POSTER'))
   );
 
   // Filter and sort products

@@ -28,17 +28,18 @@ export const usePlatformProductCounts = () => {
       
       if (error) throw error;
 
-      // Client-side categorization (since categories is an array field)
+      // Client-side categorization (check if any category CONTAINS 'POSTER' or 'CANVAS')
       const metalPrints = allProducts?.filter(p => 
-        !p.categories?.includes('POSTER') && !p.categories?.includes('CANVAS')
+        !p.categories?.some(cat => cat.toUpperCase().includes('POSTER')) && 
+        !p.categories?.some(cat => cat.toUpperCase().includes('CANVAS'))
       ) || [];
       
       const posters = allProducts?.filter(p => 
-        p.categories?.includes('POSTER')
+        p.categories?.some(cat => cat.toUpperCase().includes('POSTER'))
       ) || [];
       
       const canvas = allProducts?.filter(p => 
-        p.categories?.includes('CANVAS')
+        p.categories?.some(cat => cat.toUpperCase().includes('CANVAS'))
       ) || [];
 
       return {

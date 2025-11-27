@@ -50,13 +50,13 @@ const Home = () => {
       <EchoSpotlight />
 
       {/* Metal Print Spotlight - Prominent ART Section */}
-      {!isMobile && <MetalPrintSpotlight />}
+      <MetalPrintSpotlight />
 
       {/* Time Machine Spotlight */}
       <TimeMachineSpotlight />
 
       {/* Daily Music Anecdote */}
-      {!isMobile && <DailyAnecdote />}
+      <DailyAnecdote />
 
       {/* Shop Categories - Compact on mobile */}
       <section className={isMobile ? "py-8 bg-muted/30" : "py-16 bg-muted/30"}>
@@ -96,7 +96,7 @@ const Home = () => {
       <LatestReleasesSection />
 
       {/* Spotify New Releases */}
-      {!isMobile && <SpotifyNewReleasesSection />}
+      <SpotifyNewReleasesSection />
 
       {/* Album Reviews Spotlight */}
       <ReviewsSpotlight />
@@ -124,13 +124,13 @@ const Home = () => {
           <MusicHistorySpotlight />
 
           {/* Featured Photos from FanWall */}
-          {!isMobile && <FeaturedPhotos />}
+          <FeaturedPhotos />
 
           {/* T-shirts Spotlight */}
-          {!isMobile && <TshirtSpotlight />}
+          <TshirtSpotlight />
 
           {/* Podcast Spotlight */}
-          {!isMobile && <PodcastSpotlight />}
+          <PodcastSpotlight />
 
           {/* AI Features - Compact */}
           <AIFeaturesCompact />

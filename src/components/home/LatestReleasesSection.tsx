@@ -2,19 +2,13 @@ import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Music } from 'lucide-react';
+import { Calendar, Music, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 
 export const LatestReleasesSection = () => {
   const isMobile = useIsMobile();
@@ -131,19 +125,9 @@ export const LatestReleasesSection = () => {
         </div>
 
         {isMobile ? (
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-2">
-              {releases.map((release) => (
-                <CarouselItem key={release.id} className="pl-2 basis-[45%]">{renderReleaseCard(release)}</CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+          <div className="grid grid-cols-2 gap-3">
+            {releases.slice(0, 4).map((release) => renderReleaseCard(release))}
+          </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {releases.map((release) => renderReleaseCard(release))}
@@ -151,13 +135,13 @@ export const LatestReleasesSection = () => {
         )}
         
         {/* View All Link */}
-        <div className="text-center mt-8">
-          <Link 
-            to="/public-catalog"
-            className="inline-flex items-center gap-2 text-lg font-semibold text-primary hover:underline"
-          >
-            Bekijk Alle Releases →
-          </Link>
+        <div className="text-center mt-6">
+          <Button asChild variant="outline" size={isMobile ? "default" : "lg"}>
+            <Link to="/public-catalog">
+              Meer Releases
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>

@@ -83,7 +83,7 @@ export const ArtistSearchHero = () => {
           </form>
 
           {/* Feature badges */}
-          <div className="flex flex-wrap gap-3 justify-center items-center pt-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div className="flex flex-wrap gap-2 justify-center items-center pt-2 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             {[
               '🎵 Muziekverhalen',
               '🛍️ Shop Producten', 
@@ -93,7 +93,7 @@ export const ArtistSearchHero = () => {
             ].map((badge, index) => (
               <div
                 key={index}
-                className="px-4 py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 text-sm font-medium hover:border-primary/50 transition-colors"
+                className="px-3 py-1 md:px-4 md:py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 text-xs md:text-sm font-medium hover:border-primary/50 transition-colors"
               >
                 {badge}
               </div>

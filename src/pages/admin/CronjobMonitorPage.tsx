@@ -1,6 +1,8 @@
+import { CronjobDashboard } from "@/components/admin/CronjobDashboard";
 import { CronjobMonitor } from "@/components/admin/CronjobMonitor";
 import { DiscogsQueueMonitor } from "@/components/admin/DiscogsQueueMonitor";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 
 export default function CronjobMonitorPage() {
@@ -23,15 +25,29 @@ export default function CronjobMonitorPage() {
       <div className="space-y-2">
         <h1 className="text-4xl font-bold">Cronjob Monitor</h1>
         <p className="text-muted-foreground">
-          Real-time monitoring van alle cronjobs en queue processen
+          Real-time monitoring van alle {17} scheduled functions en queue processen
         </p>
       </div>
 
-      <CronjobMonitor />
+      <Tabs defaultValue="dashboard" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="legacy">Legacy Monitor</TabsTrigger>
+          <TabsTrigger value="discogs">Discogs Queue</TabsTrigger>
+        </TabsList>
 
-      <div className="pt-8">
-        <DiscogsQueueMonitor />
-      </div>
+        <TabsContent value="dashboard">
+          <CronjobDashboard />
+        </TabsContent>
+
+        <TabsContent value="legacy">
+          <CronjobMonitor />
+        </TabsContent>
+
+        <TabsContent value="discogs">
+          <DiscogsQueueMonitor />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

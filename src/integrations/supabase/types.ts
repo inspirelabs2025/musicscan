@@ -2537,6 +2537,105 @@ export type Database = {
         }
         Relationships: []
       }
+      media_library: {
+        Row: {
+          ai_context_type: string | null
+          ai_description: string | null
+          ai_reasoning: string | null
+          ai_status: string | null
+          ai_tags: string[] | null
+          alternative_artists: string[] | null
+          artist_confidence: number | null
+          created_at: string | null
+          file_name: string
+          file_size: number | null
+          height: number | null
+          id: string
+          manual_artist: string | null
+          manual_tags: string[] | null
+          mime_type: string | null
+          notes: string | null
+          public_url: string
+          recognized_artist: string | null
+          sent_to_buttons: boolean | null
+          sent_to_canvas: boolean | null
+          sent_to_fanwall: boolean | null
+          sent_to_posters: boolean | null
+          sent_to_socks: boolean | null
+          sent_to_tshirts: boolean | null
+          storage_bucket: string | null
+          storage_path: string
+          thumbnail_url: string | null
+          updated_at: string | null
+          user_id: string | null
+          width: number | null
+        }
+        Insert: {
+          ai_context_type?: string | null
+          ai_description?: string | null
+          ai_reasoning?: string | null
+          ai_status?: string | null
+          ai_tags?: string[] | null
+          alternative_artists?: string[] | null
+          artist_confidence?: number | null
+          created_at?: string | null
+          file_name: string
+          file_size?: number | null
+          height?: number | null
+          id?: string
+          manual_artist?: string | null
+          manual_tags?: string[] | null
+          mime_type?: string | null
+          notes?: string | null
+          public_url: string
+          recognized_artist?: string | null
+          sent_to_buttons?: boolean | null
+          sent_to_canvas?: boolean | null
+          sent_to_fanwall?: boolean | null
+          sent_to_posters?: boolean | null
+          sent_to_socks?: boolean | null
+          sent_to_tshirts?: boolean | null
+          storage_bucket?: string | null
+          storage_path: string
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          width?: number | null
+        }
+        Update: {
+          ai_context_type?: string | null
+          ai_description?: string | null
+          ai_reasoning?: string | null
+          ai_status?: string | null
+          ai_tags?: string[] | null
+          alternative_artists?: string[] | null
+          artist_confidence?: number | null
+          created_at?: string | null
+          file_name?: string
+          file_size?: number | null
+          height?: number | null
+          id?: string
+          manual_artist?: string | null
+          manual_tags?: string[] | null
+          mime_type?: string | null
+          notes?: string | null
+          public_url?: string
+          recognized_artist?: string | null
+          sent_to_buttons?: boolean | null
+          sent_to_canvas?: boolean | null
+          sent_to_fanwall?: boolean | null
+          sent_to_posters?: boolean | null
+          sent_to_socks?: boolean | null
+          sent_to_tshirts?: boolean | null
+          storage_bucket?: string | null
+          storage_path?: string
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          width?: number | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string

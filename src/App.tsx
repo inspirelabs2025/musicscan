@@ -153,6 +153,7 @@ import LlmsTxt from "./pages/LlmsTxt";
 import LlmSitemap from "./pages/LlmSitemap";
 import SEOKeywords from "./pages/admin/SEOKeywords";
 import SystemOverview from "./pages/admin/SystemOverview";
+import MediaLibrary from "./pages/admin/MediaLibrary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -374,6 +375,7 @@ const AppContent = () => {
                 <Route path="tshirt-generator" element={<TshirtGenerator />} />
                 <Route path="button-generator" element={<ButtonGenerator />} />
                 <Route path="photo-stylizer" element={<PhotoStylizer />} />
+                <Route path="media-library" element={<MediaLibrary />} />
                 <Route path="singles-importer" element={<SinglesImporterPage />} />
                 <Route path="artist-stories-generator" element={<ArtistStoriesGenerator />} />
                 <Route path="news-rss-manager" element={<NewsRssManager />} />

@@ -1,6 +1,7 @@
 import { useSpotifyNewReleases } from '@/hooks/useSpotifyNewReleases';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Music2, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Music2, ExternalLink, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -52,7 +53,7 @@ export const SpotifyNewReleasesSection = () => {
           <p className="text-xl text-muted-foreground">Verse album releases</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {featuredReleases.map((release) => (
             <a
               key={release.id}
@@ -93,6 +94,23 @@ export const SpotifyNewReleasesSection = () => {
               </div>
             </a>
           ))}
+        </div>
+
+        <div className="flex justify-center mt-8">
+          <Button
+            asChild
+            variant="outline"
+            className="group"
+          >
+            <a
+              href="https://open.spotify.com/genre/new-releases"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Meer releases
+              <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </a>
+          </Button>
         </div>
       </div>
     </section>

@@ -4,6 +4,13 @@ import { Music2, Sparkles, Heart, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import echoAvatar from '@/assets/echo-avatar.png';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export function EchoSpotlight() {
   const isMobile = useIsMobile();
@@ -31,36 +38,81 @@ export function EchoSpotlight() {
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {/* Left: Features & Content */}
             <div className="flex flex-col justify-center space-y-6">
-              {/* Features list */}
-              <div className={isMobile ? "space-y-3" : "space-y-4"}>
-                <div className="flex items-center gap-3">
-                  <div className={isMobile ? "w-8 h-8 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center flex-shrink-0" : "w-10 h-10 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center flex-shrink-0"}>
-                    <Sparkles className={isMobile ? "w-4 h-4 text-white" : "w-5 h-5 text-white"} />
+              {/* Features - Carousel on mobile, List on desktop */}
+              {isMobile ? (
+                <Carousel
+                  opts={{
+                    align: "start",
+                    loop: true,
+                  }}
+                  className="w-full"
+                >
+                  <CarouselContent className="-ml-2">
+                    <CarouselItem className="pl-2 basis-[85%]">
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 backdrop-blur-sm">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center flex-shrink-0">
+                          <Sparkles className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold">Verken Muziekgeschiedenis</p>
+                        </div>
+                      </div>
+                    </CarouselItem>
+                    <CarouselItem className="pl-2 basis-[85%]">
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 backdrop-blur-sm">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-gold to-echo-lavender flex items-center justify-center flex-shrink-0">
+                          <BookOpen className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold">Album Verhalen & Context</p>
+                        </div>
+                      </div>
+                    </CarouselItem>
+                    <CarouselItem className="pl-2 basis-[85%]">
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 backdrop-blur-sm">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center flex-shrink-0">
+                          <Heart className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold">Deel Jouw Herinneringen</p>
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  </CarouselContent>
+                  <CarouselPrevious className="hidden" />
+                  <CarouselNext className="hidden" />
+                </Carousel>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold">Verken Muziekgeschiedenis</p>
+                      <p className="text-sm text-muted-foreground">Van jazz tot punk, ontdek de verhalen achter genres</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className={isMobile ? "text-base font-semibold" : "text-lg font-semibold"}>Verken Muziekgeschiedenis</p>
-                    {!isMobile && <p className="text-sm text-muted-foreground">Van jazz tot punk, ontdek de verhalen achter genres</p>}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-gold to-echo-lavender flex items-center justify-center flex-shrink-0">
+                      <BookOpen className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold">Album Verhalen & Context</p>
+                      <p className="text-sm text-muted-foreground">Sfeer, betekenis en culturele impact van elke plaat</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center flex-shrink-0">
+                      <Heart className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold">Deel Jouw Herinneringen</p>
+                      <p className="text-sm text-muted-foreground">Emotionele connectie met muziek die jou raakt</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className={isMobile ? "w-8 h-8 rounded-full bg-gradient-to-br from-echo-gold to-echo-lavender flex items-center justify-center flex-shrink-0" : "w-10 h-10 rounded-full bg-gradient-to-br from-echo-gold to-echo-lavender flex items-center justify-center flex-shrink-0"}>
-                    <BookOpen className={isMobile ? "w-4 h-4 text-white" : "w-5 h-5 text-white"} />
-                  </div>
-                  <div>
-                    <p className={isMobile ? "text-base font-semibold" : "text-lg font-semibold"}>Album Verhalen & Context</p>
-                    {!isMobile && <p className="text-sm text-muted-foreground">Sfeer, betekenis en culturele impact van elke plaat</p>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className={isMobile ? "w-8 h-8 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center flex-shrink-0" : "w-10 h-10 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center flex-shrink-0"}>
-                    <Heart className={isMobile ? "w-4 h-4 text-white" : "w-5 h-5 text-white"} />
-                  </div>
-                  <div>
-                    <p className={isMobile ? "text-base font-semibold" : "text-lg font-semibold"}>Deel Jouw Herinneringen</p>
-                    {!isMobile && <p className="text-sm text-muted-foreground">Emotionele connectie met muziek die jou raakt</p>}
-                  </div>
-                </div>
-              </div>
+              )}
 
               {/* Info Card - Hidden on mobile */}
               {!isMobile && (

@@ -26,25 +26,132 @@ export interface CronjobStats {
   last_status: string | null;
 }
 
-// All scheduled cronjobs from config.toml
+// All scheduled cronjobs from config.toml with detailed descriptions
 export const SCHEDULED_CRONJOBS = [
-  { name: 'bulk-poster-processor', schedule: '*/10 * * * *', description: 'Verwerkt poster queue elke 10 minuten', trackingTable: 'batch_processing_status', trackingFilter: { process_type: 'poster_generation' } },
-  { name: 'discogs-lp-crawler', schedule: '0 * * * *', description: 'Crawlt Discogs LP releases elk uur', trackingTable: 'discogs_import_log' },
-  { name: 'latest-discogs-news', schedule: '0 */3 * * *', description: 'Haalt laatste Discogs nieuws elke 3 uur', trackingTable: 'news_generation_logs', trackingFilter: { generation_type: 'discogs_news' } },
-  { name: 'batch-blog-processor', schedule: '*/10 * * * *', description: 'Verwerkt blog batch elke 10 minuten', trackingTable: 'batch_processing_status', trackingFilter: { process_type: 'blog_generation' } },
-  { name: 'indexnow-processor', schedule: '*/15 * * * *', description: 'Verwerkt IndexNow queue elke 15 minuten', trackingTable: 'indexnow_queue' },
-  { name: 'sitemap-queue-processor', schedule: '*/3 * * * *', description: 'Verwerkt sitemap queue elke 3 minuten', trackingTable: 'sitemap_regeneration_log' },
-  { name: 'indexnow-cron', schedule: '*/15 * * * *', description: 'IndexNow cron elke 15 minuten', trackingTable: 'indexnow_submissions' },
-  { name: 'refresh-featured-photos', schedule: '0 */6 * * *', description: 'Refresht featured photos elke 6 uur' },
-  { name: 'daily-anecdote-generator', schedule: '5 6 * * *', description: 'Genereert dagelijkse anekdote om 06:05 UTC', trackingTable: 'news_generation_logs', trackingFilter: { generation_type: 'daily_anecdote' } },
-  { name: 'generate-daily-music-history', schedule: '0 5 * * *', description: 'Genereert dagelijkse muziek historie om 05:00 UTC', trackingTable: 'news_generation_logs', trackingFilter: { generation_type: 'music_history' } },
-  { name: 'singles-batch-processor', schedule: '*/15 * * * *', description: 'Verwerkt singles batch elke 15 minuten', trackingTable: 'batch_processing_status', trackingFilter: { process_type: 'singles_batch' } },
-  { name: 'artist-stories-batch-processor', schedule: '*/20 * * * *', description: 'Verwerkt artist stories elke 20 minuten', trackingTable: 'batch_processing_status', trackingFilter: { process_type: 'artist_stories' } },
-  { name: 'generate-llm-sitemap', schedule: '0 4 * * *', description: 'Genereert LLM sitemap om 04:00 UTC' },
-  { name: 'auto-generate-keywords', schedule: '30 3 * * *', description: 'Auto-genereert keywords om 03:30 UTC' },
-  { name: 'generate-curated-artists', schedule: '0 2 * * *', description: 'Genereert curated artists om 02:00 UTC' },
-  { name: 'daily-artist-stories-generator', schedule: '0 7 * * *', description: 'Genereert dagelijkse artist stories om 07:00 UTC', trackingTable: 'news_generation_logs', trackingFilter: { generation_type: 'artist_stories' } },
-  { name: 'rss-news-rewriter', schedule: '0 8,14,20 * * *', description: 'Herschrijft RSS nieuws 3x per dag', trackingTable: 'news_generation_logs', trackingFilter: { generation_type: 'rss_rewrite' } },
+  { 
+    name: 'bulk-poster-processor', 
+    schedule: '*/10 * * * *', 
+    description: 'Genereert album artwork posters voor de webshop. Verwerkt items uit de poster queue en maakt printklare designs.',
+    category: 'Content Generatie',
+    trackingTable: 'batch_processing_status', 
+    trackingFilter: { process_type: 'poster_generation' } 
+  },
+  { 
+    name: 'discogs-lp-crawler', 
+    schedule: '0 * * * *', 
+    description: 'Haalt nieuwe vinyl releases op van Discogs API. Zoekt naar releases van curated artists en voegt ze toe aan de import queue.',
+    category: 'Data Import',
+    trackingTable: 'discogs_import_log' 
+  },
+  { 
+    name: 'latest-discogs-news', 
+    schedule: '0 */3 * * *', 
+    description: 'Genereert nieuwsartikelen over trending Discogs releases. Analyseert prijstrends en schrijft SEO-geoptimaliseerde content.',
+    category: 'Content Generatie',
+    trackingTable: 'news_generation_logs', 
+    trackingFilter: { generation_type: 'discogs_news' } 
+  },
+  { 
+    name: 'batch-blog-processor', 
+    schedule: '*/10 * * * *', 
+    description: 'Verwerkt de blog generatie queue. Maakt uitgebreide blogposts voor vinyl/CD releases met AI-gegenereerde content.',
+    category: 'Content Generatie',
+    trackingTable: 'batch_processing_status', 
+    trackingFilter: { process_type: 'blog_generation' } 
+  },
+  { 
+    name: 'indexnow-processor', 
+    schedule: '*/15 * * * *', 
+    description: 'Verwerkt URLs uit de IndexNow queue. Stuurt nieuwe/gewijzigde paginas naar zoekmachines voor snellere indexering.',
+    category: 'SEO',
+    trackingTable: 'indexnow_queue' 
+  },
+  { 
+    name: 'sitemap-queue-processor', 
+    schedule: '*/3 * * * *', 
+    description: 'Regenereert sitemaps wanneer content wijzigt. Houdt XML sitemaps up-to-date voor optimale SEO crawling.',
+    category: 'SEO',
+    trackingTable: 'sitemap_regeneration_log' 
+  },
+  { 
+    name: 'indexnow-cron', 
+    schedule: '*/15 * * * *', 
+    description: 'Batch verzending naar IndexNow API. Bundelt meerdere URLs en submit ze naar Bing, Yandex en andere zoekmachines.',
+    category: 'SEO',
+    trackingTable: 'indexnow_submissions' 
+  },
+  { 
+    name: 'refresh-featured-photos', 
+    schedule: '0 */6 * * *', 
+    description: 'Ververst de materialized view voor uitgelichte fotos. Berekent trending fotos op basis van likes, views en recency.',
+    category: 'Community'
+  },
+  { 
+    name: 'daily-anecdote-generator', 
+    schedule: '5 6 * * *', 
+    description: 'Genereert een dagelijkse muziek anekdote met AI. Creëert interessante feitjes over artiesten, albums en muziekgeschiedenis.',
+    category: 'Content Generatie',
+    trackingTable: 'news_generation_logs', 
+    trackingFilter: { generation_type: 'daily_anecdote' } 
+  },
+  { 
+    name: 'generate-daily-music-history', 
+    schedule: '0 5 * * *', 
+    description: 'Schrijft "Op deze dag in de muziekgeschiedenis" artikelen. Haalt historische events op en genereert rijke content.',
+    category: 'Content Generatie',
+    trackingTable: 'news_generation_logs', 
+    trackingFilter: { generation_type: 'music_history' } 
+  },
+  { 
+    name: 'singles-batch-processor', 
+    schedule: '*/15 * * * *', 
+    description: 'Verwerkt singles/7" vinyl releases. Importeert metadata van Discogs en genereert productpaginas voor de webshop.',
+    category: 'Data Import',
+    trackingTable: 'batch_processing_status', 
+    trackingFilter: { process_type: 'singles_batch' } 
+  },
+  { 
+    name: 'artist-stories-batch-processor', 
+    schedule: '*/20 * * * *', 
+    description: 'Genereert uitgebreide artist stories. Maakt biografieën, discografieën en culturele impact analyses met AI.',
+    category: 'Content Generatie',
+    trackingTable: 'batch_processing_status', 
+    trackingFilter: { process_type: 'artist_stories' } 
+  },
+  { 
+    name: 'generate-llm-sitemap', 
+    schedule: '0 4 * * *', 
+    description: 'Maakt een speciale sitemap voor AI/LLM crawlers. Optimaliseert content structuur voor ChatGPT, Claude en andere AI systemen.',
+    category: 'SEO'
+  },
+  { 
+    name: 'auto-generate-keywords', 
+    schedule: '30 3 * * *', 
+    description: 'Analyseert content en genereert relevante SEO keywords. Verbetert zoekbaarheid door automatische tag-suggesties.',
+    category: 'SEO'
+  },
+  { 
+    name: 'generate-curated-artists', 
+    schedule: '0 2 * * *', 
+    description: 'Ontdekt en curated nieuwe interessante artiesten. Analyseert trends en voegt artiesten toe aan de crawl-lijst.',
+    category: 'Data Import'
+  },
+  { 
+    name: 'daily-artist-stories-generator', 
+    schedule: '0 7 * * *', 
+    description: 'Selecteert dagelijks artiesten voor story generatie. Prioriteert op basis van populariteit en ontbrekende content.',
+    category: 'Content Generatie',
+    trackingTable: 'news_generation_logs', 
+    trackingFilter: { generation_type: 'artist_stories' } 
+  },
+  { 
+    name: 'rss-news-rewriter', 
+    schedule: '0 8,14,20 * * *', 
+    description: 'Herschrijft externe muzieknieuws RSS feeds. Maakt unieke, SEO-vriendelijke versies van trending muzieknieuws.',
+    category: 'Content Generatie',
+    trackingTable: 'news_generation_logs', 
+    trackingFilter: { generation_type: 'rss_rewrite' } 
+  },
 ] as const;
 
 export const useCronjobExecutionLog = () => {

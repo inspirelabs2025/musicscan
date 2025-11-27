@@ -241,7 +241,7 @@ export const CronjobDashboard = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[40px]"></TableHead>
-                  <TableHead>Function</TableHead>
+                  <TableHead className="w-[40%]">Function & Beschrijving</TableHead>
                   <TableHead>Schedule</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Laatste Run</TableHead>
@@ -268,12 +268,23 @@ export const CronjobDashboard = () => {
                             </Button>
                           </CollapsibleTrigger>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(job.stats?.last_status)}
-                            <div>
-                              <div className="font-medium">{job.name}</div>
-                              <div className="text-xs text-muted-foreground">{job.description}</div>
+                        <TableCell className="max-w-md">
+                          <div className="flex items-start gap-3">
+                            <div className="mt-1">
+                              {getStatusIcon(job.stats?.last_status)}
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{job.name}</span>
+                                {'category' in job && (
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                    {(job as any).category}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground leading-relaxed">
+                                {job.description}
+                              </div>
                             </div>
                           </div>
                         </TableCell>

@@ -196,20 +196,20 @@ export const useCronjobExecutionLog = () => {
     refetchInterval: 10000,
   });
 
-  // Fetch sitemap regeneration stats
+  // Fetch sitemap regeneration stats - uses duration_ms column
   const { data: sitemapStats } = useQuery({
     queryKey: ['cronjob-sitemap-stats'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('sitemap_regeneration_log')
-        .select('status, created_at, processing_time_ms')
+        .select('status, created_at, duration_ms')
         .order('created_at', { ascending: false })
         .limit(100);
       
       if (error) throw error;
       
       const successCount = data.filter(d => d.status === 'success').length;
-      const avgTime = data.filter(d => d.processing_time_ms).reduce((acc, d) => acc + (d.processing_time_ms || 0), 0) / Math.max(1, data.filter(d => d.processing_time_ms).length);
+      const avgTime = data.filter(d => d.duration_ms).reduce((acc, d) => acc + (d.duration_ms || 0), 0) / Math.max(1, data.filter(d => d.duration_ms).length);
       
       return {
         total: data.length,
@@ -507,7 +507,7 @@ export const useCronjobExecutionLog = () => {
     }
 
     // News generation related cronjobs - map to actual 'source' values in DB
-    if (newsStats) {
+    if (newsStats?.bySource) {
       // Map cronjob names to the actual 'source' values stored in news_generation_logs
       const sourceMap: Record<string, string> = {
         'generate-daily-music-history': 'daily-news-update',

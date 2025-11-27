@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,9 +17,11 @@ import {
   Sparkles,
   Image as ImageIcon,
   Send,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
 import { useMediaLibrary, type MediaLibraryItem, type ProductType } from '@/hooks/useMediaLibrary';
+import { usePhotoBatchProcessor } from '@/hooks/usePhotoBatchProcessor';
 import { MediaLibraryUploader } from '@/components/admin/MediaLibraryUploader';
 import { MediaLibraryGrid } from '@/components/admin/MediaLibraryGrid';
 import { MediaLibraryDetail } from '@/components/admin/MediaLibraryDetail';
@@ -38,7 +39,6 @@ const productTypes: { key: ProductType; label: string; emoji: string }[] = [
 
 const MediaLibrary = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const {
     items,
     isLoading,
@@ -52,6 +52,8 @@ const MediaLibrary = () => {
     sendToQueue,
     isSendingToQueue
   } = useMediaLibrary();
+  
+  const { startBatch, isProcessing: isStylizerProcessing } = usePhotoBatchProcessor();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,8 +89,8 @@ const MediaLibrary = () => {
     }
   };
 
-  // Open send dialog or navigate to stylizer
-  const handleOpenSendDialog = (productType: ProductType) => {
+  // Open send dialog or start stylizer batch automatically
+  const handleOpenSendDialog = async (productType: ProductType) => {
     const selectedItems = items.filter(i => selectedIds.includes(i.id));
     if (selectedItems.length === 0) {
       toast({
@@ -99,7 +101,7 @@ const MediaLibrary = () => {
       return;
     }
     
-    // For stylizer, navigate directly with the image URL
+    // For stylizer, start batch processing automatically without navigation
     if (productType === 'stylizer') {
       if (selectedItems.length > 1) {
         toast({
@@ -109,16 +111,29 @@ const MediaLibrary = () => {
         });
         return;
       }
+      
       const item = selectedItems[0];
-      const artistName = item.manual_artist || item.recognized_artist || '';
-      // Navigate to photo stylizer with image URL as state
-      navigate('/admin/photo-stylizer', { 
-        state: { 
-          imageUrl: item.public_url,
-          artistName: artistName,
-          fromMediaLibrary: true
-        } 
-      });
+      const artistName = item.manual_artist || item.recognized_artist || 'Onbekende Artiest';
+      const title = item.file_name.replace(/\.[^/.]+$/, ''); // Remove file extension
+      
+      try {
+        // Start batch processing automatically
+        await startBatch(
+          item.public_url,
+          artistName,
+          title,
+          `Automatisch gegenereerd vanuit Media Library`
+        );
+        
+        // Mark as sent to queue
+        await sendToQueue({ items: [item], productType: 'posters' });
+        
+        // Clear selection
+        setSelectedIds([]);
+        
+      } catch (error) {
+        console.error('Stylizer batch failed:', error);
+      }
       return;
     }
     
@@ -303,10 +318,13 @@ const MediaLibrary = () => {
                 <Button
                   key={pt.key}
                   size="sm"
-                  variant="outline"
+                  variant={pt.key === 'stylizer' ? 'default' : 'outline'}
                   onClick={() => handleOpenSendDialog(pt.key)}
-                  disabled={isSendingToQueue}
+                  disabled={isSendingToQueue || (pt.key === 'stylizer' && isStylizerProcessing)}
                 >
+                  {pt.key === 'stylizer' && isStylizerProcessing ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : null}
                   {pt.emoji} {pt.label}
                 </Button>
               ))}

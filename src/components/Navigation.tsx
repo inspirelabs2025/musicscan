@@ -41,6 +41,7 @@ const verhalenMenuItems = [
   { title: "Singles", url: "/singles", icon: Music },
   { title: "Artiesten", url: "/artists", icon: Users },
   { title: "Anekdotes", url: "/anekdotes", icon: BookOpen },
+  { title: "FanWall", url: "/fanwall", icon: Images },
   { title: "Nieuws", url: "/nieuws", icon: Newspaper },
   { title: "Nieuwe Releases", url: "/releases", icon: Music },
   { title: "Podcasts", url: "/podcasts", icon: Headphones },

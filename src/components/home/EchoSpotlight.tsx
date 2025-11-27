@@ -140,7 +140,7 @@ export function EchoSpotlight() {
               )}
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex justify-center sm:justify-start">
                 <Button 
                   asChild 
                   size={isMobile ? "default" : "lg"}

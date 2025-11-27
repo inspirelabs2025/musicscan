@@ -31,7 +31,8 @@ export const MusicHistorySpotlight = () => {
       const monthDay = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       console.log('🎵 Fetching music history for month-day:', monthDay);
       
-      const { data, error } = await supabase
+      // First try to get events for today's date
+      const { data: todayData, error: todayError } = await supabase
         .from('time_machine_events')
         .select('*')
         .eq('is_published', true)
@@ -39,24 +40,48 @@ export const MusicHistorySpotlight = () => {
         .order('concert_date', { ascending: false })
         .limit(10);
 
-      if (error) {
-        console.error('❌ Error fetching music history:', error);
-        throw error;
+      if (todayError) {
+        console.error('❌ Error fetching music history:', todayError);
+        throw todayError;
       }
       
-      console.log('✅ Music history events:', data?.length || 0, 'events found');
-      return data as TimeMachineEvent[] || [];
+      // If we have events for today, return them
+      if (todayData && todayData.length > 0) {
+        console.log('✅ Music history events for today:', todayData.length, 'events found');
+        return { events: todayData as TimeMachineEvent[], isToday: true };
+      }
+      
+      // Fallback: get recent/featured events
+      console.log('📅 No events for today, fetching recent events');
+      const { data: recentData, error: recentError } = await supabase
+        .from('time_machine_events')
+        .select('*')
+        .eq('is_published', true)
+        .order('concert_date', { ascending: false })
+        .limit(6);
+
+      if (recentError) {
+        console.error('❌ Error fetching recent music history:', recentError);
+        throw recentError;
+      }
+      
+      console.log('✅ Recent music history events:', recentData?.length || 0, 'events found');
+      return { events: recentData as TimeMachineEvent[] || [], isToday: false };
     }
   });
 
-  console.log('MusicHistorySpotlight render:', { isLoading, hasData: !!events && events.length > 0, error });
+  const eventList = events?.events || [];
+  const isToday = events?.isToday ?? false;
+  
+  console.log('MusicHistorySpotlight render:', { isLoading, hasData: eventList.length > 0, isToday, error });
 
-  if (isLoading || !events || events.length === 0) {
+  if (isLoading || eventList.length === 0) {
     return null;
   }
 
-  const previewEvents = isMobile ? events.slice(0, 4) : events.slice(0, 2);
-  const totalEvents = events.length;
+  const previewEvents = isMobile ? eventList.slice(0, 4) : eventList.slice(0, 2);
+  const totalEvents = eventList.length;
+  const sectionTitle = isToday ? 'Vandaag in de Muziekgeschiedenis' : 'Muziekgeschiedenis Highlights';
 
   // Mobile compact version with slider
   if (isMobile) {
@@ -67,7 +92,7 @@ export const MusicHistorySpotlight = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-bold">Vandaag in de Muziekgeschiedenis</h2>
+              <h2 className="text-lg font-bold">{sectionTitle}</h2>
             </div>
             <Button
               variant="ghost"
@@ -123,9 +148,9 @@ export const MusicHistorySpotlight = () => {
   return (
     <section className="container mx-auto px-4 py-12">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold mb-2">Vandaag in de Muziekgeschiedenis</h2>
+        <h2 className="text-3xl font-bold mb-2">{sectionTitle}</h2>
         <p className="text-muted-foreground">
-          Ontdek iconische concerten die op deze dag plaatsvonden
+          {isToday ? 'Ontdek iconische concerten die op deze dag plaatsvonden' : 'Ontdek iconische concerten uit de muziekgeschiedenis'}
         </p>
       </div>
 

@@ -24,12 +24,13 @@ interface RSSItem {
   source: string;
 }
 
-// Nederlandse muzieknieuwssites RSS feeds
+// Nederlandse muzieknieuwssites RSS feeds (updated November 2025)
 const RSS_FEEDS = [
-  { url: 'https://3voor12.vpro.nl/feed.xml', source: '3voor12', category: 'Algemeen' },
-  { url: 'https://www.musicmaker.nl/feed/', source: 'Musicmaker', category: 'Industry' },
-  { url: 'https://feeds.feedburner.com/oor-magazine', source: 'Oor Magazine', category: 'Reviews' },
   { url: 'https://maxazine.nl/feed/', source: 'Maxazine', category: 'Concert nieuws' },
+  { url: 'https://www.festivalinfo.nl/rss/', source: 'FestivalInfo', category: 'Festival nieuws' },
+  { url: 'https://www.nporadio2.nl/rss/nieuws', source: 'NPO Radio 2', category: 'Algemeen' },
+  { url: 'https://www.musicmeter.nl/rss/nieuws', source: 'MusicMeter', category: 'Reviews' },
+  { url: 'https://www.hln.be/showbiz-rss.xml', source: 'HLN', category: 'artiest nieuws' },
 ];
 
 // Helper function to create URL-safe slugs
@@ -184,7 +185,7 @@ async function generateEnhancedContent(topic: string, description: string, sourc
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-large-128k-online',
+        model: 'sonar-pro',
         messages: [
           {
             role: 'system',

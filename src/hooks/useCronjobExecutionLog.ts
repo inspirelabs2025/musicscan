@@ -365,6 +365,44 @@ export const useCronjobExecutionLog = () => {
     refetchInterval: 60000,
   });
 
+  // Fetch cronjob execution log (for functions that use direct logging)
+  const { data: executionLogStats } = useQuery({
+    queryKey: ['cronjob-execution-log-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cronjob_execution_log')
+        .select('*')
+        .order('started_at', { ascending: false })
+        .limit(200);
+      
+      if (error) throw error;
+      
+      // Group by function_name
+      const byFunction: Record<string, { total: number; success: number; failed: number; lastRun: string | null; lastStatus: string | null; avgExecutionTime: number | null; itemsProcessed: number }> = {};
+      data.forEach(item => {
+        const fn = item.function_name;
+        if (!byFunction[fn]) {
+          byFunction[fn] = { total: 0, success: 0, failed: 0, lastRun: null, lastStatus: null, avgExecutionTime: null, itemsProcessed: 0 };
+        }
+        byFunction[fn].total++;
+        if (item.status === 'success') {
+          byFunction[fn].success++;
+        } else if (item.status === 'error') {
+          byFunction[fn].failed++;
+        }
+        if (!byFunction[fn].lastRun) {
+          byFunction[fn].lastRun = item.started_at;
+          byFunction[fn].lastStatus = item.status;
+          byFunction[fn].avgExecutionTime = item.execution_time_ms;
+          byFunction[fn].itemsProcessed = item.items_processed || 0;
+        }
+      });
+      
+      return { byFunction, raw: data };
+    },
+    refetchInterval: 30000,
+  });
+
   // Manual trigger mutation
   const triggerCronjob = useMutation({
     mutationFn: async (functionName: string) => {
@@ -383,6 +421,7 @@ export const useCronjobExecutionLog = () => {
       queryClient.invalidateQueries({ queryKey: ['cronjob-artist-stories-stats'] });
       queryClient.invalidateQueries({ queryKey: ['cronjob-anecdote-stats'] });
       queryClient.invalidateQueries({ queryKey: ['cronjob-curated-artists-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['cronjob-execution-log-stats'] });
     }
   });
 
@@ -401,6 +440,9 @@ export const useCronjobExecutionLog = () => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'indexnow_queue' }, () => {
         queryClient.invalidateQueries({ queryKey: ['cronjob-indexnow-stats'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cronjob_execution_log' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['cronjob-execution-log-stats'] });
       })
       .subscribe();
 
@@ -573,6 +615,29 @@ export const useCronjobExecutionLog = () => {
       };
     }
 
+    // Functions that use direct cronjob_execution_log logging
+    const directLoggedFunctions = [
+      'generate-llm-sitemap',
+      'auto-generate-keywords',
+      'refresh-featured-photos',
+    ];
+    
+    if (directLoggedFunctions.includes(job.name) && executionLogStats?.byFunction) {
+      const fnStats = executionLogStats.byFunction[job.name];
+      if (fnStats) {
+        stats = {
+          function_name: job.name,
+          total_runs: fnStats.total,
+          successful_runs: fnStats.success,
+          failed_runs: fnStats.failed,
+          running_count: 0,
+          avg_execution_time_ms: fnStats.avgExecutionTime,
+          last_run_at: fnStats.lastRun,
+          last_status: fnStats.lastStatus,
+        };
+      }
+    }
+
     return {
       ...job,
       stats,
@@ -606,6 +671,7 @@ export const useCronjobExecutionLog = () => {
       artistStoriesStats,
       anecdoteStats,
       curatedArtistsStats,
+      executionLogStats,
     }
   };
 };

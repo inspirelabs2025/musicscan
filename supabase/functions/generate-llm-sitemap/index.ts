@@ -36,13 +36,27 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+
+  // Log start of execution
+  let logId: string | null = null;
+  try {
+    const { data: logData } = await supabaseClient.rpc('log_cronjob_start', {
+      p_function_name: 'generate-llm-sitemap',
+      p_metadata: { triggered_at: new Date().toISOString() }
+    });
+    logId = logData;
+    console.log('[LLM-Sitemap] Started execution, log ID:', logId);
+  } catch (logError) {
+    console.warn('[LLM-Sitemap] Could not log start:', logError);
+  }
+
   try {
     console.log('[LLM-Sitemap] Generating LLM-optimized sitemap...');
-
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
 
     const urls: SitemapUrl[] = [];
     
@@ -144,7 +158,29 @@ Deno.serve(async (req) => {
 
     // Store generation timestamp for monitoring
     const generationTime = new Date().toISOString();
-    console.log(`[LLM-Sitemap] Completed at: ${generationTime}`);
+    const executionTimeMs = Date.now() - startTime;
+    console.log(`[LLM-Sitemap] Completed at: ${generationTime} (${executionTimeMs}ms)`);
+
+    // Log successful completion
+    if (logId) {
+      try {
+        await supabaseClient.rpc('log_cronjob_complete', {
+          p_log_id: logId,
+          p_status: 'success',
+          p_items_processed: urls.length,
+          p_metadata: {
+            blogs: blogs?.length || 0,
+            stories: stories?.length || 0,
+            artists: artists?.length || 0,
+            anecdotes: anecdotes?.length || 0,
+            total_urls: urls.length
+          }
+        });
+        console.log('[LLM-Sitemap] Logged successful completion');
+      } catch (logError) {
+        console.warn('[LLM-Sitemap] Could not log completion:', logError);
+      }
+    }
 
     return new Response(sitemapXML, {
       headers: {
@@ -158,6 +194,21 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('[LLM-Sitemap] Error:', error);
+    
+    // Log error
+    if (logId) {
+      try {
+        await supabaseClient.rpc('log_cronjob_complete', {
+          p_log_id: logId,
+          p_status: 'error',
+          p_items_processed: 0,
+          p_error_message: error instanceof Error ? error.message : 'Unknown error'
+        });
+      } catch (logError) {
+        console.warn('[LLM-Sitemap] Could not log error:', logError);
+      }
+    }
+    
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       {

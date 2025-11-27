@@ -24,12 +24,18 @@ interface RSSItem {
   source: string;
 }
 
-// Nederlandse muzieknieuwssites RSS feeds (updated November 2025 - music-specific only)
-const RSS_FEEDS = [
-  { url: 'https://maxazine.nl/feed/', source: 'Maxazine', category: 'Concert nieuws' },
-  { url: 'https://www.rockportaal.nl/feed/', source: 'Rockportaal', category: 'Album reviews' },
-  { url: 'https://www.musicframes.nl/feed/', source: 'Music Frames', category: 'Album reviews' },
-  { url: 'https://www.artiestennieuws.nl/feed/', source: 'Artiesten Nieuws', category: 'Artiest nieuws' },
+interface RSSFeed {
+  feed_url: string;
+  feed_name: string;
+  category: string;
+}
+
+// Fallback feeds if database is empty
+const FALLBACK_FEEDS: RSSFeed[] = [
+  { feed_url: 'https://maxazine.nl/feed/', feed_name: 'Maxazine', category: 'Concert nieuws' },
+  { feed_url: 'https://www.rockportaal.nl/feed/', feed_name: 'Rockportaal', category: 'Album reviews' },
+  { feed_url: 'https://www.musicframes.nl/feed/', feed_name: 'Music Frames', category: 'Album reviews' },
+  { feed_url: 'https://www.artiestennieuws.nl/feed/', feed_name: 'Artiesten Nieuws', category: 'Artiest nieuws' },
 ];
 
 // Helper function to create URL-safe slugs
@@ -261,6 +267,21 @@ async function logToDatabase(supabase: any, source: string, status: string, item
   }
 }
 
+// Update feed last_fetched_at timestamp
+async function updateFeedTimestamp(supabase: any, feedUrl: string, articlesCount: number) {
+  try {
+    await supabase
+      .from('news_rss_feeds')
+      .update({ 
+        last_fetched_at: new Date().toISOString(),
+        articles_fetched_count: articlesCount
+      })
+      .eq('feed_url', feedUrl);
+  } catch (error) {
+    console.error('Failed to update feed timestamp:', error);
+  }
+}
+
 serve(async (req) => {
   const startTime = Date.now();
   
@@ -277,12 +298,34 @@ serve(async (req) => {
     
     console.log('🎵 Starting enhanced Dutch music news generation...');
     
-    // Step 1: Fetch from multiple Dutch RSS feeds IN PARALLEL
-    console.log('📡 Fetching Dutch music RSS feeds in parallel...');
-    const rssPromises = RSS_FEEDS.map(feed => 
-      parseRSSFeed(feed.url, feed.source, feed.category)
+    // Step 1: Fetch active RSS feeds from database
+    console.log('📋 Fetching active RSS feeds from database...');
+    const { data: dbFeeds, error: feedsError } = await supabase
+      .from('news_rss_feeds')
+      .select('feed_url, feed_name, category')
+      .eq('is_active', true);
+    
+    // Use database feeds or fallback to hardcoded feeds
+    let feedsToUse: RSSFeed[] = [];
+    if (dbFeeds && dbFeeds.length > 0) {
+      feedsToUse = dbFeeds;
+      console.log(`📰 Using ${feedsToUse.length} feeds from database`);
+    } else {
+      feedsToUse = FALLBACK_FEEDS;
+      console.log(`📰 Using ${feedsToUse.length} fallback feeds (no active feeds in database)`);
+    }
+    
+    // Step 2: Fetch from RSS feeds IN PARALLEL
+    console.log('📡 Fetching RSS feeds in parallel...');
+    const rssPromises = feedsToUse.map(feed => 
+      parseRSSFeed(feed.feed_url, feed.feed_name, feed.category)
+        .then(items => {
+          // Update feed timestamp with count
+          updateFeedTimestamp(supabase, feed.feed_url, items.length);
+          return items;
+        })
         .catch(error => {
-          console.error(`Failed to fetch ${feed.source}:`, error);
+          console.error(`Failed to fetch ${feed.feed_name}:`, error);
           return [];
         })
     );
@@ -298,7 +341,7 @@ serve(async (req) => {
       'rss-feeds',
       allRSSItems.length > 0 ? 'success' : 'no_items',
       allRSSItems.length,
-      RSS_FEEDS.length - rssResults.filter(r => r.length > 0).length,
+      feedsToUse.length - rssResults.filter(r => r.length > 0).length,
       null,
       Date.now() - startTime
     );
@@ -420,6 +463,7 @@ serve(async (req) => {
       blogPosts: blogPosts,
       rssItemsProcessed: sortedItems.length,
       totalRssItemsFound: allRSSItems.length,
+      feedsUsed: feedsToUse.length,
       perplexityCallsUsed,
       executionTimeMs: executionTime,
       lastUpdated: new Date().toISOString()

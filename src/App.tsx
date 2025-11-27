@@ -152,6 +152,7 @@ import AdminAlbumReviews from "./pages/admin/AdminAlbumReviews";
 import LlmsTxt from "./pages/LlmsTxt";
 import LlmSitemap from "./pages/LlmSitemap";
 import SEOKeywords from "./pages/admin/SEOKeywords";
+import SystemOverview from "./pages/admin/SystemOverview";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -351,6 +352,7 @@ const AppContent = () => {
               <Routes>
                 <Route index element={<MainAdmin />} />
                 <Route path="dashboard" element={<SuperAdminDashboard />} />
+                <Route path="system-overview" element={<SystemOverview />} />
                 
                 {/* User Management */}
                 <Route path="users" element={<UserManagement />} />

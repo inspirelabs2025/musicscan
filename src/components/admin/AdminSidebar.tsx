@@ -30,7 +30,8 @@ import {
   MessageSquare,
   Mail,
   Sparkles,
-  Facebook
+  Facebook,
+  Server
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -53,6 +54,7 @@ const menuItems = [
     title: "Dashboard",
     items: [
       { title: "Overview", url: "/admin", icon: LayoutDashboard, end: true },
+      { title: "System Overview", url: "/admin/system-overview", icon: Server },
       { title: "SuperAdmin Stats", url: "/admin/dashboard", icon: BarChart3 },
       { title: "Cronjob Monitor", url: "/admin/cronjob-monitor", icon: Clock },
       { title: "Email & Notifications", url: "/admin/email-notifications", icon: Mail },

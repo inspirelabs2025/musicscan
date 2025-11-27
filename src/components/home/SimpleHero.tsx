@@ -49,38 +49,38 @@ export const SimpleHero = () => {
         <div className="absolute bottom-20 right-10 w-40 h-40 rounded-full bg-vinyl-purple/10 blur-3xl animate-pulse delay-1000" />
       </div>
 
-      <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
+      <div className="container mx-auto px-4 py-10 md:py-24 relative z-10">
         {/* Header */}
-        <div className="text-center mb-12 space-y-4">
-          <h1 className="text-4xl md:text-6xl font-bold">
+        <div className="text-center mb-8 md:mb-12 space-y-3 md:space-y-4">
+          <h1 className="text-3xl md:text-6xl font-bold">
             🎵 Jouw Muziekplatform
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground">
+          <p className="text-base md:text-2xl text-muted-foreground">
             Voor Nieuws, Verhalen, Shops & Art
           </p>
         </div>
 
         {/* CTA Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 max-w-6xl mx-auto">
           {ctaCards.map((card) => {
             const Icon = card.icon;
             return (
-              <Link key={card.title} to={card.href}>
-                <Card className="p-8 text-center hover:shadow-2xl transition-all hover:scale-105 group cursor-pointer relative overflow-hidden border-2 hover:border-primary">
+              <Link key={card.title} to={card.href} className="block">
+                <Card className="p-4 md:p-8 text-center hover:shadow-2xl transition-all hover:scale-105 group cursor-pointer relative overflow-hidden border-2 hover:border-primary h-full">
                   {/* Gradient background on hover */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-opacity`} />
-                  
-                  <div className="relative z-10 space-y-4">
+
+                  <div className="relative z-10 space-y-3 md:space-y-4">
                     <div className="flex justify-center">
-                      <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${card.gradient} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                        <Icon className="w-8 h-8 text-white" />
+                      <div className={`w-10 h-10 md:w-16 md:h-16 rounded-full bg-gradient-to-br ${card.gradient} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                        <Icon className="w-5 h-5 md:w-8 md:h-8 text-white" />
                       </div>
                     </div>
-                    
+
                     <div>
-                      <h3 className="text-2xl font-bold mb-1">{card.title}</h3>
-                      <p className="text-lg text-vinyl-gold font-semibold">{card.subtitle}</p>
-                      <p className="text-sm text-muted-foreground mt-2">{card.description}</p>
+                      <h3 className="text-base md:text-2xl font-bold mb-0.5 md:mb-1">{card.title}</h3>
+                      <p className="text-sm md:text-lg text-vinyl-gold font-semibold">{card.subtitle}</p>
+                      <p className="hidden md:block text-sm text-muted-foreground mt-2">{card.description}</p>
                     </div>
                   </div>
                 </Card>

@@ -1,14 +1,112 @@
 import { Link } from 'react-router-dom';
-import { Headphones, Play, ArrowRight } from 'lucide-react';
+import { Headphones, Play, ArrowRight, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useFeaturedEpisodes } from '@/hooks/useCuratedPodcasts';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
 export const PodcastSpotlight = () => {
+  const isMobile = useIsMobile();
   const { data: featuredEpisodes, isLoading } = useFeaturedEpisodes();
 
   const displayEpisodes = featuredEpisodes?.slice(0, 3) || [];
+
+  const renderEpisodeCard = (episode: typeof displayEpisodes[0]) => {
+    const showImage = (episode as any).spotify_curated_shows?.image_url;
+    const episodeName = episode.name;
+    const showName = (episode as any).spotify_curated_shows?.name;
+    
+    return (
+      <Card className={`${isMobile ? 'p-3' : 'p-4'} hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-green-500 h-full`}>
+        <div className="relative mb-3">
+          <div className={`${isMobile ? 'aspect-square' : 'aspect-square'} rounded-lg overflow-hidden bg-gradient-to-br from-green-500/20 to-primary/20`}>
+            {showImage ? (
+              <img 
+                src={showImage} 
+                alt={episodeName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Headphones className="w-12 h-12 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+          {!isMobile && (
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+              <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
+                <Play className="w-8 h-8 text-green-600 fill-green-600" />
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <h3 className={`font-bold ${isMobile ? 'text-sm' : 'text-lg'} mb-1 line-clamp-2 group-hover:text-green-600 transition-colors`}>
+          {episodeName}
+        </h3>
+        
+        {showName && (
+          <p className="text-xs text-muted-foreground line-clamp-1">
+            {showName}
+          </p>
+        )}
+      </Card>
+    );
+  };
+
+  // Mobile compact slider view
+  if (isMobile) {
+    return (
+      <section className="py-8 bg-gradient-to-br from-green-500/5 via-background to-background">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">🎧 Podcasts</h2>
+            <Link to="/podcasts">
+              <Button variant="ghost" size="sm" className="text-green-600">
+                Meer <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
+          
+          <Carousel opts={{ align: "start", loop: false }} className="w-full">
+            <CarouselContent className="-ml-3">
+              {isLoading ? (
+                Array(3).fill(0).map((_, i) => (
+                  <CarouselItem key={i} className="pl-3 basis-[70%]">
+                    <Card className="p-3">
+                      <Skeleton className="w-full aspect-square rounded-lg mb-3" />
+                      <Skeleton className="h-4 w-3/4 mb-1" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </Card>
+                  </CarouselItem>
+                ))
+              ) : displayEpisodes.length > 0 ? (
+                displayEpisodes.map((episode) => (
+                  <CarouselItem key={episode.id} className="pl-3 basis-[70%]">
+                    {renderEpisodeCard(episode)}
+                  </CarouselItem>
+                ))
+              ) : (
+                Array(3).fill(0).map((_, i) => (
+                  <CarouselItem key={i} className="pl-3 basis-[70%]">
+                    <Card className="p-3 border-dashed">
+                      <div className="aspect-square rounded-lg bg-gradient-to-br from-green-500/10 to-primary/10 flex items-center justify-center mb-3">
+                        <Headphones className="w-12 h-12 text-muted-foreground opacity-50" />
+                      </div>
+                      <div className="h-4 bg-muted rounded mb-1" />
+                      <div className="h-3 bg-muted rounded w-3/4" />
+                    </Card>
+                  </CarouselItem>
+                ))
+              )}
+            </CarouselContent>
+          </Carousel>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-gradient-to-br from-green-500/5 via-background to-background relative overflow-hidden">

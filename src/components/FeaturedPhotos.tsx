@@ -51,7 +51,7 @@ export function FeaturedPhotos() {
       return (
         <Link key={item.data.id} to={`/fanwall/${item.data.slug}`}>
           <Card className="group overflow-hidden hover:shadow-lg transition-all cursor-pointer h-full">
-            <div className={isMobile ? "aspect-[4/3] overflow-hidden bg-muted" : "aspect-square overflow-hidden bg-muted"}>
+            <div className={isMobile ? "aspect-[3/4] overflow-hidden bg-muted" : "aspect-square overflow-hidden bg-muted"}>
               {item.data.featured_photo_url ? (
                 <img
                   src={item.data.featured_photo_url}

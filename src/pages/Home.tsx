@@ -61,6 +61,12 @@ const Home = () => {
       {/* Spotify New Releases - Always visible */}
       <SpotifyNewReleasesSection />
 
+      {/* Album Verhalen - Always visible on mobile */}
+      {isMobile && <NewsAndStoriesSection />}
+
+      {/* Music History - Always visible on mobile */}
+      {isMobile && <MusicHistorySpotlight />}
+
       {/* Featured Photos from FanWall - Always visible */}
       <FeaturedPhotos />
 
@@ -123,14 +129,14 @@ const Home = () => {
         </div>
       ) : (
         <>
-          {/* News & Stories Section with Tabs */}
-          <NewsAndStoriesSection />
+          {/* News & Stories Section with Tabs - Desktop only here */}
+          {!isMobile && <NewsAndStoriesSection />}
 
           {/* Artist Spotlights - Compact Section */}
           <ArtistSpotlightsSection />
 
-          {/* Music History - Today in Music History */}
-          <MusicHistorySpotlight />
+          {/* Music History - Desktop only here */}
+          {!isMobile && <MusicHistorySpotlight />}
 
           {/* AI Features - Compact */}
           <AIFeaturesCompact />

@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const categories = [
   { 
@@ -35,6 +36,25 @@ const categories = [
 ];
 
 export function ShopByCategorySection() {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-wrap justify-center gap-2">
+        {categories.map((cat) => (
+          <Link key={cat.slug} to={cat.slug === 'art' ? '/art-shop' : cat.slug === 'merchandise' ? '/merchandise' : cat.slug === 'buttons' ? '/buttons' : `/shop?category=${cat.slug}`}>
+            <Card className="px-4 py-2 hover:shadow-md transition-all hover:scale-105 cursor-pointer group border hover:border-primary">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{cat.emoji}</span>
+                <span className="font-medium text-sm">{cat.name}</span>
+              </div>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
       {categories.map((cat) => (

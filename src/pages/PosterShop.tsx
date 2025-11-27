@@ -31,17 +31,18 @@ export default function PosterShop() {
   // Get accurate counts from database
   const { data: productCounts } = usePlatformProductCounts();
 
-  // Filter only POSTER products
+  // Filter only POSTER products (check if any category contains 'POSTER')
   const posterProducts = allProducts?.filter(product => 
-    product.categories?.includes('POSTER')
+    product.categories?.some(cat => cat.toUpperCase().includes('POSTER'))
   );
 
   // Get other products for navigation
   const metalProducts = allProducts?.filter(product => 
-    !product.categories?.includes('POSTER') && !product.categories?.includes('CANVAS')
+    !product.categories?.some(cat => cat.toUpperCase().includes('POSTER')) && 
+    !product.categories?.some(cat => cat.toUpperCase().includes('CANVAS'))
   );
   const canvasProducts = allProducts?.filter(product => 
-    product.categories?.includes('CANVAS')
+    product.categories?.some(cat => cat.toUpperCase().includes('CANVAS'))
   );
 
   // Filter and sort products

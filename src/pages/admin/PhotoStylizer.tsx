@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -22,6 +22,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Download, RefreshCw, Sparkles, ShoppingBag, Check, Zap } from 'lucide-react';
 
+interface LocationState {
+  imageUrl?: string;
+  artistName?: string;
+  fromMediaLibrary?: boolean;
+}
+
 const STYLE_OPTIONS = [
   { value: 'vectorCartoon' as StyleType, label: 'Vectorized Cartoon', emoji: '🎭', description: 'Smooth vector portrait' },
   { value: 'posterize' as StyleType, label: 'Pop Art Posterize', emoji: '🎨', description: 'Andy Warhol style' },
@@ -35,8 +41,12 @@ const STYLE_OPTIONS = [
 
 export default function PhotoStylizer() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const locationState = location.state as LocationState | null;
+  
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<StyleType>('vectorCartoon');
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [productType, setProductType] = useState<'poster' | 'canvas'>('poster');
@@ -65,6 +75,35 @@ export default function PhotoStylizer() {
   const { createCanvasProduct, isCreating: isCreatingCanvas } = useCanvasProductCreator();
   const { startBatch, isProcessing: isBatchProcessing, batchStatus, progress } = usePhotoBatchProcessor();
   const { batchStatus: bulkBatchStatus } = useBulkPhotoBatchProcessor();
+
+  // Handle incoming image from Media Library
+  useEffect(() => {
+    if (locationState?.fromMediaLibrary && locationState?.imageUrl) {
+      const imageUrl = locationState.imageUrl;
+      const artistName = locationState.artistName || '';
+      
+      // Set the image URL for display
+      setPreviewImageUrl(imageUrl);
+      setUploadedPhotoUrl(imageUrl);
+      
+      // Pre-fill artist name in batch metadata
+      setBatchMetadata(prev => ({
+        ...prev,
+        artist: artistName
+      }));
+      
+      // Show the batch form dialog immediately
+      setShowBatchFormDialog(true);
+      
+      toast({
+        title: "📷 Foto geladen uit Media Library",
+        description: artistName ? `Artiest: ${artistName}` : "Vul de metadata in om te starten"
+      });
+      
+      // Clear the location state to prevent re-triggering
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [locationState, navigate, location.pathname, toast]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -130,6 +169,7 @@ export default function PhotoStylizer() {
 
   const handleReset = () => {
     setSelectedFile(null);
+    setPreviewImageUrl(null);
     reset();
     setAllStyleVariants([]);
     setProductMetadata({ artist: '', title: '', description: '', price: 49.95 });
@@ -330,6 +370,15 @@ export default function PhotoStylizer() {
                     className="max-h-64 mx-auto rounded-lg"
                   />
                   <p className="text-sm font-medium">{selectedFile.name}</p>
+                </div>
+              ) : previewImageUrl ? (
+                <div className="space-y-4">
+                  <img
+                    src={previewImageUrl}
+                    alt="Preview from Media Library"
+                    className="max-h-64 mx-auto rounded-lg"
+                  />
+                  <p className="text-sm font-medium text-primary">Geladen uit Media Library</p>
                 </div>
               ) : (
                 <div className="space-y-2">

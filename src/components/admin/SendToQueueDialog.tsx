@@ -42,6 +42,7 @@ const productLabels: Record<ProductType, string> = {
   tshirts: 'T-Shirts',
   fanwall: 'FanWall',
   canvas: 'Canvas',
+  stylizer: 'Photo Stylizer',
 };
 
 export const SendToQueueDialog = ({

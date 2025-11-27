@@ -140,7 +140,7 @@ export function EchoSpotlight() {
               )}
 
               {/* CTA Buttons */}
-              <div className="flex justify-center sm:justify-start">
+              <div className="flex justify-start">
                 <Button 
                   asChild 
                   size={isMobile ? "default" : "lg"}

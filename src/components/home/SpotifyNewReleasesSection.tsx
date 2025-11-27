@@ -3,8 +3,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Music2, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const SpotifyNewReleasesSection = () => {
+  const isMobile = useIsMobile();
   const {
     data: releases,
     isLoading
@@ -36,8 +38,8 @@ export const SpotifyNewReleasesSection = () => {
     return null;
   }
 
-  // Show only first 6 releases
-  const featuredReleases = releases.slice(0, 6);
+  // Show 2 items on mobile, 6 on desktop
+  const featuredReleases = releases.slice(0, isMobile ? 2 : 6);
 
   return (
     <section className="py-16 bg-gradient-to-br from-muted/20 to-background">

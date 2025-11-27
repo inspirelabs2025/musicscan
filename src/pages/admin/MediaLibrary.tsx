@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,7 @@ import { MediaLibraryDetail } from '@/components/admin/MediaLibraryDetail';
 import { SendToQueueDialog } from '@/components/admin/SendToQueueDialog';
 
 const productTypes: { key: ProductType; label: string; emoji: string }[] = [
+  { key: 'stylizer', label: 'Photo Stylizer', emoji: '✨' },
   { key: 'posters', label: 'Posters', emoji: '🖼️' },
   { key: 'socks', label: 'Sokken', emoji: '🧦' },
   { key: 'buttons', label: 'Buttons', emoji: '🔘' },
@@ -36,6 +38,7 @@ const productTypes: { key: ProductType; label: string; emoji: string }[] = [
 
 const MediaLibrary = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const {
     items,
     isLoading,
@@ -84,7 +87,7 @@ const MediaLibrary = () => {
     }
   };
 
-  // Open send dialog
+  // Open send dialog or navigate to stylizer
   const handleOpenSendDialog = (productType: ProductType) => {
     const selectedItems = items.filter(i => selectedIds.includes(i.id));
     if (selectedItems.length === 0) {
@@ -95,6 +98,30 @@ const MediaLibrary = () => {
       });
       return;
     }
+    
+    // For stylizer, navigate directly with the image URL
+    if (productType === 'stylizer') {
+      if (selectedItems.length > 1) {
+        toast({
+          title: 'Te veel geselecteerd',
+          description: 'Photo Stylizer ondersteunt slechts 1 foto tegelijk',
+          variant: 'destructive'
+        });
+        return;
+      }
+      const item = selectedItems[0];
+      const artistName = item.manual_artist || item.recognized_artist || '';
+      // Navigate to photo stylizer with image URL as state
+      navigate('/admin/photo-stylizer', { 
+        state: { 
+          imageUrl: item.public_url,
+          artistName: artistName,
+          fromMediaLibrary: true
+        } 
+      });
+      return;
+    }
+    
     setSendDialogProductType(productType);
     setSendDialogOpen(true);
   };

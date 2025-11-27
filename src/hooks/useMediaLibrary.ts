@@ -36,7 +36,7 @@ export interface MediaLibraryItem {
   updated_at: string;
 }
 
-export type ProductType = 'posters' | 'socks' | 'buttons' | 'tshirts' | 'fanwall' | 'canvas';
+export type ProductType = 'posters' | 'socks' | 'buttons' | 'tshirts' | 'fanwall' | 'canvas' | 'stylizer';
 
 export const useMediaLibrary = () => {
   const { toast } = useToast();
@@ -203,7 +203,8 @@ export const useMediaLibrary = () => {
         buttons: 'sent_to_buttons',
         tshirts: 'sent_to_tshirts',
         fanwall: 'sent_to_fanwall',
-        canvas: 'sent_to_canvas'
+        canvas: 'sent_to_canvas',
+        stylizer: 'sent_to_posters' // Stylizer doesn't have its own field, reuse posters
       };
 
       const field = fieldMap[productType];

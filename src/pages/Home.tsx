@@ -152,22 +152,22 @@ const Home = () => {
                 Sluit je aan bij duizenden muziekliefhebbers en ontdek wat je collectie waard is
               </p>
             )}
-            <div className={isMobile ? "flex flex-col gap-3" : "flex gap-4 justify-center flex-wrap"}>
+            <div className={isMobile ? "grid grid-cols-2 gap-2" : "flex gap-4 justify-center flex-wrap"}>
               <a
                 href="/shop"
-                className={isMobile ? "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-vinyl-gold to-amber-500 px-6 py-3 text-base font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all" : "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-vinyl-gold to-amber-500 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"}
+                className={isMobile ? "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-vinyl-gold to-amber-500 px-3 py-2.5 text-sm font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all" : "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-vinyl-gold to-amber-500 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"}
               >
-                🛍️ Browse Shop
+                🛍️ Shop
               </a>
               <a
                 href="/music-news"
-                className={isMobile ? "inline-flex items-center justify-center rounded-lg border-2 border-primary bg-transparent px-6 py-3 text-base font-semibold text-primary hover:bg-primary/10 transition-all" : "inline-flex items-center justify-center rounded-lg border-2 border-primary bg-transparent px-8 py-4 text-lg font-semibold text-primary hover:bg-primary/10 transition-all"}
+                className={isMobile ? "inline-flex items-center justify-center rounded-lg border-2 border-primary bg-transparent px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition-all" : "inline-flex items-center justify-center rounded-lg border-2 border-primary bg-transparent px-8 py-4 text-lg font-semibold text-primary hover:bg-primary/10 transition-all"}
               >
-                📰 Lees Nieuws
+                📰 Nieuws
               </a>
               <a
                 href="/auth"
-                className={isMobile ? "inline-flex items-center justify-center rounded-lg border-2 border-vinyl-purple bg-transparent px-6 py-3 text-base font-semibold text-vinyl-purple hover:bg-vinyl-purple/10 transition-all" : "inline-flex items-center justify-center rounded-lg border-2 border-vinyl-purple bg-transparent px-8 py-4 text-lg font-semibold text-vinyl-purple hover:bg-vinyl-purple/10 transition-all"}
+                className={isMobile ? "inline-flex items-center justify-center rounded-lg border-2 border-vinyl-purple bg-transparent px-3 py-2.5 text-sm font-semibold text-vinyl-purple hover:bg-vinyl-purple/10 transition-all col-span-2" : "inline-flex items-center justify-center rounded-lg border-2 border-vinyl-purple bg-transparent px-8 py-4 text-lg font-semibold text-vinyl-purple hover:bg-vinyl-purple/10 transition-all"}
               >
                 📸 Scan Gratis
               </a>

@@ -31,7 +31,8 @@ import {
   Mail,
   Sparkles,
   Facebook,
-  Server
+  Server,
+  CloudUpload
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -79,6 +80,7 @@ const menuItems = [
   {
     title: "Content Generators",
     items: [
+      { title: "Media Library", url: "/admin/media-library", icon: CloudUpload },
       { title: "Art Generator", url: "/admin/art-generator", icon: Palette },
       { title: "Bulk Art Generator", url: "/admin/bulk-art-generator", icon: Wand2 },
       { title: "Sketch Art", url: "/admin/sketch-art-generator", icon: PenTool },

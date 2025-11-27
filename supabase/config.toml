@@ -404,8 +404,11 @@ cron = "0 2 * * *"  # Daily at 2 AM UTC
   [functions.daily-artist-stories-generator]
   verify_jwt = false
 
-  [functions.rss-news-rewriter]
-  verify_jwt = false
+[functions.rss-news-rewriter]
+verify_jwt = false
+
+[functions.ai-recognize-artist]
+verify_jwt = false
 
 [[functions.daily-artist-stories-generator.schedule]]
 cron = "0 1 * * *"  # Daily at 1 AM UTC - generates 20 artist stories per day

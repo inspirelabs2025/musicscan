@@ -200,10 +200,6 @@ export const useSystemOverview = () => {
         { table: 'music_stories', label: 'Music Stories', icon: '🎵', category: 'Content' },
         { table: 'music_anecdotes', label: 'Anekdotes', icon: '💡', category: 'Content' },
         { table: 'music_history_events', label: 'Muziekgeschiedenis', icon: '📅', category: 'Content' },
-        { table: 'platform_products', label: 'Platform Products', icon: '🛍️', route: '/admin/platform-products', category: 'Shop' },
-        { table: 'album_socks', label: 'Sokken Designs', icon: '🧦', route: '/admin/sock-generator', category: 'Shop' },
-        { table: 'album_tshirts', label: 'T-Shirt Designs', icon: '👕', route: '/admin/tshirt-generator', category: 'Shop' },
-        { table: 'lyric_posters', label: 'Lyric Posters', icon: '🎼', route: '/admin/lyric-poster-generator', category: 'Shop' },
         { table: 'profiles', label: 'Gebruikers', icon: '👤', route: '/admin/users', category: 'Community' },
         { table: 'photos', label: 'Fan Fotos', icon: '📸', route: '/admin/photo-moderation', category: 'Community' },
         { table: 'artist_fanwalls', label: 'Artist FanWalls', icon: '🖼️', route: '/admin/backfill-artist-fanwalls', category: 'Community' },
@@ -217,6 +213,7 @@ export const useSystemOverview = () => {
 
       const results: DatabaseStats[] = [];
 
+      // Fetch regular table counts
       for (const t of tables) {
         try {
           const { count, error } = await supabase
@@ -232,6 +229,114 @@ export const useSystemOverview = () => {
         } catch (e) {
           results.push({ ...t, count: 0 });
         }
+      }
+
+      // Fetch Shop product counts with specific categories
+      try {
+        // Total platform products
+        const { count: totalProducts } = await supabase
+          .from('platform_products')
+          .select('*', { count: 'exact', head: true });
+        
+        results.push({
+          table: 'platform_products',
+          label: 'Totaal Products',
+          icon: '🛍️',
+          route: '/admin/platform-products',
+          category: 'Shop',
+          count: totalProducts || 0,
+        });
+
+        // Album Cover Metaalprints
+        const { count: metalPrints } = await supabase
+          .from('platform_products')
+          .select('*', { count: 'exact', head: true })
+          .or('title.ilike.%metaalprint%,title.ilike.%metal print%,slug.ilike.%metaalprint%');
+        
+        results.push({
+          table: 'platform_products_metal',
+          label: 'Album Cover Metaalprint',
+          icon: '🖼️',
+          route: '/admin/platform-products',
+          category: 'Shop',
+          count: metalPrints || 0,
+        });
+
+        // Posters (excluding metal)
+        const { count: posters } = await supabase
+          .from('platform_products')
+          .select('*', { count: 'exact', head: true })
+          .or('title.ilike.%poster%,slug.ilike.%poster%')
+          .not('title', 'ilike', '%metaalprint%');
+        
+        results.push({
+          table: 'platform_products_poster',
+          label: 'Posters (Papier)',
+          icon: '📄',
+          route: '/admin/platform-products',
+          category: 'Shop',
+          count: posters || 0,
+        });
+
+        // Canvas
+        const { count: canvas } = await supabase
+          .from('platform_products')
+          .select('*', { count: 'exact', head: true })
+          .or('title.ilike.%canvas%,slug.ilike.%canvas%');
+        
+        results.push({
+          table: 'platform_products_canvas',
+          label: 'Canvas Prints',
+          icon: '🎨',
+          route: '/admin/platform-products',
+          category: 'Shop',
+          count: canvas || 0,
+        });
+
+        // Sokken from album_socks
+        const { count: socks } = await supabase
+          .from('album_socks')
+          .select('*', { count: 'exact', head: true });
+        
+        results.push({
+          table: 'album_socks',
+          label: 'Sokken Designs',
+          icon: '🧦',
+          route: '/admin/sock-generator',
+          category: 'Shop',
+          count: socks || 0,
+        });
+
+        // T-shirts from album_tshirts
+        const { count: tshirts } = await supabase
+          .from('album_tshirts')
+          .select('*', { count: 'exact', head: true });
+        
+        results.push({
+          table: 'album_tshirts',
+          label: 'T-Shirt Designs',
+          icon: '👕',
+          route: '/admin/tshirt-generator',
+          category: 'Shop',
+          count: tshirts || 0,
+        });
+
+        // Lyric Posters
+        const { count: lyricPosters } = await supabase
+          .from('lyric_posters')
+          .select('*', { count: 'exact', head: true });
+        
+        results.push({
+          table: 'lyric_posters',
+          label: 'Lyric Posters',
+          icon: '🎼',
+          route: '/admin/lyric-poster-generator',
+          category: 'Shop',
+          count: lyricPosters || 0,
+        });
+
+      } catch (e) {
+        console.error('Error fetching shop stats:', e);
       }
 
       return results;

@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, MapPin, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 interface TimeMachineEvent {
   id: string;
@@ -21,6 +23,7 @@ interface TimeMachineEvent {
 }
 
 export const MusicHistorySpotlight = () => {
+  const isMobile = useIsMobile();
   const { data: events, isLoading, error } = useQuery({
     queryKey: ['music-history-today'],
     queryFn: async () => {
@@ -52,10 +55,71 @@ export const MusicHistorySpotlight = () => {
     return null;
   }
 
-  // Get the first 2 events for the homepage preview
-  const previewEvents = events.slice(0, 2);
+  const previewEvents = isMobile ? events.slice(0, 4) : events.slice(0, 2);
   const totalEvents = events.length;
 
+  // Mobile compact version with slider
+  if (isMobile) {
+    return (
+      <section className="py-6">
+        <div className="container mx-auto px-4">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-bold">Vandaag in de Muziekgeschiedenis</h2>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1 px-2"
+              onClick={() => window.location.href = '/vandaag-in-de-muziekgeschiedenis'}
+            >
+              Meer
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Slider */}
+          <Carousel opts={{ align: "start", loop: false }}>
+            <CarouselContent className="-ml-2">
+              {previewEvents.map((event) => (
+                <CarouselItem key={event.id} className="pl-2 basis-[75%]">
+                  <Card 
+                    className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => window.location.href = `/vandaag-in-de-muziekgeschiedenis/${event.slug}`}
+                  >
+                    <div className="aspect-[16/10] relative bg-gradient-to-br from-purple-500 to-pink-500">
+                      {event.poster_image_url && (
+                        <img 
+                          src={event.poster_image_url} 
+                          alt={event.event_title}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      )}
+                      <div className="absolute top-2 right-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {new Date(event.concert_date).getFullYear()}
+                        </Badge>
+                      </div>
+                    </div>
+                    <CardContent className="p-3">
+                      <h3 className="font-bold text-sm line-clamp-1">{event.event_title}</h3>
+                      {event.artist_name && (
+                        <p className="text-xs text-muted-foreground line-clamp-1">{event.artist_name}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+      </section>
+    );
+  }
+
+  // Desktop version
   return (
     <section className="container mx-auto px-4 py-12">
       <div className="mb-8">

@@ -1,13 +1,15 @@
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const DailyAnecdote = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { data: anecdote, isLoading } = useQuery({
     queryKey: ['daily-anecdote'],
     queryFn: async () => {
@@ -36,21 +38,20 @@ export const DailyAnecdote = () => {
 
       return data;
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   if (isLoading) {
     return (
-      <section className="py-6 bg-gradient-to-br from-vinyl-purple/10 via-accent/5 to-background">
+      <section className={isMobile ? "py-4" : "py-6 bg-gradient-to-br from-vinyl-purple/10 via-accent/5 to-background"}>
         <div className="container mx-auto px-4">
-          <Card className="max-w-6xl mx-auto p-4 md:p-6 animate-pulse">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-muted"></div>
+          <Card className={isMobile ? "p-3 animate-pulse" : "max-w-6xl mx-auto p-4 md:p-6 animate-pulse"}>
+            <div className="flex items-center gap-3">
+              <div className={isMobile ? "w-10 h-10 rounded-full bg-muted" : "w-12 h-12 rounded-full bg-muted"}></div>
               <div className="flex-1">
-                <div className="h-6 bg-muted rounded w-2/3 mb-2"></div>
+                <div className="h-5 bg-muted rounded w-2/3 mb-2"></div>
                 <div className="h-4 bg-muted rounded w-full"></div>
               </div>
-              <div className="w-24 h-10 bg-muted rounded"></div>
             </div>
           </Card>
         </div>
@@ -62,6 +63,46 @@ export const DailyAnecdote = () => {
     return null;
   }
 
+  // Mobile compact version
+  if (isMobile) {
+    return (
+      <section className="py-4">
+        <div className="container mx-auto px-4">
+          <Card 
+            className="p-3 border border-vinyl-purple/20 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate(`/anekdotes/${anecdote.slug}`)}
+          >
+            <div className="flex items-center gap-3">
+              {/* Icon */}
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-sm font-semibold text-foreground">Anekdote</span>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    {anecdote.subject_type}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground line-clamp-1">
+                  {anecdote.anecdote_title}
+                </p>
+              </div>
+
+              {/* Arrow */}
+              <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+            </div>
+          </Card>
+        </div>
+      </section>
+    );
+  }
+
+  // Desktop version
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('nl-NL', { 

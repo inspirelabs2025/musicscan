@@ -1297,6 +1297,45 @@ export type Database = {
           },
         ]
       }
+      cronjob_execution_log: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          execution_time_ms: number | null
+          function_name: string
+          id: string
+          items_processed: number | null
+          metadata: Json | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          function_name: string
+          id?: string
+          items_processed?: number | null
+          metadata?: Json | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          function_name?: string
+          id?: string
+          items_processed?: number | null
+          metadata?: Json | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       curated_artists: {
         Row: {
           added_at: string | null
@@ -6039,6 +6078,19 @@ export type Database = {
       }
     }
     Views: {
+      cronjob_stats: {
+        Row: {
+          avg_execution_time_ms: number | null
+          failed_runs: number | null
+          function_name: string | null
+          last_run_at: string | null
+          last_status: string | null
+          running_count: number | null
+          successful_runs: number | null
+          total_runs: number | null
+        }
+        Relationships: []
+      }
       featured_photos: {
         Row: {
           album: string | null
@@ -6236,6 +6288,20 @@ export type Database = {
       is_conversation_participant: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
+      }
+      log_cronjob_complete: {
+        Args: {
+          p_error_message?: string
+          p_items_processed?: number
+          p_log_id: string
+          p_metadata?: Json
+          p_status: string
+        }
+        Returns: undefined
+      }
+      log_cronjob_start: {
+        Args: { p_function_name: string; p_metadata?: Json }
+        Returns: string
       }
       process_indexnow_queue: {
         Args: never

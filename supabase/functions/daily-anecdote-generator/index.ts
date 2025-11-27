@@ -130,36 +130,36 @@ serve(async (req) => {
       console.log('Force generation enabled - generating additional anecdote for today');
     }
 
-    // Select random subject from unified_scans or releases
-    const { data: randomRelease } = await supabase
-      .from('unified_scans')
-      .select('artist, title, year, genre')
-      .not('artist', 'is', null)
-      .not('title', 'is', null)
-      .limit(100);
+    // Select random artist from curated_artists for diverse international coverage
+    const { data: curatedArtists } = await supabase
+      .from('curated_artists')
+      .select('artist_name')
+      .eq('is_active', true)
+      .limit(200);
 
-    if (!randomRelease || randomRelease.length === 0) {
-      throw new Error('No releases found in database');
+    if (!curatedArtists || curatedArtists.length === 0) {
+      throw new Error('No curated artists found in database');
     }
 
-    const release = randomRelease[Math.floor(Math.random() * randomRelease.length)];
+    const randomArtist = curatedArtists[Math.floor(Math.random() * curatedArtists.length)];
     const subjectType = SUBJECT_TYPES[Math.floor(Math.random() * SUBJECT_TYPES.length)];
     
-    let subjectName = release.artist;
+    const subjectName = randomArtist.artist_name;
     let subjectContext = '';
     
-    if (subjectType === 'album') {
-      subjectName = release.title;
-      subjectContext = `Album: ${release.title} van ${release.artist}`;
-    } else if (subjectType === 'artist') {
-      subjectContext = `Artiest: ${release.artist}`;
+    if (subjectType === 'artist') {
+      subjectContext = `Artiest: ${subjectName}`;
+    } else if (subjectType === 'album') {
+      subjectContext = `Een bekend album van ${subjectName}`;
+    } else if (subjectType === 'song') {
+      subjectContext = `Een bekend nummer van ${subjectName}`;
     } else {
-      subjectContext = `${subjectType}: gerelateerd aan ${release.artist}`;
+      subjectContext = `${subjectType}: gerelateerd aan ${subjectName}`;
     }
 
-    const prompt = `Schrijf een interessante anekdote over ${subjectContext}${release.year ? ` uit ${release.year}` : ''}${release.genre ? ` (genre: ${release.genre})` : ''}.
+    const prompt = `Schrijf een interessante anekdote over ${subjectContext}.
 
-Maak het interessant en informatief!`;
+Maak het interessant en informatief! Kies zelf een interessante periode of album om over te schrijven.`;
 
     console.log('Generating anecdote for:', subjectName);
 
@@ -233,7 +233,7 @@ Maak het interessant en informatief!`;
           { role: 'system', content: EXTENDED_PROMPT },
           { 
             role: 'user', 
-            content: `Schrijf een uitgebreid artikel over: ${subjectContext}${release.year ? ` uit ${release.year}` : ''}
+            content: `Schrijf een uitgebreid artikel over: ${subjectContext}
 
 Korte samenvatting als basis:
 ${anecdoteData.content}
@@ -278,10 +278,7 @@ Maak het uitgebreider en diepgaander!`
         subject_type: subjectType,
         subject_name: subjectName,
         subject_details: {
-          artist: release.artist,
-          title: release.title,
-          year: release.year,
-          genre: release.genre
+          artist: subjectName
         },
         anecdote_title: anecdoteData.title,
         anecdote_content: anecdoteData.content,

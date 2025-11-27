@@ -144,7 +144,9 @@ export function EchoSpotlight() {
                 <Button 
                   asChild 
                   size={isMobile ? "default" : "lg"}
-                  className={isMobile ? "hover:shadow-lg hover:scale-105 transition-all" : "text-lg hover:shadow-lg hover:scale-105 transition-all"}
+                  className={isMobile 
+                    ? "bg-gradient-to-r from-vinyl-purple to-echo-lavender hover:opacity-90 hover:shadow-lg hover:scale-105 transition-all" 
+                    : "text-lg bg-gradient-to-r from-vinyl-purple to-echo-lavender hover:opacity-90 hover:shadow-lg hover:scale-105 transition-all"}
                 >
                   <Link to="/echo">
                     <Music2 className="w-5 h-5 mr-2" />

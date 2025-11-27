@@ -116,7 +116,7 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks):
       };
     }
 
-    // If we have a mediaLibraryId, update the record
+    // If we have a mediaLibraryId, update the record and potentially auto-add to FanWall
     if (mediaLibraryId) {
       const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
       const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -124,6 +124,7 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks):
       const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       
+      // Update media library record with AI results
       const { error: updateError } = await supabase
         .from('media_library')
         .update({
@@ -144,13 +145,122 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks):
       } else {
         console.log(`Updated media library record ${mediaLibraryId} with artist: ${result.primary_artist}`);
       }
+
+      // AUTO-ADD TO FANWALL if artist recognized with sufficient confidence
+      if (result.primary_artist && result.confidence >= 0.5) {
+        console.log(`🎸 Auto-adding to FanWall: ${result.primary_artist} (confidence: ${result.confidence})`);
+        
+        try {
+          // 1. Find or create the artist fanwall using existing DB function
+          const { data: fanwallId, error: fanwallError } = await supabase
+            .rpc('find_or_create_artist_fanwall', { 
+              artist_name_input: result.primary_artist 
+            });
+          
+          if (fanwallError) {
+            console.error('Failed to find/create fanwall:', fanwallError);
+          } else {
+            console.log(`FanWall ID: ${fanwallId}`);
+            
+            // 2. Get the media library item for user_id and photo URL
+            const { data: mediaItem, error: mediaError } = await supabase
+              .from('media_library')
+              .select('user_id, public_url, file_name')
+              .eq('id', mediaLibraryId)
+              .single();
+            
+            if (mediaError) {
+              console.error('Failed to get media item:', mediaError);
+            } else if (mediaItem && mediaItem.user_id) {
+              // 3. Check if photo already exists for this media library item
+              const { data: existingPhoto } = await supabase
+                .from('photos')
+                .select('id')
+                .eq('original_url', mediaItem.public_url)
+                .eq('user_id', mediaItem.user_id)
+                .maybeSingle();
+              
+              if (existingPhoto) {
+                console.log('Photo already exists in FanWall, skipping creation');
+              } else {
+                // 4. Generate unique slug
+                const slugBase = result.primary_artist.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                const slug = `${slugBase}-${Date.now()}`;
+                
+                // 5. Insert photo into photos table
+                const { data: newPhoto, error: photoError } = await supabase
+                  .from('photos')
+                  .insert({
+                    user_id: mediaItem.user_id,
+                    source_type: 'media_library',
+                    original_url: mediaItem.public_url,
+                    display_url: mediaItem.public_url,
+                    artist: result.primary_artist,
+                    caption: result.reasoning || `${result.primary_artist} fan foto`,
+                    tags: result.tags || [],
+                    status: 'published',
+                    seo_slug: slug,
+                    seo_title: `${result.primary_artist} Fan Foto`,
+                    seo_description: result.reasoning || `Fan foto van ${result.primary_artist}`,
+                    published_at: new Date().toISOString(),
+                    license_granted: true,
+                    print_allowed: true
+                  })
+                  .select('id')
+                  .single();
+                
+                if (photoError) {
+                  console.error('Failed to create photo:', photoError);
+                } else {
+                  console.log(`✅ Photo ${newPhoto.id} added to ${result.primary_artist} FanWall`);
+                  
+                  // 6. Mark media library item as sent to fanwall
+                  const { error: markError } = await supabase
+                    .from('media_library')
+                    .update({ 
+                      sent_to_fanwall: true,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', mediaLibraryId);
+                  
+                  if (markError) {
+                    console.error('Failed to mark as sent to fanwall:', markError);
+                  }
+                  
+                  // 7. Update fanwall photo count and featured photo
+                  // Note: There's a trigger that handles this, but we'll also update explicitly
+                  const { error: fanwallUpdateError } = await supabase
+                    .from('artist_fanwalls')
+                    .update({
+                      featured_photo_url: mediaItem.public_url,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', fanwallId);
+                  
+                  if (fanwallUpdateError) {
+                    console.error('Failed to update fanwall:', fanwallUpdateError);
+                  } else {
+                    console.log(`✅ FanWall updated for ${result.primary_artist}`);
+                  }
+                }
+              }
+            }
+          }
+        } catch (fanwallError) {
+          console.error('Error in auto-FanWall process:', fanwallError);
+          // Don't fail the whole request if FanWall creation fails
+        }
+      } else {
+        console.log(`Skipping auto-FanWall: artist=${result.primary_artist}, confidence=${result.confidence} (need >= 0.5)`);
+      }
     }
 
     return new Response(
       JSON.stringify({
         success: true,
         result,
-        mediaLibraryId
+        mediaLibraryId,
+        autoAddedToFanwall: result.primary_artist && result.confidence >= 0.5
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

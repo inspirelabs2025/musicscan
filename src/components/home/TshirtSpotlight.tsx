@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, Wand2, Check, Shirt } from 'lucide-react';
+import { Sparkles, Wand2, Check, Shirt, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { usePlatformProducts } from '@/hooks/usePlatformProducts';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const TshirtSpotlight = () => {
+  const isMobile = useIsMobile();
   const { data: tshirtProducts, isLoading } = usePlatformProducts({ 
     category: 'tshirts',
     limit: 6 
@@ -17,6 +19,63 @@ export const TshirtSpotlight = () => {
     { icon: Check, text: 'Premium Kwaliteit Stof' },
     { icon: Shirt, text: 'Alle Maten Beschikbaar' }
   ];
+
+  // Mobile compact view
+  if (isMobile) {
+    return (
+      <section className="py-8 bg-gradient-to-br from-background via-accent/5 to-background">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">👕 Draag je Favoriete Album</h2>
+            <Link to="/tshirts">
+              <Button variant="ghost" size="sm" className="text-primary">
+                Meer <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            {isLoading ? (
+              Array(2).fill(0).map((_, i) => (
+                <Card key={i} className="aspect-[3/4] p-2">
+                  <Skeleton className="w-full h-full rounded-lg" />
+                </Card>
+              ))
+            ) : tshirtProducts && tshirtProducts.length > 0 ? (
+              tshirtProducts.slice(0, 2).map((product) => (
+                <Link key={product.id} to={`/product/${product.slug}`}>
+                  <Card className="aspect-[3/4] p-2 hover:shadow-lg transition-all cursor-pointer group border hover:border-primary relative overflow-hidden">
+                    <div className="w-full h-full rounded-lg overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                      {product.primary_image ? (
+                        <img 
+                          src={product.primary_image} 
+                          alt={product.title}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="text-3xl">👕</div>
+                      )}
+                    </div>
+                    <span className="absolute bottom-2 left-2 bg-vinyl-gold/90 backdrop-blur-sm px-2 py-0.5 rounded-full text-xs font-semibold text-white">
+                      €{product.price}
+                    </span>
+                  </Card>
+                </Link>
+              ))
+            ) : (
+              Array(2).fill(0).map((_, i) => (
+                <Card key={i} className="aspect-[3/4] p-2 border-dashed">
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                    <div className="text-3xl opacity-50">👕</div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-gradient-to-br from-background via-accent/5 to-background relative overflow-hidden">

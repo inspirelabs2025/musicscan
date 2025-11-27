@@ -23,6 +23,7 @@ import { useMediaLibrary, type MediaLibraryItem, type ProductType } from '@/hook
 import { MediaLibraryUploader } from '@/components/admin/MediaLibraryUploader';
 import { MediaLibraryGrid } from '@/components/admin/MediaLibraryGrid';
 import { MediaLibraryDetail } from '@/components/admin/MediaLibraryDetail';
+import { SendToQueueDialog } from '@/components/admin/SendToQueueDialog';
 
 const productTypes: { key: ProductType; label: string; emoji: string }[] = [
   { key: 'posters', label: 'Posters', emoji: '🖼️' },
@@ -53,6 +54,8 @@ const MediaLibrary = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [viewingItem, setViewingItem] = useState<MediaLibraryItem | null>(null);
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [sendDialogProductType, setSendDialogProductType] = useState<ProductType>('fanwall');
 
   // Handle file upload
   const handleUpload = async (files: File[]) => {
@@ -81,8 +84,8 @@ const MediaLibrary = () => {
     }
   };
 
-  // Bulk send to queue
-  const handleBulkSendToQueue = async (productType: ProductType) => {
+  // Open send dialog
+  const handleOpenSendDialog = (productType: ProductType) => {
     const selectedItems = items.filter(i => selectedIds.includes(i.id));
     if (selectedItems.length === 0) {
       toast({
@@ -92,8 +95,25 @@ const MediaLibrary = () => {
       });
       return;
     }
+    setSendDialogProductType(productType);
+    setSendDialogOpen(true);
+  };
+
+  // Confirm send to queue
+  const handleConfirmSendToQueue = async (
+    selectedItems: MediaLibraryItem[], 
+    productType: ProductType,
+    options?: { artistName?: string; fanwallId?: string; createNewFanwall?: boolean }
+  ) => {
     await sendToQueue({ items: selectedItems, productType });
     setSelectedIds([]);
+    // TODO: Handle fanwall creation/selection with options
+    if (options?.createNewFanwall && options.artistName) {
+      toast({
+        title: 'FanWall',
+        description: `Nieuwe FanWall voor ${options.artistName} wordt aangemaakt wanneer de foto's worden verwerkt.`
+      });
+    }
   };
 
   // Filter items
@@ -257,7 +277,7 @@ const MediaLibrary = () => {
                   key={pt.key}
                   size="sm"
                   variant="outline"
-                  onClick={() => handleBulkSendToQueue(pt.key)}
+                  onClick={() => handleOpenSendDialog(pt.key)}
                   disabled={isSendingToQueue}
                 >
                   {pt.emoji} {pt.label}
@@ -298,6 +318,16 @@ const MediaLibrary = () => {
         onAnalyze={analyzeImage}
         onSendToQueue={sendToQueue}
         isAnalyzing={isAnalyzing}
+      />
+
+      {/* Send to Queue Dialog */}
+      <SendToQueueDialog
+        open={sendDialogOpen}
+        onClose={() => setSendDialogOpen(false)}
+        items={items.filter(i => selectedIds.includes(i.id))}
+        productType={sendDialogProductType}
+        onConfirm={handleConfirmSendToQueue}
+        isLoading={isSendingToQueue}
       />
     </div>
   );

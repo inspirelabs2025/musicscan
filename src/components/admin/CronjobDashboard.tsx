@@ -24,7 +24,6 @@ import {
   Clock,
   Loader2,
   Play,
-  RefreshCw,
   XCircle,
   Zap,
   Timer,
@@ -36,7 +35,7 @@ import { toast } from "sonner";
 import { useCronjobExecutionLog, SCHEDULED_CRONJOBS } from "@/hooks/useCronjobExecutionLog";
 
 export const CronjobDashboard = () => {
-  const { cronjobsWithStats, executions, isLoading, triggerCronjob } = useCronjobExecutionLog();
+  const { cronjobsWithStats, isLoading, triggerCronjob, rawData } = useCronjobExecutionLog();
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
   const handleTrigger = async (functionName: string) => {
@@ -257,7 +256,7 @@ export const CronjobDashboard = () => {
                     ? Math.round((job.stats.successful_runs / Math.max(1, job.stats.total_runs)) * 100)
                     : 0;
                   const isExpanded = expandedJob === job.name;
-                  const jobExecutions = executions?.filter(e => e.function_name === job.name).slice(0, 5) || [];
+                  const jobExecutions: any[] = []; // Executions come from various tracking tables now
 
                   return (
                     <Collapsible key={job.name} open={isExpanded} onOpenChange={() => setExpandedJob(isExpanded ? null : job.name)}>
@@ -399,7 +398,7 @@ export const CronjobDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Recent Activity */}
+      {/* Recent Activity - Built from raw data */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -409,38 +408,111 @@ export const CronjobDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {executions?.slice(0, 10).map((exec) => (
+            {/* Batch processing activities */}
+            {rawData?.batchStatus?.slice(0, 3).map((batch: any) => (
               <div 
-                key={exec.id}
+                key={batch.id}
                 className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  {getStatusIcon(exec.status)}
+                  {getStatusIcon(batch.status === 'completed' ? 'success' : batch.status === 'running' ? 'running' : 'error')}
                   <div>
-                    <div className="font-medium">{exec.function_name}</div>
+                    <div className="font-medium">{batch.process_type}</div>
                     <div className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(exec.started_at), { addSuffix: true, locale: nl })}
+                      {formatDistanceToNow(new Date(batch.updated_at), { addSuffix: true, locale: nl })}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  {exec.items_processed !== null && exec.items_processed > 0 && (
-                    <Badge variant="secondary">{exec.items_processed} items</Badge>
+                  <Badge variant="secondary">{batch.processed_items || 0} verwerkt</Badge>
+                  {batch.successful_items > 0 && (
+                    <Badge className="bg-green-500/10 text-green-500">{batch.successful_items} succes</Badge>
                   )}
-                  {exec.execution_time_ms && (
-                    <span className="text-sm text-muted-foreground font-mono">
-                      {exec.execution_time_ms > 1000 
-                        ? `${(exec.execution_time_ms / 1000).toFixed(1)}s`
-                        : `${exec.execution_time_ms}ms`}
-                    </span>
+                  {batch.failed_items > 0 && (
+                    <Badge variant="destructive">{batch.failed_items} failed</Badge>
                   )}
-                  {getStatusBadge(exec.status)}
+                  {getStatusBadge(batch.status === 'completed' ? 'success' : batch.status)}
                 </div>
               </div>
             ))}
-            {(!executions || executions.length === 0) && (
+
+            {/* Sitemap activity summary */}
+            {rawData?.sitemapStats && (
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                <div className="flex items-center gap-3">
+                  {getStatusIcon(rawData.sitemapStats.lastStatus)}
+                  <div>
+                    <div className="font-medium">sitemap-queue-processor</div>
+                    <div className="text-xs text-muted-foreground">
+                      {rawData.sitemapStats.lastRun 
+                        ? formatDistanceToNow(new Date(rawData.sitemapStats.lastRun), { addSuffix: true, locale: nl })
+                        : 'Geen data'}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary">{rawData.sitemapStats.total} totaal</Badge>
+                  <Badge className="bg-green-500/10 text-green-500">{rawData.sitemapStats.successful} succes</Badge>
+                  {rawData.sitemapStats.avgExecutionTime > 0 && (
+                    <span className="text-sm text-muted-foreground font-mono">
+                      ~{rawData.sitemapStats.avgExecutionTime}ms
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Discogs activity summary */}
+            {rawData?.discogsStats && (
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                <div className="flex items-center gap-3">
+                  {getStatusIcon(rawData.discogsStats.completed > 0 ? 'success' : null)}
+                  <div>
+                    <div className="font-medium">discogs-lp-crawler</div>
+                    <div className="text-xs text-muted-foreground">
+                      {rawData.discogsStats.lastRun 
+                        ? formatDistanceToNow(new Date(rawData.discogsStats.lastRun), { addSuffix: true, locale: nl })
+                        : 'Geen data'}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary">{rawData.discogsStats.total} totaal</Badge>
+                  <Badge className="bg-green-500/10 text-green-500">{rawData.discogsStats.completed} completed</Badge>
+                  {rawData.discogsStats.pending > 0 && (
+                    <Badge variant="outline">{rawData.discogsStats.pending} pending</Badge>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* IndexNow activity summary */}
+            {rawData?.indexnowStats && (
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                <div className="flex items-center gap-3">
+                  {getStatusIcon(rawData.indexnowStats.queue.processed > 0 ? 'success' : null)}
+                  <div>
+                    <div className="font-medium">indexnow-processor</div>
+                    <div className="text-xs text-muted-foreground">
+                      {rawData.indexnowStats.queue.lastProcessed 
+                        ? formatDistanceToNow(new Date(rawData.indexnowStats.queue.lastProcessed), { addSuffix: true, locale: nl })
+                        : 'Geen recente data'}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary">{rawData.indexnowStats.queue.total} in queue</Badge>
+                  <Badge className="bg-green-500/10 text-green-500">{rawData.indexnowStats.queue.processed} verwerkt</Badge>
+                  {rawData.indexnowStats.queue.pending > 0 && (
+                    <Badge variant="outline">{rawData.indexnowStats.queue.pending} pending</Badge>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {!rawData?.batchStatus && !rawData?.sitemapStats && !rawData?.discogsStats && (
               <div className="text-center py-8 text-muted-foreground">
-                Nog geen cronjob executions gelogd. Executions worden automatisch gelogd wanneer cronjobs draaien.
+                Geen recente activiteit gevonden.
               </div>
             )}
           </div>

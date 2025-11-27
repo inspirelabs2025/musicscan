@@ -9,9 +9,12 @@ import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Disc3, Newspaper, FileText, ArrowRight, Music } from 'lucide-react';
+import { Disc3, Newspaper, FileText, ArrowRight, Music, ChevronRight } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
 export const NewsAndStoriesSection = () => {
+  const isMobile = useIsMobile();
   
   // Releases from Discogs
   const { data: discogsReleases = [], isLoading: releasesLoading } = useDiscogsNews();
@@ -35,6 +38,122 @@ export const NewsAndStoriesSection = () => {
   // Verhalen from blog_posts
   const { blogs: verhalen, isLoading: verhalenLoading } = usePaginatedBlogs();
 
+  // Mobile compact version
+  if (isMobile) {
+    const displayVerhalen = verhalen.slice(0, 4);
+    
+    return (
+      <section className="py-6">
+        <div className="container mx-auto px-4">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-bold">Album Verhalen</h2>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1 px-2"
+              asChild
+            >
+              <Link to="/verhalen">
+                Meer
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </Button>
+          </div>
+
+          {/* Slider */}
+          {verhalenLoading ? (
+            <div className="flex gap-2 overflow-hidden">
+              {[1, 2].map((i) => (
+                <Card key={i} className="flex-shrink-0 w-[70%]">
+                  <Skeleton className="aspect-video w-full" />
+                  <div className="p-3 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : displayVerhalen.length > 0 ? (
+            <Carousel opts={{ align: "start", loop: false }}>
+              <CarouselContent className="-ml-2">
+                {displayVerhalen.map((blog) => {
+                  const title = blog.yaml_frontmatter?.title || blog.yaml_frontmatter?.album || 'Muziekverhaal';
+                  
+                  return (
+                    <CarouselItem key={blog.id} className="pl-2 basis-[70%]">
+                      <Link to={`/plaat-verhaal/${blog.slug}`}>
+                        <Card className="overflow-hidden hover:shadow-md transition-shadow">
+                          <div className="aspect-video overflow-hidden bg-gradient-to-br from-accent/20 to-primary/20">
+                            {blog.album_cover_url ? (
+                              <img 
+                                src={blog.album_cover_url} 
+                                alt={title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-4xl">
+                                📖
+                              </div>
+                            )}
+                          </div>
+                          <CardContent className="p-3">
+                            <h3 className="font-bold text-sm line-clamp-1">{title}</h3>
+                            {blog.album_type && (
+                              <Badge variant="outline" className="text-[10px] mt-1">
+                                {blog.album_type}
+                              </Badge>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    </CarouselItem>
+                  );
+                })}
+              </CarouselContent>
+            </Carousel>
+          ) : (
+            <p className="text-sm text-muted-foreground">Geen verhalen beschikbaar</p>
+          )}
+
+          {/* Quick Links Row */}
+          <div className="grid grid-cols-2 gap-2 mt-6">
+            <Link to="/nieuws">
+              <Card className="p-3 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-vinyl-gold to-amber-500 flex items-center justify-center">
+                    <Newspaper className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold">Nieuws</span>
+                    <ChevronRight className="w-4 h-4 inline-block ml-1 text-muted-foreground" />
+                  </div>
+                </div>
+              </Card>
+            </Link>
+            <Link to="/releases">
+              <Card className="p-3 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-vinyl-purple to-primary flex items-center justify-center">
+                    <Music className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold">Releases</span>
+                    <ChevronRight className="w-4 h-4 inline-block ml-1 text-muted-foreground" />
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Desktop version - keep original
   const renderReleasesContent = () => {
     if (releasesLoading) {
       return (
@@ -67,7 +186,6 @@ export const NewsAndStoriesSection = () => {
         {displayReleases.map((release: any) => (
           <Link key={release.id} to={`/music-news?tab=releases`}>
             <Card className="overflow-hidden hover:shadow-xl transition-all hover:scale-105 group h-full border-2 hover:border-vinyl-purple">
-              {/* Album Cover */}
               <div className="aspect-square overflow-hidden bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20">
                 {(release.stored_image || release.thumb || release.artwork) ? (
                   <img 
@@ -81,17 +199,13 @@ export const NewsAndStoriesSection = () => {
                   </div>
                 )}
               </div>
-              
-              {/* Content */}
               <div className="p-6 space-y-3">
                 <h3 className="font-bold text-lg line-clamp-1 group-hover:text-primary transition-colors">
                   {release.title || 'Onbekende titel'}
                 </h3>
-                
                 <p className="text-sm text-muted-foreground line-clamp-1">
                   {release.artist || 'Onbekende artiest'}
                 </p>
-
                 <div className="flex items-center gap-2 flex-wrap">
                   {release.year && (
                     <Badge variant="secondary" className="text-xs">
@@ -142,7 +256,6 @@ export const NewsAndStoriesSection = () => {
         {musicNews.map((news: any) => (
           <a key={news.id} href={news.url} target="_blank" rel="noopener noreferrer">
             <Card className="overflow-hidden hover:shadow-xl transition-all hover:scale-105 group h-full border-2 hover:border-vinyl-gold">
-              {/* Cover Image */}
               <div className="aspect-video overflow-hidden bg-gradient-to-br from-vinyl-gold/20 to-accent/20">
                 {news.image_url ? (
                   <img 
@@ -156,8 +269,6 @@ export const NewsAndStoriesSection = () => {
                   </div>
                 )}
               </div>
-              
-              {/* Content */}
               <div className="p-6 space-y-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   {news.category && (
@@ -174,11 +285,9 @@ export const NewsAndStoriesSection = () => {
                     </span>
                   )}
                 </div>
-                
                 <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
                   {news.title}
                 </h3>
-                
                 {news.summary && (
                   <p className="text-sm text-muted-foreground line-clamp-2">
                     {news.summary}
@@ -230,7 +339,6 @@ export const NewsAndStoriesSection = () => {
           return (
             <Link key={blog.id} to={`/plaat-verhaal/${blog.slug}`}>
               <Card className="overflow-hidden hover:shadow-xl transition-all hover:scale-105 group h-full border-2 hover:border-accent">
-                {/* Cover Image */}
                 <div className="aspect-video overflow-hidden bg-gradient-to-br from-accent/20 to-primary/20">
                   {blog.album_cover_url ? (
                     <img 
@@ -244,8 +352,6 @@ export const NewsAndStoriesSection = () => {
                     </div>
                   )}
                 </div>
-                
-                {/* Content */}
                 <div className="p-6 space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
                     {blog.album_type && (
@@ -260,11 +366,9 @@ export const NewsAndStoriesSection = () => {
                       })}
                     </span>
                   </div>
-                  
                   <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
                     {title}
                   </h3>
-                  
                   {description && (
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {description}

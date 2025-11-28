@@ -92,6 +92,40 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch anecdotes: ${anecdotesError.message}`);
     }
 
+    // Fetch all published Time Machine events
+    const { data: timeMachineEvents, error: timeMachineError } = await supabase
+      .from('time_machine_events')
+      .select('slug, updated_at, poster_image_url, event_title, artist_name')
+      .eq('is_published', true)
+      .order('updated_at', { ascending: false });
+
+    if (timeMachineError) {
+      throw new Error(`Failed to fetch time machine events: ${timeMachineError.message}`);
+    }
+
+    // Fetch all active artist fanwalls
+    const { data: artistFanwalls, error: fanwallsError } = await supabase
+      .from('artist_fanwalls')
+      .select('slug, updated_at, featured_photo_url, artist_name')
+      .eq('is_active', true)
+      .order('updated_at', { ascending: false });
+
+    if (fanwallsError) {
+      throw new Error(`Failed to fetch artist fanwalls: ${fanwallsError.message}`);
+    }
+
+    // Fetch all published photos
+    const { data: photos, error: photosError } = await supabase
+      .from('photos')
+      .select('seo_slug, published_at, updated_at, display_url, seo_title, artist')
+      .eq('status', 'published')
+      .not('seo_slug', 'is', null)
+      .order('published_at', { ascending: false });
+
+    if (photosError) {
+      throw new Error(`Failed to fetch photos: ${photosError.message}`);
+    }
+
     // Fetch all active art products (metal prints) with images
     const { data: artProducts, error: productsError } = await supabase
       .from('platform_products')
@@ -137,7 +171,7 @@ Deno.serve(async (req) => {
     const posterProducts = (artProducts || []).filter(p => p.categories?.includes('POSTER'));
     const metalPrintProducts = (artProducts || []).filter(p => !p.categories?.includes('POSTER'));
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, and ${canvasProducts?.length || 0} canvas doeken`);
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos`);
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
@@ -155,6 +189,33 @@ Deno.serve(async (req) => {
     const postersSitemapXml = generatePosterSitemapXml(posterProducts || []);
     const tshirtsSitemapXml = generateSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product');
     const canvasSitemapXml = generateSitemapXml(canvasProducts || [], 'https://www.musicscan.app/product');
+    
+    // Time Machine events sitemap
+    const timeMachineSitemapXml = generateSitemapXml(
+      (timeMachineEvents || []).map(e => ({
+        slug: e.slug,
+        updated_at: e.updated_at
+      })),
+      'https://www.musicscan.app/time-machine'
+    );
+    
+    // FanWall sitemaps
+    const fanwallSitemapXml = generateSitemapXml(
+      (artistFanwalls || []).map(f => ({
+        slug: f.slug,
+        updated_at: f.updated_at
+      })),
+      'https://www.musicscan.app/fanwall'
+    );
+    
+    // Photos sitemap
+    const photosSitemapXml = generateSitemapXml(
+      (photos || []).map(p => ({
+        slug: p.seo_slug,
+        updated_at: p.updated_at || p.published_at
+      })),
+      'https://www.musicscan.app/photo'
+    );
 
     // Image sitemaps
     const blogImageSitemapXml = generateImageSitemapXml(blogPosts || [], 'https://www.musicscan.app/plaat-verhaal', 'album_cover_url');
@@ -166,8 +227,47 @@ Deno.serve(async (req) => {
     const postersImageSitemapXml = generatePosterImageSitemapXml(posterProducts || []);
     const tshirtsImageSitemapXml = generateImageSitemapXml(tshirtProducts || [], 'https://www.musicscan.app/product', 'primary_image');
     const canvasImageSitemapXml = generateImageSitemapXml(canvasProducts || [], 'https://www.musicscan.app/product', 'primary_image');
+    
+    // Time Machine image sitemap
+    const timeMachineImageSitemapXml = generateImageSitemapXml(
+      (timeMachineEvents || []).map(e => ({
+        slug: e.slug,
+        updated_at: e.updated_at,
+        poster_image_url: e.poster_image_url,
+        title: e.event_title,
+        artist: e.artist_name
+      })),
+      'https://www.musicscan.app/time-machine',
+      'poster_image_url'
+    );
+    
+    // FanWall image sitemap
+    const fanwallImageSitemapXml = generateImageSitemapXml(
+      (artistFanwalls || []).map(f => ({
+        slug: f.slug,
+        updated_at: f.updated_at,
+        featured_photo_url: f.featured_photo_url,
+        title: f.artist_name,
+        artist: f.artist_name
+      })),
+      'https://www.musicscan.app/fanwall',
+      'featured_photo_url'
+    );
+    
+    // Photos image sitemap
+    const photosImageSitemapXml = generateImageSitemapXml(
+      (photos || []).map(p => ({
+        slug: p.seo_slug,
+        updated_at: p.updated_at || p.published_at,
+        display_url: p.display_url,
+        title: p.seo_title || 'Fan Photo',
+        artist: p.artist
+      })),
+      'https://www.musicscan.app/photo',
+      'display_url'
+    );
 
-    // Build uploads list (18 files total - added singles sitemaps)
+    // Build uploads list (24 files total - added time machine, fanwall and photos sitemaps)
     const uploads = [
       { name: 'sitemap-static.xml', data: staticSitemapXml },
       { name: 'sitemap-blog.xml', data: blogSitemapXml },
@@ -179,6 +279,9 @@ Deno.serve(async (req) => {
       { name: 'sitemap-posters.xml', data: postersSitemapXml },
       { name: 'sitemap-tshirts.xml', data: tshirtsSitemapXml },
       { name: 'sitemap-canvas.xml', data: canvasSitemapXml },
+      { name: 'sitemap-time-machine.xml', data: timeMachineSitemapXml },
+      { name: 'sitemap-fanwall.xml', data: fanwallSitemapXml },
+      { name: 'sitemap-photos.xml', data: photosSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
       { name: 'sitemap-images-stories.xml', data: storiesImageSitemapXml },
       { name: 'sitemap-images-singles.xml', data: singlesImageSitemapXml },
@@ -187,6 +290,9 @@ Deno.serve(async (req) => {
       { name: 'sitemap-images-posters.xml', data: postersImageSitemapXml },
       { name: 'sitemap-images-tshirts.xml', data: tshirtsImageSitemapXml },
       { name: 'sitemap-images-canvas.xml', data: canvasImageSitemapXml },
+      { name: 'sitemap-images-time-machine.xml', data: timeMachineImageSitemapXml },
+      { name: 'sitemap-images-fanwall.xml', data: fanwallImageSitemapXml },
+      { name: 'sitemap-images-photos.xml', data: photosImageSitemapXml },
     ];
 
     for (const upload of uploads) {
@@ -315,6 +421,10 @@ for (const sitemapName of allSitemaps) {
           metalPrintProducts: metalPrintProducts?.length || 0,
           tshirtProducts: tshirtProducts?.length || 0,
           canvasProducts: canvasProducts?.length || 0,
+          timeMachineEvents: timeMachineEvents?.length || 0,
+          artistFanwalls: artistFanwalls?.length || 0,
+          photos: photos?.length || 0,
+          anecdotes: anecdotes?.length || 0,
           sitemaps: uploads.map(u => ({
             name: u.name,
             url: `${supabaseUrl}/storage/v1/object/public/sitemaps/${u.name}`

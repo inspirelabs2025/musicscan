@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch APP_SECRET from Supabase
+    // Fetch FACEBOOK_APP_SECRET from Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -68,14 +68,14 @@ Deno.serve(async (req) => {
     const { data: secretData, error: secretError } = await supabase
       .from('app_secrets')
       .select('secret_value')
-      .eq('secret_key', 'APP_SECRET')
+      .eq('secret_key', 'FACEBOOK_APP_SECRET')
       .single();
 
     if (secretError || !secretData) {
-      console.error('❌ Could not fetch APP_SECRET:', secretError);
+      console.error('❌ Could not fetch FACEBOOK_APP_SECRET:', secretError);
       return new Response(
         JSON.stringify({ 
-          error: 'APP_SECRET not configured',
+          error: 'FACEBOOK_APP_SECRET not configured',
           hint: 'Please add your Facebook APP_SECRET in the admin secrets page.'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

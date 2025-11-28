@@ -1,9 +1,29 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { encode } from 'https://deno.land/std@0.208.0/encoding/hex.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Generate appsecret_proof using HMAC-SHA256
+async function generateAppSecretProof(accessToken: string, appSecret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(appSecret);
+  const messageData = encoder.encode(accessToken);
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+  const hashArray = new Uint8Array(signature);
+  return new TextDecoder().decode(encode(hashArray));
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -40,8 +60,35 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Call Facebook API WITHOUT appsecret_proof first (simpler, works for most tokens)
-    const pagesUrl = `https://graph.facebook.com/v20.0/me/accounts?access_token=${encodeURIComponent(cleanToken)}`;
+    // Fetch APP_SECRET from Supabase
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: secretData, error: secretError } = await supabase
+      .from('app_secrets')
+      .select('secret_value')
+      .eq('secret_key', 'APP_SECRET')
+      .single();
+
+    if (secretError || !secretData) {
+      console.error('❌ Could not fetch APP_SECRET:', secretError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'APP_SECRET not configured',
+          hint: 'Please add your Facebook APP_SECRET in the admin secrets page.'
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const appSecret = secretData.secret_value;
+    const appSecretProof = await generateAppSecretProof(cleanToken, appSecret);
+    
+    console.log('🔐 Generated appsecret_proof');
+
+    // Call Facebook API with appsecret_proof
+    const pagesUrl = `https://graph.facebook.com/v20.0/me/accounts?access_token=${encodeURIComponent(cleanToken)}&appsecret_proof=${appSecretProof}`;
     
     console.log('🔗 Calling /me/accounts without appsecret_proof...');
     

@@ -96,12 +96,31 @@ export const SinglesImporter = () => {
     const singles: SingleData[] = [];
 
     for (const line of lines) {
-      // Parse formats:
-      // "Artist - Song"
-      // "Artist - Song (Year)"
-      // "Artist - Song [Album]"
-      // "Artist - Song (Year) [Album]"
-      const match = line.match(/^(.+?)\s*[-—–]\s*(.+?)(?:\s*\((\d{4})\))?(?:\s*\[(.+?)\])?$/);
+      const trimmedLine = line.trim();
+      
+      // Skip header rows
+      if (trimmedLine.toLowerCase().startsWith('artist') || 
+          trimmedLine.toLowerCase() === 'artist,song' ||
+          trimmedLine.toLowerCase() === 'artist,single_name') {
+        continue;
+      }
+
+      // Try CSV format first: artist,song or artist,song,year or artist,song,year,album
+      if (trimmedLine.includes(',') && !trimmedLine.includes(' - ')) {
+        const parts = trimmedLine.split(',').map(p => p.trim());
+        if (parts.length >= 2 && parts[0] && parts[1]) {
+          singles.push({
+            artist: parts[0],
+            single_name: parts[1],
+            year: parts[2] ? parseInt(parts[2]) : undefined,
+            album: parts[3] || undefined
+          });
+          continue;
+        }
+      }
+
+      // Original format: "Artist - Song (Year) [Album]"
+      const match = trimmedLine.match(/^(.+?)\s*[-—–]\s*(.+?)(?:\s*\((\d{4})\))?(?:\s*\[(.+?)\])?$/);
       
       if (match) {
         const [, artist, song, year, album] = match;
@@ -130,6 +149,15 @@ export const SinglesImporter = () => {
     const result = await importSingles(parsedSingles);
     if (result?.success) {
       setBatchId(result.batch_id || null);
+      // Auto-start batch processing
+      toast({
+        title: "Import voltooid",
+        description: `${result.imported} singles geïmporteerd. Batch processing wordt gestart...`,
+      });
+      setTimeout(async () => {
+        await startBatchProcessing();
+        getBatchStatus();
+      }, 1000);
     }
   };
 
@@ -261,26 +289,31 @@ export const SinglesImporter = () => {
           <div className="space-y-2">
             <h3 className="font-semibold flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Stap 1: Plak Singles (één per regel)
+              Stap 1: Plak Singles (één per regel, max 2500)
             </h3>
             <Textarea
               placeholder={`Plak hier je singles, één per regel:
 
+CSV formaat (komma-gescheiden):
+The Beatles,Hey Jude
+Queen,Bohemian Rhapsody,1975
+Madonna,Like a Prayer,1989,Like a Prayer
+
+OF klassiek formaat (met hyphen):
 The Beatles - Hey Jude
 Queen - Bohemian Rhapsody (1975)
-Madonna - Like a Prayer [Like a Prayer]
-Prince - Purple Rain (1984) [Purple Rain]
-
-Format: Artist - Song
-Optioneel: (Jaar) en/of [Album]`}
+Prince - Purple Rain (1984) [Purple Rain]`}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               rows={12}
               className="font-mono text-sm"
             />
             {parsedSingles.length > 0 && (
-              <div className="text-sm text-muted-foreground">
-                ✓ {parsedSingles.length} singles herkend
+              <div className="text-sm text-muted-foreground space-y-1">
+                <div>✓ {parsedSingles.length} singles herkend</div>
+                <div className="text-xs">
+                  ⏱️ Geschatte verwerkingstijd: ~{Math.ceil(parsedSingles.length / 60)} uur ({parsedSingles.length} × 1 min/single)
+                </div>
               </div>
             )}
           </div>
@@ -426,33 +459,35 @@ Optioneel: (Jaar) en/of [Album]`}
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h4 className="font-semibold text-sm mb-2">Basis formaat:</h4>
+            <h4 className="font-semibold text-sm mb-2">📋 CSV formaat (aanbevolen voor bulk):</h4>
+            <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
+{`artist,song
+The Beatles,Hey Jude
+Queen,Bohemian Rhapsody
+Madonna,Like a Prayer`}
+            </pre>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2">📋 CSV met jaar en album:</h4>
+            <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
+{`The Beatles,Hey Jude,1968
+Queen,Bohemian Rhapsody,1975,A Night at the Opera
+Prince,Purple Rain,1984,Purple Rain`}
+            </pre>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2">📝 Klassiek formaat (met hyphen):</h4>
             <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
 {`The Beatles - Hey Jude
-Queen - Bohemian Rhapsody`}
+Queen - Bohemian Rhapsody (1975)
+Prince - Purple Rain (1984) [Purple Rain]`}
             </pre>
           </div>
-          <div>
-            <h4 className="font-semibold text-sm mb-2">Met jaar:</h4>
-            <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
-{`Queen - Bohemian Rhapsody (1975)
-Prince - Purple Rain (1984)`}
-            </pre>
-          </div>
-          <div>
-            <h4 className="font-semibold text-sm mb-2">Met album:</h4>
-            <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
-{`Madonna - Like a Prayer [Like a Prayer]
-Prince - Purple Rain [Purple Rain]`}
-            </pre>
-          </div>
-          <div>
-            <h4 className="font-semibold text-sm mb-2">Compleet (jaar + album):</h4>
-            <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
-{`Prince - Purple Rain (1984) [Purple Rain]
-Michael Jackson - Billie Jean (1983) [Thriller]`}
-            </pre>
-          </div>
+          <Alert className="mt-4">
+            <AlertDescription className="text-xs">
+              <strong>Tip:</strong> Voor 2000+ singles, gebruik CSV formaat. Header row (artist,song) wordt automatisch overgeslagen.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     </div>

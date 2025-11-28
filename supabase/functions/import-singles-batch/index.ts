@@ -51,8 +51,8 @@ serve(async (req) => {
       throw new Error('Invalid or empty singles array');
     }
 
-    if (singles.length > 250) {
-      throw new Error('Maximum 250 singles per batch');
+    if (singles.length > 2500) {
+      throw new Error('Maximum 2500 singles per batch');
     }
 
     console.log(`📥 Importing ${singles.length} singles to queue...`);

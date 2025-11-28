@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { ArtistCard } from "@/components/ArtistCard";
 
+const CANONICAL_URL = "https://www.musicscan.app/fanwall";
+
 export default function ArtistFanWallOverview() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,6 +22,37 @@ export default function ArtistFanWallOverview() {
     artist.artist_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const totalPhotos = artists?.reduce((sum, a) => sum + (a.photo_count || 0), 0) || 0;
+  const totalArtists = artists?.length || 0;
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "FanWall - Artiesten Ontdekken",
+    description: "Ontdek muziek herinneringen per artiest. Browse door duizenden fan foto's, concertmomenten en vinyl collecties georganiseerd per artiest.",
+    url: CANONICAL_URL,
+    publisher: {
+      "@type": "Organization",
+      name: "MusicScan",
+      url: "https://www.musicscan.app"
+    },
+    numberOfItems: totalArtists,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: totalArtists,
+      itemListElement: artists?.slice(0, 10).map((artist, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "MusicGroup",
+          name: artist.artist_name,
+          url: `https://www.musicscan.app/fanwall/${artist.slug}`,
+          image: artist.featured_photo_url
+        }
+      })) || []
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -28,7 +61,30 @@ export default function ArtistFanWallOverview() {
           name="description"
           content="Ontdek muziek herinneringen per artiest. Browse door duizenden fan foto's, concertmomenten en vinyl collecties georganiseerd per artiest."
         />
-        <link rel="canonical" href="https://www.musicscan.app/fanwall" />
+        <meta name="keywords" content="fan foto's, muziek herinneringen, concert foto's, vinyl collectie, artiesten, live muziek, muziek memorabilia" />
+        <link rel="canonical" href={CANONICAL_URL} />
+        
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={CANONICAL_URL} />
+        <meta property="og:title" content="FanWall - Artiesten Ontdekken | MusicScan" />
+        <meta property="og:description" content="Ontdek muziek herinneringen per artiest. Browse door duizenden fan foto's en concertmomenten." />
+        <meta property="og:image" content="https://www.musicscan.app/og-fanwall.jpg" />
+        <meta property="og:site_name" content="MusicScan" />
+        <meta property="og:locale" content="nl_NL" />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@musicscan_app" />
+        <meta name="twitter:creator" content="@musicscan_app" />
+        <meta name="twitter:title" content="FanWall - Artiesten Ontdekken | MusicScan" />
+        <meta name="twitter:description" content="Ontdek muziek herinneringen per artiest. Browse door duizenden fan foto's." />
+        <meta name="twitter:image" content="https://www.musicscan.app/og-fanwall.jpg" />
+        
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
       </Helmet>
 
       <div className="min-h-screen bg-background">

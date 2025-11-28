@@ -4927,6 +4927,75 @@ export type Database = {
         }
         Relationships: []
       }
+      spotify_new_releases_processed: {
+        Row: {
+          album_name: string
+          artist: string
+          blog_id: string | null
+          created_at: string
+          discogs_id: number | null
+          error_message: string | null
+          id: string
+          image_url: string | null
+          processed_at: string | null
+          product_id: string | null
+          release_date: string | null
+          spotify_album_id: string
+          spotify_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          album_name: string
+          artist: string
+          blog_id?: string | null
+          created_at?: string
+          discogs_id?: number | null
+          error_message?: string | null
+          id?: string
+          image_url?: string | null
+          processed_at?: string | null
+          product_id?: string | null
+          release_date?: string | null
+          spotify_album_id: string
+          spotify_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          album_name?: string
+          artist?: string
+          blog_id?: string | null
+          created_at?: string
+          discogs_id?: number | null
+          error_message?: string | null
+          id?: string
+          image_url?: string | null
+          processed_at?: string | null
+          product_id?: string | null
+          release_date?: string | null
+          spotify_album_id?: string
+          spotify_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spotify_new_releases_processed_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spotify_new_releases_processed_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "platform_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spotify_playlists: {
         Row: {
           created_at: string

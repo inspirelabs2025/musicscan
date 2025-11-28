@@ -50,9 +50,7 @@ function isValidArtistName(artist: string): boolean {
 
 // Function to clean artist name
 function cleanArtistName(artist: string): string {
-  // Remove leading asterisks
   let cleaned = artist.replace(/^\*+\s*/, '');
-  // Remove leading/trailing whitespace
   cleaned = cleaned.trim();
   return cleaned;
 }
@@ -97,6 +95,32 @@ async function getSystemUserId(): Promise<string> {
   }
 }
 
+// Get albums that have already been used in forum discussions
+async function getUsedAlbumTitles(): Promise<Set<string>> {
+  try {
+    const { data: usedTopics } = await supabase
+      .from('forum_topics')
+      .select('album_title')
+      .eq('topic_type', 'auto_generated')
+      .not('album_title', 'is', null);
+    
+    const usedTitles = new Set<string>();
+    if (usedTopics) {
+      for (const topic of usedTopics) {
+        if (topic.album_title) {
+          // Normalize the title for comparison
+          usedTitles.add(topic.album_title.toLowerCase().trim());
+        }
+      }
+    }
+    console.log(`Found ${usedTitles.size} already used albums`);
+    return usedTitles;
+  } catch (error) {
+    console.error('Error getting used album titles:', error);
+    return new Set();
+  }
+}
+
 // Fallback discussion content
 const getFallbackContent = (artist: string, title: string) => ({
   title: `Discussie: "${title}" van ${artist}`,
@@ -123,14 +147,16 @@ serve(async (req) => {
     const systemUserId = await getSystemUserId();
     console.log('Using system user ID:', systemUserId);
     
-    // Get multiple random albums to find one with valid data
+    // Get list of already used albums
+    const usedAlbumTitles = await getUsedAlbumTitles();
+    
+    // Get more albums to have a larger pool to choose from
     const { data: albums, error: albumError } = await supabase
       .from('unified_scans')
       .select('artist, title, discogs_id')
       .not('artist', 'is', null)
       .not('title', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(200);
 
     if (albumError) {
       console.error('Error fetching albums:', albumError);
@@ -142,24 +168,41 @@ serve(async (req) => {
       throw new Error('No albums found in database');
     }
 
-    console.log(`Found ${albums.length} albums, searching for valid one...`);
+    console.log(`Found ${albums.length} albums, searching for valid unused one...`);
 
-    // Find a valid album with proper artist name
+    // Find a valid album with proper artist name that hasn't been used
     let selectedAlbum: { artist: string; title: string; discogs_id?: number } | null = null;
     
     // Shuffle albums for random selection
     const shuffled = albums.sort(() => Math.random() - 0.5);
     
     for (const album of shuffled) {
+      // Check if this album title has already been used
+      const normalizedTitle = album.title.toLowerCase().trim();
+      if (usedAlbumTitles.has(normalizedTitle)) {
+        console.log(`Skipping already used album: ${album.title}`);
+        continue;
+      }
+      
       const cleanedArtist = cleanArtistName(album.artist);
       
       // Check if artist name is valid
       if (isValidArtistName(cleanedArtist)) {
-        selectedAlbum = {
-          artist: cleanedArtist,
-          title: album.title,
-          discogs_id: album.discogs_id
-        };
+        // Also try to extract from title to get clean album name
+        const extracted = extractArtistFromTitle(album.title);
+        if (extracted) {
+          selectedAlbum = {
+            artist: extracted.artist,
+            title: extracted.album,
+            discogs_id: album.discogs_id
+          };
+        } else {
+          selectedAlbum = {
+            artist: cleanedArtist,
+            title: album.title,
+            discogs_id: album.discogs_id
+          };
+        }
         break;
       }
       
@@ -176,8 +219,8 @@ serve(async (req) => {
     }
 
     if (!selectedAlbum) {
-      console.log('No valid albums found after filtering');
-      throw new Error('No valid albums found with proper artist names');
+      console.log('No valid unused albums found after filtering');
+      throw new Error('No valid unused albums found - all albums have been used or have invalid data');
     }
 
     console.log(`Selected album: ${selectedAlbum.artist} - ${selectedAlbum.title}`);
@@ -271,7 +314,7 @@ BELANGRIJK: Retourneer ALLEEN geldige JSON zonder markdown formatting, geen code
 
     console.log('Final discussion content:', discussionContent);
 
-    // Create the forum topic
+    // Create the forum topic - store the CLEAN album title for deduplication
     const { data: newTopic, error: topicError } = await supabase
       .from('forum_topics')
       .insert({
@@ -279,7 +322,7 @@ BELANGRIJK: Retourneer ALLEEN geldige JSON zonder markdown formatting, geen code
         description: discussionContent.description,
         topic_type: 'auto_generated',
         artist_name: selectedAlbum.artist,
-        album_title: selectedAlbum.title,
+        album_title: selectedAlbum.title, // Store clean title without artist prefix
         is_featured: true,
         created_by: systemUserId,
       })

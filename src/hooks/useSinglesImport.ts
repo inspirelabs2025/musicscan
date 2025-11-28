@@ -252,85 +252,76 @@ export const useSinglesImport = () => {
     }
   };
 
-  const backfillArtwork = async (refetchAll: boolean = false) => {
-    console.log('🎨 [BACKFILL] Function called with refetchAll:', refetchAll);
+  const backfillArtwork = async (refetchAll: boolean = false, batchSize: number = 10): Promise<{ updated: number; failed: number; remaining: number } | null> => {
+    console.log('🎨 [BACKFILL] Function called with refetchAll:', refetchAll, 'batchSize:', batchSize);
     
     try {
       setIsBackfilling(true);
-      console.log('🎨 [BACKFILL] State set to isBackfilling=true');
-      
-      const mode = refetchAll ? 'refetch all' : 'missing only';
-      const requestBody = { refetch_all: refetchAll };
-      console.log('🎨 [BACKFILL] Request body:', JSON.stringify(requestBody));
+      let totalUpdated = 0;
+      let totalFailed = 0;
+      let remaining = 0;
+      let hasMore = true;
+      let batchNumber = 0;
       
       toast({
         title: `Starting artwork ${refetchAll ? 'refetch' : 'backfill'}...`,
-        description: `Processing singles (${mode} mode)`
+        description: `Processing singles in batches of ${batchSize}`
       });
       
-      console.log('🎨 [BACKFILL] Invoking edge function: backfill-singles-artwork');
-      const { data, error } = await supabase.functions.invoke('backfill-singles-artwork', {
-        body: requestBody
-      });
-      
-      console.log('🎨 [BACKFILL] Edge function response:', { data, error });
-      
-      if (error) {
-        console.error('❌ [BACKFILL] Edge function returned error:', error);
-        console.error('❌ [BACKFILL] Error details:', {
-          message: error.message,
-          status: error.status,
-          statusText: error.statusText,
-          full: error
+      while (hasMore) {
+        batchNumber++;
+        console.log(`🎨 [BACKFILL] Processing batch ${batchNumber}...`);
+        
+        const { data, error } = await supabase.functions.invoke('backfill-singles-artwork', {
+          body: { refetch_all: refetchAll, batch_size: batchSize }
         });
-        toast({
-          variant: "destructive",
-          title: "Artwork backfill failed",
-          description: error.message || 'Unknown error occurred'
-        });
-        return null;
+        
+        if (error) {
+          console.error('❌ [BACKFILL] Batch error:', error);
+          toast({
+            variant: "destructive",
+            title: "Artwork backfill failed",
+            description: error.message || 'Unknown error occurred'
+          });
+          return null;
+        }
+        
+        if (!data) {
+          console.error('❌ [BACKFILL] No data received');
+          break;
+        }
+        
+        totalUpdated += data.updated || 0;
+        totalFailed += data.failed || 0;
+        remaining = data.remaining || 0;
+        hasMore = data.has_more && remaining > 0;
+        
+        console.log(`✅ [BACKFILL] Batch ${batchNumber}: ${data.updated} updated, ${remaining} remaining`);
+        
+        // Update toast with progress
+        if (hasMore) {
+          toast({
+            title: `Artwork backfill in progress...`,
+            description: `Batch ${batchNumber}: ${totalUpdated} updated, ${remaining} remaining`
+          });
+        }
       }
-      
-      if (!data) {
-        console.error('❌ [BACKFILL] No data received from edge function');
-        toast({
-          variant: "destructive",
-          title: "Artwork backfill failed",
-          description: "No response from server"
-        });
-        return null;
-      }
-      
-      console.log('✅ [BACKFILL] Success! Data received:', data);
-      
-      const stats = [
-        data.new_artwork && `${data.new_artwork} new`,
-        data.improved_artwork && `${data.improved_artwork} improved`,
-        data.unchanged && `${data.unchanged} unchanged`,
-        data.failed && `${data.failed} failed`
-      ].filter(Boolean).join(', ');
       
       toast({
         title: "Artwork backfill complete!",
-        description: `Processed ${data.processed} singles: ${stats}`
+        description: `Total: ${totalUpdated} updated, ${totalFailed} failed`
       });
       
-      return data;
+      return { updated: totalUpdated, failed: totalFailed, remaining };
     } catch (error: any) {
-      console.error('❌ [BACKFILL] Exception caught:', error);
-      console.error('❌ [BACKFILL] Exception type:', error?.constructor?.name);
-      console.error('❌ [BACKFILL] Exception message:', error?.message);
-      console.error('❌ [BACKFILL] Exception stack:', error?.stack);
-      console.error('❌ [BACKFILL] Full exception object:', JSON.stringify(error, null, 2));
-      
+      console.error('❌ [BACKFILL] Exception:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.message || "Failed to backfill artwork - check console for details"
+        description: error?.message || "Failed to backfill artwork"
       });
       return null;
     } finally {
-      console.log('🎨 [BACKFILL] Cleanup: setting isBackfilling=false');
       setIsBackfilling(false);
     }
   };

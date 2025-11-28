@@ -6,10 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, RefreshCw, Facebook, CheckCircle2, XCircle, AlertCircle, Key } from "lucide-react";
+import { Loader2, RefreshCw, Facebook, CheckCircle2, XCircle, AlertCircle, Key, Wand2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface FacebookPage {
+  id: string;
+  name: string;
+  access_token: string;
+  category?: string;
+}
 
 export default function FacebookSync() {
   const { toast } = useToast();
@@ -24,6 +32,12 @@ export default function FacebookSync() {
     failed?: number;
     status?: string;
   }>({});
+  
+  // Token helper state
+  const [userAccessToken, setUserAccessToken] = useState("");
+  const [isFetchingPages, setIsFetchingPages] = useState(false);
+  const [availablePages, setAvailablePages] = useState<FacebookPage[]>([]);
+  const [selectedPageId, setSelectedPageId] = useState("");
 
   // Fetch sync history
   const { data: syncLogs, refetch } = useQuery({
@@ -176,6 +190,67 @@ export default function FacebookSync() {
     }
   };
 
+  // Fetch pages using User Access Token via /me/accounts
+  const fetchPageTokens = async () => {
+    if (!userAccessToken.trim()) {
+      toast({
+        title: "User Access Token vereist",
+        description: "Plak je long-lived User Access Token uit Graph API Explorer",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsFetchingPages(true);
+      setAvailablePages([]);
+
+      const { data, error } = await supabase.functions.invoke('get-facebook-page-token', {
+        body: { user_access_token: userAccessToken.trim() }
+      });
+
+      if (error) throw error;
+
+      if (data.pages && data.pages.length > 0) {
+        setAvailablePages(data.pages);
+        toast({
+          title: `✅ ${data.pages.length} pagina('s) gevonden`,
+          description: "Selecteer een pagina om de Page Access Token op te slaan",
+        });
+      } else {
+        toast({
+          title: "Geen pagina's gevonden",
+          description: "Je hebt geen Facebook Pages gekoppeld aan dit account",
+          variant: "destructive"
+        });
+      }
+
+    } catch (error: any) {
+      console.error('Error fetching pages:', error);
+      toast({
+        title: "❌ Fout bij ophalen",
+        description: error.message || "Kon geen pagina's ophalen met deze token",
+        variant: "destructive"
+      });
+    } finally {
+      setIsFetchingPages(false);
+    }
+  };
+
+  // Select a page and auto-fill credentials
+  const selectPage = (pageId: string) => {
+    const page = availablePages.find(p => p.id === pageId);
+    if (page) {
+      setPageAccessToken(page.access_token);
+      setPageId(page.id);
+      setSelectedPageId(pageId);
+      toast({
+        title: `✅ ${page.name} geselecteerd`,
+        description: "Page Access Token en Page ID zijn ingevuld. Voeg nu je App Secret toe en klik 'Credentials Opslaan'.",
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -210,6 +285,84 @@ export default function FacebookSync() {
             Synchroniseer MusicScan producten naar je Facebook Catalog voor Facebook Shop integratie
           </p>
         </div>
+
+        {/* Token Helper - New Meta 2024 Rule */}
+        <Card className="border-blue-500/50 bg-blue-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wand2 className="w-5 h-5 text-blue-500" />
+              🆕 Page Token Helper (Meta 2024 Regels)
+            </CardTitle>
+            <CardDescription>
+              Sinds eind 2024 kan Graph API Explorer geen Page Tokens meer genereren voor server-side apps.
+              Gebruik deze helper om je Page Token op te halen via de /me/accounts API.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm">
+              <strong>📝 Stappen:</strong>
+              <ol className="list-decimal list-inside mt-2 space-y-1 text-muted-foreground">
+                <li>Ga naar <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Graph API Explorer</a></li>
+                <li>Selecteer je app en voeg permissions toe: <code className="bg-muted px-1 rounded">pages_manage_posts</code>, <code className="bg-muted px-1 rounded">pages_read_engagement</code></li>
+                <li>Klik "Generate Access Token" → "Open in Access Token Tool" → "Extend Access Token"</li>
+                <li>Kopieer de long-lived User Access Token hieronder</li>
+              </ol>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="userAccessToken">Long-Lived User Access Token</Label>
+              <Input
+                id="userAccessToken"
+                type="password"
+                placeholder="Plak hier je extended User Access Token uit Graph API Explorer..."
+                value={userAccessToken}
+                onChange={(e) => setUserAccessToken(e.target.value)}
+                disabled={isFetchingPages}
+              />
+            </div>
+
+            <Button
+              onClick={fetchPageTokens}
+              disabled={isFetchingPages || !userAccessToken.trim()}
+              variant="outline"
+              className="w-full"
+            >
+              {isFetchingPages ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Pagina's ophalen...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  Haal Page Tokens Op via /me/accounts
+                </>
+              )}
+            </Button>
+
+            {/* Page Selection */}
+            {availablePages.length > 0 && (
+              <div className="space-y-2 p-4 bg-success/10 border border-success/30 rounded-lg">
+                <Label>Selecteer je Facebook Pagina</Label>
+                <Select value={selectedPageId} onValueChange={selectPage}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Kies een pagina..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availablePages.map((page) => (
+                      <SelectItem key={page.id} value={page.id}>
+                        {page.name} ({page.id})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-success">
+                  ✅ Na selectie worden Page Access Token en Page ID automatisch ingevuld hieronder!
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Facebook Credentials */}
         <Card>

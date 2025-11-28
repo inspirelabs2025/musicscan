@@ -26,7 +26,6 @@ const QUALITY_CHANNELS = {
     'UCVHFbqXqoYvEWM1Ddxl0QKg', // Grammy Awards
   ],
   studio: [
-    // Focus on actual artist recording sessions, not gear/equipment channels
     'UC1IJWLhqJAV6pfPE2WpoHMg', // Sound City Studios
     'UCvQS3yKkHnWUUPPTi2kBHqQ', // Abbey Road Studios
     'UCELBWmlf2of09xyoWNWoSSg', // Red Bull Studios
@@ -51,39 +50,39 @@ const QUALITY_CHANNELS = {
 };
 
 // International search terms (English-focused) - NO gear/equipment terms
+// Now with explicit "musician" context to filter out non-music content
 const SEARCH_TERMS = {
   interview: [
-    'full interview',
-    'rare interview', 
-    'in depth interview',
-    'backstage interview',
-    'career interview'
+    'musician interview',
+    'artist interview full',
+    'music artist talks', 
+    'singer interview',
+    'band interview'
   ],
   studio: [
-    // Focus on actual recording sessions with artists, not gear reviews
-    'recording session artist',
-    'making of album',
-    'in the studio recording',
-    'album recording sessions',
-    'tracking session'
+    'recording session musician',
+    'making of album artist',
+    'in the studio recording band',
+    'album recording sessions singer',
+    'tracking session music'
   ],
   live_session: [
     'tiny desk concert',
-    'colors show',
-    'live session',
-    'acoustic session',
-    'KEXP session',
-    'live performance'
+    'colors show musician',
+    'live session artist',
+    'acoustic session singer',
+    'KEXP session band',
+    'live performance music'
   ],
   documentary: [
-    'documentary',
-    'band history',
-    'career retrospective',
-    'music documentary'
+    'music documentary',
+    'band history documentary',
+    'musician career retrospective',
+    'artist biography music'
   ]
 };
 
-// Channels/terms to exclude (Dutch content + audio/equipment channels)
+// Expanded exclusion patterns - includes non-musicians, sports, politics, films
 const EXCLUDE_PATTERNS = [
   // Dutch/local content
   'dwdd', 'de wereld draait door', '3voor12', 'rtv', 
@@ -96,7 +95,47 @@ const EXCLUDE_PATTERNS = [
   'mastering tutorial', 'audio interface', 'microphone review',
   'headphone review', 'speaker review', 'studio monitors',
   'produce like a pro', 'pensado', 'sound on sound', 'tape op',
-  'vintage king', 'perfect circuit', 'reverb demo', 'equipboard'
+  'vintage king', 'perfect circuit', 'reverb demo', 'equipboard',
+  // Sports celebrities/content
+  'michael jordan', 'lebron james', 'kobe bryant', 'nba', 'basketball',
+  'football', 'soccer', 'tennis', 'golf', 'sports', 'athlete',
+  'olympics', 'championship', 'playoffs', 'super bowl', 'world cup',
+  'nfl', 'mlb', 'nhl', 'fifa', 'ufc', 'boxing', 'wrestling',
+  // Actors/film content (not music)
+  'marlon brando', 'charlton heston', 'gregory peck', 'actor', 'actress',
+  'hollywood premiere', 'oscars ceremony', 'film premiere', 'red carpet',
+  'movie scene', 'film clip', 'opening titles', 'movie soundtrack',
+  'cinema', 'blockbuster', 'box office',
+  // Politicians/political content
+  'politician', 'president', 'election', 'congress', 'senate',
+  'parliament', 'prime minister', 'campaign', 'political',
+  // War/controversial figures
+  'joseph kony', 'war criminal', 'dictator', 'genocide', 'war',
+  // Films with same names as bands
+  'the big country 1958', 'western film', 'classic movie',
+  // Reaction videos and low-quality content
+  'reaction', 'reacts to', 'first time hearing', 'first time listening',
+  'reacting to', 'my reaction', 'reaction video'
+];
+
+// Music-related keywords that content MUST contain
+const MUSIC_INDICATORS = [
+  // Core music terms
+  'music', 'song', 'album', 'band', 'singer', 'musician', 'artist',
+  'concert', 'tour', 'live performance', 'recording', 'studio',
+  'guitar', 'drums', 'bass', 'vocals', 'producer', 'record label',
+  'grammy', 'billboard', 'charts', 'hit', 'single', 'ep', 'lp',
+  // Genres
+  'rock', 'pop', 'jazz', 'hip hop', 'rap', 'electronic', 'metal',
+  'punk', 'indie', 'folk', 'country', 'r&b', 'soul', 'blues',
+  'disco', 'funk', 'reggae', 'classical', 'opera', 'techno', 'house',
+  // Quality channels/shows
+  'tiny desk', 'kexp', 'colors show', 'npr music', 'mtv',
+  'rolling stone', 'pitchfork', 'genius', 'vevo', 'audiomack',
+  'sofar sounds', 'audiotree', 'la blogotheque', 'mahogany',
+  // Music-specific content
+  'acoustic', 'unplugged', 'live session', 'backstage', 'soundcheck',
+  'rehearsal', 'jam session', 'freestyle', 'cover', 'remix'
 ];
 
 interface YouTubeVideo {
@@ -173,7 +212,7 @@ function classifyContentType(title: string, description: string): string {
   if (text.includes('interview') || text.includes('talks') || text.includes('conversation') || text.includes('q&a')) {
     return 'interview';
   }
-  if (text.includes('studio') || text.includes('making of') || text.includes('recording') || text.includes('behind the scenes') || text.includes('gear')) {
+  if (text.includes('studio') || text.includes('making of') || text.includes('recording') || text.includes('behind the scenes')) {
     return 'studio';
   }
   if (text.includes('tiny desk') || text.includes('colors show') || text.includes('kexp') || text.includes('live session') || text.includes('acoustic session') || text.includes('sofar')) {
@@ -186,24 +225,81 @@ function classifyContentType(title: string, description: string): string {
   return 'other';
 }
 
-function isValidMusicContent(title: string, description: string, channelName: string): boolean {
+// Check if content should be excluded based on patterns
+function isExcludedContent(title: string, description: string, channelName: string): boolean {
   const text = `${title} ${description} ${channelName}`.toLowerCase();
   
   // Exclude standard music videos/clips
   const excludePatterns = [
     'official video', 'official music video', 'lyric video', 'lyrics video',
     'official audio', 'visualizer', 'music video', '(mv)', 'official mv',
-    'full album', 'álbum completo', 'playlist', 'compilation',
-    'reaction', 'reacts to', 'first time hearing'
+    'full album', 'álbum completo', 'playlist', 'compilation'
   ];
   
   for (const pattern of excludePatterns) {
-    if (text.includes(pattern)) return false;
+    if (text.includes(pattern)) return true;
   }
   
-  // Exclude Dutch/local content
+  // Exclude Dutch/local content and non-music content
   for (const pattern of EXCLUDE_PATTERNS) {
-    if (text.includes(pattern)) return false;
+    if (text.includes(pattern)) return true;
+  }
+  
+  return false;
+}
+
+// NEW: Validate that content is actually music-related
+function isMusicRelatedContent(title: string, description: string, channelName: string): boolean {
+  const text = `${title} ${description} ${channelName}`.toLowerCase();
+  
+  // Must contain at least one music indicator
+  return MUSIC_INDICATORS.some(indicator => text.includes(indicator));
+}
+
+// NEW: Validate that artist name appears in the content
+function artistNameInContent(artistName: string, title: string, description: string): boolean {
+  const text = `${title} ${description}`.toLowerCase();
+  const artistLower = artistName.toLowerCase();
+  
+  // Exact match
+  if (text.includes(artistLower)) return true;
+  
+  // Check individual words for artists with multiple names (e.g., "The Rolling Stones")
+  const artistWords = artistLower
+    .split(/[\s&,]+/)
+    .filter(w => w.length > 2 && !['the', 'and', 'of'].includes(w));
+  
+  if (artistWords.length === 0) return false;
+  
+  const matchCount = artistWords.filter(word => text.includes(word)).length;
+  
+  // At least 50% of significant words must match
+  return matchCount >= Math.ceil(artistWords.length * 0.5);
+}
+
+// Combined validation: must pass all checks
+function isValidMusicContent(
+  artistName: string,
+  title: string, 
+  description: string, 
+  channelName: string
+): boolean {
+  // 1. Not in exclusion list
+  if (isExcludedContent(title, description, channelName)) {
+    console.log(`  ❌ Excluded: "${title.substring(0, 50)}..." (matched exclusion pattern)`);
+    return false;
+  }
+  
+  // 2. Must be music-related
+  if (!isMusicRelatedContent(title, description, channelName)) {
+    console.log(`  ❌ Not music: "${title.substring(0, 50)}..." (no music indicators)`);
+    return false;
+  }
+  
+  // 3. Artist name must appear in content
+  if (!artistNameInContent(artistName, title, description)) {
+    console.log(`  ❌ Wrong artist: "${title.substring(0, 50)}..." (artist "${artistName}" not found)`);
+    return false;
   }
   
   return true;
@@ -349,6 +445,8 @@ serve(async (req) => {
         break;
       }
 
+      console.log(`\n🎵 Processing artist: ${artist.artist_name}`);
+
       for (const contentType of contentTypes) {
         if (apiCallCount >= maxApiCalls) break;
 
@@ -361,15 +459,18 @@ serve(async (req) => {
           if (apiCallCount >= maxApiCalls) break;
 
           try {
-            const query = `${artist.artist_name} ${term}`;
+            // Build query with artist name in quotes for exact match
+            const query = `"${artist.artist_name}" ${term}`;
             const videos = await searchYouTube(query, 5);
             apiCallCount++;
             
-            // Filter valid content
+            // Filter valid content using all validation checks
             const validVideos = videos.filter(v => 
-              isValidMusicContent(v.title, v.description, v.channelName) && 
+              isValidMusicContent(artist.artist_name, v.title, v.description, v.channelName) && 
               !existingIds.has(v.id)
             );
+            
+            console.log(`  Found ${validVideos.length}/${videos.length} valid videos for "${term}"`);
             
             if (validVideos.length > 0) {
               // Get video details (view counts, duration)
@@ -431,6 +532,7 @@ serve(async (req) => {
                   });
                   
                   existingIds.add(video.id);
+                  console.log(`  ✅ Added: "${video.title.substring(0, 50)}..." (score: ${qualityScore})`);
                 }
               }
             }
@@ -444,7 +546,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Found ${allDiscoveries.length} new discoveries (${apiCallCount} API calls)`);
+    console.log(`\nFound ${allDiscoveries.length} new discoveries (${apiCallCount} API calls)`);
 
     // Sort by quality score and take top results
     allDiscoveries.sort((a, b) => b.quality_score - a.quality_score);
@@ -465,17 +567,24 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      artistsSearched: selectedArtists.length,
-      totalCuratedArtists: curatedArtists.length,
-      discoveriesFound: topDiscoveries.length,
-      apiCallsUsed: apiCallCount,
-      discoveries: topDiscoveries.slice(0, 20) // Return preview of top 20
+      message: `Discovered ${topDiscoveries.length} new videos`,
+      stats: {
+        artistsProcessed: selectedArtists.length,
+        totalFound: allDiscoveries.length,
+        saved: topDiscoveries.length,
+        apiCalls: apiCallCount
+      },
+      topDiscoveries: topDiscoveries.slice(0, 5).map(d => ({
+        title: d.title,
+        artist: d.artist_name,
+        score: d.quality_score
+      }))
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
-    console.error('Error in youtube-discoveries:', error);
+    console.error('Error in youtube-discoveries function:', error);
     return new Response(JSON.stringify({
       success: false,
       error: error.message

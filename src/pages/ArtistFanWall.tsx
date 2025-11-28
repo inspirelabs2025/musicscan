@@ -60,41 +60,66 @@ export default function ArtistFanWall() {
   }
 
   const canonicalUrl = artist.canonical_url || `https://www.musicscan.app/fanwall/${artist.slug}`;
+  const pageTitle = artist.seo_title || `${artist.artist_name} FanWall | MusicScan`;
+  const pageDescription = artist.seo_description || `Ontdek ${artist.photo_count} ${artist.artist_name} fan foto's: live concerten, vinyl collecties, en meer.`;
+  const pageImage = artist.featured_photo_url || "https://www.musicscan.app/og-fanwall.jpg";
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: `${artist.artist_name} FanWall`,
+    description: pageDescription,
+    url: canonicalUrl,
+    publisher: {
+      "@type": "Organization",
+      name: "MusicScan",
+      url: "https://www.musicscan.app"
+    },
+    about: {
+      "@type": "MusicGroup",
+      name: artist.artist_name,
+    },
+    numberOfItems: artist.photo_count,
+    image: pageImage,
+    mainEntity: {
+      "@type": "ImageGallery",
+      name: `${artist.artist_name} Fan Photos`,
+      numberOfItems: artist.photo_count,
+      about: {
+        "@type": "MusicGroup",
+        name: artist.artist_name
+      }
+    }
+  };
 
   return (
     <>
       <Helmet>
-        <title>{artist.seo_title || `${artist.artist_name} FanWall | MusicScan`}</title>
-        <meta
-          name="description"
-          content={
-            artist.seo_description ||
-            `Ontdek ${artist.photo_count} ${artist.artist_name} fan foto's: live concerten, vinyl collecties, en meer.`
-          }
-        />
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta name="keywords" content={`${artist.artist_name}, fan foto's, concert foto's, vinyl collectie, live muziek, muziek herinneringen, ${artist.artist_name} fans`} />
         <link rel="canonical" href={canonicalUrl} />
 
         {/* Open Graph */}
-        <meta property="og:title" content={artist.seo_title || `${artist.artist_name} FanWall`} />
-        <meta property="og:description" content={artist.seo_description || ""} />
-        <meta property="og:image" content={artist.featured_photo_url || ""} />
-        <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:image" content={pageImage} />
+        <meta property="og:site_name" content="MusicScan" />
+        <meta property="og:locale" content="nl_NL" />
 
-        {/* Schema.org */}
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@musicscan_app" />
+        <meta name="twitter:creator" content="@musicscan_app" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={pageImage} />
+
+        {/* JSON-LD Structured Data */}
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            name: `${artist.artist_name} FanWall`,
-            description: artist.seo_description,
-            about: {
-              "@type": "MusicGroup",
-              name: artist.artist_name,
-            },
-            numberOfItems: artist.photo_count,
-            image: artist.featured_photo_url,
-          })}
+          {JSON.stringify(structuredData)}
         </script>
       </Helmet>
 

@@ -17,7 +17,7 @@ const SUBJECT_TYPES = [
   { value: 'artist', label: 'Artiesten' },
   { value: 'album', label: 'Albums' },
   { value: 'song', label: 'Songs' },
-  { value: 'studio', label: 'Studio\'s' },
+  { value: 'studio', label: "Studio's" },
   { value: 'musician', label: 'Musici' },
   { value: 'producer', label: 'Producers' },
   { value: 'label', label: 'Labels' },
@@ -29,6 +29,8 @@ const SORT_OPTIONS = [
   { value: 'popular', label: 'Meest populair' },
   { value: 'oldest', label: 'Oudste eerst' },
 ];
+
+const CANONICAL_URL = "https://www.musicscan.app/anekdotes";
 
 export default function AnecdotesOverview() {
   const navigate = useNavigate();
@@ -42,22 +44,70 @@ export default function AnecdotesOverview() {
     sortBy,
   });
 
+  const totalAnecdotes = anecdotes?.length || 0;
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Muziek Anekdotes - Dagelijkse Verhalen",
+    description: "Ontdek boeiende anekdotes uit de muziekgeschiedenis. Elke dag een nieuw verhaal over artiesten, albums, songs en meer.",
+    url: CANONICAL_URL,
+    publisher: {
+      "@type": "Organization",
+      name: "MusicScan",
+      url: "https://www.musicscan.app"
+    },
+    numberOfItems: totalAnecdotes,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: totalAnecdotes,
+      itemListElement: anecdotes?.slice(0, 10).map((anecdote, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Article",
+          headline: anecdote.anecdote_title,
+          description: anecdote.anecdote_content.substring(0, 160),
+          datePublished: anecdote.anecdote_date,
+          url: `https://www.musicscan.app/anekdotes/${anecdote.slug}`,
+          author: {
+            "@type": "Organization",
+            name: "MusicScan"
+          }
+        }
+      })) || []
+    }
+  };
+
   return (
     <>
       <Helmet>
         <title>Muziek Anekdotes - Dagelijkse Verhalen | MusicScan</title>
         <meta name="description" content="Ontdek boeiende anekdotes uit de muziekgeschiedenis. Elke dag een nieuw verhaal over artiesten, albums, songs en meer." />
-        <meta name="keywords" content="muziek anekdotes, muziekgeschiedenis, dagelijkse verhalen, artiesten, albums" />
-        <link rel="canonical" href="https://www.musicscan.app/anekdotes" />
+        <meta name="keywords" content="muziek anekdotes, muziekgeschiedenis, dagelijkse verhalen, artiesten, albums, muziek trivia, behind the scenes" />
+        <link rel="canonical" href={CANONICAL_URL} />
         
+        {/* Open Graph */}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.musicscan.app/anekdotes" />
+        <meta property="og:url" content={CANONICAL_URL} />
         <meta property="og:title" content="Muziek Anekdotes - Dagelijkse Verhalen | MusicScan" />
         <meta property="og:description" content="Ontdek boeiende anekdotes uit de muziekgeschiedenis. Elke dag een nieuw verhaal." />
+        <meta property="og:image" content="https://www.musicscan.app/og-anekdotes.jpg" />
+        <meta property="og:site_name" content="MusicScan" />
+        <meta property="og:locale" content="nl_NL" />
         
+        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@musicscan_app" />
+        <meta name="twitter:creator" content="@musicscan_app" />
         <meta name="twitter:title" content="Muziek Anekdotes - Dagelijkse Verhalen | MusicScan" />
         <meta name="twitter:description" content="Ontdek boeiende anekdotes uit de muziekgeschiedenis." />
+        <meta name="twitter:image" content="https://www.musicscan.app/og-anekdotes.jpg" />
+        
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
       </Helmet>
 
       <div className="min-h-screen bg-background">

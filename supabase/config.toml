@@ -22,17 +22,17 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.bulk-poster-processor.schedule]]
-cron = "*/5 * * * *"  # Every 5 minutes
+cron = "*/5 * * * *"
 
 [functions.discogs-lp-crawler]
 verify_jwt = false
 [[functions.discogs-lp-crawler.schedule]]
-cron = "0 * * * *"  # Hourly
+cron = "0 * * * *"
 
 [functions.process-discogs-queue]
 verify_jwt = false
 [[functions.process-discogs-queue.schedule]]
-cron = "*/2 * * * *"  # Every 2 minutes
+cron = "*/2 * * * *"
 
 [functions.seed-curated-artists]
 verify_jwt = false
@@ -65,7 +65,7 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.latest-discogs-news.schedule]]
-cron = "0 3 * * *"  # Daily at 3 AM UTC
+cron = "0 3 * * *"
 
 [functions.daily-email-digest]
 verify_jwt = false
@@ -86,7 +86,7 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.batch-blog-processor.schedule]]
-cron = "*/10 * * * *"  # Every 10 minutes
+cron = "*/10 * * * *"
 
 [functions.collection-quiz-generator]
 verify_jwt = true
@@ -167,17 +167,16 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.generate-static-sitemaps.schedule]]
-cron = "0 3 * * *"  # Daily at 3 AM UTC
+cron = "0 3 * * *"
 
 [functions.blog-meta-proxy]
 verify_jwt = false
-
 
 [functions.indexnow-processor]
 verify_jwt = false
 
 [[functions.indexnow-processor.schedule]]
-cron = "*/5 * * * *"  # Every 5 minutes
+cron = "*/5 * * * *"
 
 [functions.indexnow-submit]
 verify_jwt = false
@@ -192,7 +191,7 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.sitemap-queue-processor.schedule]]
-cron = "*/3 * * * *"  # Every 3 minutes
+cron = "*/3 * * * *"
 
 [functions.serve-sitemap]
 verify_jwt = false
@@ -216,7 +215,7 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.indexnow-cron.schedule]]
-cron = "*/15 * * * *"  # Every 15 minutes
+cron = "*/15 * * * *"
 
 [functions.verify-sitemaps]
 verify_jwt = false
@@ -309,13 +308,13 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.refresh-featured-photos.schedule]]
-cron = "0 */6 * * *"  # Every 6 hours
+cron = "0 */6 * * *"
 
 [functions.daily-anecdote-generator]
 verify_jwt = false
 
 [[functions.daily-anecdote-generator.schedule]]
-cron = "5 6 * * *"  # Daily at 6:05 AM UTC
+cron = "5 6 * * *"
 
 [functions.post-to-facebook]
 verify_jwt = false
@@ -324,7 +323,7 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.generate-daily-music-history.schedule]]
-cron = "0 6 * * *"  # Daily at 6 AM UTC
+cron = "0 6 * * *"
 
 [functions.curated-artists-monitor]
 verify_jwt = false
@@ -351,7 +350,7 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.singles-batch-processor.schedule]]
-cron = "* * * * *"  # Every minute
+cron = "* * * * *"
 
 [functions.generate-single-story]
 verify_jwt = false
@@ -366,13 +365,7 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.artist-stories-batch-processor.schedule]]
-cron = "* * * * *"  # Every minute
-
-[functions.sync-facebook-catalog]
-verify_jwt = false
-
-[functions.generate-facebook-catalog-feed]
-verify_jwt = false
+cron = "* * * * *"
 
 [functions.cleanup-duplicate-blogs]
 verify_jwt = false
@@ -387,13 +380,13 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.generate-llm-sitemap.schedule]]
-cron = "0 4 * * *"  # Daily at 4 AM UTC
+cron = "0 4 * * *"
 
 [functions.auto-generate-keywords]
 verify_jwt = true
 
 [[functions.auto-generate-keywords.schedule]]
-cron = "0 3 * * *"  # Daily at 3 AM UTC
+cron = "0 3 * * *"
 
 [functions.generate-longtail-keywords]
 verify_jwt = true
@@ -402,10 +395,10 @@ verify_jwt = true
 verify_jwt = false
 
 [[functions.generate-curated-artists.schedule]]
-cron = "0 2 * * *"  # Daily at 2 AM UTC
+cron = "0 2 * * *"
 
-  [functions.daily-artist-stories-generator]
-  verify_jwt = false
+[functions.daily-artist-stories-generator]
+verify_jwt = false
 
 [functions.rss-news-rewriter]
 verify_jwt = false
@@ -414,8 +407,13 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.daily-artist-stories-generator.schedule]]
-cron = "0 1 * * *"  # Daily at 1 AM UTC - generates 20 artist stories per day
+cron = "0 1 * * *"
 
 [[functions.rss-news-rewriter.schedule]]
-cron = "0 8,14,20 * * *"  # Daily at 08:00, 14:00, 20:00 UTC - fetch and rewrite RSS news
+cron = "0 8,14,20 * * *"
 
+[functions.process-spotify-new-releases]
+verify_jwt = false
+
+[[functions.process-spotify-new-releases.schedule]]
+cron = "0 9 * * *"

@@ -6305,6 +6305,7 @@ export type Database = {
           published_at: string | null
           quality_score: number | null
           source_channel: string | null
+          tags: string[] | null
           thumbnail_url: string | null
           title: string
           updated_at: string | null
@@ -6327,6 +6328,7 @@ export type Database = {
           published_at?: string | null
           quality_score?: number | null
           source_channel?: string | null
+          tags?: string[] | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string | null
@@ -6349,6 +6351,7 @@ export type Database = {
           published_at?: string | null
           quality_score?: number | null
           source_channel?: string | null
+          tags?: string[] | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string | null

@@ -15,18 +15,64 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Function to clean JSON from markdown code blocks
 function cleanJsonFromMarkdown(content: string): string {
-  // Remove markdown code blocks
   let cleaned = content.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-  // Remove any remaining backticks
   cleaned = cleaned.replace(/`/g, '');
-  // Trim whitespace
   return cleaned.trim();
+}
+
+// Function to validate and clean artist name
+function isValidArtistName(artist: string): boolean {
+  if (!artist || artist.length < 2 || artist.length > 100) return false;
+  
+  // Reject if it looks like description text
+  const descriptionPatterns = [
+    /^the cover/i,
+    /^this is/i,
+    /^a photo/i,
+    /^an image/i,
+    /^featuring/i,
+    /^photograph/i,
+    /^unknown/i,
+    /^various$/i,
+    /^\*\*/,  // Starts with **
+    /^#+/,   // Starts with #
+    /\bcover\b/i,
+    /\bphoto\b/i,
+    /\bimage\b/i,
+  ];
+  
+  for (const pattern of descriptionPatterns) {
+    if (pattern.test(artist)) return false;
+  }
+  
+  return true;
+}
+
+// Function to clean artist name
+function cleanArtistName(artist: string): string {
+  // Remove leading asterisks
+  let cleaned = artist.replace(/^\*+\s*/, '');
+  // Remove leading/trailing whitespace
+  cleaned = cleaned.trim();
+  return cleaned;
+}
+
+// Function to extract artist from title if needed (format: "Artist - Album")
+function extractArtistFromTitle(title: string): { artist: string; album: string } | null {
+  const match = title.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+  if (match && match[1] && match[2]) {
+    const artist = match[1].trim();
+    const album = match[2].trim();
+    if (artist.length >= 2 && album.length >= 2) {
+      return { artist, album };
+    }
+  }
+  return null;
 }
 
 // Get or create system user for auto-generated content
 async function getSystemUserId(): Promise<string> {
   try {
-    // Try to find existing system user
     const { data: systemUser } = await supabase
       .from('profiles')
       .select('user_id')
@@ -38,7 +84,6 @@ async function getSystemUserId(): Promise<string> {
       return systemUser.user_id;
     }
     
-    // If no system user found, use the first admin or any user
     const { data: firstUser } = await supabase
       .from('profiles')
       .select('user_id')
@@ -68,7 +113,6 @@ Deel je gedachten en laten we een interessante discussie beginnen!`
 });
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -76,50 +120,84 @@ serve(async (req) => {
   try {
     console.log('Starting weekly forum discussion generation...');
     
-    // Get system user ID
     const systemUserId = await getSystemUserId();
     console.log('Using system user ID:', systemUserId);
     
-    // Get a random album from the database
-    const { data: randomAlbum, error: albumError } = await supabase
+    // Get multiple random albums to find one with valid data
+    const { data: albums, error: albumError } = await supabase
       .from('unified_scans')
       .select('artist, title, discogs_id')
       .not('artist', 'is', null)
       .not('title', 'is', null)
-      .limit(1)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(50);
 
     if (albumError) {
-      console.error('Error fetching random album:', albumError);
+      console.error('Error fetching albums:', albumError);
       throw albumError;
     }
 
-    const album = randomAlbum?.[0];
-    if (!album) {
+    if (!albums || albums.length === 0) {
       console.log('No albums found in database');
       throw new Error('No albums found in database');
     }
 
-    console.log(`Selected album: ${album.artist} - ${album.title}`);
+    console.log(`Found ${albums.length} albums, searching for valid one...`);
+
+    // Find a valid album with proper artist name
+    let selectedAlbum: { artist: string; title: string; discogs_id?: number } | null = null;
+    
+    // Shuffle albums for random selection
+    const shuffled = albums.sort(() => Math.random() - 0.5);
+    
+    for (const album of shuffled) {
+      const cleanedArtist = cleanArtistName(album.artist);
+      
+      // Check if artist name is valid
+      if (isValidArtistName(cleanedArtist)) {
+        selectedAlbum = {
+          artist: cleanedArtist,
+          title: album.title,
+          discogs_id: album.discogs_id
+        };
+        break;
+      }
+      
+      // Try to extract artist from title if artist field is bad
+      const extracted = extractArtistFromTitle(album.title);
+      if (extracted && isValidArtistName(extracted.artist)) {
+        selectedAlbum = {
+          artist: extracted.artist,
+          title: extracted.album,
+          discogs_id: album.discogs_id
+        };
+        break;
+      }
+    }
+
+    if (!selectedAlbum) {
+      console.log('No valid albums found after filtering');
+      throw new Error('No valid albums found with proper artist names');
+    }
+
+    console.log(`Selected album: ${selectedAlbum.artist} - ${selectedAlbum.title}`);
 
     let discussionContent;
     
-    // Try to generate content with OpenAI
     if (openAIApiKey) {
       try {
         console.log('Attempting to generate content with OpenAI...');
         
-        // Improved prompt with explicit JSON instructions
-        const discussionPrompt = `Je bent een muziekexpert die elke week een interessante discussie start over een album voor een Nederlandse muziekforum. 
+        const discussionPrompt = `Je bent een muziekexpert die elke week een interessante discussie start over een album voor een Nederlands muziekforum. 
 
-Album: "${album.title}" door ${album.artist}
+Album: "${selectedAlbum.title}" door ${selectedAlbum.artist}
 
 Creëer een boeiende discussie met:
 1. Een korte, pakkende titel (max 80 karakters)
 2. Een interessante beschrijving die mensen uitnodigt om te reageren (max 300 woorden)
 
 De beschrijving moet:
-- Interessante achtergrondinformatie bevatten
+- Interessante achtergrondinformatie bevatten over het album of de artiest
 - Specifieke vragen stellen die discussie uitlokken
 - Warm en uitnodigend zijn
 - In het Nederlands geschreven zijn
@@ -139,7 +217,7 @@ BELANGRIJK: Retourneer ALLEEN geldige JSON zonder markdown formatting, geen code
             messages: [
               { 
                 role: 'system', 
-                content: 'Je bent een ervaren muziekjournalist die boeiende discussies creëert voor een Nederlandse muziekforum. Retourneer ALTIJD alleen geldige JSON zonder markdown formatting.'
+                content: 'Je bent een ervaren muziekjournalist die boeiende discussies creëert voor een Nederlands muziekforum. Retourneer ALTIJD alleen geldige JSON zonder markdown formatting.'
               },
               { role: 'user', content: discussionPrompt }
             ],
@@ -162,7 +240,6 @@ BELANGRIJK: Retourneer ALLEEN geldige JSON zonder markdown formatting, geen code
           throw new Error('No content generated by OpenAI');
         }
 
-        // Clean and parse the JSON response
         const rawContent = openAIData.choices[0].message.content;
         console.log('Raw OpenAI content (first 200 chars):', rawContent.substring(0, 200));
         
@@ -173,7 +250,6 @@ BELANGRIJK: Retourneer ALLEEN geldige JSON zonder markdown formatting, geen code
           discussionContent = JSON.parse(cleanedContent);
           console.log('Successfully parsed OpenAI content:', discussionContent);
           
-          // Validate the parsed content
           if (!discussionContent.title || !discussionContent.description) {
             throw new Error('Invalid content structure from OpenAI');
           }
@@ -186,11 +262,11 @@ BELANGRIJK: Retourneer ALLEEN geldige JSON zonder markdown formatting, geen code
       } catch (openAIError) {
         console.error('OpenAI generation failed:', openAIError);
         console.log('Falling back to default content...');
-        discussionContent = getFallbackContent(album.artist, album.title);
+        discussionContent = getFallbackContent(selectedAlbum.artist, selectedAlbum.title);
       }
     } else {
       console.log('No OpenAI API key found, using fallback content...');
-      discussionContent = getFallbackContent(album.artist, album.title);
+      discussionContent = getFallbackContent(selectedAlbum.artist, selectedAlbum.title);
     }
 
     console.log('Final discussion content:', discussionContent);
@@ -202,8 +278,8 @@ BELANGRIJK: Retourneer ALLEEN geldige JSON zonder markdown formatting, geen code
         title: discussionContent.title,
         description: discussionContent.description,
         topic_type: 'auto_generated',
-        artist_name: album.artist,
-        album_title: album.title,
+        artist_name: selectedAlbum.artist,
+        album_title: selectedAlbum.title,
         is_featured: true,
         created_by: systemUserId,
       })
@@ -226,14 +302,12 @@ BELANGRIJK: Retourneer ALLEEN geldige JSON zonder markdown formatting, geen code
 
     if (updateError) {
       console.error('Error updating previous topics:', updateError);
-      // Don't throw here, it's not critical
     }
 
-    // Trigger email notifications (don't wait for completion to avoid blocking)
+    // Trigger email notifications
     try {
       console.log('📧 Triggering email notifications...');
       
-      // Call email notification function without awaiting to avoid blocking
       fetch(`${supabaseUrl}/functions/v1/send-weekly-discussion-notification`, {
         method: 'POST',
         headers: {
@@ -244,8 +318,8 @@ BELANGRIJK: Retourneer ALLEEN geldige JSON zonder markdown formatting, geen code
           topicId: newTopic.id,
           topicTitle: discussionContent.title,
           topicDescription: discussionContent.description,
-          artistName: album.artist,
-          albumTitle: album.title
+          artistName: selectedAlbum.artist,
+          albumTitle: selectedAlbum.title
         })
       }).then(response => {
         console.log('📧 Email notification response status:', response.status);
@@ -258,7 +332,6 @@ BELANGRIJK: Retourneer ALLEEN geldige JSON zonder markdown formatting, geen code
       
     } catch (emailError) {
       console.error('❌ Error triggering email notifications:', emailError);
-      // Don't fail the main function if email fails
     }
 
     return new Response(

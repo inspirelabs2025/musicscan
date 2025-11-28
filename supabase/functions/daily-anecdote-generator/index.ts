@@ -300,6 +300,35 @@ Maak het uitgebreider en diepgaander!`
 
     console.log('Successfully generated and saved anecdote:', newAnecdote.id);
 
+    // Auto-post to Facebook
+    try {
+      const anecdoteUrl = `https://www.musicscan.app/anekdotes/${newAnecdote.slug}`;
+      const fbResponse = await fetch(`${supabaseUrl}/functions/v1/post-to-facebook`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`
+        },
+        body: JSON.stringify({
+          content_type: 'anecdote',
+          title: newAnecdote.anecdote_title,
+          content: newAnecdote.anecdote_content.substring(0, 400) + '...',
+          url: anecdoteUrl,
+          hashtags: ['MusicScan', 'MuziekAnekdote', subjectName.replace(/\s+/g, ''), 'Muziek', 'MuziekGeschiedenis']
+        })
+      });
+      
+      const fbResult = await fbResponse.json();
+      if (fbResult.success) {
+        console.log('✅ Successfully posted anecdote to Facebook:', fbResult.post_id);
+      } else {
+        console.warn('⚠️ Facebook post failed:', fbResult.error);
+      }
+    } catch (fbError) {
+      console.error('❌ Error posting to Facebook:', fbError);
+      // Don't fail the whole operation if Facebook post fails
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 

@@ -1943,6 +1943,51 @@ export type Database = {
         }
         Relationships: []
       }
+      facebook_post_log: {
+        Row: {
+          content: string | null
+          content_type: string
+          created_at: string
+          error_message: string | null
+          facebook_post_id: string | null
+          facebook_response: Json | null
+          id: string
+          image_url: string | null
+          posted_at: string | null
+          status: string
+          title: string | null
+          url: string | null
+        }
+        Insert: {
+          content?: string | null
+          content_type: string
+          created_at?: string
+          error_message?: string | null
+          facebook_post_id?: string | null
+          facebook_response?: Json | null
+          id?: string
+          image_url?: string | null
+          posted_at?: string | null
+          status?: string
+          title?: string | null
+          url?: string | null
+        }
+        Update: {
+          content?: string | null
+          content_type?: string
+          created_at?: string
+          error_message?: string | null
+          facebook_post_id?: string | null
+          facebook_response?: Json | null
+          id?: string
+          image_url?: string | null
+          posted_at?: string | null
+          status?: string
+          title?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       facebook_sync_log: {
         Row: {
           created_at: string | null

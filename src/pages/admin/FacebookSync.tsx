@@ -16,6 +16,7 @@ export default function FacebookSync() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [pageAccessToken, setPageAccessToken] = useState("");
   const [appSecret, setAppSecret] = useState("");
+  const [pageId, setPageId] = useState("");
   const [isSavingToken, setIsSavingToken] = useState(false);
   const [syncProgress, setSyncProgress] = useState<{
     total?: number;
@@ -33,6 +34,21 @@ export default function FacebookSync() {
         .select('*')
         .order('sync_started_at', { ascending: false })
         .limit(10);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Fetch post history
+  const { data: postLogs, refetch: refetchPosts } = useQuery({
+    queryKey: ['facebook-post-logs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('facebook_post_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
       
       if (error) throw error;
       return data;
@@ -97,10 +113,10 @@ export default function FacebookSync() {
   };
 
   const saveToken = async () => {
-    if (!pageAccessToken.trim() || !appSecret.trim()) {
+    if (!pageAccessToken.trim() || !appSecret.trim() || !pageId.trim()) {
       toast({
         title: "Credentials vereist",
-        description: "Vul zowel de Page Access Token als App Secret in",
+        description: "Vul alle velden in: Page Access Token, App Secret en Page ID",
         variant: "destructive"
       });
       return;
@@ -128,14 +144,25 @@ export default function FacebookSync() {
       });
 
       if (secretError) throw secretError;
+
+      // Save Page ID
+      const { error: pageIdError } = await supabase.functions.invoke('save-facebook-token', {
+        body: { 
+          secret_key: 'FACEBOOK_PAGE_ID',
+          secret_value: pageId.trim()
+        }
+      });
+
+      if (pageIdError) throw pageIdError;
       
       toast({
         title: "✅ Credentials opgeslagen",
-        description: "Facebook credentials zijn veilig opgeslagen en kunnen nu gebruikt worden voor synchronisatie",
+        description: "Facebook credentials zijn veilig opgeslagen. Auto-posting is nu actief!",
       });
 
       setPageAccessToken("");
       setAppSecret("");
+      setPageId("");
       
     } catch (error) {
       console.error('Error saving credentials:', error);
@@ -226,9 +253,24 @@ export default function FacebookSync() {
               </p>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="pageId">Facebook Page ID</Label>
+              <Input
+                id="pageId"
+                type="text"
+                placeholder="Plak hier je Page ID (bijv. 123456789012345)..."
+                value={pageId}
+                onChange={(e) => setPageId(e.target.value)}
+                disabled={isSavingToken}
+              />
+              <p className="text-xs text-muted-foreground">
+                Te vinden in: Facebook Pagina → Info → Page ID (of in URL: facebook.com/[page-id])
+              </p>
+            </div>
+
             <Button
               onClick={saveToken}
-              disabled={isSavingToken || !pageAccessToken.trim() || !appSecret.trim()}
+              disabled={isSavingToken || !pageAccessToken.trim() || !appSecret.trim() || !pageId.trim()}
               className="w-full"
             >
               {isSavingToken ? (
@@ -384,6 +426,67 @@ export default function FacebookSync() {
                             {JSON.stringify(log.error_details, null, 2)}
                           </pre>
                         </details>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Auto-Post Geschiedenis */}
+        <Card>
+          <CardHeader>
+            <CardTitle>📘 Auto-Post Geschiedenis</CardTitle>
+            <CardDescription>
+              Overzicht van automatisch geplaatste berichten op Facebook (anekdotes, nieuws, blog)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!postLogs || postLogs.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Nog geen automatische posts geplaatst
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {postLogs.map((post) => (
+                  <div
+                    key={post.id}
+                    className="border rounded-lg p-4 hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        {post.status === 'success' ? (
+                          <Badge className="bg-success text-success-foreground">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />Gepost
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive">
+                            <XCircle className="w-3 h-3 mr-1" />Mislukt
+                          </Badge>
+                        )}
+                        <Badge variant="outline">{post.content_type}</Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {formatDate(post.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="font-medium mb-2">{post.title}</div>
+                    <div className="text-sm text-muted-foreground line-clamp-2">
+                      {post.content}
+                    </div>
+                    
+                    {post.facebook_post_id && (
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        Post ID: {post.facebook_post_id}
+                      </div>
+                    )}
+                    
+                    {post.error_message && (
+                      <div className="mt-2 p-2 bg-destructive/10 rounded text-xs text-destructive">
+                        {post.error_message}
                       </div>
                     )}
                   </div>

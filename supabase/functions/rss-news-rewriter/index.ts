@@ -390,6 +390,35 @@ serve(async (req) => {
           });
 
           console.log(`Created article: ${rewritten.title}`);
+
+          // Auto-post to Facebook
+          try {
+            const newsUrl = `https://www.musicscan.app/blog/${newPost.slug}`;
+            const fbResponse = await fetch(`${supabaseUrl}/functions/v1/post-to-facebook`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseKey}`
+              },
+              body: JSON.stringify({
+                content_type: 'news',
+                title: rewritten.title,
+                content: rewritten.summary || rewritten.content.substring(0, 300) + '...',
+                url: newsUrl,
+                image_url: imageUrl,
+                hashtags: ['MusicScan', 'MuziekNieuws', 'Nieuws', 'Muziek']
+              })
+            });
+            
+            const fbResult = await fbResponse.json();
+            if (fbResult.success) {
+              console.log(`✅ Posted to Facebook: ${fbResult.post_id}`);
+            } else {
+              console.warn(`⚠️ Facebook post failed: ${fbResult.error}`);
+            }
+          } catch (fbError) {
+            console.error(`❌ Error posting to Facebook:`, fbError);
+          }
         } catch (error) {
           console.error(`Error processing item: ${error.message}`);
         }

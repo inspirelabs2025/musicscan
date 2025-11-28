@@ -368,13 +368,21 @@ async function executeVinylAnalysisV4(req: Request) {
   console.log(`🚀 [${VINYL_FUNCTION_VERSION_V4}] REQUEST RECEIVED AT: ${new Date().toISOString()}`);
   console.log(`📋 [${VINYL_FUNCTION_VERSION_V4}] DEPLOYMENT TIMESTAMP: ${VINYL_DEPLOYMENT_TIMESTAMP_V4}`);
 
-  const { imageUrls: imageUrlsV4 } = await req.json();
+  const requestBody = await req.json();
+  
+  // Support both imageUrls (URLs) and imageBase64 (base64 data URIs)
+  const imageUrlsV4 = requestBody.imageUrls || requestBody.imageBase64 || [];
 
   console.log(`🎵 [${VINYL_FUNCTION_VERSION_V4}] Starting vinyl image analysis...`);
   console.log(`📸 [${VINYL_FUNCTION_VERSION_V4}] Processing ${imageUrlsV4.length} images`);
+  console.log(`📸 [${VINYL_FUNCTION_VERSION_V4}] Image type: ${requestBody.imageBase64 ? 'base64' : 'URL'}`);
 
   if (!OPENAI_API_KEY_V4) {
     throw new Error('OpenAI API key not configured');
+  }
+
+  if (!imageUrlsV4 || imageUrlsV4.length === 0) {
+    throw new Error('No images provided. Send imageUrls or imageBase64 array.');
   }
 
   console.log(`🔍 [${VINYL_FUNCTION_VERSION_V4}] Analyzing images with OpenAI Vision...`);

@@ -11,8 +11,10 @@ interface FileUploadProps {
   stepTitle: string;
   stepDescription: string;
   onFileUploaded?: (url: string) => void;
+  onFileSelected?: (file: File) => void; // New: return File object without uploading
+  skipUpload?: boolean; // New: skip Supabase upload
   accept?: string;
-  isCompleted?: boolean; // Add prop to track if this step is completed
+  isCompleted?: boolean;
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -20,20 +22,24 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   stepTitle,
   stepDescription,
   onFileUploaded,
+  onFileSelected,
+  skipUpload = false,
   accept = "image/*",
   isCompleted = false
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [localFile, setLocalFile] = useState<File | null>(null);
   
   const { uploading, uploadFile, addFile } = useFileUpload();
   const { isMobile, platform, recommendedSettings } = useMobileFileUpload();
 
-  // Reset uploadedUrl when step changes or component mounts
+  // Reset state when step changes or component mounts
   useEffect(() => {
     if (!isCompleted) {
       setUploadedUrl(null);
+      setLocalFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -72,6 +78,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         description: "Maximum bestandsgrootte is 10MB",
         variant: "destructive"
       });
+      return;
+    }
+
+    // Skip upload mode - just return the file
+    if (skipUpload) {
+      setLocalFile(file);
+      onFileSelected?.(file);
       return;
     }
 
@@ -132,10 +145,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   const removeUpload = () => {
     setUploadedUrl(null);
+    setLocalFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
+
+  const isFileReady = uploadedUrl || localFile || isCompleted;
+  const isLoading = uploading && !skipUpload;
 
   return (
     <Card variant="dark" className="max-w-2xl mx-auto">\
@@ -150,7 +167,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           </p>
         </div>
 
-        {uploadedUrl || isCompleted ? (
+        {isFileReady ? (
           // Success state
           <div className="space-y-4">
             <div className="flex items-center justify-center p-8 bg-green-50 dark:bg-green-950/20 rounded-lg border-2 border-green-200 dark:border-green-800">
@@ -158,7 +175,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 <CheckCircle className="w-16 h-16 text-green-600 mx-auto" />
                 <div>
                   <p className="text-lg font-medium text-green-800 dark:text-green-200">
-                    Foto succesvol geüpload!
+                    {skipUpload ? 'Foto geselecteerd!' : 'Foto succesvol geüpload!'}
                   </p>
                   <p className="text-sm text-green-600 dark:text-green-400">
                     Stap {step} voltooid
@@ -176,12 +193,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 <X className="w-4 h-4 mr-2" />
                 Andere foto kiezen
               </Button>
-              <Button 
-                onClick={() => window.open(uploadedUrl, '_blank')}
-                className="flex-1"
-              >
-                Bekijk foto
-              </Button>
+              {uploadedUrl && (
+                <Button 
+                  onClick={() => window.open(uploadedUrl, '_blank')}
+                  className="flex-1"
+                >
+                  Bekijk foto
+                </Button>
+              )}
             </div>
           </div>
         ) : (
@@ -197,7 +216,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
-            {uploading ? (
+            {isLoading ? (
               <div className="space-y-4">
                 <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
                 <div>
@@ -223,7 +242,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 <Button 
                   size="lg" 
                   onClick={openFileDialog}
-                  disabled={uploading}
+                  disabled={isLoading}
                 >
                   {isMobile ? (
                     <Camera className="w-4 h-4 mr-2" />

@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 
 interface UploadSectionProps {
   mediaType: 'vinyl' | 'cd';
-  uploadedFiles: string[];
-  onFileUploaded: (file: string) => void;
+  uploadedFiles: string[] | File[];
+  onFileUploaded?: (file: string) => void;
+  onFileSelected?: (file: File) => void; // New: for local-only mode
+  skipUpload?: boolean; // New: skip Supabase upload
   isAnalyzing: boolean;
   onBack?: () => void;
   onReset?: () => void;
@@ -17,7 +19,9 @@ interface UploadSectionProps {
 export const UploadSection = React.memo(({ 
   mediaType, 
   uploadedFiles, 
-  onFileUploaded, 
+  onFileUploaded,
+  onFileSelected,
+  skipUpload = false,
   isAnalyzing,
   onBack,
   onReset
@@ -63,6 +67,8 @@ export const UploadSection = React.memo(({
                 stepTitle={label}
                 stepDescription={`Upload de ${label.toLowerCase()}`}
                 onFileUploaded={onFileUploaded}
+                onFileSelected={onFileSelected}
+                skipUpload={skipUpload}
                 isCompleted={uploadedFiles.length > index}
               />
             ))}
@@ -70,7 +76,7 @@ export const UploadSection = React.memo(({
           {requiredPhotos > 0 && (
             <div className="mt-6">
               <div className="text-sm text-card-dark-foreground/70 mb-2">
-                Voortgang: {uploadedFiles.length}/{requiredPhotos} foto's geüpload
+                Voortgang: {uploadedFiles.length}/{requiredPhotos} foto's {skipUpload ? 'geselecteerd' : 'geüpload'}
               </div>
               <div className="w-full bg-muted/20 rounded-full h-2 border border-muted/30">
                 <div 

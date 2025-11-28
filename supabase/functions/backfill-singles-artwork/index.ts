@@ -17,21 +17,35 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body for options
-    const { refetch_all = false } = await req.json().catch(() => ({}));
+    const { refetch_all = false, batch_size = 10 } = await req.json().catch(() => ({}));
     
     const mode = refetch_all ? '🔄 REFETCH ALL' : '🎨 MISSING ONLY';
-    console.log(`${mode} - Starting singles artwork backfill...`);
+    console.log(`${mode} - Starting singles artwork backfill (batch size: ${batch_size})...`);
 
-    // Get all singles without artwork or with failed artwork
-    const { data: singles, error: fetchError } = await supabase
+    // Get singles based on mode - limit to batch_size to prevent timeout
+    let query = supabase
       .from('music_stories')
       .select('id, artist, single_name, slug, artwork_url, yaml_frontmatter')
-      .not('single_name', 'is', null)
-      .order('created_at', { ascending: false });
+      .not('single_name', 'is', null);
+    
+    if (!refetch_all) {
+      query = query.is('artwork_url', null);
+    }
+    
+    const { data: singles, error: fetchError } = await query
+      .order('created_at', { ascending: false })
+      .limit(batch_size);
 
     if (fetchError) {
       throw new Error(`Failed to fetch singles: ${fetchError.message}`);
     }
+
+    // Also get total count for reporting
+    const { count: totalMissing } = await supabase
+      .from('music_stories')
+      .select('*', { count: 'exact', head: true })
+      .not('single_name', 'is', null)
+      .is('artwork_url', null);
 
     if (!singles || singles.length === 0) {
       return new Response(JSON.stringify({
@@ -40,35 +54,20 @@ serve(async (req) => {
         processed: 0,
         updated: 0,
         failed: 0,
-        skipped: 0
+        remaining: 0
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Filter singles based on mode
-    const singlesNeedingArtwork = refetch_all 
-      ? singles // Process ALL singles when refetch_all is true
-      : singles.filter(s => 
-          !s.artwork_url || 
-          s.artwork_url.includes('placeholder') ||
-          s.artwork_url.includes('default')
-        );
-
-    console.log(`📊 Found ${singles.length} total singles, ${singlesNeedingArtwork.length} to process (mode: ${refetch_all ? 'REFETCH ALL' : 'MISSING ONLY'})`);
+    console.log(`📊 Processing batch of ${singles.length} singles (${totalMissing || 0} total missing artwork)`);
 
     let updated = 0;
     let failed = 0;
-    let skipped = 0;
-    let improved = 0;
 
-    for (const single of singlesNeedingArtwork) {
+    for (const single of singles) {
       try {
-        const oldArtwork = single.artwork_url;
         console.log(`🎵 Processing: ${single.artist} - ${single.single_name}`);
-        if (oldArtwork) {
-          console.log(`   Old artwork: ${oldArtwork.substring(0, 80)}...`);
-        }
 
         // Extract discogs_id from yaml_frontmatter if available
         const discogsId = single.yaml_frontmatter?.discogs_id;
@@ -94,20 +93,8 @@ serve(async (req) => {
         if (artworkResponse.ok) {
           const artworkData = await artworkResponse.json();
           if (artworkData.success && artworkData.artwork_url) {
-            const newArtwork = artworkData.artwork_url;
-            
-            // Check if artwork actually changed
-            if (oldArtwork && oldArtwork !== newArtwork) {
-              improved++;
-              console.log(`🔄 Improved artwork for: ${single.artist} - ${single.single_name}`);
-              console.log(`   New artwork: ${newArtwork.substring(0, 80)}...`);
-            } else if (!oldArtwork) {
-              updated++;
-              console.log(`✅ Added artwork for: ${single.artist} - ${single.single_name}`);
-            } else {
-              skipped++;
-              console.log(`⏭️ Artwork unchanged for: ${single.artist} - ${single.single_name}`);
-            }
+            updated++;
+            console.log(`✅ Added artwork for: ${single.artist} - ${single.single_name}`);
           } else {
             console.log(`⚠️ No artwork found for: ${single.artist} - ${single.single_name}`);
           }
@@ -116,8 +103,8 @@ serve(async (req) => {
           console.error(`❌ Failed to fetch artwork for: ${single.artist} - ${single.single_name}`);
         }
 
-        // Rate limiting: 1 request per second to be respectful to APIs
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Small delay between requests
+        await new Promise(resolve => setTimeout(resolve, 500));
 
       } catch (error) {
         failed++;
@@ -125,19 +112,17 @@ serve(async (req) => {
       }
     }
 
-    console.log(`✅ Backfill complete: ${updated} new, ${improved} improved, ${skipped} unchanged, ${failed} failed`);
+    const remaining = (totalMissing || 0) - updated;
+    console.log(`✅ Batch complete: ${updated} updated, ${failed} failed, ${remaining} remaining`);
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Backfill completed',
-      mode: refetch_all ? 'refetch_all' : 'missing_only',
-      total_singles: singles.length,
-      needed_artwork: singlesNeedingArtwork.length,
-      processed: singlesNeedingArtwork.length,
-      new_artwork: updated,
-      improved_artwork: improved,
-      unchanged: skipped,
-      failed
+      message: `Batch processed: ${updated} updated`,
+      batch_size: singles.length,
+      updated,
+      failed,
+      remaining: Math.max(0, remaining),
+      has_more: remaining > 0
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

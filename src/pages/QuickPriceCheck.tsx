@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useEffect, useMemo } from 'react';
+import { useReducer, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { MediaTypeSelector } from '@/components/MediaTypeSelector';
 import { UploadSection } from '@/components/UploadSection';
@@ -7,8 +7,7 @@ import { ScanResults } from '@/components/ScanResults';
 import { ConditionSelector } from '@/components/ConditionSelector';
 import { ManualSearch } from '@/components/ManualSearch';
 import { DiscogsIdInput } from '@/components/DiscogsIdInput';
-import { useVinylAnalysis } from '@/hooks/useVinylAnalysis';
-import { useCDAnalysis } from '@/hooks/useCDAnalysis';
+import { useQuickPriceAnalysis } from '@/hooks/useQuickPriceAnalysis';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
 import { scanReducer, initialScanState } from '@/components/ScanStateReducer';
 import { Button } from '@/components/ui/button';
@@ -20,9 +19,9 @@ export default function QuickPriceCheck() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(scanReducer, initialScanState);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
-  const { isAnalyzing: isAnalyzingVinyl, analysisResult: vinylResult, analyzeImages: analyzeVinylImages } = useVinylAnalysis();
-  const { isAnalyzing: isAnalyzingCD, analysisResult: cdResult, analyzeImages: analyzeCDImages } = useCDAnalysis();
+  const { isAnalyzing, analysisResult, analyzeImages, reset: resetAnalysis } = useQuickPriceAnalysis();
   const { 
     searchResults, 
     isSearching, 
@@ -32,12 +31,6 @@ export default function QuickPriceCheck() {
     retryPricing,
     isPricingLoading
   } = useDiscogsSearch();
-
-  const isAnalyzing = isAnalyzingVinyl || isAnalyzingCD;
-  const analysisResult = useMemo(() => 
-    state.mediaType === 'vinyl' ? vinylResult : (state.mediaType === 'cd' ? cdResult : null),
-    [state.mediaType, vinylResult, cdResult]
-  );
 
   useEffect(() => {
     const mediaTypeParam = searchParams.get('mediaType');
@@ -60,32 +53,31 @@ export default function QuickPriceCheck() {
     dispatch({ type: 'SET_MEDIA_TYPE', payload: type });
     dispatch({ type: 'SET_CURRENT_STEP', payload: 1 });
     dispatch({ type: 'SET_UPLOADED_FILES', payload: [] });
-  }, []);
+    setUploadedFiles([]);
+    resetAnalysis();
+  }, [resetAnalysis]);
 
-  const handleFileUploaded = useCallback((fileUrl: string) => {
-    dispatch({ type: 'SET_UPLOADED_FILES', payload: [...state.uploadedFiles, fileUrl] });
-  }, [state.uploadedFiles]);
+  // Handle file added (store File object, not URL)
+  const handleFileAdded = useCallback((file: File) => {
+    setUploadedFiles(prev => [...prev, file]);
+  }, []);
 
   const handleDiscogsIdSubmit = useCallback((discogsId: string) => {
     dispatch({ type: 'SET_CURRENT_STEP', payload: 4 });
     searchByDiscogsId(discogsId);
   }, [searchByDiscogsId]);
 
+  // Trigger analysis when enough files are uploaded
   useEffect(() => {
     const requiredPhotos = state.mediaType === 'vinyl' ? 3 : 4;
     
-    if (state.uploadedFiles.length === requiredPhotos && state.currentStep === 1) {
+    if (uploadedFiles.length === requiredPhotos && state.currentStep === 1 && state.mediaType) {
       const analyzePhotos = async () => {
         dispatch({ type: 'SET_CURRENT_STEP', payload: 2 });
         
-        let result;
-        if (state.mediaType === 'vinyl') {
-          result = await analyzeVinylImages(state.uploadedFiles);
-        } else {
-          result = await analyzeCDImages(state.uploadedFiles);
-        }
+        const result = await analyzeImages(uploadedFiles, state.mediaType as 'vinyl' | 'cd');
 
-        if (result?.analysis) {
+        if (result?.success && result.analysis) {
           dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
           
           const catalogNumber = result.analysis.catalog_number || result.analysis.catalogNumber;
@@ -101,7 +93,7 @@ export default function QuickPriceCheck() {
 
       analyzePhotos();
     }
-  }, [state.uploadedFiles, state.mediaType, state.currentStep, analyzeVinylImages, analyzeCDImages, searchCatalog]);
+  }, [uploadedFiles, state.mediaType, state.currentStep, analyzeImages, searchCatalog]);
 
   const handleResultsFound = useCallback(async (results: any[]) => {
     dispatch({ type: 'SET_CURRENT_STEP', payload: 4 });
@@ -109,8 +101,10 @@ export default function QuickPriceCheck() {
 
   const handleNewCheck = useCallback(() => {
     dispatch({ type: 'RESET_SCAN' });
+    setUploadedFiles([]);
+    resetAnalysis();
     navigate('/quick-price-check');
-  }, [navigate]);
+  }, [navigate, resetAnalysis]);
 
   const handleCopyToClipboard = useCallback((text: string) => {
     navigator.clipboard.writeText(text);
@@ -154,11 +148,15 @@ export default function QuickPriceCheck() {
           <>
             <UploadSection
               mediaType={state.mediaType}
-              uploadedFiles={state.uploadedFiles}
-              onFileUploaded={handleFileUploaded}
+              uploadedFiles={uploadedFiles}
+              onFileSelected={handleFileAdded}
+              skipUpload={true}
               isAnalyzing={isAnalyzing}
               onBack={() => dispatch({ type: 'SET_CURRENT_STEP', payload: 0 })}
-              onReset={() => dispatch({ type: 'SET_UPLOADED_FILES', payload: [] })}
+              onReset={() => {
+                dispatch({ type: 'SET_UPLOADED_FILES', payload: [] });
+                setUploadedFiles([]);
+              }}
             />
             <ManualSearch
               analysisResult={analysisResult}

@@ -50,10 +50,17 @@ interface OCRResult {
 }
 
 async function validateImageUrls(imageUrls: string[]): Promise<void> {
-  console.log('🔍 Validating image URLs:', imageUrls);
+  console.log('🔍 Validating image URLs:', imageUrls.length, 'images');
   
   for (let i = 0; i < imageUrls.length; i++) {
     const url = imageUrls[i];
+    
+    // Skip validation for base64 data URIs
+    if (url.startsWith('data:')) {
+      console.log(`✅ Image ${i + 1} is base64 data URI, skipping URL validation`);
+      continue;
+    }
+    
     try {
       const response = await fetch(url, { method: 'HEAD' });
       if (!response.ok) {
@@ -497,22 +504,17 @@ serve(async (req) => {
       });
     }
 
-    const { imageUrls, scanId }: CDAnalysisRequest = requestData;
+    // Support both imageUrls (URLs) and imageBase64 (base64 data URIs)
+    const imageUrls = requestData.imageUrls || requestData.imageBase64 || [];
+    const scanId = requestData.scanId;
+    const isBase64 = !!requestData.imageBase64;
+
+    console.log(`📸 Image type: ${isBase64 ? 'base64' : 'URL'}`);
 
     // Comprehensive input validation
-    if (!imageUrls) {
+    if (!imageUrls || !Array.isArray(imageUrls)) {
       return new Response(JSON.stringify({ 
-        error: 'Missing imageUrls in request',
-        success: false
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (!Array.isArray(imageUrls)) {
-      return new Response(JSON.stringify({ 
-        error: 'imageUrls must be an array',
+        error: 'Missing or invalid images in request. Send imageUrls or imageBase64 array.',
         success: false
       }), {
         status: 400,
@@ -540,7 +542,7 @@ serve(async (req) => {
       });
     }
 
-    console.log(`🎵 Starting CD analysis for scan ${scanId} with ${imageUrls.length} images`);
+    console.log(`🎵 Starting CD analysis for scan ${scanId || 'quick-check'} with ${imageUrls.length} images`);
 
     // Perform OCR analysis
     const ocrResults = await performOCRAnalysis(imageUrls);

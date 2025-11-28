@@ -97,6 +97,12 @@ verify_jwt = false
 [functions.spotify-album-search]
 verify_jwt = false
 
+[functions.analyze-vinyl-images]
+verify_jwt = false
+
+[functions.analyze-cd-images]
+verify_jwt = false
+
 [functions.spotify-sync]
 verify_jwt = true
 

@@ -9,7 +9,7 @@ import { PodcastSpotlight } from '@/components/home/PodcastSpotlight';
 import { TimeMachineSpotlight } from '@/components/home/TimeMachineSpotlight';
 import { ShopByCategorySection } from '@/components/shop/ShopByCategorySection';
 import { FeaturedProductsCarousel } from '@/components/shop/FeaturedProductsCarousel';
-import { LatestReleasesSection } from '@/components/home/LatestReleasesSection';
+
 import { SpotifyNewReleasesSection } from '@/components/home/SpotifyNewReleasesSection';
 import { NewsAndStoriesSection } from '@/components/home/NewsAndStoriesSection';
 import { ReviewsSpotlight } from '@/components/home/ReviewsSpotlight';
@@ -114,8 +114,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Latest Releases */}
-      <LatestReleasesSection />
 
       {/* Album Reviews Spotlight */}
       <ReviewsSpotlight />

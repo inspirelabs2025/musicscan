@@ -154,6 +154,7 @@ import LlmSitemap from "./pages/LlmSitemap";
 import SEOKeywords from "./pages/admin/SEOKeywords";
 import SystemOverview from "./pages/admin/SystemOverview";
 import MediaLibrary from "./pages/admin/MediaLibrary";
+import YouTubeDiscoveries from "./pages/YouTubeDiscoveries";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -331,6 +332,7 @@ const AppContent = () => {
         <Route path="/artist-spotlight/:slug" element={<ArtistSpotlight />} />
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/reviews/:slug" element={<ReviewDetail />} />
+        <Route path="/youtube-discoveries" element={<YouTubeDiscoveries />} />
         
         {/* Test Pages - Redirect to /admin/test/* */}
         <Route path="/test-music-news" element={<Navigate to="/admin/test/music-news" replace />} />

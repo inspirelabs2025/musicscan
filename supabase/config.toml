@@ -412,6 +412,9 @@ cron = "0 1 * * *"
 [[functions.rss-news-rewriter.schedule]]
 cron = "0 8,14,20 * * *"
 
+[functions.youtube-discoveries]
+verify_jwt = false
+
 [functions.process-spotify-new-releases]
 verify_jwt = false
 

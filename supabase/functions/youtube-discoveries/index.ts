@@ -11,14 +11,14 @@ const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-// International quality YouTube channels for music content
+// International quality YouTube channels for music content (NO equipment/gear channels)
 const QUALITY_CHANNELS = {
   interviews: [
     'UCmBA_wu8xGg1OfOkfW13Q0Q', // Zane Lowe
     'UC0RhatS1pyxInC00YKjjBqQ', // Genius
     'UCqECaJ8Gagnn7YCbPEzWH6g', // The FADER
     'UCO3GgqahVE2MdIEpqMVdLyA', // Pitchfork
-    'UCvpDeGlR5wLP9Z3Tb6K0Xfg', // Rick Beato
+    'UCvpDeGlR5wLP9Z3Tb6K0Xfg', // Rick Beato (music analysis)
     'UC0EIMmSn_E8A6bWHYjqSA5Q', // Nardwuar
     'UCw49uOTAJjGUdoAeUcp7tOg', // Rolling Stone
     'UCELBWmlf2of09xyoWNWoSSg', // Red Bull Music
@@ -26,15 +26,10 @@ const QUALITY_CHANNELS = {
     'UCVHFbqXqoYvEWM1Ddxl0QKg', // Grammy Awards
   ],
   studio: [
-    'UCZFWPqqPkFlNwIxcpsLOwew', // Sound on Sound
-    'UCS-bq8kKHOC04bRqLrCqJvw', // Sweetwater
-    'UCqBYGlD2C0OnZjfAA3D7T7A', // Pensado's Place
-    'UC7TrNpGSM8JMOAi6I4b_Qnw', // Produce Like A Pro
-    'UCIXkQiMRISbXMb8DP6Oy7XQ', // Vintage King Audio
-    'UCIw5VpuFqRVPIlfOlD0adXw', // Mix Magazine
+    // Focus on actual artist recording sessions, not gear/equipment channels
     'UC1IJWLhqJAV6pfPE2WpoHMg', // Sound City Studios
     'UCvQS3yKkHnWUUPPTi2kBHqQ', // Abbey Road Studios
-    'UCmpwJKjnRmXMVvLg1-UYWOA', // Tape Op
+    'UCELBWmlf2of09xyoWNWoSSg', // Red Bull Studios
   ],
   live_sessions: [
     'UC4eYXhJI4-7wSWc8UNRwD4A', // NPR Music (Tiny Desk)
@@ -52,11 +47,10 @@ const QUALITY_CHANNELS = {
     'UCJIOFQLGwB3GH9K9waxwynQ', // BBC Documentary
     'UCUXRCYkJwpLVJKg3f6w82tA', // Vice
     'UC4USoIAL9qcsx5nr-TZ6-eA', // Vox
-    'UCsXVk37bltHxD1rDPwtNM8Q', // Kurzgesagt (occasionally music)
   ]
 };
 
-// International search terms (English-focused)
+// International search terms (English-focused) - NO gear/equipment terms
 const SEARCH_TERMS = {
   interview: [
     'full interview',
@@ -66,12 +60,12 @@ const SEARCH_TERMS = {
     'career interview'
   ],
   studio: [
-    'recording session',
+    // Focus on actual recording sessions with artists, not gear reviews
+    'recording session artist',
     'making of album',
-    'studio session',
-    'behind the scenes studio',
-    'album creation process',
-    'gear breakdown'
+    'in the studio recording',
+    'album recording sessions',
+    'tracking session'
   ],
   live_session: [
     'tiny desk concert',
@@ -79,7 +73,7 @@ const SEARCH_TERMS = {
     'live session',
     'acoustic session',
     'KEXP session',
-    'live performance studio'
+    'live performance'
   ],
   documentary: [
     'documentary',
@@ -89,11 +83,20 @@ const SEARCH_TERMS = {
   ]
 };
 
-// Channels/terms to exclude (too local/Dutch-focused or unwanted)
+// Channels/terms to exclude (Dutch content + audio/equipment channels)
 const EXCLUDE_PATTERNS = [
+  // Dutch/local content
   'dwdd', 'de wereld draait door', '3voor12', 'rtv', 
   'nos', 'npo', 'bnn', 'vpro muziek', 'nl20', '538',
-  'radio veronica', 'q-music nl', 'slam', 'audiofidelity'
+  'radio veronica', 'q-music nl', 'slam',
+  // Audio equipment/gear channels
+  'audiofidelity', 'sweetwater', 'andertons', 'thomann',
+  'gear review', 'pedal demo', 'amp review', 'guitar demo',
+  'synth demo', 'plugin review', 'daw tutorial', 'mixing tutorial',
+  'mastering tutorial', 'audio interface', 'microphone review',
+  'headphone review', 'speaker review', 'studio monitors',
+  'produce like a pro', 'pensado', 'sound on sound', 'tape op',
+  'vintage king', 'perfect circuit', 'reverb demo', 'equipboard'
 ];
 
 interface YouTubeVideo {

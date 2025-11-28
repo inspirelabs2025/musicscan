@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { createHmac } from "https://deno.land/std@0.177.0/node/crypto.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { user_access_token, app_secret: providedAppSecret } = await req.json();
+    const { user_access_token } = await req.json();
 
     if (!user_access_token) {
       return new Response(
@@ -21,92 +20,66 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Clean the token - remove any whitespace, newlines
+    const cleanToken = user_access_token.trim().replace(/[\r\n\s]/g, '');
+    
     console.log('📘 Fetching Facebook pages with user token...');
-    console.log('Token length:', user_access_token.length);
+    console.log('Token length:', cleanToken.length);
+    console.log('Token starts with:', cleanToken.substring(0, 10));
+    console.log('Token ends with:', cleanToken.substring(cleanToken.length - 10));
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Get App Secret from app_secrets or use provided one
-    let appSecret = providedAppSecret;
-    
-    if (!appSecret) {
-      const { data: secrets, error: secretsError } = await supabase
-        .from('app_secrets')
-        .select('secret_key, secret_value')
-        .eq('secret_key', 'FACEBOOK_APP_SECRET')
-        .single();
-
-      if (secretsError || !secrets) {
-        console.log('⚠️ No App Secret found in database, trying without appsecret_proof...');
-        appSecret = null;
-      } else {
-        appSecret = secrets.secret_value;
-        console.log('✅ App Secret found, length:', appSecret.length);
-      }
+    // Basic validation - Facebook tokens usually start with EAA
+    if (!cleanToken.startsWith('EAA') && !cleanToken.startsWith('EAAG')) {
+      console.error('⚠️ Token does not look like a Facebook access token');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid token format. Facebook access tokens typically start with "EAA". Please copy the complete token from Graph API Explorer.',
+          hint: 'Make sure you copied the entire token without any extra characters.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Build the API URL
-    let pagesUrl = `https://graph.facebook.com/v20.0/me/accounts?access_token=${encodeURIComponent(user_access_token.trim())}`;
+    // Call Facebook API WITHOUT appsecret_proof first (simpler, works for most tokens)
+    const pagesUrl = `https://graph.facebook.com/v20.0/me/accounts?access_token=${encodeURIComponent(cleanToken)}`;
     
-    // Only add appsecret_proof if we have the app secret
-    if (appSecret) {
-      // Generate appsecret_proof - MUST use the token being sent in the request
-      const appsecretProof = createHmac('sha256', appSecret.trim())
-        .update(user_access_token.trim())
-        .digest('hex');
-      
-      console.log('🔐 Generated appsecret_proof (first 10 chars):', appsecretProof.substring(0, 10));
-      pagesUrl += `&appsecret_proof=${appsecretProof}`;
-    }
-    
-    console.log('🔗 Calling /me/accounts...');
+    console.log('🔗 Calling /me/accounts without appsecret_proof...');
     
     const response = await fetch(pagesUrl);
     const result = await response.json();
 
     if (!response.ok || result.error) {
-      console.error('Facebook API error:', result);
+      console.error('Facebook API error:', JSON.stringify(result, null, 2));
       
-      // If appsecret_proof failed, try without it (for testing/debug)
-      if (result.error?.message?.includes('signature') && appSecret) {
-        console.log('⚠️ Signature failed, retrying without appsecret_proof...');
-        
-        const retryUrl = `https://graph.facebook.com/v20.0/me/accounts?access_token=${encodeURIComponent(user_access_token.trim())}`;
-        const retryResponse = await fetch(retryUrl);
-        const retryResult = await retryResponse.json();
-        
-        if (!retryResponse.ok || retryResult.error) {
-          console.error('Retry also failed:', retryResult);
-          throw new Error(retryResult.error?.message || 'Failed to fetch pages');
+      // Provide helpful error messages based on Facebook error codes
+      let errorMessage = result.error?.message || 'Failed to fetch pages';
+      let hint = '';
+      
+      if (result.error?.code === 190) {
+        if (result.error?.error_subcode === 463) {
+          hint = 'Token is expired. Please generate a new access token from Graph API Explorer.';
+        } else if (result.error?.error_subcode === 467) {
+          hint = 'Token is invalid. Please generate a new access token from Graph API Explorer.';
+        } else if (result.error?.message?.includes('signature')) {
+          hint = 'Token signature issue. Make sure you are using the token from Graph API Explorer, not from Access Token Debugger output.';
+        } else {
+          hint = 'Token is invalid or expired. Please generate a fresh access token from Graph API Explorer with pages_manage_posts permission.';
         }
-        
-        console.log(`✅ Retry succeeded! Found ${retryResult.data?.length || 0} pages`);
-        
-        const pages = (retryResult.data || []).map((page: any) => ({
-          id: page.id,
-          name: page.name,
-          access_token: page.access_token,
-          category: page.category
-        }));
-
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            pages,
-            warning: 'appsecret_proof failed - please verify your App Secret is correct',
-            message: `Found ${pages.length} page(s). Select one to save its Page Access Token.`
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      } else if (result.error?.code === 100) {
+        hint = 'Missing required permissions. Make sure you added pages_manage_posts and pages_read_engagement permissions.';
       }
       
-      throw new Error(result.error?.message || 'Failed to fetch pages');
+      return new Response(
+        JSON.stringify({ 
+          error: errorMessage,
+          hint: hint,
+          facebook_error: result.error
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log(`✅ Found ${result.data?.length || 0} pages`);
+    console.log(`✅ Success! Found ${result.data?.length || 0} pages`);
 
     // Return the pages with their tokens
     const pages = (result.data || []).map((page: any) => ({
@@ -115,6 +88,18 @@ Deno.serve(async (req) => {
       access_token: page.access_token,
       category: page.category
     }));
+
+    if (pages.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          pages: [],
+          warning: 'No pages found. Make sure your Facebook account manages at least one Facebook Page and you granted page permissions.',
+          message: 'No pages found for this account.'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     return new Response(
       JSON.stringify({ 
@@ -128,7 +113,10 @@ Deno.serve(async (req) => {
   } catch (error: any) {
     console.error('Error fetching page token:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        hint: 'An unexpected error occurred. Please try again.'
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

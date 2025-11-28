@@ -16,6 +16,7 @@ import { ReviewsSpotlight } from '@/components/home/ReviewsSpotlight';
 import { AIFeaturesCompact } from '@/components/home/AIFeaturesCompact';
 import { CommunityStats } from '@/components/home/CommunityStats';
 import { ArtistSpotlightsSection } from '@/components/home/ArtistSpotlightsSection';
+import { YouTubeDiscoveriesSection } from '@/components/home/YouTubeDiscoveriesSection';
 
 import { FeaturedPhotos } from '@/components/FeaturedPhotos';
 import { DailyAnecdote } from '@/components/home/DailyAnecdote';
@@ -75,6 +76,9 @@ const Home = () => {
 
       {/* Podcast Spotlight - Always visible */}
       <PodcastSpotlight />
+
+      {/* YouTube Discoveries Section */}
+      <YouTubeDiscoveriesSection />
 
       {/* Shop Categories - Compact on mobile */}
       <section className={isMobile ? "py-8 bg-muted/30" : "py-16 bg-muted/30"}>

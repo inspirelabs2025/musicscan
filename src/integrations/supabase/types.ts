@@ -6289,6 +6289,75 @@ export type Database = {
           },
         ]
       }
+      youtube_discoveries: {
+        Row: {
+          artist_name: string | null
+          channel_id: string | null
+          channel_name: string | null
+          content_type: string
+          created_at: string | null
+          description: string | null
+          discovered_at: string | null
+          duration: string | null
+          featured_at: string | null
+          id: string
+          is_featured: boolean | null
+          published_at: string | null
+          quality_score: number | null
+          source_channel: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+          video_id: string
+          view_count: number | null
+        }
+        Insert: {
+          artist_name?: string | null
+          channel_id?: string | null
+          channel_name?: string | null
+          content_type: string
+          created_at?: string | null
+          description?: string | null
+          discovered_at?: string | null
+          duration?: string | null
+          featured_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          published_at?: string | null
+          quality_score?: number | null
+          source_channel?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+          video_id: string
+          view_count?: number | null
+        }
+        Update: {
+          artist_name?: string | null
+          channel_id?: string | null
+          channel_name?: string | null
+          content_type?: string
+          created_at?: string | null
+          description?: string | null
+          discovered_at?: string | null
+          duration?: string | null
+          featured_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          published_at?: string | null
+          quality_score?: number | null
+          source_channel?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+          video_id?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       cronjob_stats: {

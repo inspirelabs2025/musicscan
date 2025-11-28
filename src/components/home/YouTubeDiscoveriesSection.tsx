@@ -17,6 +17,7 @@ interface YouTubeDiscovery {
   view_count: number;
   content_type: string;
   quality_score: number;
+  tags: string[] | null;
 }
 
 export const YouTubeDiscoveriesSection = () => {
@@ -102,6 +103,15 @@ export const YouTubeDiscoveriesSection = () => {
                   <h3 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
                     {video.title}
                   </h3>
+                  {video.tags && video.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {video.tags.slice(0, 2).map((tag, idx) => (
+                        <span key={idx} className="text-xs px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground mb-3">
                     {video.channel_name}
                   </p>

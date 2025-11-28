@@ -386,6 +386,31 @@ serve(async (req) => {
                 const detectedType = classifyContentType(video.title, video.description);
                 const qualityScore = calculateQualityScore(video, details.viewCount, durationMinutes);
                 
+                // Extract tags from video content
+                const tags: string[] = [artist.artist_name];
+                const finalContentType = detectedType !== 'other' ? detectedType : contentType;
+                
+                // Add content type label
+                const contentTypeLabels: Record<string, string> = {
+                  interview: 'Interview',
+                  studio: 'Studio',
+                  live_session: 'Live',
+                  documentary: 'Documentary'
+                };
+                if (contentTypeLabels[finalContentType]) {
+                  tags.push(contentTypeLabels[finalContentType]);
+                }
+                
+                // Extract song/album mentions from title
+                const titleLower = video.title.toLowerCase();
+                if (titleLower.includes('tiny desk')) tags.push('Tiny Desk');
+                if (titleLower.includes('colors show') || titleLower.includes('a colors show')) tags.push('COLORS');
+                if (titleLower.includes('kexp')) tags.push('KEXP');
+                if (titleLower.includes('npr')) tags.push('NPR');
+                if (titleLower.includes('acoustic')) tags.push('Acoustic');
+                if (titleLower.includes('unplugged')) tags.push('Unplugged');
+                if (titleLower.includes('full album')) tags.push('Album');
+                
                 // Only add if quality score is decent
                 if (qualityScore >= 25) {
                   allDiscoveries.push({
@@ -398,9 +423,10 @@ serve(async (req) => {
                     published_at: video.publishedAt,
                     view_count: details.viewCount,
                     duration_minutes: Math.round(durationMinutes),
-                    content_type: detectedType !== 'other' ? detectedType : contentType,
+                    content_type: finalContentType,
                     artist_name: artist.artist_name,
                     quality_score: qualityScore,
+                    tags: tags,
                     user_id: userId
                   });
                   

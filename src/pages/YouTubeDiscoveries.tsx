@@ -21,6 +21,7 @@ interface YouTubeDiscovery {
   content_type: string;
   artist_name: string | null;
   quality_score: number | null;
+  tags: string[] | null;
 }
 
 const contentTypeConfig = {
@@ -249,10 +250,14 @@ export default function YouTubeDiscoveries() {
                         {video.title}
                       </h3>
                       
-                      {video.artist_name && (
-                        <p className="text-sm text-primary font-medium mb-1">
-                          {video.artist_name}
-                        </p>
+                      {video.tags && video.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {video.tags.slice(0, 3).map((tag, idx) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
                       )}
                       
                       <p className="text-sm text-muted-foreground mb-2">

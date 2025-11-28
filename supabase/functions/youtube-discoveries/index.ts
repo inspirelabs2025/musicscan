@@ -89,11 +89,11 @@ const SEARCH_TERMS = {
   ]
 };
 
-// Channels/terms to exclude (too local/Dutch-focused)
+// Channels/terms to exclude (too local/Dutch-focused or unwanted)
 const EXCLUDE_PATTERNS = [
   'dwdd', 'de wereld draait door', '3voor12', 'rtv', 
   'nos', 'npo', 'bnn', 'vpro muziek', 'nl20', '538',
-  'radio veronica', 'q-music nl', 'slam'
+  'radio veronica', 'q-music nl', 'slam', 'audiofidelity'
 ];
 
 interface YouTubeVideo {

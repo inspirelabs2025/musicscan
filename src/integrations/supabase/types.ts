@@ -6299,6 +6299,7 @@ export type Database = {
           description: string | null
           discovered_at: string | null
           duration: string | null
+          duration_minutes: number | null
           featured_at: string | null
           id: string
           is_featured: boolean | null
@@ -6322,6 +6323,7 @@ export type Database = {
           description?: string | null
           discovered_at?: string | null
           duration?: string | null
+          duration_minutes?: number | null
           featured_at?: string | null
           id?: string
           is_featured?: boolean | null
@@ -6345,6 +6347,7 @@ export type Database = {
           description?: string | null
           discovered_at?: string | null
           duration?: string | null
+          duration_minutes?: number | null
           featured_at?: string | null
           id?: string
           is_featured?: boolean | null

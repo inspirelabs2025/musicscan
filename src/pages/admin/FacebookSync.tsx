@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, RefreshCw, Facebook, CheckCircle2, XCircle, AlertCircle, Key, Wand2 } from "lucide-react";
+import { Loader2, RefreshCw, Facebook, CheckCircle2, XCircle, AlertCircle, Key, Wand2, Send } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,10 @@ export default function FacebookSync() {
   const [isFetchingPages, setIsFetchingPages] = useState(false);
   const [availablePages, setAvailablePages] = useState<FacebookPage[]>([]);
   const [selectedPageId, setSelectedPageId] = useState("");
+  
+  // Test post state
+  const [testPostMessage, setTestPostMessage] = useState("🎵 Test post vanuit MusicScan! Onze Facebook integratie werkt perfect. #MusicScan #VinylCollection");
+  const [isTestPosting, setIsTestPosting] = useState(false);
 
   // Fetch sync history
   const { data: syncLogs, refetch } = useQuery({
@@ -187,6 +192,53 @@ export default function FacebookSync() {
       });
     } finally {
       setIsSavingToken(false);
+    }
+  };
+
+  // Test post to Facebook
+  const sendTestPost = async () => {
+    if (!testPostMessage.trim()) {
+      toast({
+        title: "Bericht vereist",
+        description: "Voer een testbericht in om te posten",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsTestPosting(true);
+
+      const { data, error } = await supabase.functions.invoke('post-to-facebook', {
+        body: {
+          content_type: 'test',
+          title: 'Test Post',
+          content: testPostMessage.trim(),
+          hashtags: []
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast({
+          title: "✅ Test post succesvol!",
+          description: `Post ID: ${data.post_id}`,
+        });
+        refetchPosts();
+      } else {
+        throw new Error(data?.error || 'Onbekende fout');
+      }
+
+    } catch (error: any) {
+      console.error('Test post error:', error);
+      toast({
+        title: "❌ Test post mislukt",
+        description: error.message || "Er is een fout opgetreden",
+        variant: "destructive"
+      });
+    } finally {
+      setIsTestPosting(false);
     }
   };
 
@@ -433,6 +485,50 @@ export default function FacebookSync() {
                 </>
               ) : (
                 "Credentials Opslaan"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Test Post */}
+        <Card className="border-green-500/50 bg-green-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Send className="w-5 h-5 text-green-500" />
+              🧪 Test Post naar Facebook
+            </CardTitle>
+            <CardDescription>
+              Verstuur een testbericht naar je Facebook pagina om te controleren of de integratie werkt
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="testMessage">Testbericht</Label>
+              <Textarea
+                id="testMessage"
+                placeholder="Typ hier je testbericht..."
+                value={testPostMessage}
+                onChange={(e) => setTestPostMessage(e.target.value)}
+                disabled={isTestPosting}
+                rows={3}
+              />
+            </div>
+
+            <Button
+              onClick={sendTestPost}
+              disabled={isTestPosting || !testPostMessage.trim()}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              {isTestPosting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Posten...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Verstuur Test Post
+                </>
               )}
             </Button>
           </CardContent>

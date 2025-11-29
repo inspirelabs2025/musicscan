@@ -1,5 +1,12 @@
 {
   "version": 2,
+  "redirects": [
+    {
+      "source": "/blog/:slug",
+      "destination": "/plaat-verhaal/:slug",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/sitemap.xml",

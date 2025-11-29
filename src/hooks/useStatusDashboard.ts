@@ -7,6 +7,7 @@ export interface ContentSource {
   label: string;
   table: string;
   dateColumn: string;
+  publishedColumn?: string; // Column that tracks published status (e.g., 'is_published')
   filter?: string;
   schedule: string;
   expectedDaily: number;
@@ -20,6 +21,7 @@ export const CONTENT_SOURCES: ContentSource[] = [
     label: 'Anekdotes', 
     table: 'music_anecdotes', 
     dateColumn: 'created_at',
+    publishedColumn: 'is_published',
     schedule: 'Dagelijks 06:05',
     expectedDaily: 1,
     warningAfterHours: 26,
@@ -30,6 +32,7 @@ export const CONTENT_SOURCES: ContentSource[] = [
     label: 'Muziekgeschiedenis', 
     table: 'music_history_events', 
     dateColumn: 'created_at',
+    publishedColumn: 'is_published',
     schedule: 'Dagelijks 06:00',
     expectedDaily: 1,
     warningAfterHours: 26,
@@ -40,6 +43,7 @@ export const CONTENT_SOURCES: ContentSource[] = [
     label: 'Nieuws Artikelen', 
     table: 'news_blog_posts', 
     dateColumn: 'created_at',
+    publishedColumn: 'is_published',
     schedule: '3x per dag',
     expectedDaily: 3,
     warningAfterHours: 10,
@@ -70,6 +74,7 @@ export const CONTENT_SOURCES: ContentSource[] = [
     label: 'Artist Stories', 
     table: 'artist_stories', 
     dateColumn: 'created_at',
+    publishedColumn: 'is_published',
     schedule: 'Dagelijks 01:00',
     expectedDaily: 1,
     warningAfterHours: 48,
@@ -80,6 +85,7 @@ export const CONTENT_SOURCES: ContentSource[] = [
     label: 'Music Stories', 
     table: 'music_stories', 
     dateColumn: 'created_at',
+    publishedColumn: 'is_published',
     schedule: 'Continu',
     expectedDaily: 10,
     warningAfterHours: 8,
@@ -90,6 +96,7 @@ export const CONTENT_SOURCES: ContentSource[] = [
     label: 'Blog Posts', 
     table: 'blog_posts', 
     dateColumn: 'created_at',
+    publishedColumn: 'is_published',
     schedule: 'Continu',
     expectedDaily: 50,
     warningAfterHours: 4,
@@ -112,6 +119,8 @@ export interface ContentActivity {
   lastActivity: Date | null;
   countInPeriod: number;
   total: number;
+  publishedCount: number | null;
+  unpublishedCount: number | null;
   status: 'ok' | 'warning' | 'error' | 'unknown';
   hoursSinceActivity: number | null;
 }
@@ -174,6 +183,25 @@ export function useStatusDashboard(periodHours: number = 24) {
             .from(source.table as any)
             .select('*', { count: 'exact', head: true });
           
+          // Fetch published/unpublished counts if the table has a publishedColumn
+          let publishedCount: number | null = null;
+          let unpublishedCount: number | null = null;
+          
+          if (source.publishedColumn) {
+            const { count: pubCount } = await supabase
+              .from(source.table as any)
+              .select('*', { count: 'exact', head: true })
+              .eq(source.publishedColumn, true);
+            
+            const { count: unpubCount } = await supabase
+              .from(source.table as any)
+              .select('*', { count: 'exact', head: true })
+              .eq(source.publishedColumn, false);
+            
+            publishedCount = pubCount || 0;
+            unpublishedCount = unpubCount || 0;
+          }
+          
           const lastActivity = lastRecord?.[source.dateColumn] 
             ? new Date(lastRecord[source.dateColumn]) 
             : null;
@@ -187,6 +215,8 @@ export function useStatusDashboard(periodHours: number = 24) {
             lastActivity,
             countInPeriod: periodCount || 0,
             total: totalCount || 0,
+            publishedCount,
+            unpublishedCount,
             status: calculateStatus(source, lastActivity, periodCount || 0),
             hoursSinceActivity
           });
@@ -197,6 +227,8 @@ export function useStatusDashboard(periodHours: number = 24) {
             lastActivity: null,
             countInPeriod: 0,
             total: 0,
+            publishedCount: null,
+            unpublishedCount: null,
             status: 'unknown',
             hoursSinceActivity: null
           });

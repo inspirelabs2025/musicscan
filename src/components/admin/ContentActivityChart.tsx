@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Legend } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, subDays, eachDayOfInterval } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -108,7 +108,7 @@ export function ContentActivityChart() {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
-          <LineChart data={data} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
+          <BarChart data={data} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
             <XAxis 
               dataKey="date" 
               tickFormatter={(value) => format(new Date(value), 'd MMM', { locale: nl })}
@@ -125,18 +125,16 @@ export function ContentActivityChart() {
             />
             <Legend />
             {CONTENT_SOURCES.map((source) => (
-              <Line
+              <Bar
                 key={source.id}
-                type="monotone"
                 dataKey={source.id}
                 name={source.label}
-                stroke={source.color}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4 }}
+                fill={source.color}
+                stackId="content"
+                radius={[0, 0, 0, 0]}
               />
             ))}
-          </LineChart>
+          </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>

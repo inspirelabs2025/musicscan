@@ -26,6 +26,7 @@ export interface ArtistStory {
   discogs_artist_id?: number;
   user_id?: string;
   updated_at?: string;
+  is_deep_dive?: boolean;
 }
 
 interface UseArtistStoriesOptions {
@@ -44,7 +45,8 @@ export const useArtistStories = (options: UseArtistStoriesOptions = {}) => {
       let query = supabase
         .from('artist_stories')
         .select('*')
-        .eq('is_published', true);
+        .eq('is_published', true)
+        .or('is_deep_dive.is.null,is_deep_dive.eq.false');
 
       // Apply search filter
       if (search) {
@@ -118,7 +120,8 @@ export const useArtistStoriesStats = () => {
       const { data, error } = await supabase
         .from('artist_stories')
         .select('music_style')
-        .eq('is_published', true);
+        .eq('is_published', true)
+        .or('is_deep_dive.is.null,is_deep_dive.eq.false');
 
       if (error) {
         console.error('Error fetching artist stories stats:', error);

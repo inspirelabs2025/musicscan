@@ -253,12 +253,12 @@ export default function StatusDashboard() {
                     {activity.total.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-center">
-                    {activity.publishedCount !== null ? (
+                    {activity.publishedCount !== null && activity.publishedCount !== undefined ? (
                       <div className="flex items-center justify-center gap-1">
                         <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 text-xs">
                           ✓ {activity.publishedCount.toLocaleString()}
                         </Badge>
-                        {activity.unpublishedCount && activity.unpublishedCount > 0 && (
+                        {activity.unpublishedCount != null && activity.unpublishedCount > 0 && (
                           <Badge variant="outline" className="bg-orange-500/10 text-orange-500 border-orange-500/20 text-xs">
                             ⏳ {activity.unpublishedCount.toLocaleString()}
                           </Badge>

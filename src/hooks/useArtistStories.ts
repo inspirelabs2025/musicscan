@@ -46,7 +46,7 @@ export const useArtistStories = (options: UseArtistStoriesOptions = {}) => {
         .from('artist_stories')
         .select('*')
         .eq('is_published', true)
-        .or('is_deep_dive.is.null,is_deep_dive.eq.false');
+        .neq('is_deep_dive', true);
 
       // Apply search filter
       if (search) {
@@ -121,7 +121,7 @@ export const useArtistStoriesStats = () => {
         .from('artist_stories')
         .select('music_style')
         .eq('is_published', true)
-        .or('is_deep_dive.is.null,is_deep_dive.eq.false');
+        .neq('is_deep_dive', true);
 
       if (error) {
         console.error('Error fetching artist stories stats:', error);

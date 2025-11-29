@@ -435,3 +435,12 @@ verify_jwt = false
 
 [[functions.singles-monitor.schedule]]
 cron = "*/5 * * * *"
+
+[functions.daily-status-report]
+verify_jwt = false
+
+[[functions.daily-status-report.schedule]]
+cron = "0 8 * * *"
+
+[[functions.daily-status-report.schedule]]
+cron = "0 16 * * *"

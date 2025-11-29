@@ -1943,6 +1943,108 @@ export type Database = {
         }
         Relationships: []
       }
+      facebook_auto_post_settings: {
+        Row: {
+          content_type: string
+          created_at: string
+          custom_hashtags: string[] | null
+          id: string
+          include_image: boolean | null
+          include_url: boolean | null
+          is_enabled: boolean
+          last_auto_post_at: string | null
+          max_posts_per_day: number | null
+          schedule_day: number | null
+          schedule_hour: number | null
+          schedule_type: string
+          updated_at: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          custom_hashtags?: string[] | null
+          id?: string
+          include_image?: boolean | null
+          include_url?: boolean | null
+          is_enabled?: boolean
+          last_auto_post_at?: string | null
+          max_posts_per_day?: number | null
+          schedule_day?: number | null
+          schedule_hour?: number | null
+          schedule_type?: string
+          updated_at?: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          custom_hashtags?: string[] | null
+          id?: string
+          include_image?: boolean | null
+          include_url?: boolean | null
+          is_enabled?: boolean
+          last_auto_post_at?: string | null
+          max_posts_per_day?: number | null
+          schedule_day?: number | null
+          schedule_hour?: number | null
+          schedule_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      facebook_content_queue: {
+        Row: {
+          content_id: string
+          content_preview: string | null
+          content_type: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          facebook_post_id: string | null
+          id: string
+          image_url: string | null
+          posted_at: string | null
+          scheduled_for: string | null
+          status: string
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          content_id: string
+          content_preview?: string | null
+          content_type: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          image_url?: string | null
+          posted_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          content_id?: string
+          content_preview?: string | null
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          image_url?: string | null
+          posted_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       facebook_post_log: {
         Row: {
           content: string | null

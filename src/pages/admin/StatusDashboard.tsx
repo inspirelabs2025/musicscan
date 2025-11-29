@@ -224,6 +224,7 @@ export default function StatusDashboard() {
                 <TableHead>Laatste Activiteit</TableHead>
                 <TableHead className="text-right">Laatste 24u</TableHead>
                 <TableHead className="text-right">Totaal</TableHead>
+                <TableHead className="text-center">Frontend Status</TableHead>
                 <TableHead className="text-center">Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -250,6 +251,22 @@ export default function StatusDashboard() {
                   </TableCell>
                   <TableCell className="text-right font-mono text-muted-foreground">
                     {activity.total.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {activity.publishedCount !== null ? (
+                      <div className="flex items-center justify-center gap-1">
+                        <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 text-xs">
+                          ✓ {activity.publishedCount.toLocaleString()}
+                        </Badge>
+                        {activity.unpublishedCount && activity.unpublishedCount > 0 && (
+                          <Badge variant="outline" className="bg-orange-500/10 text-orange-500 border-orange-500/20 text-xs">
+                            ⏳ {activity.unpublishedCount.toLocaleString()}
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">n.v.t.</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-2">

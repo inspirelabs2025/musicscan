@@ -205,11 +205,12 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
     let artworkUrl = null;
     const spotlightImages = [];
     
-    // Generate slug early for filename
-    const slug = artistName
+    // Generate slug early for filename - append -spotlight for unique URLs
+    const baseSlug = artistName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
+    const slug = `${baseSlug}-spotlight`;
     
     // 1. Generate AI artist portrait and upload to storage
     console.log(`Generating AI portrait for: ${artistName}`);

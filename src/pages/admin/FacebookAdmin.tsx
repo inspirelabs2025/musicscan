@@ -183,18 +183,20 @@ export default function FacebookAdmin() {
           break;
         }
         case 'music_news': {
+          // Nieuws staat in blog_posts met album_type = 'news'
           const { data } = await supabase
-            .from('music_news')
-            .select('id, title, content, image_url, slug, created_at, is_published')
+            .from('blog_posts')
+            .select('id, slug, yaml_frontmatter, album_cover_url, created_at, is_published')
+            .eq('album_type', 'news')
             .eq('is_published', true)
             .order('created_at', { ascending: false })
             .limit(50);
           
           items = (data || []).map(item => ({
             id: item.id,
-            title: item.title,
-            content_preview: item.content?.substring(0, 150),
-            image_url: item.image_url,
+            title: (item.yaml_frontmatter as any)?.title || item.slug,
+            content_preview: (item.yaml_frontmatter as any)?.description?.substring(0, 150),
+            image_url: item.album_cover_url,
             url: `https://www.musicscan.app/nieuws/${item.slug}`,
             created_at: item.created_at,
             is_published: item.is_published,
@@ -223,21 +225,22 @@ export default function FacebookAdmin() {
           break;
         }
         case 'music_anecdotes': {
+          // Correcte kolommen voor music_anecdotes tabel
           const { data } = await supabase
             .from('music_anecdotes')
-            .select('id, title, content, image_url, slug, created_at, is_published')
-            .eq('is_published', true)
+            .select('id, anecdote_title, anecdote_content, slug, created_at, is_active')
+            .eq('is_active', true)
             .order('created_at', { ascending: false })
             .limit(50);
           
           items = (data || []).map(item => ({
             id: item.id,
-            title: item.title,
-            content_preview: item.content?.substring(0, 150),
-            image_url: item.image_url,
+            title: item.anecdote_title,
+            content_preview: item.anecdote_content?.substring(0, 150),
+            image_url: undefined, // geen image_url kolom
             url: `https://www.musicscan.app/anekdotes/${item.slug}`,
             created_at: item.created_at,
-            is_published: item.is_published,
+            is_published: item.is_active,
             type: 'music_anecdotes'
           }));
           break;

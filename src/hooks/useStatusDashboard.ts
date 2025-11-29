@@ -4,12 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 export interface ProcessStatus {
   name: string;
   label: string;
+  schedule: string;
   expectedRuns: number;
   actualRuns: number;
-  successful: number;
-  failed: number;
-  items: number;
-  status: 'ok' | 'warning' | 'error';
+  contentCount: number;
+  status: 'ok' | 'warning' | 'error' | 'unknown';
+  source: 'log' | 'content' | 'none';
 }
 
 export interface QueueStats {
@@ -50,19 +50,29 @@ export interface TotalStats {
   totalSpotify: number;
 }
 
-const EXPECTED_DAILY_PROCESSES = [
-  { name: 'daily-anecdote-generator', label: 'Anekdote Generator', expectedRuns: 1 },
-  { name: 'generate-daily-music-history', label: 'Muziekgeschiedenis', expectedRuns: 1 },
-  { name: 'rss-news-rewriter', label: 'RSS Nieuws', expectedRuns: 2 },
-  { name: 'process-spotify-new-releases', label: 'Spotify Releases', expectedRuns: 2 },
-  { name: 'singles-batch-processor', label: 'Singles Processor', expectedRuns: 24 },
-  { name: 'artist-stories-batch-processor', label: 'Artist Stories', expectedRuns: 4 },
-  { name: 'batch-blog-processor', label: 'Blog Processor', expectedRuns: 12 },
-  { name: 'discogs-lp-crawler', label: 'Discogs LP Crawler', expectedRuns: 6 },
-  { name: 'latest-discogs-news', label: 'Discogs News', expectedRuns: 8 },
-  { name: 'indexnow-cron', label: 'IndexNow', expectedRuns: 6 },
-  { name: 'refresh-featured-photos', label: 'Featured Photos', expectedRuns: 2 },
-  { name: 'generate-curated-artists', label: 'Curated Artists', expectedRuns: 1 },
+// Process definitions with content-based detection
+export interface ProcessDefinition {
+  name: string;
+  label: string;
+  schedule: string; // cron schedule description
+  runsPerDay: number;
+  contentTable?: string;
+  contentColumn?: string;
+}
+
+const PROCESS_DEFINITIONS: ProcessDefinition[] = [
+  { name: 'daily-anecdote-generator', label: 'Anekdote Generator', schedule: '1x per dag (07:00)', runsPerDay: 1, contentTable: 'music_anecdotes', contentColumn: 'created_at' },
+  { name: 'generate-daily-music-history', label: 'Muziekgeschiedenis', schedule: '1x per dag (06:00)', runsPerDay: 1, contentTable: 'music_history_events', contentColumn: 'created_at' },
+  { name: 'daily-news-update', label: 'Nieuws Update', schedule: '1x per dag (08:00)', runsPerDay: 1, contentTable: 'news_blog_posts', contentColumn: 'created_at' },
+  { name: 'process-spotify-new-releases', label: 'Spotify Releases', schedule: '2x per dag', runsPerDay: 2, contentTable: 'spotify_new_releases_processed', contentColumn: 'created_at' },
+  { name: 'daily-artist-stories-generator', label: 'Artist Stories', schedule: '1x per dag (07:00)', runsPerDay: 1, contentTable: 'artist_stories', contentColumn: 'created_at' },
+  { name: 'batch-blog-processor', label: 'Blog Processor', schedule: 'Continu (elke minuut)', runsPerDay: 1440, contentTable: 'blog_posts', contentColumn: 'created_at' },
+  { name: 'latest-discogs-news', label: 'Discogs Trending', schedule: '3x per dag', runsPerDay: 3, contentTable: 'discogs_import_log', contentColumn: 'created_at' },
+  { name: 'youtube-discoveries', label: 'YouTube Discoveries', schedule: '3x per dag', runsPerDay: 3, contentTable: 'youtube_discoveries', contentColumn: 'created_at' },
+  { name: 'indexnow-cron', label: 'IndexNow', schedule: '6x per dag', runsPerDay: 6, contentTable: 'indexnow_submissions', contentColumn: 'submitted_at' },
+  { name: 'refresh-featured-photos', label: 'Featured Photos', schedule: '2x per dag', runsPerDay: 2 },
+  { name: 'singles-batch-processor', label: 'Singles Processor', schedule: 'Elk uur', runsPerDay: 24, contentTable: 'singles_import_queue', contentColumn: 'processed_at' },
+  { name: 'daily-email-digest', label: 'Email Digest', schedule: '1x per dag (10:30)', runsPerDay: 1, contentTable: 'email_logs', contentColumn: 'sent_at' },
 ];
 
 export const useStatusDashboard = (periodHours: number = 8) => {
@@ -109,20 +119,95 @@ export const useStatusDashboard = (periodHours: number = 8) => {
     staleTime: 30000,
   });
 
-  // Process status based on cronjob summary
-  const processStatus: ProcessStatus[] = EXPECTED_DAILY_PROCESSES.map(proc => {
-    const stats = cronjobStats?.summary[proc.name];
-    const actualRuns = stats?.runs || 0;
-    const expectedInPeriod = Math.ceil(proc.expectedRuns / (24 / periodHours));
-    const status = actualRuns >= expectedInPeriod ? 'ok' : actualRuns > 0 ? 'warning' : 'error';
+  // Content-based process detection
+  const { data: contentCounts } = useQuery({
+    queryKey: ['status-content-counts', periodStart],
+    queryFn: async () => {
+      const counts: Record<string, number> = {};
+      
+      // Fetch content counts for each process that has a content table
+      const queries = [
+        { key: 'music_anecdotes', table: 'music_anecdotes', column: 'created_at' },
+        { key: 'music_history_events', table: 'music_history_events', column: 'created_at' },
+        { key: 'news_blog_posts', table: 'news_blog_posts', column: 'created_at' },
+        { key: 'spotify_new_releases_processed', table: 'spotify_new_releases_processed', column: 'created_at' },
+        { key: 'artist_stories', table: 'artist_stories', column: 'created_at' },
+        { key: 'blog_posts', table: 'blog_posts', column: 'created_at' },
+        { key: 'discogs_import_log', table: 'discogs_import_log', column: 'created_at' },
+        { key: 'youtube_discoveries', table: 'youtube_discoveries', column: 'created_at' },
+        { key: 'indexnow_submissions', table: 'indexnow_submissions', column: 'submitted_at' },
+        { key: 'singles_import_queue', table: 'singles_import_queue', column: 'processed_at' },
+        { key: 'email_logs', table: 'email_logs', column: 'sent_at' },
+      ];
+
+      await Promise.all(queries.map(async ({ key, table, column }) => {
+        try {
+          const { count } = await supabase
+            .from(table)
+            .select('*', { count: 'exact', head: true })
+            .gte(column, periodStart);
+          counts[key] = count || 0;
+        } catch {
+          counts[key] = 0;
+        }
+      }));
+
+      return counts;
+    },
+    staleTime: 30000,
+  });
+
+  // Process status combining cronjob logs and content-based detection
+  const processStatus: ProcessStatus[] = PROCESS_DEFINITIONS.map(proc => {
+    const logStats = cronjobStats?.summary[proc.name];
+    const logRuns = logStats?.runs || 0;
+    
+    // Get content count for this process
+    const contentTableMap: Record<string, string> = {
+      'music_anecdotes': 'daily-anecdote-generator',
+      'music_history_events': 'generate-daily-music-history',
+      'news_blog_posts': 'daily-news-update',
+      'spotify_new_releases_processed': 'process-spotify-new-releases',
+      'artist_stories': 'daily-artist-stories-generator',
+      'blog_posts': 'batch-blog-processor',
+      'discogs_import_log': 'latest-discogs-news',
+      'youtube_discoveries': 'youtube-discoveries',
+      'indexnow_submissions': 'indexnow-cron',
+      'singles_import_queue': 'singles-batch-processor',
+      'email_logs': 'daily-email-digest',
+    };
+    
+    const contentKey = Object.entries(contentTableMap).find(([_, v]) => v === proc.name)?.[0];
+    const contentCount = contentKey ? (contentCounts?.[contentKey] || 0) : 0;
+    
+    // Calculate expected runs for period
+    const expectedInPeriod = Math.max(1, Math.ceil(proc.runsPerDay * (periodHours / 24)));
+    
+    // Determine status based on available data
+    let status: ProcessStatus['status'] = 'unknown';
+    let source: ProcessStatus['source'] = 'none';
+    
+    if (logRuns > 0) {
+      source = 'log';
+      status = logRuns >= expectedInPeriod ? 'ok' : 'warning';
+    } else if (contentCount > 0) {
+      source = 'content';
+      status = 'ok'; // Content exists, so process ran
+    } else if (proc.contentTable) {
+      // Has content table but no content - might be an issue
+      status = 'warning';
+      source = 'content';
+    }
+    
     return {
-      ...proc,
-      actualRuns,
+      name: proc.name,
+      label: proc.label,
+      schedule: proc.schedule,
       expectedRuns: expectedInPeriod,
-      successful: stats?.successful || 0,
-      failed: stats?.failed || 0,
-      items: stats?.items || 0,
-      status
+      actualRuns: logRuns,
+      contentCount,
+      status,
+      source
     };
   });
 

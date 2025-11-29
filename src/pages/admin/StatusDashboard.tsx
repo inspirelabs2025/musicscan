@@ -46,11 +46,12 @@ export default function StatusDashboard() {
     refetch,
   } = useStatusDashboard(periodHours);
 
-  const getStatusIcon = (status: 'ok' | 'warning' | 'error') => {
+  const getStatusIcon = (status: 'ok' | 'warning' | 'error' | 'unknown') => {
     switch (status) {
       case 'ok': return <CheckCircle2 className="w-4 h-4 text-green-500" />;
       case 'warning': return <AlertCircle className="w-4 h-4 text-yellow-500" />;
       case 'error': return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'unknown': return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -189,11 +190,10 @@ export default function StatusDashboard() {
                   <TableRow>
                     <TableHead className="w-12">Status</TableHead>
                     <TableHead>Proces</TableHead>
-                    <TableHead className="text-center">Runs</TableHead>
-                    <TableHead className="text-center">Verwacht</TableHead>
-                    <TableHead className="text-center">Succes</TableHead>
-                    <TableHead className="text-center">Failed</TableHead>
-                    <TableHead className="text-right">Items</TableHead>
+                    <TableHead>Schedule</TableHead>
+                    <TableHead className="text-center">Log Runs</TableHead>
+                    <TableHead className="text-center">Content</TableHead>
+                    <TableHead className="text-center">Bron</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -204,11 +204,26 @@ export default function StatusDashboard() {
                         <div className="font-medium">{proc.label}</div>
                         <div className="text-xs text-muted-foreground">{proc.name}</div>
                       </TableCell>
-                      <TableCell className="text-center">{proc.actualRuns}</TableCell>
-                      <TableCell className="text-center">{proc.expectedRuns}</TableCell>
-                      <TableCell className="text-center text-green-600">{proc.successful}</TableCell>
-                      <TableCell className="text-center text-red-600">{proc.failed}</TableCell>
-                      <TableCell className="text-right">{proc.items}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{proc.schedule}</TableCell>
+                      <TableCell className="text-center">
+                        {proc.actualRuns > 0 ? (
+                          <span className="text-green-600 font-medium">{proc.actualRuns}</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {proc.contentCount > 0 ? (
+                          <span className="text-blue-600 font-medium">{proc.contentCount}</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant={proc.source === 'log' ? 'default' : proc.source === 'content' ? 'secondary' : 'outline'}>
+                          {proc.source === 'log' ? 'Log' : proc.source === 'content' ? 'Content' : 'Geen'}
+                        </Badge>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

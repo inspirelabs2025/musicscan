@@ -32,11 +32,13 @@ serve(async (req) => {
     console.log(`Generating spotlight for artist: ${artistName}`);
 
     // Early duplicate check to avoid heavy AI calls and return a friendly 409
+    // Only check for existing SPOTLIGHTS, not regular artist stories
     try {
       const { data: existingByName } = await supabase
         .from('artist_stories')
         .select('id')
         .eq('artist_name', artistName)
+        .eq('is_spotlight', true)
         .maybeSingle();
 
       if (existingByName) {
@@ -342,11 +344,12 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
       ? storyData.music_style 
       : [storyData.music_style];
 
-    // Late duplicate guard (race condition safe)
+    // Late duplicate guard (race condition safe) - only check for spotlights
     const { data: existingSpotlight } = await supabase
       .from('artist_stories')
       .select('id, artist_name')
       .eq('artist_name', artistName)
+      .eq('is_spotlight', true)
       .maybeSingle();
 
     if (existingSpotlight) {

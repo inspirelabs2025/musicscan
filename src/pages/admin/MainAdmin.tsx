@@ -47,6 +47,15 @@ interface AdminPage {
 const adminPages: AdminPage[] = [
   // Monitoring & Analytics
   {
+    title: "Status Dashboard",
+    description: "Live overzicht van alle processen, queues en content generatie",
+    path: "/admin/status",
+    icon: BarChart3,
+    category: "monitoring",
+    status: "ok",
+    badge: "Live"
+  },
+  {
     title: "SuperAdmin Dashboard",
     description: "Overzicht van alle systeem statistieken en gebruikersactiviteit",
     path: "/superadmin-dashboard",

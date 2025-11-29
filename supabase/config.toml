@@ -444,3 +444,6 @@ cron = "0 8 * * *"
 
 [[functions.daily-status-report.schedule]]
 cron = "0 16 * * *"
+
+[functions.send-order-email]
+verify_jwt = false

@@ -385,9 +385,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  let logId: string | null = null;
+
   try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { userId, contentTypes = ['interview', 'studio', 'live_session'], artistLimit = 25 } = await req.json();
+
+    // Start logging
+    const { data: logData } = await supabase.rpc('log_cronjob_start', {
+      p_function_name: 'youtube-discoveries',
+      p_metadata: { userId, contentTypes, artistLimit }
+    });
+    logId = logData;
 
     if (!YOUTUBE_API_KEY) {
       throw new Error('YouTube API key not configured');
@@ -565,6 +574,21 @@ serve(async (req) => {
       }
     }
 
+    // Log successful completion
+    if (logId) {
+      await supabase.rpc('log_cronjob_complete', {
+        p_log_id: logId,
+        p_status: 'completed',
+        p_items_processed: topDiscoveries.length,
+        p_metadata: {
+          artistsProcessed: selectedArtists.length,
+          totalFound: allDiscoveries.length,
+          saved: topDiscoveries.length,
+          apiCalls: apiCallCount
+        }
+      });
+    }
+
     return new Response(JSON.stringify({
       success: true,
       message: `Discovered ${topDiscoveries.length} new videos`,
@@ -585,6 +609,17 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in youtube-discoveries function:', error);
+    
+    // Log error
+    if (logId) {
+      await supabase.rpc('log_cronjob_complete', {
+        p_log_id: logId,
+        p_status: 'failed',
+        p_items_processed: 0,
+        p_error_message: error.message
+      });
+    }
+    
     return new Response(JSON.stringify({
       success: false,
       error: error.message

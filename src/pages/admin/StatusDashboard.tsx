@@ -10,7 +10,7 @@ import { nl } from "date-fns/locale";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { IndexNowChart } from "@/components/admin/IndexNowChart";
+import { ContentActivityChart } from "@/components/admin/ContentActivityChart";
 
 function StatusIcon({ status }: { status: string }) {
   switch (status) {
@@ -204,8 +204,8 @@ export default function StatusDashboard() {
       {/* Issues Section */}
       <IssuesSection issues={issues} />
 
-      {/* IndexNow Chart */}
-      <IndexNowChart />
+      {/* Content Activity Chart */}
+      <ContentActivityChart />
 
       {/* Content Activity Table */}
       <Card>

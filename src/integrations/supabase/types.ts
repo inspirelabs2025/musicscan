@@ -521,6 +521,7 @@ export type Database = {
           discogs_artist_id: number | null
           featured_products: string[] | null
           id: string
+          is_deep_dive: boolean | null
           is_published: boolean | null
           is_spotlight: boolean | null
           meta_description: string | null
@@ -547,6 +548,7 @@ export type Database = {
           discogs_artist_id?: number | null
           featured_products?: string[] | null
           id?: string
+          is_deep_dive?: boolean | null
           is_published?: boolean | null
           is_spotlight?: boolean | null
           meta_description?: string | null
@@ -573,6 +575,7 @@ export type Database = {
           discogs_artist_id?: number | null
           featured_products?: string[] | null
           id?: string
+          is_deep_dive?: boolean | null
           is_published?: boolean | null
           is_spotlight?: boolean | null
           meta_description?: string | null

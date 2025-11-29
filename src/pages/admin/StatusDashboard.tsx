@@ -1,59 +1,153 @@
-import { useState } from "react";
+import { useStatusDashboard, ContentActivity } from "@/hooks/useStatusDashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  RefreshCw, 
-  CheckCircle2, 
-  XCircle, 
-  AlertCircle,
-  Clock,
-  Newspaper,
-  Music,
-  FileText,
-  Youtube,
-  Radio,
-  Database,
-  Zap,
-  TrendingUp,
-  Mail
-} from "lucide-react";
-import { useStatusDashboard } from "@/hooks/useStatusDashboard";
+import { RefreshCw, CheckCircle2, AlertTriangle, XCircle, Clock, HelpCircle, Mail } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
+import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-export default function StatusDashboard() {
-  const [periodHours, setPeriodHours] = useState(8);
-  const [sendingReport, setSendingReport] = useState(false);
-  
-  const {
-    processStatus,
-    singlesQueue,
-    discogsQueue,
-    contentStats,
-    totalStats,
-    newsGenStats,
-    newsCache,
-    batchQueue,
-    cronjobSummary,
-    hasIssues,
-    isLoading,
-    refetch,
-  } = useStatusDashboard(periodHours);
+function StatusIcon({ status }: { status: string }) {
+  switch (status) {
+    case 'ok':
+      return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+    case 'warning':
+      return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+    case 'error':
+      return <XCircle className="h-5 w-5 text-red-500" />;
+    default:
+      return <HelpCircle className="h-5 w-5 text-muted-foreground" />;
+  }
+}
 
-  const getStatusIcon = (status: 'ok' | 'warning' | 'error' | 'unknown') => {
-    switch (status) {
-      case 'ok': return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case 'warning': return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      case 'error': return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'unknown': return <Clock className="w-4 h-4 text-muted-foreground" />;
-    }
+function StatusBadge({ status }: { status: string }) {
+  const variants: Record<string, string> = {
+    ok: 'bg-green-500/10 text-green-500 border-green-500/20',
+    warning: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+    error: 'bg-red-500/10 text-red-500 border-red-500/20',
+    unknown: 'bg-muted text-muted-foreground border-muted',
   };
+  
+  const labels: Record<string, string> = {
+    ok: 'OK',
+    warning: 'Waarschuwing',
+    error: 'Probleem',
+    unknown: 'Onbekend',
+  };
+  
+  return (
+    <Badge variant="outline" className={variants[status] || variants.unknown}>
+      {labels[status] || 'Onbekend'}
+    </Badge>
+  );
+}
+
+function formatRelativeTime(date: Date | null): string {
+  if (!date) return 'Nooit';
+  return formatDistanceToNow(date, { addSuffix: true, locale: nl });
+}
+
+function IssuesSection({ issues }: { issues: ContentActivity[] }) {
+  if (issues.length === 0) return null;
+  
+  const errors = issues.filter(i => i.status === 'error');
+  const warnings = issues.filter(i => i.status === 'warning');
+  
+  return (
+    <Card className="border-destructive/50 bg-destructive/5">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-destructive" />
+          Aandachtspunten ({issues.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {errors.map(issue => (
+          <div key={issue.source.id} className="flex items-center gap-3 p-2 rounded bg-red-500/10">
+            <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+            <div className="flex-1">
+              <span className="font-medium">{issue.source.icon} {issue.source.label}</span>
+              <span className="text-muted-foreground text-sm ml-2">
+                — Laatste activiteit: {formatRelativeTime(issue.lastActivity)}
+                {issue.hoursSinceActivity && ` (${Math.round(issue.hoursSinceActivity)} uur geleden)`}
+              </span>
+            </div>
+          </div>
+        ))}
+        {warnings.map(issue => (
+          <div key={issue.source.id} className="flex items-center gap-3 p-2 rounded bg-yellow-500/10">
+            <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0" />
+            <div className="flex-1">
+              <span className="font-medium">{issue.source.icon} {issue.source.label}</span>
+              <span className="text-muted-foreground text-sm ml-2">
+                — Verwacht: {issue.source.expectedDaily}/dag, gevonden: {issue.countInPeriod} in 24u
+              </span>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function OverallStatus({ errorCount, warningCount }: { errorCount: number; warningCount: number }) {
+  if (errorCount > 0) {
+    return (
+      <div className="flex items-center gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+        <XCircle className="h-8 w-8 text-red-500" />
+        <div>
+          <div className="font-semibold text-lg">Problemen Gedetecteerd</div>
+          <div className="text-sm text-muted-foreground">
+            {errorCount} kritiek, {warningCount} waarschuwingen
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (warningCount > 0) {
+    return (
+      <div className="flex items-center gap-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+        <AlertTriangle className="h-8 w-8 text-yellow-500" />
+        <div>
+          <div className="font-semibold text-lg">Waarschuwingen</div>
+          <div className="text-sm text-muted-foreground">
+            {warningCount} items vereisen aandacht
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+      <CheckCircle2 className="h-8 w-8 text-green-500" />
+      <div>
+        <div className="font-semibold text-lg">Alles Operationeel</div>
+        <div className="text-sm text-muted-foreground">
+          Alle content generatie processen werken correct
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function StatusDashboard() {
+  const [sendingReport, setSendingReport] = useState(false);
+  const { 
+    contentActivity, 
+    queueStats, 
+    cronLogs,
+    issues,
+    errorCount,
+    warningCount,
+    isLoading, 
+    refetch 
+  } = useStatusDashboard(24);
 
   const sendEmailReport = async () => {
     setSendingReport(true);
@@ -69,387 +163,198 @@ export default function StatusDashboard() {
     }
   };
 
-  const StatCard = ({ value, label, icon: Icon, color = "primary" }: { value: number; label: string; icon: any; color?: string }) => (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className={`text-2xl font-bold text-${color}`}>{value}</div>
-            <div className="text-xs text-muted-foreground">{label}</div>
-          </div>
-          <Icon className={`w-8 h-8 text-${color}/20`} />
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-8 px-4 space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <div className="grid gap-4">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
-      </CardContent>
-    </Card>
-  );
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto py-8 px-4 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Status Dashboard</h1>
-          <p className="text-muted-foreground">Live overzicht van alle processen en content generatie</p>
+          <p className="text-muted-foreground">
+            Real-time overzicht van content generatie (laatste 24 uur)
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Select value={String(periodHours)} onValueChange={(v) => setPeriodHours(Number(v))}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="4">Laatste 4 uur</SelectItem>
-              <SelectItem value="8">Laatste 8 uur</SelectItem>
-              <SelectItem value="12">Laatste 12 uur</SelectItem>
-              <SelectItem value="24">Laatste 24 uur</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
+        <div className="flex gap-2">
+          <Button onClick={() => refetch()} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Vernieuwen
           </Button>
-          <Button onClick={sendEmailReport} disabled={sendingReport}>
-            <Mail className={`w-4 h-4 mr-2 ${sendingReport ? 'animate-pulse' : ''}`} />
+          <Button onClick={sendEmailReport} disabled={sendingReport} size="sm">
+            <Mail className={`h-4 w-4 mr-2 ${sendingReport ? 'animate-pulse' : ''}`} />
             Stuur Report
           </Button>
         </div>
       </div>
 
-      {/* Status Alert */}
-      {hasIssues ? (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-destructive" />
-          <div>
-            <span className="font-semibold">Er zijn problemen gedetecteerd!</span>
-            <span className="text-muted-foreground ml-2">Controleer de details hieronder.</span>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-green-500" />
-          <div>
-            <span className="font-semibold">Alles draait soepel!</span>
-            <span className="text-muted-foreground ml-2">Alle processen draaien volgens verwachting.</span>
-          </div>
-        </div>
-      )}
+      {/* Overall Status */}
+      <OverallStatus errorCount={errorCount} warningCount={warningCount} />
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <StatCard value={contentStats?.blogs || 0} label="Nieuwe Blogs" icon={FileText} />
-        <StatCard value={contentStats?.musicStories || 0} label="Music Stories" icon={Music} />
-        <StatCard value={contentStats?.artistStories || 0} label="Artist Stories" icon={Music} />
-        <StatCard value={contentStats?.news || 0} label="Nieuws Artikelen" icon={Newspaper} />
-        <StatCard value={contentStats?.anecdotes || 0} label="Anekdotes" icon={Radio} />
-        <StatCard value={contentStats?.musicHistory || 0} label="Muziekgeschiedenis" icon={Clock} />
-        <StatCard value={contentStats?.youtube || 0} label="YouTube Videos" icon={Youtube} />
-        <StatCard value={contentStats?.spotify || 0} label="Spotify Releases" icon={Music} />
-        <StatCard value={contentStats?.singles || 0} label="Singles Verwerkt" icon={Music} />
-        <StatCard value={contentStats?.discogs || 0} label="Discogs Imports" icon={Database} />
-        <StatCard value={contentStats?.indexNow || 0} label="IndexNow" icon={Zap} />
-        <StatCard value={cronjobSummary ? Object.values(cronjobSummary).reduce((a, b) => a + b.runs, 0) : 0} label="Cronjob Runs" icon={RefreshCw} />
-      </div>
+      {/* Issues Section */}
+      <IssuesSection issues={issues} />
 
-      {/* Database Totals */}
+      {/* Content Activity Table */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Database className="w-4 h-4" />
-            Database Totalen
-          </CardTitle>
+        <CardHeader>
+          <CardTitle>Content Generatie Overzicht</CardTitle>
+          <CardDescription>
+            Status gebaseerd op daadwerkelijke content in de database
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-6 text-sm">
-            <div><strong>{totalStats?.totalNews || 0}</strong> Nieuws artikelen</div>
-            <div><strong>{totalStats?.totalAnecdotes || 0}</strong> Anekdotes</div>
-            <div><strong>{totalStats?.totalMusicHistory || 0}</strong> Muziekgeschiedenis</div>
-            <div><strong>{totalStats?.totalYouTube || 0}</strong> YouTube videos</div>
-            <div><strong>{totalStats?.totalSpotify || 0}</strong> Spotify releases</div>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Content Type</TableHead>
+                <TableHead>Schema</TableHead>
+                <TableHead>Laatste Activiteit</TableHead>
+                <TableHead className="text-right">Laatste 24u</TableHead>
+                <TableHead className="text-right">Totaal</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contentActivity.map((activity) => (
+                <TableRow key={activity.source.id}>
+                  <TableCell className="font-medium">
+                    <span className="mr-2">{activity.source.icon}</span>
+                    {activity.source.label}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {activity.source.schedule}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className={activity.hoursSinceActivity && activity.hoursSinceActivity > activity.source.warningAfterHours ? 'text-destructive' : ''}>
+                        {formatRelativeTime(activity.lastActivity)}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {activity.countInPeriod}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-muted-foreground">
+                    {activity.total.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <StatusIcon status={activity.status} />
+                      <StatusBadge status={activity.status} />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
-      {/* Main Tabs */}
-      <Tabs defaultValue="processes" className="w-full">
-        <TabsList>
-          <TabsTrigger value="processes">Proces Status</TabsTrigger>
-          <TabsTrigger value="queues">Queues</TabsTrigger>
-          <TabsTrigger value="news">Nieuws</TabsTrigger>
-          <TabsTrigger value="cronjobs">Alle Cronjobs</TabsTrigger>
-        </TabsList>
+      {/* Queue Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Queue Status</CardTitle>
+          <CardDescription>
+            Overzicht van verwerkingsqueues
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Queue</TableHead>
+                <TableHead className="text-right">Pending</TableHead>
+                <TableHead className="text-right">Processing</TableHead>
+                <TableHead className="text-right">Completed</TableHead>
+                <TableHead className="text-right">Failed</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {queueStats.map((queue) => (
+                <TableRow key={queue.name}>
+                  <TableCell className="font-medium">{queue.name}</TableCell>
+                  <TableCell className="text-right font-mono">
+                    <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
+                      {queue.pending.toLocaleString()}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500">
+                      {queue.processing.toLocaleString()}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    <Badge variant="outline" className="bg-green-500/10 text-green-500">
+                      {queue.completed.toLocaleString()}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    <Badge variant="outline" className={queue.failed > 0 ? "bg-red-500/10 text-red-500" : ""}>
+                      {queue.failed.toLocaleString()}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-        {/* Processes Tab */}
-        <TabsContent value="processes">
-          <Card>
-            <CardHeader>
-              <CardTitle>Proces Status Overzicht</CardTitle>
-              <CardDescription>Verwachte vs. werkelijke uitvoeringen per proces (laatste {periodHours} uur)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">Status</TableHead>
-                    <TableHead>Proces</TableHead>
-                    <TableHead>Schedule</TableHead>
-                    <TableHead className="text-center">Log Runs</TableHead>
-                    <TableHead className="text-center">Content</TableHead>
-                    <TableHead className="text-center">Bron</TableHead>
+      {/* Recent Cron Logs (for reference) */}
+      {cronLogs.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recente Cron Job Logs</CardTitle>
+            <CardDescription>
+              Laatste {cronLogs.length} gelogde uitvoeringen (niet alle jobs loggen)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Functie</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Gestart</TableHead>
+                  <TableHead className="text-right">Duur</TableHead>
+                  <TableHead className="text-right">Items</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cronLogs.slice(0, 10).map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="font-medium">{log.function_name}</TableCell>
+                    <TableCell>
+                      <Badge variant={log.status === 'completed' ? 'default' : log.status === 'failed' ? 'destructive' : 'secondary'}>
+                        {log.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {formatRelativeTime(new Date(log.started_at))}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {log.execution_time_ms ? `${(log.execution_time_ms / 1000).toFixed(1)}s` : '-'}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {log.items_processed || 0}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {processStatus.map((proc) => (
-                    <TableRow key={proc.name} className={proc.status === 'error' ? 'bg-destructive/5' : proc.status === 'warning' ? 'bg-yellow-500/5' : ''}>
-                      <TableCell>{getStatusIcon(proc.status)}</TableCell>
-                      <TableCell>
-                        <div className="font-medium">{proc.label}</div>
-                        <div className="text-xs text-muted-foreground">{proc.name}</div>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{proc.schedule}</TableCell>
-                      <TableCell className="text-center">
-                        {proc.actualRuns > 0 ? (
-                          <span className="text-green-600 font-medium">{proc.actualRuns}</span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {proc.contentCount > 0 ? (
-                          <span className="text-blue-600 font-medium">{proc.contentCount}</span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={proc.source === 'log' ? 'default' : proc.source === 'content' ? 'secondary' : 'outline'}>
-                          {proc.source === 'log' ? 'Log' : proc.source === 'content' ? 'Content' : 'Geen'}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Queues Tab */}
-        <TabsContent value="queues">
-          <div className="grid md:grid-cols-2 gap-4">
-            {/* Singles Queue */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Music className="w-5 h-5" />
-                  Singles Import Queue
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span>⏳ Pending</span>
-                    <Badge variant="outline">{singlesQueue?.pending || 0}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>🔄 Processing</span>
-                    <Badge variant="secondary">{singlesQueue?.processing || 0}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>✅ Completed</span>
-                    <Badge variant="default" className="bg-green-500">{singlesQueue?.completed || 0}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>❌ Failed</span>
-                    <Badge variant={singlesQueue?.failed ? "destructive" : "outline"}>{singlesQueue?.failed || 0}</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Discogs Queue */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="w-5 h-5" />
-                  Discogs Import Queue
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span>⏳ Pending</span>
-                    <Badge variant="outline">{discogsQueue?.pending || 0}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>🔄 Processing</span>
-                    <Badge variant="secondary">{discogsQueue?.processing || 0}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>✅ Completed</span>
-                    <Badge variant="default" className="bg-green-500">{discogsQueue?.completed || 0}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>❌ Failed</span>
-                    <Badge variant={discogsQueue?.failed ? "destructive" : "outline"}>{discogsQueue?.failed || 0}</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Batch Queues */}
-            {batchQueue && Object.keys(batchQueue).length > 0 && (
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle>Batch Queues</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-center">Pending</TableHead>
-                        <TableHead className="text-center">Processing</TableHead>
-                        <TableHead className="text-center">Completed</TableHead>
-                        <TableHead className="text-center">Failed</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {Object.entries(batchQueue).map(([type, stats]) => (
-                        <TableRow key={type}>
-                          <TableCell className="font-medium">{type}</TableCell>
-                          <TableCell className="text-center">{stats.pending}</TableCell>
-                          <TableCell className="text-center">{stats.processing}</TableCell>
-                          <TableCell className="text-center text-green-600">{stats.completed}</TableCell>
-                          <TableCell className="text-center text-red-600">{stats.failed}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </TabsContent>
-
-        {/* News Tab */}
-        <TabsContent value="news">
-          <div className="grid md:grid-cols-2 gap-4">
-            {/* News Generation */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Newspaper className="w-5 h-5" />
-                  Nieuws Generatie
-                </CardTitle>
-                <CardDescription>Per bron (laatste {periodHours} uur)</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {newsGenStats && newsGenStats.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Bron</TableHead>
-                        <TableHead className="text-center">Runs</TableHead>
-                        <TableHead className="text-center">Succes</TableHead>
-                        <TableHead className="text-right">Items</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {newsGenStats.map((stat) => (
-                        <TableRow key={stat.source} className={stat.lastError ? 'bg-destructive/5' : ''}>
-                          <TableCell>
-                            <div className="font-medium">{stat.source}</div>
-                            {stat.lastError && (
-                              <div className="text-xs text-destructive truncate max-w-[200px]">{stat.lastError}</div>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">{stat.runs}</TableCell>
-                          <TableCell className="text-center text-green-600">{stat.success}</TableCell>
-                          <TableCell className="text-right">{stat.items}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p className="text-muted-foreground text-sm">Geen nieuws generatie in deze periode</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* News Cache */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="w-5 h-5" />
-                  News Cache Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {newsCache && newsCache.length > 0 ? (
-                  <div className="space-y-3">
-                    {newsCache.map((cache) => (
-                      <div key={cache.source} className={`flex justify-between items-center p-2 rounded ${cache.isExpired ? 'bg-yellow-500/10' : 'bg-green-500/10'}`}>
-                        <div>
-                          <div className="font-medium">{cache.source}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(cache.lastCached, { addSuffix: true, locale: nl })}
-                          </div>
-                        </div>
-                        <Badge variant={cache.isExpired ? "outline" : "default"} className={cache.isExpired ? '' : 'bg-green-500'}>
-                          {cache.isExpired ? '⚠️ Verlopen' : '✅ Actief'}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-sm">Geen cache data beschikbaar</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* All Cronjobs Tab */}
-        <TabsContent value="cronjobs">
-          <Card>
-            <CardHeader>
-              <CardTitle>Alle Cronjob Executions</CardTitle>
-              <CardDescription>Geaggregeerd per functie (laatste {periodHours} uur)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {cronjobSummary ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Functie</TableHead>
-                      <TableHead className="text-center">Runs</TableHead>
-                      <TableHead className="text-center">Succes</TableHead>
-                      <TableHead className="text-center">Failed</TableHead>
-                      <TableHead className="text-right">Items</TableHead>
-                      <TableHead className="text-right">Gem. Tijd</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Object.entries(cronjobSummary)
-                      .sort((a, b) => b[1].runs - a[1].runs)
-                      .map(([name, stats]) => (
-                        <TableRow key={name} className={stats.failed > 0 ? 'bg-destructive/5' : ''}>
-                          <TableCell className="font-mono text-sm">{name}</TableCell>
-                          <TableCell className="text-center">{stats.runs}</TableCell>
-                          <TableCell className="text-center text-green-600">{stats.successful}</TableCell>
-                          <TableCell className="text-center text-red-600">{stats.failed}</TableCell>
-                          <TableCell className="text-right">{stats.items}</TableCell>
-                          <TableCell className="text-right">{stats.avgTime}ms</TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-muted-foreground">Geen cronjob data beschikbaar</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

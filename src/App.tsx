@@ -158,6 +158,12 @@ import StatusDashboard from "./pages/admin/StatusDashboard";
 import MediaLibrary from "./pages/admin/MediaLibrary";
 import YouTubeDiscoveries from "./pages/YouTubeDiscoveries";
 
+// Redirect component for old /blog/ URLs to /plaat-verhaal/
+const BlogRedirect = () => {
+  const { slug } = require('react-router-dom').useParams();
+  return <Navigate to={`/plaat-verhaal/${slug}`} replace />;
+};
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -431,6 +437,7 @@ const AppContent = () => {
         } />
         
         <Route path="/plaat-verhaal/:slug" element={<PlaatVerhaal />} />
+        <Route path="/blog/:slug" element={<BlogRedirect />} />
         <Route path="/time-machine" element={<TimeMachine />} />
         <Route path="/time-machine/:slug" element={<TimeMachineStory />} />
         <Route path="/podcasts" element={<Podcasts />} />

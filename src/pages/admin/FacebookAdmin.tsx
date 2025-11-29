@@ -155,7 +155,7 @@ export default function FacebookAdmin() {
             title: (item.yaml_frontmatter as any)?.title || item.slug,
             content_preview: (item.yaml_frontmatter as any)?.description,
             image_url: item.album_cover_url,
-            url: `https://www.musicscan.app/blog/${item.slug}`,
+            url: `https://www.musicscan.app/plaat-verhaal/${item.slug}`,
             created_at: item.created_at,
             is_published: item.is_published,
             type: 'blog_posts'

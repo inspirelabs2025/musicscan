@@ -479,8 +479,26 @@ export default function FacebookSync() {
               </p>
             </div>
 
+            {/* Debug info for missing fields */}
+            {(!pageAccessToken.trim() || !appSecret.trim() || !pageId.trim()) && (
+              <div className="text-sm p-3 bg-destructive/10 border border-destructive/30 rounded-lg space-y-1">
+                <p className="font-medium text-destructive">⚠️ Vereiste velden ontbreken:</p>
+                <ul className="list-disc list-inside text-xs text-destructive/80">
+                  {!pageAccessToken.trim() && <li>Page Access Token is leeg</li>}
+                  {!appSecret.trim() && <li>App Secret is leeg</li>}
+                  {!pageId.trim() && <li>Page ID is leeg</li>}
+                </ul>
+              </div>
+            )}
+
             <Button
-              onClick={saveToken}
+              onClick={() => {
+                console.log('🔘 Save button clicked!');
+                console.log('pageAccessToken filled:', !!pageAccessToken.trim());
+                console.log('appSecret filled:', !!appSecret.trim());
+                console.log('pageId filled:', !!pageId.trim());
+                saveToken();
+              }}
               disabled={isSavingToken || !pageAccessToken.trim() || !appSecret.trim() || !pageId.trim()}
               className="w-full"
             >

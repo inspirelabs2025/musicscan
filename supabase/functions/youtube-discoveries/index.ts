@@ -389,12 +389,16 @@ serve(async (req) => {
   let logId: string | null = null;
 
   try {
-    const { userId, contentTypes = ['interview', 'studio', 'live_session'], artistLimit = 25 } = await req.json();
+    const { userId: rawUserId, contentTypes = ['interview', 'studio', 'live_session'], artistLimit = 25 } = await req.json();
+
+    // Validate userId - must be a valid UUID, otherwise set to null (for system/cron calls)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const userId = (rawUserId && uuidRegex.test(rawUserId)) ? rawUserId : null;
 
     // Start logging
     const { data: logData } = await supabase.rpc('log_cronjob_start', {
       p_function_name: 'youtube-discoveries',
-      p_metadata: { userId, contentTypes, artistLimit }
+      p_metadata: { userId: rawUserId, contentTypes, artistLimit }
     });
     logId = logData;
 
@@ -402,7 +406,7 @@ serve(async (req) => {
       throw new Error('YouTube API key not configured');
     }
 
-    console.log(`Discovering YouTube content for user: ${userId}`);
+    console.log(`Discovering YouTube content for user: ${rawUserId} (validated: ${userId || 'system'})`);
     console.log(`Content types: ${contentTypes.join(', ')}`);
 
     // Get artists from curated_artists table (primary source)

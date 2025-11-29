@@ -129,6 +129,7 @@ const menuItems = [
   {
     title: "Integraties",
     items: [
+      { title: "Facebook Admin", url: "/admin/facebook-admin", icon: Facebook },
       { title: "Facebook Sync", url: "/admin/facebook-sync", icon: Facebook },
     ]
   },

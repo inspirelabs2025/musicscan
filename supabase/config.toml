@@ -429,3 +429,9 @@ verify_jwt = false
 
 [[functions.process-spotify-new-releases.schedule]]
 cron = "0 9 * * *"
+
+[functions.singles-monitor]
+verify_jwt = false
+
+[[functions.singles-monitor.schedule]]
+cron = "*/5 * * * *"

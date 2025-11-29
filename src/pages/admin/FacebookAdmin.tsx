@@ -89,12 +89,15 @@ export default function FacebookAdmin() {
   const { data: settings, isLoading: settingsLoading } = useQuery({
     queryKey: ['facebook-auto-post-settings'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('facebook_auto_post_settings')
         .select('*')
         .order('content_type');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching settings:', error);
+        return [];
+      }
       return data as AutoPostSetting[];
     }
   });
@@ -103,13 +106,16 @@ export default function FacebookAdmin() {
   const { data: queue, isLoading: queueLoading } = useQuery({
     queryKey: ['facebook-content-queue'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('facebook_content_queue')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching queue:', error);
+        return [];
+      }
       return data as QueueItem[];
     }
   });
@@ -265,7 +271,7 @@ export default function FacebookAdmin() {
   // Update setting mutation
   const updateSettingMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<AutoPostSetting> }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('facebook_auto_post_settings')
         .update(updates)
         .eq('id', id);
@@ -294,7 +300,7 @@ export default function FacebookAdmin() {
         status: 'pending'
       }));
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('facebook_content_queue')
         .upsert(queueItems, { onConflict: 'content_type,content_id' });
       
@@ -313,7 +319,7 @@ export default function FacebookAdmin() {
   // Remove from queue mutation
   const removeFromQueueMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('facebook_content_queue')
         .delete()
         .eq('id', id);
@@ -347,7 +353,7 @@ export default function FacebookAdmin() {
         toast({ title: "Gepost naar Facebook!", description: `Post ID: ${data.post_id}` });
         
         if (isFromQueue && 'id' in item) {
-          await supabase
+          await (supabase as any)
             .from('facebook_content_queue')
             .update({ 
               status: 'posted', 
@@ -366,7 +372,7 @@ export default function FacebookAdmin() {
       toast({ title: "Fout bij posten", description: error.message, variant: "destructive" });
       
       if (isFromQueue && 'id' in item) {
-        await supabase
+        await (supabase as any)
           .from('facebook_content_queue')
           .update({ status: 'failed', error_message: error.message })
           .eq('id', item.id);

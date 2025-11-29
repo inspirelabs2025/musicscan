@@ -160,7 +160,8 @@ import YouTubeDiscoveries from "./pages/YouTubeDiscoveries";
 
 // Redirect component for old /blog/ URLs to /plaat-verhaal/
 const BlogRedirect = () => {
-  const { slug } = require('react-router-dom').useParams();
+  const params = window.location.pathname.split('/');
+  const slug = params[params.length - 1];
   return <Navigate to={`/plaat-verhaal/${slug}`} replace />;
 };
 

@@ -1,414 +1,299 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export interface ProcessStatus {
-  name: string;
+// Content sources - the PRIMARY source of truth for status
+export interface ContentSource {
+  id: string;
   label: string;
+  table: string;
+  dateColumn: string;
+  filter?: string;
   schedule: string;
-  expectedRuns: number;
-  actualRuns: number;
-  contentCount: number;
+  expectedDaily: number;
+  warningAfterHours: number;
+  icon: string;
+}
+
+export const CONTENT_SOURCES: ContentSource[] = [
+  { 
+    id: 'anecdotes', 
+    label: 'Anekdotes', 
+    table: 'music_anecdotes', 
+    dateColumn: 'created_at',
+    schedule: 'Dagelijks 06:05',
+    expectedDaily: 1,
+    warningAfterHours: 26,
+    icon: '🎭'
+  },
+  { 
+    id: 'music_history', 
+    label: 'Muziekgeschiedenis', 
+    table: 'music_history_events', 
+    dateColumn: 'created_at',
+    schedule: 'Dagelijks 06:00',
+    expectedDaily: 1,
+    warningAfterHours: 26,
+    icon: '📜'
+  },
+  { 
+    id: 'news', 
+    label: 'Nieuws Artikelen', 
+    table: 'news_blog_posts', 
+    dateColumn: 'created_at',
+    schedule: '3x per dag',
+    expectedDaily: 3,
+    warningAfterHours: 10,
+    icon: '📰'
+  },
+  { 
+    id: 'youtube', 
+    label: 'YouTube Videos', 
+    table: 'youtube_discoveries', 
+    dateColumn: 'created_at',
+    schedule: 'Continu',
+    expectedDaily: 20,
+    warningAfterHours: 8,
+    icon: '🎬'
+  },
+  { 
+    id: 'spotify', 
+    label: 'Spotify Releases', 
+    table: 'spotify_new_releases_processed', 
+    dateColumn: 'created_at',
+    schedule: 'Dagelijks 09:00',
+    expectedDaily: 1,
+    warningAfterHours: 26,
+    icon: '🎵'
+  },
+  { 
+    id: 'artist_stories', 
+    label: 'Artist Stories', 
+    table: 'artist_stories', 
+    dateColumn: 'created_at',
+    schedule: 'Dagelijks 01:00',
+    expectedDaily: 1,
+    warningAfterHours: 48,
+    icon: '👤'
+  },
+  { 
+    id: 'music_stories', 
+    label: 'Music Stories', 
+    table: 'music_stories', 
+    dateColumn: 'created_at',
+    schedule: 'Continu',
+    expectedDaily: 10,
+    warningAfterHours: 8,
+    icon: '📖'
+  },
+  { 
+    id: 'blogs', 
+    label: 'Blog Posts', 
+    table: 'blog_posts', 
+    dateColumn: 'created_at',
+    schedule: 'Continu',
+    expectedDaily: 50,
+    warningAfterHours: 4,
+    icon: '📝'
+  },
+  { 
+    id: 'indexnow', 
+    label: 'IndexNow', 
+    table: 'indexnow_submissions', 
+    dateColumn: 'submitted_at',
+    schedule: 'Elke 15 min',
+    expectedDaily: 10,
+    warningAfterHours: 6,
+    icon: '🔍'
+  },
+];
+
+export interface ContentActivity {
+  source: ContentSource;
+  lastActivity: Date | null;
+  countInPeriod: number;
+  total: number;
   status: 'ok' | 'warning' | 'error' | 'unknown';
-  source: 'log' | 'content' | 'none';
+  hoursSinceActivity: number | null;
 }
 
 export interface QueueStats {
+  name: string;
   pending: number;
   processing: number;
   completed: number;
   failed: number;
 }
 
-export interface NewsGenStats {
-  source: string;
-  runs: number;
-  success: number;
-  items: number;
-  lastError?: string;
+function calculateStatus(
+  source: ContentSource,
+  lastActivity: Date | null,
+  countInPeriod: number
+): 'ok' | 'warning' | 'error' | 'unknown' {
+  if (!lastActivity) return 'unknown';
+  
+  const hoursSince = (Date.now() - lastActivity.getTime()) / (1000 * 60 * 60);
+  
+  // Error if way over threshold
+  if (hoursSince > source.warningAfterHours) {
+    return 'error';
+  }
+  
+  // Warning if approaching threshold
+  if (hoursSince > source.warningAfterHours * 0.75) {
+    return 'warning';
+  }
+  
+  // OK if recent activity
+  return 'ok';
 }
 
-export interface ContentStats {
-  blogs: number;
-  musicStories: number;
-  artistStories: number;
-  news: number;
-  anecdotes: number;
-  musicHistory: number;
-  youtube: number;
-  spotify: number;
-  singles: number;
-  discogs: number;
-  indexNow: number;
-  cronjobs: number;
-}
-
-export interface TotalStats {
-  totalNews: number;
-  totalAnecdotes: number;
-  totalMusicHistory: number;
-  totalYouTube: number;
-  totalSpotify: number;
-}
-
-// Process definitions with content-based detection
-export interface ProcessDefinition {
-  name: string;
-  label: string;
-  schedule: string; // cron schedule description
-  runsPerDay: number;
-  contentTable?: string;
-  contentColumn?: string;
-}
-
-const PROCESS_DEFINITIONS: ProcessDefinition[] = [
-  { name: 'daily-anecdote-generator', label: 'Anekdote Generator', schedule: '1x per dag (07:00)', runsPerDay: 1, contentTable: 'music_anecdotes', contentColumn: 'created_at' },
-  { name: 'generate-daily-music-history', label: 'Muziekgeschiedenis', schedule: '1x per dag (06:00)', runsPerDay: 1, contentTable: 'music_history_events', contentColumn: 'created_at' },
-  { name: 'daily-news-update', label: 'Nieuws Update', schedule: '1x per dag (08:00)', runsPerDay: 1, contentTable: 'news_blog_posts', contentColumn: 'created_at' },
-  { name: 'process-spotify-new-releases', label: 'Spotify Releases', schedule: '2x per dag', runsPerDay: 2, contentTable: 'spotify_new_releases_processed', contentColumn: 'created_at' },
-  { name: 'daily-artist-stories-generator', label: 'Artist Stories', schedule: '1x per dag (07:00)', runsPerDay: 1, contentTable: 'artist_stories', contentColumn: 'created_at' },
-  { name: 'batch-blog-processor', label: 'Blog Processor', schedule: 'Continu (elke minuut)', runsPerDay: 1440, contentTable: 'blog_posts', contentColumn: 'created_at' },
-  { name: 'latest-discogs-news', label: 'Discogs Trending', schedule: '3x per dag', runsPerDay: 3, contentTable: 'discogs_import_log', contentColumn: 'created_at' },
-  { name: 'youtube-discoveries', label: 'YouTube Discoveries', schedule: '3x per dag', runsPerDay: 3, contentTable: 'youtube_discoveries', contentColumn: 'created_at' },
-  { name: 'indexnow-cron', label: 'IndexNow', schedule: '6x per dag', runsPerDay: 6, contentTable: 'indexnow_submissions', contentColumn: 'submitted_at' },
-  { name: 'refresh-featured-photos', label: 'Featured Photos', schedule: '2x per dag', runsPerDay: 2 },
-  { name: 'singles-batch-processor', label: 'Singles Processor', schedule: 'Elk uur', runsPerDay: 24, contentTable: 'singles_import_queue', contentColumn: 'processed_at' },
-  { name: 'daily-email-digest', label: 'Email Digest', schedule: '1x per dag (10:30)', runsPerDay: 1, contentTable: 'email_logs', contentColumn: 'sent_at' },
-];
-
-export const useStatusDashboard = (periodHours: number = 8) => {
-  const periodStart = new Date(Date.now() - periodHours * 60 * 60 * 1000).toISOString();
-
-  // Cronjob stats
-  const { data: cronjobStats, isLoading: cronjobLoading, refetch: refetchCronjobs } = useQuery({
-    queryKey: ['status-cronjobs', periodStart],
+export function useStatusDashboard(periodHours: number = 24) {
+  // Fetch content activity for each source
+  const { data: contentActivity, isLoading: contentLoading, refetch: refetchContent } = useQuery({
+    queryKey: ['content-activity', periodHours],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cronjob_execution_log')
-        .select('function_name, status, items_processed, execution_time_ms, error_message')
-        .gte('started_at', periodStart)
-        .order('started_at', { ascending: false });
-
-      if (error) throw error;
-
-      const summary: Record<string, { runs: number; successful: number; failed: number; items: number; avgTime: number; errors: string[] }> = {};
+      const activities: ContentActivity[] = [];
+      const periodStart = new Date(Date.now() - periodHours * 60 * 60 * 1000).toISOString();
       
-      for (const log of data || []) {
-        if (!summary[log.function_name]) {
-          summary[log.function_name] = { runs: 0, successful: 0, failed: 0, items: 0, avgTime: 0, errors: [] };
-        }
-        const s = summary[log.function_name];
-        s.runs++;
-        if (log.status === 'completed' || log.status === 'success') {
-          s.successful++;
-        } else if (log.status === 'failed' || log.status === 'error') {
-          s.failed++;
-          if (log.error_message) s.errors.push(log.error_message);
-        }
-        s.items += log.items_processed || 0;
-        s.avgTime += log.execution_time_ms || 0;
-      }
-
-      for (const key in summary) {
-        if (summary[key].runs > 0) {
-          summary[key].avgTime = Math.round(summary[key].avgTime / summary[key].runs);
-        }
-      }
-
-      return { raw: data, summary };
-    },
-    staleTime: 30000,
-  });
-
-  // Content-based process detection
-  const { data: contentCounts } = useQuery({
-    queryKey: ['status-content-counts', periodStart],
-    queryFn: async () => {
-      const counts: Record<string, number> = {};
-      
-      // Fetch content counts for each process that has a content table
-      const queries = [
-        { key: 'music_anecdotes', table: 'music_anecdotes', column: 'created_at' },
-        { key: 'music_history_events', table: 'music_history_events', column: 'created_at' },
-        { key: 'news_blog_posts', table: 'news_blog_posts', column: 'created_at' },
-        { key: 'spotify_new_releases_processed', table: 'spotify_new_releases_processed', column: 'created_at' },
-        { key: 'artist_stories', table: 'artist_stories', column: 'created_at' },
-        { key: 'blog_posts', table: 'blog_posts', column: 'created_at' },
-        { key: 'discogs_import_log', table: 'discogs_import_log', column: 'created_at' },
-        { key: 'youtube_discoveries', table: 'youtube_discoveries', column: 'created_at' },
-        { key: 'indexnow_submissions', table: 'indexnow_submissions', column: 'submitted_at' },
-        { key: 'singles_import_queue', table: 'singles_import_queue', column: 'processed_at' },
-        { key: 'email_logs', table: 'email_logs', column: 'sent_at' },
-      ];
-
-      await Promise.all(queries.map(async ({ key, table, column }) => {
+      for (const source of CONTENT_SOURCES) {
         try {
-          const { count } = await supabase
-            .from(table)
+          // Get last activity and count in period
+          const { data: lastRecord } = await supabase
+            .from(source.table as any)
+            .select(source.dateColumn)
+            .order(source.dateColumn, { ascending: false })
+            .limit(1)
+            .single();
+          
+          const { count: periodCount } = await supabase
+            .from(source.table as any)
             .select('*', { count: 'exact', head: true })
-            .gte(column, periodStart);
-          counts[key] = count || 0;
-        } catch {
-          counts[key] = 0;
+            .gte(source.dateColumn, periodStart);
+          
+          const { count: totalCount } = await supabase
+            .from(source.table as any)
+            .select('*', { count: 'exact', head: true });
+          
+          const lastActivity = lastRecord?.[source.dateColumn] 
+            ? new Date(lastRecord[source.dateColumn]) 
+            : null;
+          
+          const hoursSinceActivity = lastActivity 
+            ? (Date.now() - lastActivity.getTime()) / (1000 * 60 * 60)
+            : null;
+          
+          activities.push({
+            source,
+            lastActivity,
+            countInPeriod: periodCount || 0,
+            total: totalCount || 0,
+            status: calculateStatus(source, lastActivity, periodCount || 0),
+            hoursSinceActivity
+          });
+        } catch (error) {
+          console.error(`Error fetching ${source.table}:`, error);
+          activities.push({
+            source,
+            lastActivity: null,
+            countInPeriod: 0,
+            total: 0,
+            status: 'unknown',
+            hoursSinceActivity: null
+          });
         }
-      }));
-
-      return counts;
+      }
+      
+      return activities;
     },
-    staleTime: 30000,
+    refetchInterval: 60000,
   });
 
-  // Process status combining cronjob logs and content-based detection
-  const processStatus: ProcessStatus[] = PROCESS_DEFINITIONS.map(proc => {
-    const logStats = cronjobStats?.summary[proc.name];
-    const logRuns = logStats?.runs || 0;
-    
-    // Get content count for this process
-    const contentTableMap: Record<string, string> = {
-      'music_anecdotes': 'daily-anecdote-generator',
-      'music_history_events': 'generate-daily-music-history',
-      'news_blog_posts': 'daily-news-update',
-      'spotify_new_releases_processed': 'process-spotify-new-releases',
-      'artist_stories': 'daily-artist-stories-generator',
-      'blog_posts': 'batch-blog-processor',
-      'discogs_import_log': 'latest-discogs-news',
-      'youtube_discoveries': 'youtube-discoveries',
-      'indexnow_submissions': 'indexnow-cron',
-      'singles_import_queue': 'singles-batch-processor',
-      'email_logs': 'daily-email-digest',
-    };
-    
-    const contentKey = Object.entries(contentTableMap).find(([_, v]) => v === proc.name)?.[0];
-    const contentCount = contentKey ? (contentCounts?.[contentKey] || 0) : 0;
-    
-    // Calculate expected runs for period
-    const expectedInPeriod = Math.max(1, Math.ceil(proc.runsPerDay * (periodHours / 24)));
-    
-    // Determine status based on available data
-    let status: ProcessStatus['status'] = 'unknown';
-    let source: ProcessStatus['source'] = 'none';
-    
-    if (logRuns > 0) {
-      source = 'log';
-      status = logRuns >= expectedInPeriod ? 'ok' : 'warning';
-    } else if (contentCount > 0) {
-      source = 'content';
-      status = 'ok'; // Content exists, so process ran
-    } else if (proc.contentTable) {
-      // Has content table but no content - might be an issue
-      status = 'warning';
-      source = 'content';
-    }
-    
-    return {
-      name: proc.name,
-      label: proc.label,
-      schedule: proc.schedule,
-      expectedRuns: expectedInPeriod,
-      actualRuns: logRuns,
-      contentCount,
-      status,
-      source
-    };
-  });
-
-  // Singles queue
-  const { data: singlesQueue, isLoading: singlesLoading } = useQuery({
-    queryKey: ['status-singles-queue'],
+  // Fetch queue statistics
+  const { data: queueStats, isLoading: queuesLoading } = useQuery({
+    queryKey: ['queue-stats'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const queues: QueueStats[] = [];
+      
+      // Singles queue
+      const { data: singlesData } = await supabase
         .from('singles_import_queue')
         .select('status');
       
-      if (error) throw error;
-      
-      const counts: QueueStats = { pending: 0, processing: 0, completed: 0, failed: 0 };
-      for (const item of data || []) {
-        if (item.status in counts) {
-          counts[item.status as keyof QueueStats]++;
-        }
+      if (singlesData) {
+        queues.push({
+          name: 'Singles Import',
+          pending: singlesData.filter(s => s.status === 'pending').length,
+          processing: singlesData.filter(s => s.status === 'processing').length,
+          completed: singlesData.filter(s => s.status === 'completed').length,
+          failed: singlesData.filter(s => s.status === 'failed').length,
+        });
       }
-      return counts;
-    },
-    staleTime: 30000,
-  });
-
-  // Discogs queue
-  const { data: discogsQueue, isLoading: discogsLoading } = useQuery({
-    queryKey: ['status-discogs-queue'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+      
+      // Discogs queue
+      const { data: discogsData } = await supabase
         .from('discogs_import_log')
         .select('status');
       
-      if (error) throw error;
+      if (discogsData) {
+        queues.push({
+          name: 'Discogs Import',
+          pending: discogsData.filter(s => s.status === 'pending').length,
+          processing: discogsData.filter(s => s.status === 'processing').length,
+          completed: discogsData.filter(s => s.status === 'completed').length,
+          failed: discogsData.filter(s => s.status === 'failed').length,
+        });
+      }
       
-      const counts: QueueStats = { pending: 0, processing: 0, completed: 0, failed: 0 };
-      for (const item of data || []) {
-        const status = item.status as string;
-        if (status in counts) {
-          counts[status as keyof QueueStats]++;
-        }
-      }
-      return counts;
-    },
-    staleTime: 30000,
-  });
-
-  // Content stats for period
-  const { data: contentStats, isLoading: contentLoading, refetch: refetchContent } = useQuery({
-    queryKey: ['status-content', periodStart],
-    queryFn: async () => {
-      const [blogs, musicStories, artistStories, news, anecdotes, musicHistory, youtube, spotify, singles, discogs, indexNow] = await Promise.all([
-        supabase.from('blog_posts').select('*', { count: 'exact', head: true }).gte('created_at', periodStart),
-        supabase.from('music_stories').select('*', { count: 'exact', head: true }).gte('created_at', periodStart),
-        supabase.from('artist_stories').select('*', { count: 'exact', head: true }).gte('created_at', periodStart),
-        supabase.from('news_blog_posts').select('*', { count: 'exact', head: true }).gte('created_at', periodStart),
-        supabase.from('music_anecdotes').select('*', { count: 'exact', head: true }).gte('created_at', periodStart),
-        supabase.from('music_history_events').select('*', { count: 'exact', head: true }).gte('created_at', periodStart),
-        supabase.from('youtube_discoveries').select('*', { count: 'exact', head: true }).gte('created_at', periodStart),
-        supabase.from('spotify_new_releases_processed').select('*', { count: 'exact', head: true }).gte('created_at', periodStart),
-        supabase.from('singles_import_queue').select('*', { count: 'exact', head: true }).in('status', ['completed', 'failed']).gte('processed_at', periodStart),
-        supabase.from('discogs_import_log').select('*', { count: 'exact', head: true }).gte('processed_at', periodStart),
-        supabase.from('indexnow_submissions').select('*', { count: 'exact', head: true }).gte('submitted_at', periodStart),
-      ]);
-
-      return {
-        blogs: blogs.count || 0,
-        musicStories: musicStories.count || 0,
-        artistStories: artistStories.count || 0,
-        news: news.count || 0,
-        anecdotes: anecdotes.count || 0,
-        musicHistory: musicHistory.count || 0,
-        youtube: youtube.count || 0,
-        spotify: spotify.count || 0,
-        singles: singles.count || 0,
-        discogs: discogs.count || 0,
-        indexNow: indexNow.count || 0,
-        cronjobs: cronjobStats?.raw?.length || 0,
-      };
-    },
-    staleTime: 30000,
-  });
-
-  // Total stats
-  const { data: totalStats, isLoading: totalsLoading } = useQuery({
-    queryKey: ['status-totals'],
-    queryFn: async () => {
-      const [news, anecdotes, musicHistory, youtube, spotify] = await Promise.all([
-        supabase.from('news_blog_posts').select('*', { count: 'exact', head: true }),
-        supabase.from('music_anecdotes').select('*', { count: 'exact', head: true }),
-        supabase.from('music_history_events').select('*', { count: 'exact', head: true }),
-        supabase.from('youtube_discoveries').select('*', { count: 'exact', head: true }),
-        supabase.from('spotify_new_releases_processed').select('*', { count: 'exact', head: true }),
-      ]);
-
-      return {
-        totalNews: news.count || 0,
-        totalAnecdotes: anecdotes.count || 0,
-        totalMusicHistory: musicHistory.count || 0,
-        totalYouTube: youtube.count || 0,
-        totalSpotify: spotify.count || 0,
-      };
-    },
-    staleTime: 60000,
-  });
-
-  // News generation logs
-  const { data: newsGenStats, isLoading: newsGenLoading } = useQuery({
-    queryKey: ['status-news-gen', periodStart],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('news_generation_logs')
-        .select('source, status, items_generated, error_message')
-        .gte('created_at', periodStart);
-
-      if (error) throw error;
-
-      const summary: Record<string, NewsGenStats> = {};
-      for (const log of data || []) {
-        if (!summary[log.source]) {
-          summary[log.source] = { source: log.source, runs: 0, success: 0, items: 0 };
-        }
-        summary[log.source].runs++;
-        if (log.status === 'success' || log.status === 'completed') {
-          summary[log.source].success++;
-          summary[log.source].items += log.items_generated || 0;
-        } else if (log.error_message) {
-          summary[log.source].lastError = log.error_message;
-        }
-      }
-
-      return Object.values(summary);
-    },
-    staleTime: 30000,
-  });
-
-  // News cache status
-  const { data: newsCache, isLoading: newsCacheLoading } = useQuery({
-    queryKey: ['status-news-cache'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('news_cache')
-        .select('source, cached_at, expires_at');
-
-      if (error) throw error;
-
-      return (data || []).map(item => ({
-        source: item.source,
-        lastCached: new Date(item.cached_at),
-        isExpired: new Date(item.expires_at) < new Date(),
-      }));
-    },
-    staleTime: 30000,
-  });
-
-  // Batch queue stats
-  const { data: batchQueue, isLoading: batchLoading } = useQuery({
-    queryKey: ['status-batch-queue'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+      // Batch queue
+      const { data: batchData } = await supabase
         .from('batch_queue_items')
-        .select('item_type, status');
-
-      if (error) throw error;
-
-      const byType: Record<string, QueueStats> = {};
-      for (const item of data || []) {
-        if (!byType[item.item_type]) {
-          byType[item.item_type] = { pending: 0, processing: 0, completed: 0, failed: 0 };
-        }
-        if (item.status in byType[item.item_type]) {
-          byType[item.item_type][item.status as keyof QueueStats]++;
-        }
+        .select('status');
+      
+      if (batchData) {
+        queues.push({
+          name: 'Batch Queue',
+          pending: batchData.filter(s => s.status === 'pending').length,
+          processing: batchData.filter(s => s.status === 'processing').length,
+          completed: batchData.filter(s => s.status === 'completed').length,
+          failed: batchData.filter(s => s.status === 'failed').length,
+        });
       }
-      return byType;
+      
+      return queues;
     },
-    staleTime: 30000,
+    refetchInterval: 60000,
   });
 
-  const hasIssues = processStatus.some(p => p.status === 'error') ||
-                    (singlesQueue?.failed || 0) > 0 ||
-                    Object.values(cronjobStats?.summary || {}).some(s => s.failed > 0);
+  // Fetch recent cron logs (for reference only)
+  const { data: cronLogs, isLoading: cronLoading } = useQuery({
+    queryKey: ['cron-logs-recent'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('cronjob_execution_log')
+        .select('*')
+        .order('started_at', { ascending: false })
+        .limit(50);
+      
+      return data || [];
+    },
+    refetchInterval: 60000,
+  });
 
-  const refetchAll = () => {
-    refetchCronjobs();
-    refetchContent();
-  };
+  // Calculate issues
+  const issues = contentActivity?.filter(a => a.status === 'error' || a.status === 'warning') || [];
+  const hasIssues = issues.length > 0;
+  const errorCount = contentActivity?.filter(a => a.status === 'error').length || 0;
+  const warningCount = contentActivity?.filter(a => a.status === 'warning').length || 0;
 
   return {
-    processStatus,
-    singlesQueue,
-    discogsQueue,
-    contentStats,
-    totalStats,
-    newsGenStats,
-    newsCache,
-    batchQueue,
-    cronjobSummary: cronjobStats?.summary,
-    cronjobRaw: cronjobStats?.raw,
+    contentActivity: contentActivity || [],
+    queueStats: queueStats || [],
+    cronLogs: cronLogs || [],
+    issues,
     hasIssues,
-    isLoading: cronjobLoading || singlesLoading || discogsLoading || contentLoading || totalsLoading || newsGenLoading || newsCacheLoading || batchLoading,
-    refetch: refetchAll,
-    periodHours,
+    errorCount,
+    warningCount,
+    isLoading: contentLoading || queuesLoading || cronLoading,
+    refetch: refetchContent,
   };
-};
+}

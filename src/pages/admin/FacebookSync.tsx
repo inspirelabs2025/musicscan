@@ -144,14 +144,20 @@ export default function FacebookSync() {
     try {
       setIsSavingToken(true);
       
+      console.log('🔐 Saving credentials...');
+      console.log('Page Access Token length:', pageAccessToken.trim().length);
+      console.log('App Secret length:', appSecret.trim().length);
+      console.log('Page ID:', pageId.trim());
+      
       // Save Page Access Token
-      const { error: tokenError } = await supabase.functions.invoke('save-facebook-token', {
+      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('save-facebook-token', {
         body: { 
           secret_key: 'FACEBOOK_PAGE_ACCESS_TOKEN',
           secret_value: pageAccessToken.trim()
         }
       });
 
+      console.log('Token save result:', { tokenData, tokenError });
       if (tokenError) throw tokenError;
 
       // Save App Secret

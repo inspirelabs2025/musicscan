@@ -27,6 +27,7 @@ export default function FacebookSync() {
   const [appSecret, setAppSecret] = useState("");
   const [pageId, setPageId] = useState("");
   const [isSavingToken, setIsSavingToken] = useState(false);
+  const [credentialsSaved, setCredentialsSaved] = useState(false);
   const [syncProgress, setSyncProgress] = useState<{
     total?: number;
     synced?: number;
@@ -43,6 +44,37 @@ export default function FacebookSync() {
   // Test post state
   const [testPostMessage, setTestPostMessage] = useState("🎵 Test post vanuit MusicScan! Onze Facebook integratie werkt perfect. #MusicScan #VinylCollection");
   const [isTestPosting, setIsTestPosting] = useState(false);
+
+  // Query to check current saved credentials status
+  const { data: savedCredentials, refetch: refetchCredentials } = useQuery({
+    queryKey: ['facebook-credentials-status'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('app_secrets')
+        .select('secret_key, updated_at')
+        .in('secret_key', ['FACEBOOK_PAGE_ACCESS_TOKEN', 'FACEBOOK_APP_SECRET', 'FACEBOOK_PAGE_ID']);
+      
+      if (error) throw error;
+      
+      const result = {
+        hasToken: false,
+        hasSecret: false,
+        hasPageId: false,
+        lastUpdated: null as string | null
+      };
+      
+      data?.forEach((item: { secret_key: string; updated_at: string }) => {
+        if (item.secret_key === 'FACEBOOK_PAGE_ACCESS_TOKEN') result.hasToken = true;
+        if (item.secret_key === 'FACEBOOK_APP_SECRET') result.hasSecret = true;
+        if (item.secret_key === 'FACEBOOK_PAGE_ID') result.hasPageId = true;
+        if (item.updated_at && (!result.lastUpdated || item.updated_at > result.lastUpdated)) {
+          result.lastUpdated = item.updated_at;
+        }
+      });
+      
+      return result;
+    }
+  });
 
   // Fetch sync history
   const { data: syncLogs, refetch } = useQuery({
@@ -185,9 +217,9 @@ export default function FacebookSync() {
         description: "Facebook credentials zijn veilig opgeslagen. Auto-posting is nu actief!",
       });
 
-      setPageAccessToken("");
-      setAppSecret("");
-      setPageId("");
+      // Don't clear the form - just show success state and refresh status
+      setCredentialsSaved(true);
+      refetchCredentials();
       
     } catch (error) {
       console.error('Error saving credentials:', error);
@@ -434,6 +466,37 @@ export default function FacebookSync() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Current saved credentials status */}
+            <div className="p-3 bg-muted/50 border rounded-lg space-y-2">
+              <p className="font-medium text-sm">📊 Huidige Status in Database:</p>
+              <div className="flex flex-wrap gap-3 text-sm">
+                <span className={savedCredentials?.hasToken ? "text-green-600" : "text-destructive"}>
+                  {savedCredentials?.hasToken ? "✅" : "❌"} Page Token
+                </span>
+                <span className={savedCredentials?.hasSecret ? "text-green-600" : "text-destructive"}>
+                  {savedCredentials?.hasSecret ? "✅" : "❌"} App Secret
+                </span>
+                <span className={savedCredentials?.hasPageId ? "text-green-600" : "text-destructive"}>
+                  {savedCredentials?.hasPageId ? "✅" : "❌"} Page ID
+                </span>
+              </div>
+              {savedCredentials?.lastUpdated && (
+                <p className="text-xs text-muted-foreground">
+                  Laatst bijgewerkt: {new Date(savedCredentials.lastUpdated).toLocaleString('nl-NL')}
+                </p>
+              )}
+            </div>
+
+            {/* Success message after saving */}
+            {credentialsSaved && (
+              <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                <p className="text-green-600 font-medium flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  ✅ Credentials succesvol opgeslagen! Je kunt nu een test post versturen.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="pageAccessToken">Facebook Page Access Token</Label>
               <Input
@@ -456,7 +519,10 @@ export default function FacebookSync() {
                 type="password"
                 placeholder="Plak hier je App Secret..."
                 value={appSecret}
-                onChange={(e) => setAppSecret(e.target.value)}
+                onChange={(e) => {
+                  console.log('📝 App Secret onChange - new length:', e.target.value.length);
+                  setAppSecret(e.target.value);
+                }}
                 disabled={isSavingToken}
               />
               <p className="text-xs text-muted-foreground">

@@ -20,6 +20,7 @@ import { ShoppingCartWidget } from "@/components/ShoppingCartWidget";
 
 // SHOP MENU ITEMS
 const shopMenuItems = [
+  { title: "Shop Overzicht", url: "/shop", icon: ShoppingCart, highlight: true },
   { title: "Art Prints", url: "/art-shop", icon: Images },
   { title: "Metal Prints", url: "/metaalprints", icon: Images },
   { title: "Posters", url: "/posters", icon: Images },
@@ -159,16 +160,17 @@ export function Navigation() {
                 <div className="grid w-[300px] gap-1 p-4 bg-popover">
                   {shopMenuItems
                     .filter(item => !item.requiresAuth || user)
-                    .map((item) => (
+                    .map((item, index) => (
                       <NavigationMenuLink key={item.title} asChild>
                         <Link
                           to={item.url}
                           className={cn(
                             "flex items-center gap-2 rounded-md p-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
-                            currentPath === item.url && "bg-accent text-accent-foreground"
+                            currentPath === item.url && "bg-accent text-accent-foreground",
+                            item.highlight && "bg-primary/10 border border-primary/20 font-semibold"
                           )}
                         >
-                          <item.icon className="h-4 w-4" />
+                          <item.icon className={cn("h-4 w-4", item.highlight && "text-primary")} />
                           <div className="font-medium">{item.title}</div>
                         </Link>
                       </NavigationMenuLink>

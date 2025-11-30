@@ -30,7 +30,7 @@ export const PublicScannerSpotlight = () => {
                 Scan je Platen & CD's
               </h2>
               <p className="text-base text-muted-foreground mb-5 max-w-lg">
-                Identificeer en waardeer je hele collectie met onze gratis scanner. Direct resultaat!
+                Wat is je LP of CD waard? Ontdek het direct met onze gratis scanner!
               </p>
               
               {/* Feature badges - Larger */}

@@ -424,6 +424,12 @@ cron = "0 8,14,20 * * *"
 [functions.youtube-discoveries]
 verify_jwt = false
 
+[[functions.youtube-discoveries.schedule]]
+cron = "0 10 * * *"
+
+[[functions.youtube-discoveries.schedule]]
+cron = "0 18 * * *"
+
 [functions.process-spotify-new-releases]
 verify_jwt = false
 

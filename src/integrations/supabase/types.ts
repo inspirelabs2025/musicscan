@@ -2361,6 +2361,51 @@ export type Database = {
         }
         Relationships: []
       }
+      instagram_post_log: {
+        Row: {
+          content: string | null
+          content_type: string
+          created_at: string
+          error_message: string | null
+          id: string
+          image_url: string | null
+          instagram_post_id: string | null
+          instagram_response: Json | null
+          posted_at: string | null
+          status: string
+          title: string | null
+          url: string | null
+        }
+        Insert: {
+          content?: string | null
+          content_type: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          image_url?: string | null
+          instagram_post_id?: string | null
+          instagram_response?: Json | null
+          posted_at?: string | null
+          status?: string
+          title?: string | null
+          url?: string | null
+        }
+        Update: {
+          content?: string | null
+          content_type?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          image_url?: string | null
+          instagram_post_id?: string | null
+          instagram_response?: Json | null
+          posted_at?: string | null
+          status?: string
+          title?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       lyric_posters: {
         Row: {
           album_name: string | null

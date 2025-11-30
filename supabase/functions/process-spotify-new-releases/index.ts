@@ -330,12 +330,47 @@ serve(async (req) => {
           })
           .eq('id', trackingRecord.id);
         
+        // Auto-post to Facebook if product was created
+        if (productId) {
+          try {
+            console.log(`📘 Posting new release to Facebook: ${artistName} - ${albumName}`);
+            
+            const productUrl = `https://www.musicscan.app/product/${productId}`;
+            const fbResponse = await fetch(`${SUPABASE_URL}/functions/v1/post-to-facebook`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+              },
+              body: JSON.stringify({
+                content_type: 'product',
+                title: `🆕 Nieuw: ${artistName} - ${albumName}`,
+                content: `Nieuwe release! ${artistName} heeft "${albumName}" uitgebracht (${album.release_date}). Ontdek dit album en vind exclusieve merchandise op MusicScan.`,
+                url: productUrl,
+                image_url: imageUrl,
+                hashtags: ['MusicScan', 'NewRelease', 'NieuweMuziek', artistName.replace(/[^a-zA-Z0-9]/g, ''), 'Muziek']
+              })
+            });
+            
+            const fbResult = await fbResponse.json();
+            if (fbResult.success) {
+              console.log(`✅ Successfully posted new release to Facebook: ${fbResult.post_id}`);
+            } else {
+              console.warn(`⚠️ Facebook post failed: ${fbResult.error}`);
+            }
+          } catch (fbError) {
+            console.error('❌ Error posting to Facebook:', fbError);
+            // Don't fail the whole operation if Facebook post fails
+          }
+        }
+        
         results.push({
           album: albumName,
           artist: artistName,
           discogs_id: discogsResult.id,
           product_id: productId,
-          status: productId ? 'completed' : 'product_failed'
+          status: productId ? 'completed' : 'product_failed',
+          facebook_posted: productId ? true : false
         });
         
       } catch (error) {

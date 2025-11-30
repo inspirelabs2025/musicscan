@@ -116,35 +116,34 @@ Deno.serve(async (req) => {
 
     console.log(`Converted ${catalogItems.length} products to catalog format`);
 
-    // Fetch Facebook credentials from database
-    const { data: tokenSecret, error: tokenError } = await supabaseClient
+    // Fetch all Facebook credentials from database
+    const { data: secrets, error: secretsError } = await supabaseClient
       .from('app_secrets')
-      .select('secret_value')
-      .eq('secret_key', 'FACEBOOK_PAGE_ACCESS_TOKEN')
-      .single();
+      .select('secret_key, secret_value')
+      .in('secret_key', ['FACEBOOK_PAGE_ACCESS_TOKEN', 'FACEBOOK_APP_SECRET', 'FACEBOOK_CATALOG_ID']);
 
-    if (tokenError || !tokenSecret) {
-      console.error('Failed to fetch Facebook token:', tokenError);
-      throw new Error('Facebook Page Access Token not configured. Please save your token first.');
+    if (secretsError || !secrets || secrets.length === 0) {
+      console.error('Failed to fetch Facebook credentials:', secretsError);
+      throw new Error('Facebook credentials not configured in app_secrets table');
     }
 
-    const { data: appSecretData, error: appSecretError } = await supabaseClient
-      .from('app_secrets')
-      .select('secret_value')
-      .eq('secret_key', 'FACEBOOK_APP_SECRET')
-      .single();
+    const credentials: Record<string, string> = {};
+    secrets.forEach((s: any) => {
+      credentials[s.secret_key] = s.secret_value;
+    });
 
-    if (appSecretError || !appSecretData) {
-      console.error('Failed to fetch Facebook App Secret:', appSecretError);
-      throw new Error('Facebook App Secret not configured. Please save it first.');
+    const pageAccessToken = credentials['FACEBOOK_PAGE_ACCESS_TOKEN'];
+    const appSecret = credentials['FACEBOOK_APP_SECRET'];
+    const catalogId = credentials['FACEBOOK_CATALOG_ID'];
+
+    if (!pageAccessToken) {
+      throw new Error('FACEBOOK_PAGE_ACCESS_TOKEN not configured in app_secrets');
     }
-
-    const pageAccessToken = tokenSecret.secret_value;
-    const appSecret = appSecretData.secret_value;
-    const catalogId = Deno.env.get('FACEBOOK_CATALOG_ID'); // Catalog ID can remain in env for now
-
-    if (!pageAccessToken || !appSecret || !catalogId) {
-      throw new Error('Facebook credentials not fully configured');
+    if (!appSecret) {
+      throw new Error('FACEBOOK_APP_SECRET not configured in app_secrets');
+    }
+    if (!catalogId) {
+      throw new Error('FACEBOOK_CATALOG_ID not configured in app_secrets. Ga naar Facebook Commerce Manager om je Catalog ID te vinden.');
     }
 
     console.log('Retrieved Facebook credentials from database');

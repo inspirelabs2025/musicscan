@@ -300,9 +300,16 @@ Maak het uitgebreider en diepgaander!`
 
     console.log('Successfully generated and saved anecdote:', newAnecdote.id);
 
-    // Auto-post to Facebook
+    // Auto-post to Facebook and Instagram
+    const anecdoteUrl = `https://www.musicscan.app/anekdotes/${newAnecdote.slug}`;
+    const postContent = newAnecdote.anecdote_content.substring(0, 400) + '...';
+    const postHashtags = ['MusicScan', 'MuziekAnekdote', subjectName.replace(/\s+/g, ''), 'Muziek', 'MuziekGeschiedenis'];
+    
+    // Default image for social posts (can be replaced with generated image later)
+    const defaultImageUrl = 'https://www.musicscan.app/og-image.png';
+    
+    // Post to Facebook
     try {
-      const anecdoteUrl = `https://www.musicscan.app/anekdotes/${newAnecdote.slug}`;
       const fbResponse = await fetch(`${supabaseUrl}/functions/v1/post-to-facebook`, {
         method: 'POST',
         headers: {
@@ -312,9 +319,9 @@ Maak het uitgebreider en diepgaander!`
         body: JSON.stringify({
           content_type: 'anecdote',
           title: newAnecdote.anecdote_title,
-          content: newAnecdote.anecdote_content.substring(0, 400) + '...',
+          content: postContent,
           url: anecdoteUrl,
-          hashtags: ['MusicScan', 'MuziekAnekdote', subjectName.replace(/\s+/g, ''), 'Muziek', 'MuziekGeschiedenis']
+          hashtags: postHashtags
         })
       });
       
@@ -326,7 +333,34 @@ Maak het uitgebreider en diepgaander!`
       }
     } catch (fbError) {
       console.error('❌ Error posting to Facebook:', fbError);
-      // Don't fail the whole operation if Facebook post fails
+    }
+    
+    // Post to Instagram (requires image)
+    try {
+      const igResponse = await fetch(`${supabaseUrl}/functions/v1/post-to-instagram`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`
+        },
+        body: JSON.stringify({
+          content_type: 'anecdote',
+          title: newAnecdote.anecdote_title,
+          content: postContent,
+          url: anecdoteUrl,
+          image_url: defaultImageUrl,
+          hashtags: postHashtags
+        })
+      });
+      
+      const igResult = await igResponse.json();
+      if (igResult.success) {
+        console.log('✅ Successfully posted anecdote to Instagram:', igResult.post_id);
+      } else {
+        console.warn('⚠️ Instagram post failed:', igResult.error);
+      }
+    } catch (igError) {
+      console.error('❌ Error posting to Instagram:', igError);
     }
 
     return new Response(

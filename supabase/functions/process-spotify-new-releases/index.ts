@@ -330,12 +330,16 @@ serve(async (req) => {
           })
           .eq('id', trackingRecord.id);
         
-        // Auto-post to Facebook if product was created
+        // Auto-post to Facebook and Instagram if product was created
         if (productId) {
+          const productUrl = `https://www.musicscan.app/product/${productId}`;
+          const postTitle = `🆕 Nieuw: ${artistName} - ${albumName}`;
+          const postContent = `Nieuwe release! ${artistName} heeft "${albumName}" uitgebracht (${album.release_date}). Ontdek dit album en vind exclusieve merchandise op MusicScan.`;
+          const postHashtags = ['MusicScan', 'NewRelease', 'NieuweMuziek', artistName.replace(/[^a-zA-Z0-9]/g, ''), 'Muziek'];
+          
+          // Post to Facebook
           try {
             console.log(`📘 Posting new release to Facebook: ${artistName} - ${albumName}`);
-            
-            const productUrl = `https://www.musicscan.app/product/${productId}`;
             const fbResponse = await fetch(`${SUPABASE_URL}/functions/v1/post-to-facebook`, {
               method: 'POST',
               headers: {
@@ -344,11 +348,11 @@ serve(async (req) => {
               },
               body: JSON.stringify({
                 content_type: 'product',
-                title: `🆕 Nieuw: ${artistName} - ${albumName}`,
-                content: `Nieuwe release! ${artistName} heeft "${albumName}" uitgebracht (${album.release_date}). Ontdek dit album en vind exclusieve merchandise op MusicScan.`,
+                title: postTitle,
+                content: postContent,
                 url: productUrl,
                 image_url: imageUrl,
-                hashtags: ['MusicScan', 'NewRelease', 'NieuweMuziek', artistName.replace(/[^a-zA-Z0-9]/g, ''), 'Muziek']
+                hashtags: postHashtags
               })
             });
             
@@ -360,7 +364,37 @@ serve(async (req) => {
             }
           } catch (fbError) {
             console.error('❌ Error posting to Facebook:', fbError);
-            // Don't fail the whole operation if Facebook post fails
+          }
+          
+          // Post to Instagram (has image from Spotify)
+          if (imageUrl) {
+            try {
+              console.log(`📸 Posting new release to Instagram: ${artistName} - ${albumName}`);
+              const igResponse = await fetch(`${SUPABASE_URL}/functions/v1/post-to-instagram`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+                },
+                body: JSON.stringify({
+                  content_type: 'product',
+                  title: postTitle,
+                  content: postContent,
+                  url: productUrl,
+                  image_url: imageUrl,
+                  hashtags: postHashtags
+                })
+              });
+              
+              const igResult = await igResponse.json();
+              if (igResult.success) {
+                console.log(`✅ Successfully posted new release to Instagram: ${igResult.post_id}`);
+              } else {
+                console.warn(`⚠️ Instagram post failed: ${igResult.error}`);
+              }
+            } catch (igError) {
+              console.error('❌ Error posting to Instagram:', igError);
+            }
           }
         }
         
@@ -370,7 +404,7 @@ serve(async (req) => {
           discogs_id: discogsResult.id,
           product_id: productId,
           status: productId ? 'completed' : 'product_failed',
-          facebook_posted: productId ? true : false
+          social_posted: productId ? true : false
         });
         
       } catch (error) {

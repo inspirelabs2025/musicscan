@@ -325,6 +325,9 @@ cron = "5 6 * * *"
 [functions.post-to-facebook]
 verify_jwt = false
 
+[functions.post-to-instagram]
+verify_jwt = false
+
 [functions.get-facebook-page-token]
 verify_jwt = false
 

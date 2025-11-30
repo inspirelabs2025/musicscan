@@ -37,15 +37,21 @@ Deno.serve(async (req) => {
     console.log(`📸 Posting to Instagram: ${content_type} - ${title}`);
 
     // Get Instagram credentials from environment variables
-    const accessToken = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
-    const instagramAccountId = Deno.env.get('INSTAGRAM_BUSINESS_ACCOUNT_ID');
+    let accessToken = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
+    let instagramAccountId = Deno.env.get('INSTAGRAM_BUSINESS_ACCOUNT_ID');
 
     if (!accessToken || !instagramAccountId) {
       console.error('Missing credentials - accessToken:', !!accessToken, 'instagramAccountId:', !!instagramAccountId);
       throw new Error('Missing Instagram credentials (FACEBOOK_PAGE_ACCESS_TOKEN or INSTAGRAM_BUSINESS_ACCOUNT_ID)');
     }
 
+    // Trim any whitespace that might have been accidentally added
+    accessToken = accessToken.trim();
+    instagramAccountId = instagramAccountId.trim();
+
     console.log('✅ Instagram credentials loaded from environment');
+    console.log(`📊 Token length: ${accessToken.length}, starts with: ${accessToken.substring(0, 10)}..., ends with: ...${accessToken.substring(accessToken.length - 10)}`);
+    console.log(`📊 Instagram Account ID: ${instagramAccountId}`);
 
     // Format the caption
     let caption = '';

@@ -36,22 +36,37 @@ Deno.serve(async (req) => {
 
     console.log(`📸 Posting to Instagram: ${content_type} - ${title}`);
 
-    // Get Instagram credentials from environment variables
-    let accessToken = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
-    let instagramAccountId = Deno.env.get('INSTAGRAM_BUSINESS_ACCOUNT_ID');
+    // Get Instagram credentials from app_secrets table (same as Facebook)
+    const { data: secrets, error: secretsError } = await supabase
+      .from('app_secrets')
+      .select('secret_key, secret_value')
+      .in('secret_key', ['FACEBOOK_PAGE_ACCESS_TOKEN', 'INSTAGRAM_BUSINESS_ACCOUNT_ID']);
+
+    if (secretsError || !secrets || secrets.length === 0) {
+      console.error('Failed to fetch Instagram credentials:', secretsError);
+      throw new Error('Instagram credentials not configured in app_secrets table');
+    }
+
+    const credentials: Record<string, string> = {};
+    secrets.forEach(s => {
+      credentials[s.secret_key] = s.secret_value;
+    });
+
+    const accessToken = credentials['FACEBOOK_PAGE_ACCESS_TOKEN'];
+    let instagramAccountId = credentials['INSTAGRAM_BUSINESS_ACCOUNT_ID'];
+    
+    // Fallback to environment variable for Instagram Account ID if not in database
+    if (!instagramAccountId) {
+      instagramAccountId = Deno.env.get('INSTAGRAM_BUSINESS_ACCOUNT_ID') || '';
+    }
 
     if (!accessToken || !instagramAccountId) {
       console.error('Missing credentials - accessToken:', !!accessToken, 'instagramAccountId:', !!instagramAccountId);
       throw new Error('Missing Instagram credentials (FACEBOOK_PAGE_ACCESS_TOKEN or INSTAGRAM_BUSINESS_ACCOUNT_ID)');
     }
 
-    // Trim any whitespace that might have been accidentally added
-    accessToken = accessToken.trim();
-    instagramAccountId = instagramAccountId.trim();
-
-    console.log('✅ Instagram credentials loaded from environment');
-    console.log(`📊 Token length: ${accessToken.length}, starts with: ${accessToken.substring(0, 10)}..., ends with: ...${accessToken.substring(accessToken.length - 10)}`);
-    console.log(`📊 Instagram Account ID: ${instagramAccountId}`);
+    console.log('✅ Instagram credentials loaded from app_secrets');
+    console.log(`📊 Token length: ${accessToken.length}, Instagram Account ID: ${instagramAccountId}`);
 
     // Format the caption
     let caption = '';

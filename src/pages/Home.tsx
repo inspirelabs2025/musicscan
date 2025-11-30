@@ -1,5 +1,6 @@
 import { SimpleHero } from '@/components/home/SimpleHero';
 import { ArtistSearchHero } from '@/components/home/ArtistSearchHero';
+import { PublicScannerSpotlight } from '@/components/home/PublicScannerSpotlight';
 import { QuickDiscoveryBar } from '@/components/home/QuickDiscoveryBar';
 import { EchoSpotlight } from '@/components/home/EchoSpotlight';
 import { MetalPrintSpotlight } from '@/components/home/MetalPrintSpotlight';
@@ -40,6 +41,9 @@ const Home = () => {
     <div className="min-h-screen">
       {/* Artist Search Hero - EERSTE ELEMENT */}
       <ArtistSearchHero />
+
+      {/* Public Scanner - Scan je collectie */}
+      <PublicScannerSpotlight />
 
       {/* Hero Section - Simple with 3 CTAs */}
       <SimpleHero />

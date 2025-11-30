@@ -9,6 +9,165 @@ const corsHeaders = {
 
 const REPORT_EMAIL = "rogiervisser76@gmail.com";
 
+// Content sources - same as useStatusDashboard hook
+const CONTENT_SOURCES = [
+  { 
+    id: 'anecdotes', 
+    label: 'Anekdotes', 
+    table: 'music_anecdotes', 
+    dateColumn: 'created_at',
+    publishedColumn: 'is_published',
+    schedule: 'Dagelijks 06:05',
+    expectedDaily: 1,
+    warningAfterHours: 26,
+    icon: '🎭'
+  },
+  { 
+    id: 'music_history', 
+    label: 'Muziekgeschiedenis', 
+    table: 'music_history_events', 
+    dateColumn: 'created_at',
+    publishedColumn: 'is_published',
+    schedule: 'Dagelijks 06:00',
+    expectedDaily: 1,
+    warningAfterHours: 26,
+    icon: '📜'
+  },
+  { 
+    id: 'news', 
+    label: 'Nieuws Artikelen', 
+    table: 'news_blog_posts', 
+    dateColumn: 'created_at',
+    publishedColumn: 'is_published',
+    schedule: '3x per dag',
+    expectedDaily: 3,
+    warningAfterHours: 10,
+    icon: '📰'
+  },
+  { 
+    id: 'youtube', 
+    label: 'YouTube Videos', 
+    table: 'youtube_discoveries', 
+    dateColumn: 'created_at',
+    schedule: 'Continu',
+    expectedDaily: 20,
+    warningAfterHours: 8,
+    icon: '🎬'
+  },
+  { 
+    id: 'spotify', 
+    label: 'Spotify Releases', 
+    table: 'spotify_new_releases_processed', 
+    dateColumn: 'created_at',
+    schedule: 'Dagelijks 09:00',
+    expectedDaily: 1,
+    warningAfterHours: 26,
+    icon: '🎵'
+  },
+  { 
+    id: 'artist_stories', 
+    label: 'Artist Stories', 
+    table: 'artist_stories', 
+    dateColumn: 'created_at',
+    publishedColumn: 'is_published',
+    schedule: 'Dagelijks 01:00',
+    expectedDaily: 1,
+    warningAfterHours: 48,
+    icon: '👤'
+  },
+  { 
+    id: 'music_stories', 
+    label: 'Music Stories', 
+    table: 'music_stories', 
+    dateColumn: 'created_at',
+    publishedColumn: 'is_published',
+    schedule: 'Continu',
+    expectedDaily: 10,
+    warningAfterHours: 8,
+    icon: '📖'
+  },
+  { 
+    id: 'blogs', 
+    label: 'Blog Posts', 
+    table: 'blog_posts', 
+    dateColumn: 'created_at',
+    publishedColumn: 'is_published',
+    schedule: 'Continu',
+    expectedDaily: 50,
+    warningAfterHours: 4,
+    icon: '📝'
+  },
+  { 
+    id: 'indexnow', 
+    label: 'IndexNow', 
+    table: 'indexnow_submissions', 
+    dateColumn: 'submitted_at',
+    schedule: 'Elke 15 min',
+    expectedDaily: 10,
+    warningAfterHours: 6,
+    icon: '🔍'
+  },
+];
+
+interface ContentActivity {
+  source: typeof CONTENT_SOURCES[0];
+  lastActivity: string | null;
+  countInPeriod: number;
+  total: number;
+  publishedCount: number | null;
+  unpublishedCount: number | null;
+  status: 'ok' | 'warning' | 'error' | 'unknown';
+  hoursSinceActivity: number | null;
+}
+
+interface QueueStats {
+  name: string;
+  pending: number;
+  processing: number;
+  completed: number;
+  failed: number;
+}
+
+function calculateStatus(
+  source: typeof CONTENT_SOURCES[0],
+  lastActivity: Date | null,
+  countInPeriod: number
+): 'ok' | 'warning' | 'error' | 'unknown' {
+  if (!lastActivity) return 'unknown';
+  
+  const hoursSince = (Date.now() - lastActivity.getTime()) / (1000 * 60 * 60);
+  
+  if (hoursSince > source.warningAfterHours) {
+    return 'error';
+  }
+  
+  if (hoursSince > source.warningAfterHours * 0.75) {
+    return 'warning';
+  }
+  
+  return 'ok';
+}
+
+function formatRelativeTime(date: Date | null): string {
+  if (!date) return 'Nooit';
+  
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  
+  if (diffHours > 24) {
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} dag${diffDays > 1 ? 'en' : ''} geleden`;
+  } else if (diffHours > 0) {
+    return `${diffHours} uur geleden`;
+  } else if (diffMinutes > 0) {
+    return `${diffMinutes} min geleden`;
+  } else {
+    return 'Zojuist';
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -21,530 +180,389 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('📊 Generating comprehensive daily status report...');
+    console.log('📊 Generating status report (same as dashboard)...');
 
-    // Determine report period (last 8 hours for twice daily reports)
-    const periodStart = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
-    const periodEnd = new Date().toISOString();
+    const periodHours = 24;
+    const periodStart = new Date(Date.now() - periodHours * 60 * 60 * 1000).toISOString();
     const reportTime = new Date().toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' });
 
     // ============================================
-    // 1. CRONJOB EXECUTION STATS
+    // CONTENT ACTIVITY (same as useStatusDashboard)
     // ============================================
-    const { data: cronjobStats, error: cronjobError } = await supabase
-      .from('cronjob_execution_log')
-      .select('function_name, status, items_processed, execution_time_ms, error_message')
-      .gte('started_at', periodStart)
-      .order('started_at', { ascending: false });
-
-    if (cronjobError) throw cronjobError;
-
-    // Aggregate cronjob stats by function
-    const cronjobSummary: Record<string, { 
-      runs: number; 
-      successful: number; 
-      failed: number; 
-      itemsProcessed: number;
-      avgTime: number;
-      errors: string[];
-    }> = {};
-
-    for (const log of cronjobStats || []) {
-      if (!cronjobSummary[log.function_name]) {
-        cronjobSummary[log.function_name] = { 
-          runs: 0, successful: 0, failed: 0, itemsProcessed: 0, avgTime: 0, errors: [] 
-        };
-      }
-      const summary = cronjobSummary[log.function_name];
-      summary.runs++;
-      if (log.status === 'completed' || log.status === 'success') {
-        summary.successful++;
-      } else if (log.status === 'failed' || log.status === 'error') {
-        summary.failed++;
-        if (log.error_message) summary.errors.push(log.error_message);
-      }
-      summary.itemsProcessed += log.items_processed || 0;
-      summary.avgTime += log.execution_time_ms || 0;
-    }
-
-    // Calculate averages
-    for (const key in cronjobSummary) {
-      if (cronjobSummary[key].runs > 0) {
-        cronjobSummary[key].avgTime = Math.round(cronjobSummary[key].avgTime / cronjobSummary[key].runs);
-      }
-    }
-
-    // ============================================
-    // 2. SINGLES IMPORT QUEUE
-    // ============================================
-    const { data: singlesStats } = await supabase
-      .from('singles_import_queue')
-      .select('status')
-      .then(res => {
-        const counts = { pending: 0, processing: 0, completed: 0, failed: 0 };
-        for (const item of res.data || []) {
-          counts[item.status as keyof typeof counts] = (counts[item.status as keyof typeof counts] || 0) + 1;
+    const contentActivity: ContentActivity[] = [];
+    
+    for (const source of CONTENT_SOURCES) {
+      try {
+        // Get last activity
+        const { data: lastRecord } = await supabase
+          .from(source.table)
+          .select(source.dateColumn)
+          .order(source.dateColumn, { ascending: false })
+          .limit(1)
+          .single();
+        
+        // Get count in period
+        const { count: periodCount } = await supabase
+          .from(source.table)
+          .select('*', { count: 'exact', head: true })
+          .gte(source.dateColumn, periodStart);
+        
+        // Get total count
+        const { count: totalCount } = await supabase
+          .from(source.table)
+          .select('*', { count: 'exact', head: true });
+        
+        // Get published/unpublished counts if applicable
+        let publishedCount: number | null = null;
+        let unpublishedCount: number | null = null;
+        
+        if (source.publishedColumn) {
+          const { count: pubCount } = await supabase
+            .from(source.table)
+            .select('*', { count: 'exact', head: true })
+            .eq(source.publishedColumn, true);
+          
+          const { count: unpubCount } = await supabase
+            .from(source.table)
+            .select('*', { count: 'exact', head: true })
+            .eq(source.publishedColumn, false);
+          
+          publishedCount = pubCount || 0;
+          unpublishedCount = unpubCount || 0;
         }
-        return { data: counts };
-      });
+        
+        const lastActivity = lastRecord?.[source.dateColumn] 
+          ? new Date(lastRecord[source.dateColumn]) 
+          : null;
+        
+        const hoursSinceActivity = lastActivity 
+          ? (Date.now() - lastActivity.getTime()) / (1000 * 60 * 60)
+          : null;
+        
+        contentActivity.push({
+          source,
+          lastActivity: lastActivity?.toISOString() || null,
+          countInPeriod: periodCount || 0,
+          total: totalCount || 0,
+          publishedCount,
+          unpublishedCount,
+          status: calculateStatus(source, lastActivity, periodCount || 0),
+          hoursSinceActivity
+        });
+      } catch (error) {
+        console.error(`Error fetching ${source.table}:`, error);
+        contentActivity.push({
+          source,
+          lastActivity: null,
+          countInPeriod: 0,
+          total: 0,
+          publishedCount: null,
+          unpublishedCount: null,
+          status: 'unknown',
+          hoursSinceActivity: null
+        });
+      }
+    }
 
-    const { count: singlesProcessedPeriod } = await supabase
+    // ============================================
+    // QUEUE STATS (same as useStatusDashboard)
+    // ============================================
+    const queueStats: QueueStats[] = [];
+    
+    // Singles queue
+    const { data: singlesData } = await supabase
       .from('singles_import_queue')
-      .select('*', { count: 'exact', head: true })
-      .in('status', ['completed', 'failed'])
-      .gte('processed_at', periodStart);
-
-    // ============================================
-    // 3. BATCH QUEUE STATUS
-    // ============================================
-    const { data: batchQueueStats } = await supabase
+      .select('status');
+    
+    if (singlesData) {
+      queueStats.push({
+        name: 'Singles Import',
+        pending: singlesData.filter(s => s.status === 'pending').length,
+        processing: singlesData.filter(s => s.status === 'processing').length,
+        completed: singlesData.filter(s => s.status === 'completed').length,
+        failed: singlesData.filter(s => s.status === 'failed').length,
+      });
+    }
+    
+    // Discogs queue
+    const { data: discogsData } = await supabase
+      .from('discogs_import_log')
+      .select('status');
+    
+    if (discogsData) {
+      queueStats.push({
+        name: 'Discogs Import',
+        pending: discogsData.filter(s => s.status === 'pending').length,
+        processing: discogsData.filter(s => s.status === 'processing').length,
+        completed: discogsData.filter(s => s.status === 'completed').length,
+        failed: discogsData.filter(s => s.status === 'failed').length,
+      });
+    }
+    
+    // Batch queue
+    const { data: batchData } = await supabase
       .from('batch_queue_items')
-      .select('item_type, status')
-      .then(res => {
-        const byType: Record<string, Record<string, number>> = {};
-        for (const item of res.data || []) {
-          if (!byType[item.item_type]) byType[item.item_type] = {};
-          byType[item.item_type][item.status] = (byType[item.item_type][item.status] || 0) + 1;
-        }
-        return { data: byType };
+      .select('status');
+    
+    if (batchData) {
+      queueStats.push({
+        name: 'Batch Queue',
+        pending: batchData.filter(s => s.status === 'pending').length,
+        processing: batchData.filter(s => s.status === 'processing').length,
+        completed: batchData.filter(s => s.status === 'completed').length,
+        failed: batchData.filter(s => s.status === 'failed').length,
       });
-
-    // ============================================
-    // 4. CONTENT CREATION STATS
-    // ============================================
-    const { count: newBlogs } = await supabase
-      .from('blog_posts')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', periodStart);
-
-    const { count: newMusicStories } = await supabase
-      .from('music_stories')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', periodStart);
-
-    const { count: newArtistStories } = await supabase
-      .from('artist_stories')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', periodStart);
-
-    // ============================================
-    // 5. NEWS STATS
-    // ============================================
-    const { count: newNewsArticles } = await supabase
-      .from('news_blog_posts')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', periodStart);
-
-    const { count: totalNewsArticles } = await supabase
-      .from('news_blog_posts')
-      .select('*', { count: 'exact', head: true });
-
-    // News cache by source
-    const { data: newsCacheData } = await supabase
-      .from('news_cache')
-      .select('source, cached_at, expires_at');
-
-    const newsCacheSummary: Record<string, { lastCached: string; isExpired: boolean }> = {};
-    for (const item of newsCacheData || []) {
-      const isExpired = new Date(item.expires_at) < new Date();
-      newsCacheSummary[item.source] = {
-        lastCached: new Date(item.cached_at).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' }),
-        isExpired
-      };
-    }
-
-    // News generation logs
-    const { data: newsGenerationLogs } = await supabase
-      .from('news_generation_logs')
-      .select('source, status, items_generated, error_message, created_at')
-      .gte('created_at', periodStart)
-      .order('created_at', { ascending: false });
-
-    const newsGenSummary: Record<string, { runs: number; success: number; items: number; lastError?: string }> = {};
-    for (const log of newsGenerationLogs || []) {
-      if (!newsGenSummary[log.source]) {
-        newsGenSummary[log.source] = { runs: 0, success: 0, items: 0 };
-      }
-      newsGenSummary[log.source].runs++;
-      if (log.status === 'success' || log.status === 'completed') {
-        newsGenSummary[log.source].success++;
-        newsGenSummary[log.source].items += log.items_generated || 0;
-      } else if (log.error_message) {
-        newsGenSummary[log.source].lastError = log.error_message;
-      }
     }
 
     // ============================================
-    // 6. ANECDOTES STATS
+    // CRON LOGS
     // ============================================
-    const { count: newAnecdotes } = await supabase
-      .from('music_anecdotes')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', periodStart);
-
-    const { count: totalAnecdotes } = await supabase
-      .from('music_anecdotes')
-      .select('*', { count: 'exact', head: true });
+    const { data: cronLogs } = await supabase
+      .from('cronjob_execution_log')
+      .select('*')
+      .order('started_at', { ascending: false })
+      .limit(20);
 
     // ============================================
-    // 7. MUSIC HISTORY EVENTS
+    // CALCULATE ISSUES
     // ============================================
-    const { count: newMusicHistory } = await supabase
-      .from('music_history_events')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', periodStart);
-
-    const { count: totalMusicHistory } = await supabase
-      .from('music_history_events')
-      .select('*', { count: 'exact', head: true });
+    const issues = contentActivity.filter(a => a.status === 'error' || a.status === 'warning');
+    const errorCount = contentActivity.filter(a => a.status === 'error').length;
+    const warningCount = contentActivity.filter(a => a.status === 'warning').length;
+    const hasIssues = issues.length > 0;
 
     // ============================================
-    // 8. YOUTUBE DISCOVERIES
+    // BUILD HTML EMAIL (matching dashboard design)
     // ============================================
-    const { count: newYouTube } = await supabase
-      .from('youtube_discoveries')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', periodStart);
+    const statusIcon = (status: string) => {
+      switch (status) {
+        case 'ok': return '✅';
+        case 'warning': return '⚠️';
+        case 'error': return '❌';
+        default: return '❓';
+      }
+    };
 
-    const { count: totalYouTube } = await supabase
-      .from('youtube_discoveries')
-      .select('*', { count: 'exact', head: true });
+    const statusLabel = (status: string) => {
+      switch (status) {
+        case 'ok': return 'OK';
+        case 'warning': return 'Waarschuwing';
+        case 'error': return 'Probleem';
+        default: return 'Onbekend';
+      }
+    };
 
-    // ============================================
-    // 9. SPOTIFY RELEASES
-    // ============================================
-    const { count: newSpotifyReleases } = await supabase
-      .from('spotify_new_releases_processed')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', periodStart);
-
-    const { count: totalSpotifyReleases } = await supabase
-      .from('spotify_new_releases_processed')
-      .select('*', { count: 'exact', head: true });
-
-    // ============================================
-    // 10. INDEXNOW SUBMISSIONS
-    // ============================================
-    const { count: indexNowSubmitted } = await supabase
-      .from('indexnow_submissions')
-      .select('*', { count: 'exact', head: true })
-      .gte('submitted_at', periodStart);
-
-    // ============================================
-    // 11. DISCOGS IMPORT STATUS
-    // ============================================
-    const { data: discogsStats } = await supabase
-      .from('discogs_import_log')
-      .select('status')
-      .then(res => {
-        const counts = { pending: 0, processing: 0, completed: 0, failed: 0 };
-        for (const item of res.data || []) {
-          const status = item.status as string;
-          if (status in counts) {
-            counts[status as keyof typeof counts]++;
-          }
+    const contentRows = contentActivity.map(activity => {
+      const lastDate = activity.lastActivity ? new Date(activity.lastActivity) : null;
+      const rowBg = activity.status === 'error' ? 'background-color: #ffebee;' : 
+                    activity.status === 'warning' ? 'background-color: #fff8e1;' : '';
+      
+      let frontendStatus = '<span style="color: #999;">n.v.t.</span>';
+      if (activity.publishedCount !== null) {
+        frontendStatus = `<span style="color: #4caf50;">✓ ${activity.publishedCount.toLocaleString()}</span>`;
+        if (activity.unpublishedCount && activity.unpublishedCount > 0) {
+          frontendStatus += ` <span style="color: #ff9800;">⏳ ${activity.unpublishedCount.toLocaleString()}</span>`;
         }
-        return { data: counts };
-      });
-
-    const { count: discogsProcessedPeriod } = await supabase
-      .from('discogs_import_log')
-      .select('*', { count: 'exact', head: true })
-      .gte('processed_at', periodStart);
-
-    // ============================================
-    // CHECK EXPECTED DAILY PROCESSES
-    // ============================================
-    const expectedDailyProcesses = [
-      { name: 'daily-anecdote-generator', label: 'Anekdote Generator', expectedRuns: 1 },
-      { name: 'generate-daily-music-history', label: 'Muziekgeschiedenis', expectedRuns: 1 },
-      { name: 'rss-news-rewriter', label: 'RSS Nieuws', expectedRuns: 2 },
-      { name: 'process-spotify-new-releases', label: 'Spotify Releases', expectedRuns: 2 },
-      { name: 'singles-batch-processor', label: 'Singles Processor', expectedRuns: 24 },
-      { name: 'artist-stories-batch-processor', label: 'Artist Stories', expectedRuns: 4 },
-      { name: 'batch-blog-processor', label: 'Blog Processor', expectedRuns: 12 },
-      { name: 'discogs-lp-crawler', label: 'Discogs LP Crawler', expectedRuns: 6 },
-      { name: 'latest-discogs-news', label: 'Discogs News', expectedRuns: 8 },
-      { name: 'indexnow-cron', label: 'IndexNow', expectedRuns: 6 },
-      { name: 'refresh-featured-photos', label: 'Featured Photos', expectedRuns: 2 },
-      { name: 'generate-curated-artists', label: 'Curated Artists', expectedRuns: 1 },
-    ];
-
-    const processStatus = expectedDailyProcesses.map(proc => {
-      const stats = cronjobSummary[proc.name];
-      const actualRuns = stats?.runs || 0;
-      // For 8-hour period, expect 1/3 of daily runs
-      const expectedInPeriod = Math.ceil(proc.expectedRuns / 3);
-      const status = actualRuns >= expectedInPeriod ? '✅' : actualRuns > 0 ? '⚠️' : '❌';
-      return {
-        ...proc,
-        actualRuns,
-        expectedInPeriod,
-        status,
-        successful: stats?.successful || 0,
-        failed: stats?.failed || 0,
-        items: stats?.itemsProcessed || 0
-      };
-    });
-
-    // ============================================
-    // BUILD HTML EMAIL
-    // ============================================
-    const cronjobTableRows = Object.entries(cronjobSummary)
-      .sort((a, b) => b[1].runs - a[1].runs)
-      .map(([name, stats]) => `
-        <tr style="${stats.failed > 0 ? 'background-color: #ffebee;' : ''}">
-          <td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 12px;">${name}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${stats.runs}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: green;">${stats.successful}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: ${stats.failed > 0 ? 'red' : 'inherit'};">${stats.failed}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${stats.itemsProcessed}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${stats.avgTime}ms</td>
+      }
+      
+      return `
+        <tr style="${rowBg}">
+          <td style="padding: 10px; border-bottom: 1px solid #eee;">
+            ${activity.source.icon} ${activity.source.label}
+          </td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; color: #666; font-size: 13px;">
+            ${activity.source.schedule}
+          </td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee;">
+            ${formatRelativeTime(lastDate)}
+          </td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-family: monospace;">
+            ${activity.countInPeriod}
+          </td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-family: monospace; color: #666;">
+            ${activity.total.toLocaleString()}
+          </td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">
+            ${frontendStatus}
+          </td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">
+            ${statusIcon(activity.status)} ${statusLabel(activity.status)}
+          </td>
         </tr>
-      `).join('');
+      `;
+    }).join('');
 
-    const batchQueueRows = Object.entries(batchQueueStats || {})
-      .map(([type, statuses]) => `
-        <tr>
-          <td style="padding: 8px; border-bottom: 1px solid #eee;">${type}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${statuses['pending'] || 0}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${statuses['processing'] || 0}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: green;">${statuses['completed'] || 0}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: ${(statuses['failed'] || 0) > 0 ? 'red' : 'inherit'};">${statuses['failed'] || 0}</td>
-        </tr>
-      `).join('');
-
-    const processStatusRows = processStatus.map(proc => `
-      <tr style="${proc.status === '❌' ? 'background-color: #ffebee;' : proc.status === '⚠️' ? 'background-color: #fff3e0;' : ''}">
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">${proc.status}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">${proc.label}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${proc.actualRuns}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${proc.expectedInPeriod}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: green;">${proc.successful}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: ${proc.failed > 0 ? 'red' : 'inherit'};">${proc.failed}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${proc.items}</td>
+    const queueRows = queueStats.map(queue => `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: 500;">${queue.name}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">
+          <span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 4px;">${queue.pending.toLocaleString()}</span>
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">
+          <span style="background: #fff8e1; color: #f57c00; padding: 2px 8px; border-radius: 4px;">${queue.processing.toLocaleString()}</span>
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">
+          <span style="background: #e8f5e9; color: #388e3c; padding: 2px 8px; border-radius: 4px;">${queue.completed.toLocaleString()}</span>
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">
+          <span style="background: ${queue.failed > 0 ? '#ffebee' : '#f5f5f5'}; color: ${queue.failed > 0 ? '#d32f2f' : '#666'}; padding: 2px 8px; border-radius: 4px;">${queue.failed.toLocaleString()}</span>
+        </td>
       </tr>
     `).join('');
 
-    const newsGenRows = Object.entries(newsGenSummary).map(([source, stats]) => `
-      <tr style="${stats.lastError ? 'background-color: #ffebee;' : ''}">
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">${source}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${stats.runs}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: green;">${stats.success}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${stats.items}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 11px; color: red;">${stats.lastError || '-'}</td>
-      </tr>
-    `).join('');
+    const issuesHtml = issues.length > 0 ? `
+      <div style="background: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;">
+        <strong style="font-size: 16px;">⚠️ Aandachtspunten (${issues.length})</strong>
+        <div style="margin-top: 10px;">
+          ${issues.filter(i => i.status === 'error').map(issue => `
+            <div style="padding: 8px; margin: 4px 0; background: rgba(244,67,54,0.1); border-radius: 4px;">
+              ❌ <strong>${issue.source.icon} ${issue.source.label}</strong>
+              <span style="color: #666; margin-left: 8px;">
+                — Laatste activiteit: ${formatRelativeTime(issue.lastActivity ? new Date(issue.lastActivity) : null)}
+                ${issue.hoursSinceActivity ? ` (${Math.round(issue.hoursSinceActivity)} uur geleden)` : ''}
+              </span>
+            </div>
+          `).join('')}
+          ${issues.filter(i => i.status === 'warning').map(issue => `
+            <div style="padding: 8px; margin: 4px 0; background: rgba(255,193,7,0.1); border-radius: 4px;">
+              ⚠️ <strong>${issue.source.icon} ${issue.source.label}</strong>
+              <span style="color: #666; margin-left: 8px;">
+                — Verwacht: ${issue.source.expectedDaily}/dag, gevonden: ${issue.countInPeriod} in 24u
+              </span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
 
-    const newsCacheRows = Object.entries(newsCacheSummary).map(([source, info]) => `
-      <tr style="${info.isExpired ? 'background-color: #fff3e0;' : ''}">
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">${source}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee;">${info.lastCached}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${info.isExpired ? '⚠️ Verlopen' : '✅ Actief'}</td>
-      </tr>
-    `).join('');
+    const overallStatusHtml = errorCount > 0 ? `
+      <div style="background: #ffebee; border: 1px solid rgba(244,67,54,0.2); padding: 16px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 32px;">❌</span>
+        <div>
+          <div style="font-weight: 600; font-size: 18px;">Problemen Gedetecteerd</div>
+          <div style="color: #666; font-size: 14px;">${errorCount} kritiek, ${warningCount} waarschuwingen</div>
+        </div>
+      </div>
+    ` : warningCount > 0 ? `
+      <div style="background: #fff8e1; border: 1px solid rgba(255,193,7,0.2); padding: 16px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 32px;">⚠️</span>
+        <div>
+          <div style="font-weight: 600; font-size: 18px;">Waarschuwingen</div>
+          <div style="color: #666; font-size: 14px;">${warningCount} items vereisen aandacht</div>
+        </div>
+      </div>
+    ` : `
+      <div style="background: #e8f5e9; border: 1px solid rgba(76,175,80,0.2); padding: 16px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 32px;">✅</span>
+        <div>
+          <div style="font-weight: 600; font-size: 18px;">Alles Operationeel</div>
+          <div style="color: #666; font-size: 14px;">Alle content generatie processen werken correct</div>
+        </div>
+      </div>
+    `;
 
-    const hasIssues = Object.values(cronjobSummary).some(s => s.failed > 0) || 
-                      (singlesStats?.failed || 0) > 0 ||
-                      processStatus.some(p => p.status === '❌');
-
-    const missedProcesses = processStatus.filter(p => p.status === '❌');
+    const cronLogsHtml = (cronLogs && cronLogs.length > 0) ? `
+      <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">Recente Cron Job Logs</h2>
+      <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <thead style="background: #f5f5f5;">
+          <tr>
+            <th style="padding: 12px; text-align: left;">Functie</th>
+            <th style="padding: 12px; text-align: left;">Status</th>
+            <th style="padding: 12px; text-align: left;">Gestart</th>
+            <th style="padding: 12px; text-align: right;">Duur</th>
+            <th style="padding: 12px; text-align: right;">Items</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${cronLogs.slice(0, 10).map(log => `
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: 500;">${log.function_name}</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                <span style="background: ${log.status === 'completed' ? '#e8f5e9' : log.status === 'failed' ? '#ffebee' : '#f5f5f5'}; 
+                             color: ${log.status === 'completed' ? '#388e3c' : log.status === 'failed' ? '#d32f2f' : '#666'}; 
+                             padding: 2px 8px; border-radius: 4px;">
+                  ${log.status}
+                </span>
+              </td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">
+                ${formatRelativeTime(new Date(log.started_at))}
+              </td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-family: monospace; font-size: 13px;">
+                ${log.execution_time_ms ? `${(log.execution_time_ms / 1000).toFixed(1)}s` : '-'}
+              </td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-family: monospace;">
+                ${log.items_processed || 0}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    ` : '';
 
     const emailHtml = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
-        <title>MusicScan Status Report</title>
+        <title>MusicScan Status Dashboard</title>
       </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-          <h1 style="margin: 0;">📊 MusicScan Compleet Status Report</h1>
-          <p style="margin: 10px 0 0 0; opacity: 0.9;">${reportTime}</p>
-          <p style="margin: 5px 0 0 0; opacity: 0.7; font-size: 14px;">Periode: laatste 8 uur</p>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 12px 12px 0 0;">
+          <h1 style="margin: 0; font-size: 24px;">📊 Status Dashboard</h1>
+          <p style="margin: 8px 0 0 0; opacity: 0.9;">Real-time overzicht van content generatie (laatste 24 uur)</p>
+          <p style="margin: 4px 0 0 0; opacity: 0.7; font-size: 14px;">${reportTime}</p>
         </div>
         
-        <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-top: none;">
-          ${hasIssues ? `
-            <div style="background: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin-bottom: 20px;">
-              <strong>⚠️ Er zijn problemen gedetecteerd!</strong>
-              ${missedProcesses.length > 0 ? `<br><span style="font-size: 13px;">Gemiste processen: ${missedProcesses.map(p => p.label).join(', ')}</span>` : ''}
-            </div>
-          ` : `
-            <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin-bottom: 20px;">
-              <strong>✅ Alles draait soepel!</strong> Alle processen draaien volgens verwachting.
-            </div>
-          `}
+        <div style="background: white; padding: 24px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 12px 12px;">
           
-          <!-- SUMMARY CARDS -->
-          <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">📈 Samenvatting</h2>
+          ${overallStatusHtml}
           
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #667eea;">${newBlogs || 0}</div>
-              <div style="color: #666; font-size: 12px;">Nieuwe Blogs</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #667eea;">${newMusicStories || 0}</div>
-              <div style="color: #666; font-size: 12px;">Music Stories</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #667eea;">${newArtistStories || 0}</div>
-              <div style="color: #666; font-size: 12px;">Artist Stories</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #e91e63;">${newNewsArticles || 0}</div>
-              <div style="color: #666; font-size: 12px;">Nieuws Artikelen</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #ff9800;">${newAnecdotes || 0}</div>
-              <div style="color: #666; font-size: 12px;">Anekdotes</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #9c27b0;">${newMusicHistory || 0}</div>
-              <div style="color: #666; font-size: 12px;">Muziekgeschiedenis</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #f44336;">${newYouTube || 0}</div>
-              <div style="color: #666; font-size: 12px;">YouTube Videos</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #1db954;">${newSpotifyReleases || 0}</div>
-              <div style="color: #666; font-size: 12px;">Spotify Releases</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #667eea;">${singlesProcessedPeriod || 0}</div>
-              <div style="color: #666; font-size: 12px;">Singles Verwerkt</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #667eea;">${discogsProcessedPeriod || 0}</div>
-              <div style="color: #666; font-size: 12px;">Discogs Imports</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #667eea;">${indexNowSubmitted || 0}</div>
-              <div style="color: #666; font-size: 12px;">IndexNow</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-size: 22px; font-weight: bold; color: #667eea;">${(cronjobStats || []).length}</div>
-              <div style="color: #666; font-size: 12px;">Cronjob Runs</div>
-            </div>
-          </div>
-
-          <!-- TOTALS -->
-          <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #666;">📊 Database Totalen</h3>
-            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; font-size: 12px;">
-              <div><strong>${totalNewsArticles || 0}</strong> Nieuws</div>
-              <div><strong>${totalAnecdotes || 0}</strong> Anekdotes</div>
-              <div><strong>${totalMusicHistory || 0}</strong> Muziekgeschiedenis</div>
-              <div><strong>${totalYouTube || 0}</strong> YouTube</div>
-              <div><strong>${totalSpotifyReleases || 0}</strong> Spotify</div>
-            </div>
-          </div>
-
-          <!-- PROCESS STATUS TABLE -->
-          <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">🔄 Proces Status Overzicht</h2>
-          <table style="width: 100%; border-collapse: collapse; background: white; margin-bottom: 20px; font-size: 12px;">
-            <tr style="background: #f5f5f5;">
-              <th style="padding: 8px; text-align: left; width: 30px;">Status</th>
-              <th style="padding: 8px; text-align: left;">Proces</th>
-              <th style="padding: 8px; text-align: center;">Runs</th>
-              <th style="padding: 8px; text-align: center;">Verwacht</th>
-              <th style="padding: 8px; text-align: center;">✅</th>
-              <th style="padding: 8px; text-align: center;">❌</th>
-              <th style="padding: 8px; text-align: right;">Items</th>
-            </tr>
-            ${processStatusRows}
-          </table>
-
-          <!-- NEWS SECTION -->
-          <h2 style="color: #e91e63; border-bottom: 2px solid #e91e63; padding-bottom: 10px;">📰 Nieuws Generatie</h2>
+          ${issuesHtml}
           
-          ${Object.keys(newsGenSummary).length > 0 ? `
-            <table style="width: 100%; border-collapse: collapse; background: white; margin-bottom: 15px; font-size: 12px;">
-              <tr style="background: #f5f5f5;">
-                <th style="padding: 8px; text-align: left;">Bron</th>
-                <th style="padding: 8px; text-align: center;">Runs</th>
-                <th style="padding: 8px; text-align: center;">Succes</th>
-                <th style="padding: 8px; text-align: right;">Items</th>
-                <th style="padding: 8px; text-align: left;">Error</th>
+          <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Content Generatie Overzicht</h2>
+          <p style="color: #666; margin-bottom: 16px; font-size: 14px;">Status gebaseerd op daadwerkelijke content in de database</p>
+          
+          <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <thead style="background: #f5f5f5;">
+              <tr>
+                <th style="padding: 12px; text-align: left;">Content Type</th>
+                <th style="padding: 12px; text-align: left;">Schema</th>
+                <th style="padding: 12px; text-align: left;">Laatste Activiteit</th>
+                <th style="padding: 12px; text-align: right;">24u</th>
+                <th style="padding: 12px; text-align: right;">Totaal</th>
+                <th style="padding: 12px; text-align: center;">Frontend</th>
+                <th style="padding: 12px; text-align: center;">Status</th>
               </tr>
-              ${newsGenRows}
-            </table>
-          ` : '<p style="color: #666; font-size: 13px;">Geen nieuws generatie in deze periode</p>'}
-
-          <h3 style="font-size: 14px; color: #666;">📦 News Cache Status</h3>
-          ${Object.keys(newsCacheSummary).length > 0 ? `
-            <table style="width: 100%; border-collapse: collapse; background: white; margin-bottom: 20px; font-size: 12px;">
-              <tr style="background: #f5f5f5;">
-                <th style="padding: 8px; text-align: left;">Bron</th>
-                <th style="padding: 8px; text-align: left;">Laatst Gecached</th>
-                <th style="padding: 8px; text-align: center;">Status</th>
+            </thead>
+            <tbody>
+              ${contentRows}
+            </tbody>
+          </table>
+          
+          <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 30px;">Queue Status</h2>
+          <p style="color: #666; margin-bottom: 16px; font-size: 14px;">Overzicht van verwerkingsqueues</p>
+          
+          <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <thead style="background: #f5f5f5;">
+              <tr>
+                <th style="padding: 12px; text-align: left;">Queue</th>
+                <th style="padding: 12px; text-align: right;">Pending</th>
+                <th style="padding: 12px; text-align: right;">Processing</th>
+                <th style="padding: 12px; text-align: right;">Completed</th>
+                <th style="padding: 12px; text-align: right;">Failed</th>
               </tr>
-              ${newsCacheRows}
-            </table>
-          ` : '<p style="color: #666; font-size: 13px;">Geen cache data beschikbaar</p>'}
-
-          <!-- SINGLES QUEUE -->
-          <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">🎵 Singles Import Queue</h2>
-          <table style="width: 100%; border-collapse: collapse; background: white; margin-bottom: 20px;">
-            <tr style="background: #f5f5f5;">
-              <th style="padding: 10px; text-align: left;">Status</th>
-              <th style="padding: 10px; text-align: right;">Aantal</th>
-            </tr>
-            <tr><td style="padding: 8px;">⏳ Pending</td><td style="padding: 8px; text-align: right;">${singlesStats?.pending || 0}</td></tr>
-            <tr><td style="padding: 8px;">🔄 Processing</td><td style="padding: 8px; text-align: right;">${singlesStats?.processing || 0}</td></tr>
-            <tr><td style="padding: 8px;">✅ Completed</td><td style="padding: 8px; text-align: right; color: green;">${singlesStats?.completed || 0}</td></tr>
-            <tr><td style="padding: 8px;">❌ Failed</td><td style="padding: 8px; text-align: right; color: ${(singlesStats?.failed || 0) > 0 ? 'red' : 'inherit'};">${singlesStats?.failed || 0}</td></tr>
+            </thead>
+            <tbody>
+              ${queueRows}
+            </tbody>
           </table>
           
-          <!-- BATCH QUEUES -->
-          <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">📦 Batch Queues</h2>
-          <table style="width: 100%; border-collapse: collapse; background: white; margin-bottom: 20px;">
-            <tr style="background: #f5f5f5;">
-              <th style="padding: 10px; text-align: left;">Type</th>
-              <th style="padding: 10px; text-align: center;">Pending</th>
-              <th style="padding: 10px; text-align: center;">Processing</th>
-              <th style="padding: 10px; text-align: center;">Completed</th>
-              <th style="padding: 10px; text-align: center;">Failed</th>
-            </tr>
-            ${batchQueueRows || '<tr><td colspan="5" style="padding: 8px; text-align: center;">Geen batch items</td></tr>'}
-          </table>
+          ${cronLogsHtml}
           
-          <!-- CRONJOB DETAILS -->
-          <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">⏰ Alle Cronjob Executions</h2>
-          <table style="width: 100%; border-collapse: collapse; background: white; margin-bottom: 20px; font-size: 11px;">
-            <tr style="background: #f5f5f5;">
-              <th style="padding: 8px; text-align: left;">Function</th>
-              <th style="padding: 8px; text-align: center;">Runs</th>
-              <th style="padding: 8px; text-align: center;">✅</th>
-              <th style="padding: 8px; text-align: center;">❌</th>
-              <th style="padding: 8px; text-align: right;">Items</th>
-              <th style="padding: 8px; text-align: right;">Avg Time</th>
-            </tr>
-            ${cronjobTableRows || '<tr><td colspan="6" style="padding: 8px; text-align: center;">Geen cronjobs uitgevoerd</td></tr>'}
-          </table>
-          
-          <!-- DISCOGS IMPORT -->
-          <h2 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">📀 Discogs Import Queue</h2>
-          <table style="width: 100%; border-collapse: collapse; background: white; margin-bottom: 20px;">
-            <tr style="background: #f5f5f5;">
-              <th style="padding: 10px; text-align: left;">Status</th>
-              <th style="padding: 10px; text-align: right;">Aantal</th>
-            </tr>
-            <tr><td style="padding: 8px;">⏳ Pending</td><td style="padding: 8px; text-align: right;">${discogsStats?.pending || 0}</td></tr>
-            <tr><td style="padding: 8px;">🔄 Processing</td><td style="padding: 8px; text-align: right;">${discogsStats?.processing || 0}</td></tr>
-            <tr><td style="padding: 8px;">✅ Completed</td><td style="padding: 8px; text-align: right; color: green;">${discogsStats?.completed || 0}</td></tr>
-            <tr><td style="padding: 8px;">❌ Failed</td><td style="padding: 8px; text-align: right; color: ${(discogsStats?.failed || 0) > 0 ? 'red' : 'inherit'};">${discogsStats?.failed || 0}</td></tr>
-          </table>
-          
-          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
-            <p>
-              <a href="https://supabase.com/dashboard/project/ssxbpyqnjfiyubsuonar" style="color: #667eea;">Open Supabase Dashboard</a> |
-              <a href="https://supabase.com/dashboard/project/ssxbpyqnjfiyubsuonar/functions" style="color: #667eea;">Edge Functions</a> |
-              <a href="https://www.musicscan.app/admin" style="color: #667eea;">Admin Panel</a>
-            </p>
-            <p>Report gegenereerd op ${new Date().toISOString()}</p>
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #999; font-size: 13px;">
+            <a href="https://www.musicscan.app/admin/status" style="color: #667eea; text-decoration: none;">
+              Bekijk live dashboard →
+            </a>
           </div>
         </div>
       </body>
@@ -556,13 +574,13 @@ serve(async (req) => {
       const resend = new Resend(resendApiKey);
       
       await resend.emails.send({
-        from: 'MusicScan Reports <onboarding@resend.dev>',
+        from: 'MusicScan <onboarding@resend.dev>',
         to: [REPORT_EMAIL],
-        subject: `${hasIssues ? '⚠️' : '✅'} MusicScan Compleet Status Report - ${reportTime}`,
+        subject: `${hasIssues ? '⚠️' : '✅'} MusicScan Status Dashboard - ${reportTime}`,
         html: emailHtml,
       });
       
-      console.log('📧 Comprehensive status report email sent successfully');
+      console.log('📧 Status dashboard email sent successfully');
     } else {
       console.warn('⚠️ RESEND_API_KEY not configured');
     }
@@ -576,52 +594,36 @@ serve(async (req) => {
         started_at: new Date().toISOString(),
         completed_at: new Date().toISOString(),
         metadata: {
-          period_start: periodStart,
-          period_end: periodEnd,
-          cronjob_runs: (cronjobStats || []).length,
-          new_blogs: newBlogs,
-          new_music_stories: newMusicStories,
-          new_news_articles: newNewsArticles,
-          new_anecdotes: newAnecdotes,
-          new_music_history: newMusicHistory,
-          new_youtube: newYouTube,
-          new_spotify: newSpotifyReleases,
-          singles_processed: singlesProcessedPeriod,
-          has_issues: hasIssues,
-          missed_processes: missedProcesses.map(p => p.name)
+          errorCount,
+          warningCount,
+          contentSources: contentActivity.length,
+          queueStats: queueStats.length
         }
       });
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Comprehensive status report sent',
-      period: { start: periodStart, end: periodEnd },
-      summary: {
-        blogs: newBlogs,
-        musicStories: newMusicStories,
-        artistStories: newArtistStories,
-        news: newNewsArticles,
-        anecdotes: newAnecdotes,
-        musicHistory: newMusicHistory,
-        youtube: newYouTube,
-        spotify: newSpotifyReleases,
-        singles: singlesProcessedPeriod,
-        cronjobs: (cronjobStats || []).length
-      },
-      hasIssues,
-      missedProcesses: missedProcesses.map(p => p.name)
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Status dashboard email sent',
+        hasIssues,
+        errorCount,
+        warningCount,
+        contentActivity: contentActivity.map(a => ({
+          source: a.source.label,
+          status: a.status,
+          countInPeriod: a.countInPeriod,
+          total: a.total
+        })),
+        queueStats
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
-    console.error('❌ Status report error:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      success: false 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('❌ Error generating status report:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 });

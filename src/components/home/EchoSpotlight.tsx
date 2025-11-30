@@ -1,242 +1,79 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Music2, Sparkles, Heart, BookOpen } from 'lucide-react';
+import { Music2, Sparkles, BookOpen, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import echoAvatar from '@/assets/echo-avatar.png';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 
 export function EchoSpotlight() {
   const isMobile = useIsMobile();
   
   return (
-    <section className={isMobile ? "py-8 bg-gradient-to-br from-background via-echo-lavender/5 to-background relative overflow-hidden" : "py-16 bg-gradient-to-br from-background via-echo-lavender/5 to-background relative overflow-hidden"}>
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-      
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className={isMobile ? "text-center mb-6" : "text-center mb-12"}>
-            <h2 className={isMobile ? "text-2xl font-bold mb-2" : "text-4xl md:text-5xl font-bold mb-4"}>
-              🎵 Praat met Echo, onze muziekexpert
-            </h2>
-            {!isMobile && (
-              <p className="text-xl text-muted-foreground">
-                Waar elke plaat iets te vertellen heeft
-              </p>
-            )}
-          </div>
-
-          {/* Main showcase with split layout */}
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            {/* Left: Features & Content */}
-            <div className="flex flex-col justify-center space-y-6">
-              {/* Features - Carousel on mobile, List on desktop */}
-              {isMobile ? (
-                <Carousel
-                  opts={{
-                    align: "start",
-                    loop: true,
-                  }}
-                  className="w-full"
-                >
-                  <CarouselContent className="-ml-2">
-                    <CarouselItem className="pl-2 basis-[85%]">
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 backdrop-blur-sm">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center flex-shrink-0">
-                          <Sparkles className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-base font-semibold">Verken Muziekgeschiedenis</p>
-                        </div>
-                      </div>
-                    </CarouselItem>
-                    <CarouselItem className="pl-2 basis-[85%]">
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 backdrop-blur-sm">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-gold to-echo-lavender flex items-center justify-center flex-shrink-0">
-                          <BookOpen className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-base font-semibold">Album Verhalen & Context</p>
-                        </div>
-                      </div>
-                    </CarouselItem>
-                    <CarouselItem className="pl-2 basis-[85%]">
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 backdrop-blur-sm">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center flex-shrink-0">
-                          <Heart className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-base font-semibold">Deel Jouw Herinneringen</p>
-                        </div>
-                      </div>
-                    </CarouselItem>
-                  </CarouselContent>
-                  <CarouselPrevious className="hidden" />
-                  <CarouselNext className="hidden" />
-                </Carousel>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-lavender to-echo-gold flex items-center justify-center flex-shrink-0">
-                      <Sparkles className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-semibold">Verken Muziekgeschiedenis</p>
-                      <p className="text-sm text-muted-foreground">Van jazz tot punk, ontdek de verhalen achter genres</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-echo-gold to-echo-lavender flex items-center justify-center flex-shrink-0">
-                      <BookOpen className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-semibold">Album Verhalen & Context</p>
-                      <p className="text-sm text-muted-foreground">Sfeer, betekenis en culturele impact van elke plaat</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center flex-shrink-0">
-                      <Heart className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-semibold">Deel Jouw Herinneringen</p>
-                      <p className="text-sm text-muted-foreground">Emotionele connectie met muziek die jou raakt</p>
-                    </div>
-                  </div>
+    <section className="py-6 md:py-8 bg-gradient-to-br from-background via-echo-lavender/5 to-background">
+      <div className="container mx-auto px-4">
+        <Card className="max-w-4xl mx-auto border-2 border-echo-lavender/30 bg-card/50 backdrop-blur-sm overflow-hidden">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+              {/* Left: Avatar + Intro */}
+              <div className="flex items-center gap-4 flex-shrink-0">
+                <img 
+                  src={echoAvatar} 
+                  alt="Echo - Muziekexpert" 
+                  className="w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-echo-lavender/50 shadow-lg"
+                />
+                <div className="md:hidden">
+                  <h3 className="font-bold text-lg">Echo</h3>
+                  <p className="text-sm text-muted-foreground">Muziekexpert</p>
                 </div>
-              )}
+              </div>
 
-              {/* Info Card - Hidden on mobile */}
-              {!isMobile && (
-                <Card className="bg-card p-6 border-2 border-echo-lavender/30">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="flex-shrink-0">
-                      <img 
-                        src={echoAvatar} 
-                        alt="Echo - Muziekexpert" 
-                        className="w-12 h-12 rounded-full border-2 border-echo-lavender/50 shadow-lg"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg mb-1">4 Verschillende Modes</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Verkennen · Album Verhaal · Lyric Analyse · Herinneringen
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground italic border-t pt-3 mt-3">
-                    Echo spreekt als een platenzaak-curator, muziekjournalist en late-night radiostem — 
-                    de stem van muziekherinnering.
+              {/* Center: Content */}
+              <div className="flex-1 space-y-3">
+                <div className="hidden md:block">
+                  <h3 className="font-bold text-xl mb-1">🎵 Praat met Echo, onze muziekexpert</h3>
+                  <p className="text-sm text-muted-foreground italic">
+                    "Ah — <em>Blue Train</em> van Coltrane. Elke noot hier voelt als een gebed in koper..."
                   </p>
-                </Card>
-              )}
+                </div>
 
-              {/* CTA Buttons */}
-              <div className="flex justify-start">
+                {/* Feature badges */}
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-echo-lavender/10 text-xs font-medium">
+                    <Sparkles className="w-3 h-3 text-echo-lavender" />
+                    Muziekgeschiedenis
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-echo-gold/10 text-xs font-medium">
+                    <BookOpen className="w-3 h-3 text-echo-gold" />
+                    Album Verhalen
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-vinyl-purple/10 text-xs font-medium">
+                    <Heart className="w-3 h-3 text-vinyl-purple" />
+                    Herinneringen
+                  </span>
+                </div>
+
+                {/* Mobile quote */}
+                <p className="md:hidden text-sm text-muted-foreground italic">
+                  "Elke plaat heeft een verhaal te vertellen..."
+                </p>
+              </div>
+
+              {/* Right: CTA */}
+              <div className="flex-shrink-0">
                 <Button 
                   asChild 
                   size={isMobile ? "default" : "lg"}
-                  className={isMobile 
-                    ? "bg-gradient-to-r from-vinyl-purple to-echo-lavender hover:opacity-90 hover:shadow-lg hover:scale-105 transition-all" 
-                    : "text-lg bg-gradient-to-r from-vinyl-purple to-echo-lavender hover:opacity-90 hover:shadow-lg hover:scale-105 transition-all"}
+                  className="w-full md:w-auto bg-gradient-to-r from-vinyl-purple to-echo-lavender hover:opacity-90 hover:shadow-lg transition-all"
                 >
                   <Link to="/echo">
-                    <Music2 className="w-5 h-5 mr-2" />
+                    <Music2 className="w-4 h-4 mr-2" />
                     Chat met Echo
                   </Link>
                 </Button>
               </div>
             </div>
-
-            {/* Right: Example Conversation - Hidden on mobile */}
-            {!isMobile && (
-              <div className="space-y-4">
-                <Card className="border-2 border-echo-lavender/30 hover:border-echo-lavender/50 transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-3 mb-4">
-                      <div className="flex-shrink-0">
-                        <img 
-                          src={echoAvatar} 
-                          alt="Echo" 
-                          className="w-10 h-10 rounded-full border-2 border-echo-lavender/50 shadow-md"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-echo-lavender mb-1">Echo</p>
-                        <p className="text-sm leading-relaxed text-muted-foreground">
-                          "Ah — <em>Blue Train</em> van John Coltrane. Elke noot hier voelt als een gebed in koper. 
-                          Wist je dat dit het eerste album was dat hij voor Blue Note opnam? 🎷"
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Sparkles className="w-3 h-3" />
-                      <span>Album Verhaalvertelling</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-2 border-echo-gold/30 hover:border-echo-gold/50 transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-3 mb-4">
-                      <div className="flex-shrink-0">
-                        <img 
-                          src={echoAvatar} 
-                          alt="Echo" 
-                          className="w-10 h-10 rounded-full border-2 border-echo-gold/50 shadow-md"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-echo-gold mb-1">Echo</p>
-                        <p className="text-sm leading-relaxed text-muted-foreground">
-                          "Die basslijn in '<em>Superstition</em>' — dat is Stevie Wonder's eigen groove, 
-                          gespeeld op een Moog synthesizer. Pure magie uit 1972. 🎹"
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <BookOpen className="w-3 h-3" />
-                      <span>Muziekgeschiedenis</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-2 border-vinyl-purple/30 hover:border-vinyl-purple/50 transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-3 mb-4">
-                      <div className="flex-shrink-0">
-                        <img 
-                          src={echoAvatar} 
-                          alt="Echo" 
-                          className="w-10 h-10 rounded-full border-2 border-vinyl-purple/50 shadow-md"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-vinyl-purple mb-1">Echo</p>
-                        <p className="text-sm leading-relaxed text-muted-foreground">
-                          "Wat een prachtige herinnering! '<em>Wish You Were Here</em>' met je vader — 
-                          zo'n moment maakte die plaat voor altijd deel van jullie verhaal. 💫"
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Heart className="w-3 h-3" />
-                      <span>Persoonlijke Herinneringen</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </section>
   );

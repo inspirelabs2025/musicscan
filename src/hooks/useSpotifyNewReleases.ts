@@ -23,7 +23,9 @@ export const useSpotifyNewReleases = () => {
       
       return data.albums as SpotifyNewRelease[];
     },
-    staleTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
     retry: 2,
   });
 };

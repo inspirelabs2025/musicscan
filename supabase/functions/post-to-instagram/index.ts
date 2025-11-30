@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createHmac } from 'https://deno.land/std@0.177.0/node/crypto.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,7 +7,7 @@ const corsHeaders = {
 };
 
 interface PostRequest {
-  content_type: 'anecdote' | 'news' | 'blog' | 'product' | 'youtube_discovery';
+  content_type: 'anecdote' | 'news' | 'blog' | 'product' | 'youtube_discovery' | 'artist_stories';
   title: string;
   content: string;
   url?: string;
@@ -40,7 +41,7 @@ Deno.serve(async (req) => {
     const { data: secrets, error: secretsError } = await supabase
       .from('app_secrets')
       .select('secret_key, secret_value')
-      .in('secret_key', ['FACEBOOK_PAGE_ACCESS_TOKEN', 'INSTAGRAM_BUSINESS_ACCOUNT_ID']);
+      .in('secret_key', ['FACEBOOK_PAGE_ACCESS_TOKEN', 'FACEBOOK_APP_SECRET', 'INSTAGRAM_BUSINESS_ACCOUNT_ID']);
 
     if (secretsError || !secrets || secrets.length === 0) {
       console.error('Failed to fetch Instagram credentials:', secretsError);
@@ -53,6 +54,7 @@ Deno.serve(async (req) => {
     });
 
     const accessToken = credentials['FACEBOOK_PAGE_ACCESS_TOKEN'];
+    const appSecret = credentials['FACEBOOK_APP_SECRET'];
     let instagramAccountId = credentials['INSTAGRAM_BUSINESS_ACCOUNT_ID'];
     
     // Fallback to environment variable for Instagram Account ID if not in database
@@ -60,10 +62,15 @@ Deno.serve(async (req) => {
       instagramAccountId = Deno.env.get('INSTAGRAM_BUSINESS_ACCOUNT_ID') || '';
     }
 
-    if (!accessToken || !instagramAccountId) {
-      console.error('Missing credentials - accessToken:', !!accessToken, 'instagramAccountId:', !!instagramAccountId);
-      throw new Error('Missing Instagram credentials (FACEBOOK_PAGE_ACCESS_TOKEN or INSTAGRAM_BUSINESS_ACCOUNT_ID)');
+    if (!accessToken || !appSecret || !instagramAccountId) {
+      console.error('Missing credentials - accessToken:', !!accessToken, 'appSecret:', !!appSecret, 'instagramAccountId:', !!instagramAccountId);
+      throw new Error('Missing Instagram credentials (FACEBOOK_PAGE_ACCESS_TOKEN, FACEBOOK_APP_SECRET, or INSTAGRAM_BUSINESS_ACCOUNT_ID)');
     }
+
+    // Generate appsecret_proof for secure API calls
+    const appsecretProof = createHmac('sha256', appSecret)
+      .update(accessToken)
+      .digest('hex');
 
     console.log('✅ Instagram credentials loaded from app_secrets');
     console.log(`📊 Token length: ${accessToken.length}, Instagram Account ID: ${instagramAccountId}`);
@@ -77,7 +84,8 @@ Deno.serve(async (req) => {
       news: '📰',
       blog: '📖',
       product: '🛒',
-      youtube_discovery: '🎬'
+      youtube_discovery: '🎬',
+      artist_stories: '🎤'
     };
     
     caption += `${emojis[content_type] || '🎶'} ${title}\n\n`;
@@ -114,6 +122,7 @@ Deno.serve(async (req) => {
         image_url: image_url,
         caption: caption,
         access_token: accessToken,
+        appsecret_proof: appsecretProof,
       }),
     });
 
@@ -151,6 +160,7 @@ Deno.serve(async (req) => {
       body: new URLSearchParams({
         creation_id: containerId,
         access_token: accessToken,
+        appsecret_proof: appsecretProof,
       }),
     });
 

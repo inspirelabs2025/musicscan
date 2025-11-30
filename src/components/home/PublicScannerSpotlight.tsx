@@ -12,9 +12,9 @@ const features = [
 
 export const PublicScannerSpotlight = () => {
   return (
-    <section className="py-10 md:py-14 bg-gradient-to-br from-slate-900 via-primary/20 to-slate-900">
+    <section className="py-10 md:py-14 bg-gradient-to-br from-primary/15 via-accent/10 to-muted/50">
       <div className="container max-w-5xl mx-auto px-4">
-        <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-2xl border border-primary/30 ring-1 ring-white/5">
+        <div className="bg-gradient-to-br from-card to-muted/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-xl border border-primary/20">
           <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
             {/* Icon - Larger and more prominent */}
             <div className="flex-shrink-0 relative">
@@ -29,14 +29,14 @@ export const PublicScannerSpotlight = () => {
 
             {/* Content */}
             <div className="flex-1 text-center md:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/20 rounded-full text-xs font-medium text-primary mb-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/15 rounded-full text-xs font-medium text-primary mb-3">
                 <Sparkles className="w-3 h-3" />
                 AI-Powered Scanner
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
                 Scan je Platen & CD's
               </h2>
-              <p className="text-base text-slate-300 mb-5 max-w-lg">
+              <p className="text-base text-muted-foreground mb-5 max-w-lg">
                 Identificeer en waardeer je hele collectie met onze gratis AI-scanner. Direct resultaat!
               </p>
               
@@ -46,7 +46,7 @@ export const PublicScannerSpotlight = () => {
                   <Badge 
                     key={feature.label} 
                     variant="secondary" 
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white/10 text-slate-200 border-white/10 hover:bg-white/20"
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm"
                   >
                     <feature.icon className="w-4 h-4" />
                     <span>{feature.label}</span>

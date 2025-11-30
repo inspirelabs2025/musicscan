@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Camera, Disc3, DollarSign, Globe, Sparkles } from 'lucide-react';
+import { Camera, Disc3, DollarSign, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -22,22 +22,15 @@ export const PublicScannerSpotlight = () => {
               <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-2xl">
                 <Camera className="w-12 h-12 md:w-14 md:h-14 text-primary-foreground" />
               </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-accent rounded-full flex items-center justify-center shadow-lg">
-                <Sparkles className="w-4 h-4 text-accent-foreground" />
-              </div>
             </div>
 
             {/* Content */}
             <div className="flex-1 text-center md:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/15 rounded-full text-xs font-medium text-primary mb-3">
-                <Sparkles className="w-3 h-3" />
-                AI-Powered Scanner
-              </div>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
                 Scan je Platen & CD's
               </h2>
               <p className="text-base text-muted-foreground mb-5 max-w-lg">
-                Identificeer en waardeer je hele collectie met onze gratis AI-scanner. Direct resultaat!
+                Identificeer en waardeer je hele collectie met onze gratis scanner. Direct resultaat!
               </p>
               
               {/* Feature badges - Larger */}

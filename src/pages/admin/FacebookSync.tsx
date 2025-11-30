@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, RefreshCw, Facebook, CheckCircle2, XCircle, AlertCircle, Key, Wand2, Send } from "lucide-react";
+import { Loader2, RefreshCw, Facebook, CheckCircle2, XCircle, AlertCircle, Key, Wand2, Send, Package, ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface FacebookPage {
   id: string;
@@ -73,6 +74,21 @@ export default function FacebookSync() {
       });
       
       return result;
+    }
+  });
+
+  // Fetch product count
+  const { data: productStats } = useQuery({
+    queryKey: ['product-stats-for-sync'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('platform_products')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active')
+        .not('published_at', 'is', null);
+      
+      if (error) throw error;
+      return { activeProducts: count || 0 };
     }
   });
 
@@ -366,15 +382,223 @@ export default function FacebookSync() {
     });
   };
 
+  const isConfigured = savedCredentials?.hasToken && savedCredentials?.hasSecret && savedCredentials?.hasPageId;
+
   return (
     <AdminLayout>
       <div className="container mx-auto py-8 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Facebook Catalog Synchronisatie</h1>
-          <p className="text-muted-foreground">
-            Synchroniseer MusicScan producten naar je Facebook Catalog voor Facebook Shop integratie
+        {/* Hero Section - Clear Purpose */}
+        <div className="text-center space-y-4 pb-6 border-b">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#1877F2]/10 mb-4">
+            <Facebook className="w-8 h-8 text-[#1877F2]" />
+          </div>
+          <h1 className="text-3xl font-bold">Facebook Catalog Sync</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Synchroniseer automatisch alle MusicScan producten naar je Facebook Catalog voor naadloze 
+            Facebook & Instagram Shopping integratie.
           </p>
         </div>
+
+        {/* How It Works - Visual Flow */}
+        <Card className="border-2 border-dashed">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Hoe het werkt
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 py-6">
+              {/* Step 1 */}
+              <motion.div 
+                className="flex flex-col items-center text-center p-4 rounded-xl bg-muted/50 min-w-[180px]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                  <Package className="w-6 h-6 text-primary" />
+                </div>
+                <p className="font-medium">MusicScan Producten</p>
+                <p className="text-sm text-muted-foreground">{productStats?.activeProducts || 0} actief</p>
+              </motion.div>
+
+              {/* Arrow */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <ArrowRight className="w-6 h-6 text-muted-foreground hidden md:block" />
+              </motion.div>
+
+              {/* Step 2 - Sync Action */}
+              <motion.div 
+                className={`flex flex-col items-center text-center p-4 rounded-xl min-w-[180px] border-2 ${
+                  isSyncing ? 'border-primary bg-primary/5 animate-pulse' : 'border-transparent bg-muted/50'
+                }`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
+                  isSyncing ? 'bg-primary text-primary-foreground' : 'bg-primary/10'
+                }`}>
+                  {isSyncing ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-6 h-6 text-primary" />
+                  )}
+                </div>
+                <p className="font-medium">Synchronisatie</p>
+                <p className="text-sm text-muted-foreground">
+                  {isSyncing ? 'Bezig...' : 'CSV Feed → API'}
+                </p>
+              </motion.div>
+
+              {/* Arrow */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                <ArrowRight className="w-6 h-6 text-muted-foreground hidden md:block" />
+              </motion.div>
+
+              {/* Step 3 */}
+              <motion.div 
+                className="flex flex-col items-center text-center p-4 rounded-xl bg-[#1877F2]/10 min-w-[180px]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <div className="w-12 h-12 rounded-full bg-[#1877F2] flex items-center justify-center mb-3">
+                  <ShoppingBag className="w-6 h-6 text-white" />
+                </div>
+                <p className="font-medium">Facebook Shop</p>
+                <p className="text-sm text-muted-foreground">Live producten</p>
+              </motion.div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Main Sync Action Card */}
+        <Card className={`border-2 ${isConfigured ? 'border-success/50 bg-success/5' : 'border-destructive/30 bg-destructive/5'}`}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} />
+              Product Synchronisatie
+              {isConfigured ? (
+                <Badge className="bg-success text-success-foreground ml-2">
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  Geconfigureerd
+                </Badge>
+              ) : (
+                <Badge variant="destructive" className="ml-2">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  Niet geconfigureerd
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription>
+              {isConfigured 
+                ? `Klaar om ${productStats?.activeProducts || 0} producten te synchroniseren naar Facebook Catalog`
+                : 'Configureer eerst je Facebook credentials hieronder'
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Progress during sync */}
+            <AnimatePresence>
+              {isSyncing && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-3 p-4 bg-primary/5 rounded-lg border border-primary/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    <span className="font-medium">Synchronisatie bezig...</span>
+                  </div>
+                  <Progress value={33} className="h-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Producten worden verzonden naar Facebook Catalog API...
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Sync result */}
+            <AnimatePresence>
+              {syncProgress.status && !isSyncing && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={`p-4 rounded-lg border ${
+                    syncProgress.status === 'completed' 
+                      ? 'bg-success/10 border-success/30' 
+                      : 'bg-destructive/10 border-destructive/30'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    {syncProgress.status === 'completed' ? (
+                      <CheckCircle2 className="w-5 h-5 text-success" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-destructive" />
+                    )}
+                    <span className="font-medium">
+                      {syncProgress.status === 'completed' ? 'Synchronisatie voltooid!' : 'Synchronisatie gedeeltelijk'}
+                    </span>
+                  </div>
+                  <div className="flex gap-4 text-sm">
+                    <span className="text-success">✓ {syncProgress.synced || 0} gesynchroniseerd</span>
+                    {(syncProgress.failed || 0) > 0 && (
+                      <span className="text-destructive">✗ {syncProgress.failed} mislukt</span>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Sync buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => startSync(false)}
+                disabled={isSyncing || !isConfigured}
+                size="lg"
+                className="flex-1 bg-[#1877F2] hover:bg-[#1877F2]/90"
+              >
+                {isSyncing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Synchroniseren...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-5 h-5 mr-2" />
+                    Sync naar Facebook
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => startSync(true)}
+                disabled={isSyncing || !isConfigured}
+                variant="outline"
+                size="lg"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Volledige Resync
+              </Button>
+            </div>
+
+            {!isConfigured && (
+              <p className="text-sm text-muted-foreground text-center">
+                ⚠️ Scroll naar beneden om je Facebook credentials te configureren
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Token Helper - New Meta 2024 Rule */}
         <Card className="border-blue-500/50 bg-blue-500/5">

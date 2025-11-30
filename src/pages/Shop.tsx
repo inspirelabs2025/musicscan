@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { usePublicMarketplace } from "@/hooks/usePublicMarketplace";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Search, 
-  Filter, 
   ShoppingBag, 
   Disc, 
   Shirt, 
@@ -19,25 +18,70 @@ import {
   Music,
   ArrowRight,
   Sparkles,
-  Grid3X3,
-  LayoutGrid
+  CircleDot,
+  ChevronRight
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
-type SortOption = "newest" | "price-low" | "price-high" | "title";
-type CategoryFilter = "all" | "vinyl" | "cd" | "art" | "clothing" | "accessories";
+// Category configuration
+const CATEGORIES = [
+  { 
+    key: "vinyl", 
+    label: "Vinyl Platen", 
+    icon: Disc, 
+    description: "Tweedehands vinyl uit collecties",
+    link: "/marketplace?filter=vinyl",
+    gradient: "from-orange-500/20 to-red-500/20"
+  },
+  { 
+    key: "cd", 
+    label: "CD's", 
+    icon: Music, 
+    description: "Tweedehands CD's uit collecties",
+    link: "/marketplace?filter=cd",
+    gradient: "from-blue-500/20 to-purple-500/20"
+  },
+  { 
+    key: "art", 
+    label: "Art Prints & Posters", 
+    icon: ImageIcon, 
+    description: "Album covers als kunstwerk",
+    link: "/art-shop",
+    gradient: "from-pink-500/20 to-rose-500/20"
+  },
+  { 
+    key: "clothing", 
+    label: "Kleding", 
+    icon: Shirt, 
+    description: "T-shirts & sokken met album art",
+    link: "/merchandise",
+    gradient: "from-green-500/20 to-emerald-500/20"
+  },
+  { 
+    key: "accessories", 
+    label: "Buttons & Badges", 
+    icon: CircleDot, 
+    description: "Muziek buttons en pins",
+    link: "/buttons",
+    gradient: "from-yellow-500/20 to-amber-500/20"
+  },
+];
+
+type UnifiedProduct = {
+  id: string;
+  type: "platform" | "marketplace";
+  title: string;
+  artist?: string;
+  price: number;
+  image?: string;
+  category: string;
+  mediaType?: string;
+  slug?: string;
+  createdAt: string;
+  condition?: string;
+};
 
 const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<SortOption>("newest");
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
-  const [viewMode, setViewMode] = useState<"grid" | "compact">("grid");
 
   const { data: platformProducts = [], isLoading: platformLoading } = usePlatformProducts();
   const { items: marketplaceItems = [], isLoading: marketplaceLoading } = usePublicMarketplace();
@@ -46,19 +90,7 @@ const Shop = () => {
 
   // Combine all products into unified format
   const allProducts = useMemo(() => {
-    const products: Array<{
-      id: string;
-      type: "platform" | "marketplace";
-      title: string;
-      artist?: string;
-      price: number;
-      image?: string;
-      category: string;
-      mediaType?: string;
-      slug?: string;
-      createdAt: string;
-      condition?: string;
-    }> = [];
+    const products: UnifiedProduct[] = [];
 
     // Add platform products
     platformProducts.forEach((p) => {
@@ -97,67 +129,52 @@ const Shop = () => {
     return products;
   }, [platformProducts, marketplaceItems]);
 
-  // Filter and sort products
+  // Filter products by search
   const filteredProducts = useMemo(() => {
-    let filtered = allProducts;
+    if (!searchQuery) return allProducts;
+    const query = searchQuery.toLowerCase();
+    return allProducts.filter(
+      (p) =>
+        p.title.toLowerCase().includes(query) ||
+        p.artist?.toLowerCase().includes(query)
+    );
+  }, [allProducts, searchQuery]);
 
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.title.toLowerCase().includes(query) ||
-          p.artist?.toLowerCase().includes(query)
-      );
-    }
-
-    // Category filter
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter((p) => {
-        switch (categoryFilter) {
+  // Group products by category
+  const productsByCategory = useMemo(() => {
+    const grouped: Record<string, UnifiedProduct[]> = {};
+    
+    CATEGORIES.forEach(cat => {
+      grouped[cat.key] = filteredProducts.filter((p) => {
+        switch (cat.key) {
           case "vinyl":
             return p.mediaType === "vinyl" || p.category === "vinyl";
           case "cd":
             return p.mediaType === "cd" || p.category === "cd";
           case "art":
-            return ["art", "poster", "canvas", "print"].includes(p.category);
+            return ["art", "poster", "canvas", "print", "metal-print"].includes(p.category);
           case "clothing":
-            return ["clothing", "tshirt", "shirt", "socks"].includes(p.category);
+            return ["clothing", "tshirt", "shirt", "socks", "t-shirt"].includes(p.category);
           case "accessories":
-            return ["accessories", "button", "badge", "merch"].includes(p.category);
+            return ["accessories", "button", "badge", "merch", "buttons"].includes(p.category);
           default:
-            return true;
+            return false;
         }
-      });
-    }
-
-    // Sort
-    switch (sortBy) {
-      case "price-low":
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case "price-high":
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case "title":
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case "newest":
-      default:
-        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-
-    return filtered;
-  }, [allProducts, searchQuery, categoryFilter, sortBy]);
+      }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    });
+    
+    return grouped;
+  }, [filteredProducts]);
 
   // Stats for display
   const stats = useMemo(() => ({
     total: allProducts.length,
-    vinyl: allProducts.filter(p => p.mediaType === "vinyl" || p.category === "vinyl").length,
-    cd: allProducts.filter(p => p.mediaType === "cd" || p.category === "cd").length,
-    art: allProducts.filter(p => ["art", "poster", "canvas", "print"].includes(p.category)).length,
-    clothing: allProducts.filter(p => ["clothing", "tshirt", "shirt", "socks"].includes(p.category)).length,
-  }), [allProducts]);
+    vinyl: productsByCategory.vinyl?.length || 0,
+    cd: productsByCategory.cd?.length || 0,
+    art: productsByCategory.art?.length || 0,
+    clothing: productsByCategory.clothing?.length || 0,
+    accessories: productsByCategory.accessories?.length || 0,
+  }), [allProducts, productsByCategory]);
 
   // Structured data for SEO
   const structuredData = {
@@ -168,8 +185,8 @@ const Shop = () => {
     url: "https://musicscan.nl/shop",
     mainEntity: {
       "@type": "ItemList",
-      numberOfItems: filteredProducts.length,
-      itemListElement: filteredProducts.slice(0, 20).map((product, index) => ({
+      numberOfItems: allProducts.length,
+      itemListElement: allProducts.slice(0, 20).map((product, index) => ({
         "@type": "ListItem",
         position: index + 1,
         item: {
@@ -196,21 +213,126 @@ const Shop = () => {
       case "art":
       case "poster":
       case "canvas":
+      case "metal-print":
         return <ImageIcon className="w-4 h-4" />;
       case "clothing":
       case "tshirt":
       case "socks":
+      case "t-shirt":
         return <Shirt className="w-4 h-4" />;
+      case "buttons":
+      case "button":
+      case "badge":
+        return <CircleDot className="w-4 h-4" />;
       default:
         return <ShoppingBag className="w-4 h-4" />;
     }
   };
 
-  const getProductLink = (product: typeof filteredProducts[0]) => {
+  const getProductLink = (product: UnifiedProduct) => {
     if (product.type === "platform" && product.slug) {
       return `/product/${product.slug}`;
     }
     return `/marketplace`;
+  };
+
+  // Product Card Component
+  const ProductCard = ({ product, index }: { product: UnifiedProduct; index: number }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+    >
+      <Link to={getProductLink(product)}>
+        <Card className="group overflow-hidden h-full hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1 border-border/50 hover:border-primary/30">
+          <div className="aspect-square relative overflow-hidden bg-muted">
+            {product.image ? (
+              <img
+                src={product.image}
+                alt={product.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                {getCategoryIcon(product.category)}
+              </div>
+            )}
+            
+            {product.condition && (
+              <Badge 
+                variant="secondary"
+                className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm"
+              >
+                {product.condition}
+              </Badge>
+            )}
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+              <span className="text-white text-sm font-medium flex items-center gap-1">
+                Bekijk <ArrowRight className="w-4 h-4" />
+              </span>
+            </div>
+          </div>
+
+          <CardContent className="p-3">
+            {product.artist && (
+              <p className="text-xs text-muted-foreground truncate mb-0.5">
+                {product.artist}
+              </p>
+            )}
+            <h3 className="text-sm font-semibold truncate mb-1 group-hover:text-primary transition-colors">
+              {product.title}
+            </h3>
+            <p className="text-base font-bold text-primary">
+              €{product.price.toFixed(2)}
+            </p>
+          </CardContent>
+        </Card>
+      </Link>
+    </motion.div>
+  );
+
+  // Category Section Component
+  const CategorySection = ({ category }: { category: typeof CATEGORIES[0] }) => {
+    const products = productsByCategory[category.key] || [];
+    const displayProducts = products.slice(0, 6);
+    const hasMore = products.length > 6;
+    const Icon = category.icon;
+
+    if (products.length === 0) return null;
+
+    return (
+      <section className="mb-12">
+        <div className={`rounded-2xl p-6 bg-gradient-to-br ${category.gradient} border border-border/30 mb-6`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-background/80 backdrop-blur-sm">
+                <Icon className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">{category.label}</h2>
+                <p className="text-muted-foreground">{category.description} • {products.length} items</p>
+              </div>
+            </div>
+            {hasMore && (
+              <Link to={category.link}>
+                <Button variant="outline" className="gap-2">
+                  Bekijk alle
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {displayProducts.map((product, index) => (
+            <ProductCard key={`${product.type}-${product.id}`} product={product} index={index} />
+          ))}
+        </div>
+      </section>
+    );
   };
 
   return (
@@ -236,7 +358,7 @@ const Shop = () => {
         {/* Hero Section */}
         <section className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-primary/5 via-background to-accent/5">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
-          <div className="container mx-auto px-4 py-16 md:py-24 relative">
+          <div className="container mx-auto px-4 py-12 md:py-20 relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -246,10 +368,10 @@ const Shop = () => {
                 <Sparkles className="w-3 h-3 mr-1" />
                 {stats.total} producten beschikbaar
               </Badge>
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
                 MusicScan Shop
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Vinyl, CD's, art prints, merchandise en meer. 
                 Alles voor de echte muziekliefhebber.
               </p>
@@ -267,188 +389,87 @@ const Shop = () => {
               </div>
             </motion.div>
 
-            {/* Quick Category Stats */}
+            {/* Quick Stats */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex flex-wrap justify-center gap-4 mt-10"
+              className="flex flex-wrap justify-center gap-3 mt-8"
             >
-              {[
-                { key: "vinyl", label: "Vinyl", count: stats.vinyl, icon: Disc },
-                { key: "cd", label: "CD's", count: stats.cd, icon: Music },
-                { key: "art", label: "Art Prints", count: stats.art, icon: ImageIcon },
-                { key: "clothing", label: "Kleding", count: stats.clothing, icon: Shirt },
-              ].map((cat) => (
-                <button
-                  key={cat.key}
-                  onClick={() => setCategoryFilter(categoryFilter === cat.key ? "all" : cat.key as CategoryFilter)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
-                    categoryFilter === cat.key
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <cat.icon className="w-4 h-4" />
-                  <span className="font-medium">{cat.label}</span>
-                  <span className="text-xs opacity-70">({cat.count})</span>
-                </button>
-              ))}
+              {CATEGORIES.map((cat) => {
+                const count = stats[cat.key as keyof typeof stats] || 0;
+                if (count === 0) return null;
+                return (
+                  <Link
+                    key={cat.key}
+                    to={cat.link}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                  >
+                    <cat.icon className="w-4 h-4" />
+                    <span className="font-medium">{cat.label}</span>
+                    <span className="text-xs opacity-70">({count})</span>
+                  </Link>
+                );
+              })}
             </motion.div>
           </div>
         </section>
 
-        {/* Filters & Products */}
-        <section className="container mx-auto px-4 py-8">
-          {/* Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {filteredProducts.length} resultaten
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Sorteer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Nieuwste eerst</SelectItem>
-                  <SelectItem value="price-low">Prijs: laag-hoog</SelectItem>
-                  <SelectItem value="price-high">Prijs: hoog-laag</SelectItem>
-                  <SelectItem value="title">Titel A-Z</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex border rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "bg-muted/50"}`}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("compact")}
-                  className={`p-2 ${viewMode === "compact" ? "bg-primary text-primary-foreground" : "bg-muted/50"}`}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Loading State */}
-          {isLoading && (
-            <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"}`}>
-              {Array.from({ length: 20 }).map((_, i) => (
-                <Card key={i} className="overflow-hidden">
-                  <Skeleton className="aspect-square w-full" />
-                  <CardContent className="p-4">
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-3 w-1/2 mb-3" />
-                    <Skeleton className="h-5 w-1/3" />
-                  </CardContent>
-                </Card>
+        {/* Category Sections */}
+        <div className="container mx-auto px-4 py-10">
+          {isLoading ? (
+            <div className="space-y-12">
+              {[1, 2, 3].map((i) => (
+                <div key={i}>
+                  <Skeleton className="h-24 w-full rounded-2xl mb-6" />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <Card key={j} className="overflow-hidden">
+                        <Skeleton className="aspect-square w-full" />
+                        <CardContent className="p-3">
+                          <Skeleton className="h-3 w-2/3 mb-2" />
+                          <Skeleton className="h-4 w-full mb-2" />
+                          <Skeleton className="h-4 w-1/3" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
-          )}
+          ) : (
+            <>
+              {CATEGORIES.map((category) => (
+                <CategorySection key={category.key} category={category} />
+              ))}
 
-          {/* Products Grid */}
-          {!isLoading && (
-            <AnimatePresence mode="popLayout">
-              {filteredProducts.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-20"
-                >
+              {/* Empty State */}
+              {allProducts.length === 0 && (
+                <div className="text-center py-20">
                   <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Geen producten gevonden</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Probeer andere zoektermen of filters
+                  <h3 className="text-xl font-semibold mb-2">Nog geen producten</h3>
+                  <p className="text-muted-foreground">
+                    Er zijn momenteel geen producten beschikbaar.
                   </p>
-                  <Button variant="outline" onClick={() => { setSearchQuery(""); setCategoryFilter("all"); }}>
-                    Reset filters
-                  </Button>
-                </motion.div>
-              ) : (
-                <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"}`}>
-                  {filteredProducts.map((product, index) => (
-                    <motion.div
-                      key={`${product.type}-${product.id}`}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ delay: index * 0.02 }}
-                    >
-                      <Link to={getProductLink(product)}>
-                        <Card className="group overflow-hidden h-full hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1 border-border/50 hover:border-primary/30">
-                          {/* Image */}
-                          <div className="aspect-square relative overflow-hidden bg-muted">
-                            {product.image ? (
-                              <img
-                                src={product.image}
-                                alt={product.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                {getCategoryIcon(product.category)}
-                              </div>
-                            )}
-                            
-                            {/* Category Badge */}
-                            <Badge 
-                              className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm text-foreground border-0"
-                            >
-                              {getCategoryIcon(product.category)}
-                              <span className="ml-1 capitalize">{product.mediaType || product.category}</span>
-                            </Badge>
-
-                            {/* Condition Badge for marketplace items */}
-                            {product.condition && (
-                              <Badge 
-                                variant="secondary"
-                                className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm"
-                              >
-                                {product.condition}
-                              </Badge>
-                            )}
-
-                            {/* Hover Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-                              <span className="text-white text-sm font-medium flex items-center gap-1">
-                                Bekijk <ArrowRight className="w-4 h-4" />
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Content */}
-                          <CardContent className={viewMode === "grid" ? "p-4" : "p-3"}>
-                            {product.artist && (
-                              <p className="text-xs text-muted-foreground truncate mb-1">
-                                {product.artist}
-                              </p>
-                            )}
-                            <h3 className={`font-semibold truncate mb-2 group-hover:text-primary transition-colors ${viewMode === "grid" ? "text-sm" : "text-xs"}`}>
-                              {product.title}
-                            </h3>
-                            <p className={`font-bold text-primary ${viewMode === "grid" ? "text-lg" : "text-sm"}`}>
-                              €{product.price.toFixed(2)}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    </motion.div>
-                  ))}
                 </div>
               )}
-            </AnimatePresence>
+
+              {/* Search Empty State */}
+              {searchQuery && filteredProducts.length === 0 && allProducts.length > 0 && (
+                <div className="text-center py-20">
+                  <Search className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">Geen resultaten voor "{searchQuery}"</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Probeer andere zoektermen
+                  </p>
+                  <Button variant="outline" onClick={() => setSearchQuery("")}>
+                    Wis zoekopdracht
+                  </Button>
+                </div>
+              )}
+            </>
           )}
-        </section>
+        </div>
       </main>
     </>
   );

@@ -27,10 +27,10 @@ export const PublicScannerSpotlight = () => {
             {/* Content */}
             <div className="flex-1 text-center md:text-left">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                Scan je Platen & CD's
+                Ontdek de waarde van je LP of CD
               </h2>
               <p className="text-base text-muted-foreground mb-5 max-w-lg">
-                Ontdek de waarde van je LP of CD
+                Scan je platen en CD's met onze gratis scanner
               </p>
               
               {/* Feature badges - Larger */}

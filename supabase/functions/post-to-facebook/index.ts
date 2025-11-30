@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface PostRequest {
-  content_type: 'anecdote' | 'news' | 'blog' | 'product';
+  content_type: 'anecdote' | 'news' | 'blog' | 'product' | 'youtube_discovery';
   title: string;
   content: string;
   url?: string;
@@ -74,7 +74,8 @@ Deno.serve(async (req) => {
       anecdote: '🎵',
       news: '📰',
       blog: '📖',
-      product: '🛒'
+      product: '🛒',
+      youtube_discovery: '🎬'
     };
     
     postMessage += `${emojis[content_type] || '🎶'} ${title}\n\n`;

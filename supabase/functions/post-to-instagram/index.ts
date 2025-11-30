@@ -36,28 +36,16 @@ Deno.serve(async (req) => {
 
     console.log(`📸 Posting to Instagram: ${content_type} - ${title}`);
 
-    // Get Instagram credentials from app_secrets
-    const { data: secrets, error: secretsError } = await supabase
-      .from('app_secrets')
-      .select('secret_key, secret_value')
-      .in('secret_key', ['FACEBOOK_PAGE_ACCESS_TOKEN', 'INSTAGRAM_BUSINESS_ACCOUNT_ID']);
-
-    if (secretsError || !secrets || secrets.length === 0) {
-      console.error('Failed to fetch Instagram credentials:', secretsError);
-      throw new Error('Instagram credentials not configured');
-    }
-
-    const credentials: Record<string, string> = {};
-    secrets.forEach(s => {
-      credentials[s.secret_key] = s.secret_value;
-    });
-
-    const accessToken = credentials['FACEBOOK_PAGE_ACCESS_TOKEN'];
-    const instagramAccountId = credentials['INSTAGRAM_BUSINESS_ACCOUNT_ID'];
+    // Get Instagram credentials from environment variables
+    const accessToken = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
+    const instagramAccountId = Deno.env.get('INSTAGRAM_BUSINESS_ACCOUNT_ID');
 
     if (!accessToken || !instagramAccountId) {
-      throw new Error('Missing Instagram credentials (PAGE_ACCESS_TOKEN or INSTAGRAM_BUSINESS_ACCOUNT_ID)');
+      console.error('Missing credentials - accessToken:', !!accessToken, 'instagramAccountId:', !!instagramAccountId);
+      throw new Error('Missing Instagram credentials (FACEBOOK_PAGE_ACCESS_TOKEN or INSTAGRAM_BUSINESS_ACCOUNT_ID)');
     }
+
+    console.log('✅ Instagram credentials loaded from environment');
 
     // Format the caption
     let caption = '';

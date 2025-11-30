@@ -575,6 +575,62 @@ serve(async (req) => {
         console.error('Error inserting discoveries:', insertError);
       } else {
         console.log(`Successfully inserted ${topDiscoveries.length} discoveries`);
+        
+        // Auto-post best discovery to Facebook
+        const bestDiscovery = topDiscoveries[0]; // Already sorted by quality_score
+        if (bestDiscovery && bestDiscovery.quality_score >= 50) {
+          try {
+            console.log(`📘 Auto-posting to Facebook: ${bestDiscovery.title}`);
+            
+            const contentTypeLabels: Record<string, string> = {
+              interview: '🎤 Interview',
+              studio: '🎚️ Studio Session',
+              live_session: '🎸 Live Performance',
+              documentary: '🎬 Documentary'
+            };
+            
+            const typeLabel = contentTypeLabels[bestDiscovery.content_type] || '🎵 Music Video';
+            const youtubeUrl = `https://www.youtube.com/watch?v=${bestDiscovery.video_id}`;
+            
+            // Build engaging post content
+            const postContent = `${typeLabel}: ${bestDiscovery.artist_name}\n\n` +
+              `"${bestDiscovery.title}"\n\n` +
+              `${bestDiscovery.view_count > 100000 ? `👀 ${(bestDiscovery.view_count / 1000000).toFixed(1)}M+ views\n\n` : ''}` +
+              `🔗 Bekijk nu op YouTube`;
+            
+            const hashtags = [
+              'MusicScan',
+              'YouTube',
+              bestDiscovery.artist_name.replace(/\s+/g, ''),
+              bestDiscovery.content_type === 'live_session' ? 'LiveMusic' : 'MusicDiscovery'
+            ];
+            
+            const fbResponse = await fetch(`${SUPABASE_URL}/functions/v1/post-to-facebook`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+              },
+              body: JSON.stringify({
+                content_type: 'youtube_discovery',
+                title: `${bestDiscovery.artist_name} - ${typeLabel}`,
+                content: postContent,
+                url: youtubeUrl,
+                image_url: bestDiscovery.thumbnail_url,
+                hashtags: hashtags
+              })
+            });
+            
+            if (fbResponse.ok) {
+              console.log('✅ Successfully posted to Facebook');
+            } else {
+              const fbError = await fbResponse.text();
+              console.error('❌ Facebook post failed:', fbError);
+            }
+          } catch (fbErr) {
+            console.error('Error posting to Facebook:', fbErr);
+          }
+        }
       }
     }
 

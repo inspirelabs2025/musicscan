@@ -48,10 +48,14 @@ MusicScan helpt muziekliefhebbers en verzamelaars om:
 - /vandaag-in-de-muziekgeschiedenis - Dagelijkse muziekgeschiedenis
 
 ### Shop & Producten
+- /shop - Alle producten overzicht (vinyl, CD's, merchandise, art)
 - /art-shop - Overzicht van alle art producten
 - /posters - Album cover posters
 - /product/[slug] - Individuele product pagina's
 - /lyric-posters - Songtekst posters
+- /merchandise - Muziek merchandise
+- /socks - Album sokken
+- /shirts - Album t-shirts
 
 ### Tools & Scanner
 - /scanner - AI vinyl en CD scanner

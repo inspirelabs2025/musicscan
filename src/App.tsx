@@ -122,6 +122,7 @@ import SinglesImporterPage from "./pages/admin/SinglesImporterPage";
 import ArtistStoriesGenerator from "./pages/admin/ArtistStoriesGenerator";
 import FacebookSync from "./pages/admin/FacebookSync";
 import FacebookAdmin from "./pages/admin/FacebookAdmin";
+import InstagramAdmin from "./pages/admin/InstagramAdmin";
 import NewsRssManager from "./pages/admin/NewsRssManager";
 import SocksShop from "./pages/SocksShop";
 import TshirtsShop from "./pages/TshirtsShop";
@@ -394,6 +395,7 @@ const AppContent = () => {
                 <Route path="artist-spotlights" element={<ArtistSpotlightsAdmin />} />
                 <Route path="facebook-sync" element={<FacebookSync />} />
                 <Route path="facebook-admin" element={<FacebookAdmin />} />
+                <Route path="instagram-admin" element={<InstagramAdmin />} />
                 <Route path="artist-spotlight/new" element={<ArtistSpotlightEditor />} />
                 <Route path="artist-spotlight/edit/:id" element={<ArtistSpotlightEditor />} />
                 

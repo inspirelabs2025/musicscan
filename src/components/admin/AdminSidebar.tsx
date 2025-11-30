@@ -31,6 +31,7 @@ import {
   Mail,
   Sparkles,
   Facebook,
+  Instagram,
   Server,
   CloudUpload
 } from "lucide-react";
@@ -131,6 +132,7 @@ const menuItems = [
     items: [
       { title: "Facebook Admin", url: "/admin/facebook-admin", icon: Facebook },
       { title: "Facebook Sync", url: "/admin/facebook-sync", icon: Facebook },
+      { title: "Instagram Admin", url: "/admin/instagram-admin", icon: Instagram },
     ]
   },
   {

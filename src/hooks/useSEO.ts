@@ -151,5 +151,10 @@ export const SEO_CONFIGS = {
     title: 'Public Music Catalog - Browse Community Collections | MusicScan',
     description: 'Explore public music collections from the MusicScan community. Discover rare vinyl, popular CDs, and music trends.',
     keywords: 'public music catalog, community collections, vinyl database, CD database, music discovery'
+  },
+  '/shop': {
+    title: 'Shop - Muziek Merchandise, Vinyl & CD\'s | MusicScan',
+    description: 'Ontdek unieke muziek merchandise, vinyl platen, CD\'s, art prints, t-shirts en meer. De beste shop voor muziekliefhebbers.',
+    keywords: 'vinyl kopen, cd kopen, muziek merchandise, band shirts, muziek posters, platenwinkel, muziek shop'
   }
 };

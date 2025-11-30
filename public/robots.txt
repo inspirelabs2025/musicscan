@@ -107,7 +107,11 @@ Allow: /scanner
 # Encourage indexing of key content
 Allow: /release/*
 Allow: /collection/*
+Allow: /shop
 Allow: /shop/*
+Allow: /merchandise
+Allow: /socks
+Allow: /shirts
 
 # Disallow admin and internal paths
 Disallow: /admin/

@@ -159,6 +159,7 @@ import SystemOverview from "./pages/admin/SystemOverview";
 import StatusDashboard from "./pages/admin/StatusDashboard";
 import MediaLibrary from "./pages/admin/MediaLibrary";
 import YouTubeDiscoveries from "./pages/YouTubeDiscoveries";
+import Shop from "./pages/Shop";
 
 // Redirect component for old /blog/ URLs to /plaat-verhaal/
 const BlogRedirect = () => {
@@ -313,7 +314,7 @@ const AppContent = () => {
             <MyShop />
           </ProtectedRoute>
         } />
-        <Route path="/shop" element={<Navigate to="/shops" replace />} />
+        <Route path="/shop" element={<Shop />} />
         <Route path="/shop/:shopSlug" element={<ShopOrProductRouter />} />
         <Route path="/shop/:shopSlug/item/:itemId" element={<PublicShopItemDetail />} />
         <Route path="/product/:slug" element={<PlatformProductDetail />} />

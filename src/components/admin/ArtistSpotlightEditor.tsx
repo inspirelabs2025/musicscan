@@ -396,7 +396,7 @@ export const ArtistSpotlightEditor = () => {
                 placeholder="Plak hier je volledige tekst (minimaal 100 woorden)..."
                 value={initialText}
                 onChange={(e) => setInitialText(e.target.value)}
-                disabled={isEditing || generateMutation.isPending || formatMutation.isPending}
+                disabled={generateMutation.isPending || formatMutation.isPending}
                 rows={20}
                 className="resize-y"
               />

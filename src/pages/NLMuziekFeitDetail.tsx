@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { motion } from "framer-motion";
-import { ArrowLeft, Calendar, Share2, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { ArrowLeft, Calendar, Share2, ChevronLeft, ChevronRight, Music, Play, Disc3, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import {
 } from "@/data/nederlandseMuziekFeiten";
 import { Navigation } from "@/components/Navigation";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
+import { SmartArtistLinks } from "@/components/nederland/SmartArtistLink";
 
 export default function NLMuziekFeitDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -48,6 +49,11 @@ export default function NLMuziekFeitDetail() {
   const relatedFacts = NL_MUZIEK_FEITEN
     .filter(f => f.decade === fact.decade && f.slug !== fact.slug)
     .slice(0, 3);
+
+  // Get contextual facts from same year or nearby years
+  const contextFacts = NL_MUZIEK_FEITEN
+    .filter(f => Math.abs(f.year - fact.year) <= 2 && f.slug !== fact.slug)
+    .slice(0, 2);
 
   const shareFact = () => {
     const url = window.location.href;
@@ -86,6 +92,11 @@ export default function NLMuziekFeitDetail() {
             "author": {
               "@type": "Organization",
               "name": "MusicScan"
+            },
+            "about": {
+              "@type": "MusicEvent",
+              "name": fact.title,
+              "startDate": `${fact.year}`
             }
           })}
         </script>
@@ -186,6 +197,69 @@ export default function NLMuziekFeitDetail() {
                     </p>
                   </div>
 
+                  {/* YouTube Embed */}
+                  {fact.youtubeId && (
+                    <Card className="overflow-hidden mb-8">
+                      <div className="aspect-video">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${fact.youtubeId}`}
+                          title={`${fact.title} - Video`}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="w-full h-full"
+                        />
+                      </div>
+                      <div className="p-4 bg-muted/30">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Play className="w-4 h-4" />
+                          Bekijk de video van dit historische moment
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Famous Track */}
+                  {fact.famousTrack && (
+                    <Card 
+                      className="p-6 mb-8"
+                      style={{ 
+                        borderColor: `${decadeColor}30`,
+                        background: `linear-gradient(135deg, ${decadeColor}08, transparent)`
+                      }}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div 
+                          className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: `${decadeColor}15` }}
+                        >
+                          <Music className="w-6 h-6" style={{ color: decadeColor }} />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
+                            <Disc3 className="w-4 h-4" style={{ color: decadeColor }} />
+                            Bekendste nummer
+                          </h3>
+                          <p className="text-xl font-semibold" style={{ color: decadeColor }}>
+                            "{fact.famousTrack}"
+                          </p>
+                          {fact.spotifyUri && (
+                            <a 
+                              href={`https://open.spotify.com/track/${fact.spotifyUri.replace('spotify:track:', '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 mt-2 text-sm text-green-600 hover:text-green-700"
+                            >
+                              <span className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                <Play className="w-2 h-2 text-white fill-white" />
+                              </span>
+                              Beluister op Spotify
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+
                   {/* Fun Fact Card */}
                   {fact.funFact && (
                     <Card 
@@ -196,7 +270,8 @@ export default function NLMuziekFeitDetail() {
                       }}
                     >
                       <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
-                        <span>💡</span> Wist je dat?
+                        <Sparkles className="w-5 h-5 text-amber-500" />
+                        Wist je dat?
                       </h3>
                       <p className="text-muted-foreground">
                         {fact.funFact}
@@ -204,22 +279,47 @@ export default function NLMuziekFeitDetail() {
                     </Card>
                   )}
 
-                  {/* Related Artists */}
+                  {/* Historical Context */}
+                  {(fact.historicalContext || contextFacts.length > 0) && (
+                    <Card className="p-6 mb-8 bg-muted/20">
+                      <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                        <Calendar className="w-5 h-5" />
+                        Context: Rond {fact.year}
+                      </h3>
+                      
+                      {fact.historicalContext && (
+                        <p className="text-muted-foreground mb-4">
+                          {fact.historicalContext}
+                        </p>
+                      )}
+                      
+                      {contextFacts.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground">
+                            In dezelfde periode:
+                          </p>
+                          {contextFacts.map((cf) => (
+                            <Link 
+                              key={cf.slug}
+                              to={`/nl-muziekfeit/${cf.slug}`}
+                              className="flex items-center gap-2 p-2 rounded-lg hover:bg-background transition-colors"
+                            >
+                              <span className="text-sm font-bold" style={{ color: decadeColor }}>
+                                {cf.year}
+                              </span>
+                              <span className="text-sm">{cf.title}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </Card>
+                  )}
+
+                  {/* Related Artists - Using Smart Links */}
                   {fact.relatedArtists && fact.relatedArtists.length > 0 && (
                     <div className="mb-8">
                       <h3 className="text-lg font-bold mb-3">Gerelateerde artiesten</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {fact.relatedArtists.map((artist) => (
-                          <Link 
-                            key={artist}
-                            to={`/artist/${artist.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted rounded-full text-sm hover:bg-primary/10 transition-colors"
-                          >
-                            {artist}
-                            <ExternalLink className="w-3 h-3" />
-                          </Link>
-                        ))}
-                      </div>
+                      <SmartArtistLinks artists={fact.relatedArtists} />
                     </div>
                   )}
 

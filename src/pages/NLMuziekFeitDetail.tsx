@@ -12,7 +12,6 @@ import {
   iconMap,
   type MuziekFeit 
 } from "@/data/nederlandseMuziekFeiten";
-import { Navigation } from "@/components/Navigation";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { SmartArtistLinks } from "@/components/nederland/SmartArtistLink";
 
@@ -29,7 +28,6 @@ export default function NLMuziekFeitDetail() {
   if (!fact) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navigation />
         <main className="flex-1 container mx-auto px-4 py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Muziekfeit niet gevonden</h1>
           <Button asChild>
@@ -103,7 +101,6 @@ export default function NLMuziekFeitDetail() {
       </Helmet>
 
       <div className="min-h-screen flex flex-col bg-background">
-        <Navigation />
         
         <main className="flex-1">
           {/* Hero Section */}

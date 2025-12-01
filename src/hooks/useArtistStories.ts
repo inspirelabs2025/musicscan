@@ -53,9 +53,9 @@ export const useArtistStories = (options: UseArtistStoriesOptions = {}) => {
         query = query.or(`artist_name.ilike.%${search}%,biography.ilike.%${search}%`);
       }
 
-      // Apply genre filter
+      // Apply genre filter (case-insensitive)
       if (genre) {
-        query = query.contains('music_style', [genre]);
+        query = query.contains('music_style', [genre.toLowerCase()]);
       }
 
       // Apply sorting

@@ -84,7 +84,7 @@ export function NederlandseGenres() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
             >
-              <Link to={`/artists?genre=${encodeURIComponent(genre.name)}&country=netherlands`}>
+              <Link to={`/artists?genre=${encodeURIComponent(genre.name.toLowerCase())}`}>
                 <Card 
                   className="group p-6 h-full hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-opacity-30 cursor-pointer"
                   style={{ 

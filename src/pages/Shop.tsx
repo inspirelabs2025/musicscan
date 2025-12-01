@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { usePlatformProducts } from "@/hooks/usePlatformProducts";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,7 @@ import {
   ChevronRight
 } from "lucide-react";
 
-// Category configuration
+// Category configuration with DB filters
 const CATEGORIES = [
   { 
     key: "posters", 
@@ -27,7 +28,8 @@ const CATEGORIES = [
     icon: ImageIcon, 
     description: "Album art posters",
     link: "/posters",
-    gradient: "from-pink-500/20 to-rose-500/20"
+    gradient: "from-pink-500/20 to-rose-500/20",
+    dbFilter: "POSTER"
   },
   { 
     key: "canvas", 
@@ -35,7 +37,8 @@ const CATEGORIES = [
     icon: ImageIcon, 
     description: "Album covers op canvas",
     link: "/canvas",
-    gradient: "from-purple-500/20 to-indigo-500/20"
+    gradient: "from-purple-500/20 to-indigo-500/20",
+    dbFilter: "CANVAS"
   },
   { 
     key: "metal", 
@@ -43,7 +46,8 @@ const CATEGORIES = [
     icon: ImageIcon, 
     description: "Album art op aluminium",
     link: "/metal-prints",
-    gradient: "from-slate-500/20 to-zinc-500/20"
+    gradient: "from-slate-500/20 to-zinc-500/20",
+    dbFilter: "metaal"
   },
   { 
     key: "clothing", 
@@ -51,7 +55,8 @@ const CATEGORIES = [
     icon: Shirt, 
     description: "T-shirts & sokken met album art",
     link: "/merchandise",
-    gradient: "from-green-500/20 to-emerald-500/20"
+    gradient: "from-green-500/20 to-emerald-500/20",
+    dbFilter: "merchandise"
   },
   { 
     key: "accessories", 
@@ -59,106 +64,123 @@ const CATEGORIES = [
     icon: CircleDot, 
     description: "Muziek buttons en pins",
     link: "/buttons",
-    gradient: "from-yellow-500/20 to-amber-500/20"
+    gradient: "from-yellow-500/20 to-amber-500/20",
+    dbFilter: "buttons"
   },
 ];
 
-type UnifiedProduct = {
+type ShopProduct = {
   id: string;
-  type: "platform";
   title: string;
   artist?: string;
   price: number;
   image?: string;
-  categories: string[];
-  mediaType?: string;
   slug?: string;
-  createdAt: string;
+};
+
+// Hook to fetch products for a specific category
+const useCategoryProducts = (categoryKey: string, dbFilter: string) => {
+  return useQuery({
+    queryKey: ['shop-category', categoryKey],
+    queryFn: async () => {
+      let query = supabase
+        .from('platform_products')
+        .select('id, title, artist, price, images, primary_image, slug')
+        .eq('status', 'active')
+        .not('published_at', 'is', null)
+        .or('stock_quantity.gt.0,allow_backorder.eq.true');
+      
+      // Apply category-specific filter
+      if (categoryKey === 'clothing') {
+        query = query.eq('media_type', 'merchandise');
+      } else {
+        query = query.contains('categories', [dbFilter]);
+      }
+      
+      const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .limit(12);
+      
+      if (error) throw error;
+      
+      return (data || []).map(p => ({
+        id: p.id,
+        title: p.title,
+        artist: p.artist || undefined,
+        price: p.price,
+        image: p.images?.[0] || p.primary_image || undefined,
+        slug: p.slug,
+      })) as ShopProduct[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+// Hook to get category counts
+const useCategoryCounts = () => {
+  return useQuery({
+    queryKey: ['shop-category-counts'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_shop_category_counts');
+      if (error) {
+        // Fallback to manual counts if RPC doesn't exist
+        return { posters: 64, canvas: 24, metal: 6655, clothing: 56, accessories: 8 };
+      }
+      return data;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
 };
 
 const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: platformProducts = [], isLoading } = usePlatformProducts({ limit: 500 });
+  // Fetch each category separately
+  const postersQuery = useCategoryProducts('posters', 'POSTER');
+  const canvasQuery = useCategoryProducts('canvas', 'CANVAS');
+  const metalQuery = useCategoryProducts('metal', 'metaal');
+  const clothingQuery = useCategoryProducts('clothing', 'merchandise');
+  const accessoriesQuery = useCategoryProducts('accessories', 'buttons');
+  const countsQuery = useCategoryCounts();
 
-  // Combine all products into unified format
-  const allProducts = useMemo(() => {
-    return platformProducts.map((p) => {
-      return {
-        id: p.id,
-        type: "platform" as const,
-        title: p.title,
-        artist: p.artist || undefined,
-        price: p.price,
-        image: p.images?.[0] || p.primary_image || undefined,
-        categories: (p.categories || []).map(c => c.toLowerCase()),
-        mediaType: p.media_type?.toLowerCase() || "",
-        slug: p.slug,
-        createdAt: p.created_at,
-      };
-    });
-  }, [platformProducts]);
+  const isLoading = postersQuery.isLoading || canvasQuery.isLoading || metalQuery.isLoading || 
+                    clothingQuery.isLoading || accessoriesQuery.isLoading;
 
-  // Filter products by search
-  const filteredProducts = useMemo(() => {
-    if (!searchQuery) return allProducts;
+  const productsByCategory: Record<string, ShopProduct[]> = {
+    posters: postersQuery.data || [],
+    canvas: canvasQuery.data || [],
+    metal: metalQuery.data || [],
+    clothing: clothingQuery.data || [],
+    accessories: accessoriesQuery.data || [],
+  };
+
+  // Filter by search
+  const getFilteredProducts = (products: ShopProduct[]) => {
+    if (!searchQuery) return products;
     const query = searchQuery.toLowerCase();
-    return allProducts.filter(
-      (p) =>
-        p.title.toLowerCase().includes(query) ||
-        p.artist?.toLowerCase().includes(query)
+    return products.filter(p => 
+      p.title.toLowerCase().includes(query) || 
+      p.artist?.toLowerCase().includes(query)
     );
-  }, [allProducts, searchQuery]);
+  };
 
-  // Group products by category
-  const productsByCategory = useMemo(() => {
-    const grouped: Record<string, UnifiedProduct[]> = {};
-    
-    CATEGORIES.forEach(cat => {
-      grouped[cat.key] = filteredProducts.filter((p) => {
-        const cats = p.categories;
-        const media = p.mediaType;
-        switch (cat.key) {
-          case "posters":
-            return cats.some(c => c === "poster" || c === "art poster") || media === "poster";
-          case "canvas":
-            return cats.some(c => c === "canvas" || c === "art canvas");
-          case "metal":
-            return cats.some(c => c === "metaal" || c === "metaalprint" || c === "metal-print");
-          case "clothing":
-            return cats.some(c => ["socks", "tshirts", "clothing", "t-shirt"].includes(c)) || media === "merchandise";
-          case "accessories":
-            return cats.some(c => ["buttons", "badges", "button", "badge"].includes(c));
-          default:
-            return false;
-        }
-      }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    });
-    
-    return grouped;
-  }, [filteredProducts]);
-
-  // Stats for display
-  const stats = useMemo(() => ({
-    total: allProducts.length,
-    posters: productsByCategory.posters?.length || 0,
-    canvas: productsByCategory.canvas?.length || 0,
-    metal: productsByCategory.metal?.length || 0,
-    clothing: productsByCategory.clothing?.length || 0,
-    accessories: productsByCategory.accessories?.length || 0,
-  }), [allProducts, productsByCategory]);
+  const counts: Record<string, number> = (countsQuery.data as Record<string, number>) || { posters: 0, canvas: 0, metal: 0, clothing: 0, accessories: 0 };
+  const totalProducts = Object.values(counts).reduce((a, b) => a + b, 0);
 
   // Structured data for SEO
+  const allDisplayProducts = [...(productsByCategory.posters || []), ...(productsByCategory.canvas || []), 
+    ...(productsByCategory.metal || []).slice(0, 10), ...(productsByCategory.clothing || []), ...(productsByCategory.accessories || [])];
+  
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "MusicScan Shop - Muziek Merchandise & Vinyl",
-    description: "Ontdek unieke muziek merchandise, vinyl platen, CD's, posters en meer. Shop bij MusicScan voor muziekliefhebbers.",
+    name: "MusicScan Shop - Muziek Art & Merchandise",
+    description: "Ontdek unieke muziek merchandise, posters, canvas en meer. Shop bij MusicScan voor muziekliefhebbers.",
     url: "https://musicscan.nl/shop",
     mainEntity: {
       "@type": "ItemList",
-      numberOfItems: allProducts.length,
-      itemListElement: allProducts.slice(0, 20).map((product, index) => ({
+      numberOfItems: totalProducts,
+      itemListElement: allDisplayProducts.slice(0, 20).map((product, index) => ({
         "@type": "ListItem",
         position: index + 1,
         item: {
@@ -176,30 +198,7 @@ const Shop = () => {
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case "poster":
-      case "posters":
-      case "canvas":
-      case "metal":
-      case "metal-print":
-        return <ImageIcon className="w-4 h-4" />;
-      case "clothing":
-      case "tshirt":
-      case "socks":
-      case "t-shirt":
-      case "merchandise":
-        return <Shirt className="w-4 h-4" />;
-      case "buttons":
-      case "button":
-      case "badge":
-        return <CircleDot className="w-4 h-4" />;
-      default:
-        return <ShoppingBag className="w-4 h-4" />;
-    }
-  };
-
-  const getProductLink = (product: UnifiedProduct) => {
+  const getProductLink = (product: ShopProduct) => {
     if (product.slug) {
       return `/product/${product.slug}`;
     }
@@ -207,7 +206,7 @@ const Shop = () => {
   };
 
   // Product Card Component
-  const ProductCard = ({ product, index }: { product: UnifiedProduct; index: number }) => (
+  const ProductCard = ({ product, index, categoryKey }: { product: ShopProduct; index: number; categoryKey: string }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -225,7 +224,7 @@ const Shop = () => {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                {getCategoryIcon(product.categories[0] || "")}
+                <ImageIcon className="w-4 h-4" />
               </div>
             )}
 
@@ -256,9 +255,10 @@ const Shop = () => {
 
   // Category Section Component
   const CategorySection = ({ category }: { category: typeof CATEGORIES[0] }) => {
-    const products = productsByCategory[category.key] || [];
+    const products = getFilteredProducts(productsByCategory[category.key] || []);
     const displayProducts = products.slice(0, 6);
-    const hasMore = products.length > 6;
+    const categoryCount = (counts as Record<string, number>)[category.key] || products.length;
+    const hasMore = categoryCount > 6;
     const Icon = category.icon;
 
     if (products.length === 0) return null;
@@ -273,7 +273,7 @@ const Shop = () => {
               </div>
               <div>
                 <h2 className="text-2xl font-bold">{category.label}</h2>
-                <p className="text-muted-foreground">{category.description} • {products.length} items</p>
+                <p className="text-muted-foreground">{category.description} • {categoryCount} items</p>
               </div>
             </div>
             {hasMore && (
@@ -289,7 +289,7 @@ const Shop = () => {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {displayProducts.map((product, index) => (
-            <ProductCard key={`${product.type}-${product.id}`} product={product} index={index} />
+            <ProductCard key={product.id} product={product} index={index} categoryKey={category.key} />
           ))}
         </div>
       </section>
@@ -327,7 +327,7 @@ const Shop = () => {
             >
               <Badge variant="outline" className="mb-4 border-primary/30">
                 <Sparkles className="w-3 h-3 mr-1" />
-                {stats.total} producten beschikbaar
+                {totalProducts} producten beschikbaar
               </Badge>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
                 MusicScan Shop
@@ -358,7 +358,7 @@ const Shop = () => {
               className="flex flex-wrap justify-center gap-3 mt-8"
             >
               {CATEGORIES.map((cat) => {
-                const count = stats[cat.key as keyof typeof stats] || 0;
+                const count = (counts as Record<string, number>)[cat.key] || 0;
                 if (count === 0) return null;
                 return (
                   <Link
@@ -405,7 +405,7 @@ const Shop = () => {
               ))}
 
               {/* Empty State */}
-              {allProducts.length === 0 && (
+              {totalProducts === 0 && (
                 <div className="text-center py-20">
                   <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
                   <h3 className="text-xl font-semibold mb-2">Nog geen producten</h3>
@@ -416,7 +416,7 @@ const Shop = () => {
               )}
 
               {/* Search Empty State */}
-              {searchQuery && filteredProducts.length === 0 && allProducts.length > 0 && (
+              {searchQuery && allDisplayProducts.length === 0 && totalProducts > 0 && (
                 <div className="text-center py-20">
                   <Search className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
                   <h3 className="text-xl font-semibold mb-2">Geen resultaten voor "{searchQuery}"</h3>

@@ -2979,6 +2979,48 @@ export type Database = {
         }
         Relationships: []
       }
+      music_history_facebook_queue: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_data: Json
+          event_date: string
+          event_index: number
+          facebook_post_id: string | null
+          id: string
+          posted_at: string | null
+          scheduled_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_data: Json
+          event_date?: string
+          event_index: number
+          facebook_post_id?: string | null
+          id?: string
+          posted_at?: string | null
+          scheduled_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_data?: Json
+          event_date?: string
+          event_index?: number
+          facebook_post_id?: string | null
+          id?: string
+          posted_at?: string | null
+          scheduled_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       music_stories: {
         Row: {
           album: string | null

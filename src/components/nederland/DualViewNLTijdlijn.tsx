@@ -1,12 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence, PanInfo } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { 
-  ChevronLeft, 
   ChevronRight, 
-  Shuffle, 
-  Play, 
-  Pause,
   Share2,
   ExternalLink,
   ChevronDown
@@ -19,136 +15,16 @@ import {
   NL_MUZIEK_FEITEN, 
   DECADES, 
   DECADE_INFO,
-  iconMap,
-  type MuziekFeit 
+  iconMap 
 } from "@/data/nederlandseMuziekFeiten";
 
 export function DualViewNLTijdlijn() {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedDecade, setSelectedDecade] = useState("Alle");
-  const [isShuffled, setIsShuffled] = useState(false);
-  const [isAutoplay, setIsAutoplay] = useState(false);
-  const [shuffledFacts, setShuffledFacts] = useState<MuziekFeit[]>([]);
-  const [direction, setDirection] = useState(0);
-  const autoplayRef = useRef<NodeJS.Timeout | null>(null);
 
   // Filter facts by decade
-  const filteredFacts = selectedDecade === "Alle" 
+  const displayFacts = selectedDecade === "Alle" 
     ? NL_MUZIEK_FEITEN 
     : NL_MUZIEK_FEITEN.filter(f => f.decade === selectedDecade);
-
-  // Get the actual facts to display (shuffled or not)
-  const displayFacts = isShuffled ? shuffledFacts : filteredFacts;
-
-  // Get current decade from current fact
-  const currentFact = displayFacts[currentIndex];
-  const currentDecade = currentFact?.decade || "50s";
-
-  // Shuffle function
-  const shuffleFacts = useCallback(() => {
-    const shuffled = [...filteredFacts].sort(() => Math.random() - 0.5);
-    setShuffledFacts(shuffled);
-    setCurrentIndex(0);
-  }, [filteredFacts]);
-
-  // Toggle shuffle
-  const toggleShuffle = () => {
-    if (!isShuffled) {
-      shuffleFacts();
-    }
-    setIsShuffled(!isShuffled);
-    setCurrentIndex(0);
-  };
-
-  // Navigation
-  const nextFact = useCallback(() => {
-    setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % displayFacts.length);
-  }, [displayFacts.length]);
-
-  const prevFact = useCallback(() => {
-    setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + displayFacts.length) % displayFacts.length);
-  }, [displayFacts.length]);
-
-  // Jump to decade
-  const jumpToDecade = (decade: string) => {
-    if (decade === "Alle") {
-      setSelectedDecade("Alle");
-      setCurrentIndex(0);
-      return;
-    }
-    
-    // Find first fact of this decade
-    const facts = isShuffled ? shuffledFacts : NL_MUZIEK_FEITEN;
-    const index = facts.findIndex(f => f.decade === decade);
-    if (index !== -1) {
-      setSelectedDecade("Alle");
-      setCurrentIndex(index);
-    }
-  };
-
-  // Handle drag end
-  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const threshold = 50;
-    if (info.offset.x > threshold) {
-      prevFact();
-    } else if (info.offset.x < -threshold) {
-      nextFact();
-    }
-  };
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") nextFact();
-      if (e.key === "ArrowLeft") prevFact();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [nextFact, prevFact]);
-
-  // Autoplay
-  useEffect(() => {
-    if (isAutoplay) {
-      autoplayRef.current = setInterval(nextFact, 5000);
-    } else {
-      if (autoplayRef.current) {
-        clearInterval(autoplayRef.current);
-      }
-    }
-    return () => {
-      if (autoplayRef.current) {
-        clearInterval(autoplayRef.current);
-      }
-    };
-  }, [isAutoplay, nextFact]);
-
-  // Reset index when filter changes
-  useEffect(() => {
-    setCurrentIndex(0);
-    if (isShuffled) {
-      shuffleFacts();
-    }
-  }, [selectedDecade]);
-
-  const IconComponent = currentFact ? iconMap[currentFact.icon] : iconMap.music;
-
-  // Share function
-  const shareFact = () => {
-    if (currentFact) {
-      const url = `${window.location.origin}/nl-muziekfeit/${currentFact.slug}`;
-      const text = `🎵 ${currentFact.year}: ${currentFact.title}\n${currentFact.description}`;
-      if (navigator.share) {
-        navigator.share({ text, url });
-      } else {
-        navigator.clipboard.writeText(`${text}\n${url}`);
-        toast.success("Gekopieerd naar klembord!");
-      }
-    }
-  };
-
-  if (!currentFact) return null;
 
   const activeDecades = DECADES.filter(d => d !== "Alle");
 
@@ -176,7 +52,7 @@ export function DualViewNLTijdlijn() {
         {/* Dual View Layout */}
         <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto">
           
-          {/* Vertical Timeline (Left) */}
+          {/* Vertical Timeline Navigation (Left) */}
           <div className="lg:w-48 flex-shrink-0">
             <div className="sticky top-24">
               <h3 className="text-sm font-semibold text-muted-foreground mb-4 hidden lg:block">
@@ -186,14 +62,14 @@ export function DualViewNLTijdlijn() {
               {/* Mobile: Horizontal scroll */}
               <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide">
                 {activeDecades.map((decade) => {
-                  const isActive = currentDecade === decade;
+                  const isActive = selectedDecade === decade;
                   const decadeInfo = DECADE_INFO[decade];
                   const factsInDecade = NL_MUZIEK_FEITEN.filter(f => f.decade === decade).length;
                   
                   return (
                     <motion.button
                       key={decade}
-                      onClick={() => jumpToDecade(decade)}
+                      onClick={() => setSelectedDecade(isActive ? "Alle" : decade)}
                       className={cn(
                         "relative flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left min-w-[120px] lg:min-w-0",
                         isActive 
@@ -238,20 +114,22 @@ export function DualViewNLTijdlijn() {
               </div>
 
               {/* View all decades link */}
-              <Link 
-                to={`/nl-muziek/jaren-${currentDecade}`}
-                className="mt-4 hidden lg:flex items-center gap-2 text-sm text-primary hover:underline"
-              >
-                <span>Alle '{currentDecade} feiten</span>
-                <ExternalLink className="w-3 h-3" />
-              </Link>
+              {selectedDecade !== "Alle" && (
+                <Link 
+                  to={`/nl-muziek/jaren-${selectedDecade}`}
+                  className="mt-4 hidden lg:flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  <span>Alle '{selectedDecade} feiten</span>
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              )}
             </div>
           </div>
 
-          {/* Swipe Card Area (Right) */}
+          {/* Vertical Timeline Content (Right) */}
           <div className="flex-1">
             {/* Decade Filter Pills */}
-            <div className="flex flex-wrap justify-center gap-2 mb-6">
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
               {DECADES.map((decade) => (
                 <Button
                   key={decade}
@@ -268,176 +146,160 @@ export function DualViewNLTijdlijn() {
               ))}
             </div>
 
-            {/* Card Container */}
+            {/* Vertical Timeline */}
             <div className="relative">
-              {/* Navigation Buttons */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={prevFact}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background hidden md:flex"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={nextFact}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background hidden md:flex"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </Button>
+              {/* Timeline Line */}
+              <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[hsl(24,100%,50%)] via-primary to-[hsl(0,84%,40%)]" />
 
-              {/* Swipe Card */}
-              <div className="overflow-hidden px-4 md:px-12">
-                <AnimatePresence mode="wait" custom={direction}>
-                  <motion.div
-                    key={currentIndex}
-                    custom={direction}
-                    initial={{ opacity: 0, x: direction * 100 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -direction * 100 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.1}
-                    onDragEnd={handleDragEnd}
-                    className="cursor-grab active:cursor-grabbing"
-                  >
-                    <div className="bg-card border rounded-2xl p-6 md:p-8 shadow-xl relative overflow-hidden min-h-[350px]">
-                      {/* Background gradient based on decade */}
+              {/* Timeline Items */}
+              <div className="space-y-8">
+                {displayFacts.map((fact, index) => {
+                  const FactIcon = iconMap[fact.icon];
+                  const isEven = index % 2 === 0;
+                  
+                  return (
+                    <motion.div
+                      key={fact.slug}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ duration: 0.4, delay: Math.min(index * 0.03, 0.3) }}
+                      className={cn(
+                        "relative flex items-start gap-4",
+                        "pl-12 md:pl-0",
+                        isEven ? "md:flex-row" : "md:flex-row-reverse"
+                      )}
+                    >
+                      {/* Timeline Dot */}
                       <div 
-                        className="absolute inset-0 opacity-5 pointer-events-none"
-                        style={{ 
-                          background: `radial-gradient(circle at top right, ${DECADE_INFO[currentFact.decade]?.color || 'hsl(var(--primary))'}, transparent 70%)` 
-                        }}
+                        className={cn(
+                          "absolute left-2 md:left-1/2 md:-translate-x-1/2 z-10",
+                          "w-5 h-5 rounded-full border-4 border-background shadow-lg"
+                        )}
+                        style={{ backgroundColor: DECADE_INFO[fact.decade]?.color || 'hsl(var(--primary))' }}
                       />
 
-                      {/* Category & Year Header */}
-                      <div className="flex items-center justify-between mb-4 relative">
-                        <Badge 
-                          variant="outline" 
-                          className="bg-background/50"
-                          style={{ borderColor: DECADE_INFO[currentFact.decade]?.color }}
+                      {/* Year Label - Desktop only, opposite side */}
+                      <div className={cn(
+                        "hidden md:flex items-center justify-end w-[calc(50%-2rem)]",
+                        isEven ? "pr-8" : "pl-8 flex-row-reverse"
+                      )}>
+                        <span 
+                          className="text-3xl font-bold"
+                          style={{ color: DECADE_INFO[fact.decade]?.color }}
                         >
-                          {currentFact.category}
-                        </Badge>
-                        <div className="flex items-center gap-2">
-                          <IconComponent 
-                            className="w-5 h-5" 
-                            style={{ color: DECADE_INFO[currentFact.decade]?.color }}
+                          {fact.year}
+                        </span>
+                      </div>
+
+                      {/* Content Card */}
+                      <div className={cn(
+                        "flex-1 md:w-[calc(50%-2rem)]",
+                        isEven ? "md:pl-8" : "md:pr-8"
+                      )}>
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          className="bg-card border rounded-xl p-5 shadow-lg hover:shadow-xl transition-all relative overflow-hidden group"
+                        >
+                          {/* Background gradient */}
+                          <div 
+                            className="absolute inset-0 opacity-5 pointer-events-none"
+                            style={{ 
+                              background: `radial-gradient(circle at top right, ${DECADE_INFO[fact.decade]?.color || 'hsl(var(--primary))'}, transparent 70%)` 
+                            }}
                           />
-                          <span 
-                            className="text-4xl md:text-5xl font-bold"
-                            style={{ color: DECADE_INFO[currentFact.decade]?.color }}
-                          >
-                            {currentFact.year}
-                          </span>
-                        </div>
-                      </div>
 
-                      {/* Title & Description */}
-                      <div className="relative">
-                        <h3 className="text-2xl md:text-3xl font-bold mb-3">
-                          {currentFact.title}
-                        </h3>
-                        <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-                          {currentFact.description}
-                        </p>
-                      </div>
+                          {/* Mobile Year */}
+                          <div className="flex items-center justify-between mb-3 md:hidden">
+                            <span 
+                              className="text-2xl font-bold"
+                              style={{ color: DECADE_INFO[fact.decade]?.color }}
+                            >
+                              {fact.year}
+                            </span>
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs"
+                              style={{ borderColor: DECADE_INFO[fact.decade]?.color }}
+                            >
+                              {fact.category}
+                            </Badge>
+                          </div>
 
-                      {/* Fun Fact */}
-                      {currentFact.funFact && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2 }}
-                          className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg"
-                        >
-                          <p className="text-sm">
-                            <span className="font-semibold text-primary">💡 Wist je dat? </span>
-                            {currentFact.funFact}
+                          {/* Desktop Category Badge */}
+                          <div className="hidden md:flex items-center gap-2 mb-3">
+                            <FactIcon 
+                              className="w-4 h-4" 
+                              style={{ color: DECADE_INFO[fact.decade]?.color }}
+                            />
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs"
+                              style={{ borderColor: DECADE_INFO[fact.decade]?.color }}
+                            >
+                              {fact.category}
+                            </Badge>
+                          </div>
+
+                          {/* Title */}
+                          <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors">
+                            {fact.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                            {fact.description}
                           </p>
+
+                          {/* Fun Fact */}
+                          {fact.funFact && (
+                            <div className="p-2 bg-primary/5 border border-primary/20 rounded-lg mb-4">
+                              <p className="text-xs">
+                                <span className="font-semibold text-primary">💡 </span>
+                                {fact.funFact}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Actions */}
+                          <div className="flex flex-wrap gap-2">
+                            <Button asChild variant="default" size="sm" className="h-8 text-xs">
+                              <Link to={`/nl-muziekfeit/${fact.slug}`}>
+                                Lees meer
+                                <ChevronRight className="w-3 h-3 ml-1" />
+                              </Link>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="h-8 text-xs"
+                              onClick={() => {
+                                const url = `${window.location.origin}/nl-muziekfeit/${fact.slug}`;
+                                const text = `🎵 ${fact.year}: ${fact.title}\n${fact.description}`;
+                                if (navigator.share) {
+                                  navigator.share({ text, url });
+                                } else {
+                                  navigator.clipboard.writeText(`${text}\n${url}`);
+                                  toast.success("Gekopieerd!");
+                                }
+                              }}
+                            >
+                              <Share2 className="w-3 h-3" />
+                            </Button>
+                          </div>
                         </motion.div>
-                      )}
-
-                      {/* Action Buttons */}
-                      <div className="mt-6 flex flex-wrap gap-2">
-                        <Button asChild variant="default" size="sm">
-                          <Link to={`/nl-muziekfeit/${currentFact.slug}`}>
-                            Lees meer
-                            <ChevronRight className="w-4 h-4 ml-1" />
-                          </Link>
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={shareFact}
-                        >
-                          <Share2 className="w-4 h-4 mr-1" />
-                          Deel
-                        </Button>
-                        <Button asChild variant="ghost" size="sm">
-                          <Link to={`/nl-muziek/jaren-${currentFact.decade}`}>
-                            Meer uit de '{currentFact.decade}
-                          </Link>
-                        </Button>
                       </div>
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
               </div>
 
-              {/* Progress Indicator */}
-              <div className="flex items-center justify-center gap-1 mt-4">
-                {displayFacts.slice(0, Math.min(10, displayFacts.length)).map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentIndex(idx)}
-                    className={cn(
-                      "w-2 h-2 rounded-full transition-all",
-                      idx === currentIndex 
-                        ? "bg-primary w-6" 
-                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                    )}
-                  />
-                ))}
-                {displayFacts.length > 10 && (
-                  <span className="text-xs text-muted-foreground ml-2">
-                    +{displayFacts.length - 10} meer
-                  </span>
-                )}
-              </div>
-
-              {/* Controls */}
-              <div className="flex items-center justify-center gap-4 mt-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsAutoplay(!isAutoplay)}
-                  className={cn(isAutoplay && "text-primary")}
-                >
-                  {isAutoplay ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
-                  {isAutoplay ? "Pauzeer" : "Autoplay"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleShuffle}
-                  className={cn(isShuffled && "text-primary")}
-                >
-                  <Shuffle className="w-4 h-4 mr-1" />
-                  Shuffle
-                </Button>
-              </div>
-
-              {/* Swipe hint for mobile */}
-              <p className="text-center text-xs text-muted-foreground mt-4 md:hidden flex items-center justify-center gap-1">
-                <ChevronLeft className="w-3 h-3" />
-                Swipe om te navigeren
-                <ChevronRight className="w-3 h-3" />
-              </p>
+              {/* Results count */}
+              {displayFacts.length > 0 && (
+                <div className="text-center mt-8 text-sm text-muted-foreground">
+                  {displayFacts.length} muziekfeiten {selectedDecade !== "Alle" && `uit de jaren '${selectedDecade}`}
+                </div>
+              )}
             </div>
           </div>
         </div>

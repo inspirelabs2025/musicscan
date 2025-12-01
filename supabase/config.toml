@@ -477,3 +477,15 @@ verify_jwt = false
 
 [functions.generate-quiz-share-image]
 verify_jwt = false
+
+[functions.schedule-youtube-posts]
+verify_jwt = false
+
+[[functions.schedule-youtube-posts.schedule]]
+cron = "10 6 * * *"
+
+[functions.post-scheduled-youtube]
+verify_jwt = false
+
+[[functions.post-scheduled-youtube.schedule]]
+cron = "0 9-21 * * *"

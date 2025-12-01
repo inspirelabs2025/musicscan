@@ -6687,6 +6687,45 @@ export type Database = {
         }
         Relationships: []
       }
+      youtube_facebook_queue: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          facebook_post_id: string | null
+          id: string
+          posted_at: string | null
+          scheduled_time: string
+          status: string
+          updated_at: string
+          video_data: Json
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          posted_at?: string | null
+          scheduled_time: string
+          status?: string
+          updated_at?: string
+          video_data: Json
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          posted_at?: string | null
+          scheduled_time?: string
+          status?: string
+          updated_at?: string
+          video_data?: Json
+          video_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       cronjob_stats: {

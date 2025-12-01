@@ -6,13 +6,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Sparkles, Save, Eye, Trash2 } from "lucide-react";
+import { Loader2, Sparkles, Save, Eye, Trash2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGenerateSpotlight, useUpdateSpotlight, useArtistSpotlightById, useFormatSpotlight, useDeleteSpotlight, useGenerateSpotlightImages, useInsertImagesToSpotlight } from "@/hooks/useArtistSpotlight";
 import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 import { SpotlightImageManager } from "./SpotlightImageManager";
 import type { SpotlightImage } from "@/hooks/useSpotlightImages";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const ArtistSpotlightEditor = () => {
   const { id } = useParams();
@@ -29,6 +39,8 @@ export const ArtistSpotlightEditor = () => {
   const [generatedStoryId, setGeneratedStoryId] = useState<string | null>(null);
   const [wordCount, setWordCount] = useState(0);
   const [discogsArtistId, setDiscogsArtistId] = useState<number | undefined>();
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [duplicateArtistName, setDuplicateArtistName] = useState("");
 
   // Only fetch existing story if we're editing (id exists)
   const { data: existingStory, isLoading: loadingStory } = useArtistSpotlightById(id || "", {
@@ -59,7 +71,7 @@ export const ArtistSpotlightEditor = () => {
     }
   }, [existingStory]);
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (force: boolean = false) => {
     if (!artistName.trim()) {
       toast({
         title: "Artiest naam vereist",
@@ -70,20 +82,14 @@ export const ArtistSpotlightEditor = () => {
     }
 
     generateMutation.mutate(
-      { artistName, initialText },
+      { artistName, initialText, force },
       {
         onSuccess: (data) => {
           // Handle duplicate detection
           if (data?.success === false && data?.code === 'DUPLICATE') {
-            toast({
-              title: "Spotlight bestaat al",
-              description: `Er bestaat al een spotlight voor ${artistName}.`,
-              variant: "default",
-            });
-            // Navigate to existing spotlight for editing
-            if (data.existing_id) {
-              navigate(`/admin/artist-spotlight/edit/${data.existing_id}`);
-            }
+            // Show dialog to ask if user wants to create anyway
+            setDuplicateArtistName(artistName);
+            setShowDuplicateDialog(true);
             return;
           }
 
@@ -112,6 +118,11 @@ export const ArtistSpotlightEditor = () => {
         },
       }
     );
+  };
+
+  const handleForceGenerate = () => {
+    setShowDuplicateDialog(false);
+    handleGenerate(true);
   };
 
   const handleFormatAndSave = async () => {
@@ -401,7 +412,7 @@ export const ArtistSpotlightEditor = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <Button 
-                onClick={handleGenerate} 
+                onClick={() => handleGenerate(false)} 
                 disabled={!artistName.trim() || generateMutation.isPending || formatMutation.isPending || isEditing}
                 variant="outline"
                 size="lg"
@@ -519,6 +530,26 @@ export const ArtistSpotlightEditor = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Duplicate Spotlight Dialog */}
+      <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Spotlight bestaat al</AlertDialogTitle>
+            <AlertDialogDescription>
+              Er bestaat al een spotlight voor <strong>{duplicateArtistName}</strong>.
+              Wil je toch een nieuwe spotlight aanmaken?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={handleForceGenerate}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Toch aanmaken
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

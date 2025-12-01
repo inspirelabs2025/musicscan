@@ -5,19 +5,69 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNederlandseArtiesten } from "@/hooks/useNederlandseMuziek";
 
+// Import artist images
+import withinTemptationImg from "@/assets/artists/within-temptation.jpg";
+import goldenEarringImg from "@/assets/artists/golden-earring.jpg";
+import andreHazesImg from "@/assets/artists/andre-hazes.jpg";
+import marcoBorsatoImg from "@/assets/artists/marco-borsato.jpg";
+import doeMaarImg from "@/assets/artists/doe-maar.jpg";
+import anoukImg from "@/assets/artists/anouk.jpg";
+import tiestoImg from "@/assets/artists/tiesto.jpg";
+import arminVanBuurenImg from "@/assets/artists/armin-van-buuren.jpg";
+
 export function NederlandseArtiesten() {
   const { data: artiesten, isLoading } = useNederlandseArtiesten();
 
-  // Featured Dutch artists with their info
+  // Featured Dutch artists with their info and images
   const featuredArtists = [
-    { name: "Within Temptation", genre: "Symphonic Metal", emoji: "🎸" },
-    { name: "Golden Earring", genre: "Rock", emoji: "🎵" },
-    { name: "André Hazes", genre: "Levenslied", emoji: "🎤" },
-    { name: "Marco Borsato", genre: "Pop", emoji: "🎹" },
-    { name: "Doe Maar", genre: "Nederpop", emoji: "🎺" },
-    { name: "Anouk", genre: "Rock/Pop", emoji: "🎙️" },
-    { name: "Tiësto", genre: "Electronic", emoji: "🎧" },
-    { name: "Armin van Buuren", genre: "Trance", emoji: "🔊" },
+    { 
+      name: "Within Temptation", 
+      genre: "Symphonic Metal", 
+      emoji: "🎸",
+      image: withinTemptationImg
+    },
+    { 
+      name: "Golden Earring", 
+      genre: "Rock", 
+      emoji: "🎵",
+      image: goldenEarringImg
+    },
+    { 
+      name: "André Hazes", 
+      genre: "Levenslied", 
+      emoji: "🎤",
+      image: andreHazesImg
+    },
+    { 
+      name: "Marco Borsato", 
+      genre: "Pop", 
+      emoji: "🎹",
+      image: marcoBorsatoImg
+    },
+    { 
+      name: "Doe Maar", 
+      genre: "Nederpop", 
+      emoji: "🎺",
+      image: doeMaarImg
+    },
+    { 
+      name: "Anouk", 
+      genre: "Rock/Pop", 
+      emoji: "🎙️",
+      image: anoukImg
+    },
+    { 
+      name: "Tiësto", 
+      genre: "Electronic", 
+      emoji: "🎧",
+      image: tiestoImg
+    },
+    { 
+      name: "Armin van Buuren", 
+      genre: "Trance", 
+      emoji: "🔊",
+      image: arminVanBuurenImg
+    },
   ];
 
   if (isLoading) {
@@ -108,7 +158,7 @@ export function NederlandseArtiesten() {
 }
 
 interface ArtistCardProps {
-  artist: { name: string; genre: string; emoji: string };
+  artist: { name: string; genre: string; emoji: string; image?: string };
   artistData?: {
     artwork_url?: string;
     views_count?: number;
@@ -117,18 +167,27 @@ interface ArtistCardProps {
 }
 
 function ArtistCard({ artist, artistData }: ArtistCardProps) {
+  // Use artist story artwork if available, otherwise use fallback image
+  const imageUrl = artistData?.artwork_url || artist.image;
+  
   return (
     <Card className="group relative overflow-hidden h-48 md:h-56 hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[hsl(24,100%,50%)]/30">
       {/* Background */}
-      {artistData?.artwork_url ? (
+      {imageUrl ? (
         <img
-          src={artistData.artwork_url}
+          src={imageUrl}
           alt={artist.name}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={(e) => {
+            // Fallback to gradient if image fails to load
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.parentElement?.classList.add('bg-gradient-fallback');
+          }}
         />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(24,100%,50%)] to-[hsl(211,100%,35%)]" />
-      )}
+      ) : null}
+      
+      {/* Gradient fallback - always present as base layer */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(24,100%,50%)] to-[hsl(211,100%,35%)] -z-10" />
 
       {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />

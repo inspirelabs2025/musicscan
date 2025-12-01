@@ -11,6 +11,12 @@ export interface MuziekFeit {
   icon: "star" | "award" | "mic" | "radio" | "disc" | "music";
   slug: string;
   relatedArtists?: string[];
+  // New enriched fields
+  youtubeId?: string;           // YouTube video ID for embedding
+  famousTrack?: string;         // Most famous track from this moment
+  spotifyUri?: string;          // Spotify track/album URI
+  imageUrl?: string;            // Historical image URL
+  historicalContext?: string;   // What else was happening in Dutch music
 }
 
 // 50+ Nederlandse muziek feiten met slugs voor detail pagina's
@@ -26,7 +32,10 @@ export const NL_MUZIEK_FEITEN: MuziekFeit[] = [
     icon: "mic", 
     funFact: "Hij werd geboren op de Lindengracht in Amsterdam",
     slug: "johnny-jordaan-debuteert-1956",
-    relatedArtists: ["Johnny Jordaan"]
+    relatedArtists: ["Johnny Jordaan"],
+    youtubeId: "CQGE6e2_x8w",
+    famousTrack: "Bij Ons in de Jordaan",
+    historicalContext: "In de jaren '50 was het levenslied de populairste muziekstijl in Nederland, met Amsterdam als epicentrum."
   },
   { 
     year: 1958, 
@@ -37,7 +46,10 @@ export const NL_MUZIEK_FEITEN: MuziekFeit[] = [
     decade: "50s", 
     icon: "star",
     slug: "willy-alberti-doorbraak-1958",
-    relatedArtists: ["Willy Alberti"]
+    relatedArtists: ["Willy Alberti"],
+    youtubeId: "QnSKC_pBMlw",
+    famousTrack: "Kleine Geertje",
+    historicalContext: "De jaren '50 waren de hoogtijdagen van het Nederlandse levenslied, met sterke Italiaanse en Franse invloeden."
   },
   
   // 1960s
@@ -50,7 +62,10 @@ export const NL_MUZIEK_FEITEN: MuziekFeit[] = [
     decade: "60s", 
     icon: "music",
     slug: "the-cats-opgericht-1960",
-    relatedArtists: ["The Cats"]
+    relatedArtists: ["The Cats"],
+    youtubeId: "uG4CNpW8VPs",
+    famousTrack: "One Way Wind",
+    historicalContext: "Volendam zou uitgroeien tot Nederlands muziekdorp met later ook BZN, Nick & Simon en 3JS."
   },
   { 
     year: 1964, 
@@ -62,7 +77,8 @@ export const NL_MUZIEK_FEITEN: MuziekFeit[] = [
     icon: "radio", 
     funFact: "Meer dan 100 beatbands ontstonden in dit jaar",
     slug: "nederbiet-explosie-1964",
-    relatedArtists: ["The Motions", "Q65", "Golden Earring"]
+    relatedArtists: ["The Motions", "Q65", "Golden Earring"],
+    historicalContext: "De Beatles speelden in 1964 in Blokker, wat de Nederbiet explosie nog verder aanwakkerde."
   },
   { 
     year: 1966, 
@@ -73,7 +89,9 @@ export const NL_MUZIEK_FEITEN: MuziekFeit[] = [
     decade: "60s", 
     icon: "star",
     slug: "rob-de-nijs-doorbraak-1966",
-    relatedArtists: ["Rob de Nijs"]
+    relatedArtists: ["Rob de Nijs"],
+    youtubeId: "KQfOINIJaC4",
+    famousTrack: "Het Werd Zomer"
   },
   { 
     year: 1969, 
@@ -85,13 +103,18 @@ export const NL_MUZIEK_FEITEN: MuziekFeit[] = [
     icon: "award", 
     funFact: "Het nummer werd later gecoverd door Bananarama",
     slug: "venus-nummer-1-vs-1969",
-    relatedArtists: ["Shocking Blue"]
+    relatedArtists: ["Shocking Blue"],
+    youtubeId: "8LhkyyCvUHk",
+    famousTrack: "Venus",
+    historicalContext: "1969 was een gouden jaar voor Nederlandse rock, met ook Focus die in dat jaar werd opgericht."
   },
   { 
     year: 1969, 
     title: "Focus opgericht", 
     description: "Jan Akkerman en Thijs van Leer richten Focus op, die later wereldfaam bereikt met Hocus Pocus.", 
     longDescription: "Focus combineerde rock met klassieke muziek en jazz tot een uniek progressief geluid. Jan Akkerman's virtuoze gitaarspel en Thijs van Leer's Hammond orgel en jodelen creëerden een herkenbare sound. 'Hocus Pocus' en 'Sylvia' werden wereldhits en Focus tourde met de grootste namen in de rock.",
+    youtubeId: "g4ouPGGLI6Q",
+    famousTrack: "Hocus Pocus",
     category: "Prog Rock", 
     decade: "60s", 
     icon: "music",

@@ -11,77 +11,153 @@ import { NederlandseMuziekGeschiedenis } from "@/components/nederland/Nederlands
 import { NederlandseGenres } from "@/components/nederland/NederlandseGenres";
 
 const NederlandseMuziek = () => {
+  const pageUrl = "https://vinylplaten.nl/nederland";
+  const pageTitle = "Nederlandse Muziek | Artiesten, Albums & Geschiedenis";
+  const pageDescription = "Ontdek Nederlandse muziek van Golden Earring tot Tiësto. Quiz, interactieve kaart, artiesten per provincie en 60 jaar muziekgeschiedenis.";
+  const ogImage = "https://vinylplaten.nl/og-nederland-muziek.jpg";
+
+  // Structured Data - CollectionPage with ItemList
+  const collectionPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": pageTitle,
+    "description": pageDescription,
+    "url": pageUrl,
+    "inLanguage": "nl-NL",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "VinylPlaten.nl",
+      "url": "https://vinylplaten.nl"
+    },
+    "about": {
+      "@type": "Thing",
+      "name": "Nederlandse Muziek",
+      "description": "Muziek uit Nederland, van nederpop tot EDM"
+    },
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "Nederlandse Artiesten",
+      "numberOfItems": 50,
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Golden Earring", "url": "https://vinylplaten.nl/artists/golden-earring" },
+        { "@type": "ListItem", "position": 2, "name": "Within Temptation", "url": "https://vinylplaten.nl/artists/within-temptation" },
+        { "@type": "ListItem", "position": 3, "name": "André Hazes", "url": "https://vinylplaten.nl/artists/andre-hazes" },
+        { "@type": "ListItem", "position": 4, "name": "Tiësto", "url": "https://vinylplaten.nl/artists/tiesto" },
+        { "@type": "ListItem", "position": 5, "name": "Marco Borsato", "url": "https://vinylplaten.nl/artists/marco-borsato" }
+      ]
+    }
+  };
+
+  // Breadcrumb Schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://vinylplaten.nl" },
+      { "@type": "ListItem", "position": 2, "name": "Landen", "item": "https://vinylplaten.nl/landen" },
+      { "@type": "ListItem", "position": 3, "name": "Nederland", "item": pageUrl }
+    ]
+  };
+
+  // FAQ Schema for common questions
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Wie zijn de bekendste Nederlandse artiesten?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "De bekendste Nederlandse artiesten zijn onder andere Golden Earring, Within Temptation, André Hazes, Tiësto, Armin van Buuren, Martin Garrix, Marco Borsato, Anouk en Doe Maar."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Welke muziekgenres komen uit Nederland?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Nederland is bekend om diverse genres zoals nederpop, levenslied, symphonic metal (Within Temptation, Epica), EDM/trance (Tiësto, Armin van Buuren), Dutch house en gabber."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Welke Nederlandse band had een wereldhit?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Golden Earring scoorde een wereldhit met 'Radar Love' (1973). Shocking Blue bereikte #1 in de VS met 'Venus' (1969). Focus had internationaal succes met 'Hocus Pocus'."
+        }
+      }
+    ]
+  };
+
   return (
     <>
       <Helmet>
-        <title>Nederlandse Muziek | Ontdek Nederlandse Artiesten & Albums</title>
-        <meta 
-          name="description" 
-          content="Ontdek het beste van de Nederlandse muziekscene. Van Golden Earring tot Within Temptation, van nederpop tot symphonic metal. Albums, verhalen en releases uit Nederland." 
-        />
-        <meta 
-          name="keywords" 
-          content="Nederlandse muziek, Dutch music, Within Temptation, Golden Earring, André Hazes, Tiësto, nederpop, symphonic metal, Dutch artists" 
-        />
-        <link rel="canonical" href="https://vinylplaten.nl/nederland" />
+        {/* Primary Meta Tags */}
+        <title>{pageTitle}</title>
+        <meta name="title" content={pageTitle} />
+        <meta name="description" content={pageDescription} />
+        <meta name="keywords" content="Nederlandse muziek, Dutch music, Nederlandse artiesten, Golden Earring, Within Temptation, André Hazes, Tiësto, Martin Garrix, nederpop, levenslied, symphonic metal, Dutch EDM, Nederlandse albums" />
+        <meta name="robots" content="index, follow" />
+        <meta name="language" content="Dutch" />
+        <meta name="author" content="VinylPlaten.nl" />
+        <link rel="canonical" href={pageUrl} />
         
-        {/* Open Graph */}
-        <meta property="og:title" content="Nederlandse Muziek | Ontdek Nederlandse Artiesten & Albums" />
-        <meta property="og:description" content="Ontdek het beste van de Nederlandse muziekscene. Van Golden Earring tot Within Temptation." />
+        {/* Hreflang */}
+        <link rel="alternate" hrefLang="nl" href={pageUrl} />
+        <link rel="alternate" hrefLang="x-default" href={pageUrl} />
+        
+        {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:locale" content="nl_NL" />
+        <meta property="og:site_name" content="VinylPlaten.nl" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={pageUrl} />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={ogImage} />
         
         {/* Structured Data */}
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": "Nederlandse Muziek",
-            "description": "Collectie van Nederlandse muziek, artiesten en albums",
-            "url": "https://vinylplaten.nl/nederland",
-            "inLanguage": "nl",
-            "about": {
-              "@type": "Country",
-              "name": "Netherlands"
-            },
-            "mainEntity": {
-              "@type": "MusicGroup",
-              "name": "Nederlandse Artiesten",
-              "description": "Collectie van Nederlandse muziekartiesten"
-            }
-          })}
+          {JSON.stringify(collectionPageSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(faqSchema)}
         </script>
       </Helmet>
 
       <main className="min-h-screen">
-        {/* 1. Hero Section */}
+        {/* H1 is in NederlandHero component */}
         <NederlandHero />
 
-        {/* 2. Nederlandse Muziek Quiz */}
         <NederlandseMuziekQuiz />
 
-        {/* 3. Reis Door de Tijd - Decennium Slider */}
         <DecenniumSlider />
 
-        {/* 4. Interactieve Nederland Kaart */}
         <NederlandKaart />
 
-        {/* 5. Artiest Spotlight */}
         <DutchArtistSpotlight />
 
-        {/* 6. Uitgelichte Nederlandse Artiesten */}
         <NederlandseArtiesten />
 
-        {/* 7. Nederlandse Album Verhalen */}
         <NederlandseVerhalen />
 
-        {/* 8. Nederlandse Releases */}
         <NederlandseReleases />
 
-        {/* 9. Nederlandse Muziekgeschiedenis */}
         <NederlandseMuziekGeschiedenis />
 
-        {/* 10. Genres in Nederland */}
         <NederlandseGenres />
       </main>
     </>

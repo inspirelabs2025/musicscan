@@ -31,22 +31,49 @@ export interface NederlandseArtiest {
   views_count?: number;
 }
 
-// List of known Dutch artists for filtering
+// Comprehensive list of known Dutch artists for filtering
 const DUTCH_ARTISTS = [
+  // Classic Dutch pop/rock
   'Within Temptation', 'Golden Earring', 'André Hazes', 'Marco Borsato',
   'Doe Maar', 'Boudewijn de Groot', 'Anouk', 'Herman Brood', 'BZN',
   'Guus Meeuwis', 'Het Goede Doel', 'Frank Boeijen', 'Krezip',
   'De Dijk', 'Volumia!', 'Nick & Simon', 'Jan Smit', 'Trijntje Oosterhuis',
   'Ilse DeLange', 'Acda en de Munnik', 'Blof', 'Ramses Shaffy',
   'Willeke Alberti', 'Gerard Joling', 'Lee Towers', 'Anita Meyer',
-  'Tiësto', 'Armin van Buuren', 'Martin Garrix', 'Afrojack', 'Hardwell',
-  'Ferry Corsten', 'Fedde Le Grand', 'Nicky Romero', 'Oliver Heldens',
   'Shocking Blue', 'Focus', 'Earth and Fire', 'Kayak', 'Ekseption',
   'The Cats', 'George Baker Selection', 'Pussycat', 'Luv\'',
+  'Mouth & MacNeal', 'Rob de Nijs', 'Liesbeth List', 'Herman van Veen',
+  'André van Duin', 'André Rieu', 'Glennis Grace', 'Guys \'n Dolls',
+  'Grant & Forsyth', 'Grad Damen', 'Het Simplisties Verbond',
+  
+  // Dutch EDM/Electronic
+  'Tiësto', 'Armin van Buuren', 'Martin Garrix', 'Afrojack', 'Hardwell',
+  'Ferry Corsten', 'Fedde Le Grand', 'Nicky Romero', 'Oliver Heldens',
+  '16 Bit Lolita\'s', 'Buzz Fuzz', 'DJ Maestro', 'DJ Montana',
+  'Eric Prydz', 'Showtek', 'Headhunterz', 'Brennan Heart', 'Coone',
+  'Noisia', 'Yellow Claw', 'Don Diablo', 'R3hab', 'Sander van Doorn',
+  'Dash Berlin', 'W&W', 'Blasterjaxx', 'Bassjackers', 'Lucas & Steve',
+  
+  // Dutch metal/rock
+  'Epica', 'Epica (2)', 'Delain', 'The Gathering', 'Gorefest',
+  'Pestilence', 'Asphyx', 'Hail of Bullets', 'God Dethroned',
+  'Textures', 'Stream of Passion', 'After Forever', 'Ayreon',
+  'Star One', 'Guilt Machine',
+  
+  // Modern Dutch artists
   'Candy Dulfer', 'Caro Emerald', 'Kovacs', 'Davina Michelle',
-  'Snelle', 'Lil Kleine', 'Boef', 'Ronnie Flex', 'Kraantje Pansen',
+  'Snelle', 'Lil Kleine', 'Boef', 'Ronnie Flex', 'Kraantje Pappen',
   'S10', 'Froukje', 'Merol', 'BLØF', 'Chef\'Special', 'Racoon',
-  'Kensington', 'Danny Vera', 'Di-Rect', 'Rowwen Hèze', '3Js',
+  'Kensington', 'Danny Vera', 'Di-Rect', 'Rowwen Hèze', '3JS', '3Js',
+  'Suzan & Freek', 'Maan', 'Flemming', 'Eefje de Visser', 'Goldband',
+  'Spinvis', 'Blaudzun', 'Go Back to the Zoo', 'Voicst', 'Caesar',
+  
+  // Jazz/Classical Dutch
+  'Candy Dulfer', 'Hans Dulfer', 'Cees Slinger', 'Rita Reys',
+  
+  // Dutch hip-hop/rap
+  'Osdorp Posse', 'Opgezwoansen', 'De Jeugd van Tegenwoordig',
+  'Extince', 'Lange Frans', 'Ali B', 'Gers Pardoel', 'Bizzey',
 ];
 
 export const useNederlandseReleases = () => {

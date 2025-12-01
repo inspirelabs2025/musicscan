@@ -33,7 +33,7 @@ export const NL_MUZIEK_FEITEN: MuziekFeit[] = [
     funFact: "Hij werd geboren op de Lindengracht in Amsterdam",
     slug: "johnny-jordaan-debuteert-1956",
     relatedArtists: ["Johnny Jordaan"],
-    youtubeId: "aET0E5NyEAg",
+    youtubeId: "TQzyoXgQQjw",
     famousTrack: "Bij Ons in de Jordaan",
     historicalContext: "In de jaren '50 was het levenslied de populairste muziekstijl in Nederland, met Amsterdam als epicentrum."
   },

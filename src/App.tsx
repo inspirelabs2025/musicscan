@@ -161,6 +161,8 @@ import MediaLibrary from "./pages/admin/MediaLibrary";
 import YouTubeDiscoveries from "./pages/YouTubeDiscoveries";
 import Shop from "./pages/Shop";
 import NederlandseMuziek from "./pages/NederlandseMuziek";
+import NLMuziekDecennium from "./pages/NLMuziekDecennium";
+import NLMuziekFeitDetail from "./pages/NLMuziekFeitDetail";
 
 // Redirect component for old /blog/ URLs to /plaat-verhaal/
 const BlogRedirect = () => {
@@ -340,6 +342,8 @@ const AppContent = () => {
         <Route path="/nieuws" element={<Nieuws />} />
         <Route path="/releases" element={<Releases />} />
         <Route path="/nederland" element={<NederlandseMuziek />} />
+        <Route path="/nl-muziek/jaren-:decade" element={<NLMuziekDecennium />} />
+        <Route path="/nl-muziekfeit/:slug" element={<NLMuziekFeitDetail />} />
         <Route path="/nederlandse-muziek" element={<Navigate to="/nederland" replace />} />
         <Route path="/news" element={<Navigate to="/verhalen" replace />} />
         <Route path="/nieuws/:slug" element={<NewsPost />} />

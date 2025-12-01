@@ -468,3 +468,6 @@ verify_jwt = false
 
 [functions.seed-dutch-artist-stories]
 verify_jwt = false
+
+[functions.fetch-artist-artwork]
+verify_jwt = false

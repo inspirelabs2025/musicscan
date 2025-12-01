@@ -3,7 +3,6 @@ import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { usePlatformProducts } from "@/hooks/usePlatformProducts";
-import { usePublicMarketplace } from "@/hooks/usePublicMarketplace";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Search, 
   ShoppingBag, 
-  Disc, 
   Shirt, 
   Image as ImageIcon,
-  Music,
   ArrowRight,
   Sparkles,
   CircleDot,
@@ -25,28 +22,28 @@ import {
 // Category configuration
 const CATEGORIES = [
   { 
-    key: "vinyl", 
-    label: "Vinyl Platen", 
-    icon: Disc, 
-    description: "Tweedehands vinyl uit collecties",
-    link: "/marketplace?filter=vinyl",
-    gradient: "from-orange-500/20 to-red-500/20"
-  },
-  { 
-    key: "cd", 
-    label: "CD's", 
-    icon: Music, 
-    description: "Tweedehands CD's uit collecties",
-    link: "/marketplace?filter=cd",
-    gradient: "from-blue-500/20 to-purple-500/20"
-  },
-  { 
-    key: "art", 
-    label: "Art Prints & Posters", 
+    key: "posters", 
+    label: "Posters", 
     icon: ImageIcon, 
-    description: "Album covers als kunstwerk",
-    link: "/art-shop",
+    description: "Album art posters",
+    link: "/posters",
     gradient: "from-pink-500/20 to-rose-500/20"
+  },
+  { 
+    key: "canvas", 
+    label: "Canvas Doeken", 
+    icon: ImageIcon, 
+    description: "Album covers op canvas",
+    link: "/canvas",
+    gradient: "from-purple-500/20 to-indigo-500/20"
+  },
+  { 
+    key: "metal", 
+    label: "Metal Prints", 
+    icon: ImageIcon, 
+    description: "Album art op aluminium",
+    link: "/metal-prints",
+    gradient: "from-slate-500/20 to-zinc-500/20"
   },
   { 
     key: "clothing", 
@@ -68,66 +65,39 @@ const CATEGORIES = [
 
 type UnifiedProduct = {
   id: string;
-  type: "platform" | "marketplace";
+  type: "platform";
   title: string;
   artist?: string;
   price: number;
   image?: string;
-  category: string;
+  categories: string[];
   mediaType?: string;
   slug?: string;
   createdAt: string;
-  condition?: string;
 };
 
 const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: platformProducts = [], isLoading: platformLoading } = usePlatformProducts();
-  const { items: marketplaceItems = [], isLoading: marketplaceLoading } = usePublicMarketplace();
-
-  const isLoading = platformLoading || marketplaceLoading;
+  const { data: platformProducts = [], isLoading } = usePlatformProducts({ limit: 500 });
 
   // Combine all products into unified format
   const allProducts = useMemo(() => {
-    const products: UnifiedProduct[] = [];
-
-    // Add platform products
-    platformProducts.forEach((p) => {
-      const category = p.categories?.[0] || "other";
-      products.push({
+    return platformProducts.map((p) => {
+      return {
         id: p.id,
-        type: "platform",
+        type: "platform" as const,
         title: p.title,
         artist: p.artist || undefined,
         price: p.price,
         image: p.images?.[0] || p.primary_image || undefined,
-        category,
-        mediaType: p.media_type || category,
+        categories: (p.categories || []).map(c => c.toLowerCase()),
+        mediaType: p.media_type?.toLowerCase() || "",
         slug: p.slug,
         createdAt: p.created_at,
-      });
+      };
     });
-
-    // Add marketplace items (vinyl/cd for sale)
-    marketplaceItems.forEach((item) => {
-      products.push({
-        id: item.id,
-        type: "marketplace",
-        title: item.title || "Untitled",
-        artist: item.artist || undefined,
-        price: item.marketplace_price || 0,
-        image: item.front_image,
-        category: item.media_type === "vinyl" ? "vinyl" : "cd",
-        mediaType: item.media_type,
-        slug: undefined,
-        createdAt: item.created_at,
-        condition: item.condition_grade,
-      });
-    });
-
-    return products;
-  }, [platformProducts, marketplaceItems]);
+  }, [platformProducts]);
 
   // Filter products by search
   const filteredProducts = useMemo(() => {
@@ -146,17 +116,19 @@ const Shop = () => {
     
     CATEGORIES.forEach(cat => {
       grouped[cat.key] = filteredProducts.filter((p) => {
+        const cats = p.categories;
+        const media = p.mediaType;
         switch (cat.key) {
-          case "vinyl":
-            return p.mediaType === "vinyl" || p.category === "vinyl";
-          case "cd":
-            return p.mediaType === "cd" || p.category === "cd";
-          case "art":
-            return ["art", "poster", "canvas", "print", "metal-print"].includes(p.category);
+          case "posters":
+            return cats.some(c => c === "poster" || c === "art poster") || media === "poster";
+          case "canvas":
+            return cats.some(c => c === "canvas" || c === "art canvas");
+          case "metal":
+            return cats.some(c => c === "metaal" || c === "metaalprint" || c === "metal-print");
           case "clothing":
-            return ["clothing", "tshirt", "shirt", "socks", "t-shirt"].includes(p.category);
+            return cats.some(c => ["socks", "tshirts", "clothing", "t-shirt"].includes(c)) || media === "merchandise";
           case "accessories":
-            return ["accessories", "button", "badge", "merch", "buttons"].includes(p.category);
+            return cats.some(c => ["buttons", "badges", "button", "badge"].includes(c));
           default:
             return false;
         }
@@ -169,9 +141,9 @@ const Shop = () => {
   // Stats for display
   const stats = useMemo(() => ({
     total: allProducts.length,
-    vinyl: productsByCategory.vinyl?.length || 0,
-    cd: productsByCategory.cd?.length || 0,
-    art: productsByCategory.art?.length || 0,
+    posters: productsByCategory.posters?.length || 0,
+    canvas: productsByCategory.canvas?.length || 0,
+    metal: productsByCategory.metal?.length || 0,
     clothing: productsByCategory.clothing?.length || 0,
     accessories: productsByCategory.accessories?.length || 0,
   }), [allProducts, productsByCategory]);
@@ -206,19 +178,17 @@ const Shop = () => {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case "vinyl":
-        return <Disc className="w-4 h-4" />;
-      case "cd":
-        return <Music className="w-4 h-4" />;
-      case "art":
       case "poster":
+      case "posters":
       case "canvas":
+      case "metal":
       case "metal-print":
         return <ImageIcon className="w-4 h-4" />;
       case "clothing":
       case "tshirt":
       case "socks":
       case "t-shirt":
+      case "merchandise":
         return <Shirt className="w-4 h-4" />;
       case "buttons":
       case "button":
@@ -230,10 +200,10 @@ const Shop = () => {
   };
 
   const getProductLink = (product: UnifiedProduct) => {
-    if (product.type === "platform" && product.slug) {
+    if (product.slug) {
       return `/product/${product.slug}`;
     }
-    return `/marketplace`;
+    return `/shop`;
   };
 
   // Product Card Component
@@ -255,17 +225,8 @@ const Shop = () => {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                {getCategoryIcon(product.category)}
+                {getCategoryIcon(product.categories[0] || "")}
               </div>
-            )}
-            
-            {product.condition && (
-              <Badge 
-                variant="secondary"
-                className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm"
-              >
-                {product.condition}
-              </Badge>
             )}
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
@@ -338,15 +299,15 @@ const Shop = () => {
   return (
     <>
       <Helmet>
-        <title>Shop - Muziek Merchandise, Vinyl & CD's | MusicScan</title>
+        <title>Shop - Muziek Art & Merchandise | MusicScan</title>
         <meta 
           name="description" 
-          content="Ontdek unieke muziek merchandise, vinyl platen, CD's, art prints, t-shirts en meer. De beste shop voor muziekliefhebbers met duizenden producten." 
+          content="Ontdek unieke muziek merchandise, posters, canvas, metal prints, t-shirts en meer. De beste shop voor muziekliefhebbers." 
         />
-        <meta name="keywords" content="vinyl kopen, cd kopen, muziek merchandise, band shirts, muziek posters, platenwinkel, muziek shop" />
+        <meta name="keywords" content="muziek merchandise, band shirts, muziek posters, canvas art, metal prints, muziek shop" />
         <link rel="canonical" href="https://musicscan.nl/shop" />
-        <meta property="og:title" content="MusicScan Shop - Muziek Merchandise & Vinyl" />
-        <meta property="og:description" content="Ontdek unieke muziek merchandise, vinyl platen, CD's en meer bij MusicScan." />
+        <meta property="og:title" content="MusicScan Shop - Muziek Art & Merchandise" />
+        <meta property="og:description" content="Ontdek unieke muziek merchandise, posters, canvas, metal prints en meer bij MusicScan." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://musicscan.nl/shop" />
         <script type="application/ld+json">
@@ -372,7 +333,7 @@ const Shop = () => {
                 MusicScan Shop
               </h1>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Vinyl, CD's, art prints, merchandise en meer. 
+                Posters, canvas, metal prints, kleding en meer. 
                 Alles voor de echte muziekliefhebber.
               </p>
 

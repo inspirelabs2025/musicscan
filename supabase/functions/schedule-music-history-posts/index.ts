@@ -35,18 +35,23 @@ Deno.serve(async (req) => {
 
     console.log(`📆 Fetching music history events for ${day}/${month}...`);
 
-    // Fetch today's music history events
-    const { data: events, error: eventsError } = await supabase
+    // Fetch today's music history events - using correct column names
+    const { data: eventRecord, error: eventsError } = await supabase
       .from('music_history_events')
       .select('*')
-      .eq('event_month', month)
-      .eq('event_day', day)
-      .order('year', { ascending: true });
+      .eq('month_of_year', month)
+      .eq('day_of_month', day)
+      .order('generated_at', { ascending: false })
+      .limit(1)
+      .single();
 
     if (eventsError) {
       console.error('Error fetching events:', eventsError);
       throw eventsError;
     }
+
+    // Events are stored as JSONB array in the 'events' column
+    const events: MusicHistoryEvent[] = eventRecord?.events || [];
 
     if (!events || events.length === 0) {
       console.log('⚠️ No music history events found for today');

@@ -267,7 +267,36 @@ Deno.serve(async (req) => {
       'display_url'
     );
 
-    // Build uploads list (24 files total - added time machine, fanwall and photos sitemaps)
+    // NL Muziekfeiten sitemap (static data - 56 Dutch music history facts)
+    const nlMuziekFeitenSlugs = [
+      'johnny-jordaan-debuteert-1956', 'willy-alberti-doorbraak-1958', 'the-cats-opgericht-1960',
+      'nederbiet-explosie-1964', 'rob-de-nijs-doorbraak-1966', 'venus-nummer-1-vs-1969',
+      'focus-opgericht-1969', 'little-green-bag-1970', 'mouth-macneal-1971', 'radar-love-1973',
+      'teach-in-songfestival-1974', 'avond-boudewijn-de-groot-1975', 'pussycat-mississippi-1976',
+      'herman-brood-doorbraak-1977', 'luv-internationale-hit-1979', 'doe-maar-opgericht-1981',
+      'doe-maar-mania-1982', 'het-goede-doel-belgie-1983', 'andre-hazes-doorbraak-1984',
+      'kronenburg-park-1985', 'bzn-recordverkoop-1986', 'gabber-rotterdam-1988',
+      'marco-borsato-debuut-1990', 'urban-dance-squad-1992', 'tiesto-start-1993',
+      'de-dijk-10-jaar-1994', 'anouk-debuut-1995', 'within-temptation-opgericht-1996',
+      'het-is-een-nacht-1997', 'trance-energy-1998', 'krezip-doorbraak-1999',
+      'armin-van-buuren-debuut-2000', 'tiesto-nummer-1-2001', 'jeugd-van-tegenwoordig-2002',
+      'within-temptation-internationaal-2003', 'afrojack-start-2004', 'blof-domineert-2005',
+      'nick-simon-doorbraak-2006', 'hardwell-opkomst-2007', 'caro-emerald-debuut-2008',
+      'kensington-opgericht-2009', 'oliver-heldens-start-2010', 'hardwell-nummer-1-2011',
+      'danny-vera-opkomst-2012', 'martin-garrix-animals-2013', 'chef-special-internationaal-2014',
+      'davina-michelle-youtube-2015', 'kensington-ziggo-dome-2016', 'snelle-eerste-release-2017',
+      'goldband-opgericht-2018', 'danny-vera-roller-coaster-2019', 'snelle-lockdown-2020',
+      'froukje-protestlied-2021', 's10-eurovision-2022', 'goldband-festivals-2023', 'joost-klein-viral-2024'
+    ];
+    
+    const nlMuziekFeitenSitemapXml = generateSitemapXml(
+      nlMuziekFeitenSlugs.map(slug => ({ slug, updated_at: new Date().toISOString() })),
+      'https://www.musicscan.app/nl-muziekfeit'
+    );
+
+    console.log(`Found ${nlMuziekFeitenSlugs.length} NL muziekfeiten`);
+
+    // Build uploads list (25 files total - added NL muziekfeiten)
     const uploads = [
       { name: 'sitemap-static.xml', data: staticSitemapXml },
       { name: 'sitemap-blog.xml', data: blogSitemapXml },
@@ -282,6 +311,7 @@ Deno.serve(async (req) => {
       { name: 'sitemap-time-machine.xml', data: timeMachineSitemapXml },
       { name: 'sitemap-fanwall.xml', data: fanwallSitemapXml },
       { name: 'sitemap-photos.xml', data: photosSitemapXml },
+      { name: 'sitemap-nl-muziekfeiten.xml', data: nlMuziekFeitenSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
       { name: 'sitemap-images-stories.xml', data: storiesImageSitemapXml },
       { name: 'sitemap-images-singles.xml', data: singlesImageSitemapXml },
@@ -425,6 +455,7 @@ for (const sitemapName of allSitemaps) {
           artistFanwalls: artistFanwalls?.length || 0,
           photos: photos?.length || 0,
           anecdotes: anecdotes?.length || 0,
+          nlMuziekFeiten: nlMuziekFeitenSlugs?.length || 0,
           sitemaps: uploads.map(u => ({
             name: u.name,
             url: `${supabaseUrl}/storage/v1/object/public/sitemaps/${u.name}`

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Music, Search, Filter } from 'lucide-react';
 import { useArtistStories, useArtistStoriesStats } from '@/hooks/useArtistStories';
 import { Input } from '@/components/ui/input';
@@ -18,9 +18,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const Artists = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState<string>('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize state from URL params (convert genre to lowercase for matching)
+  const urlGenre = searchParams.get('genre');
+  const initialGenre = urlGenre ? urlGenre.toLowerCase() : 'all';
+  const initialSearch = searchParams.get('search') || '';
+  
+  const [search, setSearch] = useState(initialSearch);
+  const [selectedGenre, setSelectedGenre] = useState<string>(initialGenre);
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'alphabetical'>('newest');
+  
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedGenre && selectedGenre !== 'all') {
+      params.set('genre', selectedGenre);
+    }
+    if (search) {
+      params.set('search', search);
+    }
+    setSearchParams(params, { replace: true });
+  }, [selectedGenre, search, setSearchParams]);
 
   const { data: stories, isLoading, error } = useArtistStories({
     search,
@@ -41,12 +60,15 @@ const Artists = () => {
   return (
     <>
       <Helmet>
-        <title>Artiesten | Verhalen over Muziek Iconen | MusicScan</title>
+        <title>{selectedGenre !== 'all' ? `${selectedGenre} Artiesten` : 'Artiesten'} | Verhalen over Muziek Iconen | MusicScan</title>
         <meta 
           name="description" 
-          content="Ontdek verhalen over iconische muziekartiesten uit verschillende genres en tijdperken. Van biografie tot culturele impact." 
+          content={selectedGenre !== 'all' 
+            ? `Ontdek ${selectedGenre} artiesten en hun verhalen. Van biografie tot culturele impact.`
+            : "Ontdek verhalen over iconische muziekartiesten uit verschillende genres en tijdperken. Van biografie tot culturele impact."
+          } 
         />
-        <meta property="og:title" content="Artiesten | MusicScan" />
+        <meta property="og:title" content={`${selectedGenre !== 'all' ? selectedGenre + ' ' : ''}Artiesten | MusicScan`} />
         <meta 
           property="og:description" 
           content="Ontdek verhalen over iconische muziekartiesten uit verschillende genres en tijdperken." 

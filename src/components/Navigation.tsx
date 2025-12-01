@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, Menu, X, Images, Brain, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign, Archive, Clock, Heart, Package, Headphones, Calendar, BookOpen, Sparkles, CircleDot, Youtube } from "lucide-react";
+import { Home, ShoppingCart, Menu, X, Images, Brain, LogOut, User, Music, Store, Newspaper, ScanLine, ChevronDown, Library, LogIn, BarChart3, MessageCircle, LayoutDashboard, Trophy, Users, DollarSign, Archive, Clock, Heart, Package, Headphones, Calendar, BookOpen, Sparkles, CircleDot, Youtube, Globe, Flag } from "lucide-react";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 import {
   NavigationMenu,
@@ -51,6 +51,14 @@ const verhalenMenuItems = [
   { title: "Vandaag in de Muziekgeschiedenis", url: "/vandaag-in-de-muziekgeschiedenis", icon: Calendar }
 ];
 
+// LANDEN & GENRES MENU ITEMS
+const landenGenresMenuItems = [
+  { title: "🇳🇱 Nederland", url: "/nederland", icon: Flag, highlight: true },
+  { title: "Alle Artiesten", url: "/artists", icon: Users },
+  { title: "Alle Releases", url: "/releases", icon: Music },
+  { title: "Muziekgeschiedenis", url: "/vandaag-in-de-muziekgeschiedenis", icon: Calendar },
+];
+
 // SCAN & COLLECTIE MENU ITEMS (Logged in only)
 const scanCollectionMenuItems = [
   { title: "Scanner", url: "/scanner", icon: ScanLine },
@@ -90,6 +98,7 @@ export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [isShopMenuOpen, setIsShopMenuOpen] = useState(false);
   const [isVerhalenMenuOpen, setIsVerhalenMenuOpen] = useState(false);
+  const [isLandenGenresMenuOpen, setIsLandenGenresMenuOpen] = useState(false);
   const [isScanCollectionMenuOpen, setIsScanCollectionMenuOpen] = useState(false);
   const [isAiToolsMenuOpen, setIsAiToolsMenuOpen] = useState(false);
   const [isCommunityMenuOpen, setIsCommunityMenuOpen] = useState(false);
@@ -98,6 +107,7 @@ export function Navigation() {
   const profileMenuItem = getProfileMenuItem(user?.id);
   const isShopPageActive = shopMenuItems.some(item => currentPath === item.url);
   const isVerhalenPageActive = verhalenMenuItems.some(item => currentPath === item.url);
+  const isLandenGenresPageActive = landenGenresMenuItems.some(item => currentPath === item.url) || currentPath === '/nederland';
   const isScanCollectionPageActive = scanCollectionMenuItems.some(item => currentPath === item.url);
   const isAiToolsPageActive = aiToolsMenuItems.some(item => currentPath === item.url);
   const isCommunityPageActive = communityMenuItems.some(item => currentPath === item.url) || (profileMenuItem && currentPath === profileMenuItem.url);
@@ -204,6 +214,41 @@ export function Navigation() {
                       </Link>
                     </NavigationMenuLink>
                   ))}
+                </div>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+
+            {/* Landen & Genres Dropdown */}
+            <NavigationMenuItem>
+              <NavigationMenuTrigger className={cn(
+                "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
+                isLandenGenresPageActive && "bg-accent text-accent-foreground"
+              )}>
+                <Globe className="h-4 w-4 mr-2" />
+                Landen & Genres
+              </NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <div className="grid w-[280px] gap-1 p-4 bg-popover">
+                  {landenGenresMenuItems.map((item) => (
+                    <NavigationMenuLink key={item.title} asChild>
+                      <Link
+                        to={item.url}
+                        className={cn(
+                          "flex items-center gap-2 rounded-md p-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
+                          currentPath === item.url && "bg-accent text-accent-foreground",
+                          item.highlight && "bg-[hsl(24,100%,50%)]/10 border border-[hsl(24,100%,50%)]/30 font-semibold"
+                        )}
+                      >
+                        <item.icon className={cn("h-4 w-4", item.highlight && "text-[hsl(24,100%,50%)]")} />
+                        <div className="font-medium">{item.title}</div>
+                      </Link>
+                    </NavigationMenuLink>
+                  ))}
+                  <div className="border-t mt-2 pt-2">
+                    <p className="text-xs text-muted-foreground px-3 py-2">
+                      🌍 Meer landen komen binnenkort...
+                    </p>
+                  </div>
                 </div>
               </NavigationMenuContent>
             </NavigationMenuItem>
@@ -463,9 +508,35 @@ export function Navigation() {
                        ))}
                      </div>
                    )}
-                 </div>
+                  </div>
+
+                  {/* Landen & Genres Section */}
+                  <div className="mt-2">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setIsLandenGenresMenuOpen(!isLandenGenresMenuOpen)}
+                      className={cn(
+                        "w-full justify-start text-muted-foreground hover:text-primary",
+                        isLandenGenresPageActive && "bg-muted text-primary"
+                      )}
+                    >
+                      <Globe className="h-4 w-4 mr-3" />
+                      <span className="text-base">Landen & Genres</span>
+                      <ChevronDown className={cn(
+                        "h-4 w-4 ml-auto transition-transform",
+                        isLandenGenresMenuOpen && "rotate-180"
+                      )} />
+                    </Button>
+                    {isLandenGenresMenuOpen && (
+                      <div className="ml-6 mt-1 space-y-1">
+                        {landenGenresMenuItems.map((item) => (
+                          <NavLink key={item.title} item={item} mobile />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 
-                 {user ? (
+                  {user ? (
                    <>
                      {/* Scan & Collectie Section */}
                      <div className="mt-2">

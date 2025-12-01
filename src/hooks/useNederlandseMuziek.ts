@@ -120,6 +120,7 @@ export const useNederlandseArtiesten = () => {
       }));
 
       // Add artists from releases that don't have stories
+      // BUT only if they are in our known Dutch artists list
       const { data: releaseArtists } = await supabase
         .from("releases")
         .select("artist")
@@ -127,8 +128,14 @@ export const useNederlandseArtiesten = () => {
 
       const uniqueReleaseArtists = [...new Set((releaseArtists || []).map(r => r.artist))];
       
+      // Only add release artists that are actually Dutch (in our list)
       uniqueReleaseArtists.forEach(artist => {
-        if (!dutchArtists.find(a => a.name.toLowerCase() === artist.toLowerCase())) {
+        const isDutchArtist = DUTCH_ARTISTS.some(dutch => 
+          artist.toLowerCase().includes(dutch.toLowerCase()) ||
+          dutch.toLowerCase().includes(artist.toLowerCase())
+        );
+        
+        if (isDutchArtist && !dutchArtists.find(a => a.name.toLowerCase() === artist.toLowerCase())) {
           dutchArtists.push({ 
             name: artist,
             slug: undefined,

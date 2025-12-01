@@ -337,6 +337,18 @@ verify_jwt = false
 [[functions.generate-daily-music-history.schedule]]
 cron = "0 6 * * *"
 
+[functions.schedule-music-history-posts]
+verify_jwt = false
+
+[[functions.schedule-music-history-posts.schedule]]
+cron = "5 6 * * *"
+
+[functions.post-scheduled-music-history]
+verify_jwt = false
+
+[[functions.post-scheduled-music-history.schedule]]
+cron = "0 8-22 * * *"
+
 [functions.curated-artists-monitor]
 verify_jwt = false
 

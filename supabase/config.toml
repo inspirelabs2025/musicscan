@@ -465,3 +465,6 @@ cron = "0 8 * * *"
 
 [functions.send-order-email]
 verify_jwt = false
+
+[functions.seed-dutch-artist-stories]
+verify_jwt = false

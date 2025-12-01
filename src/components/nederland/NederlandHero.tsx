@@ -6,13 +6,9 @@ export function NederlandHero() {
   const { data: stats } = useNederlandseStats();
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[hsl(24,100%,50%)] via-[hsl(0,0%,100%)] to-[hsl(211,100%,35%)] py-20 md:py-32">
-      {/* Dutch flag stripes overlay */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="h-1/3 bg-[hsl(0,84%,40%)]" />
-        <div className="h-1/3 bg-white" />
-        <div className="h-1/3 bg-[hsl(211,100%,35%)]" />
-      </div>
+    <section className="relative overflow-hidden bg-gradient-to-br from-[hsl(24,100%,45%)] via-[hsl(24,80%,55%)] to-[hsl(211,100%,40%)] py-20 md:py-32">
+      {/* Dark overlay for better text readability */}
+      <div className="absolute inset-0 bg-black/20" />
       
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -62,14 +58,14 @@ export function NederlandHero() {
             <span className="text-6xl md:text-8xl drop-shadow-lg">🇳🇱</span>
           </motion.div>
 
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 drop-shadow-lg">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
             Nederlandse{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[hsl(24,100%,60%)] to-[hsl(45,100%,51%)]">
+            <span className="text-[hsl(45,100%,60%)]" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
               Muziek
             </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto drop-shadow">
+          <p className="text-lg md:text-xl text-white mb-10 max-w-2xl mx-auto font-medium" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>
             Van Golden Earring tot Within Temptation, van nederpop tot symphonic metal.
             Ontdek het beste van de Nederlandse muziekscene.
           </p>
@@ -81,32 +77,32 @@ export function NederlandHero() {
             transition={{ delay: 0.4 }}
             className="grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto"
           >
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white/30">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white shadow-lg">
               <div className="flex justify-center mb-2">
-                <Disc className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                <Disc className="w-6 h-6 md:w-8 md:h-8 text-[hsl(24,100%,45%)]" />
               </div>
-              <div className="text-2xl md:text-4xl font-bold text-white">
+              <div className="text-2xl md:text-4xl font-bold text-[hsl(24,100%,45%)]">
                 {stats?.totalReleases || 0}
               </div>
-              <div className="text-sm md:text-base text-white/80">Releases</div>
+              <div className="text-sm md:text-base text-gray-600">Releases</div>
             </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white/30">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white shadow-lg">
               <div className="flex justify-center mb-2">
-                <Users className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                <Users className="w-6 h-6 md:w-8 md:h-8 text-[hsl(211,100%,40%)]" />
               </div>
-              <div className="text-2xl md:text-4xl font-bold text-white">
+              <div className="text-2xl md:text-4xl font-bold text-[hsl(211,100%,40%)]">
                 {stats?.totalArtiesten || 0}
               </div>
-              <div className="text-sm md:text-base text-white/80">Artiesten</div>
+              <div className="text-sm md:text-base text-gray-600">Artiesten</div>
             </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white/30">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white shadow-lg">
               <div className="flex justify-center mb-2">
-                <BookOpen className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                <BookOpen className="w-6 h-6 md:w-8 md:h-8 text-[hsl(45,100%,40%)]" />
               </div>
-              <div className="text-2xl md:text-4xl font-bold text-white">
+              <div className="text-2xl md:text-4xl font-bold text-[hsl(45,100%,40%)]">
                 {stats?.totalVerhalen || 0}
               </div>
-              <div className="text-sm md:text-base text-white/80">Verhalen</div>
+              <div className="text-sm md:text-base text-gray-600">Verhalen</div>
             </div>
           </motion.div>
         </motion.div>

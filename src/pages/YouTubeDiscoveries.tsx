@@ -53,7 +53,7 @@ export default function YouTubeDiscoveries() {
       const { data, error } = await supabase
         .from('youtube_discoveries')
         .select('*')
-        .order('quality_score', { ascending: false })
+        .order('discovered_at', { ascending: false })
         .limit(100);
 
       if (error) throw error;

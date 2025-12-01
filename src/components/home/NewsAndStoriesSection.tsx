@@ -3,21 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePaginatedBlogs } from '@/hooks/usePaginatedBlogs';
-import { useDiscogsNews } from '@/hooks/useNewsCache';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Disc3, Newspaper, FileText, ArrowRight, Music, ChevronRight } from 'lucide-react';
+import { Newspaper, FileText, ArrowRight, Music, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
 export const NewsAndStoriesSection = () => {
   const isMobile = useIsMobile();
-  
-  // Releases from Discogs
-  const { data: discogsReleases = [], isLoading: releasesLoading } = useDiscogsNews();
   
   // News from news_blog_posts
   const { data: musicNews = [], isLoading: newsLoading } = useQuery({
@@ -152,79 +148,6 @@ export const NewsAndStoriesSection = () => {
       </section>
     );
   }
-
-  // Desktop version - keep original
-  const renderReleasesContent = () => {
-    if (releasesLoading) {
-      return (
-        <div className="grid md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="overflow-hidden">
-              <Skeleton className="aspect-square w-full" />
-              <div className="p-4 space-y-2">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-full" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      );
-    }
-
-    const displayReleases = discogsReleases.slice(0, 3);
-
-    if (!displayReleases || displayReleases.length === 0) {
-      return (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">Geen releases beschikbaar</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid md:grid-cols-3 gap-6">
-        {displayReleases.map((release: any) => (
-          <Link key={release.id} to={`/music-news?tab=releases`}>
-            <Card className="overflow-hidden hover:shadow-xl transition-all hover:scale-105 group h-full border-2 hover:border-vinyl-purple">
-              <div className="aspect-square overflow-hidden bg-gradient-to-br from-vinyl-purple/20 to-vinyl-gold/20">
-                {(release.stored_image || release.thumb || release.artwork) ? (
-                  <img 
-                    src={release.stored_image || release.thumb || release.artwork} 
-                    alt={release.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-6xl">
-                    🎵
-                  </div>
-                )}
-              </div>
-              <div className="p-6 space-y-3">
-                <h3 className="font-bold text-lg line-clamp-1 group-hover:text-primary transition-colors">
-                  {release.title || 'Onbekende titel'}
-                </h3>
-                <p className="text-sm text-muted-foreground line-clamp-1">
-                  {release.artist || 'Onbekende artiest'}
-                </p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {release.year && (
-                    <Badge variant="secondary" className="text-xs">
-                      {release.year}
-                    </Badge>
-                  )}
-                  {release.format && Array.isArray(release.format) && release.format.length > 0 && (
-                    <Badge variant="outline" className="text-xs">
-                      {release.format[0]}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    );
-  };
 
   const renderNewsContent = () => {
     if (newsLoading) {
@@ -391,12 +314,12 @@ export const NewsAndStoriesSection = () => {
             🎵 Ontdek Muzieknieuws
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Blijf op de hoogte van de nieuwste verhalen, nieuws en releases uit de muziekwereld
+            Blijf op de hoogte van de nieuwste verhalen en nieuws uit de muziekwereld
           </p>
         </div>
 
-        {/* Three Column Grid with Direct Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Two Column Grid with Direct Links */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Verhalen */}
           <Link to="/verhalen" className="group">
             <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-primary">
@@ -433,7 +356,7 @@ export const NewsAndStoriesSection = () => {
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-muted-foreground mb-4">
-                  Het laatste nieuws uit de muziekindustrie
+                  Het laatste muzieknieuws en updates
                 </p>
                 <Button variant="ghost" className="group-hover:bg-primary/10">
                   Bekijk Nieuws
@@ -442,43 +365,39 @@ export const NewsAndStoriesSection = () => {
               </CardContent>
             </Card>
           </Link>
-
-          {/* Releases */}
-          <Link to="/releases" className="group">
-            <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-primary">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-vinyl-purple to-primary flex items-center justify-center">
-                  <Music className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-2xl group-hover:text-primary transition-colors">
-                  🎵 Releases
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-muted-foreground mb-4">
-                  De nieuwste albums en releases
-                </p>
-                <Button variant="ghost" className="group-hover:bg-primary/10">
-                  Bekijk Releases
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </CardContent>
-            </Card>
-          </Link>
         </div>
 
-        {/* Preview Content - Show Verhalen by default */}
-        <div className="mt-8">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-2xl font-bold">Laatste Verhalen</h3>
-            <Link to="/verhalen">
-              <Button variant="outline" className="group">
-                Bekijk alle verhalen
-                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+        {/* Preview Sections */}
+        <div className="space-y-12">
+          {/* Verhalen Preview */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold flex items-center gap-2">
+                📚 Laatste Verhalen
+              </h3>
+              <Button variant="ghost" asChild>
+                <Link to="/verhalen">
+                  Bekijk alles <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
               </Button>
-            </Link>
+            </div>
+            {renderVerhalenContent()}
           </div>
-          {renderVerhalenContent()}
+
+          {/* News Preview */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold flex items-center gap-2">
+                📰 Laatste Nieuws
+              </h3>
+              <Button variant="ghost" asChild>
+                <Link to="/nieuws">
+                  Bekijk alles <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            {renderNewsContent()}
+          </div>
         </div>
       </div>
     </section>

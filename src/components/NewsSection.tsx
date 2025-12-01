@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Music, Disc3, Newspaper, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
-import { useDiscogsNews } from "@/hooks/useNewsCache";
+import { Music, Newspaper, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -90,12 +89,9 @@ interface NewsSectionProps {
 }
 
 export const NewsSection = ({ compact = false, limit }: NewsSectionProps = {}) => {
-  const [newsSource, setNewsSource] = useState<'discogs' | 'perplexity' | 'blog'>('discogs');
+  const [newsSource, setNewsSource] = useState<'perplexity' | 'blog'>('perplexity');
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Use the cached hooks for different sources
-  const { data: discogsReleases = [], isLoading: isLoadingDiscogs, error: discogsError } = useDiscogsNews();
-  
   // Use the blog posts query for perplexity news
   const { data: blogPosts = [], isLoading: isLoadingBlogPosts, error: blogPostsError } = useQuery({
     queryKey: ["music-blog-posts"],
@@ -140,17 +136,8 @@ export const NewsSection = ({ compact = false, limit }: NewsSectionProps = {}) =
     gcTime: 60 * 60 * 1000, // 1 hour
   });
 
-  const loading = newsSource === 'discogs' 
-    ? isLoadingDiscogs 
-    : newsSource === 'perplexity' 
-    ? isLoadingBlogPosts 
-    : isLoadingAlbumBlogs;
-    
-  const error = newsSource === 'discogs' 
-    ? discogsError 
-    : newsSource === 'perplexity' 
-    ? blogPostsError 
-    : albumBlogsError;
+  const loading = newsSource === 'perplexity' ? isLoadingBlogPosts : isLoadingAlbumBlogs;
+  const error = newsSource === 'perplexity' ? blogPostsError : albumBlogsError;
 
   // Compact mode for homepage
   if (compact) {
@@ -191,7 +178,7 @@ export const NewsSection = ({ compact = false, limit }: NewsSectionProps = {}) =
     );
   }
 
-  const handleSourceSwitch = (source: 'discogs' | 'perplexity' | 'blog') => {
+  const handleSourceSwitch = (source: 'perplexity' | 'blog') => {
     if (source !== newsSource) {
       setNewsSource(source);
     }
@@ -223,18 +210,10 @@ export const NewsSection = ({ compact = false, limit }: NewsSectionProps = {}) =
             Laatste Muzieknieuws
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-            Blijf op de hoogte van de nieuwste releases en muzieknieuws
+            Blijf op de hoogte van het laatste muzieknieuws
           </p>
           
           <div className="flex justify-center gap-4">
-            <Button 
-              variant={newsSource === 'discogs' ? 'default' : 'outline'} 
-              onClick={() => handleSourceSwitch('discogs')} 
-              className="flex items-center gap-2"
-            >
-              <Disc3 className="w-4 h-4" />
-              Nieuwe Releases
-            </Button>
             <Button 
               variant={newsSource === 'perplexity' ? 'default' : 'outline'} 
               onClick={() => handleSourceSwitch('perplexity')} 
@@ -264,118 +243,6 @@ export const NewsSection = ({ compact = false, limit }: NewsSectionProps = {}) =
             <Button onClick={() => window.location.reload()} variant="outline">
               Opnieuw proberen
             </Button>
-          </div>
-        )}
-
-        {!loading && !error && newsSource === 'discogs' && (
-          <div>
-            {/* Initial 3 items */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(discogsReleases as any[]).slice(0, 3).map((release: any) => (
-                <Card key={release.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg line-clamp-1">{release.title || 'Onbekende titel'}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {release.artist || 'Onbekende artiest'} • {release.year || 'Jaar onbekend'}
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    {(release.stored_image || release.thumb || release.artwork) && (
-                      <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                        <img 
-                          src={release.stored_image || release.thumb || release.artwork} 
-                          alt={`${release.title} cover`} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            // Fallback to original thumb if stored image fails
-                            if (release.stored_image && e.currentTarget.src === release.stored_image) {
-                              e.currentTarget.src = release.thumb || release.artwork || '';
-                            }
-                          }}
-                        />
-                      </div>
-                    )}
-                    <div className="space-y-2">
-                      {release.format && Array.isArray(release.format) && release.format.length > 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          Format: {release.format.join(', ')}
-                        </p>
-                      )}
-                      {release.genre && Array.isArray(release.genre) && release.genre.length > 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          Genre: {release.genre.slice(0, 2).join(', ')}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Collapsible section for remaining items */}
-            {(discogsReleases as any[]).length > 3 && (
-              <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-                <CollapsibleContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-                    {(discogsReleases as any[]).slice(3).map((release: any) => (
-                      <Card key={release.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg line-clamp-1">{release.title || 'Onbekende titel'}</CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            {release.artist || 'Onbekende artiest'} • {release.year || 'Jaar onbekend'}
-                          </p>
-                        </CardHeader>
-                        <CardContent>
-                          {(release.stored_image || release.thumb || release.artwork) && (
-                            <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                              <img 
-                                src={release.stored_image || release.thumb || release.artwork} 
-                                alt={`${release.title} cover`} 
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                onError={(e) => {
-                                  // Fallback to original thumb if stored image fails
-                                  if (release.stored_image && e.currentTarget.src === release.stored_image) {
-                                    e.currentTarget.src = release.thumb || release.artwork || '';
-                                  }
-                                }}
-                              />
-                            </div>
-                          )}
-                          <div className="space-y-2">
-                            {release.format && Array.isArray(release.format) && release.format.length > 0 && (
-                              <p className="text-xs text-muted-foreground">
-                                Format: {release.format.join(', ')}
-                              </p>
-                            )}
-                            {release.genre && Array.isArray(release.genre) && release.genre.length > 0 && (
-                              <p className="text-xs text-muted-foreground">
-                                Genre: {release.genre.slice(0, 2).join(', ')}
-                              </p>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-                
-                <div className="flex justify-center mt-8">
-                  <CollapsibleTrigger asChild>
-                    <Button variant="outline" className="flex items-center gap-2">
-                      {isExpanded ? (
-                        <>
-                          Toon minder <ChevronUp className="w-4 h-4" />
-                        </>
-                      ) : (
-                        <>
-                          Toon meer ({(discogsReleases as any[]).length - 3} meer) <ChevronDown className="w-4 h-4" />
-                        </>
-                      )}
-                    </Button>
-                  </CollapsibleTrigger>
-                </div>
-              </Collapsible>
-            )}
           </div>
         )}
 
@@ -477,80 +344,80 @@ export const NewsSection = ({ compact = false, limit }: NewsSectionProps = {}) =
 
         {!loading && !error && newsSource === 'blog' && (
           <div>
-            {/* Album blog stories content */}
+            {/* Initial 3 items */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {albumBlogs.slice(0, 3).map((blog: AlbumBlogPost) => (
-                <Card key={blog.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden border-accent/30">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg line-clamp-2 text-accent">{blog.artist} - {blog.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Album verhaal • {new Date(blog.published_at).toLocaleDateString('nl-NL')}
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                      <img 
-                        src={blog.album_cover_url || getPlaceholderImage(blog.id)} 
-                        alt={`${blog.artist} - ${blog.title}`} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <p className="text-sm mb-4 line-clamp-3">
-                      Ontdek het verhaal achter "{blog.title}" van {blog.artist}. Een diepgaande blik op de muziek, de tijd en de betekenis van dit iconische album.
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">
-                        Album Verhaal
-                      </span>
-                      <Link 
-                        to={`/plaat-verhaal/${blog.slug}`}
-                        className="inline-flex items-center gap-1 text-accent hover:text-accent/80 text-sm group-hover:gap-2 transition-all duration-200"
-                      >
-                        Lees verhaal <ArrowRight className="w-3 h-3" />
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
+                <Link key={blog.id} to={`/plaat-verhaal/${blog.slug}`}>
+                  <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg line-clamp-1">
+                        {blog.yaml_frontmatter?.title || blog.title}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {blog.artist} • {new Date(blog.published_at).toLocaleDateString('nl-NL')}
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      {blog.album_cover_url && (
+                        <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                          <img 
+                            src={blog.album_cover_url} 
+                            alt={blog.title} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      )}
+                      <p className="text-sm mb-4 line-clamp-3">
+                        {blog.yaml_frontmatter?.excerpt || `Een verhaal over ${blog.title} van ${blog.artist}`}
+                      </p>
+                      <div className="flex items-center justify-end">
+                        <span className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm group-hover:gap-2 transition-all duration-200">
+                          Lees meer <ArrowRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
 
-            {/* Collapsible section for remaining album stories */}
+            {/* Collapsible section for remaining items */}
             {albumBlogs.length > 3 && (
               <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
                 <CollapsibleContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                     {albumBlogs.slice(3).map((blog: AlbumBlogPost) => (
-                      <Card key={blog.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden border-accent/30">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg line-clamp-2 text-accent">{blog.artist} - {blog.title}</CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            Album verhaal • {new Date(blog.published_at).toLocaleDateString('nl-NL')}
-                          </p>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
-                            <img 
-                              src={blog.album_cover_url || getPlaceholderImage(blog.id)} 
-                              alt={`${blog.artist} - ${blog.title}`} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          </div>
-                          <p className="text-sm mb-4 line-clamp-3">
-                            Ontdek het verhaal achter "{blog.title}" van {blog.artist}. Een diepgaande blik op de muziek, de tijd en de betekenis van dit iconische album.
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">
-                              Album Verhaal
-                            </span>
-                            <Link 
-                              to={`/plaat-verhaal/${blog.slug}`}
-                              className="inline-flex items-center gap-1 text-accent hover:text-accent/80 text-sm group-hover:gap-2 transition-all duration-200"
-                            >
-                              Lees verhaal <ArrowRight className="w-3 h-3" />
-                            </Link>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <Link key={blog.id} to={`/plaat-verhaal/${blog.slug}`}>
+                        <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-lg line-clamp-1">
+                              {blog.yaml_frontmatter?.title || blog.title}
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              {blog.artist} • {new Date(blog.published_at).toLocaleDateString('nl-NL')}
+                            </p>
+                          </CardHeader>
+                          <CardContent>
+                            {blog.album_cover_url && (
+                              <div className="w-full h-32 bg-muted rounded-lg mb-3 overflow-hidden">
+                                <img 
+                                  src={blog.album_cover_url} 
+                                  alt={blog.title} 
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                              </div>
+                            )}
+                            <p className="text-sm mb-4 line-clamp-3">
+                              {blog.yaml_frontmatter?.excerpt || `Een verhaal over ${blog.title} van ${blog.artist}`}
+                            </p>
+                            <div className="flex items-center justify-end">
+                              <span className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm group-hover:gap-2 transition-all duration-200">
+                                Lees meer <ArrowRight className="w-3 h-3" />
+                              </span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
                     ))}
                   </div>
                 </CollapsibleContent>

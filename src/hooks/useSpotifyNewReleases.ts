@@ -14,18 +14,29 @@ export const useSpotifyNewReleases = () => {
   return useQuery({
     queryKey: ['spotify-new-releases'],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('spotify-new-releases');
+      const { data, error } = await supabase
+        .from('spotify_new_releases_processed')
+        .select('id, artist, album_name, image_url, spotify_url, release_date')
+        .order('release_date', { ascending: false })
+        .limit(20);
       
       if (error) {
         console.error('Error fetching Spotify new releases:', error);
         throw error;
       }
       
-      return data.albums as SpotifyNewRelease[];
+      // Map database columns to interface
+      return (data || []).map(item => ({
+        id: item.id,
+        name: item.album_name,
+        artist: item.artist,
+        image_url: item.image_url,
+        spotify_url: item.spotify_url,
+        release_date: item.release_date
+      })) as SpotifyNewRelease[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    staleTime: 30 * 60 * 1000, // 30 minutes (data comes from DB, refreshed by cron)
+    refetchOnWindowFocus: false,
     retry: 2,
   });
 };

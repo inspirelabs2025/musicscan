@@ -73,6 +73,18 @@ export const getStaticRoutes = (): SitemapEntry[] => {
       lastmod: currentDate,
       changefreq: 'monthly',
       priority: 0.6
+    },
+    {
+      url: `${baseUrl}/nederland`,
+      lastmod: currentDate,
+      changefreq: 'weekly',
+      priority: 0.8
+    },
+    {
+      url: `${baseUrl}/nl-muziek`,
+      lastmod: currentDate,
+      changefreq: 'weekly',
+      priority: 0.7
     }
   ];
   
@@ -271,4 +283,19 @@ export const getArtProductRoutes = async (): Promise<SitemapEntry[]> => {
     console.error('Error generating art product sitemap entries:', error);
     return [];
   }
+};
+
+// Get NL muziekfeiten for sitemap (static data)
+export const getNLMuziekFeitenRoutes = async (): Promise<SitemapEntry[]> => {
+  const { NL_MUZIEK_FEITEN } = await import('@/data/nederlandseMuziekFeiten');
+  
+  const baseUrl = 'https://www.musicscan.app';
+  const currentDate = new Date().toISOString().split('T')[0];
+  
+  return NL_MUZIEK_FEITEN.map((feit) => ({
+    url: `${baseUrl}/nl-muziekfeit/${feit.slug}`,
+    lastmod: currentDate,
+    changefreq: 'monthly' as const,
+    priority: 0.6
+  }));
 };

@@ -63,6 +63,11 @@ Allow: /anekdotes/*
 Allow: /nieuws
 Allow: /nieuws/*
 Allow: /vandaag-in-de-muziekgeschiedenis
+Allow: /nederland
+Allow: /nl-muziekfeit
+Allow: /nl-muziekfeit/*
+Allow: /nl-muziek
+Allow: /nl-muziek/*
 
 # LLM-Optimized Markdown Content
 Allow: /api/llm/
@@ -88,6 +93,7 @@ Sitemap: https://www.musicscan.app/sm/sitemap-posters.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-metal-prints.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-blog.xml
 Sitemap: https://www.musicscan.app/sm/sitemap-anecdotes.xml
+Sitemap: https://www.musicscan.app/sm/sitemap-nl-muziekfeiten.xml
 
 # IndexNow Key
 Sitemap: https://www.musicscan.app/indexnow-key.txt

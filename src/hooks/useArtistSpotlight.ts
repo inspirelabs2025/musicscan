@@ -149,20 +149,38 @@ export const useGenerateSpotlight = () => {
       });
 
       // Handle 409 duplicate gracefully
-      if (error instanceof FunctionsHttpError) {
-        try {
-          const errorBody = await error.context.json();
-          // If it's a duplicate, return the payload instead of throwing
-          if (errorBody?.code === 'DUPLICATE') {
-            return errorBody; // { success: false, code: 'DUPLICATE', existing_id, error }
-          }
-        } catch (jsonError) {
-          // If we can't parse JSON, throw original error
-          throw error;
+      if (error) {
+        // Check if we got a duplicate response in the data
+        if (data?.code === 'DUPLICATE') {
+          return data;
         }
+        
+        // Try to extract error details from FunctionsHttpError
+        if (error instanceof FunctionsHttpError && error.context) {
+          try {
+            // Clone response to avoid "body already consumed" issues
+            const clonedResponse = error.context.clone?.() || error.context;
+            const errorText = await clonedResponse.text();
+            
+            // Try to parse as JSON
+            try {
+              const errorBody = JSON.parse(errorText);
+              if (errorBody?.code === 'DUPLICATE') {
+                return errorBody;
+              }
+            } catch {
+              // Not JSON, use text as error message
+              throw new Error(errorText || error.message);
+            }
+          } catch (parseError) {
+            // If parsing fails, throw original error
+            throw error;
+          }
+        }
+        
+        throw error;
       }
-
-      if (error) throw error;
+      
       return data;
     },
     onSuccess: () => {
@@ -282,15 +300,20 @@ export const useFormatSpotlight = () => {
         body: { artistName, fullText }
       });
 
-      // Handle 409 duplicate - check error context first
+      // Handle errors
       if (error) {
-        if (error instanceof FunctionsHttpError) {
-          const status = error.context?.status;
-          
-          // Handle 409 Conflict (duplicate)
-          if (status === 409) {
+        // Check if we got a duplicate response in the data
+        if (data?.code === 'DUPLICATE') {
+          return data;
+        }
+        
+        if (error instanceof FunctionsHttpError && error.context) {
+          try {
+            const clonedResponse = error.context.clone?.() || error.context;
+            const errorText = await clonedResponse.text();
+            
             try {
-              const errorBody = await error.context.json();
+              const errorBody = JSON.parse(errorText);
               if (errorBody?.code === 'DUPLICATE') {
                 return {
                   success: false,
@@ -298,13 +321,14 @@ export const useFormatSpotlight = () => {
                   existing_id: errorBody.existing_id
                 };
               }
-            } catch (jsonError) {
-              console.error('Failed to parse 409 response:', jsonError);
+            } catch {
+              throw new Error(errorText || error.message);
             }
+          } catch (parseError) {
+            throw error;
           }
         }
         
-        // For all other errors, throw
         throw error;
       }
 

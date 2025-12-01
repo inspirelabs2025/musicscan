@@ -8,55 +8,55 @@ import { useNederlandseArtiesten } from "@/hooks/useNederlandseMuziek";
 export function NederlandseArtiesten() {
   const { data: artiesten, isLoading } = useNederlandseArtiesten();
 
-  // Featured Dutch artists with their info and real Discogs images
+  // Featured Dutch artists with genre-based gradients
   const featuredArtists = [
     { 
       name: "Within Temptation", 
       genre: "Symphonic Metal", 
       emoji: "🎸",
-      image: "https://i.discogs.com/efRgkeS38PUBISwmXILMfOff9gNWT_83qegUp5ICfXU/rs:fit/g:sm/q:90/h:500/w:500/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTE2MDA3/Ny0xNjkyOTAyNTM1/LTMxNTcucG5n.jpeg"
+      gradient: "from-purple-900 via-red-800 to-black"
     },
     { 
       name: "Golden Earring", 
       genre: "Rock", 
       emoji: "🎵",
-      image: "https://i.discogs.com/nklP1886ZFTIiecFv6mCJv8Mf9TOFXfhl209NIkIplg/rs:fit/g:sm/q:90/h:500/w:500/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTI0NzAw/OS0xNDQ4MTk5MDc1/LTExODUucG5n.jpeg"
+      gradient: "from-amber-700 via-yellow-600 to-orange-800"
     },
     { 
       name: "André Hazes", 
       genre: "Levenslied", 
       emoji: "🎤",
-      image: "https://i.discogs.com/uUjvLbv-O_zOuQdvQoXfXVpIydEOdr14anprrzxzLYU/rs:fit/g:sm/q:90/h:500/w:500/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTI4MjI4/Ny0xNjI1OTMzMTMz/LTY4MDAuanBlZw.jpeg"
+      gradient: "from-red-700 via-orange-600 to-amber-700"
     },
     { 
       name: "Marco Borsato", 
       genre: "Pop", 
       emoji: "🎹",
-      image: "https://i.discogs.com/kcj7FJHXgZPu4TSb2fYsbrK5j4S7Im6xNGxuqFucB2s/rs:fit/g:sm/q:90/h:500/w:500/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTI4NzM3/NS0xMTE0NDU4MDg5/LmpwZw.jpeg"
+      gradient: "from-blue-700 via-indigo-600 to-purple-700"
     },
     { 
       name: "Doe Maar", 
       genre: "Nederpop", 
       emoji: "🎺",
-      image: "https://i.discogs.com/4jwmwkhjDXyQqKb5fUl-5mLFmEaIRoxSvidw-HKM4lY/rs:fit/g:sm/q:90/h:500/w:500/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTI2MDI4/My0xNTQxMzMyNjc4/LTIzNzkuanBlZw.jpeg"
+      gradient: "from-green-700 via-teal-600 to-cyan-700"
     },
     { 
       name: "Anouk", 
       genre: "Rock/Pop", 
       emoji: "🎙️",
-      image: "https://i.discogs.com/KO246b-R868CK3JyMSvjowcnHpwwvbsU34aRQR_7aDE/rs:fit/g:sm/q:90/h:500/w:500/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTU4MzUw/LTE2MTE0NzM5MTUt/NTQ0Mi5qcGVn.jpeg"
+      gradient: "from-slate-800 via-zinc-700 to-neutral-800"
     },
     { 
       name: "Tiësto", 
       genre: "Electronic", 
       emoji: "🎧",
-      image: "https://i.discogs.com/73dpXgGTXxQSJpLb1UvlL1USj891YnIF_OszcEmqqyY/rs:fit/g:sm/q:90/h:500/w:500/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTYxOTct/MTY3Mjc0NjM1My0z/Mjk2LmpwZWc.jpeg"
+      gradient: "from-cyan-600 via-blue-500 to-indigo-600"
     },
     { 
       name: "Armin van Buuren", 
       genre: "Trance", 
       emoji: "🔊",
-      image: "https://i.discogs.com/NRd0WGL2gN4Ss13Z5FCQNq4mDGp7d0OHalKQQGjJZbw/rs:fit/g:sm/q:90/h:500/w:500/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTkwNzAt/MTY3NjI1NjY3OS0z/ODg1LmpwZWc.jpeg"
+      gradient: "from-violet-700 via-purple-600 to-fuchsia-700"
     },
   ];
 
@@ -148,7 +148,7 @@ export function NederlandseArtiesten() {
 }
 
 interface ArtistCardProps {
-  artist: { name: string; genre: string; emoji: string; image: string };
+  artist: { name: string; genre: string; emoji: string; gradient: string };
   artistData?: {
     artwork_url?: string;
     views_count?: number;
@@ -157,41 +157,44 @@ interface ArtistCardProps {
 }
 
 function ArtistCard({ artist, artistData }: ArtistCardProps) {
-  // Use artist story artwork if available, otherwise use Discogs image
-  const imageUrl = artistData?.artwork_url || artist.image;
+  // Use artist story artwork if available
+  const hasArtwork = artistData?.artwork_url;
   
   return (
     <Card className="group relative overflow-hidden h-48 md:h-56 hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[hsl(24,100%,50%)]/30">
-      {/* Background Image */}
-      {imageUrl && (
+      {/* Background - Artwork or Gradient */}
+      {hasArtwork ? (
         <img
-          src={imageUrl}
+          src={artistData.artwork_url}
           alt={artist.name}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          onError={(e) => {
-            // Hide image on error, fallback gradient will show
-            e.currentTarget.style.display = 'none';
-          }}
         />
+      ) : (
+        <div className={`absolute inset-0 bg-gradient-to-br ${artist.gradient}`}>
+          {/* Decorative pattern overlay */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-4 right-4 text-6xl opacity-30">{artist.emoji}</div>
+            <div className="absolute bottom-12 left-8 text-4xl opacity-20 rotate-12">{artist.emoji}</div>
+          </div>
+          {/* Noise texture effect */}
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNhKSIgb3BhY2l0eT0iMC4xIi8+PC9zdmc+')] opacity-50" />
+        </div>
       )}
-      
-      {/* Gradient fallback - always present as base layer */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(24,100%,50%)] to-[hsl(211,100%,35%)] -z-10" />
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+      {/* Overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
       {/* Content */}
       <div className="absolute inset-0 p-4 flex flex-col justify-end">
-        <div className="text-3xl mb-2">{artist.emoji}</div>
-        <h3 className="text-white font-bold text-lg md:text-xl line-clamp-1">
+        <div className="text-3xl mb-2 drop-shadow-lg">{artist.emoji}</div>
+        <h3 className="text-white font-bold text-lg md:text-xl line-clamp-1 drop-shadow-lg">
           {artist.name}
         </h3>
-        <p className="text-white/70 text-sm">
+        <p className="text-white/80 text-sm drop-shadow-md">
           {artistData?.music_style?.[0] || artist.genre}
         </p>
         {artistData?.views_count && artistData.views_count > 0 && (
-          <div className="flex items-center gap-1 text-white/60 text-xs mt-1">
+          <div className="flex items-center gap-1 text-white/70 text-xs mt-1">
             <Eye className="w-3 h-3" />
             {artistData.views_count.toLocaleString()} views
           </div>
@@ -200,7 +203,7 @@ function ArtistCard({ artist, artistData }: ArtistCardProps) {
 
       {/* Hover indicator */}
       <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="bg-[hsl(24,100%,50%)] rounded-full p-2">
+        <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
           <User className="w-4 h-4 text-white" />
         </div>
       </div>

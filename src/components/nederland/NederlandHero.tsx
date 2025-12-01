@@ -1,0 +1,126 @@
+import { motion } from "framer-motion";
+import { Disc, Music, Users, BookOpen, Flag } from "lucide-react";
+import { useNederlandseStats } from "@/hooks/useNederlandseMuziek";
+
+export function NederlandHero() {
+  const { data: stats } = useNederlandseStats();
+
+  return (
+    <section className="relative overflow-hidden bg-gradient-to-br from-[hsl(24,100%,50%)] via-[hsl(0,0%,100%)] to-[hsl(211,100%,35%)] py-20 md:py-32">
+      {/* Dutch flag stripes overlay */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="h-1/3 bg-[hsl(0,84%,40%)]" />
+        <div className="h-1/3 bg-white" />
+        <div className="h-1/3 bg-[hsl(211,100%,35%)]" />
+      </div>
+      
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          animate={{ 
+            y: [0, -20, 0],
+            rotate: [0, 5, 0]
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute top-20 left-10 text-white/20"
+        >
+          <Disc className="w-32 h-32" />
+        </motion.div>
+        <motion.div
+          animate={{ 
+            y: [0, 20, 0],
+            rotate: [0, -5, 0]
+          }}
+          transition={{ duration: 6, repeat: Infinity }}
+          className="absolute bottom-20 right-10 text-white/20"
+        >
+          <Music className="w-24 h-24" />
+        </motion.div>
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 4, repeat: Infinity }}
+          className="absolute top-1/2 right-1/4 text-white/10"
+        >
+          <Flag className="w-40 h-40" />
+        </motion.div>
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center max-w-4xl mx-auto"
+        >
+          {/* Dutch flag emoji with glow */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", delay: 0.2 }}
+            className="inline-block mb-6"
+          >
+            <span className="text-6xl md:text-8xl drop-shadow-lg">🇳🇱</span>
+          </motion.div>
+
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 drop-shadow-lg">
+            Nederlandse{" "}
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[hsl(24,100%,60%)] to-[hsl(45,100%,51%)]">
+              Muziek
+            </span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto drop-shadow">
+            Van Golden Earring tot Within Temptation, van nederpop tot symphonic metal.
+            Ontdek het beste van de Nederlandse muziekscene.
+          </p>
+
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto"
+          >
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white/30">
+              <div className="flex justify-center mb-2">
+                <Disc className="w-6 h-6 md:w-8 md:h-8 text-white" />
+              </div>
+              <div className="text-2xl md:text-4xl font-bold text-white">
+                {stats?.totalReleases || 0}
+              </div>
+              <div className="text-sm md:text-base text-white/80">Releases</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white/30">
+              <div className="flex justify-center mb-2">
+                <Users className="w-6 h-6 md:w-8 md:h-8 text-white" />
+              </div>
+              <div className="text-2xl md:text-4xl font-bold text-white">
+                {stats?.totalArtiesten || 0}
+              </div>
+              <div className="text-sm md:text-base text-white/80">Artiesten</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white/30">
+              <div className="flex justify-center mb-2">
+                <BookOpen className="w-6 h-6 md:w-8 md:h-8 text-white" />
+              </div>
+              <div className="text-2xl md:text-4xl font-bold text-white">
+                {stats?.totalVerhalen || 0}
+              </div>
+              <div className="text-sm md:text-base text-white/80">Verhalen</div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* Bottom wave */}
+      <div className="absolute bottom-0 left-0 right-0">
+        <svg viewBox="0 0 1440 120" fill="none" className="w-full">
+          <path
+            d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
+            className="fill-background"
+          />
+        </svg>
+      </div>
+    </section>
+  );
+}

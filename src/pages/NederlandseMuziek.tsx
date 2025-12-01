@@ -1,5 +1,9 @@
 import { Helmet } from "react-helmet";
 import { NederlandHero } from "@/components/nederland/NederlandHero";
+import { NederlandseMuziekQuiz } from "@/components/nederland/NederlandseMuziekQuiz";
+import { DecenniumSlider } from "@/components/nederland/DecenniumSlider";
+import { NederlandKaart } from "@/components/nederland/NederlandKaart";
+import { DutchArtistSpotlight } from "@/components/nederland/DutchArtistSpotlight";
 import { NederlandseArtiesten } from "@/components/nederland/NederlandseArtiesten";
 import { NederlandseVerhalen } from "@/components/nederland/NederlandseVerhalen";
 import { NederlandseReleases } from "@/components/nederland/NederlandseReleases";
@@ -53,19 +57,31 @@ const NederlandseMuziek = () => {
         {/* 1. Hero Section */}
         <NederlandHero />
 
-        {/* 2. Uitgelichte Nederlandse Artiesten */}
+        {/* 2. Nederlandse Muziek Quiz */}
+        <NederlandseMuziekQuiz />
+
+        {/* 3. Reis Door de Tijd - Decennium Slider */}
+        <DecenniumSlider />
+
+        {/* 4. Interactieve Nederland Kaart */}
+        <NederlandKaart />
+
+        {/* 5. Artiest Spotlight */}
+        <DutchArtistSpotlight />
+
+        {/* 6. Uitgelichte Nederlandse Artiesten */}
         <NederlandseArtiesten />
 
-        {/* 3. Nederlandse Album Verhalen */}
+        {/* 7. Nederlandse Album Verhalen */}
         <NederlandseVerhalen />
 
-        {/* 4. Nederlandse Releases */}
+        {/* 8. Nederlandse Releases */}
         <NederlandseReleases />
 
-        {/* 5. Nederlandse Muziekgeschiedenis */}
+        {/* 9. Nederlandse Muziekgeschiedenis */}
         <NederlandseMuziekGeschiedenis />
 
-        {/* 6. Genres in Nederland */}
+        {/* 10. Genres in Nederland */}
         <NederlandseGenres />
       </main>
     </>

@@ -413,7 +413,7 @@ export const ArtistSpotlightEditor = () => {
             <div className="grid grid-cols-2 gap-4">
               <Button 
                 onClick={() => handleGenerate(false)} 
-                disabled={!artistName.trim() || generateMutation.isPending || formatMutation.isPending || isEditing}
+                disabled={!artistName.trim() || generateMutation.isPending || formatMutation.isPending}
                 variant="outline"
                 size="lg"
               >
@@ -432,7 +432,7 @@ export const ArtistSpotlightEditor = () => {
 
               <Button
                 onClick={handleFormatAndSave}
-                disabled={!artistName.trim() || wordCount < 100 || formatMutation.isPending || generateMutation.isPending || isEditing}
+                disabled={!artistName.trim() || wordCount < 100 || formatMutation.isPending || generateMutation.isPending}
                 size="lg"
               >
                 {formatMutation.isPending ? (

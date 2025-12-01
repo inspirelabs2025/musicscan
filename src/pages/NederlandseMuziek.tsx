@@ -7,7 +7,7 @@ import { DutchArtistSpotlight } from "@/components/nederland/DutchArtistSpotligh
 import { NederlandseArtiesten } from "@/components/nederland/NederlandseArtiesten";
 import { NederlandseVerhalen } from "@/components/nederland/NederlandseVerhalen";
 import { NederlandseReleases } from "@/components/nederland/NederlandseReleases";
-import { InteractieveNLMuziekTijdlijn } from "@/components/nederland/InteractieveNLMuziekTijdlijn";
+import { DualViewNLTijdlijn } from "@/components/nederland/DualViewNLTijdlijn";
 import { NederlandseGenres } from "@/components/nederland/NederlandseGenres";
 
 const NederlandseMuziek = () => {
@@ -156,7 +156,7 @@ const NederlandseMuziek = () => {
 
         <NederlandseReleases />
 
-        <InteractieveNLMuziekTijdlijn />
+        <DualViewNLTijdlijn />
 
         <NederlandseGenres />
       </main>

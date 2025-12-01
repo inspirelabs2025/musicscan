@@ -474,3 +474,6 @@ verify_jwt = false
 
 [functions.queue-nl-muziek-artists]
 verify_jwt = false
+
+[functions.generate-quiz-share-image]
+verify_jwt = false

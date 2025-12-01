@@ -6,7 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Trophy, Target, RotateCcw, Play, CheckCircle2, XCircle, Timer, Music, Disc3, Shuffle } from 'lucide-react';
+import { useQuizShare } from '@/hooks/useQuizShare';
+import { QuizShareDialog } from '@/components/quiz/QuizShareDialog';
+import { Clock, Trophy, Target, RotateCcw, Play, CheckCircle2, XCircle, Timer, Music, Disc3, Shuffle, Share2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface QuizQuestion {
   id: number;
@@ -38,6 +41,7 @@ type QuizMode = 'physical_only' | 'spotify_only' | 'mixed' | 'auto';
 export function CollectionQuiz() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { saveQuizResult, createChallenge, getBadge, isSaving } = useQuizShare();
   
   // Quiz state
   const [quiz, setQuiz] = useState<QuizData | null>(null);
@@ -55,6 +59,10 @@ export function CollectionQuiz() {
   const [selectedQuizMode, setSelectedQuizMode] = useState<QuizMode>('auto');
   const [showModeSelector, setShowModeSelector] = useState(true);
   const [currentQuizMode, setCurrentQuizMode] = useState<QuizMode>('auto');
+  
+  // Share state
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [savedResult, setSavedResult] = useState<{ id: string; shareToken: string } | null>(null);
 
   const generateQuiz = async (questionCount: number = 10, quizMode: QuizMode = selectedQuizMode) => {
     if (!user) return;
@@ -136,11 +144,29 @@ export function CollectionQuiz() {
     }
   }, [currentQuestionIndex, quiz]);
 
-  const completeQuiz = useCallback(() => {
+  const completeQuiz = useCallback(async () => {
     setIsQuizComplete(true);
     setRoundsCompleted(prev => prev + 1);
     setTotalScore(prev => prev + score);
-  }, [score]);
+    
+    // Save result with share token
+    if (user && quiz) {
+      const percentage = Math.round((score / quiz.questions.length) * 100);
+      const badge = getBadge(percentage);
+      
+      const result = await saveQuizResult(user.id, {
+        score,
+        totalQuestions: quiz.questions.length,
+        percentage,
+        quizType: currentQuizMode,
+        badge
+      });
+      
+      if (result) {
+        setSavedResult(result);
+      }
+    }
+  }, [score, user, quiz, currentQuizMode, saveQuizResult, getBadge]);
 
   const continueQuiz = useCallback(() => {
     setIsQuizComplete(false);
@@ -148,24 +174,33 @@ export function CollectionQuiz() {
   }, []);
 
   const finishQuiz = useCallback(() => {
-    // Save quiz results to database
-    if (user && quiz) {
-      supabase
-        .from('quiz_results')
-        .insert({
-          user_id: user.id,
-          quiz_type: currentQuizMode,
-          questions_total: quiz.questions.length,
-          questions_correct: score,
-          score_percentage: Math.round((score / quiz.questions.length) * 100)
-        });
-    }
-    
     toast({
       title: "Quiz voltooid!",
       description: `${totalScore + score} punten in ${roundsCompleted + 1} ronde${roundsCompleted > 0 ? 's' : ''}`,
     });
-  }, [user, quiz, score, totalScore, roundsCompleted, currentQuizMode]);
+    // Result is already saved in completeQuiz
+  }, [score, totalScore, roundsCompleted, toast]);
+
+  const handleCreateChallenge = useCallback(async () => {
+    if (!user || !savedResult) return;
+    
+    const challengeToken = await createChallenge(
+      user.id,
+      savedResult.id,
+      score,
+      currentQuizMode,
+      quiz!.questions.length
+    );
+    
+    if (challengeToken) {
+      const challengeUrl = `${window.location.origin}/quiz/challenge/${challengeToken}`;
+      navigator.clipboard.writeText(challengeUrl);
+      toast({
+        title: "Challenge Link Gekopieerd!",
+        description: "Deel deze link om je vrienden uit te dagen",
+      });
+    }
+  }, [user, savedResult, score, currentQuizMode, quiz, createChallenge, toast]);
 
   const resetQuiz = () => {
     setQuiz(null);
@@ -182,6 +217,7 @@ export function CollectionQuiz() {
     setShowModeSelector(true);
     setSelectedQuizMode('auto');
     setCurrentQuizMode('auto');
+    setSavedResult(null);
   };
 
   const getQuizModeLabel = (mode: QuizMode) => {
@@ -323,60 +359,117 @@ export function CollectionQuiz() {
   if (isQuizComplete) {
     const percentage = Math.round((score / quiz!.questions.length) * 100);
     const totalPercentage = Math.round(((totalScore + score) / ((roundsCompleted + 1) * quiz!.questions.length)) * 100);
+    const badge = getBadge(percentage);
     
     return (
       <div className="max-w-4xl mx-auto space-y-6">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl flex items-center gap-2">
-                {getQuizModeIcon(currentQuizMode)}
-                {getQuizModeLabel(currentQuizMode)} Quiz Voltooid! 🎉
-              </CardTitle>
-              <Badge variant="outline" className="text-lg px-3 py-1">
-                Ronde {roundsCompleted + 1}
-              </Badge>
-            </div>
-            <CardDescription>
-              Je hebt {score} van de {quiz!.questions.length} vragen goed beantwoord
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            <div className="text-center space-y-4">
-              <div className="text-4xl font-bold text-primary">{score}/{quiz!.questions.length}</div>
-              <div className="text-2xl">{percentage}% correct</div>
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200 }}
+        >
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  {getQuizModeIcon(currentQuizMode)}
+                  {getQuizModeLabel(currentQuizMode)} Quiz Voltooid! 🎉
+                </CardTitle>
+                <Badge variant="outline" className="text-lg px-3 py-1">
+                  Ronde {roundsCompleted + 1}
+                </Badge>
+              </div>
+              <CardDescription>
+                Je hebt {score} van de {quiz!.questions.length} vragen goed beantwoord
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              <motion.div 
+                className="text-center space-y-4"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <motion.div 
+                  className="text-5xl font-bold text-primary"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
+                >
+                  {percentage}%
+                </motion.div>
+                <div className="text-xl text-muted-foreground">{score}/{quiz!.questions.length} correct</div>
+                
+                {roundsCompleted > 0 && (
+                  <div className="text-muted-foreground">
+                    Totaal: {totalScore + score} punten in {roundsCompleted + 1} rondes ({totalPercentage}% gemiddeld)
+                  </div>
+                )}
+                
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <Badge variant="secondary" className={`text-lg px-4 py-2 ${badge.color}`}>
+                    <span className="text-xl mr-2">{badge.emoji}</span>
+                    {badge.title}
+                  </Badge>
+                </motion.div>
+              </motion.div>
               
-              {roundsCompleted > 0 && (
-                <div className="text-muted-foreground">
-                  Totaal: {totalScore + score} punten in {roundsCompleted + 1} rondes ({totalPercentage}% gemiddeld)
-                </div>
+              {/* Share Button - Primary Action */}
+              {savedResult && (
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <Button 
+                    onClick={() => setShowShareDialog(true)} 
+                    className="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    size="lg"
+                  >
+                    <Share2 className="w-5 h-5" />
+                    Deel je Score & Daag Vrienden Uit!
+                  </Button>
+                </motion.div>
               )}
               
-              <Badge variant="secondary" className="text-lg px-4 py-2">
-                {percentage >= 90 ? '🏆 Quiz Expert' :
-                 percentage >= 75 ? '🎵 Muziekkenner' :
-                 percentage >= 60 ? '📀 Goede Score' : '🎧 Blijf Oefenen'}
-              </Badge>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button onClick={continueQuiz} className="gap-2">
-                <Play className="w-4 h-4" />
-                Nieuwe Ronde
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button onClick={continueQuiz} variant="outline" className="gap-2">
+                  <Play className="w-4 h-4" />
+                  Nieuwe Ronde
+                </Button>
+                <Button onClick={finishQuiz} variant="outline" className="gap-2">
+                  <Trophy className="w-4 h-4" />
+                  Quiz Beëindigen
+                </Button>
+              </div>
+              
+              <Button onClick={resetQuiz} variant="ghost" className="w-full gap-2">
+                <RotateCcw className="w-4 h-4" />
+                Nieuwe Quiz Starten
               </Button>
-              <Button onClick={finishQuiz} variant="outline" className="gap-2">
-                <Trophy className="w-4 h-4" />
-                Quiz Beëindigen
-              </Button>
-            </div>
-            
-            <Button onClick={resetQuiz} variant="ghost" className="w-full gap-2">
-              <RotateCcw className="w-4 h-4" />
-              Nieuwe Quiz Starten
-            </Button>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
+        
+        {/* Share Dialog */}
+        {savedResult && (
+          <QuizShareDialog
+            open={showShareDialog}
+            onOpenChange={setShowShareDialog}
+            score={score}
+            totalQuestions={quiz!.questions.length}
+            percentage={percentage}
+            badge={badge}
+            shareToken={savedResult.shareToken}
+            quizType={getQuizModeLabel(currentQuizMode)}
+            onCreateChallenge={handleCreateChallenge}
+          />
+        )}
       </div>
     );
   }

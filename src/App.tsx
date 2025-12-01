@@ -93,6 +93,7 @@ import MainAdmin from "./pages/admin/MainAdmin";
 import CronjobMonitorPage from "./pages/admin/CronjobMonitorPage";
 import EmailNotificationsPage from "./pages/admin/EmailNotificationsPage";
 import Quiz from "./pages/Quiz";
+import QuizResult from "./pages/QuizResult";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import ReturnPolicy from "./pages/ReturnPolicy";
@@ -274,6 +275,7 @@ const AppContent = () => {
             <Quiz />
           </ProtectedRoute>
         } />
+        <Route path="/quiz/result/:shareToken" element={<QuizResult />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<About />} />
         <Route path="/retourbeleid" element={<ReturnPolicy />} />

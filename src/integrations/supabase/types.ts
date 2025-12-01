@@ -4355,39 +4355,170 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_challenges: {
+        Row: {
+          challenge_token: string
+          challenged_score: number | null
+          challenged_user_id: string | null
+          challenger_id: string | null
+          challenger_score: number | null
+          completed_at: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          questions_total: number | null
+          quiz_result_id: string | null
+          quiz_type: string | null
+          status: string | null
+          winner_id: string | null
+        }
+        Insert: {
+          challenge_token: string
+          challenged_score?: number | null
+          challenged_user_id?: string | null
+          challenger_id?: string | null
+          challenger_score?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          questions_total?: number | null
+          quiz_result_id?: string | null
+          quiz_type?: string | null
+          status?: string | null
+          winner_id?: string | null
+        }
+        Update: {
+          challenge_token?: string
+          challenged_score?: number | null
+          challenged_user_id?: string | null
+          challenger_id?: string | null
+          challenger_score?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          questions_total?: number | null
+          quiz_result_id?: string | null
+          quiz_type?: string | null
+          status?: string | null
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_challenges_quiz_result_id_fkey"
+            columns: ["quiz_result_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_leaderboard: {
+        Row: {
+          avatar_url: string | null
+          average_score: number | null
+          badges_earned: Json | null
+          best_score: number | null
+          challenges_lost: number | null
+          challenges_won: number | null
+          created_at: string | null
+          current_streak: number | null
+          display_name: string | null
+          highest_streak: number | null
+          id: string
+          last_quiz_at: string | null
+          total_correct: number | null
+          total_questions: number | null
+          total_quizzes: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          average_score?: number | null
+          badges_earned?: Json | null
+          best_score?: number | null
+          challenges_lost?: number | null
+          challenges_won?: number | null
+          created_at?: string | null
+          current_streak?: number | null
+          display_name?: string | null
+          highest_streak?: number | null
+          id?: string
+          last_quiz_at?: string | null
+          total_correct?: number | null
+          total_questions?: number | null
+          total_quizzes?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          average_score?: number | null
+          badges_earned?: Json | null
+          best_score?: number | null
+          challenges_lost?: number | null
+          challenges_won?: number | null
+          created_at?: string | null
+          current_streak?: number | null
+          display_name?: string | null
+          highest_streak?: number | null
+          id?: string
+          last_quiz_at?: string | null
+          total_correct?: number | null
+          total_questions?: number | null
+          total_quizzes?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       quiz_results: {
         Row: {
+          badge_earned: string | null
           created_at: string
           id: string
+          is_public: boolean | null
           questions_correct: number
           questions_total: number
           quiz_data: Json | null
           quiz_type: string
           score_percentage: number
+          share_image_url: string | null
+          share_token: string | null
           time_taken_seconds: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          badge_earned?: string | null
           created_at?: string
           id?: string
+          is_public?: boolean | null
           questions_correct: number
           questions_total: number
           quiz_data?: Json | null
           quiz_type?: string
           score_percentage: number
+          share_image_url?: string | null
+          share_token?: string | null
           time_taken_seconds?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          badge_earned?: string | null
           created_at?: string
           id?: string
+          is_public?: boolean | null
           questions_correct?: number
           questions_total?: number
           quiz_data?: Json | null
           quiz_type?: string
           score_percentage?: number
+          share_image_url?: string | null
+          share_token?: string | null
           time_taken_seconds?: number | null
           updated_at?: string
           user_id?: string

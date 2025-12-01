@@ -6,6 +6,7 @@ import { ArtistStory } from "./useArtistStories";
 interface GenerateSpotlightParams {
   artistName: string;
   initialText?: string;
+  force?: boolean;
 }
 
 // Helper function to extract a clean intro from biography or story content
@@ -143,9 +144,9 @@ export const useGenerateSpotlight = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ artistName, initialText }: GenerateSpotlightParams) => {
+    mutationFn: async ({ artistName, initialText, force }: GenerateSpotlightParams) => {
       const { data, error } = await supabase.functions.invoke('generate-artist-spotlight', {
-        body: { artistName, initialText }
+        body: { artistName, initialText, force }
       });
 
       // Handle 409 duplicate gracefully

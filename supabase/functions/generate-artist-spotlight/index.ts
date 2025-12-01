@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { artistName, initialText } = await req.json();
+    const { artistName, initialText, force } = await req.json();
     
     if (!artistName) {
       throw new Error('Artist name is required');
@@ -29,33 +29,33 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log(`Generating spotlight for artist: ${artistName}`);
+    console.log(`Generating spotlight for artist: ${artistName}, force: ${force}`);
 
-    // Early duplicate check to avoid heavy AI calls and return a friendly 409
-    // Only check for existing SPOTLIGHTS, not regular artist stories
-    try {
-      const { data: existingByName } = await supabase
-        .from('artist_stories')
-        .select('id')
-        .eq('artist_name', artistName)
-        .eq('is_spotlight', true)
-        .maybeSingle();
+    // Early duplicate check to avoid heavy AI calls - skip if force=true
+    if (!force) {
+      try {
+        const { data: existingByName } = await supabase
+          .from('artist_stories')
+          .select('id')
+          .eq('artist_name', artistName)
+          .eq('is_spotlight', true)
+          .maybeSingle();
 
-      if (existingByName) {
-        console.warn(`Spotlight already exists for ${artistName}, aborting.`);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: `Er bestaat al een spotlight voor ${artistName}.`,
-            code: 'DUPLICATE',
-            existing_id: existingByName.id
-          }),
-          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        if (existingByName) {
+          console.warn(`Spotlight already exists for ${artistName}, aborting.`);
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: `Er bestaat al een spotlight voor ${artistName}.`,
+              code: 'DUPLICATE',
+              existing_id: existingByName.id
+            }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } catch (e) {
+        console.warn('Duplicate pre-check failed, will rely on insert handling.');
       }
-    } catch (e) {
-      // If the check fails for any reason, continue (insert will still be guarded below)
-      console.warn('Duplicate pre-check failed, will rely on insert handling.');
     }
 
     // Generate spotlight content with AI
@@ -206,11 +206,14 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
     const spotlightImages = [];
     
     // Generate slug early for filename - append -spotlight for unique URLs
+    // If force mode, add timestamp to make slug unique
     const baseSlug = artistName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
-    const slug = `${baseSlug}-spotlight`;
+    const slug = force 
+      ? `${baseSlug}-spotlight-${Date.now()}`
+      : `${baseSlug}-spotlight`;
     
     // 1. Generate AI artist portrait and upload to storage
     console.log(`Generating AI portrait for: ${artistName}`);
@@ -345,25 +348,27 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
       ? storyData.music_style 
       : [storyData.music_style];
 
-    // Late duplicate guard (race condition safe) - only check for spotlights
-    const { data: existingSpotlight } = await supabase
-      .from('artist_stories')
-      .select('id, artist_name')
-      .eq('artist_name', artistName)
-      .eq('is_spotlight', true)
-      .maybeSingle();
+    // Late duplicate guard (race condition safe) - skip if force=true
+    if (!force) {
+      const { data: existingSpotlight } = await supabase
+        .from('artist_stories')
+        .select('id, artist_name')
+        .eq('artist_name', artistName)
+        .eq('is_spotlight', true)
+        .maybeSingle();
 
-    if (existingSpotlight) {
-      console.warn(`Duplicate detected post-generation for ${artistName}, aborting insert.`);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: `Er bestaat al een spotlight voor ${artistName}.`,
-          code: 'DUPLICATE',
-          existing_id: existingSpotlight.id
-        }),
-        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (existingSpotlight) {
+        console.warn(`Duplicate detected post-generation for ${artistName}, aborting insert.`);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Er bestaat al een spotlight voor ${artistName}.`,
+            code: 'DUPLICATE',
+            existing_id: existingSpotlight.id
+          }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Insert into database

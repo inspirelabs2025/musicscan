@@ -84,19 +84,20 @@ export function NederlandseGenres() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card 
-                className="group p-6 h-full hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-opacity-30"
-                style={{ 
-                  '--hover-border-color': genre.color,
-                  borderColor: 'transparent'
-                } as any}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = genre.color + '4D'; // 30% opacity
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
-                }}
-              >
+              <Link to={`/artists?genre=${encodeURIComponent(genre.name)}&country=netherlands`}>
+                <Card 
+                  className="group p-6 h-full hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-opacity-30 cursor-pointer"
+                  style={{ 
+                    '--hover-border-color': genre.color,
+                    borderColor: 'transparent'
+                  } as any}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = genre.color + '4D'; // 30% opacity
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
+                  }}
+                >
                 <div className="flex items-start gap-4">
                   {/* Icon */}
                   <div 
@@ -154,6 +155,7 @@ export function NederlandseGenres() {
                   style={{ backgroundColor: genre.color }}
                 />
               </Card>
+              </Link>
             </motion.div>
           ))}
         </div>

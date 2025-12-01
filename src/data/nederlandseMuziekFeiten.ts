@@ -47,7 +47,7 @@ export const NL_MUZIEK_FEITEN: MuziekFeit[] = [
     icon: "star",
     slug: "willy-alberti-doorbraak-1958",
     relatedArtists: ["Willy Alberti"],
-    youtubeId: "QnSKC_pBMlw",
+    youtubeId: "kOlJq1PTX14",
     famousTrack: "Kleine Geertje",
     historicalContext: "De jaren '50 waren de hoogtijdagen van het Nederlandse levenslied, met sterke Italiaanse en Franse invloeden."
   },

@@ -40,8 +40,9 @@ export default function NLMuziekFeitDetail() {
     );
   }
 
-  const decadeInfo = DECADE_INFO[fact.decade];
-  const IconComponent = iconMap[fact.icon];
+  const decadeInfo = DECADE_INFO[fact.decade] || { color: 'hsl(var(--primary))', name: `Jaren '${fact.decade}` };
+  const IconComponent = iconMap[fact.icon] || iconMap.music;
+  const decadeColor = decadeInfo.color || 'hsl(var(--primary))';
 
   // Get related facts from same decade
   const relatedFacts = NL_MUZIEK_FEITEN
@@ -62,7 +63,7 @@ export default function NLMuziekFeitDetail() {
   return (
     <>
       <Helmet>
-        <title>{fact.title} ({fact.year}) - Nederlandse Muziekgeschiedenis | MusicScan</title>
+        <title>{`${fact.title} (${fact.year}) - Nederlandse Muziekgeschiedenis | MusicScan`}</title>
         <meta 
           name="description" 
           content={fact.longDescription || fact.description}
@@ -98,7 +99,7 @@ export default function NLMuziekFeitDetail() {
           <section 
             className="relative py-20 overflow-hidden"
             style={{
-              background: `linear-gradient(135deg, ${decadeInfo?.color || 'hsl(var(--primary))'}15, transparent 50%)`
+              background: `linear-gradient(135deg, ${decadeColor}15, transparent 50%)`
             }}
           >
             <div className="container mx-auto px-4">
@@ -117,9 +118,9 @@ export default function NLMuziekFeitDetail() {
                   <div className="flex flex-wrap items-center gap-3 mb-4">
                     <Badge 
                       style={{ 
-                        backgroundColor: `${decadeInfo?.color}20`,
-                        borderColor: decadeInfo?.color,
-                        color: decadeInfo?.color
+                        backgroundColor: `${decadeColor}20`,
+                        borderColor: decadeColor,
+                        color: decadeColor
                       }}
                     >
                       {fact.category}
@@ -128,23 +129,23 @@ export default function NLMuziekFeitDetail() {
                       to={`/nl-muziek/jaren-${fact.decade}`}
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {decadeInfo?.name}
+                      {decadeInfo.name}
                     </Link>
                   </div>
                   
                   <div className="flex items-center gap-4 mb-4">
                     <div 
                       className="w-16 h-16 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: `${decadeInfo?.color}15` }}
+                      style={{ backgroundColor: `${decadeColor}15` }}
                     >
                       <IconComponent 
                         className="w-8 h-8" 
-                        style={{ color: decadeInfo?.color }}
+                        style={{ color: decadeColor }}
                       />
                     </div>
                     <div 
                       className="text-6xl md:text-8xl font-bold"
-                      style={{ color: decadeInfo?.color }}
+                      style={{ color: decadeColor }}
                     >
                       {fact.year}
                     </div>
@@ -190,8 +191,8 @@ export default function NLMuziekFeitDetail() {
                     <Card 
                       className="p-6 mb-8"
                       style={{ 
-                        borderColor: `${decadeInfo?.color}30`,
-                        background: `linear-gradient(135deg, ${decadeInfo?.color}05, transparent)`
+                        borderColor: `${decadeColor}30`,
+                        background: `linear-gradient(135deg, ${decadeColor}05, transparent)`
                       }}
                     >
                       <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
@@ -259,7 +260,7 @@ export default function NLMuziekFeitDetail() {
               <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
                   <h2 className="text-2xl font-bold mb-6">
-                    Meer uit de {decadeInfo?.name}
+                    Meer uit de {decadeInfo.name}
                   </h2>
                   
                   <div className="grid md:grid-cols-3 gap-4">
@@ -274,11 +275,11 @@ export default function NLMuziekFeitDetail() {
                             <div className="flex items-center gap-3 mb-2">
                               <RelIcon 
                                 className="w-5 h-5" 
-                                style={{ color: decadeInfo?.color }}
+                                style={{ color: decadeColor }}
                               />
                               <span 
                                 className="text-2xl font-bold"
-                                style={{ color: decadeInfo?.color }}
+                                style={{ color: decadeColor }}
                               >
                                 {relFact.year}
                               </span>
@@ -296,7 +297,7 @@ export default function NLMuziekFeitDetail() {
                   <div className="text-center mt-6">
                     <Button asChild variant="outline">
                       <Link to={`/nl-muziek/jaren-${fact.decade}`}>
-                        Bekijk alle {decadeInfo?.name} feiten
+                        Bekijk alle {decadeInfo.name} feiten
                         <ChevronRight className="w-4 h-4 ml-1" />
                       </Link>
                     </Button>

@@ -55,16 +55,21 @@ export const getSpotlightImageUrl = (spotlight: ArtistStory): string | null => {
 export const useArtistSpotlights = (options: { 
   published?: boolean;
   limit?: number;
+  spotlightOnly?: boolean;
 } = {}) => {
-  const { published = true, limit } = options;
+  const { published = true, limit, spotlightOnly = false } = options;
 
   return useQuery({
-    queryKey: ['artist-spotlights', published, limit],
+    queryKey: ['artist-spotlights', published, limit, spotlightOnly],
     queryFn: async () => {
       let query = supabase
         .from('artist_stories')
-        .select('*')
-        .eq('is_spotlight', true);
+        .select('*');
+      
+      // Only filter by is_spotlight if explicitly requested
+      if (spotlightOnly) {
+        query = query.eq('is_spotlight', true);
+      }
 
       if (published) {
         query = query.eq('is_published', true);

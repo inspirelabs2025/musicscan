@@ -9,6 +9,7 @@ import {
   detectGenre, 
   profileMention 
 } from '../_shared/facebook-content-helpers.ts';
+import { postToThreads } from '../_shared/threads-poster.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -229,6 +230,26 @@ Deno.serve(async (req) => {
     } catch (fbError) {
       console.error('❌ Facebook posting error:', fbError);
       postError = fbError.message;
+    }
+
+    // Also post to Threads (non-blocking)
+    let threadsPostId = null;
+    try {
+      const threadsResult = await postToThreads({
+        title: eventData.title,
+        content: eventData.description,
+        url: 'https://www.musicscan.app/vandaag-in-de-muziekgeschiedenis',
+        image_url: eventData.image_url,
+        artist: eventData.artist,
+        content_type: 'music_history'
+      });
+      
+      if (threadsResult.success) {
+        threadsPostId = threadsResult.post_id;
+        console.log(`✅ Posted to Threads: ${threadsPostId}`);
+      }
+    } catch (threadsError) {
+      console.log('🧵 Threads posting skipped or failed:', threadsError.message);
     }
 
     // Update queue status

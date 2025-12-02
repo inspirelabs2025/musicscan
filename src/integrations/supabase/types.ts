@@ -5798,6 +5798,42 @@ export type Database = {
         }
         Relationships: []
       }
+      threads_post_log: {
+        Row: {
+          content: string | null
+          content_type: string
+          created_at: string
+          error_message: string | null
+          id: string
+          status: string
+          threads_post_id: string | null
+          threads_response: Json | null
+          title: string
+        }
+        Insert: {
+          content?: string | null
+          content_type: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          threads_post_id?: string | null
+          threads_response?: Json | null
+          title: string
+        }
+        Update: {
+          content?: string | null
+          content_type?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          threads_post_id?: string | null
+          threads_response?: Json | null
+          title?: string
+        }
+        Relationships: []
+      }
       time_machine_events: {
         Row: {
           archive_photos: Json | null

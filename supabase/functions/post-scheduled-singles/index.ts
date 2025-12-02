@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { postToThreads } from '../_shared/threads-poster.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -93,6 +94,24 @@ serve(async (req) => {
           .eq('id', queueItem.id);
 
         console.log(`✅ Posted to Facebook: ${fbResult.post_id}`);
+
+        // Also post to Threads (non-blocking)
+        try {
+          const threadsResult = await postToThreads({
+            title: `🎵 ${queueItem.artist} - ${queueItem.single_name}`,
+            content: summary,
+            url: singleUrl,
+            image_url: queueItem.artwork_url,
+            artist: queueItem.artist,
+            content_type: 'blog'
+          });
+          
+          if (threadsResult.success) {
+            console.log(`✅ Posted to Threads: ${threadsResult.post_id}`);
+          }
+        } catch (threadsError) {
+          console.log('🧵 Threads posting skipped or failed:', threadsError.message);
+        }
 
         return new Response(JSON.stringify({
           success: true,

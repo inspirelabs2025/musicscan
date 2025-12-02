@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, RefreshCw, Facebook, CheckCircle2, XCircle, AlertCircle, Key, Wand2, Send, Package, ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
+import { Loader2, RefreshCw, Facebook, CheckCircle2, XCircle, AlertCircle, Key, Wand2, Send, Package, ArrowRight, ShoppingBag, Sparkles, AtSign } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
@@ -45,6 +45,12 @@ export default function FacebookSync() {
   // Test post state
   const [testPostMessage, setTestPostMessage] = useState("🎵 Test post vanuit MusicScan! Onze Facebook integratie werkt perfect. #MusicScan #VinylCollection");
   const [isTestPosting, setIsTestPosting] = useState(false);
+  
+  // Threads state
+  const [threadsAccessToken, setThreadsAccessToken] = useState("");
+  const [threadsUserId, setThreadsUserId] = useState("");
+  const [isSavingThreads, setIsSavingThreads] = useState(false);
+  const [threadsSaved, setThreadsSaved] = useState(false);
 
   // Query to check current saved credentials status
   const { data: savedCredentials, refetch: refetchCredentials } = useQuery({
@@ -68,6 +74,35 @@ export default function FacebookSync() {
         if (item.secret_key === 'FACEBOOK_PAGE_ACCESS_TOKEN') result.hasToken = true;
         if (item.secret_key === 'FACEBOOK_APP_SECRET') result.hasSecret = true;
         if (item.secret_key === 'FACEBOOK_PAGE_ID') result.hasPageId = true;
+        if (item.updated_at && (!result.lastUpdated || item.updated_at > result.lastUpdated)) {
+          result.lastUpdated = item.updated_at;
+        }
+      });
+      
+      return result;
+    }
+  });
+
+  // Query to check Threads credentials status
+  const { data: threadsCredentials, refetch: refetchThreadsCredentials } = useQuery({
+    queryKey: ['threads-credentials-status'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('app_secrets')
+        .select('secret_key, updated_at')
+        .in('secret_key', ['THREADS_ACCESS_TOKEN', 'THREADS_USER_ID']);
+      
+      if (error) throw error;
+      
+      const result = {
+        hasToken: false,
+        hasUserId: false,
+        lastUpdated: null as string | null
+      };
+      
+      data?.forEach((item: { secret_key: string; updated_at: string }) => {
+        if (item.secret_key === 'THREADS_ACCESS_TOKEN') result.hasToken = true;
+        if (item.secret_key === 'THREADS_USER_ID') result.hasUserId = true;
         if (item.updated_at && (!result.lastUpdated || item.updated_at > result.lastUpdated)) {
           result.lastUpdated = item.updated_at;
         }
@@ -293,6 +328,60 @@ export default function FacebookSync() {
       });
     } finally {
       setIsTestPosting(false);
+    }
+  };
+
+  // Save Threads credentials
+  const saveThreadsCredentials = async () => {
+    if (!threadsAccessToken.trim() || !threadsUserId.trim()) {
+      toast({
+        title: "Credentials vereist",
+        description: "Vul zowel Access Token als User ID in",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsSavingThreads(true);
+      
+      // Save Threads Access Token
+      const { error: tokenError } = await supabase.functions.invoke('save-facebook-token', {
+        body: { 
+          secret_key: 'THREADS_ACCESS_TOKEN',
+          secret_value: threadsAccessToken.trim()
+        }
+      });
+
+      if (tokenError) throw tokenError;
+
+      // Save Threads User ID
+      const { error: userIdError } = await supabase.functions.invoke('save-facebook-token', {
+        body: { 
+          secret_key: 'THREADS_USER_ID',
+          secret_value: threadsUserId.trim()
+        }
+      });
+
+      if (userIdError) throw userIdError;
+      
+      toast({
+        title: "✅ Threads credentials opgeslagen",
+        description: "Threads auto-posting is nu actief!",
+      });
+
+      setThreadsSaved(true);
+      refetchThreadsCredentials();
+      
+    } catch (error: any) {
+      console.error('Error saving Threads credentials:', error);
+      toast({
+        title: "❌ Fout bij opslaan",
+        description: error.message || "Er is een fout opgetreden",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingThreads(false);
     }
   };
 
@@ -842,6 +931,102 @@ export default function FacebookSync() {
                 <>
                   <Send className="w-4 h-4 mr-2" />
                   Verstuur Test Post
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Threads Credentials */}
+        <Card className="border-purple-500/50 bg-purple-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AtSign className="w-5 h-5 text-purple-500" />
+              🧵 Threads Integratie
+            </CardTitle>
+            <CardDescription>
+              Configureer Threads om automatisch content te cross-posten naar Meta's Threads platform
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Current Threads status */}
+            <div className="p-3 bg-muted/50 border rounded-lg space-y-2">
+              <p className="font-medium text-sm">📊 Threads Status:</p>
+              <div className="flex flex-wrap gap-3 text-sm">
+                <span className={threadsCredentials?.hasToken ? "text-green-600" : "text-destructive"}>
+                  {threadsCredentials?.hasToken ? "✅" : "❌"} Access Token
+                </span>
+                <span className={threadsCredentials?.hasUserId ? "text-green-600" : "text-destructive"}>
+                  {threadsCredentials?.hasUserId ? "✅" : "❌"} User ID
+                </span>
+              </div>
+              {threadsCredentials?.lastUpdated && (
+                <p className="text-xs text-muted-foreground">
+                  Laatst bijgewerkt: {new Date(threadsCredentials.lastUpdated).toLocaleString('nl-NL')}
+                </p>
+              )}
+            </div>
+
+            {threadsSaved && (
+              <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                <p className="text-purple-600 font-medium flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Threads credentials opgeslagen! Cross-posting is nu actief.
+                </p>
+              </div>
+            )}
+
+            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm">
+              <strong>📝 Threads Access Token verkrijgen:</strong>
+              <ol className="list-decimal list-inside mt-2 space-y-1 text-muted-foreground">
+                <li>Ga naar <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Meta Developer Console</a></li>
+                <li>Selecteer je app → Use Cases → Threads API</li>
+                <li>Genereer een Threads Access Token met <code className="bg-muted px-1 rounded">threads_basic</code> en <code className="bg-muted px-1 rounded">threads_content_publish</code></li>
+                <li>Je Threads User ID vind je via: <code className="bg-muted px-1 rounded">GET /me?fields=id</code> op graph.threads.net</li>
+              </ol>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="threadsAccessToken">Threads Access Token</Label>
+              <Input
+                id="threadsAccessToken"
+                type="password"
+                placeholder="Plak hier je Threads Access Token..."
+                value={threadsAccessToken}
+                onChange={(e) => setThreadsAccessToken(e.target.value)}
+                disabled={isSavingThreads}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="threadsUserId">Threads User ID</Label>
+              <Input
+                id="threadsUserId"
+                type="text"
+                placeholder="Bijv. 148484922994956"
+                value={threadsUserId}
+                onChange={(e) => setThreadsUserId(e.target.value)}
+                disabled={isSavingThreads}
+              />
+              <p className="text-xs text-muted-foreground">
+                Dit is je Threads account ID (te vinden via Threads API /me endpoint)
+              </p>
+            </div>
+
+            <Button
+              onClick={saveThreadsCredentials}
+              disabled={isSavingThreads || !threadsAccessToken.trim() || !threadsUserId.trim()}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              {isSavingThreads ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Opslaan...
+                </>
+              ) : (
+                <>
+                  <AtSign className="w-4 h-4 mr-2" />
+                  Threads Credentials Opslaan
                 </>
               )}
             </Button>

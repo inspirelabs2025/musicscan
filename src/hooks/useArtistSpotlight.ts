@@ -70,7 +70,8 @@ export const useArtistSpotlights = (options: {
         query = query.eq('is_published', true);
       }
 
-      query = query.order('published_at', { ascending: false });
+      // Order by created_at for admin view (includes unpublished), published_at for public
+      query = query.order('created_at', { ascending: false });
 
       if (limit) {
         query = query.limit(limit);

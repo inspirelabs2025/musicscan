@@ -264,10 +264,12 @@ Geef ALTIJD specifieke details wanneer je iets beweert.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: `🎵 ${artist} - ${single_name}\n\n${summary}\n\n🔗 Lees het volledige verhaal:`,
-          link: singleUrl,
-          imageUrl: artworkUrl,
-          hashtags: ['#MusicScan', '#Singles', '#MuziekVerhaal', year ? `#${year}s` : null].filter(Boolean)
+          content_type: 'blog',
+          title: `🎵 ${artist} - ${single_name}`,
+          content: summary,
+          url: singleUrl,
+          image_url: artworkUrl,
+          hashtags: ['Singles', 'MuziekVerhaal', year ? `${year}s` : null].filter(Boolean)
         })
       });
 

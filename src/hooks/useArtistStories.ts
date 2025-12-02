@@ -29,18 +29,32 @@ export interface ArtistStory {
   is_deep_dive?: boolean;
 }
 
+// List of known Dutch artists for filtering
+const DUTCH_ARTISTS = [
+  'Golden Earring', 'Within Temptation', 'André Hazes', 'Marco Borsato', 'Doe Maar',
+  'Anouk', 'Tiësto', 'Armin van Buuren', 'Martin Garrix', 'BLØF', 'Guus Meeuwis',
+  'De Dijk', 'Herman Brood', 'Boudewijn de Groot', 'Epica', 'Krezip', 'Kensington',
+  'De Staat', 'Chef\'Special', 'Danny Vera', 'Ilse DeLange', 'Nick & Simon',
+  'Davina Michelle', 'Floor Jansen', 'Hardwell', 'Afrojack', 'Nicky Romero',
+  'Snollebollekes', 'Henk Poort', 'Gordon', 'Frans Bauer', 'Jan Smit', 'Gerard Joling',
+  'Acda en de Munnik', 'Het Goede Doel', 'Racoon', 'DI-RECT', 'Cuby + Blizzards',
+  'Shocking Blue', 'Focus', 'Kayak', 'Ekseption', 'Volbeat', 'Delain', 'After Forever',
+  'The Gathering', 'Gorefest', 'Heidevolk', 'Asrai', 'Stream of Passion', 'ReVamp'
+];
+
 interface UseArtistStoriesOptions {
   search?: string;
   genre?: string;
+  country?: string;
   sortBy?: 'newest' | 'popular' | 'alphabetical';
   limit?: number;
 }
 
 export const useArtistStories = (options: UseArtistStoriesOptions = {}) => {
-  const { search, genre, sortBy = 'newest', limit } = options;
+  const { search, genre, country, sortBy = 'newest', limit } = options;
 
   return useQuery({
-    queryKey: ['artist-stories', search, genre, sortBy, limit],
+    queryKey: ['artist-stories', search, genre, country, sortBy, limit],
     queryFn: async () => {
       let query = supabase
         .from('artist_stories')
@@ -56,6 +70,11 @@ export const useArtistStories = (options: UseArtistStoriesOptions = {}) => {
       // Apply genre filter (case-insensitive)
       if (genre) {
         query = query.contains('music_style', [genre.toLowerCase()]);
+      }
+
+      // Apply country filter (for Nederland, filter by known Dutch artists)
+      if (country === 'nederland') {
+        query = query.in('artist_name', DUTCH_ARTISTS);
       }
 
       // Apply sorting

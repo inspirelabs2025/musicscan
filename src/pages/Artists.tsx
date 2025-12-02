@@ -22,11 +22,14 @@ const Artists = () => {
   
   // Initialize state from URL params (convert genre to lowercase for matching)
   const urlGenre = searchParams.get('genre');
+  const urlCountry = searchParams.get('country');
   const initialGenre = urlGenre ? urlGenre.toLowerCase() : 'all';
+  const initialCountry = urlCountry || '';
   const initialSearch = searchParams.get('search') || '';
   
   const [search, setSearch] = useState(initialSearch);
   const [selectedGenre, setSelectedGenre] = useState<string>(initialGenre);
+  const [selectedCountry, setSelectedCountry] = useState<string>(initialCountry);
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'alphabetical'>('newest');
   
   // Update URL when filters change
@@ -35,15 +38,19 @@ const Artists = () => {
     if (selectedGenre && selectedGenre !== 'all') {
       params.set('genre', selectedGenre);
     }
+    if (selectedCountry) {
+      params.set('country', selectedCountry);
+    }
     if (search) {
       params.set('search', search);
     }
     setSearchParams(params, { replace: true });
-  }, [selectedGenre, search, setSearchParams]);
+  }, [selectedGenre, selectedCountry, search, setSearchParams]);
 
   const { data: stories, isLoading, error } = useArtistStories({
     search,
     genre: selectedGenre === 'all' ? undefined : selectedGenre,
+    country: selectedCountry || undefined,
     sortBy
   });
 
@@ -79,26 +86,41 @@ const Artists = () => {
 
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10 py-20">
+        <section className={`relative overflow-hidden py-20 ${selectedCountry === 'nederland' ? 'bg-gradient-to-br from-[hsl(24,100%,50%)]/10 via-[hsl(211,100%,35%)]/10 to-[hsl(0,0%,100%)]/10' : 'bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10'}`}>
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
               <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-6">
                 <Music className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium text-primary">Artiest Collectie</span>
+                <span className="text-sm font-medium text-primary">
+                  {selectedCountry === 'nederland' ? '🇳🇱 Nederlandse Artiesten' : 'Artiest Collectie'}
+                </span>
               </div>
               
               <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
-                Verhalen over Muziek Iconen
+                {selectedCountry === 'nederland' ? 'Nederlandse Muziek Iconen' : 'Verhalen over Muziek Iconen'}
               </h1>
               
               <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Ontdek de verhalen achter de grootste artiesten uit de muziekgeschiedenis. Van hun beginjaren tot hun blijvende erfenis.
+                {selectedCountry === 'nederland' 
+                  ? 'Ontdek de verhalen achter de grootste Nederlandse artiesten. Van Golden Earring tot Martin Garrix.'
+                  : 'Ontdek de verhalen achter de grootste artiesten uit de muziekgeschiedenis. Van hun beginjaren tot hun blijvende erfenis.'}
               </p>
+
+              {selectedCountry === 'nederland' && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setSelectedCountry('')}
+                  className="mb-6"
+                >
+                  ✕ Nederland filter verwijderen
+                </Button>
+              )}
 
               {stats && (
                 <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
                   <div>
-                    <span className="text-2xl font-bold text-foreground">{stats.totalStories}</span>
+                    <span className="text-2xl font-bold text-foreground">{stories?.length || stats.totalStories}</span>
                     <span className="ml-2">Artiesten</span>
                   </div>
                   <div>

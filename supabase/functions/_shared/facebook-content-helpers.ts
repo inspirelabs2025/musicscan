@@ -8,6 +8,77 @@ export function randomPick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// ============================================
+// CONTENT CLEANING UTILITIES
+// ============================================
+
+/**
+ * Strip markdown, YAML frontmatter, and HTML from content for clean social posts
+ */
+export function stripMarkdownForSocial(content: string): string {
+  if (!content) return '';
+  
+  let cleaned = content;
+  
+  // Remove YAML frontmatter (---...---)
+  cleaned = cleaned.replace(/^---[\s\S]*?---\n?/g, '');
+  
+  // Remove code blocks (```...```)
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
+  
+  // Remove markdown headers (# ## ### etc)
+  cleaned = cleaned.replace(/^#+\s+.*$/gm, '');
+  
+  // Remove bold/italic markers
+  cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, '$1');
+  cleaned = cleaned.replace(/\*([^*]+)\*/g, '$1');
+  cleaned = cleaned.replace(/__([^_]+)__/g, '$1');
+  cleaned = cleaned.replace(/_([^_]+)_/g, '$1');
+  
+  // Remove links but keep text [text](url) -> text
+  cleaned = cleaned.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+  
+  // Remove images ![alt](url)
+  cleaned = cleaned.replace(/!\[[^\]]*\]\([^)]+\)/g, '');
+  
+  // Remove blockquotes
+  cleaned = cleaned.replace(/^>\s*/gm, '');
+  
+  // Remove list markers
+  cleaned = cleaned.replace(/^[\-\*]\s+/gm, '');
+  cleaned = cleaned.replace(/^\d+\.\s+/gm, '');
+  
+  // Remove horizontal rules
+  cleaned = cleaned.replace(/^---+$/gm, '');
+  cleaned = cleaned.replace(/^\*\*\*+$/gm, '');
+  
+  // Remove HTML tags
+  cleaned = cleaned.replace(/<[^>]+>/g, '');
+  
+  // Normalize whitespace
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+  cleaned = cleaned.trim();
+  
+  return cleaned;
+}
+
+/**
+ * Extract a clean summary from markdown content (first ~300 chars)
+ */
+export function extractSocialSummary(content: string, maxLength: number = 300): string {
+  const cleaned = stripMarkdownForSocial(content);
+  
+  if (cleaned.length <= maxLength) {
+    return cleaned;
+  }
+  
+  // Cut at word boundary
+  const truncated = cleaned.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  
+  return truncated.substring(0, lastSpace > 200 ? lastSpace : maxLength) + '...';
+}
+
 export function shuffleArray<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }

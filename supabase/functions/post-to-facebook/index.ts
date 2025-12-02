@@ -93,6 +93,9 @@ Deno.serve(async (req) => {
     if (url) {
       postMessage += `\n\n🔗 Lees meer: ${url}`;
     }
+    
+    // Add profile mention/tag at the end
+    postMessage += '\n\n📌 Via Rogier Visser: https://www.facebook.com/profile.php?id=100086154933382';
 
     // Post to Facebook Page
     const fbApiUrl = `https://graph.facebook.com/v18.0/${pageId}/feed`;

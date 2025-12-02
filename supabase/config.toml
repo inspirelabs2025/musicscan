@@ -489,3 +489,12 @@ verify_jwt = false
 
 [[functions.post-scheduled-youtube.schedule]]
 cron = "0 9-21 * * *"
+
+[functions.singles-facebook-queue]
+verify_jwt = false
+
+[functions.post-scheduled-singles]
+verify_jwt = false
+
+[[functions.post-scheduled-singles.schedule]]
+cron = "30 9-21/2 * * *"

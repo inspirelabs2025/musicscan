@@ -375,6 +375,8 @@ export const studioFacebookPages: Record<string, string> = {
 export function detectGenre(artist: string, description: string, tags?: string[]): string | null {
   const text = `${artist} ${description} ${(tags || []).join(' ')}`.toLowerCase();
   
+  // Prog rock detection FIRST (before general rock)
+  if (text.match(/prog|progressive|jethro tull|genesis|yes|king crimson|pink floyd|rush|emerson|lake|palmer|moody blues|camel|gentle giant|van der graaf/)) return 'prog';
   if (text.match(/metal|heavy|thrash|death|black metal/)) return 'metal';
   if (text.match(/rock|guitar|band|classic rock/)) return 'rock';
   if (text.match(/pop|hit|chart|mainstream/)) return 'pop';
@@ -438,6 +440,7 @@ export function buildSmartHashtags(options: {
   
   // 3. GENRE/CONTEXT HASHTAG (1x)
   const genreHashtags: Record<string, string[]> = {
+    'prog': ['#ProgRock', '#ProgressiveRock', '#ClassicProg'],
     'rock': ['#ClassicRock', '#RockMusic', '#RockHistory'],
     'pop': ['#PopMusic', '#PopHits', '#PopClassics'],
     'hiphop': ['#HipHop', '#RapMusic', '#HipHopClassics'],

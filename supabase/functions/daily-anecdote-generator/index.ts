@@ -303,7 +303,6 @@ Maak het uitgebreider en diepgaander!`
     // Auto-post to Facebook and Instagram
     const anecdoteUrl = `https://www.musicscan.app/anekdotes/${newAnecdote.slug}`;
     const postContent = newAnecdote.anecdote_content.substring(0, 400) + '...';
-    const postHashtags = ['MusicScan', 'MuziekAnekdote', subjectName.replace(/\s+/g, ''), 'Muziek', 'MuziekGeschiedenis'];
     
     // Default image for social posts (can be replaced with generated image later)
     const defaultImageUrl = 'https://www.musicscan.app/og-image.png';
@@ -321,7 +320,7 @@ Maak het uitgebreider en diepgaander!`
           title: newAnecdote.anecdote_title,
           content: postContent,
           url: anecdoteUrl,
-          hashtags: postHashtags
+          artist: subjectType === 'artist' ? subjectName : undefined
         })
       });
       

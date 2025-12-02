@@ -56,6 +56,20 @@ serve(async (req) => {
       } catch (e) {
         console.warn('Duplicate pre-check failed, will rely on insert handling.');
       }
+    } else {
+      // Force mode: delete existing spotlight first to avoid unique constraint
+      console.log(`Force mode: deleting existing spotlight for ${artistName} if exists`);
+      const { error: deleteError } = await supabase
+        .from('artist_stories')
+        .delete()
+        .eq('artist_name', artistName)
+        .eq('is_spotlight', true);
+      
+      if (deleteError) {
+        console.warn(`Failed to delete existing spotlight: ${deleteError.message}`);
+      } else {
+        console.log(`Deleted existing spotlight for ${artistName}`);
+      }
     }
 
     // Generate spotlight content with AI

@@ -51,6 +51,13 @@ export default function FacebookSync() {
   const [threadsUserId, setThreadsUserId] = useState("");
   const [isSavingThreads, setIsSavingThreads] = useState(false);
   const [threadsSaved, setThreadsSaved] = useState(false);
+  
+  // Threads OAuth state
+  const [threadsAuthCode, setThreadsAuthCode] = useState("");
+  const [isExchangingCode, setIsExchangingCode] = useState(false);
+  const [threadsAppId, setThreadsAppId] = useState("");
+  const [threadsAppSecret, setThreadsAppSecret] = useState("");
+  const [isSavingAppCredentials, setIsSavingAppCredentials] = useState(false);
 
   // Query to check current saved credentials status
   const { data: savedCredentials, refetch: refetchCredentials } = useQuery({
@@ -382,6 +389,100 @@ export default function FacebookSync() {
       });
     } finally {
       setIsSavingThreads(false);
+    }
+  };
+
+  // Save Threads App Credentials (App ID and App Secret)
+  const saveThreadsAppCredentials = async () => {
+    if (!threadsAppId.trim() || !threadsAppSecret.trim()) {
+      toast({
+        title: "Credentials vereist",
+        description: "Vul zowel Threads App ID als App Secret in",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsSavingAppCredentials(true);
+      
+      // Save Threads App ID
+      await supabase.functions.invoke('save-facebook-token', {
+        body: { 
+          secret_key: 'THREADS_APP_ID',
+          secret_value: threadsAppId.trim()
+        }
+      });
+
+      // Save Threads App Secret
+      await supabase.functions.invoke('save-facebook-token', {
+        body: { 
+          secret_key: 'THREADS_APP_SECRET',
+          secret_value: threadsAppSecret.trim()
+        }
+      });
+      
+      toast({
+        title: "✅ App credentials opgeslagen",
+        description: "Nu kun je de OAuth flow starten!",
+      });
+      
+    } catch (error: any) {
+      console.error('Error saving Threads app credentials:', error);
+      toast({
+        title: "❌ Fout bij opslaan",
+        description: error.message || "Er is een fout opgetreden",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingAppCredentials(false);
+    }
+  };
+
+  // Exchange Threads OAuth code for access token
+  const exchangeThreadsCode = async () => {
+    if (!threadsAuthCode.trim()) {
+      toast({
+        title: "Code vereist",
+        description: "Plak de authorization code uit de redirect URL",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsExchangingCode(true);
+      
+      const { data, error } = await supabase.functions.invoke('threads-token-exchange', {
+        body: { 
+          code: threadsAuthCode.trim(),
+          redirect_uri: 'https://www.musicscan.nl/'
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast({
+          title: "✅ Threads verbonden!",
+          description: `User ID: ${data.user_id} - Token type: ${data.token_type}`,
+        });
+        setThreadsSaved(true);
+        refetchThreadsCredentials();
+        setThreadsAuthCode("");
+      } else {
+        throw new Error(data?.error || 'Onbekende fout');
+      }
+      
+    } catch (error: any) {
+      console.error('Error exchanging Threads code:', error);
+      toast({
+        title: "❌ Code exchange mislukt",
+        description: error.message || "Er is een fout opgetreden",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExchangingCode(false);
     }
   };
 
@@ -976,60 +1077,153 @@ export default function FacebookSync() {
               </div>
             )}
 
-            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm">
-              <strong>📝 Threads Access Token verkrijgen:</strong>
-              <ol className="list-decimal list-inside mt-2 space-y-1 text-muted-foreground">
-                <li>Ga naar <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Meta Developer Console</a></li>
-                <li>Selecteer je app → Use Cases → Threads API</li>
-                <li>Genereer een Threads Access Token met <code className="bg-muted px-1 rounded">threads_basic</code> en <code className="bg-muted px-1 rounded">threads_content_publish</code></li>
-                <li>Je Threads User ID vind je via: <code className="bg-muted px-1 rounded">GET /me?fields=id</code> op graph.threads.net</li>
-              </ol>
+            {/* OAuth Flow Section - RECOMMENDED */}
+            <div className="p-4 bg-purple-500/10 border-2 border-purple-500/30 rounded-lg space-y-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-500" />
+                <strong className="text-purple-700">✨ Automatische OAuth Flow (Aanbevolen)</strong>
+              </div>
+              
+              <div className="text-sm space-y-3">
+                <p className="text-muted-foreground">
+                  <strong>Stap 1:</strong> Sla eerst je Threads App ID en App Secret op:
+                </p>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="threadsAppId" className="text-xs">Threads App ID</Label>
+                    <Input
+                      id="threadsAppId"
+                      placeholder="1484849229994956"
+                      value={threadsAppId}
+                      onChange={(e) => setThreadsAppId(e.target.value)}
+                      disabled={isSavingAppCredentials}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="threadsAppSecret" className="text-xs">Threads App Secret</Label>
+                    <Input
+                      id="threadsAppSecret"
+                      type="password"
+                      placeholder="App secret..."
+                      value={threadsAppSecret}
+                      onChange={(e) => setThreadsAppSecret(e.target.value)}
+                      disabled={isSavingAppCredentials}
+                    />
+                  </div>
+                </div>
+                
+                <Button
+                  onClick={saveThreadsAppCredentials}
+                  disabled={isSavingAppCredentials || !threadsAppId.trim() || !threadsAppSecret.trim()}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  {isSavingAppCredentials ? (
+                    <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Opslaan...</>
+                  ) : (
+                    "Stap 1: App Credentials Opslaan"
+                  )}
+                </Button>
+
+                <p className="text-muted-foreground mt-4">
+                  <strong>Stap 2:</strong> Klik op deze link om te autoriseren (kopieer daarna de <code className="bg-muted px-1 rounded">code</code> uit de URL):
+                </p>
+                
+                <a 
+                  href={`https://threads.net/oauth/authorize?client_id=${threadsAppId || '1484849229994956'}&redirect_uri=https://www.musicscan.nl/&scope=threads_basic,threads_content_publish&response_type=code`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block p-2 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                >
+                  🔐 Autoriseer Threads Account
+                </a>
+                
+                <p className="text-muted-foreground">
+                  <strong>Stap 3:</strong> Plak de <code className="bg-muted px-1 rounded">code</code> parameter uit de redirect URL:
+                </p>
+                
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="AQC... (code uit redirect URL)"
+                    value={threadsAuthCode}
+                    onChange={(e) => setThreadsAuthCode(e.target.value)}
+                    disabled={isExchangingCode}
+                  />
+                  <Button
+                    onClick={exchangeThreadsCode}
+                    disabled={isExchangingCode || !threadsAuthCode.trim()}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    {isExchangingCode ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Activeer"
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="threadsAccessToken">Threads Access Token</Label>
-              <Input
-                id="threadsAccessToken"
-                type="password"
-                placeholder="Plak hier je Threads Access Token..."
-                value={threadsAccessToken}
-                onChange={(e) => setThreadsAccessToken(e.target.value)}
-                disabled={isSavingThreads}
-              />
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-muted-foreground/20"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-background px-2 text-muted-foreground">OF handmatig invoeren</span>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="threadsUserId">Threads User ID</Label>
-              <Input
-                id="threadsUserId"
-                type="text"
-                placeholder="Bijv. 148484922994956"
-                value={threadsUserId}
-                onChange={(e) => setThreadsUserId(e.target.value)}
-                disabled={isSavingThreads}
-              />
+            {/* Manual Method */}
+            <div className="space-y-4 opacity-70">
               <p className="text-xs text-muted-foreground">
-                Dit is je Threads account ID (te vinden via Threads API /me endpoint)
+                Heb je al een Access Token en User ID? Voer ze hier handmatig in:
               </p>
-            </div>
 
-            <Button
-              onClick={saveThreadsCredentials}
-              disabled={isSavingThreads || !threadsAccessToken.trim() || !threadsUserId.trim()}
-              className="w-full bg-purple-600 hover:bg-purple-700"
-            >
-              {isSavingThreads ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Opslaan...
-                </>
-              ) : (
-                <>
-                  <AtSign className="w-4 h-4 mr-2" />
-                  Threads Credentials Opslaan
-                </>
-              )}
-            </Button>
+              <div className="space-y-2">
+                <Label htmlFor="threadsAccessToken">Threads Access Token</Label>
+                <Input
+                  id="threadsAccessToken"
+                  type="password"
+                  placeholder="Plak hier je Threads Access Token..."
+                  value={threadsAccessToken}
+                  onChange={(e) => setThreadsAccessToken(e.target.value)}
+                  disabled={isSavingThreads}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="threadsUserId">Threads User ID</Label>
+                <Input
+                  id="threadsUserId"
+                  type="text"
+                  placeholder="Bijv. 148484922994956"
+                  value={threadsUserId}
+                  onChange={(e) => setThreadsUserId(e.target.value)}
+                  disabled={isSavingThreads}
+                />
+              </div>
+
+              <Button
+                onClick={saveThreadsCredentials}
+                disabled={isSavingThreads || !threadsAccessToken.trim() || !threadsUserId.trim()}
+                className="w-full bg-purple-600 hover:bg-purple-700"
+              >
+                {isSavingThreads ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Opslaan...
+                  </>
+                ) : (
+                  <>
+                    <AtSign className="w-4 h-4 mr-2" />
+                    Threads Credentials Opslaan
+                  </>
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

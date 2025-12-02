@@ -23,7 +23,9 @@ interface PostRequest {
   content: string;
   url?: string;
   image_url?: string;
-  hashtags?: string[];
+  artist?: string;
+  year?: number;
+  hashtags?: string[]; // Deprecated - smart hashtags are now always used
 }
 
 Deno.serve(async (req) => {
@@ -37,7 +39,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { content_type, title, content, url, image_url, hashtags }: PostRequest = await req.json();
+    const { content_type, title, content, url, image_url, artist, year }: PostRequest = await req.json();
 
     if (!content) {
       return new Response(
@@ -99,27 +101,19 @@ Deno.serve(async (req) => {
       postMessage += foundArtistTag ? `\n🎹 ${studioTag}` : `\n\n🎹 ${studioTag}`;
     }
     
-    // Genre detectie voor smart hashtags
-    const genre = detectGenre('', content);
+    // Genre detectie MET artiest voor betere nauwkeurigheid
+    const genre = detectGenre(artist || '', content);
     
-    // Smart hashtags (max 5)
-    let smartHashtags: string[];
-    if (hashtags && hashtags.length > 0) {
-      // Gebruik max 2 van de meegegeven hashtags + vul aan met smart logic
-      const providedHashtags = hashtags.slice(0, 2).map(tag => `#${tag.replace(/\s+/g, '')}`);
-      smartHashtags = [
-        '#MusicScan',
-        ...providedHashtags,
-        randomPick(['#MusicLovers', '#Vinyl', '#MuziekGeschiedenis']),
-      ].slice(0, 5);
-    } else {
-      smartHashtags = buildSmartHashtags({
-        genre: genre,
-        category: content_type === 'anecdote' ? 'story' : 
-                  content_type === 'news' ? 'history' : 'release',
-        isVinyl: content.toLowerCase().includes('vinyl') || content.toLowerCase().includes('plaat'),
-      });
-    }
+    // ALTIJD buildSmartHashtags gebruiken - negeer handmatige hashtags
+    const smartHashtags = buildSmartHashtags({
+      artist: artist,
+      genre: genre,
+      year: year,
+      category: content_type === 'anecdote' ? 'story' : 
+                content_type === 'news' ? 'history' : 
+                content_type === 'youtube_discovery' ? 'video' : 'release',
+      isVinyl: content.toLowerCase().includes('vinyl') || content.toLowerCase().includes('plaat'),
+    });
     
     postMessage += '\n\n' + smartHashtags.join(' ');
     

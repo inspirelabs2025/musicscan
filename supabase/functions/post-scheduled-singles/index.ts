@@ -74,7 +74,8 @@ serve(async (req) => {
           content: summary,
           url: singleUrl,
           image_url: queueItem.artwork_url,
-          hashtags: ['Singles', 'MuziekVerhaal', year ? `${year}s` : null].filter(Boolean)
+          artist: queueItem.artist,
+          year: year
         })
       });
 

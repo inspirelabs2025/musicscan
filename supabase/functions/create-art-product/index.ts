@@ -491,7 +491,8 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
                   content: summary,
                   url: blogUrl,
                   image_url: artworkUrl,
-                  hashtags: [artistValue.replace(/\s+/g, ''), genreStr.split(',')[0].trim(), 'Vinyl', 'MuziekVerhaal']
+                  artist: artistValue,
+                  year: yearValue || undefined
                 }
               });
               console.log('✅ Blog auto-posted to Facebook');

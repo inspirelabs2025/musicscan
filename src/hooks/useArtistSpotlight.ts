@@ -127,11 +127,15 @@ export const useArtistSpotlightById = (id: string, options?: { enabled?: boolean
         .select('*')
         .eq('id', id)
         .eq('is_spotlight', true)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching spotlight by id:', error);
         throw error;
+      }
+
+      if (!data) {
+        throw new Error('Spotlight niet gevonden. Ververs de pagina om de nieuwste versie te laden.');
       }
 
       return data as ArtistStory;
@@ -205,15 +209,20 @@ export const useUpdateSpotlight = () => {
         .from('artist_stories')
         .update(updates)
         .eq('id', id)
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
-      return data;
+      
+      if (!data || data.length === 0) {
+        throw new Error('Spotlight niet gevonden. Mogelijk is deze verwijderd of opnieuw aangemaakt. Ververs de pagina.');
+      }
+      
+      return data[0];
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['artist-spotlights'] });
       queryClient.invalidateQueries({ queryKey: ['artist-spotlight', data.slug] });
+      queryClient.invalidateQueries({ queryKey: ['artist-spotlight-by-id', data.id] });
     },
   });
 };

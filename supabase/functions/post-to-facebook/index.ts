@@ -1,5 +1,16 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { createHmac } from "https://deno.land/std@0.177.0/node/crypto.ts";
+import { 
+  randomPick, 
+  introVariations, 
+  ctaVariations, 
+  buildSmartHashtags, 
+  getArtistTag, 
+  getStudioTag, 
+  detectGenre,
+  artistFacebookPages,
+  profileMention 
+} from '../_shared/facebook-content-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -66,36 +77,60 @@ Deno.serve(async (req) => {
       .update(pageAccessToken)
       .digest('hex');
 
-    // Format the post content
-    let postMessage = '';
-    
-    // Add emoji based on content type
-    const emojis: Record<string, string> = {
-      anecdote: '🎵',
-      news: '📰',
-      blog: '📖',
-      product: '🛒',
-      youtube_discovery: '🎬'
-    };
-    
-    postMessage += `${emojis[content_type] || '🎶'} ${title}\n\n`;
+    // Format the post content with random intro
+    const intro = randomPick(introVariations.generic);
+    let postMessage = `${intro} ${title}\n\n`;
     postMessage += content;
     
-    // Add hashtags
+    // Artiest @tag detecteren in content
+    let foundArtistTag = false;
+    for (const [artist, page] of Object.entries(artistFacebookPages)) {
+      if (content.toLowerCase().includes(artist.toLowerCase()) || 
+          title.toLowerCase().includes(artist.toLowerCase())) {
+        postMessage += `\n\n🎤 @${page}`;
+        foundArtistTag = true;
+        break; // Alleen eerste match
+      }
+    }
+    
+    // Studio @tag detectie
+    const studioTag = getStudioTag(content);
+    if (studioTag) {
+      postMessage += foundArtistTag ? `\n🎹 ${studioTag}` : `\n\n🎹 ${studioTag}`;
+    }
+    
+    // Genre detectie voor smart hashtags
+    const genre = detectGenre('', content);
+    
+    // Smart hashtags (max 5)
+    let smartHashtags: string[];
     if (hashtags && hashtags.length > 0) {
-      postMessage += '\n\n' + hashtags.map(tag => `#${tag.replace(/\s+/g, '')}`).join(' ');
+      // Gebruik max 2 van de meegegeven hashtags + vul aan met smart logic
+      const providedHashtags = hashtags.slice(0, 2).map(tag => `#${tag.replace(/\s+/g, '')}`);
+      smartHashtags = [
+        '#MusicScan',
+        ...providedHashtags,
+        randomPick(['#MusicLovers', '#Vinyl', '#MuziekGeschiedenis']),
+      ].slice(0, 5);
     } else {
-      // Default hashtags
-      postMessage += '\n\n#MusicScan #MuziekGeschiedenis #Vinyl #Muziek';
+      smartHashtags = buildSmartHashtags({
+        genre: genre,
+        category: content_type === 'anecdote' ? 'story' : 
+                  content_type === 'news' ? 'history' : 'release',
+        isVinyl: content.toLowerCase().includes('vinyl') || content.toLowerCase().includes('plaat'),
+      });
     }
     
-    // Add URL if provided
+    postMessage += '\n\n' + smartHashtags.join(' ');
+    
+    // URL met random CTA
     if (url) {
-      postMessage += `\n\n🔗 Lees meer: ${url}`;
+      const cta = randomPick(ctaVariations.generic);
+      postMessage += `\n\n${cta} ${url}`;
     }
     
-    // Add profile mention/tag at the end
-    postMessage += '\n\n📌 Via Rogier Visser: https://www.facebook.com/profile.php?id=100086154933382';
+    // Profiel link
+    postMessage += profileMention;
 
     // Post to Facebook Page
     const fbApiUrl = `https://graph.facebook.com/v18.0/${pageId}/feed`;

@@ -453,6 +453,51 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
             } catch (artErr) {
               console.warn('⚠️ Blog artwork update failed (non-blocking):', artErr);
             }
+            
+            // Step 10: Auto-post to Facebook
+            console.log('📘 Auto-posting blog to Facebook...');
+            try {
+              // Extract clean summary from blog content
+              const blogContent = blogData.blog.markdown_content || '';
+              const blogTitle = blogData.blog.yaml_frontmatter?.title || `${artistValue} - ${albumTitle}`;
+              
+              // Strip markdown/YAML for clean social text
+              let socialContent = blogContent;
+              // Remove YAML frontmatter
+              socialContent = socialContent.replace(/^---[\s\S]*?---\n?/g, '');
+              // Remove markdown headers
+              socialContent = socialContent.replace(/^#+\s+.*$/gm, '');
+              // Remove code blocks
+              socialContent = socialContent.replace(/```[\s\S]*?```/g, '');
+              // Remove bold/italic
+              socialContent = socialContent.replace(/\*\*([^*]+)\*\*/g, '$1');
+              socialContent = socialContent.replace(/\*([^*]+)\*/g, '$1');
+              // Remove links
+              socialContent = socialContent.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+              // Normalize whitespace
+              socialContent = socialContent.replace(/\n{3,}/g, '\n\n').trim();
+              
+              // Take first 280 chars for summary
+              const summary = socialContent.length > 280 
+                ? socialContent.substring(0, socialContent.lastIndexOf(' ', 280)) + '...'
+                : socialContent;
+              
+              const blogUrl = `https://www.musicscan.app/plaat-verhaal/${blogData.blog.slug}`;
+              
+              await supabase.functions.invoke('post-to-facebook', {
+                body: {
+                  content_type: 'blog',
+                  title: blogTitle,
+                  content: summary,
+                  url: blogUrl,
+                  image_url: artworkUrl,
+                  hashtags: [artistValue.replace(/\s+/g, ''), genreStr.split(',')[0].trim(), 'Vinyl', 'MuziekVerhaal']
+                }
+              });
+              console.log('✅ Blog auto-posted to Facebook');
+            } catch (fbErr) {
+              console.warn('⚠️ Facebook auto-post failed (non-blocking):', fbErr);
+            }
           }
         }
       } catch (blogErr) {

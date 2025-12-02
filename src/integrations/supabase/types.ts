@@ -4936,6 +4936,65 @@ export type Database = {
           },
         ]
       }
+      singles_facebook_queue: {
+        Row: {
+          artist: string
+          artwork_url: string | null
+          created_at: string
+          error_message: string | null
+          facebook_post_id: string | null
+          id: string
+          music_story_id: string
+          posted_at: string | null
+          priority: number
+          scheduled_for: string | null
+          single_name: string
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          artist: string
+          artwork_url?: string | null
+          created_at?: string
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          music_story_id: string
+          posted_at?: string | null
+          priority?: number
+          scheduled_for?: string | null
+          single_name: string
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          artist?: string
+          artwork_url?: string | null
+          created_at?: string
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          music_story_id?: string
+          posted_at?: string | null
+          priority?: number
+          scheduled_for?: string | null
+          single_name?: string
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "singles_facebook_queue_music_story_id_fkey"
+            columns: ["music_story_id"]
+            isOneToOne: true
+            referencedRelation: "music_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       singles_import_queue: {
         Row: {
           album: string | null

@@ -251,36 +251,32 @@ Geef ALTIJD specifieke details wanneer je iets beweert.`;
       // Don't fail the whole request for artwork errors
     }
 
-    // Auto-post to Facebook
+    // Add to Facebook queue with HIGH PRIORITY (new singles get priority 100)
     try {
-      console.log('📱 Auto-posting single to Facebook...');
-      const singleUrl = `https://musicscan.nl/singles/${newStory.slug}`;
-      const summary = storyContent.substring(0, 280).replace(/\n/g, ' ').trim() + '...';
+      console.log('📱 Adding single to Facebook queue with high priority...');
       
-      const fbResponse = await fetch(`${supabaseUrl}/functions/v1/post-to-facebook`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content_type: 'blog',
-          title: `🎵 ${artist} - ${single_name}`,
-          content: summary,
-          url: singleUrl,
-          image_url: artworkUrl,
-          hashtags: ['Singles', 'MuziekVerhaal', year ? `${year}s` : null].filter(Boolean)
-        })
-      });
+      const { error: queueError } = await supabase
+        .from('singles_facebook_queue')
+        .upsert({
+          music_story_id: newStory.id,
+          artist: artist,
+          single_name: single_name,
+          slug: newStory.slug,
+          artwork_url: artworkUrl,
+          priority: 100, // High priority for new singles
+          status: 'pending'
+        }, {
+          onConflict: 'music_story_id'
+        });
 
-      if (fbResponse.ok) {
-        console.log('✅ Facebook post created for single');
+      if (queueError) {
+        console.log('⚠️ Failed to add to Facebook queue:', queueError.message);
       } else {
-        console.log('⚠️ Facebook post failed:', await fbResponse.text());
+        console.log('✅ Added to Facebook queue with priority 100');
       }
     } catch (fbError) {
-      console.error('❌ Facebook auto-post error:', fbError);
-      // Don't fail the whole request for FB errors
+      console.error('❌ Facebook queue error:', fbError);
+      // Don't fail the whole request for queue errors
     }
 
     return new Response(JSON.stringify({

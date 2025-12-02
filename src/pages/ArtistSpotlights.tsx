@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
 const ArtistSpotlights = () => {
-  const { data: spotlights, isLoading } = useArtistSpotlights({ published: true });
+  const { data: spotlights, isLoading } = useArtistSpotlights({ published: true, spotlightOnly: true });
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredSpotlights = spotlights?.filter(story =>

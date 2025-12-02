@@ -49,6 +49,7 @@ Deno.serve(async (req) => {
     }
 
     console.log(`📘 Posting to Facebook: ${content_type} - ${title}`);
+    console.log(`📸 Image URL: ${image_url || 'GEEN AFBEELDING'}`);
 
     // Get Facebook credentials from app_secrets
     const { data: secrets, error: secretsError } = await supabase

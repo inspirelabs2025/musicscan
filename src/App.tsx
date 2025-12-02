@@ -348,6 +348,8 @@ const AppContent = () => {
         <Route path="/nl-muziek/jaren-:decade" element={<NLMuziekDecennium />} />
         <Route path="/nl-muziekfeit/:slug" element={<NLMuziekFeitDetail />} />
         <Route path="/nederlandse-muziek" element={<Navigate to="/nederland" replace />} />
+        <Route path="/frankrijk" element={<FranseMuziek />} />
+        <Route path="/franse-muziek" element={<Navigate to="/frankrijk" replace />} />
         <Route path="/news" element={<Navigate to="/verhalen" replace />} />
         <Route path="/nieuws/:slug" element={<NewsPost />} />
         <Route path="/artist/:slug" element={<ArtistDetail />} />

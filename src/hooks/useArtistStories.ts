@@ -42,6 +42,25 @@ const DUTCH_ARTISTS = [
   'The Gathering', 'Gorefest', 'Heidevolk', 'Asrai', 'Stream of Passion', 'ReVamp'
 ];
 
+// List of known French artists for filtering
+const FRENCH_ARTISTS = [
+  'Édith Piaf', 'Edith Piaf', 'Charles Aznavour', 'Jacques Brel', 'Serge Gainsbourg',
+  'Georges Brassens', 'Yves Montand', 'Gilbert Bécaud', 'Charles Trenet',
+  'Dalida', 'Mireille Mathieu', 'Johnny Hallyday', 'Sylvie Vartan',
+  'France Gall', 'Françoise Hardy', 'Jane Birkin', 'Michel Sardou',
+  'Claude François', 'Léo Ferré', 'Barbara', 'Juliette Gréco',
+  'Daft Punk', 'Air', 'Phoenix', 'M83', 'Justice',
+  'Stromae', 'Christine and the Queens', 'Indochine', 'Téléphone',
+  'Mylène Farmer', 'Vanessa Paradis', 'Alizée', 'Patricia Kaas',
+  'Francis Cabrel', 'Jean-Jacques Goldman', 'Renaud', 'Alain Souchon',
+  'David Guetta', 'Martin Solveig', 'Cassius', 'Bob Sinclar',
+  'Laurent Garnier', 'Breakbot', 'Kavinsky', 'Gesaffelstein', 'Madeon',
+  'MC Solaar', 'IAM', 'NTM', 'PNL', 'Booba', 'Nekfeu',
+  'Orelsan', 'Bigflo & Oli', 'Angèle', 'Aya Nakamura',
+  'Gojira', 'Alcest', 'Magma', 'Trust', 'Noir Désir',
+  'Zaz', 'Pomme', 'Clara Luciani', 'Juliette Armanet', 'Louane'
+];
+
 interface UseArtistStoriesOptions {
   search?: string;
   genre?: string;
@@ -72,9 +91,11 @@ export const useArtistStories = (options: UseArtistStoriesOptions = {}) => {
         query = query.contains('music_style', [genre.toLowerCase()]);
       }
 
-      // Apply country filter (for Nederland, filter by known Dutch artists)
+      // Apply country filter
       if (country === 'nederland') {
         query = query.in('artist_name', DUTCH_ARTISTS);
+      } else if (country === 'frankrijk') {
+        query = query.in('artist_name', FRENCH_ARTISTS);
       }
 
       // Apply sorting

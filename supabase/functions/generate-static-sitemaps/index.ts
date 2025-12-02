@@ -618,6 +618,10 @@ function generateStaticSitemapXml(): string {
     { url: `${baseUrl}/plaat-verhaal`, priority: 0.8, changefreq: 'daily' },
     { url: `${baseUrl}/muziek-verhaal`, priority: 0.8, changefreq: 'daily' },
     { url: `${baseUrl}/podcasts`, priority: 0.7, changefreq: 'weekly' },
+    { url: `${baseUrl}/nederland`, priority: 0.8, changefreq: 'weekly' },
+    { url: `${baseUrl}/frankrijk`, priority: 0.8, changefreq: 'weekly' },
+    { url: `${baseUrl}/artists`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/singles`, priority: 0.8, changefreq: 'daily' },
     { url: `${baseUrl}/auth`, priority: 0.6, changefreq: 'monthly' }
   ];
   

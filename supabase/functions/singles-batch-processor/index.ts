@@ -32,6 +32,61 @@ serve(async (req) => {
 
     if (!pendingSingles || pendingSingles.length === 0) {
       console.log('✅ No pending singles to process');
+      
+      // Check if we should send an alert email (once per day)
+      const { data: lastAlert } = await supabase
+        .from('email_logs')
+        .select('sent_at')
+        .eq('email_type', 'singles_queue_empty')
+        .order('sent_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const shouldSendAlert = !lastAlert || lastAlert.sent_at < oneDayAgo;
+      
+      if (shouldSendAlert) {
+        console.log('📧 Sending queue empty alert email...');
+        try {
+          const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+          if (RESEND_API_KEY) {
+            const emailRes = await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                from: 'MusicScan <noreply@musicscan.nl>',
+                to: ['rogiervisser76@gmail.com'],
+                subject: '🎵 Singles Queue Leeg - Nieuwe Input Nodig',
+                html: `
+                  <h2>Singles Queue is Leeg</h2>
+                  <p>De singles import queue bevat geen nieuwe items meer om te verwerken.</p>
+                  <p>Voeg nieuwe singles toe via de admin interface:</p>
+                  <p><a href="https://musicscan.nl/admin/singles-importer">Singles Importer</a></p>
+                  <hr>
+                  <p><small>Dit is een automatische melding van MusicScan</small></p>
+                `
+              })
+            });
+            
+            if (emailRes.ok) {
+              // Log the email
+              await supabase.from('email_logs').insert({
+                email_type: 'singles_queue_empty',
+                recipient_email: 'rogiervisser76@gmail.com',
+                subject: 'Singles Queue Leeg',
+                status: 'sent'
+              });
+              console.log('✅ Alert email sent');
+            }
+          }
+        } catch (emailError) {
+          console.error('❌ Email error:', emailError);
+        }
+      }
+      
       return new Response(JSON.stringify({ 
         success: true, 
         message: 'No pending singles' 

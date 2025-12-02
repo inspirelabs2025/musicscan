@@ -251,6 +251,36 @@ Geef ALTIJD specifieke details wanneer je iets beweert.`;
       // Don't fail the whole request for artwork errors
     }
 
+    // Auto-post to Facebook
+    try {
+      console.log('📱 Auto-posting single to Facebook...');
+      const singleUrl = `https://musicscan.nl/singles/${newStory.slug}`;
+      const summary = storyContent.substring(0, 280).replace(/\n/g, ' ').trim() + '...';
+      
+      const fbResponse = await fetch(`${supabaseUrl}/functions/v1/post-to-facebook`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: `🎵 ${artist} - ${single_name}\n\n${summary}\n\n🔗 Lees het volledige verhaal:`,
+          link: singleUrl,
+          imageUrl: artworkUrl,
+          hashtags: ['#MusicScan', '#Singles', '#MuziekVerhaal', year ? `#${year}s` : null].filter(Boolean)
+        })
+      });
+
+      if (fbResponse.ok) {
+        console.log('✅ Facebook post created for single');
+      } else {
+        console.log('⚠️ Facebook post failed:', await fbResponse.text());
+      }
+    } catch (fbError) {
+      console.error('❌ Facebook auto-post error:', fbError);
+      // Don't fail the whole request for FB errors
+    }
+
     return new Response(JSON.stringify({
       success: true,
       music_story_id: newStory.id,

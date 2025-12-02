@@ -1,4 +1,14 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { 
+  randomPick, 
+  introVariations, 
+  ctaVariations, 
+  buildSmartHashtags, 
+  getArtistTag, 
+  getStudioTag, 
+  detectGenre, 
+  profileMention 
+} from '../_shared/facebook-content-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,46 +44,53 @@ function formatFacebookPost(event: EventData, month: number, day: number): strin
                       'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
   const monthName = monthNames[month - 1];
   
-  // Build the post
-  let post = `📅 Wist je dat...\n\n`;
-  post += `${emoji} Op ${day} ${monthName} ${event.year}: ${event.title}\n\n`;
+  // Random intro
+  const intro = randomPick(introVariations.musicHistory);
+  
+  // Random datum formaat
+  const dateFormats = [
+    `${day} ${monthName} ${event.year}`,
+    `op ${day} ${monthName} ${event.year}`,
+    `vandaag in ${event.year}`,
+    `${event.year}, op deze dag`,
+  ];
+  const dateStr = randomPick(dateFormats);
+  
+  let post = `${intro}\n\n`;
+  post += `${emoji} ${dateStr}: ${event.title}\n\n`;
   post += `${event.description}\n\n`;
   
-  // Add hashtags
-  const hashtags = ['#WistJeDat', '#MuziekGeschiedenis', '#OnThisDay'];
-  
-  // Add artist hashtag if available
+  // Artiest @tag
   if (event.artist) {
-    const artistHashtag = event.artist
-      .replace(/[^a-zA-Z0-9\s]/g, '')
-      .split(' ')
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-      .join('');
-    if (artistHashtag) {
-      hashtags.push(`#${artistHashtag}`);
+    const artistTag = getArtistTag(event.artist);
+    if (artistTag) {
+      post += `🎤 ${artistTag}\n`;
     }
   }
   
-  // Add category hashtag
-  if (event.category) {
-    const categoryMap: Record<string, string> = {
-      'release': '#NieuweRelease',
-      'birth': '#Verjaardag',
-      'death': '#InMemoriam',
-      'award': '#Award',
-      'concert': '#LiveConcert',
-      'milestone': '#Mijlpaal'
-    };
-    if (categoryMap[event.category.toLowerCase()]) {
-      hashtags.push(categoryMap[event.category.toLowerCase()]);
-    }
+  // Studio @tag detecteren in beschrijving
+  const studioTag = getStudioTag(event.description);
+  if (studioTag) {
+    post += `🎵 ${studioTag}\n`;
   }
   
-  hashtags.push('#MusicScan');
-  post += `🎵 ${hashtags.join(' ')}\n\n`;
+  // Genre detectie & smart hashtags (max 5)
+  const genre = detectGenre(event.artist || '', event.description);
+  const hashtags = buildSmartHashtags({
+    artist: event.artist,
+    genre: genre,
+    year: event.year,
+    category: 'history',
+  });
   
-  // Add link to MusicScan
-  post += `👉 Ontdek meer muziekgeschiedenis op musicscan.app/muziekgeschiedenis`;
+  post += `\n${hashtags.join(' ')}\n\n`;
+  
+  // Random CTA
+  const cta = randomPick(ctaVariations.musicHistory);
+  post += `${cta} musicscan.app/vandaag-in-de-muziekgeschiedenis`;
+  
+  // Profiel link
+  post += profileMention;
   
   return post;
 }
@@ -236,7 +253,7 @@ Deno.serve(async (req) => {
       title: eventData.title,
       content: postContent.substring(0, 500),
       image_url: eventData.image_url,
-      url: 'https://www.musicscan.app/muziekgeschiedenis',
+      url: 'https://www.musicscan.app/vandaag-in-de-muziekgeschiedenis',
       status: facebookPostId ? 'posted' : 'failed',
       facebook_post_id: facebookPostId,
       error_message: postError,

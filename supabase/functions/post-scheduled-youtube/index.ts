@@ -1,4 +1,14 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { 
+  randomPick, 
+  introVariations, 
+  ctaVariations, 
+  buildSmartHashtags, 
+  getArtistTag, 
+  getStudioTag, 
+  detectGenre, 
+  profileMention 
+} from '../_shared/facebook-content-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +22,14 @@ const contentTypeEmojis: Record<string, string> = {
   'live_session': '🎸',
   'documentary': '🎬',
   'other': '🎥'
+};
+
+const contentTypeLabels: Record<string, string> = {
+  'interview': 'Interview',
+  'studio': 'Studio Sessie',
+  'live_session': 'Live Sessie',
+  'documentary': 'Documentaire',
+  'other': 'Video'
 };
 
 interface VideoData {
@@ -28,55 +46,54 @@ interface VideoData {
 
 function formatFacebookPost(videoId: string, video: VideoData): string {
   const emoji = contentTypeEmojis[video.content_type || 'other'] || contentTypeEmojis['other'];
-  const contentTypeLabels: Record<string, string> = {
-    'interview': 'Interview',
-    'studio': 'Studio Sessie',
-    'live_session': 'Live Sessie',
-    'documentary': 'Documentaire',
-    'other': 'Video'
-  };
   const typeLabel = contentTypeLabels[video.content_type || 'other'] || 'Video';
   
-  let post = `${emoji} ${typeLabel}: ${video.title}\n\n`;
+  // Random intro
+  const intro = randomPick(introVariations.youtube);
   
+  let post = `${intro}\n\n`;
+  post += `${emoji} ${typeLabel}: ${video.title}\n\n`;
+  
+  // Artiest met @tag
   if (video.artist_name) {
-    post += `🎵 Artiest: ${video.artist_name}\n`;
+    const artistTag = getArtistTag(video.artist_name);
+    if (artistTag) {
+      post += `🎵 Artiest: ${video.artist_name} ${artistTag}\n`;
+    } else {
+      post += `🎵 Artiest: ${video.artist_name}\n`;
+    }
   }
   
   if (video.channel_name) {
     post += `📺 Kanaal: ${video.channel_name}\n`;
   }
   
-  post += `\n▶️ Bekijk hier: https://www.youtube.com/watch?v=${videoId}\n\n`;
-  
-  // Add hashtags
-  const hashtags = ['#YouTube', '#Muziek', '#MusicScan'];
-  
-  if (video.artist_name) {
-    const artistHashtag = video.artist_name
-      .replace(/[^a-zA-Z0-9\s]/g, '')
-      .split(' ')
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-      .join('');
-    if (artistHashtag) {
-      hashtags.push(`#${artistHashtag}`);
+  // Studio @tag detectie in beschrijving
+  if (video.description) {
+    const studioTag = getStudioTag(video.description);
+    if (studioTag) {
+      post += `🎹 ${studioTag}\n`;
     }
   }
   
-  if (video.content_type) {
-    const typeHashtags: Record<string, string> = {
-      'interview': '#Interview',
-      'studio': '#StudioSession',
-      'live_session': '#LiveSession',
-      'documentary': '#Documentary'
-    };
-    if (typeHashtags[video.content_type]) {
-      hashtags.push(typeHashtags[video.content_type]);
-    }
-  }
+  post += `\n▶️ https://www.youtube.com/watch?v=${videoId}\n\n`;
   
-  post += `🎧 ${hashtags.join(' ')}\n\n`;
-  post += `👉 Ontdek meer op musicscan.app/youtube-discoveries`;
+  // Smart hashtags (max 5)
+  const genre = detectGenre(video.artist_name || '', video.description || '', video.tags);
+  const hashtags = buildSmartHashtags({
+    artist: video.artist_name,
+    genre: genre,
+    category: 'video',
+  });
+  
+  post += `${hashtags.join(' ')}\n\n`;
+  
+  // Random CTA
+  const cta = randomPick(ctaVariations.youtube);
+  post += `${cta} musicscan.app/youtube-discoveries`;
+  
+  // Profiel link
+  post += profileMention;
   
   return post;
 }

@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet";
 import { NederlandHero } from "@/components/nederland/NederlandHero";
 import { NederlandseMuziekQuiz } from "@/components/nederland/NederlandseMuziekQuiz";
 import { DecenniumSlider } from "@/components/nederland/DecenniumSlider";
-import { NederlandKaart } from "@/components/nederland/NederlandKaart";
+
 import { DutchArtistSpotlight } from "@/components/nederland/DutchArtistSpotlight";
 import { NederlandseArtiesten } from "@/components/nederland/NederlandseArtiesten";
 import { NederlandseVerhalen } from "@/components/nederland/NederlandseVerhalen";
@@ -146,7 +146,7 @@ const NederlandseMuziek = () => {
 
         <DecenniumSlider />
 
-        <NederlandKaart />
+        
 
         <DutchArtistSpotlight />
 

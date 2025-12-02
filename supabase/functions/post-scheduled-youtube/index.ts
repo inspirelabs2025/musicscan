@@ -9,6 +9,7 @@ import {
   detectGenre, 
   profileMention 
 } from '../_shared/facebook-content-helpers.ts';
+import { postToThreads } from '../_shared/threads-poster.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -228,6 +229,26 @@ Deno.serve(async (req) => {
     } catch (fbError) {
       console.error('❌ Facebook posting error:', fbError);
       postError = fbError.message;
+    }
+
+    // Also post to Threads (non-blocking)
+    let threadsPostId = null;
+    try {
+      const threadsResult = await postToThreads({
+        title: videoData.title,
+        content: `${videoData.artist_name ? `🎵 ${videoData.artist_name}` : ''}\n▶️ https://www.youtube.com/watch?v=${post.video_id}`,
+        url: `https://www.youtube.com/watch?v=${post.video_id}`,
+        image_url: videoData.thumbnail_url,
+        artist: videoData.artist_name,
+        content_type: 'youtube_discovery'
+      });
+      
+      if (threadsResult.success) {
+        threadsPostId = threadsResult.post_id;
+        console.log(`✅ Posted to Threads: ${threadsPostId}`);
+      }
+    } catch (threadsError) {
+      console.log('🧵 Threads posting skipped or failed:', threadsError.message);
     }
 
     // Update queue status

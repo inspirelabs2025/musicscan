@@ -164,6 +164,7 @@ import Shop from "./pages/Shop";
 import NederlandseMuziek from "./pages/NederlandseMuziek";
 import NLMuziekDecennium from "./pages/NLMuziekDecennium";
 import NLMuziekFeitDetail from "./pages/NLMuziekFeitDetail";
+import FranseMuziek from "./pages/FranseMuziek";
 
 // Redirect component for old /blog/ URLs to /plaat-verhaal/
 const BlogRedirect = () => {

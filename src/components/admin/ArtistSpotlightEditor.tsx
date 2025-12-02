@@ -103,6 +103,11 @@ export const ArtistSpotlightEditor = () => {
               title: "✨ Spotlight gegenereerd!",
               description: "AI heeft een uitgebreid spotlight verhaal gemaakt. Bekijk en bewerk naar wens.",
             });
+            
+            // If force-created (old was deleted), navigate to new ID to keep URL in sync
+            if (force && data.story.id !== id) {
+              navigate(`/admin/artist-spotlight/edit/${data.story.id}`, { replace: true });
+            }
           }
         },
         onError: (error: any) => {

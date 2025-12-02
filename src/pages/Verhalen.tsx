@@ -6,8 +6,8 @@ export default function Verhalen() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Muziekverhalen - PlaatjesPraat</title>
-        <meta name="description" content="Ontdek verhalen achter albums, artiesten en muziekgeschiedenis" />
+        <title>Muziekverhalen - Albums, Artiesten & Singles | MusicScan</title>
+        <meta name="description" content="Ontdek de verhalen achter je favoriete albums, artiesten en singles. Achtergrondinformatie, geschiedenis en bijzondere details over muziek." />
       </Helmet>
 
       <BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />

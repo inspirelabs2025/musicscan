@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Trophy, RotateCcw, Share2, Home, Star } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Trophy, RotateCcw, Share2, Home, Star, Mail, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuizShare } from '@/hooks/useQuizShare';
+import { QuizShareDialog } from './QuizShareDialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface Question {
   id: number;
@@ -34,13 +44,19 @@ export function QuizResults({
 }: QuizResultsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { saveQuizResult, getBadge } = useQuizShare();
+  const { saveQuizResult, getBadge, createChallenge } = useQuizShare();
+  
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailAddress, setEmailAddress] = useState('');
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [shareToken, setShareToken] = useState<string | null>(null);
   
   const percentage = Math.round((score / totalQuestions) * 100);
   const badge = getBadge(percentage);
   const pointsEarned = score * 10 + (percentage === 100 ? 50 : 0);
 
-  // Save result to database
+  // Save result to database and get share token
   useEffect(() => {
     if (user) {
       saveResult();
@@ -51,14 +67,18 @@ export function QuizResults({
     if (!user) return;
 
     try {
-      // Save to quiz_results
-      await supabase.from('quiz_results').insert({
-        user_id: user.id,
-        quiz_type: quizType,
-        questions_total: totalQuestions,
-        questions_correct: score,
-        score_percentage: percentage,
+      // Save to quiz_results and get share token
+      const result = await saveQuizResult(user.id, {
+        score,
+        totalQuestions,
+        percentage,
+        quizType,
+        badge
       });
+      
+      if (result?.shareToken) {
+        setShareToken(result.shareToken);
+      }
 
       // Update leaderboard with points
       const { data: existing } = await supabase
@@ -83,6 +103,77 @@ export function QuizResults({
       });
     } catch (error) {
       console.error('Error saving quiz result:', error);
+    }
+  };
+
+  const handleCreateChallenge = async () => {
+    if (!user || !shareToken) return;
+    
+    const challengeToken = await createChallenge(
+      user.id,
+      shareToken,
+      score,
+      quizType,
+      totalQuestions
+    );
+    
+    if (challengeToken) {
+      toast({
+        title: "Challenge aangemaakt!",
+        description: "Deel de link om vrienden uit te dagen.",
+      });
+    }
+  };
+
+  const handleSendEmailReport = async () => {
+    if (!emailAddress) {
+      toast({
+        title: "Voer een e-mailadres in",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSendingEmail(true);
+    
+    try {
+      const { error } = await supabase.functions.invoke('send-quiz-report', {
+        body: {
+          email: emailAddress,
+          score,
+          totalQuestions,
+          percentage,
+          quizType,
+          badge: badge.title,
+          badgeEmoji: badge.emoji,
+          questions: questions.map((q, i) => ({
+            question: q.question,
+            correctAnswer: q.correctAnswer,
+            userAnswer: answers[i],
+            isCorrect: answers[i] === q.correctAnswer
+          })),
+          pointsEarned,
+          shareUrl: shareToken ? `${window.location.origin}/quiz/result/${shareToken}` : null
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Rapport verzonden!",
+        description: `Je quiz rapport is verzonden naar ${emailAddress}`,
+      });
+      setEmailDialogOpen(false);
+      setEmailAddress('');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast({
+        title: "Verzenden mislukt",
+        description: "Probeer het later opnieuw",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -140,7 +231,26 @@ export function QuizResults({
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Share & Email Actions */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <Button 
+              onClick={() => setShareDialogOpen(true)} 
+              className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Deel je Score
+            </Button>
+            <Button 
+              onClick={() => setEmailDialogOpen(true)} 
+              variant="outline" 
+              className="w-full"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Email Rapport
+            </Button>
+          </div>
+
+          {/* Play Again & Hub Actions */}
           <div className="grid grid-cols-2 gap-3">
             <Button onClick={onPlayAgain} variant="outline" className="w-full">
               <RotateCcw className="w-4 h-4 mr-2" />
@@ -197,6 +307,77 @@ export function QuizResults({
           </div>
         </CardContent>
       </Card>
+
+      {/* Share Dialog */}
+      {shareToken && (
+        <QuizShareDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          score={score}
+          totalQuestions={totalQuestions}
+          percentage={percentage}
+          badge={badge}
+          shareToken={shareToken}
+          quizType={quizType}
+          onCreateChallenge={handleCreateChallenge}
+        />
+      )}
+
+      {/* Email Report Dialog */}
+      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5" />
+              Quiz Rapport Versturen
+            </DialogTitle>
+            <DialogDescription>
+              Ontvang een gedetailleerd overzicht van je quiz resultaten per e-mail.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mailadres</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="jouw@email.nl"
+                value={emailAddress}
+                onChange={(e) => setEmailAddress(e.target.value)}
+              />
+            </div>
+            
+            <div className="bg-muted/50 p-4 rounded-lg text-sm">
+              <p className="font-medium mb-2">Het rapport bevat:</p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                <li>Je score: {score}/{totalQuestions} ({percentage}%)</li>
+                <li>Badge: {badge.emoji} {badge.title}</li>
+                <li>Alle vragen met jouw antwoorden</li>
+                <li>Link om je score te delen</li>
+              </ul>
+            </div>
+            
+            <Button 
+              onClick={handleSendEmailReport} 
+              className="w-full"
+              disabled={isSendingEmail || !emailAddress}
+            >
+              {isSendingEmail ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verzenden...
+                </>
+              ) : (
+                <>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Verstuur Rapport
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

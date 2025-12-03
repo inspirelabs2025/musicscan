@@ -33,7 +33,8 @@ import {
   Facebook,
   Instagram,
   Server,
-  CloudUpload
+  CloudUpload,
+  Bell
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -125,6 +126,12 @@ const menuItems = [
       { title: "Create FanWall", url: "/admin/create-artist-fanwall", icon: Users },
       { title: "Generate Seed", url: "/admin/generate-seed", icon: Settings },
       { title: "Bulk Poster Upload", url: "/admin/bulk-poster-upload", icon: Image },
+    ]
+  },
+  {
+    title: "Marketing",
+    items: [
+      { title: "Popup Beheer", url: "/admin/popups", icon: Bell },
     ]
   },
   {

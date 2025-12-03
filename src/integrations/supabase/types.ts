@@ -5230,6 +5230,90 @@ export type Database = {
           },
         ]
       }
+      site_popups: {
+        Row: {
+          button_text: string | null
+          button_url: string | null
+          clicks_count: number | null
+          created_at: string | null
+          description: string | null
+          dismissals_count: number | null
+          display_frequency: string | null
+          end_date: string | null
+          exclude_pages: string[] | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          max_displays: number | null
+          name: string
+          popup_type: string
+          priority: number | null
+          show_to_guests: boolean | null
+          show_to_users: boolean | null
+          start_date: string | null
+          title: string
+          trigger_pages: string[] | null
+          trigger_type: string
+          trigger_value: number | null
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          button_text?: string | null
+          button_url?: string | null
+          clicks_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          dismissals_count?: number | null
+          display_frequency?: string | null
+          end_date?: string | null
+          exclude_pages?: string[] | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          max_displays?: number | null
+          name: string
+          popup_type: string
+          priority?: number | null
+          show_to_guests?: boolean | null
+          show_to_users?: boolean | null
+          start_date?: string | null
+          title: string
+          trigger_pages?: string[] | null
+          trigger_type: string
+          trigger_value?: number | null
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          button_text?: string | null
+          button_url?: string | null
+          clicks_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          dismissals_count?: number | null
+          display_frequency?: string | null
+          end_date?: string | null
+          exclude_pages?: string[] | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          max_displays?: number | null
+          name?: string
+          popup_type?: string
+          priority?: number | null
+          show_to_guests?: boolean | null
+          show_to_users?: boolean | null
+          start_date?: string | null
+          title?: string
+          trigger_pages?: string[] | null
+          trigger_type?: string
+          trigger_value?: number | null
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       sitemap_logs: {
         Row: {
           created_at: string | null

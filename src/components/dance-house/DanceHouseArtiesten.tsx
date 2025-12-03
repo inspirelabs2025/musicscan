@@ -5,17 +5,19 @@ import { Link } from 'react-router-dom';
 import { useDanceHouseArtiesten } from '@/hooks/useDanceHouseMuziek';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Featured artists met fallback images
+// Featured artists met Wikipedia/Wikimedia images (stabiele URLs)
 const FEATURED_DANCE_ARTISTS = [
-  { name: 'Tiësto', image: 'https://i.discogs.com/qDLpJHqFqMYWnTJ8ukAk3LKnJCuDT3YRIJJLm7RLYy0/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTEwMDUw/LTE2NzA5NTQ5NDYt/Njc1MS5qcGVn.jpeg', slug: 'tiesto' },
-  { name: 'Daft Punk', image: 'https://i.discogs.com/4bPnKYvbZp_QO8xGl7_y9vNiMX0nBGG4U-IQN1qKCBU/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTE3ODkw/LTE2NzIzMTMwNTQt/MjI3NS5qcGVn.jpeg', slug: 'daft-punk' },
-  { name: 'Martin Garrix', image: 'https://i.discogs.com/fIwNbXCNzPLF_ckHvfqMFQB8YHRV6yrfqVdK0U5c7rw/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTM0MzM2/ODEtMTU3NTkwNTkx/OS03NTcyLmpwZWc.jpeg', slug: 'martin-garrix' },
-  { name: 'Armin van Buuren', image: 'https://i.discogs.com/nf5R6OI-QOF2sNEOvfJxLkLfVNJFAO-T5KvBXm1Bz1k/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTUyNDkt/MTY1NjE2MTc5MS00/MzMxLmpwZWc.jpeg', slug: 'armin-van-buuren' },
-  { name: 'Carl Cox', image: 'https://i.discogs.com/UT3rnFZGBHxj-I4fxbR6FeGk3TQq_oZ_3W9Qe9Uo0JQ/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTIwOTg5/LTE2NjY3MTAxMDMt/OTYyNi5qcGVn.jpeg', slug: 'carl-cox' },
-  { name: 'Deadmau5', image: 'https://i.discogs.com/TfGPqpxvwvAMqmh9_Tz8YGKf9P-RqLSrLCrJyTSqHpw/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTEyMDkx/NTMtMTYwOTYwMDUw/Ni00OTg1LmpwZWc.jpeg', slug: 'deadmau5' },
-  { name: 'Calvin Harris', image: 'https://i.discogs.com/x5pZQF2lFSJrQJJIw8VfGXgKVT8l-R8rz6A6p6IaZCY/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTU3MzQz/OC0xNjMxNzkwNjY2/LTk5MjMuanBlZw.jpeg', slug: 'calvin-harris' },
-  { name: 'The Prodigy', image: 'https://i.discogs.com/qIZN-7N_bHqfJLSMlEKrY3k7mJX0dPKKmVmGMQwKQTI/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9BLTQxNzQt/MTY2MTI2NjA3OS0y/MDU5LmpwZWc.jpeg', slug: 'the-prodigy' },
+  { name: 'Tiësto', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Ti%C3%ABsto_in_2023.jpg/440px-Ti%C3%ABsto_in_2023.jpg', slug: 'tiesto' },
+  { name: 'Daft Punk', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Daftpunklapremiere2010.jpg/440px-Daftpunklapremiere2010.jpg', slug: 'daft-punk' },
+  { name: 'Martin Garrix', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Martin_Garrix_2016.jpg/440px-Martin_Garrix_2016.jpg', slug: 'martin-garrix' },
+  { name: 'Armin van Buuren', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Armin_van_Buuren_-_A_State_Of_Trance_1000_-_Festhalle_Frankfurt_-_2022-09-03_%28cropped%29.jpg/440px-Armin_van_Buuren_-_A_State_Of_Trance_1000_-_Festhalle_Frankfurt_-_2022-09-03_%28cropped%29.jpg', slug: 'armin-van-buuren' },
+  { name: 'Carl Cox', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Carl_Cox_Awakenings_2018.jpg/440px-Carl_Cox_Awakenings_2018.jpg', slug: 'carl-cox' },
+  { name: 'Deadmau5', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Deadmau5_2019.jpg/440px-Deadmau5_2019.jpg', slug: 'deadmau5' },
+  { name: 'Calvin Harris', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Calvin_Harris_-_Rock_in_Rio_Madrid_2012_-_03.jpg/440px-Calvin_Harris_-_Rock_in_Rio_Madrid_2012_-_03.jpg', slug: 'calvin-harris' },
+  { name: 'The Prodigy', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/The_Prodigy_-_Rock_am_Ring_2015-9254_%28cropped%29.jpg/440px-The_Prodigy_-_Rock_am_Ring_2015-9254_%28cropped%29.jpg', slug: 'the-prodigy' },
 ];
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=400&h=400&fit=crop';
 
 export const DanceHouseArtiesten = () => {
   const { data: artistStories, isLoading } = useDanceHouseArtiesten(8);
@@ -67,6 +69,9 @@ export const DanceHouseArtiesten = () => {
                         src={artist.image}
                         alt={artist.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+                        }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
                         <ExternalLink className="w-5 h-5 text-white" />

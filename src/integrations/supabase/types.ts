@@ -1378,6 +1378,68 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_challenge_results: {
+        Row: {
+          challenge_id: string | null
+          created_at: string | null
+          id: string
+          rank_position: number | null
+          score: number
+          time_taken_seconds: number | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id?: string | null
+          created_at?: string | null
+          id?: string
+          rank_position?: number | null
+          score: number
+          time_taken_seconds?: number | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string | null
+          created_at?: string | null
+          id?: string
+          rank_position?: number | null
+          score?: number
+          time_taken_seconds?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_challenge_results_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_challenges: {
+        Row: {
+          category_mix: string[] | null
+          challenge_date: string
+          created_at: string | null
+          id: string
+          quiz_data: Json
+        }
+        Insert: {
+          category_mix?: string[] | null
+          challenge_date: string
+          created_at?: string | null
+          id?: string
+          quiz_data: Json
+        }
+        Update: {
+          category_mix?: string[] | null
+          challenge_date?: string
+          created_at?: string | null
+          id?: string
+          quiz_data?: Json
+        }
+        Relationships: []
+      }
       demand_analytics: {
         Row: {
           analysis_period: string
@@ -4388,6 +4450,42 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          difficulty: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          question_count: number | null
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          question_count?: number | null
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          question_count?: number | null
+          slug?: string
+        }
+        Relationships: []
+      }
       quiz_challenges: {
         Row: {
           challenge_token: string
@@ -4457,15 +4555,20 @@ export type Database = {
           challenges_won: number | null
           created_at: string | null
           current_streak: number | null
+          daily_streak: number | null
           display_name: string | null
+          favorite_category: string | null
           highest_streak: number | null
           id: string
+          last_daily_at: string | null
           last_quiz_at: string | null
           total_correct: number | null
+          total_points: number | null
           total_questions: number | null
           total_quizzes: number | null
           updated_at: string | null
           user_id: string | null
+          weekly_points: number | null
         }
         Insert: {
           avatar_url?: string | null
@@ -4476,15 +4579,20 @@ export type Database = {
           challenges_won?: number | null
           created_at?: string | null
           current_streak?: number | null
+          daily_streak?: number | null
           display_name?: string | null
+          favorite_category?: string | null
           highest_streak?: number | null
           id?: string
+          last_daily_at?: string | null
           last_quiz_at?: string | null
           total_correct?: number | null
+          total_points?: number | null
           total_questions?: number | null
           total_quizzes?: number | null
           updated_at?: string | null
           user_id?: string | null
+          weekly_points?: number | null
         }
         Update: {
           avatar_url?: string | null
@@ -4495,15 +4603,20 @@ export type Database = {
           challenges_won?: number | null
           created_at?: string | null
           current_streak?: number | null
+          daily_streak?: number | null
           display_name?: string | null
+          favorite_category?: string | null
           highest_streak?: number | null
           id?: string
+          last_daily_at?: string | null
           last_quiz_at?: string | null
           total_correct?: number | null
+          total_points?: number | null
           total_questions?: number | null
           total_quizzes?: number | null
           updated_at?: string | null
           user_id?: string | null
+          weekly_points?: number | null
         }
         Relationships: []
       }

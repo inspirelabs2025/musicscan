@@ -95,6 +95,8 @@ import MainAdmin from "./pages/admin/MainAdmin";
 import CronjobMonitorPage from "./pages/admin/CronjobMonitorPage";
 import EmailNotificationsPage from "./pages/admin/EmailNotificationsPage";
 import Quiz from "./pages/Quiz";
+import QuizHub from "./pages/QuizHub";
+import CategoryQuiz from "./pages/CategoryQuiz";
 import QuizResult from "./pages/QuizResult";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
@@ -281,6 +283,8 @@ const AppContent = () => {
             <Quiz />
           </ProtectedRoute>
         } />
+        <Route path="/quizzen" element={<QuizHub />} />
+        <Route path="/quizzen/:category" element={<CategoryQuiz />} />
         <Route path="/quiz/result/:shareToken" element={<QuizResult />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<About />} />

@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.queue-dance-house-content]
+verify_jwt = false
+
 [functions.spotify-new-releases]
 verify_jwt = false
 

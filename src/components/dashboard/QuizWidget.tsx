@@ -169,9 +169,16 @@ export const QuizWidget = () => {
             </Link>
           </Button>
           
+          <Button asChild variant="outline" className="w-full">
+            <Link to="/quizzen">
+              🎮 Alle Quizzen
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </Button>
+          
           {stats?.hasPlayed && (
             <>
-              <Button asChild variant="outline" className="w-full">
+              <Button asChild variant="ghost" size="sm" className="w-full">
                 <Link to="/mijn-quizzen">
                   Bekijk Alle Scores
                   <ArrowRight className="w-4 h-4 ml-2" />

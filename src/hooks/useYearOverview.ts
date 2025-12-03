@@ -1,75 +1,141 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface YearOverviewStats {
-  year: number;
-  total_scans: number;
-  vinyl_count: number;
-  cd_count: number;
-  vinyl_percentage: number;
-  unique_artists: number;
-  avg_median_price: number;
-  new_users: number;
-  total_stories: number;
-  total_products: number;
+// ============ TYPE DEFINITIONS ============
+
+export interface TopArtist {
+  name: string;
+  achievement: string;
+  genre: string;
+  image_url?: string;
+}
+
+export interface TopAlbum {
+  artist: string;
+  title: string;
+  description: string;
+  image_url?: string;
+}
+
+export interface Award {
+  category: string;
+  winner: string;
+}
+
+export interface InMemoriamArtist {
+  name: string;
+  years: string;
+  known_for: string;
+  image_url?: string;
 }
 
 export interface GenreData {
   genre: string;
-  count: number;
+  count?: number;
+  percentage?: number;
 }
 
-export interface CountryData {
-  country: string;
-  count: number;
-}
-
-export interface DecadeData {
-  decade: string;
-  count: number;
-}
-
-export interface MonthlyData {
-  month: number;
-  month_name: string;
-  scans: number;
-  avg_price: number;
-}
-
-export interface TopArtist {
+export interface TourInfo {
   artist: string;
-  count: number;
-  avg_value: number;
+  tour_name: string;
+  gross?: number;
 }
 
-export interface PriceInsights {
-  highest_valued: Array<{
-    artist: string;
+export interface YearOverviewSections {
+  global_overview: {
+    narrative: string;
+    highlights?: string[];
+  };
+  top_artists: TopArtist[];
+  top_albums: TopAlbum[];
+  awards: {
+    narrative: string;
+    grammy: Award[];
+    brit_awards: Award[];
+    edison: Award[];
+  };
+  in_memoriam: {
+    narrative: string;
+    artists: InMemoriamArtist[];
+  };
+  dutch_music: {
+    narrative: string;
+    highlights: string[];
+    top_artists: string[];
+    edison_winners: Award[];
+  };
+  streaming_viral: {
+    narrative: string;
+    viral_hits: string[];
+    streaming_records: string[];
+  };
+  tours_festivals: {
+    narrative: string;
+    biggest_tours: TourInfo[];
+    festivals: string[];
+  };
+  genre_trends: {
+    narrative: string;
+    rising_genres?: string[];
+    popular_genres: GenreData[];
+  };
+}
+
+export interface SpotifyData {
+  newReleases: Array<{
+    name: string;
+    artists: Array<{ name: string }>;
+    images: Array<{ url: string }>;
+    release_date: string;
+    external_urls: { spotify: string };
+  }>;
+  featuredPlaylists: any[];
+  fetchedAt: string;
+}
+
+export interface DiscogsData {
+  topReleases: Array<{
     title: string;
-    median_price: number;
-    format: string;
+    year: number;
+    genre: string[];
+    style: string[];
+    thumb: string;
+    country: string;
   }>;
-  price_ranges: Array<{
-    price_range: string;
-    count: number;
-  }>;
+  vinylReleases: any[];
+  genreDistribution: Array<{ genre: string; count: number }>;
+  styleDistribution: Array<{ style: string; count: number }>;
+  totalResults: number;
+  fetchedAt: string;
+}
+
+export interface PerplexityData {
+  awards: string;
+  events: string;
+  inMemoriam: string;
+  trends: string;
+  dutchMusic: string;
+  fetchedAt: string;
 }
 
 export interface YearOverviewData {
   year: number;
   data_points: {
-    stats: YearOverviewStats;
-    genres: GenreData[];
-    countries: CountryData[];
-    decades: DecadeData[];
-    monthly: MonthlyData[];
-    topArtists: TopArtist[];
-    priceInsights: PriceInsights;
+    spotify: SpotifyData | null;
+    discogs: DiscogsData | null;
+    perplexity: PerplexityData | null;
   };
-  generated_narratives: Record<string, string>;
+  generated_narratives: YearOverviewSections;
+  sources: {
+    spotify: boolean;
+    discogs: boolean;
+    perplexity: boolean;
+  };
   created_at: string;
   expires_at: string;
 }
+
+// ============ HOOKS ============
 
 export const useYearOverview = (year: number = new Date().getFullYear()) => {
   return useQuery({
@@ -85,35 +151,11 @@ export const useYearOverview = (year: number = new Date().getFullYear()) => {
         .single();
 
       if (cached && !cacheError) {
-        return cached as unknown as YearOverviewData;
+        return transformCacheData(cached);
       }
 
-      // If no cache, fetch fresh data from RPC functions
-      const [stats, genres, countries, decades, monthly, topArtists, priceInsights] = await Promise.all([
-        supabase.rpc('get_year_overview_stats', { p_year: year }),
-        supabase.rpc('get_genre_distribution_by_year', { p_year: year }),
-        supabase.rpc('get_country_distribution_by_year', { p_year: year }),
-        supabase.rpc('get_decade_distribution_by_year', { p_year: year }),
-        supabase.rpc('get_monthly_trends_by_year', { p_year: year }),
-        supabase.rpc('get_top_artists_by_year', { p_year: year, p_limit: 10 }),
-        supabase.rpc('get_price_insights_by_year', { p_year: year })
-      ]);
-
-      return {
-        year,
-        data_points: {
-          stats: stats.data || {} as YearOverviewStats,
-          genres: genres.data || [],
-          countries: countries.data || [],
-          decades: decades.data || [],
-          monthly: monthly.data || [],
-          topArtists: topArtists.data || [],
-          priceInsights: priceInsights.data || { highest_valued: [], price_ranges: [] }
-        },
-        generated_narratives: {},
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      };
+      // If no cache, return null - user needs to generate
+      return null;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -129,7 +171,7 @@ export const useGenerateYearOverview = () => {
       });
 
       if (error) throw error;
-      return data as YearOverviewData;
+      return transformCacheData(data);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['year-overview', data.year] });
@@ -142,9 +184,36 @@ export const useAvailableYears = () => {
     queryKey: ['available-years'],
     queryFn: async () => {
       const currentYear = new Date().getFullYear();
-      // Return last 5 years as options
-      return Array.from({ length: 5 }, (_, i) => currentYear - i);
+      // Return last 10 years as options
+      return Array.from({ length: 10 }, (_, i) => currentYear - i);
     },
     staleTime: Infinity,
   });
 };
+
+// ============ HELPERS ============
+
+function transformCacheData(data: any): YearOverviewData {
+  return {
+    year: data.year,
+    data_points: data.data_points || { spotify: null, discogs: null, perplexity: null },
+    generated_narratives: data.generated_narratives || getEmptySections(),
+    sources: data.sources || { spotify: false, discogs: false, perplexity: false },
+    created_at: data.created_at || new Date().toISOString(),
+    expires_at: data.expires_at || new Date().toISOString()
+  };
+}
+
+function getEmptySections(): YearOverviewSections {
+  return {
+    global_overview: { narrative: '' },
+    top_artists: [],
+    top_albums: [],
+    awards: { narrative: '', grammy: [], brit_awards: [], edison: [] },
+    in_memoriam: { narrative: '', artists: [] },
+    dutch_music: { narrative: '', highlights: [], top_artists: [], edison_winners: [] },
+    streaming_viral: { narrative: '', viral_hits: [], streaming_records: [] },
+    tours_festivals: { narrative: '', biggest_tours: [], festivals: [] },
+    genre_trends: { narrative: '', popular_genres: [] }
+  };
+}

@@ -131,7 +131,7 @@ const menuItems = [
   {
     title: "Marketing",
     items: [
-      { title: "Popups & Newsletter", url: "/admin/popups", icon: Bell },
+      { title: "Popup Beheer", url: "/admin/popups", icon: Bell },
     ]
   },
   {

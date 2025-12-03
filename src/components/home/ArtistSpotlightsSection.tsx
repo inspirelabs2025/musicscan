@@ -9,7 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const ArtistSpotlightsSection = () => {
   const { data: spotlights, isLoading } = useArtistSpotlights({ 
     published: true,
-    limit: 3 
+    spotlightOnly: true,
+    limit: 1 
   });
 
   if (isLoading) {
@@ -25,8 +26,8 @@ export const ArtistSpotlightsSection = () => {
               </div>
             </div>
           </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
+          <div className="grid gap-4">
+            {[1].map((i) => (
               <Card key={i} className="overflow-hidden">
                 <Skeleton className="h-48 w-full" />
                 <CardHeader>
@@ -67,7 +68,7 @@ export const ArtistSpotlightsSection = () => {
         </div>
 
         <div className="space-y-6">
-          {spotlights.slice(0, 3).map((spotlight) => {
+          {spotlights.slice(0, 1).map((spotlight) => {
             const intro = extractSpotlightIntro(spotlight);
             const imageUrl = getSpotlightImageUrl(spotlight);
             

@@ -166,6 +166,8 @@ import NederlandseMuziek from "./pages/NederlandseMuziek";
 import NLMuziekDecennium from "./pages/NLMuziekDecennium";
 import NLMuziekFeitDetail from "./pages/NLMuziekFeitDetail";
 import FranseMuziek from "./pages/FranseMuziek";
+import DanceHouseMuziek from "./pages/DanceHouseMuziek";
+import DanceHouseFeitDetail from "./pages/DanceHouseFeitDetail";
 
 // Redirect component for old /blog/ URLs to /plaat-verhaal/
 const BlogRedirect = () => {
@@ -352,6 +354,15 @@ const AppContent = () => {
         <Route path="/nederlandse-muziek" element={<Navigate to="/nederland" replace />} />
         <Route path="/frankrijk" element={<FranseMuziek />} />
         <Route path="/franse-muziek" element={<Navigate to="/frankrijk" replace />} />
+        
+        {/* Dance/House Genre Routes */}
+        <Route path="/dance-house" element={<DanceHouseMuziek />} />
+        <Route path="/dh-muziekfeit/:slug" element={<DanceHouseFeitDetail />} />
+        <Route path="/dance-muziek" element={<Navigate to="/dance-house" replace />} />
+        <Route path="/house-muziek" element={<Navigate to="/dance-house" replace />} />
+        <Route path="/electronic" element={<Navigate to="/dance-house" replace />} />
+        <Route path="/edm" element={<Navigate to="/dance-house" replace />} />
+        
         <Route path="/news" element={<Navigate to="/verhalen" replace />} />
         <Route path="/nieuws/:slug" element={<NewsPost />} />
         <Route path="/artist/:slug" element={<ArtistDetail />} />

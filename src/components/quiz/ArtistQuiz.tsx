@@ -189,14 +189,14 @@ export function ArtistQuiz() {
               </div>
 
               <div className="flex flex-wrap gap-2 justify-center py-2">
-                <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 dark:text-blue-300">
-                  🤖 AI-gegenereerd
-                </Badge>
                 <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-300">
                   ⭐ +10 punten per vraag
                 </Badge>
                 <Badge variant="secondary" className="bg-purple-500/10 text-purple-700 dark:text-purple-300">
                   🏆 Leaderboard
+                </Badge>
+                <Badge variant="secondary" className="bg-orange-500/10 text-orange-700 dark:text-orange-300">
+                  🎲 Unieke vragen
                 </Badge>
               </div>
 
@@ -220,7 +220,7 @@ export function ArtistQuiz() {
               </Button>
               
               <p className="text-xs text-center text-muted-foreground">
-                Elke quiz is uniek en wordt speciaal voor jou gegenereerd door AI
+                Elke quiz is uniek en wordt speciaal voor jou samengesteld
               </p>
             </CardContent>
           </Card>

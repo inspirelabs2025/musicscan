@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Mail, Download, Trash2, Search, Users, TrendingUp, Calendar, MailX } from 'lucide-react';
+import { Mail, Download, Trash2, Search, Users, TrendingUp, Calendar, MailX, Plus } from 'lucide-react';
 import { useNewsletterSubscribers } from '@/hooks/useNewsletterSubscribers';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -18,10 +19,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export function NewsletterSubscribersSection() {
-  const { subscribers, stats, isLoading, deleteSubscriber, unsubscribe, exportToCsv } = useNewsletterSubscribers();
+  const { subscribers, stats, isLoading, deleteSubscriber, unsubscribe, addSubscriber, exportToCsv } = useNewsletterSubscribers();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [newSource, setNewSource] = useState('admin');
 
   const filteredSubscribers = subscribers?.filter(s => 
     s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -55,6 +67,36 @@ export function NewsletterSubscribersSection() {
       toast({
         title: 'Fout',
         description: 'Kon niet uitschrijven.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleAdd = async () => {
+    if (!newEmail || !newEmail.includes('@')) {
+      toast({
+        title: 'Ongeldig email',
+        description: 'Voer een geldig emailadres in.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await addSubscriber.mutateAsync({ email: newEmail, source: newSource });
+      toast({
+        title: 'Subscriber toegevoegd',
+        description: `${newEmail} is toegevoegd aan de lijst.`,
+      });
+      setNewEmail('');
+      setNewSource('admin');
+      setIsAddDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: 'Fout',
+        description: error.message?.includes('duplicate') 
+          ? 'Dit emailadres bestaat al.' 
+          : 'Kon subscriber niet toevoegen.',
         variant: 'destructive',
       });
     }
@@ -134,6 +176,10 @@ export function NewsletterSubscribersSection() {
               </CardDescription>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Toevoegen
+              </Button>
               <Button variant="outline" size="sm" onClick={exportToCsv}>
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
@@ -243,6 +289,47 @@ export function NewsletterSubscribersSection() {
           )}
         </CardContent>
       </Card>
+
+      {/* Add Subscriber Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Subscriber toevoegen</DialogTitle>
+            <DialogDescription>
+              Voeg handmatig een nieuwe subscriber toe aan de nieuwsbrief.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="email@voorbeeld.nl"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="source">Bron</Label>
+              <Input
+                id="source"
+                placeholder="admin"
+                value={newSource}
+                onChange={(e) => setNewSource(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleAdd} disabled={addSubscriber.isPending}>
+              {addSubscriber.isPending ? 'Toevoegen...' : 'Toevoegen'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

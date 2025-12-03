@@ -90,6 +90,25 @@ export function useNewsletterSubscribers() {
     },
   });
 
+  const addSubscriber = useMutation({
+    mutationFn: async ({ email, source }: { email: string; source?: string }) => {
+      const { error } = await supabase
+        .from('newsletter_subscribers')
+        .insert({
+          email: email.toLowerCase().trim(),
+          source: source || 'admin',
+          is_confirmed: true,
+          welcome_email_sent: false,
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['newsletter-subscribers'] });
+      queryClient.invalidateQueries({ queryKey: ['newsletter-stats'] });
+    },
+  });
+
   const exportToCsv = () => {
     if (!subscribers?.length) return;
     
@@ -118,6 +137,7 @@ export function useNewsletterSubscribers() {
     error,
     deleteSubscriber,
     unsubscribe,
+    addSubscriber,
     exportToCsv,
   };
 }

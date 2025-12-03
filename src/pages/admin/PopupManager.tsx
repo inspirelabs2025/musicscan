@@ -1,18 +1,19 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { 
-  Bell, Plus, Pencil, Trash2, Eye, EyeOff, 
+  Bell, Plus, Pencil, Trash2, 
   Clock, MousePointerClick, ArrowUpFromLine, FileText,
-  BarChart3
+  ChevronDown, ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,7 @@ import {
   useDeletePopup,
   SitePopup 
 } from '@/hooks/useSitePopups';
+import { PopupTemplateGallery, PopupTemplate } from '@/components/admin/PopupTemplateGallery';
 
 const TRIGGER_TYPES = [
   { value: 'time_on_page', label: 'Tijd op pagina', icon: Clock, description: 'Toon na X seconden' },
@@ -48,11 +50,26 @@ const TRIGGER_TYPES = [
 ];
 
 const POPUP_TYPES = [
-  { value: 'quiz_prompt', label: 'Quiz Uitnodiging' },
-  { value: 'newsletter', label: 'Nieuwsbrief' },
-  { value: 'promo', label: 'Promotie' },
-  { value: 'announcement', label: 'Aankondiging' },
-  { value: 'custom', label: 'Aangepast' },
+  { value: 'quiz_prompt', label: 'Quiz Uitnodiging', color: 'bg-purple-500', emoji: '🎯' },
+  { value: 'newsletter', label: 'Nieuwsbrief', color: 'bg-blue-500', emoji: '📬' },
+  { value: 'contextual_redirect', label: 'Contextuele Redirect', color: 'bg-emerald-500', emoji: '🔗' },
+  { value: 'gamification', label: 'Gamification', color: 'bg-amber-500', emoji: '🏆' },
+  { value: 'promo', label: 'Promotie', color: 'bg-rose-500', emoji: '🎁' },
+  { value: 'announcement', label: 'Aankondiging', color: 'bg-cyan-500', emoji: '📢' },
+  { value: 'custom', label: 'Aangepast', color: 'bg-gray-500', emoji: '⚙️' },
+];
+
+// Group definitions for organizing popups
+const PAGE_GROUPS = [
+  { id: 'nieuws', label: '📰 Nieuws & Content', pages: ['/nieuws', '/singles', '/muziek-verhaal', '/plaat-verhaal', '/anekdotes'] },
+  { id: 'land-genre', label: '🌍 Land & Genre Hubs', pages: ['/nederland', '/frankrijk', '/dance-house'] },
+  { id: 'quiz', label: '🎮 Quiz & Gamification', pages: ['/quizzen'] },
+  { id: 'shop', label: '🛒 Shop & Conversie', pages: ['/shop', '/product', '/posters', '/canvas', '/shirts', '/merchandise'] },
+  { id: 'collection', label: '💿 Collectie', pages: ['/mijn-collectie', '/collection'] },
+  { id: 'releases', label: '🎵 Releases & History', pages: ['/new-release', '/releases', '/vandaag-in-de-muziekgeschiedenis'] },
+  { id: 'artists', label: '🎤 Artiesten', pages: ['/artists'] },
+  { id: 'homepage', label: '🏠 Homepage', pages: ['/'] },
+  { id: 'general', label: '📋 Algemeen', pages: [] },
 ];
 
 const FREQUENCY_OPTIONS = [
@@ -205,9 +222,139 @@ export default function PopupManager() {
     return trigger?.icon || Clock;
   };
 
+  const getPopupType = (type: string) => {
+    return POPUP_TYPES.find(t => t.value === type) || POPUP_TYPES[POPUP_TYPES.length - 1];
+  };
+
   const calculateCTR = (popup: SitePopup) => {
     if (popup.views_count === 0) return 0;
     return ((popup.clicks_count / popup.views_count) * 100).toFixed(1);
+  };
+
+  // Handle template selection
+  const handleTemplateSelect = (template: PopupTemplate) => {
+    setSelectedPopup(null);
+    setFormData({
+      ...defaultFormData,
+      name: template.name,
+      popup_type: template.popup_type,
+      title: '',
+      trigger_type: template.trigger_type,
+      trigger_value: template.trigger_value,
+      display_frequency: template.display_frequency,
+      trigger_pages: template.suggested_pages.length > 0 ? template.suggested_pages : null,
+    });
+    setTriggerPagesInput(template.suggested_pages.join(', '));
+    setExcludePagesInput('');
+    setIsEditorOpen(true);
+  };
+
+  // Group popups by page context
+  const groupedPopups = useMemo(() => {
+    const groups: Record<string, SitePopup[]> = {};
+    
+    PAGE_GROUPS.forEach(group => {
+      groups[group.id] = [];
+    });
+
+    popups.forEach(popup => {
+      const triggerPages = popup.trigger_pages || [];
+      let assigned = false;
+
+      for (const group of PAGE_GROUPS) {
+        if (group.pages.length === 0) continue;
+        if (triggerPages.some(tp => group.pages.some(gp => tp.startsWith(gp)))) {
+          groups[group.id].push(popup);
+          assigned = true;
+          break;
+        }
+      }
+
+      if (!assigned) {
+        groups['general'].push(popup);
+      }
+    });
+
+    return groups;
+  }, [popups]);
+
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(PAGE_GROUPS.map(g => g.id)));
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
+  };
+
+  const renderPopupCard = (popup: SitePopup) => {
+    const TriggerIcon = getTriggerIcon(popup.trigger_type);
+    const popupType = getPopupType(popup.popup_type);
+    
+    return (
+      <Card key={popup.id} className={!popup.is_active ? 'opacity-60' : ''}>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold">{popup.name}</h3>
+                <Badge variant={popup.is_active ? 'default' : 'secondary'}>
+                  {popup.is_active ? 'Actief' : 'Inactief'}
+                </Badge>
+                <Badge className={`${popupType.color} text-white`}>
+                  {popupType.emoji} {popupType.label}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">{popup.title}</p>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                <span className="flex items-center gap-1">
+                  <TriggerIcon className="h-3 w-3" />
+                  {TRIGGER_TYPES.find(t => t.value === popup.trigger_type)?.label}
+                  {popup.trigger_value && ` (${popup.trigger_value}${popup.trigger_type === 'scroll_depth' ? '%' : 's'})`}
+                </span>
+                <span>Prioriteit: {popup.priority}</span>
+                <span>{FREQUENCY_OPTIONS.find(f => f.value === popup.display_frequency)?.label}</span>
+                {popup.trigger_pages && popup.trigger_pages.length > 0 && (
+                  <span className="text-primary">{popup.trigger_pages.join(', ')}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="flex items-center gap-6 text-sm">
+              <div className="text-center">
+                <div className="font-semibold">{popup.views_count.toLocaleString()}</div>
+                <div className="text-xs text-muted-foreground">Views</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold">{popup.clicks_count.toLocaleString()}</div>
+                <div className="text-xs text-muted-foreground">Clicks</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold">{calculateCTR(popup)}%</div>
+                <div className="text-xs text-muted-foreground">CTR</div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={popup.is_active}
+                onCheckedChange={() => handleToggleActive(popup)}
+              />
+              <Button variant="ghost" size="icon" onClick={() => handleEdit(popup)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => handleDelete(popup)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -228,6 +375,9 @@ export default function PopupManager() {
             Nieuwe Popup
           </Button>
         </div>
+
+        {/* Template Gallery */}
+        <PopupTemplateGallery onSelectTemplate={handleTemplateSelect} />
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -271,7 +421,7 @@ export default function PopupManager() {
           </Card>
         </div>
 
-        {/* Popup List */}
+        {/* Grouped Popup List */}
         <div className="space-y-4">
           {isLoading ? (
             <Card>
@@ -282,70 +432,44 @@ export default function PopupManager() {
           ) : popups.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center text-muted-foreground">
-                Nog geen popups aangemaakt
+                Nog geen popups aangemaakt. Gebruik de template gallery hierboven om snel te starten!
               </CardContent>
             </Card>
           ) : (
-            popups.map(popup => {
-              const TriggerIcon = getTriggerIcon(popup.trigger_type);
+            PAGE_GROUPS.map(group => {
+              const groupPopups = groupedPopups[group.id] || [];
+              if (groupPopups.length === 0) return null;
+              
               return (
-                <Card key={popup.id} className={!popup.is_active ? 'opacity-60' : ''}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{popup.name}</h3>
-                          <Badge variant={popup.is_active ? 'default' : 'secondary'}>
-                            {popup.is_active ? 'Actief' : 'Inactief'}
-                          </Badge>
-                          <Badge variant="outline">
-                            {POPUP_TYPES.find(t => t.value === popup.popup_type)?.label || popup.popup_type}
-                          </Badge>
+                <Collapsible
+                  key={group.id}
+                  open={expandedGroups.has(group.id)}
+                  onOpenChange={() => toggleGroup(group.id)}
+                >
+                  <CollapsibleTrigger asChild>
+                    <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {expandedGroups.has(group.id) ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4" />
+                            )}
+                            <span className="font-medium">{group.label}</span>
+                            <Badge variant="secondary">{groupPopups.length}</Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {groupPopups.filter(p => p.is_active).length} actief
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground">{popup.title}</p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <TriggerIcon className="h-3 w-3" />
-                            {TRIGGER_TYPES.find(t => t.value === popup.trigger_type)?.label}
-                            {popup.trigger_value && ` (${popup.trigger_value}${popup.trigger_type === 'scroll_depth' ? '%' : 's'})`}
-                          </span>
-                          <span>Prioriteit: {popup.priority}</span>
-                          <span>{FREQUENCY_OPTIONS.find(f => f.value === popup.display_frequency)?.label}</span>
-                        </div>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="flex items-center gap-6 text-sm">
-                        <div className="text-center">
-                          <div className="font-semibold">{popup.views_count.toLocaleString()}</div>
-                          <div className="text-xs text-muted-foreground">Views</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-semibold">{popup.clicks_count.toLocaleString()}</div>
-                          <div className="text-xs text-muted-foreground">Clicks</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-semibold">{calculateCTR(popup)}%</div>
-                          <div className="text-xs text-muted-foreground">CTR</div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={popup.is_active}
-                          onCheckedChange={() => handleToggleActive(popup)}
-                        />
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(popup)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(popup)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      </CardContent>
+                    </Card>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2 mt-2 ml-4">
+                    {groupPopups.map(renderPopupCard)}
+                  </CollapsibleContent>
+                </Collapsible>
               );
             })
           )}

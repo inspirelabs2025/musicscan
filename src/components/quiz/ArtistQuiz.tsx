@@ -98,82 +98,133 @@ export function ArtistQuiz() {
   // Start screen
   if (!quizStarted) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <Link to="/quizzen" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-6">
-          <ArrowLeft className="w-4 h-4" />
-          Terug naar Quiz Hub
-        </Link>
+      <div className="min-h-[80vh] relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-cyan-500/10 to-purple-600/20 -z-10" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl -z-10" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl -z-10" />
+        
+        {/* Floating music notes decoration */}
+        <div className="absolute top-32 right-20 text-6xl opacity-10 animate-pulse">🎵</div>
+        <div className="absolute bottom-40 left-16 text-5xl opacity-10 animate-pulse" style={{ animationDelay: '0.5s' }}>🎤</div>
+        <div className="absolute top-60 left-1/4 text-4xl opacity-10 animate-pulse" style={{ animationDelay: '1s' }}>🎸</div>
+        
+        <div className="max-w-2xl mx-auto px-4 py-8 relative">
+          <Link to="/quizzen" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Terug naar Quiz Hub
+          </Link>
 
-        <Card>
-          <CardHeader className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-              <Users className="w-8 h-8 text-white" />
-            </div>
-            <CardTitle className="text-2xl">Artiesten Quiz</CardTitle>
-            <p className="text-muted-foreground">Test je kennis van muziekartiesten</p>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Moeilijkheid</label>
-                <Select value={difficulty} onValueChange={(v) => setDifficulty(v as Difficulty)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="easy">😊 Makkelijk</SelectItem>
-                    <SelectItem value="medium">🎯 Gemiddeld</SelectItem>
-                    <SelectItem value="hard">🔥 Moeilijk</SelectItem>
-                  </SelectContent>
-                </Select>
+          <Card className="border-0 shadow-2xl bg-card/80 backdrop-blur-sm overflow-hidden">
+            {/* Header with gradient accent */}
+            <div className="h-2 bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600" />
+            
+            <CardHeader className="text-center pt-8 pb-4">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/30 transform hover:scale-105 transition-transform">
+                <Users className="w-10 h-10 text-white" />
+              </div>
+              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                Artiesten Quiz
+              </CardTitle>
+              <p className="text-muted-foreground text-lg mt-2">
+                Test je kennis van muziekartiesten uit alle tijden
+              </p>
+            </CardHeader>
+            
+            <CardContent className="space-y-6 px-8 pb-8">
+              {/* Info cards */}
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="bg-blue-500/10 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-600">10</div>
+                  <div className="text-xs text-muted-foreground">Vragen</div>
+                </div>
+                <div className="bg-cyan-500/10 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-cyan-600">100</div>
+                  <div className="text-xs text-muted-foreground">Max Punten</div>
+                </div>
+                <div className="bg-purple-500/10 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-purple-600">141</div>
+                  <div className="text-xs text-muted-foreground">Artiesten</div>
+                </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Genre (optioneel)</label>
-                <Select value={genre || 'all'} onValueChange={(v) => setGenre(v === 'all' ? '' : v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Alle genres" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle genres</SelectItem>
-                    <SelectItem value="rock">Rock</SelectItem>
-                    <SelectItem value="pop">Pop</SelectItem>
-                    <SelectItem value="metal">Metal</SelectItem>
-                    <SelectItem value="jazz">Jazz</SelectItem>
-                    <SelectItem value="electronic">Electronic</SelectItem>
-                    <SelectItem value="hip-hop">Hip-Hop</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-semibold mb-2 block flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-xs">1</span>
+                    Kies je moeilijkheid
+                  </label>
+                  <Select value={difficulty} onValueChange={(v) => setDifficulty(v as Difficulty)}>
+                    <SelectTrigger className="h-12 bg-background/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="easy">😊 Makkelijk - Bekende artiesten</SelectItem>
+                      <SelectItem value="medium">🎯 Gemiddeld - Mix van genres</SelectItem>
+                      <SelectItem value="hard">🔥 Moeilijk - Obscure feiten</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold mb-2 block flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-xs">2</span>
+                    Kies een genre (optioneel)
+                  </label>
+                  <Select value={genre || 'all'} onValueChange={(v) => setGenre(v === 'all' ? '' : v)}>
+                    <SelectTrigger className="h-12 bg-background/50">
+                      <SelectValue placeholder="Alle genres" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">🎵 Alle genres</SelectItem>
+                      <SelectItem value="rock">🎸 Rock</SelectItem>
+                      <SelectItem value="pop">🎤 Pop</SelectItem>
+                      <SelectItem value="metal">🤘 Metal</SelectItem>
+                      <SelectItem value="jazz">🎷 Jazz</SelectItem>
+                      <SelectItem value="electronic">🎹 Electronic</SelectItem>
+                      <SelectItem value="hip-hop">🎧 Hip-Hop</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">10 vragen</Badge>
-              <Badge variant="secondary">AI-gegenereerd</Badge>
-              <Badge variant="secondary">+10 punten per vraag</Badge>
-            </div>
+              <div className="flex flex-wrap gap-2 justify-center py-2">
+                <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 dark:text-blue-300">
+                  🤖 AI-gegenereerd
+                </Badge>
+                <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-300">
+                  ⭐ +10 punten per vraag
+                </Badge>
+                <Badge variant="secondary" className="bg-purple-500/10 text-purple-700 dark:text-purple-300">
+                  🏆 Leaderboard
+                </Badge>
+              </div>
 
-            <Button 
-              onClick={startQuiz} 
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500"
-              size="lg"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Quiz laden...
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  Start Quiz
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+              <Button 
+                onClick={startQuiz} 
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600 hover:from-blue-600 hover:via-cyan-600 hover:to-blue-700 shadow-lg shadow-blue-500/30 h-14 text-lg font-semibold"
+                size="lg"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Quiz wordt gegenereerd...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5 mr-2" />
+                    Start de Quiz!
+                  </>
+                )}
+              </Button>
+              
+              <p className="text-xs text-center text-muted-foreground">
+                Elke quiz is uniek en wordt speciaal voor jou gegenereerd door AI
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

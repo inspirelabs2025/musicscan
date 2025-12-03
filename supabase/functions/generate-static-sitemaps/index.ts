@@ -81,6 +81,17 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch singles: ${singlesError.message}`);
     }
 
+    // Fetch all Spotify new releases with slugs
+    const { data: newReleases, error: newReleasesError } = await supabase
+      .from('spotify_new_releases_processed')
+      .select('slug, created_at, image_url, artist, album_name')
+      .not('slug', 'is', null)
+      .order('release_date', { ascending: false });
+
+    if (newReleasesError) {
+      throw new Error(`Failed to fetch new releases: ${newReleasesError.message}`);
+    }
+
     // Fetch all active music anecdotes
     const { data: anecdotes, error: anecdotesError } = await supabase
       .from('music_anecdotes')
@@ -171,7 +182,7 @@ Deno.serve(async (req) => {
     const posterProducts = (artProducts || []).filter(p => p.categories?.includes('POSTER'));
     const metalPrintProducts = (artProducts || []).filter(p => !p.categories?.includes('POSTER'));
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos`);
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${newReleases?.length || 0} new releases, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos`);
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
@@ -294,7 +305,29 @@ Deno.serve(async (req) => {
       'https://www.musicscan.app/nl-muziekfeit'
     );
 
-    console.log(`Found ${nlMuziekFeitenSlugs.length} NL muziekfeiten`);
+    // New Releases sitemap
+    const newReleasesSitemapXml = generateSitemapXml(
+      (newReleases || []).map(r => ({
+        slug: r.slug,
+        updated_at: r.created_at
+      })),
+      'https://www.musicscan.app/new-release'
+    );
+
+    // New Releases image sitemap
+    const newReleasesImageSitemapXml = generateImageSitemapXml(
+      (newReleases || []).map(r => ({
+        slug: r.slug,
+        updated_at: r.created_at,
+        image_url: r.image_url,
+        title: r.album_name,
+        artist: r.artist
+      })),
+      'https://www.musicscan.app/new-release',
+      'image_url'
+    );
+
+    console.log(`Found ${nlMuziekFeitenSlugs.length} NL muziekfeiten, ${newReleases?.length || 0} new releases`);
 
     // Build uploads list (25 files total - added NL muziekfeiten)
     const uploads = [
@@ -312,6 +345,7 @@ Deno.serve(async (req) => {
       { name: 'sitemap-fanwall.xml', data: fanwallSitemapXml },
       { name: 'sitemap-photos.xml', data: photosSitemapXml },
       { name: 'sitemap-nl-muziekfeiten.xml', data: nlMuziekFeitenSitemapXml },
+      { name: 'sitemap-new-releases.xml', data: newReleasesSitemapXml },
       { name: 'sitemap-images-blogs.xml', data: blogImageSitemapXml },
       { name: 'sitemap-images-stories.xml', data: storiesImageSitemapXml },
       { name: 'sitemap-images-singles.xml', data: singlesImageSitemapXml },
@@ -323,6 +357,7 @@ Deno.serve(async (req) => {
       { name: 'sitemap-images-time-machine.xml', data: timeMachineImageSitemapXml },
       { name: 'sitemap-images-fanwall.xml', data: fanwallImageSitemapXml },
       { name: 'sitemap-images-photos.xml', data: photosImageSitemapXml },
+      { name: 'sitemap-images-new-releases.xml', data: newReleasesImageSitemapXml },
     ];
 
     for (const upload of uploads) {

@@ -8,6 +8,7 @@ export interface SpotifyNewRelease {
   image_url: string | null;
   spotify_url: string;
   release_date: string;
+  slug: string | null;
 }
 
 export const useSpotifyNewReleases = () => {
@@ -16,7 +17,8 @@ export const useSpotifyNewReleases = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('spotify_new_releases_processed')
-        .select('id, artist, album_name, image_url, spotify_url, release_date')
+        .select('id, artist, album_name, image_url, spotify_url, release_date, slug')
+        .not('slug', 'is', null)
         .order('release_date', { ascending: false })
         .limit(20);
       
@@ -32,7 +34,8 @@ export const useSpotifyNewReleases = () => {
         artist: item.artist,
         image_url: item.image_url,
         spotify_url: item.spotify_url,
-        release_date: item.release_date
+        release_date: item.release_date,
+        slug: item.slug
       })) as SpotifyNewRelease[];
     },
     staleTime: 30 * 60 * 1000, // 30 minutes (data comes from DB, refreshed by cron)

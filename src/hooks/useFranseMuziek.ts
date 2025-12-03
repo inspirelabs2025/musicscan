@@ -33,6 +33,19 @@ export interface FranseArtiest {
   music_style?: string[];
 }
 
+// Helper function for strict artist name matching
+const matchesFrenchArtist = (artistName: string): boolean => {
+  const normalizedName = artistName.toLowerCase().trim();
+  return FRENCH_ARTISTS.some(fa => {
+    const normalizedFa = fa.toLowerCase().trim();
+    // Exact match
+    if (normalizedName === normalizedFa) return true;
+    // Word boundary match (prevent "Air" matching "Jefferson Airplane")
+    const regex = new RegExp(`\\b${normalizedFa.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    return regex.test(artistName);
+  });
+};
+
 // Comprehensive list of French artists
 export const FRENCH_ARTISTS = [
   // Klassieke Chanson
@@ -112,14 +125,11 @@ export const useFranseVerhalen = () => {
         throw error;
       }
 
-      // Filter for French artists
+      // Filter for French artists using strict matching
       const frenchPosts = (data || []).filter(post => {
         const frontmatter = post.yaml_frontmatter as any;
         const artist = frontmatter?.artist || '';
-        return FRENCH_ARTISTS.some(fa => 
-          artist.toLowerCase().includes(fa.toLowerCase()) ||
-          fa.toLowerCase().includes(artist.toLowerCase())
-        );
+        return matchesFrenchArtist(artist);
       });
 
       return frenchPosts as FransBlogPost[];
@@ -141,12 +151,9 @@ export const useFranseArtiesten = () => {
         throw error;
       }
 
-      // Filter for French artists
+      // Filter for French artists using strict matching
       const frenchArtists = (data || []).filter(artist =>
-        FRENCH_ARTISTS.some(fa => 
-          artist.artist_name.toLowerCase().includes(fa.toLowerCase()) ||
-          fa.toLowerCase().includes(artist.artist_name.toLowerCase())
-        )
+        matchesFrenchArtist(artist.artist_name)
       );
 
       return frenchArtists as FranseArtiest[];
@@ -206,9 +213,7 @@ export const useFranseStats = () => {
       const frenchPosts = (blogPosts || []).filter(post => {
         const frontmatter = post.yaml_frontmatter as any;
         const artist = frontmatter?.artist || '';
-        return FRENCH_ARTISTS.some(fa => 
-          artist.toLowerCase().includes(fa.toLowerCase())
-        );
+        return matchesFrenchArtist(artist);
       });
 
       // Get French artists count
@@ -218,9 +223,7 @@ export const useFranseStats = () => {
         .eq('is_published', true);
 
       const frenchArtistsCount = (artists || []).filter(artist =>
-        FRENCH_ARTISTS.some(fa => 
-          artist.artist_name.toLowerCase().includes(fa.toLowerCase())
-        )
+        matchesFrenchArtist(artist.artist_name)
       ).length;
 
       return {

@@ -55,6 +55,7 @@ const verhalenMenuItems = [
 const landenGenresMenuItems = [
   { title: "🇳🇱 Nederland", url: "/nederland", icon: Flag, highlight: true },
   { title: "🇫🇷 Frankrijk", url: "/frankrijk", icon: Flag, highlight: true },
+  { title: "🎧 Dance/House", url: "/dance-house", icon: Music, highlight: true },
   { title: "Alle Artiesten", url: "/artists", icon: Users },
   { title: "Alle Releases", url: "/releases", icon: Music },
   { title: "Muziekgeschiedenis", url: "/vandaag-in-de-muziekgeschiedenis", icon: Calendar },

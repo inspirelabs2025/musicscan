@@ -54,6 +54,7 @@ const verhalenMenuItems = [
 // LANDEN & GENRES MENU ITEMS
 const landenGenresMenuItems = [
   { title: "🇳🇱 Nederland", url: "/nederland", icon: Flag, highlight: true },
+  { title: "🇫🇷 Frankrijk", url: "/frankrijk", icon: Flag, highlight: true },
   { title: "Alle Artiesten", url: "/artists", icon: Users },
   { title: "Alle Releases", url: "/releases", icon: Music },
   { title: "Muziekgeschiedenis", url: "/vandaag-in-de-muziekgeschiedenis", icon: Calendar },
@@ -107,7 +108,7 @@ export function Navigation() {
   const profileMenuItem = getProfileMenuItem(user?.id);
   const isShopPageActive = shopMenuItems.some(item => currentPath === item.url);
   const isVerhalenPageActive = verhalenMenuItems.some(item => currentPath === item.url);
-  const isLandenGenresPageActive = landenGenresMenuItems.some(item => currentPath === item.url) || currentPath === '/nederland';
+  const isLandenGenresPageActive = landenGenresMenuItems.some(item => currentPath === item.url) || currentPath === '/nederland' || currentPath === '/frankrijk';
   const isScanCollectionPageActive = scanCollectionMenuItems.some(item => currentPath === item.url);
   const isAiToolsPageActive = aiToolsMenuItems.some(item => currentPath === item.url);
   const isCommunityPageActive = communityMenuItems.some(item => currentPath === item.url) || (profileMenuItem && currentPath === profileMenuItem.url);

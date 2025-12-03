@@ -99,13 +99,31 @@ export function SitePopupProvider({ children }: { children: ReactNode }) {
 
   // Check if popup should show on current page
   const shouldShowOnPage = useCallback((popup: SitePopup, currentPath: string): boolean => {
-    if (popup.exclude_pages?.some(page => currentPath.startsWith(page))) {
+    // Auto-exclude admin and auth pages
+    if (currentPath.startsWith('/admin') || currentPath.startsWith('/auth')) {
       return false;
     }
-    if (popup.trigger_pages && popup.trigger_pages.length > 0) {
-      return popup.trigger_pages.some(page => currentPath.startsWith(page));
+    
+    // Check exclude pages with prefix matching
+    if (popup.exclude_pages?.some(page => 
+      currentPath === page || currentPath.startsWith(page + '/')
+    )) {
+      return false;
     }
-    return true;
+    
+    // If no trigger pages specified, show everywhere (except excluded)
+    if (!popup.trigger_pages || popup.trigger_pages.length === 0) {
+      return true;
+    }
+    
+    // Prefix matching for trigger pages
+    // Handle special case for homepage '/'
+    return popup.trigger_pages.some(page => {
+      if (page === '/') {
+        return currentPath === '/';
+      }
+      return currentPath === page || currentPath.startsWith(page + '/') || currentPath.startsWith(page);
+    });
   }, []);
 
   const shouldTriggerPopup = useCallback((popup: SitePopup): boolean => {

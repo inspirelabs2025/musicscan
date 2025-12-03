@@ -25,13 +25,13 @@ export const InMemoriamSection: React.FC<InMemoriamSectionProps> = ({ narrative,
         )}
         
         {artists && artists.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             {artists.map((artist, index) => (
               <div 
                 key={index}
-                className="flex items-start gap-3 p-3 rounded-lg bg-background/50"
+                className="flex items-start gap-3 p-4 rounded-lg bg-background/50"
               >
-                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                   {artist.image_url ? (
                     <img 
                       src={artist.image_url} 
@@ -39,15 +39,33 @@ export const InMemoriamSection: React.FC<InMemoriamSectionProps> = ({ narrative,
                       className="w-full h-full rounded-full object-cover grayscale"
                     />
                   ) : (
-                    <span className="text-lg">🕯️</span>
+                    <span className="text-2xl">🕯️</span>
                   )}
                 </div>
-                <div className="min-w-0">
-                  <h3 className="font-semibold text-sm">{artist.name}</h3>
-                  <p className="text-xs text-muted-foreground">{artist.years}</p>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold">{artist.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {artist.years}
+                    {artist.age && ` (${artist.age} jaar)`}
+                  </p>
+                  {artist.date_of_death && (
+                    <p className="text-xs text-muted-foreground">
+                      † {new Date(artist.date_of_death).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  )}
+                  <p className="text-sm text-muted-foreground mt-1">
                     {artist.known_for}
                   </p>
+                  {artist.notable_works && artist.notable_works.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Bekend van: {artist.notable_works.slice(0, 3).join(', ')}
+                    </p>
+                  )}
+                  {artist.legacy && (
+                    <p className="text-xs text-muted-foreground mt-1 italic">
+                      "{artist.legacy}"
+                    </p>
+                  )}
                 </div>
               </div>
             ))}

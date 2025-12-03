@@ -223,72 +223,175 @@ async function generateAllNarratives(year: number, spotifyData: any, discogsData
     return getFallbackNarratives(year, spotifyData, discogsData);
   }
 
-  const spotifyArtists = spotifyData?.newReleases?.map((r: any) => r.artists[0]?.name).filter(Boolean).slice(0, 10) || [];
-  const spotifyAlbums = spotifyData?.newReleases?.map((r: any) => `${r.artists[0]?.name} - ${r.name}`).slice(0, 5) || [];
   const discogsGenres = discogsData?.genreDistribution?.slice(0, 5) || [];
 
-  const prompt = `Je bent een Nederlandse muziekjournalist. Genereer een compleet muziek jaaroverzicht voor ${year}.
+  const prompt = `Je bent een ervaren Nederlandse muziekjournalist met diepgaande kennis van de muziekindustrie. Genereer een UITGEBREID en GEDETAILLEERD muziek jaaroverzicht voor ${year}.
 
-BESCHIKBARE DATA:
-- Spotify nieuwe releases: ${spotifyAlbums.join(', ') || 'Geen data'}
-- Populaire artiesten: ${spotifyArtists.join(', ') || 'Geen data'}
-- Discogs genres: ${discogsGenres.map((g: any) => g.genre).join(', ') || 'Geen data'}
+BELANGRIJKE INSTRUCTIES:
+1. Gebruik je volledige kennis over muziekgebeurtenissen in ${year}
+2. Geef CONCRETE cijfers, namen, datums waar mogelijk
+3. Wees SPECIFIEK - geen vage beschrijvingen
+4. Denk aan: Grammy's, Brit Awards, Edison, MTV VMA's, Billboard records
+5. Denk aan overleden artiesten (In Memoriam) - wie stierven er in ${year}?
+6. Denk aan virale TikTok hits, streaming records, Spotify wrapped data
+7. Denk aan Nederlandse muziek: 3FM, NPO Radio 2, Top 40, Edison winnaars
+8. Denk aan grote tours die plaatsvonden, festivalheadliners
 
-Genereer JSON met deze EXACTE structuur (gebruik je eigen kennis over muziek in ${year}):
+CONTEXT DATA (ter referentie):
+- Discogs populaire genres ${year}: ${discogsGenres.map((g: any) => g.genre).join(', ') || 'Geen data'}
+
+Genereer JSON met deze EXACTE structuur - UITGEBREID EN GEDETAILLEERD:
 
 {
   "global_overview": {
-    "narrative": "Een boeiende introductie over het muziekjaar ${year} (max 150 woorden)",
-    "highlights": ["highlight 1", "highlight 2", "highlight 3"]
+    "narrative": "Een uitgebreide introductie (200-300 woorden) over het muziekjaar ${year}. Beschrijf de belangrijkste trends, doorbraken, verrassingen. Noem specifieke cijfers: hoeveel albums werden uitgebracht, streaming cijfers, vinyl verkoop, etc.",
+    "highlights": ["5-8 concrete hoogtepunten met cijfers/namen"]
   },
   "top_artists": [
-    {"name": "Artiest", "achievement": "Belangrijkste prestatie", "genre": "Genre", "image_url": null}
+    {
+      "name": "Artiest naam",
+      "achievement": "Specifieke prestatie met cijfers (bijv. '3.2 miljard streams op Spotify')",
+      "genre": "Genre",
+      "albums_released": 1,
+      "total_streams_billions": 3.2,
+      "notable_songs": ["Song 1", "Song 2"],
+      "image_url": null
+    }
   ],
   "top_albums": [
-    {"artist": "Artiest", "title": "Album", "description": "Korte beschrijving", "image_url": null}
+    {
+      "artist": "Artiest",
+      "title": "Album titel",
+      "description": "Uitgebreide beschrijving (50-80 woorden): productie, samenwerkingen, thema's, ontvangst, verkoopcijfers",
+      "release_date": "${year}-01-15",
+      "label": "Platenmaatschappij",
+      "weeks_on_chart": 52,
+      "certifications": ["Platina NL", "Goud BE"],
+      "image_url": null
+    }
   ],
   "awards": {
-    "narrative": "Korte tekst over de awards van ${year}",
-    "grammy": [{"category": "Album of the Year", "winner": "Artiest - Album"}],
-    "brit_awards": [{"category": "British Album", "winner": "Artiest"}],
-    "edison": [{"category": "Album", "winner": "Nederlandse artiest"}]
+    "narrative": "Uitgebreide beschrijving van het awards seizoen ${year} (150 woorden). Beschrijf trends, verrassingen, snubs, historische momenten.",
+    "grammy": [
+      {"category": "Album of the Year", "winner": "Artiest - Album", "other_nominees": ["Nominee 1", "Nominee 2"]}
+    ],
+    "brit_awards": [
+      {"category": "British Album of the Year", "winner": "Artiest - Album"}
+    ],
+    "edison": [
+      {"category": "Album Nationaal", "winner": "Nederlandse artiest - Album"}
+    ],
+    "mtv_vma": [
+      {"category": "Video of the Year", "winner": "Artiest - Song"}
+    ],
+    "billboard_achievements": [
+      "Record 1 met specifieke cijfers",
+      "Record 2 met specifieke cijfers"
+    ]
   },
   "in_memoriam": {
-    "narrative": "Eerbetoon aan verloren artiesten",
-    "artists": [{"name": "Artiest", "years": "1950-${year}", "known_for": "Bekend van", "image_url": null}]
+    "narrative": "Een respectvolle herdenking (150-200 woorden) van de artiesten, muzikanten, producers en muziekindustrie figuren die we in ${year} verloren. Beschrijf hun collectieve impact op de muziekwereld.",
+    "artists": [
+      {
+        "name": "Overleden artiest",
+        "years": "1940-${year}",
+        "date_of_death": "${year}-03-15",
+        "age": 83,
+        "cause": "Natuurlijke oorzaak / na ziekte / etc",
+        "known_for": "Uitgebreide beschrijving van hun belangrijkste werk en invloed",
+        "notable_works": ["Album/Song 1", "Album/Song 2", "Album/Song 3"],
+        "legacy": "Korte beschrijving van hun nalatenschap",
+        "image_url": null
+      }
+    ]
   },
   "dutch_music": {
-    "narrative": "Nederlandse muziek hoogtepunten",
-    "highlights": ["highlight 1", "highlight 2"],
-    "top_artists": ["Artiest 1", "Artiest 2"],
-    "edison_winners": [{"category": "Pop", "winner": "Artiest"}]
+    "narrative": "Uitgebreide beschrijving (200 woorden) van de Nederlandse muziekscene in ${year}. Noem specifieke hitlijst posities, streaming cijfers, doorbraken, Edison winnaars, 3FM Serious Talent, NPO Radio 2 successen.",
+    "highlights": [
+      "Specifiek hoogtepunt met namen en cijfers",
+      "Nog een hoogtepunt"
+    ],
+    "top_artists": ["Nederlandse artiest 1", "Nederlandse artiest 2", "Nederlandse artiest 3"],
+    "edison_winners": [
+      {"category": "Album Nationaal", "winner": "Artiest - Album"},
+      {"category": "Song Nationaal", "winner": "Artiest - Song"}
+    ],
+    "top_40_records": ["Record 1", "Record 2"],
+    "festivals_nl": ["Festival 1 - headliner info", "Festival 2 - headliner info"]
   },
   "streaming_viral": {
-    "narrative": "Streaming en virale hits",
-    "viral_hits": ["Song 1", "Song 2"],
-    "streaming_records": ["Record 1", "Record 2"]
+    "narrative": "Uitgebreide analyse (200 woorden) van streaming trends, TikTok virale hits, Spotify Wrapped statistieken, Apple Music trends. Noem specifieke cijfers en songs.",
+    "viral_hits": [
+      {"song": "Song titel", "artist": "Artiest", "platform": "TikTok/Spotify", "streams_millions": 500, "viral_reason": "Waarom viral"}
+    ],
+    "streaming_records": [
+      "Specifiek record met cijfers",
+      "Nog een record met cijfers"
+    ],
+    "spotify_wrapped": {
+      "most_streamed_artist": "Artiest - X miljard streams",
+      "most_streamed_song": "Song - X miljard streams",
+      "most_streamed_album": "Album - X miljard streams"
+    },
+    "tiktok_trends": ["Trend 1", "Trend 2"]
   },
   "tours_festivals": {
-    "narrative": "Grootste tours en festivals",
-    "biggest_tours": [{"artist": "Artiest", "tour_name": "Tour naam", "gross": null}],
-    "festivals": ["Festival 1", "Festival 2"]
+    "narrative": "Uitgebreide beschrijving (200 woorden) van de live muziekscene in ${year}. Grootste tours met opbrengsten, belangrijkste festivals, memorabele concerten, records.",
+    "biggest_tours": [
+      {
+        "artist": "Artiest",
+        "tour_name": "Tour naam",
+        "gross_millions": 500,
+        "shows": 150,
+        "attendance_millions": 5.2,
+        "notable_venues": ["Stadium 1", "Stadium 2"]
+      }
+    ],
+    "festivals": [
+      {
+        "name": "Festival naam",
+        "headliners": ["Artiest 1", "Artiest 2"],
+        "attendance": 80000,
+        "notable_moments": "Memorabel moment"
+      }
+    ],
+    "venue_records": ["Record 1", "Record 2"]
   },
   "genre_trends": {
-    "narrative": "Genre analyse van ${year}",
-    "rising_genres": ["Genre 1", "Genre 2"],
-    "popular_genres": [{"genre": "Pop", "percentage": 30}]
+    "narrative": "Diepgaande analyse (200 woorden) van genre trends in ${year}. Welke genres groeiden, welke afnamen? Fusie genres? Nieuwe subgenres? Regionale invloeden?",
+    "rising_genres": [
+      {"genre": "Genre naam", "growth_percentage": 25, "key_artists": ["Artiest 1", "Artiest 2"]}
+    ],
+    "popular_genres": [
+      {"genre": "Pop", "percentage": 30, "top_songs": ["Song 1", "Song 2"]},
+      {"genre": "Hip-Hop", "percentage": 25, "top_songs": ["Song 1", "Song 2"]},
+      {"genre": "Rock", "percentage": 15, "top_songs": ["Song 1", "Song 2"]}
+    ],
+    "declining_genres": ["Genre 1", "Genre 2"],
+    "fusion_trends": ["Genre 1 + Genre 2 fusie"]
+  },
+  "industry_stats": {
+    "total_albums_released": 50000,
+    "total_songs_released": 500000,
+    "vinyl_sales_growth_percentage": 12,
+    "streaming_revenue_billions": 15,
+    "live_music_revenue_billions": 25,
+    "notable_record_deals": ["Deal 1", "Deal 2"],
+    "major_label_news": ["Nieuws 1", "Nieuws 2"]
   }
 }
 
-BELANGRIJK:
+KRITIEKE EISEN:
+- Geef minimaal 8-10 top artiesten met ECHTE gegevens over ${year}
+- Geef minimaal 8-10 top albums die ECHT uitkwamen in ${year}
+- Geef minimaal 5-10 overleden artiesten voor In Memoriam (als ze er waren in ${year})
+- Geef echte Grammy/Brit/Edison winnaars van ${year}
+- Alle cijfers moeten realistisch zijn voor ${year}
 - Schrijf in het Nederlands
-- Gebruik GEEN AI terminologie
-- Geef minimaal 5 top artiesten, 5 top albums, 3-5 awards per categorie
-- Vul aan met je eigen kennis over ${year}
-- Return ALLEEN valid JSON, geen extra tekst`;
+- Return ALLEEN valid JSON, geen markdown of extra tekst`;
 
   try {
-    console.log('Calling AI for narrative generation...');
+    console.log('Calling AI for comprehensive narrative generation...');
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -298,10 +401,17 @@ BELANGRIJK:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'Je bent een expert muziekjournalist. Genereer alleen valid JSON zonder markdown code fences.' },
+          { 
+            role: 'system', 
+            content: `Je bent een expert muziekjournalist met encyclopedische kennis van muziekgeschiedenis, charts, awards en de muziekindustrie. 
+Je kent alle Grammy winnaars, Billboard records, overleden artiesten, virale hits, en streaming statistieken.
+Genereer alleen valid JSON zonder markdown code fences.
+Wees SPECIFIEK en GEDETAILLEERD - geen generieke of vage beschrijvingen.
+Als je iets niet zeker weet voor een specifiek jaar, geef dan realistische schattingen.` 
+          },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 4000
+        max_tokens: 8000
       }),
     });
 
@@ -358,7 +468,7 @@ async function fetchArtworkForNarratives(narratives: any) {
     
     // Fetch artwork for top_albums using Spotify Search
     if (narratives.top_albums && Array.isArray(narratives.top_albums)) {
-      for (let i = 0; i < narratives.top_albums.length; i++) {
+      for (let i = 0; i < Math.min(narratives.top_albums.length, 10); i++) {
         const album = narratives.top_albums[i];
         if (album.artist && album.title) {
           try {
@@ -376,8 +486,7 @@ async function fetchArtworkForNarratives(narratives: any) {
                 console.log(`Found artwork for album: ${album.artist} - ${album.title}`);
               }
             }
-            // Small delay to respect rate limits
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 50));
           } catch (e) {
             console.error(`Error fetching artwork for ${album.title}:`, e);
           }
@@ -387,7 +496,7 @@ async function fetchArtworkForNarratives(narratives: any) {
     
     // Fetch artwork for top_artists using Spotify Search
     if (narratives.top_artists && Array.isArray(narratives.top_artists)) {
-      for (let i = 0; i < narratives.top_artists.length; i++) {
+      for (let i = 0; i < Math.min(narratives.top_artists.length, 10); i++) {
         const artist = narratives.top_artists[i];
         if (artist.name) {
           try {
@@ -405,7 +514,35 @@ async function fetchArtworkForNarratives(narratives: any) {
                 console.log(`Found artwork for artist: ${artist.name}`);
               }
             }
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 50));
+          } catch (e) {
+            console.error(`Error fetching artwork for ${artist.name}:`, e);
+          }
+        }
+      }
+    }
+
+    // Fetch artwork for in_memoriam artists
+    if (narratives.in_memoriam?.artists && Array.isArray(narratives.in_memoriam.artists)) {
+      for (let i = 0; i < Math.min(narratives.in_memoriam.artists.length, 10); i++) {
+        const artist = narratives.in_memoriam.artists[i];
+        if (artist.name) {
+          try {
+            const query = encodeURIComponent(artist.name);
+            const searchResponse = await fetch(
+              `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`,
+              { headers: { 'Authorization': `Bearer ${access_token}` } }
+            );
+            
+            if (searchResponse.ok) {
+              const searchData = await searchResponse.json();
+              const foundArtist = searchData.artists?.items?.[0];
+              if (foundArtist?.images?.[0]?.url) {
+                narratives.in_memoriam.artists[i].image_url = foundArtist.images[0].url;
+                console.log(`Found artwork for in memoriam: ${artist.name}`);
+              }
+            }
+            await new Promise(resolve => setTimeout(resolve, 50));
           } catch (e) {
             console.error(`Error fetching artwork for ${artist.name}:`, e);
           }
@@ -474,11 +611,16 @@ function getFallbackNarratives(year: number, spotifyData: any, discogsData: any)
       festivals: ['Pinkpop', 'Lowlands', 'North Sea Jazz'] 
     },
     genre_trends: {
-      narrative: `De genreverdeling in ${year} liet interessante verschuivingen zien.`,
-      rising_genres: genres.length > 0 ? genres.slice(0, 2).map((g: any) => g.genre) : ['Latin', 'K-Pop'],
+      narrative: `De muziekgenres van ${year} lieten interessante trends zien.`,
+      rising_genres: genres.length > 0 ? genres.slice(0, 3).map((g: any) => g.genre) : ['Hyperpop', 'Afrobeats'],
       popular_genres: genres.length > 0 
-        ? genres.map((g: any) => ({ genre: g.genre, percentage: Math.round((g.count / 50) * 100) }))
-        : [{ genre: 'Pop', percentage: 35 }, { genre: 'Hip-Hop', percentage: 25 }, { genre: 'Rock', percentage: 20 }]
+        ? genres.map((g: any) => ({ genre: g.genre, percentage: Math.round(g.count * 2) }))
+        : [{ genre: 'Pop', percentage: 30 }, { genre: 'Hip-Hop', percentage: 25 }]
+    },
+    industry_stats: {
+      total_albums_released: 50000,
+      streaming_revenue_billions: 15,
+      vinyl_sales_growth_percentage: 10
     }
   };
 }

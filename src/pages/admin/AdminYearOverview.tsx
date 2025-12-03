@@ -103,7 +103,13 @@ const AdminYearOverview: React.FC = () => {
               <TopArtistsSection artists={sections.top_artists || []} />
               <TopAlbumsSection albums={sections.top_albums || []} />
               <AwardsSection narrative={sections.awards?.narrative || ''} grammy={sections.awards?.grammy || []} brit_awards={sections.awards?.brit_awards || []} edison={sections.awards?.edison || []} />
-              <GenreTrendsSection narrative={sections.genre_trends?.narrative || ''} risingGenres={sections.genre_trends?.rising_genres} popularGenres={sections.genre_trends?.popular_genres || []} />
+              <GenreTrendsSection 
+                narrative={sections.genre_trends?.narrative || ''} 
+                risingGenres={sections.genre_trends?.rising_genres} 
+                popularGenres={sections.genre_trends?.popular_genres || []}
+                decliningGenres={sections.genre_trends?.declining_genres}
+                fusionTrends={sections.genre_trends?.fusion_trends}
+              />
             </div>
           ) : (
             <Card><CardContent className="py-10 text-center"><p className="text-muted-foreground">Klik op "Genereer Overzicht" om te starten.</p></CardContent></Card>

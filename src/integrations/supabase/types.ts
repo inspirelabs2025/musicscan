@@ -1440,6 +1440,53 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_quiz_facebook_queue: {
+        Row: {
+          challenge_date: string
+          challenge_id: string | null
+          created_at: string
+          error_message: string | null
+          facebook_post_id: string | null
+          id: string
+          posted_at: string | null
+          scheduled_for: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          challenge_date: string
+          challenge_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          posted_at?: string | null
+          scheduled_for: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          challenge_date?: string
+          challenge_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          posted_at?: string | null
+          scheduled_for?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_quiz_facebook_queue_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demand_analytics: {
         Row: {
           analysis_period: string

@@ -524,3 +524,15 @@ verify_jwt = false
 
 [functions.queue-french-artists]
 verify_jwt = false
+
+[functions.schedule-daily-quiz-posts]
+verify_jwt = false
+
+[[functions.schedule-daily-quiz-posts.schedule]]
+cron = "15 6 * * *"
+
+[functions.post-scheduled-daily-quiz]
+verify_jwt = false
+
+[[functions.post-scheduled-daily-quiz.schedule]]
+cron = "0 10,18 * * *"

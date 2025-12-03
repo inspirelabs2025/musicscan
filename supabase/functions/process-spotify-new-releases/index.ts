@@ -12,16 +12,19 @@ const SPOTIFY_CLIENT_ID = Deno.env.get('SPOTIFY_CLIENT_ID');
 const SPOTIFY_CLIENT_SECRET = Deno.env.get('SPOTIFY_CLIENT_SECRET');
 
 // Configuration
-const MAX_RELEASES_PER_RUN = 5;
-const DISCOGS_DELAY_MS = 2000;
-const BLOG_PRIORITY = 10; // Highest priority for new releases
+const MAX_RELEASES_TO_FETCH = 200;  // Fetch up to 200 releases
+const MAX_PROCESS_PER_RUN = 20;     // Process max 20 new releases per run
+const DISCOGS_DELAY_MS = 1500;      // Delay between Discogs API calls
+const BLOG_PRIORITY = 100;          // Highest priority for new releases (100 = top)
 
 interface SpotifyAlbum {
   id: string;
   name: string;
-  artists: { name: string }[];
+  artists: { id: string; name: string }[];
   images: { url: string }[];
   release_date: string;
+  album_type: string;
+  total_tracks: number;
   external_urls: { spotify: string };
 }
 
@@ -55,20 +58,49 @@ async function getSpotifyAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-async function getSpotifyNewReleases(accessToken: string): Promise<SpotifyAlbum[]> {
-  const response = await fetch(
-    'https://api.spotify.com/v1/browse/new-releases?country=NL&limit=20',
-    {
+async function getSpotifyNewReleasesWithPagination(
+  accessToken: string, 
+  maxReleases: number = 200
+): Promise<SpotifyAlbum[]> {
+  const allAlbums: SpotifyAlbum[] = [];
+  const pageSize = 50;
+  let offset = 0;
+  let hasMore = true;
+  
+  while (hasMore && allAlbums.length < maxReleases) {
+    const url = `https://api.spotify.com/v1/browse/new-releases?country=NL&limit=${pageSize}&offset=${offset}`;
+    
+    console.log(`Fetching releases: offset=${offset}, limit=${pageSize}`);
+    
+    const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Spotify new releases: ${response.statusText}`);
     }
-  );
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch Spotify new releases: ${response.statusText}`);
+    const data = await response.json();
+    const items = data.albums?.items || [];
+    
+    allAlbums.push(...items);
+    offset += pageSize;
+    hasMore = data.albums?.next !== null && items.length === pageSize;
+    
+    console.log(`Fetched ${allAlbums.length} releases so far`);
+    
+    // Small delay between requests
+    if (hasMore && allAlbums.length < maxReleases) {
+      await delay(100);
+    }
   }
-
-  const data = await response.json();
-  return data.albums?.items || [];
+  
+  // Deduplicate
+  const uniqueAlbums = Array.from(
+    new Map(allAlbums.map(album => [album.id, album])).values()
+  );
+  
+  return uniqueAlbums.slice(0, maxReleases);
 }
 
 async function searchDiscogs(artist: string, album: string): Promise<DiscogsSearchResult | null> {
@@ -80,7 +112,6 @@ async function searchDiscogs(artist: string, album: string): Promise<DiscogsSear
   }
 
   try {
-    // Clean up search terms
     const cleanArtist = artist.replace(/[^\w\s]/g, '').trim();
     const cleanAlbum = album.replace(/[^\w\s]/g, '').trim();
     
@@ -104,7 +135,6 @@ async function searchDiscogs(artist: string, album: string): Promise<DiscogsSear
     const data = await response.json();
     
     if (data.results && data.results.length > 0) {
-      // Find best match - prefer exact artist match
       const bestMatch = data.results.find((r: any) => 
         r.title?.toLowerCase().includes(cleanArtist.toLowerCase())
       ) || data.results[0];
@@ -133,13 +163,13 @@ serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    console.log('🎵 Starting Spotify new releases processing...');
+    console.log('🎵 Starting Spotify new releases processing (automated)...');
     
-    // Step 1: Get Spotify new releases
+    // Step 1: Get Spotify new releases WITH PAGINATION
     const accessToken = await getSpotifyAccessToken();
-    const spotifyAlbums = await getSpotifyNewReleases(accessToken);
+    const spotifyAlbums = await getSpotifyNewReleasesWithPagination(accessToken, MAX_RELEASES_TO_FETCH);
     
-    console.log(`Found ${spotifyAlbums.length} Spotify new releases`);
+    console.log(`Found ${spotifyAlbums.length} Spotify new releases (max ${MAX_RELEASES_TO_FETCH})`);
     
     if (spotifyAlbums.length === 0) {
       return new Response(
@@ -166,9 +196,35 @@ serve(async (req) => {
       );
     }
 
-    // Step 4: Process releases (max MAX_RELEASES_PER_RUN per run)
-    const toProcess = newReleases.slice(0, MAX_RELEASES_PER_RUN);
+    // Step 4: Process releases (max MAX_PROCESS_PER_RUN per run to avoid timeouts)
+    const toProcess = newReleases.slice(0, MAX_PROCESS_PER_RUN);
     const results: any[] = [];
+    
+    // Get or create batch for blog generation
+    let { data: activeBatch } = await supabase
+      .from('batch_processing_status')
+      .select('id')
+      .eq('process_type', 'blog_generation')
+      .in('status', ['pending', 'running'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    let batchId = activeBatch?.id;
+    
+    if (!batchId) {
+      const { data: newBatch } = await supabase
+        .from('batch_processing_status')
+        .insert({
+          process_type: 'blog_generation',
+          status: 'pending',
+          total_items: toProcess.length
+        })
+        .select()
+        .single();
+      
+      batchId = newBatch?.id;
+    }
     
     for (const album of toProcess) {
       const artistName = album.artists.map(a => a.name).join(', ');
@@ -198,12 +254,11 @@ serve(async (req) => {
       }
       
       try {
-        // Search Discogs
-        await delay(DISCOGS_DELAY_MS); // Rate limiting
+        // Search Discogs with rate limiting
+        await delay(DISCOGS_DELAY_MS);
         const discogsResult = await searchDiscogs(artistName, albumName);
         
         if (!discogsResult) {
-          // No Discogs match found - update status
           await supabase
             .from('spotify_new_releases_processed')
             .update({
@@ -226,7 +281,7 @@ serve(async (req) => {
           .update({ discogs_id: discogsResult.id })
           .eq('id', trackingRecord.id);
         
-        // Create ART product via create-art-product function
+        // Create ART product
         console.log(`🎨 Creating ART product for Discogs ID: ${discogsResult.id}`);
         
         const { data: productData, error: productError } = await supabase.functions.invoke('create-art-product', {
@@ -240,7 +295,6 @@ serve(async (req) => {
           productId = productData.product_id;
           console.log(`✅ Product created: ${productId}`);
           
-          // Update tracking with product ID
           await supabase
             .from('spotify_new_releases_processed')
             .update({ product_id: productId })
@@ -250,45 +304,17 @@ serve(async (req) => {
           productId = productData.product_id;
         }
         
-        // Get or find existing batch for blog generation
-        let { data: activeBatch } = await supabase
-          .from('batch_processing_status')
-          .select('id')
-          .eq('process_type', 'blog_generation')
-          .in('status', ['pending', 'running'])
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-        
-        let batchId = activeBatch?.id;
-        
-        if (!batchId) {
-          // Create new batch if none exists
-          const { data: newBatch } = await supabase
-            .from('batch_processing_status')
-            .insert({
-              process_type: 'blog_generation',
-              status: 'pending',
-              total_items: 1
-            })
-            .select()
-            .single();
-          
-          batchId = newBatch?.id;
-        }
-        
+        // Queue blog generation with HIGHEST priority (100)
         if (batchId && productId) {
-          // Queue blog generation with HIGH priority (10)
-          console.log(`📝 Queuing blog generation with priority ${BLOG_PRIORITY}`);
-          
-          // First check if product already has a blog
           const { data: existingBlog } = await supabase
             .from('blog_posts')
             .select('id')
             .eq('album_id', productId)
-            .single();
+            .maybeSingle();
           
           if (!existingBlog) {
+            console.log(`📝 Queuing blog generation with priority ${BLOG_PRIORITY}`);
+            
             const { error: queueError } = await supabase
               .from('batch_queue_items')
               .insert({
@@ -302,18 +328,18 @@ serve(async (req) => {
                   artist: artistName,
                   album_name: albumName,
                   discogs_id: discogsResult.id,
-                  source: 'spotify_new_releases'
+                  source: 'spotify_new_releases',
+                  is_new_release: true
                 }
               });
             
             if (queueError) {
               console.error(`Failed to queue blog: ${queueError.message}`);
             } else {
-              console.log('✅ Blog generation queued with priority 10');
+              console.log(`✅ Blog queued with priority ${BLOG_PRIORITY} (highest)`);
             }
           } else {
-            console.log('Blog already exists for this product');
-            // Update tracking with blog ID
+            console.log('Blog already exists');
             await supabase
               .from('spotify_new_releases_processed')
               .update({ blog_id: existingBlog.id })
@@ -330,71 +356,27 @@ serve(async (req) => {
           })
           .eq('id', trackingRecord.id);
         
-        // Auto-post to Facebook and Instagram if product was created
+        // Auto-post to Facebook
         if (productId) {
           const productUrl = `https://www.musicscan.app/product/${productId}`;
           const postTitle = `🆕 Nieuw: ${artistName} - ${albumName}`;
-          const postContent = `Nieuwe release! ${artistName} heeft "${albumName}" uitgebracht (${album.release_date}). Ontdek dit album en vind exclusieve merchandise op MusicScan.`;
-          const postHashtags = ['MusicScan', 'NewRelease', 'NieuweMuziek', artistName.replace(/[^a-zA-Z0-9]/g, ''), 'Muziek'];
+          const postContent = `Nieuwe release! ${artistName} heeft "${albumName}" uitgebracht. Ontdek dit album op MusicScan.`;
           
-          // Post to Facebook
           try {
-            console.log(`📘 Posting new release to Facebook: ${artistName} - ${albumName}`);
-            const fbResponse = await fetch(`${SUPABASE_URL}/functions/v1/post-to-facebook`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
-              },
-              body: JSON.stringify({
+            console.log(`📘 Posting to Facebook: ${artistName} - ${albumName}`);
+            await supabase.functions.invoke('post-to-facebook', {
+              body: {
                 content_type: 'product',
                 title: postTitle,
                 content: postContent,
                 url: productUrl,
                 image_url: imageUrl,
-                hashtags: postHashtags
-              })
-            });
-            
-            const fbResult = await fbResponse.json();
-            if (fbResult.success) {
-              console.log(`✅ Successfully posted new release to Facebook: ${fbResult.post_id}`);
-            } else {
-              console.warn(`⚠️ Facebook post failed: ${fbResult.error}`);
-            }
-          } catch (fbError) {
-            console.error('❌ Error posting to Facebook:', fbError);
-          }
-          
-          // Post to Instagram (has image from Spotify)
-          if (imageUrl) {
-            try {
-              console.log(`📸 Posting new release to Instagram: ${artistName} - ${albumName}`);
-              const igResponse = await fetch(`${SUPABASE_URL}/functions/v1/post-to-instagram`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
-                },
-                body: JSON.stringify({
-                  content_type: 'product',
-                  title: postTitle,
-                  content: postContent,
-                  url: productUrl,
-                  image_url: imageUrl,
-                  hashtags: postHashtags
-                })
-              });
-              
-              const igResult = await igResponse.json();
-              if (igResult.success) {
-                console.log(`✅ Successfully posted new release to Instagram: ${igResult.post_id}`);
-              } else {
-                console.warn(`⚠️ Instagram post failed: ${igResult.error}`);
+                artist: artistName,
+                year: album.release_date?.substring(0, 4)
               }
-            } catch (igError) {
-              console.error('❌ Error posting to Instagram:', igError);
-            }
+            });
+          } catch (fbError) {
+            console.error('Facebook post error:', fbError);
           }
         }
         
@@ -403,8 +385,7 @@ serve(async (req) => {
           artist: artistName,
           discogs_id: discogsResult.id,
           product_id: productId,
-          status: productId ? 'completed' : 'product_failed',
-          social_posted: productId ? true : false
+          status: productId ? 'completed' : 'product_failed'
         });
         
       } catch (error) {
@@ -429,7 +410,12 @@ serve(async (req) => {
     }
     
     const successCount = results.filter(r => r.status === 'completed').length;
+    const remaining = newReleases.length - toProcess.length;
+    
     console.log(`\n🎉 Processing complete: ${successCount}/${results.length} successful`);
+    if (remaining > 0) {
+      console.log(`📋 ${remaining} releases remaining for next run`);
+    }
     
     return new Response(
       JSON.stringify({
@@ -437,6 +423,8 @@ serve(async (req) => {
         message: `Processed ${results.length} releases, ${successCount} successful`,
         processed: results.length,
         successful: successCount,
+        remaining: remaining,
+        total_available: spotifyAlbums.length,
         results
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

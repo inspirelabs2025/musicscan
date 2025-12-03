@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PageviewStatsWidget } from "@/components/admin/PageviewStatsWidget";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -371,6 +372,11 @@ export default function MainAdmin() {
         <p className="text-muted-foreground">
           Centraal overzicht van alle admin tools en functionaliteiten
         </p>
+      </div>
+
+      {/* Pageview Stats Widget */}
+      <div className="mb-8 max-w-md">
+        <PageviewStatsWidget />
       </div>
 
       {/* Search */}

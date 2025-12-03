@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { SitePopupProvider } from "@/components/popups/SitePopupProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Navigation } from "@/components/Navigation";
@@ -165,6 +166,7 @@ import StatusDashboard from "./pages/admin/StatusDashboard";
 import MediaLibrary from "./pages/admin/MediaLibrary";
 import YouTubeDiscoveries from "./pages/YouTubeDiscoveries";
 import Shop from "./pages/Shop";
+import PopupManager from "./pages/admin/PopupManager";
 import NederlandseMuziek from "./pages/NederlandseMuziek";
 import NLMuziekDecennium from "./pages/NLMuziekDecennium";
 import NLMuziekFeitDetail from "./pages/NLMuziekFeitDetail";
@@ -430,6 +432,7 @@ const AppContent = () => {
                 <Route path="facebook-sync" element={<FacebookSync />} />
                 <Route path="facebook-admin" element={<FacebookAdmin />} />
                 <Route path="instagram-admin" element={<InstagramAdmin />} />
+                <Route path="popups" element={<PopupManager />} />
                 <Route path="artist-spotlight/new" element={<ArtistSpotlightEditor />} />
                 <Route path="artist-spotlight/edit/:id" element={<ArtistSpotlightEditor />} />
                 
@@ -539,7 +542,9 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                  <AppContent />
+                  <SitePopupProvider>
+                    <AppContent />
+                  </SitePopupProvider>
                 </BrowserRouter>
           </ErrorBoundary>
         </TooltipProvider>

@@ -8,6 +8,9 @@ export interface TopArtist {
   achievement: string;
   genre: string;
   image_url?: string;
+  albums_released?: number;
+  total_streams_billions?: number;
+  notable_songs?: string[];
 }
 
 export interface TopAlbum {
@@ -15,11 +18,16 @@ export interface TopAlbum {
   title: string;
   description: string;
   image_url?: string;
+  release_date?: string;
+  label?: string;
+  weeks_on_chart?: number;
+  certifications?: string[];
 }
 
 export interface Award {
   category: string;
   winner: string;
+  other_nominees?: string[];
 }
 
 export interface InMemoriamArtist {
@@ -27,18 +35,55 @@ export interface InMemoriamArtist {
   years: string;
   known_for: string;
   image_url?: string;
+  date_of_death?: string;
+  age?: number;
+  cause?: string;
+  notable_works?: string[];
+  legacy?: string;
 }
 
 export interface GenreData {
   genre: string;
   count?: number;
   percentage?: number;
+  top_songs?: string[];
+  growth_percentage?: number;
+  key_artists?: string[];
 }
 
 export interface TourInfo {
   artist: string;
   tour_name: string;
   gross?: number;
+  gross_millions?: number;
+  shows?: number;
+  attendance_millions?: number;
+  notable_venues?: string[];
+}
+
+export interface ViralHit {
+  song: string;
+  artist: string;
+  platform?: string;
+  streams_millions?: number;
+  viral_reason?: string;
+}
+
+export interface FestivalInfo {
+  name: string;
+  headliners?: string[];
+  attendance?: number;
+  notable_moments?: string;
+}
+
+export interface IndustryStats {
+  total_albums_released?: number;
+  total_songs_released?: number;
+  vinyl_sales_growth_percentage?: number;
+  streaming_revenue_billions?: number;
+  live_music_revenue_billions?: number;
+  notable_record_deals?: string[];
+  major_label_news?: string[];
 }
 
 export interface YearOverviewSections {
@@ -53,6 +98,8 @@ export interface YearOverviewSections {
     grammy: Award[];
     brit_awards: Award[];
     edison: Award[];
+    mtv_vma?: Award[];
+    billboard_achievements?: string[];
   };
   in_memoriam: {
     narrative: string;
@@ -63,22 +110,34 @@ export interface YearOverviewSections {
     highlights: string[];
     top_artists: string[];
     edison_winners: Award[];
+    top_40_records?: string[];
+    festivals_nl?: string[];
   };
   streaming_viral: {
     narrative: string;
-    viral_hits: string[];
+    viral_hits: (string | ViralHit)[];
     streaming_records: string[];
+    spotify_wrapped?: {
+      most_streamed_artist?: string;
+      most_streamed_song?: string;
+      most_streamed_album?: string;
+    };
+    tiktok_trends?: string[];
   };
   tours_festivals: {
     narrative: string;
     biggest_tours: TourInfo[];
-    festivals: string[];
+    festivals: (string | FestivalInfo)[];
+    venue_records?: string[];
   };
   genre_trends: {
     narrative: string;
-    rising_genres?: string[];
+    rising_genres?: (string | GenreData)[];
     popular_genres: GenreData[];
+    declining_genres?: string[];
+    fusion_trends?: string[];
   };
+  industry_stats?: IndustryStats;
 }
 
 export interface SpotifyData {

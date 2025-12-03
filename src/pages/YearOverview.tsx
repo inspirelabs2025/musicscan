@@ -95,9 +95,26 @@ const YearOverview: React.FC = () => {
               <TopArtistsSection artists={sections?.top_artists || []} />
               <TopAlbumsSection albums={sections?.top_albums || []} />
               <AwardsSection narrative={sections?.awards?.narrative || ''} grammy={sections?.awards?.grammy || []} brit_awards={sections?.awards?.brit_awards || []} edison={sections?.awards?.edison || []} />
-              <StreamingViralSection narrative={sections?.streaming_viral?.narrative || ''} viralHits={sections?.streaming_viral?.viral_hits || []} streamingRecords={sections?.streaming_viral?.streaming_records || []} />
-              <GenreTrendsSection narrative={sections?.genre_trends?.narrative || ''} risingGenres={sections?.genre_trends?.rising_genres} popularGenres={sections?.genre_trends?.popular_genres || []} />
-              <ToursFestivalsSection narrative={sections?.tours_festivals?.narrative || ''} biggestTours={sections?.tours_festivals?.biggest_tours || []} festivals={sections?.tours_festivals?.festivals || []} />
+              <StreamingViralSection 
+                narrative={sections?.streaming_viral?.narrative || ''} 
+                viralHits={sections?.streaming_viral?.viral_hits || []} 
+                streamingRecords={sections?.streaming_viral?.streaming_records || []}
+                spotifyWrapped={sections?.streaming_viral?.spotify_wrapped}
+                tiktokTrends={sections?.streaming_viral?.tiktok_trends}
+              />
+              <GenreTrendsSection 
+                narrative={sections?.genre_trends?.narrative || ''} 
+                risingGenres={sections?.genre_trends?.rising_genres} 
+                popularGenres={sections?.genre_trends?.popular_genres || []}
+                decliningGenres={sections?.genre_trends?.declining_genres}
+                fusionTrends={sections?.genre_trends?.fusion_trends}
+              />
+              <ToursFestivalsSection 
+                narrative={sections?.tours_festivals?.narrative || ''} 
+                biggestTours={sections?.tours_festivals?.biggest_tours || []} 
+                festivals={sections?.tours_festivals?.festivals || []}
+                venueRecords={sections?.tours_festivals?.venue_records}
+              />
               <DutchMusicSection narrative={sections?.dutch_music?.narrative || ''} highlights={sections?.dutch_music?.highlights || []} topArtists={sections?.dutch_music?.top_artists || []} edisonWinners={sections?.dutch_music?.edison_winners || []} />
               <InMemoriamSection narrative={sections?.in_memoriam?.narrative || ''} artists={sections?.in_memoriam?.artists || []} />
             </div>

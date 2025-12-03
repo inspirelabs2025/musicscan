@@ -43,6 +43,21 @@ export const TopAlbumsSection: React.FC<TopAlbumsSectionProps> = ({ albums }) =>
               </div>
               <h3 className="font-medium text-sm truncate">{album.title}</h3>
               <p className="text-xs text-muted-foreground truncate">{album.artist}</p>
+              {album.label && (
+                <p className="text-xs text-muted-foreground truncate">📀 {album.label}</p>
+              )}
+              {album.certifications && album.certifications.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {album.certifications.slice(0, 2).map((cert, i) => (
+                    <span key={i} className="text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-1.5 py-0.5 rounded">
+                      {cert}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {album.weeks_on_chart && (
+                <p className="text-xs text-green-500 mt-1">📊 {album.weeks_on_chart} weken in chart</p>
+              )}
             </div>
           ))}
         </div>

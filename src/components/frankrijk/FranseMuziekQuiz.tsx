@@ -59,6 +59,18 @@ const quizQuestions: QuizQuestion[] = [
     options: ["Pookie", "Djadja", "Copines", "Doudou"],
     correctAnswer: 1,
     explanation: "'Djadja' brak alle records en maakte Aya Nakamura tot de meest gestreamde Franstalige artiest."
+  },
+  {
+    question: "Welke Belgisch-Franse artiest brak door met 'Alors on danse' in 2010?",
+    options: ["Maître Gims", "Stromae", "Dadju", "Angèle"],
+    correctAnswer: 1,
+    explanation: "Stromae had een enorme hit met 'Alors on danse' dat #1 werd in 19 landen."
+  },
+  {
+    question: "Welk Franse synthpop duo maakte de soundtrack voor de film 'Oblivion' met Tom Cruise?",
+    options: ["Air", "Justice", "M83", "Kavinsky"],
+    correctAnswer: 2,
+    explanation: "M83 componeerde de epische soundtrack voor de science fiction film 'Oblivion' (2013)."
   }
 ];
 

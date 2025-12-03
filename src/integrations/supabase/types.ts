@@ -2055,6 +2055,30 @@ export type Database = {
         }
         Relationships: []
       }
+      excluded_analytics_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       facebook_auto_post_settings: {
         Row: {
           content_type: string
@@ -7309,6 +7333,26 @@ export type Database = {
         Args: { album_name: string; artist_name: string }
         Returns: string
       }
+      get_analytics_overview: {
+        Args: { p_days?: number }
+        Returns: {
+          admin_views: number
+          avg_views_per_day: number
+          direct_views: number
+          facebook_views: number
+          google_views: number
+          total_views: number
+          unique_sessions: number
+        }[]
+      }
+      get_content_category_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          category: string
+          unique_sessions: number
+          view_count: number
+        }[]
+      }
       get_current_usage: {
         Args: { p_user_id: string }
         Returns: {
@@ -7317,6 +7361,42 @@ export type Database = {
           bulk_uploads_used: number
           period_end: string
           period_start: string
+        }[]
+      }
+      get_daily_traffic_trend: {
+        Args: { p_days?: number }
+        Returns: {
+          date: string
+          from_facebook: number
+          total_views: number
+          unique_sessions: number
+        }[]
+      }
+      get_device_breakdown: {
+        Args: { p_days?: number }
+        Returns: {
+          device_type: string
+          percentage: number
+          view_count: number
+        }[]
+      }
+      get_filtered_pageview_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          from_direct: number
+          from_facebook: number
+          from_google: number
+          page_title: string
+          path: string
+          unique_sessions: number
+          view_count: number
+        }[]
+      }
+      get_hourly_traffic: {
+        Args: { p_days?: number }
+        Returns: {
+          hour_of_day: number
+          view_count: number
         }[]
       }
       get_pageview_stats: {
@@ -7347,6 +7427,15 @@ export type Database = {
         }[]
       }
       get_random_bot_user: { Args: never; Returns: string }
+      get_traffic_sources_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          percentage: number
+          source_name: string
+          unique_sessions: number
+          view_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

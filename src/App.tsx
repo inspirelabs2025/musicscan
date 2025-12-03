@@ -147,6 +147,7 @@ import MyPhotos from "./pages/MyPhotos";
 import LikedPhotos from "./pages/LikedPhotos";
 import MusicHistory from "./pages/MusicHistory";
 import UserManagement from "./pages/admin/UserManagement";
+import Statistics from "./pages/admin/Statistics";
 import Singles from "./pages/Singles";
 import SingleDetail from "./pages/SingleDetail";
 import Artists from "./pages/Artists";
@@ -457,6 +458,7 @@ const AppContent = () => {
                 <Route path="seo-keywords" element={<SEOKeywords />} />
                 <Route path="price-history" element={<PriceHistoryAdmin />} />
                 <Route path="cronjob-monitor" element={<CronjobMonitorPage />} />
+                <Route path="statistics" element={<Statistics />} />
                 
                 {/* Maintenance */}
                 <Route path="fix-blog-slugs" element={<FixBlogSlugs />} />

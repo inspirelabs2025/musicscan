@@ -131,12 +131,12 @@ export function ArtistQuiz() {
 
               <div>
                 <label className="text-sm font-medium mb-2 block">Genre (optioneel)</label>
-                <Select value={genre} onValueChange={setGenre}>
+                <Select value={genre || 'all'} onValueChange={(v) => setGenre(v === 'all' ? '' : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Alle genres" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle genres</SelectItem>
+                    <SelectItem value="all">Alle genres</SelectItem>
                     <SelectItem value="rock">Rock</SelectItem>
                     <SelectItem value="pop">Pop</SelectItem>
                     <SelectItem value="metal">Metal</SelectItem>

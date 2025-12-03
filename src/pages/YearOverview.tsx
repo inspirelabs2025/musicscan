@@ -26,7 +26,7 @@ const YearOverview: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>Muziek Jaar Overzicht {selectedYear} | MusicScan</title>
+        <title>{`Muziek Jaar Overzicht ${selectedYear} | MusicScan`}</title>
         <meta name="description" content={`Bekijk het complete muziek jaaroverzicht van ${selectedYear}. Ontdek trends, top artiesten, genre statistieken en meer op MusicScan.`} />
         <meta property="og:title" content={`Muziek Jaar Overzicht ${selectedYear} | MusicScan`} />
         <meta property="og:description" content={`Ontdek de muziektrends van ${selectedYear}: top artiesten, populaire genres, en community statistieken.`} />

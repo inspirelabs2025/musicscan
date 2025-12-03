@@ -33,8 +33,8 @@ const Home = () => {
   const [showMoreFeatures, setShowMoreFeatures] = useState(false);
   
   useSEO({
-    title: "Vinyl Verzamelaar - Scan, Ontdek & Deel je Muziekcollectie",
-    description: "Scan je platen en cd's met AI, ontdek prijzen en verhalen, deel met de community. 10.000+ albums gescand. Start gratis!",
+    title: "MusicScan - Hét Muziekplatform | Nieuws, Verhalen, Shop, Quiz & Smart Scanner",
+    description: "MusicScan is hét complete muziekplatform. Ontdek muzieknieuws, lees verhalen over albums & artiesten, shop unieke muziekproducten, doe de quiz, en scan je vinyl & CD collectie met waardebepaling.",
   });
 
   return (

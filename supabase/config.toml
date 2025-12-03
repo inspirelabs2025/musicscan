@@ -499,11 +499,8 @@ verify_jwt = false
 [[functions.post-scheduled-singles.schedule]]
 cron = "30 9-21/2 * * *"
 
-[functions.threads-token-exchange]
-verify_jwt = false
-
 [functions.post-to-threads]
 verify_jwt = false
 
-[functions.post-to-threads]
+[functions.queue-french-artists]
 verify_jwt = false

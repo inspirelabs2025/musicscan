@@ -27,17 +27,27 @@ export const AwardsSection: React.FC<AwardsSectionProps> = ({
   const AwardList = ({ title, awards, icon }: { title: string; awards: AwardItem[]; icon: string }) => {
     if (!awards || awards.length === 0) return null;
     
+    // Filter out any "Nog niet bekend" entries
+    const validAwards = awards.filter(a => 
+      a.winner && 
+      !a.winner.toLowerCase().includes('nog niet bekend') &&
+      !a.winner.toLowerCase().includes('niet bekend') &&
+      !a.winner.toLowerCase().includes('unknown')
+    );
+    
+    if (validAwards.length === 0) return null;
+    
     return (
-      <div className="space-y-2">
-        <h3 className="font-semibold text-sm flex items-center gap-2">
-          <span>{icon}</span>
+      <div className="space-y-3">
+        <h3 className="font-semibold text-base flex items-center gap-2">
+          <span className="text-lg">{icon}</span>
           {title}
         </h3>
-        <ul className="space-y-1">
-          {awards.slice(0, 5).map((award, index) => (
-            <li key={index} className="text-sm flex justify-between items-start gap-2 py-1 border-b border-border/50 last:border-0">
-              <span className="text-muted-foreground">{award.category}</span>
-              <span className="font-medium text-right">{award.winner}</span>
+        <ul className="space-y-2">
+          {validAwards.slice(0, 8).map((award, index) => (
+            <li key={index} className="text-sm py-2 px-3 bg-muted/30 rounded-lg">
+              <span className="text-muted-foreground text-xs block">{award.category}</span>
+              <span className="font-medium">{award.winner}</span>
             </li>
           ))}
         </ul>
@@ -54,8 +64,8 @@ export const AwardsSection: React.FC<AwardsSectionProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {narrative && (
-          <p className="text-muted-foreground">{narrative}</p>
+        {narrative && !narrative.toLowerCase().includes('onbeschreven blad') && (
+          <p className="text-muted-foreground leading-relaxed">{narrative}</p>
         )}
         
         <div className="grid md:grid-cols-3 gap-6">

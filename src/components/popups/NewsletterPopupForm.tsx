@@ -3,12 +3,15 @@ import { Mail, Loader2, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface NewsletterPopupFormProps {
   onSuccess?: () => void;
+  source?: string;
+  sourcePage?: string;
 }
 
-export function NewsletterPopupForm({ onSuccess }: NewsletterPopupFormProps) {
+export function NewsletterPopupForm({ onSuccess, source = 'popup', sourcePage }: NewsletterPopupFormProps) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -16,7 +19,9 @@ export function NewsletterPopupForm({ onSuccess }: NewsletterPopupFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !email.includes('@')) {
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
       toast({
         title: 'Ongeldig e-mailadres',
         description: 'Voer een geldig e-mailadres in.',
@@ -28,26 +33,63 @@ export function NewsletterPopupForm({ onSuccess }: NewsletterPopupFormProps) {
     setIsLoading(true);
 
     try {
-      // Store email in localStorage for now (can be integrated with email service later)
-      const subscribers = JSON.parse(localStorage.getItem('newsletter_subscribers') || '[]');
-      if (!subscribers.includes(email)) {
-        subscribers.push(email);
-        localStorage.setItem('newsletter_subscribers', JSON.stringify(subscribers));
+      // Insert into Supabase
+      const { error: insertError } = await supabase
+        .from('newsletter_subscribers')
+        .insert({
+          email: email.toLowerCase().trim(),
+          source,
+          source_page: sourcePage || window.location.pathname,
+        });
+
+      if (insertError) {
+        // Check for duplicate email
+        if (insertError.code === '23505') {
+          toast({
+            title: 'Al ingeschreven',
+            description: 'Dit e-mailadres is al ingeschreven voor onze nieuwsbrief.',
+          });
+          localStorage.setItem('newsletter_subscribed', 'true');
+          setIsSuccess(true);
+          setTimeout(() => onSuccess?.(), 1500);
+          return;
+        }
+        throw insertError;
       }
 
-      // Mark as permanently dismissed after successful signup
+      // Send welcome email via edge function
+      try {
+        await supabase.functions.invoke('send-newsletter-welcome', {
+          body: { email: email.toLowerCase().trim(), source }
+        });
+        
+        // Update record to mark welcome email as sent
+        await supabase
+          .from('newsletter_subscribers')
+          .update({ 
+            welcome_email_sent: true, 
+            welcome_email_sent_at: new Date().toISOString() 
+          })
+          .eq('email', email.toLowerCase().trim());
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't fail the subscription if email fails
+      }
+
+      // Mark as subscribed in localStorage
       localStorage.setItem('newsletter_subscribed', 'true');
       
       setIsSuccess(true);
       toast({
         title: 'Ingeschreven!',
-        description: 'Je ontvangt binnenkort onze nieuwsbrief.',
+        description: 'Bedankt! Check je inbox voor een welkomstmail.',
       });
 
       setTimeout(() => {
         onSuccess?.();
       }, 1500);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Newsletter subscription error:', error);
       toast({
         title: 'Er ging iets mis',
         description: 'Probeer het later opnieuw.',

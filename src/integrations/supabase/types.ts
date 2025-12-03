@@ -3317,6 +3317,51 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_subscribers: {
+        Row: {
+          confirmed_at: string | null
+          created_at: string
+          email: string
+          id: string
+          is_confirmed: boolean | null
+          source: string | null
+          source_page: string | null
+          subscribed_at: string
+          unsubscribed_at: string | null
+          updated_at: string
+          welcome_email_sent: boolean | null
+          welcome_email_sent_at: string | null
+        }
+        Insert: {
+          confirmed_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          is_confirmed?: boolean | null
+          source?: string | null
+          source_page?: string | null
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          welcome_email_sent?: boolean | null
+          welcome_email_sent_at?: string | null
+        }
+        Update: {
+          confirmed_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          is_confirmed?: boolean | null
+          source?: string | null
+          source_page?: string | null
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          welcome_email_sent?: boolean | null
+          welcome_email_sent_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string

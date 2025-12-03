@@ -319,11 +319,106 @@ BELANGRIJK:
     console.log('AI response length:', content.length);
     
     const narratives = JSON.parse(content);
-    return narratives;
+    
+    // Enrich with real images from Spotify data
+    const enrichedNarratives = enrichWithRealImages(narratives, spotifyData, discogsData);
+    return enrichedNarratives;
   } catch (error) {
     console.error('AI narrative generation error:', error);
     return getFallbackNarratives(year, spotifyData, discogsData);
   }
+}
+
+function enrichWithRealImages(narratives: any, spotifyData: any, discogsData: any) {
+  const spotifyReleases = spotifyData?.newReleases || [];
+  const discogsReleases = discogsData?.topReleases || [];
+  
+  // Create lookup maps for artist images from Spotify
+  const artistImageMap = new Map<string, string>();
+  const albumImageMap = new Map<string, string>();
+  
+  spotifyReleases.forEach((release: any) => {
+    const artistName = release.artists?.[0]?.name?.toLowerCase();
+    const imageUrl = release.images?.[0]?.url || release.images?.[1]?.url;
+    
+    if (artistName && imageUrl) {
+      if (!artistImageMap.has(artistName)) {
+        artistImageMap.set(artistName, imageUrl);
+      }
+    }
+    
+    // Also map album title to image
+    const albumKey = `${artistName}-${release.name?.toLowerCase()}`;
+    if (imageUrl) {
+      albumImageMap.set(albumKey, imageUrl);
+    }
+  });
+  
+  // Also add Discogs images
+  discogsReleases.forEach((release: any) => {
+    if (release.thumb && release.title) {
+      const parts = release.title.split(' - ');
+      if (parts.length >= 2) {
+        const artistName = parts[0].toLowerCase();
+        if (!artistImageMap.has(artistName)) {
+          artistImageMap.set(artistName, release.thumb);
+        }
+      }
+    }
+  });
+  
+  // Enrich top_artists with real images
+  if (narratives.top_artists && Array.isArray(narratives.top_artists)) {
+    narratives.top_artists = narratives.top_artists.map((artist: any, index: number) => {
+      const artistKey = artist.name?.toLowerCase();
+      let imageUrl = artistImageMap.get(artistKey);
+      
+      // If no direct match, try to find a similar artist
+      if (!imageUrl) {
+        for (const [key, url] of artistImageMap.entries()) {
+          if (key.includes(artistKey) || artistKey.includes(key)) {
+            imageUrl = url;
+            break;
+          }
+        }
+      }
+      
+      // Fallback: use a Spotify release image by index
+      if (!imageUrl && spotifyReleases[index]?.images?.[0]?.url) {
+        imageUrl = spotifyReleases[index].images[0].url;
+      }
+      
+      return {
+        ...artist,
+        image_url: imageUrl || null
+      };
+    });
+  }
+  
+  // Enrich top_albums with real images
+  if (narratives.top_albums && Array.isArray(narratives.top_albums)) {
+    narratives.top_albums = narratives.top_albums.map((album: any, index: number) => {
+      const albumKey = `${album.artist?.toLowerCase()}-${album.title?.toLowerCase()}`;
+      let imageUrl = albumImageMap.get(albumKey);
+      
+      // Try artist match
+      if (!imageUrl) {
+        imageUrl = artistImageMap.get(album.artist?.toLowerCase());
+      }
+      
+      // Fallback: use Spotify release by index
+      if (!imageUrl && spotifyReleases[index]?.images?.[0]?.url) {
+        imageUrl = spotifyReleases[index].images[0].url;
+      }
+      
+      return {
+        ...album,
+        image_url: imageUrl || null
+      };
+    });
+  }
+  
+  return narratives;
 }
 
 function getFallbackNarratives(year: number, spotifyData: any, discogsData: any) {

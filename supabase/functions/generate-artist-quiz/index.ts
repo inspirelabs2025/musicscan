@@ -12,15 +12,130 @@ serve(async (req) => {
   }
 
   try {
-    const { difficulty = 'medium', genre, questionCount = 10 } = await req.json();
+    const { artistName, difficulty = 'medium', genre, questionCount = 10 } = await req.json();
     
-    console.log('Generating artist quiz:', { difficulty, genre, questionCount });
+    console.log('Generating artist quiz:', { artistName, difficulty, genre, questionCount });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch artists from database
+    // If specific artist requested, fetch only that artist with full details
+    if (artistName) {
+      const { data: artist, error: artistError } = await supabase
+        .from('artist_stories')
+        .select('artist_name, music_style, notable_albums, biography, story_content, artwork_url, cultural_impact')
+        .eq('artist_name', artistName)
+        .eq('is_published', true)
+        .single();
+
+      if (artistError || !artist) {
+        console.error('Artist not found:', artistError);
+        return new Response(JSON.stringify({ 
+          error: 'Artist not found',
+          questions: [] 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      console.log(`Generating quiz for specific artist: ${artist.artist_name}`);
+
+      // Generate quiz with AI for specific artist
+      const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+      if (!LOVABLE_API_KEY) {
+        throw new Error('LOVABLE_API_KEY not configured');
+      }
+
+      const artistPrompt = `Je bent een Nederlandse muziekquiz generator. Genereer ${questionCount} diepgaande quiz vragen over de artiest "${artist.artist_name}".
+
+ARTIEST INFORMATIE:
+- Naam: ${artist.artist_name}
+- Muziekstijlen: ${(artist.music_style || []).join(', ') || 'onbekend'}
+- Bekende albums: ${(artist.notable_albums || []).join(', ') || 'onbekend'}
+- Biografie: ${artist.biography || 'geen biografie beschikbaar'}
+- Verhaal: ${artist.story_content?.substring(0, 1500) || 'geen verhaal'}
+- Culturele impact: ${artist.cultural_impact || 'onbekend'}
+
+GENEREER 10 GEVARIEERDE VRAGEN OVER DEZE ARTIEST:
+1. Biografie vragen (geboortejaar, -plaats, echte naam)
+2. Carrière mijlpalen (doorbraak, eerste hit, belangrijke momenten)
+3. Album vragen (release jaar, bekende tracks, productie)
+4. Muziekstijl vragen (genre, invloeden, kenmerkende sound)
+5. Band/groep vragen (leden, oprichting, line-up wijzigingen)
+6. Awards en erkenning (prijzen, nominaties, records)
+7. Samenwerkingen (duetten, gastoptredens, producenten)
+8. Persoonlijke trivia (hobbies, bijnamen, anekdotes)
+9. Live optredens (tours, festivals, memorabele shows)
+10. Legacy/invloed (impact op genre, inspiratie voor anderen)
+
+REGELS:
+- Alle vragen en antwoorden in het Nederlands
+- 4 antwoordopties per vraag (1 correct, 3 plausibele alternatieven)
+- Alternatieven moeten geloofwaardig zijn (niet "Mickey Mouse" als optie)
+- Korte, informatieve uitleg bij elk antwoord
+- Mix van makkelijke en moeilijkere vragen
+
+GEEF ALLEEN VALID JSON TERUG (geen markdown):
+{
+  "questions": [
+    {
+      "id": 1,
+      "type": "biography",
+      "question": "In welk jaar werd ${artist.artist_name} geboren?",
+      "options": ["1970", "1972", "1975", "1978"],
+      "correctAnswer": "1972",
+      "explanation": "De artiest werd geboren in 1972 in..."
+    }
+  ]
+}`;
+
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{ role: 'user', content: artistPrompt }],
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('AI API error:', errorText);
+        throw new Error(`AI API failed: ${response.status}`);
+      }
+
+      const aiResponse = await response.json();
+      let content = aiResponse.choices?.[0]?.message?.content || '';
+
+      // Parse JSON from response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.error('No valid JSON in AI response:', content);
+        throw new Error('Invalid AI response format');
+      }
+
+      const quizData = JSON.parse(jsonMatch[0]);
+
+      console.log(`Generated ${quizData.questions?.length || 0} questions for ${artist.artist_name}`);
+
+      return new Response(JSON.stringify({
+        success: true,
+        quiz: {
+          category: 'artiesten',
+          artistName: artist.artist_name,
+          artistImage: artist.artwork_url,
+          questions: quizData.questions || []
+        }
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Original logic for random artist quiz (fallback)
     let query = supabase
       .from('artist_stories')
       .select('artist_name, music_style, notable_albums, biography, artwork_url')

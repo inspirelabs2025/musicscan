@@ -60,6 +60,18 @@ const QUIZ_QUESTIONS: Question[] = [
     options: ["Duncan Laurence", "S10", "Douwe Bob", "Waylon"],
     correctAnswer: 1,
     funFact: "S10 zong 'De Diepte' - het eerste Nederlandstalige nummer op Eurovision in decennia."
+  },
+  {
+    question: "Welke Nederlandse band scoorde een hit met 'Pa'?",
+    options: ["BZN", "Doe Maar", "Het Goede Doel", "De Dijk"],
+    correctAnswer: 1,
+    funFact: "Doe Maar was een van de eerste Nederlandse bands die Nederlands zongen en toch massaal populair werden."
+  },
+  {
+    question: "Welke Nederlandse rockzangeres brak internationaal door met 'Nobody's Wife'?",
+    options: ["Sharon den Adel", "Anouk", "Floor Jansen", "Caro Emerald"],
+    correctAnswer: 1,
+    funFact: "Anouk was de eerste Nederlandse vrouwelijke rockartiest die internationaal succes had."
   }
 ];
 
@@ -79,7 +91,7 @@ export const NederlandseMuziekQuiz = () => {
   const [quizComplete, setQuizComplete] = useState(false);
   const [started, setStarted] = useState(false);
 
-  const questions = QUIZ_QUESTIONS.slice(0, 5); // Use 5 random questions
+  const questions = QUIZ_QUESTIONS; // All 10 questions
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
   const handleAnswer = (answerIndex: number) => {
@@ -135,10 +147,10 @@ export const NederlandseMuziekQuiz = () => {
                 <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-500" />
-                    5 vragen
+                    10 vragen
                   </span>
                   <span>•</span>
-                  <span>2-3 minuten</span>
+                  <span>3-5 minuten</span>
                 </div>
                 <Button 
                   onClick={() => setStarted(true)}
@@ -196,8 +208,10 @@ export const NederlandseMuziekQuiz = () => {
                 <p className="text-muted-foreground">
                   {score === questions.length 
                     ? "Perfecte score! Je bent een echte Nederlandse muziek expert!"
-                    : score >= 3 
-                    ? "Goed gedaan! Je kent je Nederlandse muziek!"
+                    : score >= 7 
+                    ? "Uitstekend! Je kent je Nederlandse muziek!"
+                    : score >= 5
+                    ? "Goed gedaan! Je kent aardig wat Nederlandse muziek!"
                     : "Blijf luisteren en ontdek meer Nederlandse muziek!"}
                 </p>
                 

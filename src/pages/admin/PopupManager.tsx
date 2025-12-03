@@ -3,8 +3,10 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { 
   Bell, Plus, Pencil, Trash2, 
   Clock, MousePointerClick, ArrowUpFromLine, FileText,
-  ChevronDown, ChevronRight
+  ChevronDown, ChevronRight, Mail
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { NewsletterSubscribersSection } from '@/components/admin/NewsletterSubscribersSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -364,20 +366,36 @@ export default function PopupManager() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Bell className="h-6 w-6" />
-              Popup Beheer
+              Popup & Newsletter Beheer
             </h1>
             <p className="text-muted-foreground">
-              Beheer gedrag-gebaseerde popups voor je website
+              Beheer popups en nieuwsbrief inschrijvingen
             </p>
           </div>
-          <Button onClick={handleCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nieuwe Popup
-          </Button>
         </div>
 
-        {/* Template Gallery */}
-        <PopupTemplateGallery onSelectTemplate={handleTemplateSelect} />
+        <Tabs defaultValue="popups" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="popups" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Popups
+            </TabsTrigger>
+            <TabsTrigger value="newsletter" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Newsletter Subscribers
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="popups" className="space-y-6">
+            <div className="flex justify-end">
+              <Button onClick={handleCreate}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nieuwe Popup
+              </Button>
+            </div>
+
+            {/* Template Gallery */}
+            <PopupTemplateGallery onSelectTemplate={handleTemplateSelect} />
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -474,6 +492,12 @@ export default function PopupManager() {
             })
           )}
         </div>
+          </TabsContent>
+
+          <TabsContent value="newsletter">
+            <NewsletterSubscribersSection />
+          </TabsContent>
+        </Tabs>
 
         {/* Editor Dialog */}
         <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>

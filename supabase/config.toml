@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.send-newsletter-welcome]
+verify_jwt = false
+
 [functions.queue-dance-house-content]
 verify_jwt = false
 [[functions.queue-dance-house-content.schedule]]

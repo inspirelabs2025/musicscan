@@ -7056,6 +7056,39 @@ export type Database = {
           },
         ]
       }
+      year_overview_cache: {
+        Row: {
+          created_at: string | null
+          data_points: Json
+          expires_at: string | null
+          filter_hash: string | null
+          generated_narratives: Json | null
+          id: string
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          data_points?: Json
+          expires_at?: string | null
+          filter_hash?: string | null
+          generated_narratives?: Json | null
+          id?: string
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          data_points?: Json
+          expires_at?: string | null
+          filter_hash?: string | null
+          generated_narratives?: Json | null
+          id?: string
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       youtube_discoveries: {
         Row: {
           artist_name: string | null
@@ -7353,6 +7386,10 @@ export type Database = {
           view_count: number
         }[]
       }
+      get_country_distribution_by_year: {
+        Args: { p_year?: number }
+        Returns: Json
+      }
       get_current_usage: {
         Args: { p_user_id: string }
         Returns: {
@@ -7371,6 +7408,10 @@ export type Database = {
           total_views: number
           unique_sessions: number
         }[]
+      }
+      get_decade_distribution_by_year: {
+        Args: { p_year?: number }
+        Returns: Json
       }
       get_device_breakdown: {
         Args: { p_days?: number }
@@ -7392,6 +7433,10 @@ export type Database = {
           view_count: number
         }[]
       }
+      get_genre_distribution_by_year: {
+        Args: { p_year?: number }
+        Returns: Json
+      }
       get_hourly_traffic: {
         Args: { p_days?: number }
         Returns: {
@@ -7399,6 +7444,7 @@ export type Database = {
           view_count: number
         }[]
       }
+      get_monthly_trends_by_year: { Args: { p_year?: number }; Returns: Json }
       get_pageview_stats: {
         Args: { p_days?: number }
         Returns: {
@@ -7408,6 +7454,7 @@ export type Database = {
           view_count: number
         }[]
       }
+      get_price_insights_by_year: { Args: { p_year?: number }; Returns: Json }
       get_price_trend: {
         Args: { p_discogs_id: number }
         Returns: {
@@ -7427,6 +7474,10 @@ export type Database = {
         }[]
       }
       get_random_bot_user: { Args: never; Returns: string }
+      get_top_artists_by_year: {
+        Args: { p_limit?: number; p_year?: number }
+        Returns: Json
+      }
       get_traffic_sources_stats: {
         Args: { p_days?: number }
         Returns: {
@@ -7436,6 +7487,7 @@ export type Database = {
           view_count: number
         }[]
       }
+      get_year_overview_stats: { Args: { p_year?: number }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

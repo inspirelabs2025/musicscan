@@ -176,6 +176,8 @@ import DanceHouseMuziek from "./pages/DanceHouseMuziek";
 import DanceHouseFeitDetail from "./pages/DanceHouseFeitDetail";
 import SetPassword from "./pages/SetPassword";
 import MyQuizzes from "./pages/MyQuizzes";
+import YearOverview from "./pages/YearOverview";
+import AdminYearOverview from "./pages/admin/AdminYearOverview";
 
 // Redirect component for old /blog/ URLs to /plaat-verhaal/
 const BlogRedirect = () => {
@@ -459,6 +461,7 @@ const AppContent = () => {
                 <Route path="price-history" element={<PriceHistoryAdmin />} />
                 <Route path="cronjob-monitor" element={<CronjobMonitorPage />} />
                 <Route path="statistics" element={<Statistics />} />
+                <Route path="year-overview" element={<AdminYearOverview />} />
                 
                 {/* Maintenance */}
                 <Route path="fix-blog-slugs" element={<FixBlogSlugs />} />
@@ -510,6 +513,9 @@ const AppContent = () => {
         {/* Anecdotes Routes */}
         <Route path="/anekdotes" element={<AnecdotesOverview />} />
         <Route path="/anekdotes/:slug" element={<AnecdoteDetail />} />
+        
+        {/* Year Overview */}
+        <Route path="/jaar-overzicht" element={<YearOverview />} />
         
         <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
         <Route path="/singles" element={<Singles />} />

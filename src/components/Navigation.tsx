@@ -83,6 +83,7 @@ const aiToolsMenuItems = [
 const communityMenuItems = [
   { title: "FanWall", url: "/fanwall", icon: Images },
   { title: "Mijn Likes", url: "/my/liked", icon: Heart },
+  { title: "Mijn Quizzen", url: "/mijn-quizzen", icon: Trophy },
   { title: "Forum", url: "/forum", icon: MessageCircle },
   { title: "Social", url: "/social", icon: Users },
   { title: "Prestaties", url: "/prestaties", icon: Trophy }

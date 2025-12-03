@@ -1,11 +1,17 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
 import { QuizHubHero } from '@/components/quiz/QuizHubHero';
 import { QuizCategoryGrid } from '@/components/quiz/QuizCategoryGrid';
 import { QuizLeaderboard } from '@/components/quiz/QuizLeaderboard';
 import { DailyChallengeBanner } from '@/components/quiz/DailyChallengeBanner';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { BarChart3 } from 'lucide-react';
 
 export default function QuizHub() {
+  const { user } = useAuth();
+
   return (
     <>
       <Helmet>
@@ -20,6 +26,18 @@ export default function QuizHub() {
         <QuizHubHero />
         
         <div className="container mx-auto px-4 py-8 space-y-12">
+          {/* User Stats Link */}
+          {user && (
+            <div className="flex justify-end">
+              <Link to="/mijn-quizzen">
+                <Button variant="outline" className="gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Mijn Quizzen & Scores
+                </Button>
+              </Link>
+            </div>
+          )}
+
           {/* Daily Challenge Banner */}
           <DailyChallengeBanner />
           

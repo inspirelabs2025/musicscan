@@ -489,6 +489,9 @@ verify_jwt = false
 [functions.generate-quiz-share-image]
 verify_jwt = false
 
+[functions.send-quiz-registration-email]
+verify_jwt = false
+
 [functions.generate-artist-quiz]
 verify_jwt = false
 

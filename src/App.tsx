@@ -173,6 +173,8 @@ import NLMuziekFeitDetail from "./pages/NLMuziekFeitDetail";
 import FranseMuziek from "./pages/FranseMuziek";
 import DanceHouseMuziek from "./pages/DanceHouseMuziek";
 import DanceHouseFeitDetail from "./pages/DanceHouseFeitDetail";
+import SetPassword from "./pages/SetPassword";
+import MyQuizzes from "./pages/MyQuizzes";
 
 // Redirect component for old /blog/ URLs to /plaat-verhaal/
 const BlogRedirect = () => {
@@ -215,6 +217,7 @@ const AppContent = () => {
         <Route path="/llms.txt" element={<LlmsTxt />} />
         <Route path="/sitemap-llm.xml" element={<LlmSitemap />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/set-password" element={<SetPassword />} />
         <Route path="/" element={<Home />} />
         <Route path="/search/artist" element={<ArtistSearchResults />} />
         <Route path="/dashboard" element={
@@ -288,6 +291,11 @@ const AppContent = () => {
         <Route path="/quizzen" element={<QuizHub />} />
         <Route path="/quizzen/:category" element={<CategoryQuiz />} />
         <Route path="/quiz/result/:shareToken" element={<QuizResult />} />
+        <Route path="/mijn-quizzen" element={
+          <ProtectedRoute>
+            <MyQuizzes />
+          </ProtectedRoute>
+        } />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<About />} />
         <Route path="/retourbeleid" element={<ReturnPolicy />} />

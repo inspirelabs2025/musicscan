@@ -170,11 +170,19 @@ export const QuizWidget = () => {
           </Button>
           
           {stats?.hasPlayed && (
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">
-                🏆 {stats.totalQuizzes} quiz{stats.totalQuizzes !== 1 ? 'zes' : ''} voltooid
-              </p>
-            </div>
+            <>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/mijn-quizzen">
+                  Bekijk Alle Scores
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">
+                  🏆 {stats.totalQuizzes} quiz{stats.totalQuizzes !== 1 ? 'zes' : ''} voltooid
+                </p>
+              </div>
+            </>
           )}
         </div>
       </CardContent>

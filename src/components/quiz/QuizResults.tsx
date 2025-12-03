@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Trophy, RotateCcw, Share2, Home, Star, Mail, Loader2 } from 'lucide-react';
+import { Trophy, RotateCcw, Share2, Home, Star, Mail, Loader2, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuizShare } from '@/hooks/useQuizShare';
 import { QuizShareDialog } from './QuizShareDialog';
+import { QuizCompletionDialog } from './QuizCompletionDialog';
 import {
   Dialog,
   DialogContent,
@@ -48,27 +49,34 @@ export function QuizResults({
   
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [registrationDialogOpen, setRegistrationDialogOpen] = useState(false);
   const [emailAddress, setEmailAddress] = useState('');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [shareToken, setShareToken] = useState<string | null>(null);
+  const [tempUserId, setTempUserId] = useState<string | null>(null);
   
   const percentage = Math.round((score / totalQuestions) * 100);
   const badge = getBadge(percentage);
   const pointsEarned = score * 10 + (percentage === 100 ? 50 : 0);
 
-  // Save result to database and get share token
+  // Save result to database and get share token (for logged in users)
+  // Or show registration dialog for non-logged in users
   useEffect(() => {
     if (user) {
       saveResult();
+    } else {
+      // Show registration dialog for non-logged in users
+      setRegistrationDialogOpen(true);
     }
   }, []);
 
-  const saveResult = async () => {
-    if (!user) return;
+  const saveResult = async (userId?: string) => {
+    const targetUserId = userId || user?.id;
+    if (!targetUserId) return;
 
     try {
       // Save to quiz_results and get share token
-      const result = await saveQuizResult(user.id, {
+      const result = await saveQuizResult(targetUserId, {
         score,
         totalQuestions,
         percentage,
@@ -84,7 +92,7 @@ export function QuizResults({
       const { data: existing } = await supabase
         .from('quiz_leaderboard')
         .select('total_points')
-        .eq('user_id', user.id)
+        .eq('user_id', targetUserId)
         .maybeSingle();
 
       if (existing) {
@@ -94,7 +102,7 @@ export function QuizResults({
             total_points: (existing.total_points || 0) + pointsEarned,
             weekly_points: (existing.total_points || 0) + pointsEarned,
           })
-          .eq('user_id', user.id);
+          .eq('user_id', targetUserId);
       }
 
       toast({
@@ -106,11 +114,20 @@ export function QuizResults({
     }
   };
 
+  // Handle account created from registration dialog
+  const handleAccountCreated = async (newUserId: string) => {
+    setTempUserId(newUserId);
+    // Save the quiz result for the new user
+    await saveResult(newUserId);
+    setRegistrationDialogOpen(false);
+  };
+
   const handleCreateChallenge = async () => {
-    if (!user || !shareToken) return;
+    const targetUserId = user?.id || tempUserId;
+    if (!targetUserId || !shareToken) return;
     
     const challengeToken = await createChallenge(
-      user.id,
+      targetUserId,
       shareToken,
       score,
       quizType,
@@ -378,6 +395,18 @@ export function QuizResults({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Registration Dialog for non-logged in users */}
+      <QuizCompletionDialog
+        open={registrationDialogOpen}
+        onOpenChange={setRegistrationDialogOpen}
+        score={score}
+        totalQuestions={totalQuestions}
+        percentage={percentage}
+        badge={badge}
+        quizType={quizType}
+        onAccountCreated={handleAccountCreated}
+      />
     </div>
   );
 }

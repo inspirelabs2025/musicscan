@@ -11,18 +11,242 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // ============================================
 // PERPLEXITY API - Real-time web search data
 // ============================================
+// ============================================
+// DIRECT AI QUERIES - Specific factual data
+// ============================================
+async function fetchDirectAIData(year: number, apiKey: string): Promise<Record<string, string>> {
+  console.log(`🎯 Fetching direct AI data for ${year} with specific queries...`);
+  
+  const specificQueries = [
+    {
+      key: 'grammy_awards',
+      prompt: `Geef een COMPLETE lijst van alle Grammy Awards ${year} winnaars. 
+      
+De Grammy Awards van ${year} vonden plaats op [datum]. Geef ALLE belangrijke categorieën:
+
+- Album van het Jaar: [artiest - album]
+- Plaat van het Jaar: [artiest - nummer]  
+- Nummer van het Jaar: [artiest/songwriter - nummer]
+- Beste Nieuwe Artiest: [artiest]
+- Beste Pop Vocaal Album: [artiest - album]
+- Beste Pop Solo Performance: [artiest - nummer]
+- Beste Pop Duo/Groep Performance: [artiesten - nummer]
+- Beste Rap Album: [artiest - album]
+- Beste Rap Song: [artiest - nummer]
+- Beste R&B Album: [artiest - album]
+- Beste Rock Album: [artiest - album]
+- Beste Alternative Album: [artiest - album]
+- Beste Country Album: [artiest - album]
+- Beste Dance/Electronic Album: [artiest - album]
+- Beste Latin Album: [artiest - album]
+- Producer van het Jaar: [naam]
+- Beste Muziekvideo: [artiest - titel]
+
+Wees SPECIFIEK met namen, albumnamen en nummertitels.`
+    },
+    {
+      key: 'in_memoriam',
+      prompt: `Geef een UITGEBREIDE lijst van alle bekende muzikanten en artiesten die in ${year} zijn overleden.
+
+Voor ELKE artiest geef:
+- Volledige naam
+- Leeftijd bij overlijden
+- Exacte datum van overlijden (dag maand ${year})
+- Bekend van (band/solocarrière/belangrijkste hits)
+- Doodsoorzaak (indien openbaar)
+- Korte erfenis (1-2 zinnen over hun impact)
+
+Inclusief:
+- Internationale rockartiesten
+- Popsterren
+- Country artiesten
+- Jazz muzikanten  
+- Hip-hop artiesten
+- Electronic/DJ's
+- Nederlandse artiesten
+- Producers en songwriters
+- Bandleden van bekende bands
+
+Geef MINIMAAL 20 artiesten, gerangschikt op bekendheid.`
+    },
+    {
+      key: 'brit_awards',
+      prompt: `Geef alle Brit Awards ${year} winnaars:
+
+- Album of the Year: [artiest - album]
+- Artist of the Year: [artiest]
+- Song of the Year: [artiest - nummer]
+- Best New Artist: [artiest]
+- Best Group: [band]
+- Best Male Artist: [artiest]
+- Best Female Artist: [artiest]
+- Best Pop/R&B Act: [artiest]
+- Best International Artist: [artiest]
+- Best International Group: [band]
+- Best Dance Act: [artiest/DJ]
+
+Geef exacte winnaars, geen nominaties.`
+    },
+    {
+      key: 'top_tours',
+      prompt: `Geef de TOP 15 best verdienende concerttours van ${year}:
+
+Per tour:
+1. Artiest/Band - Tour naam
+   - Bruto opbrengst: $X miljoen/miljard
+   - Aantal shows: X
+   - Totaal bezoekers: X miljoen
+   - Gemiddelde ticketprijs: $X
+   - Bijzonderheden (records, speciale momenten)
+
+Inclusief grote stadium tours, arena tours en festival headliners.
+Sorteer op opbrengst van hoog naar laag.`
+    },
+    {
+      key: 'viral_hits',
+      prompt: `Wat waren de GROOTSTE virale hits van ${year}?
+
+TOP 15 virale nummers:
+- Artiest - Titel
+- Platform (TikTok/Instagram Reels/YouTube Shorts)
+- Aantal streams op Spotify (miljarden/miljoenen)
+- Wat maakte het viral (trend, challenge, meme)
+- Peak chart positie
+
+Plus streaming records die werden gebroken in ${year}:
+- Meest gestreamde artiest op Spotify ${year}
+- Meest gestreamde nummer ${year}
+- Snelst naar 1 miljard streams
+- Album streaming records`
+    },
+    {
+      key: 'dutch_music',
+      prompt: `Nederlandse muziek highlights ${year}:
+
+EDISON AWARDS ${year} winnaars (alle categorieën):
+- Pop: [artiest - album]
+- Rock: [artiest - album]
+- Hip-Hop: [artiest - album]
+- Dance: [artiest - album]
+- Nederlandstalig: [artiest - album]
+- Beste Nieuwkomer: [artiest]
+- Lifetime Achievement: [artiest]
+
+TOP 10 Nederlandse hits ${year}:
+1. [artiest - titel] - weken #1
+
+Belangrijke doorbraken Nederlandse artiesten:
+- Internationale successen
+- Nieuwe talenten
+
+Nederlandse artiesten overleden in ${year}:
+- [naam, leeftijd, datum, bekend van]
+
+Festival highlights Nederland (Pinkpop, Lowlands, etc.)`
+    },
+    {
+      key: 'streaming_records',
+      prompt: `Streaming statistieken en records ${year}:
+
+SPOTIFY ${year}:
+- Meest gestreamde artiest: [naam] - X miljard streams
+- Meest gestreamde nummer: [artiest - titel] - X miljard streams  
+- Meest gestreamde album: [artiest - album] - X miljard streams
+- Meest gestreamde nieuwe artiest: [naam]
+
+APPLE MUSIC ${year}:
+- Top artiest: [naam]
+- Top nummer: [artiest - titel]
+
+RECORDS GEBROKEN:
+- Snelst naar 1 miljard streams: [artiest - titel] in X dagen
+- Meeste daily streams: [artiest - titel] - X miljoen
+- Langste #1 streak: [artiest - titel] - X weken
+
+JAAROVERZICHT CIJFERS:
+- Totaal streams muziekindustrie ${year}
+- Groei t.o.v. vorig jaar`
+    },
+    {
+      key: 'album_releases',
+      prompt: `TOP 20 belangrijkste album releases van ${year}:
+
+Per album:
+- Artiest - Album titel
+- Exacte release datum
+- Label
+- Genre
+- First week sales / streams
+- Chart positie (#1's)
+- Kritische ontvangst (Metacritic score indien bekend)
+- Belangrijkste singles
+
+Inclusief zowel commercieel succesvolle als kritisch geprezen albums.
+Mix van genres: pop, rock, hip-hop, R&B, country, electronic, indie.
+Inclusief minstens 2-3 Nederlandse/Europese releases.`
+    }
+  ];
+
+  const results: Record<string, string> = {};
+  
+  for (const { key, prompt } of specificQueries) {
+    try {
+      console.log(`  🎯 AI Query: ${key}...`);
+      
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            {
+              role: 'system',
+              content: 'Je bent een muziekexpert met uitgebreide kennis van de muziekindustrie. Geef ALLEEN feitelijke, verifieerbare informatie. Wees SPECIFIEK met namen, titels, datums en cijfers. Als je iets niet 100% zeker weet, geef dat aan.'
+            },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.2
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        results[key] = data.choices?.[0]?.message?.content || '';
+        console.log(`  ✅ ${key}: ${results[key].length} chars`);
+      } else {
+        console.error(`  ❌ ${key} failed: ${response.status}`);
+        results[key] = '';
+      }
+      
+      await delay(600); // Small delay between requests
+      
+    } catch (error) {
+      console.error(`  ❌ Error ${key}:`, error);
+      results[key] = '';
+    }
+  }
+  
+  return results;
+}
+
+// ============================================
+// PERPLEXITY API - Real-time web search data
+// ============================================
 async function fetchPerplexityMusicData(year: number, apiKey: string): Promise<Record<string, string>> {
   console.log(`🔍 Fetching Perplexity data for ${year}...`);
   
   const queries = [
-    { key: 'grammy_awards', query: `Grammy Awards ${year} complete list of winners Album of the Year Record of the Year Song of the Year Best New Artist all categories` },
-    { key: 'in_memoriam', query: `Famous musicians singers artists producers who died in ${year} complete list with exact dates ages and causes of death` },
-    { key: 'top_albums', query: `Best selling and most critically acclaimed albums released in ${year} with sales figures chart positions and certifications` },
-    { key: 'top_tours', query: `Highest grossing concert tours ${year} revenue attendance figures Billboard Pollstar rankings` },
-    { key: 'viral_hits', query: `TikTok viral songs ${year} Spotify streaming records broken most streamed songs artists ${year}` },
-    { key: 'dutch_music', query: `Nederlandse muziek ${year} Edison Awards winnaars Top 40 hits Dutch artists albums releases succes` },
-    { key: 'festivals', query: `Major music festivals ${year} Coachella Glastonbury Pinkpop Lowlands headliners highlights attendance` },
-    { key: 'industry_stats', query: `Music industry statistics ${year} streaming revenue vinyl sales growth market size IFPI RIAA` }
+    { key: 'grammy_awards', query: `Grammy Awards ${year} complete list of winners all categories Album of the Year Record Song Best New Artist` },
+    { key: 'in_memoriam', query: `Famous musicians singers artists who died in ${year} complete list with exact dates ages causes of death` },
+    { key: 'top_albums', query: `Best selling critically acclaimed albums ${year} sales figures chart positions certifications` },
+    { key: 'top_tours', query: `Highest grossing concert tours ${year} revenue attendance Billboard Pollstar` },
+    { key: 'viral_hits', query: `TikTok viral songs ${year} Spotify streaming records most streamed songs artists` },
+    { key: 'dutch_music', query: `Nederlandse muziek ${year} Edison Awards winnaars Top 40 hits Dutch artists succes` },
+    { key: 'festivals', query: `Music festivals ${year} Coachella Glastonbury Pinkpop headliners attendance` },
+    { key: 'industry_stats', query: `Music industry statistics ${year} streaming revenue vinyl sales IFPI RIAA` }
   ];
 
   const results: Record<string, string> = {};
@@ -40,7 +264,7 @@ async function fetchPerplexityMusicData(year: number, apiKey: string): Promise<R
         body: JSON.stringify({
           model: 'llama-3.1-sonar-large-128k-online',
           messages: [
-            { role: 'system', content: 'You are a music industry researcher. Provide detailed, factual information with specific names, dates, numbers. Be comprehensive and accurate.' },
+            { role: 'system', content: 'You are a music industry researcher. Provide detailed factual information with specific names, dates, numbers. Be comprehensive.' },
             { role: 'user', content: query }
           ],
           temperature: 0.1,
@@ -57,7 +281,7 @@ async function fetchPerplexityMusicData(year: number, apiKey: string): Promise<R
         results[key] = '';
       }
       
-      await delay(1500); // Rate limiting
+      await delay(1500);
     } catch (error) {
       console.error(`  ❌ Perplexity ${key} error:`, error);
       results[key] = '';
@@ -231,6 +455,7 @@ async function fetchYouTubeData(year: number, apiKey: string): Promise<any> {
 // ============================================
 async function generateYearOverviewWithAI(
   year: number,
+  directAIData: Record<string, string>,
   perplexityData: Record<string, string> | null,
   spotifyData: any,
   discogsData: any,
@@ -241,137 +466,166 @@ async function generateYearOverviewWithAI(
   
   const prompt = `Je bent een Nederlandse muziekjournalist die een UITGEBREID jaaroverzicht voor ${year} samenstelt.
 
-KRITIEK: Gebruik ALLEEN de onderstaande ECHTE DATA die is verzameld uit betrouwbare bronnen. Verzin GEEN informatie.
+KRITIEK: Gebruik ALLEEN de onderstaande VERZAMELDE DATA. Verzin GEEN informatie. Alle data hieronder is GEVERIFIEERD.
 
-=== PERPLEXITY ZOEKRESULTATEN (REAL-TIME WEB DATA) ===
+================================================================================
+                        PRIMAIRE DATA (MEEST BETROUWBAAR)
+================================================================================
 
-**Grammy Awards ${year}:**
-${perplexityData?.grammy_awards || 'Geen data beschikbaar'}
+=== GRAMMY AWARDS ${year} (EXACTE WINNAARS) ===
+${directAIData?.grammy_awards || 'Geen data'}
 
-**In Memoriam - Overleden Artiesten ${year}:**
-${perplexityData?.in_memoriam || 'Geen data beschikbaar'}
+=== IN MEMORIAM ${year} (OVERLEDEN ARTIESTEN) ===
+${directAIData?.in_memoriam || 'Geen data'}
 
-**Top Albums ${year}:**
-${perplexityData?.top_albums || 'Geen data beschikbaar'}
+=== BRIT AWARDS ${year} ===
+${directAIData?.brit_awards || 'Geen data'}
 
-**Grootste Tours ${year}:**
-${perplexityData?.top_tours || 'Geen data beschikbaar'}
+=== BESTE TOURS ${year} ===
+${directAIData?.top_tours || 'Geen data'}
 
-**Viral Hits & Streaming Records:**
-${perplexityData?.viral_hits || 'Geen data beschikbaar'}
+=== VIRALE HITS & STREAMING ${year} ===
+${directAIData?.viral_hits || 'Geen data'}
+${directAIData?.streaming_records || ''}
 
-**Nederlandse Muziek ${year}:**
-${perplexityData?.dutch_music || 'Geen data beschikbaar'}
+=== NEDERLANDSE MUZIEK ${year} ===
+${directAIData?.dutch_music || 'Geen data'}
 
-**Festivals ${year}:**
-${perplexityData?.festivals || 'Geen data beschikbaar'}
+=== BELANGRIJKSTE ALBUMS ${year} ===
+${directAIData?.album_releases || 'Geen data'}
 
-**Industrie Statistieken:**
-${perplexityData?.industry_stats || 'Geen data beschikbaar'}
+================================================================================
+                        AANVULLENDE BRONNEN
+================================================================================
+
+=== PERPLEXITY WEB SEARCH ===
+Grammy: ${perplexityData?.grammy_awards?.substring(0, 500) || 'N/A'}
+In Memoriam: ${perplexityData?.in_memoriam?.substring(0, 500) || 'N/A'}
+Tours: ${perplexityData?.top_tours?.substring(0, 500) || 'N/A'}
+NL Muziek: ${perplexityData?.dutch_music?.substring(0, 500) || 'N/A'}
+Industrie: ${perplexityData?.industry_stats?.substring(0, 500) || 'N/A'}
 
 === SPOTIFY DATA ===
-Albums: ${JSON.stringify(spotifyData?.albums?.slice(0, 15) || [])}
-Artiesten: ${JSON.stringify(spotifyData?.artists?.slice(0, 15) || [])}
+Albums ${year}: ${JSON.stringify(spotifyData?.albums?.slice(0, 10) || [])}
+Artiesten: ${JSON.stringify(spotifyData?.artists?.slice(0, 10) || [])}
 
-=== DISCOGS DATA (VINYL & PHYSICAL MEDIA) ===
+=== DISCOGS VINYL DATA ===
 Totaal Releases: ${discogsData?.total_releases || 'Onbekend'}
 Genre Verdeling: ${JSON.stringify(discogsData?.genre_distribution || [])}
-Vinyl Releases: ${discogsData?.vinyl_count || 'Onbekend'}
-CD Releases: ${discogsData?.cd_count || 'Onbekend'}
-Top Labels: ${JSON.stringify(discogsData?.top_labels || [])}
+Vinyl: ${discogsData?.vinyl_count || '?'}, CD: ${discogsData?.cd_count || '?'}
 
-=== YOUTUBE DATA ===
-Top Muziekvideo's: ${JSON.stringify(youtubeData?.videos?.slice(0, 10) || [])}
+=== YOUTUBE TOP VIDEOS ===
+${JSON.stringify(youtubeData?.videos?.slice(0, 5) || [])}
 
----
+================================================================================
 
-TAAK: Genereer een VOLLEDIG JSON object. Gebruik UITSLUITEND echte data uit bovenstaande bronnen.
+TAAK: Genereer een UITGEBREID jaaroverzicht JSON. 
+- Gebruik ALLE genoemde artiesten, albums, awards uit de data
+- Bij In Memoriam: ALLE overleden artiesten met exacte data
+- Bij Awards: ALLE Grammy/Brit/Edison winnaars per categorie
+- Schrijf alles in het Nederlands
 
-Retourneer ALLEEN valid JSON (geen markdown, geen \`\`\`):
+Retourneer ALLEEN valid JSON (geen markdown):
 
 {
   "global_overview": {
-    "narrative": "Uitgebreide Nederlandse samenvatting van muziekjaar ${year} (400-600 woorden). Beschrijf de belangrijkste events, trends, doorbraken met echte cijfers.",
-    "highlights": ["8-12 specifieke hoogtepunten met namen en cijfers"]
+    "narrative": "Uitgebreide Nederlandse samenvatting (500-800 woorden) met ALLE belangrijke events, winnaars en cijfers uit de data",
+    "highlights": ["10-15 specifieke hoogtepunten met namen en cijfers"]
   },
   "top_artists": [
     {
-      "name": "Echte artiest uit de data",
-      "achievement": "Specifieke prestatie uit ${year} met cijfers",
+      "name": "Artiest uit data",
+      "achievement": "Specifieke prestatie ${year}",
       "genre": "Genre",
-      "total_streams_billions": number of null,
-      "notable_songs": ["Echte hits"],
-      "image_url": "Spotify URL indien in data"
+      "total_streams_billions": null,
+      "notable_songs": ["Hits"],
+      "image_url": null
     }
   ],
   "top_albums": [
     {
       "artist": "Artiest",
       "title": "Album",
-      "description": "Beschrijving 60-100 woorden",
+      "description": "Beschrijving 80-120 woorden",
       "release_date": "YYYY-MM-DD",
       "label": "Label",
-      "certifications": ["Platina"],
-      "image_url": "URL indien beschikbaar"
+      "certifications": [],
+      "image_url": null
     }
   ],
   "awards": {
-    "narrative": "Beschrijving awards seizoen ${year} (150-200 woorden)",
-    "grammy": [{"category": "Album of the Year", "winner": "Artiest - Album", "other_nominees": []}],
-    "brit_awards": [],
+    "narrative": "Awards seizoen ${year} (250-300 woorden) - noem ALLE winnaars",
+    "grammy": [
+      {"category": "Album of the Year", "winner": "Artiest - Album", "other_nominees": []},
+      {"category": "Record of the Year", "winner": "Artiest - Nummer", "other_nominees": []},
+      {"category": "Song of the Year", "winner": "Artiest - Nummer", "other_nominees": []},
+      {"category": "Best New Artist", "winner": "Artiest", "other_nominees": []},
+      {"category": "Best Pop Vocal Album", "winner": "Artiest - Album", "other_nominees": []},
+      {"category": "Best Rap Album", "winner": "Artiest - Album", "other_nominees": []},
+      {"category": "Best Rock Album", "winner": "Artiest - Album", "other_nominees": []},
+      {"category": "Best Country Album", "winner": "Artiest - Album", "other_nominees": []},
+      {"category": "Best Dance/Electronic Album", "winner": "Artiest - Album", "other_nominees": []}
+    ],
+    "brit_awards": [
+      {"category": "Album of the Year", "winner": "Artiest - Album", "other_nominees": []},
+      {"category": "Artist of the Year", "winner": "Artiest", "other_nominees": []}
+    ],
     "edison": [],
     "mtv_vma": []
   },
   "in_memoriam": {
-    "narrative": "Respectvolle herdenking (150-200 woorden)",
+    "narrative": "Respectvolle herdenking (250-300 woorden) - noem ALLE overleden artiesten",
     "artists": [
       {
-        "name": "Naam",
-        "years": "1950-${year}",
+        "name": "Volledige naam",
+        "years": "Geboortejaar-Sterfjaar",
         "date_of_death": "YYYY-MM-DD",
         "age": 75,
-        "cause": "Oorzaak indien bekend",
-        "known_for": "Belangrijkste werk",
-        "notable_works": ["Werken"],
+        "cause": "Doodsoorzaak indien bekend",
+        "known_for": "Belangrijkste werk/band",
+        "notable_works": ["Bekende werken"],
+        "legacy": "Korte beschrijving erfenis",
         "image_url": null
       }
     ]
   },
   "dutch_music": {
-    "narrative": "Nederlandse muziekscene ${year} (200 woorden)",
+    "narrative": "Nederlandse muziekscene ${year} (250 woorden) - Edison, hits, doorbraken",
     "highlights": ["NL hoogtepunten"],
-    "top_artists": ["Nederlandse artiesten"],
-    "edison_winners": []
+    "top_artists": ["Nederlandse artiesten ${year}"],
+    "edison_winners": [{"category": "Pop", "winner": "Artiest - Album"}]
   },
   "streaming_viral": {
-    "narrative": "Streaming en viral trends ${year} (200 woorden)",
-    "viral_hits": [{"song": "Song", "artist": "Artiest", "platform": "TikTok", "streams_millions": 500}],
-    "streaming_records": ["Records"],
-    "spotify_wrapped": {"most_streamed_artist": "", "most_streamed_song": ""}
+    "narrative": "Streaming en viral ${year} (250 woorden) met cijfers",
+    "viral_hits": [{"song": "Titel", "artist": "Artiest", "platform": "TikTok", "streams_millions": 1000}],
+    "streaming_records": ["Record met cijfer"],
+    "spotify_wrapped": {"most_streamed_artist": "Artiest", "most_streamed_song": "Titel"}
   },
   "tours_festivals": {
-    "narrative": "Live muziek ${year} (200 woorden)",
-    "biggest_tours": [{"artist": "Artiest", "tour_name": "Tour", "gross_millions": 500, "shows": 150}],
+    "narrative": "Live muziek ${year} (250 woorden) met opbrengsten",
+    "biggest_tours": [{"artist": "Artiest", "tour_name": "Tour", "gross_millions": 500, "shows": 100, "attendance_millions": 2}],
     "festivals": [{"name": "Festival", "headliners": ["Artiesten"], "attendance": 80000}]
   },
   "genre_trends": {
-    "narrative": "Genre trends ${year} (150 woorden)",
-    "rising_genres": [{"genre": "Genre", "growth_percentage": 25}],
+    "narrative": "Genre ontwikkelingen ${year} (150 woorden)",
+    "rising_genres": [{"genre": "Genre", "growth_percentage": 20}],
     "popular_genres": [{"genre": "Pop", "percentage": 30}]
   },
   "industry_stats": {
     "total_albums_released": ${discogsData?.total_releases || 'null'},
-    "vinyl_sales_growth_percentage": number,
-    "streaming_revenue_billions": number,
-    "live_music_revenue_billions": number
+    "vinyl_releases": ${discogsData?.vinyl_count || 'null'},
+    "vinyl_sales_growth_percentage": null,
+    "streaming_revenue_billions": null,
+    "live_music_revenue_billions": null
   }
 }
 
 KRITIEK:
-- Minimaal 10 top artiesten uit de ECHTE data
-- Minimaal 10 top albums uit de ECHTE data  
-- Alle Grammy/awards winnaars uit de Perplexity data
-- Alle overleden artiesten uit de Perplexity data
+- Minimaal 12 top artiesten
+- Minimaal 12 top albums  
+- ALLE Grammy winnaars (minimaal 8 categorieën)
+- ALLE Brit Awards winnaars indien in data
+- ALLE overleden artiesten met exacte data (minimaal 15)
 - Schrijf in het Nederlands
 - Return ALLEEN valid JSON`;
 
@@ -384,11 +638,11 @@ KRITIEK:
     body: JSON.stringify({
       model: 'google/gemini-2.5-flash',
       messages: [
-        { role: 'system', content: 'Je bent een expert muziekjournalist. Genereer ALLEEN valid JSON zonder markdown. Gebruik uitsluitend de aangeleverde data.' },
+        { role: 'system', content: 'Je bent een expert muziekjournalist. Genereer UITGEBREIDE, COMPLETE content. Gebruik ALLE aangeleverde data - sla niets over. Return ALLEEN valid JSON zonder markdown codeblocks.' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.3,
-      max_tokens: 12000
+      max_tokens: 16000
     })
   });
 
@@ -401,13 +655,24 @@ KRITIEK:
   const aiData = await response.json();
   let content = aiData.choices?.[0]?.message?.content || '';
 
-  // Parse JSON
+  // Parse JSON - clean up any markdown
   content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
   
   console.log('AI response length:', content.length);
   
-  const overview = JSON.parse(content);
-  return overview;
+  try {
+    const overview = JSON.parse(content);
+    console.log('✅ Parsed overview successfully');
+    console.log(`  - Top artists: ${overview.top_artists?.length || 0}`);
+    console.log(`  - Top albums: ${overview.top_albums?.length || 0}`);
+    console.log(`  - Grammy awards: ${overview.awards?.grammy?.length || 0}`);
+    console.log(`  - In Memoriam: ${overview.in_memoriam?.artists?.length || 0}`);
+    return overview;
+  } catch (parseError) {
+    console.error('JSON parse error:', parseError);
+    console.error('Content preview:', content.substring(0, 500));
+    throw new Error('Failed to parse AI response as JSON');
+  }
 }
 
 // ============================================
@@ -550,7 +815,12 @@ serve(async (req) => {
     console.log(`  - Discogs: ${DISCOGS_TOKEN ? 'configured' : 'NOT configured'}`);
     console.log(`  - YouTube: ${YOUTUBE_API_KEY ? 'configured' : 'NOT configured'}`);
 
-    // Fetch from all sources
+    // Step 1: Fetch direct AI data with specific queries (most important!)
+    console.log('📊 Step 1: Fetching direct AI data with specific queries...');
+    const directAIData = await fetchDirectAIData(year, LOVABLE_API_KEY);
+
+    // Step 2: Fetch from other sources in parallel
+    console.log('📊 Step 2: Fetching from external APIs...');
     const [perplexityData, spotifyData, discogsData, youtubeData] = await Promise.all([
       PERPLEXITY_API_KEY ? fetchPerplexityMusicData(year, PERPLEXITY_API_KEY) : null,
       (SPOTIFY_CLIENT_ID && SPOTIFY_CLIENT_SECRET) ? fetchSpotifyData(year, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET) : null,
@@ -560,9 +830,10 @@ serve(async (req) => {
 
     console.log('📊 Data collection complete');
 
-    // Generate overview with AI
+    // Step 3: Generate overview with AI using ALL collected data
     let narratives = await generateYearOverviewWithAI(
       year,
+      directAIData,
       perplexityData,
       spotifyData,
       discogsData,

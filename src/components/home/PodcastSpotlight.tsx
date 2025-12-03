@@ -19,40 +19,42 @@ export const PodcastSpotlight = () => {
     const showName = (episode as any).spotify_curated_shows?.name;
     
     return (
-      <Card className={`${isMobile ? 'p-3' : 'p-4'} hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-green-500 h-full`}>
-        <div className="relative mb-3">
-          <div className={`${isMobile ? 'aspect-square' : 'aspect-square'} rounded-lg overflow-hidden bg-gradient-to-br from-green-500/20 to-primary/20`}>
-            {showImage ? (
-              <img 
-                src={showImage} 
-                alt={episodeName}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Headphones className="w-12 h-12 text-muted-foreground" />
+      <Link to="/podcasts" className="block h-full">
+        <Card className={`${isMobile ? 'p-3' : 'p-4'} hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-green-500 h-full`}>
+          <div className="relative mb-3">
+            <div className={`${isMobile ? 'aspect-square' : 'aspect-square'} rounded-lg overflow-hidden bg-gradient-to-br from-green-500/20 to-primary/20`}>
+              {showImage ? (
+                <img 
+                  src={showImage} 
+                  alt={episodeName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Headphones className="w-12 h-12 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+            {!isMobile && (
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
+                  <Play className="w-8 h-8 text-green-600 fill-green-600" />
+                </div>
               </div>
             )}
           </div>
-          {!isMobile && (
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-              <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
-                <Play className="w-8 h-8 text-green-600 fill-green-600" />
-              </div>
-            </div>
+          
+          <h3 className={`font-bold ${isMobile ? 'text-sm' : 'text-lg'} mb-1 line-clamp-2 group-hover:text-green-600 transition-colors`}>
+            {episodeName}
+          </h3>
+          
+          {showName && (
+            <p className="text-xs text-muted-foreground line-clamp-1">
+              {showName}
+            </p>
           )}
-        </div>
-        
-        <h3 className={`font-bold ${isMobile ? 'text-sm' : 'text-lg'} mb-1 line-clamp-2 group-hover:text-green-600 transition-colors`}>
-          {episodeName}
-        </h3>
-        
-        {showName && (
-          <p className="text-xs text-muted-foreground line-clamp-1">
-            {showName}
-          </p>
-        )}
-      </Card>
+        </Card>
+      </Link>
     );
   };
 
@@ -146,51 +148,53 @@ export const PodcastSpotlight = () => {
                 const showName = (episode as any).spotify_curated_shows?.name;
                 
                 return (
-                  <Card key={episode.id} className="p-4 hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-green-500">
-                    <div className="relative mb-4">
-                      <div className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-green-500/20 to-primary/20">
-                        {showImage ? (
-                          <img 
-                            src={showImage} 
-                            alt={episodeName}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Headphones className="w-16 h-16 text-muted-foreground" />
+                  <Link key={episode.id} to="/podcasts" className="block">
+                    <Card className="p-4 hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-green-500">
+                      <div className="relative mb-4">
+                        <div className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-green-500/20 to-primary/20">
+                          {showImage ? (
+                            <img 
+                              src={showImage} 
+                              alt={episodeName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Headphones className="w-16 h-16 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        {/* Play button overlay */}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
+                            <Play className="w-8 h-8 text-green-600 fill-green-600" />
                           </div>
-                        )}
-                      </div>
-                      {/* Play button overlay */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
-                          <Play className="w-8 h-8 text-green-600 fill-green-600" />
                         </div>
                       </div>
-                    </div>
-                    
-                    <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
-                      {episodeName}
-                    </h3>
-                    
-                    {showName && (
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {showName}
-                      </p>
-                    )}
-                    
-                    {episode.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {episode.description}
-                      </p>
-                    )}
-                    
-                    {episode.duration_ms && (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
-                        <span>{Math.floor(episode.duration_ms / 60000)} min</span>
-                      </div>
-                    )}
-                  </Card>
+                      
+                      <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
+                        {episodeName}
+                      </h3>
+                      
+                      {showName && (
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {showName}
+                        </p>
+                      )}
+                      
+                      {episode.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {episode.description}
+                        </p>
+                      )}
+                      
+                      {episode.duration_ms && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
+                          <span>{Math.floor(episode.duration_ms / 60000)} min</span>
+                        </div>
+                      )}
+                    </Card>
+                  </Link>
                 );
               })
             ) : (

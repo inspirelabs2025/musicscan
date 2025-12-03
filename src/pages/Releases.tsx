@@ -142,49 +142,70 @@ export default function Releases() {
 
         {!isLoading && !error && (
           <div className={`grid gap-6 ${filters.viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-            {filteredReleases.map((release) => (
-              <Card key={release.id} className={`group hover:shadow-lg transition-all duration-300 overflow-hidden ${filters.viewMode === 'list' ? 'flex' : ''}`}>
-                {filters.viewMode === 'list' && release.image_url && (
-                  <div className="w-24 h-24 bg-muted flex-shrink-0">
-                    <img 
-                      src={release.image_url} 
-                      alt={`${release.name} cover`} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <CardHeader className="pb-3">
-                    <CardTitle className={`${filters.viewMode === 'list' ? 'text-base' : 'text-lg'} line-clamp-1`}>
-                      {release.name || 'Onbekende titel'}
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {release.artist || 'Onbekende artiest'} • {getReleaseYear(release.release_date)}
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    {filters.viewMode === 'grid' && release.image_url && (
-                      <div className="w-full aspect-square bg-muted rounded-lg mb-3 overflow-hidden">
-                        <img 
-                          src={release.image_url} 
-                          alt={`${release.name} cover`} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+            {filteredReleases.map((release) => {
+              const releaseSlug = (release as any).slug;
+              const linkTo = releaseSlug ? `/new-release/${releaseSlug}` : undefined;
+              
+              return (
+                <Card 
+                  key={release.id} 
+                  className={`group hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer ${filters.viewMode === 'list' ? 'flex' : ''}`}
+                  onClick={() => linkTo && window.location.assign(linkTo)}
+                >
+                  {filters.viewMode === 'list' && release.image_url && (
+                    <div className="w-24 h-24 bg-muted flex-shrink-0">
+                      <img 
+                        src={release.image_url} 
+                        alt={`${release.name} cover`} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <CardHeader className="pb-3">
+                      <CardTitle className={`${filters.viewMode === 'list' ? 'text-base' : 'text-lg'} line-clamp-1`}>
+                        {release.name || 'Onbekende titel'}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {release.artist || 'Onbekende artiest'} • {getReleaseYear(release.release_date)}
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      {filters.viewMode === 'grid' && release.image_url && (
+                        <div className="w-full aspect-square bg-muted rounded-lg mb-3 overflow-hidden">
+                          <img 
+                            src={release.image_url} 
+                            alt={`${release.name} cover`} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        {linkTo && (
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={(e) => { e.stopPropagation(); window.location.assign(linkTo); }}
+                          >
+                            Bekijk details
+                          </Button>
+                        )}
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className={linkTo ? '' : 'w-full'}
+                          onClick={(e) => { e.stopPropagation(); window.open(release.spotify_url, '_blank'); }}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Spotify
+                        </Button>
                       </div>
-                    )}
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => window.open(release.spotify_url, '_blank')}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Beluister op Spotify
-                    </Button>
-                  </CardContent>
-                </div>
-              </Card>
-            ))}
+                    </CardContent>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         )}
 

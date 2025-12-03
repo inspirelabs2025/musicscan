@@ -49,6 +49,7 @@ import MusicNews from "./pages/MusicNews";
 import Verhalen from "./pages/Verhalen";
 import Nieuws from "./pages/Nieuws";
 import Releases from "./pages/Releases";
+import NewReleaseDetail from "./pages/NewReleaseDetail";
 import TestMusicNews from "./pages/TestMusicNews";
 import TestNewsUpdate from "./pages/TestNewsUpdate";
 import TestNewsGeneration from "./pages/TestNewsGeneration";
@@ -348,6 +349,7 @@ const AppContent = () => {
         <Route path="/vandaag-in-de-muziekgeschiedenis" element={<MusicHistory />} />
         <Route path="/nieuws" element={<Nieuws />} />
         <Route path="/releases" element={<Releases />} />
+        <Route path="/new-release/:slug" element={<NewReleaseDetail />} />
         <Route path="/nederland" element={<NederlandseMuziek />} />
         <Route path="/nl-muziek/jaren-:decade" element={<NLMuziekDecennium />} />
         <Route path="/nl-muziekfeit/:slug" element={<NLMuziekFeitDetail />} />

@@ -5355,6 +5355,7 @@ export type Database = {
           processed_at: string | null
           product_id: string | null
           release_date: string | null
+          slug: string | null
           spotify_album_id: string
           spotify_url: string | null
           status: string
@@ -5372,6 +5373,7 @@ export type Database = {
           processed_at?: string | null
           product_id?: string | null
           release_date?: string | null
+          slug?: string | null
           spotify_album_id: string
           spotify_url?: string | null
           status?: string
@@ -5389,6 +5391,7 @@ export type Database = {
           processed_at?: string | null
           product_id?: string | null
           release_date?: string | null
+          slug?: string | null
           spotify_album_id?: string
           spotify_url?: string | null
           status?: string
@@ -7013,6 +7016,10 @@ export type Database = {
         Returns: string
       }
       generate_shop_slug: { Args: { shop_name: string }; Returns: string }
+      generate_spotify_release_slug: {
+        Args: { album_name: string; artist_name: string }
+        Returns: string
+      }
       get_current_usage: {
         Args: { p_user_id: string }
         Returns: {

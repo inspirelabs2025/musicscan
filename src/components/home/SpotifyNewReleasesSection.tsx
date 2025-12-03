@@ -1,10 +1,11 @@
 import { useSpotifyNewReleases } from '@/hooks/useSpotifyNewReleases';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Music2, ExternalLink, ChevronRight } from 'lucide-react';
+import { Music2, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Link } from 'react-router-dom';
 
 export const SpotifyNewReleasesSection = () => {
   const isMobile = useIsMobile();
@@ -55,11 +56,9 @@ export const SpotifyNewReleasesSection = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {featuredReleases.map((release) => (
-            <a
+            <Link
               key={release.id}
-              href={release.spotify_url}
-              target="_blank"
-              rel="noopener noreferrer"
+              to={release.slug ? `/new-release/${release.slug}` : `/releases`}
               className="group block space-y-3 transition-transform hover:scale-105"
             >
               <div className="relative aspect-square rounded-lg overflow-hidden bg-muted shadow-lg group-hover:shadow-xl transition-shadow">
@@ -76,7 +75,9 @@ export const SpotifyNewReleasesSection = () => {
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                  <ExternalLink className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                    Bekijk details
+                  </span>
                 </div>
               </div>
               <div className="space-y-1">
@@ -92,7 +93,7 @@ export const SpotifyNewReleasesSection = () => {
                   })}
                 </p>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -102,14 +103,10 @@ export const SpotifyNewReleasesSection = () => {
             variant="outline"
             className="group"
           >
-            <a
-              href="https://open.spotify.com/genre/new-releases"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Meer releases
+            <Link to="/releases">
+              Alle releases bekijken
               <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </a>
+            </Link>
           </Button>
         </div>
       </div>

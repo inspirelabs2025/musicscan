@@ -76,8 +76,7 @@ const aiToolsMenuItems = [
   { title: "Chat met Collectie", url: "/collection-chat", icon: MessageCircle },
   { title: "Prijscheck", url: "/quick-price-check", icon: DollarSign },
   { title: "Muziek Analyse", url: "/ai-analysis", icon: Brain },
-  { title: "Spotify Profiel", url: "/spotify-profile", icon: Music },
-  { title: "Quiz", url: "/quiz", icon: Trophy }
+  { title: "Spotify Profiel", url: "/spotify-profile", icon: Music }
 ];
 
 // COMMUNITY MENU ITEMS
@@ -156,6 +155,13 @@ export function Navigation() {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <NavLink item={{ title: "Home", url: "/", icon: Home }} />
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+
+            {/* Quizzen */}
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <NavLink item={{ title: "Quizzen", url: "/quizzen", icon: Trophy }} />
               </NavigationMenuLink>
             </NavigationMenuItem>
 
@@ -457,6 +463,9 @@ export function Navigation() {
                <nav className="flex flex-col flex-1 p-4 space-y-1 overflow-y-auto">
                  {/* Home */}
                  <NavLink item={{ title: "Home", url: "/", icon: Home }} mobile />
+
+                 {/* Quizzen */}
+                 <NavLink item={{ title: "Quizzen", url: "/quizzen", icon: Trophy }} mobile />
 
                  {/* Shop Section */}
                  <div className="mt-2">

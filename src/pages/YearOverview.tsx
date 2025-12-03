@@ -4,43 +4,61 @@ import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { useYearOverview, useAvailableYears, useGenerateYearOverview } from '@/hooks/useYearOverview';
 import { YearOverviewHero } from '@/components/year-overview/YearOverviewHero';
-import { GlobalStatsCards } from '@/components/year-overview/GlobalStatsCards';
-import { GenreDistributionChart } from '@/components/year-overview/GenreDistributionChart';
-import { FormatDistributionChart } from '@/components/year-overview/FormatDistributionChart';
-import { DecadeDistributionChart } from '@/components/year-overview/DecadeDistributionChart';
-import { MonthlyTrendsChart } from '@/components/year-overview/MonthlyTrendsChart';
-import { TopArtistsChart } from '@/components/year-overview/TopArtistsChart';
-import { CountryDistributionChart } from '@/components/year-overview/CountryDistributionChart';
-import { PriceInsightsSection } from '@/components/year-overview/PriceInsightsSection';
 import { AIGeneratedNarrative } from '@/components/year-overview/AIGeneratedNarrative';
-import { Loader2 } from 'lucide-react';
+import { TopArtistsSection } from '@/components/year-overview/TopArtistsSection';
+import { TopAlbumsSection } from '@/components/year-overview/TopAlbumsSection';
+import { AwardsSection } from '@/components/year-overview/AwardsSection';
+import { InMemoriamSection } from '@/components/year-overview/InMemoriamSection';
+import { DutchMusicSection } from '@/components/year-overview/DutchMusicSection';
+import { StreamingViralSection } from '@/components/year-overview/StreamingViralSection';
+import { ToursFestivalsSection } from '@/components/year-overview/ToursFestivalsSection';
+import { GenreTrendsSection } from '@/components/year-overview/GenreTrendsSection';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 
 const YearOverview: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const { data: availableYears = [] } = useAvailableYears();
   const { data, isLoading, error } = useYearOverview(selectedYear);
+  const generateMutation = useGenerateYearOverview();
 
-  const stats = data?.data_points?.stats;
-  const narratives = data?.generated_narratives || {};
+  const handleGenerate = async () => {
+    try {
+      toast.info('Jaaroverzicht wordt gegenereerd... Dit kan even duren.');
+      await generateMutation.mutateAsync({ year: selectedYear, regenerate: true });
+      toast.success(`Jaaroverzicht ${selectedYear} gegenereerd!`);
+    } catch (error) {
+      toast.error('Fout bij genereren van jaaroverzicht');
+    }
+  };
+
+  const sections = data?.generated_narratives;
+  const sources = data?.sources;
 
   return (
     <>
       <Helmet>
-        <title>{`Muziek Jaar Overzicht ${selectedYear} | MusicScan`}</title>
-        <meta name="description" content={`Bekijk het complete muziek jaaroverzicht van ${selectedYear}. Ontdek trends, top artiesten, genre statistieken en meer op MusicScan.`} />
-        <meta property="og:title" content={`Muziek Jaar Overzicht ${selectedYear} | MusicScan`} />
-        <meta property="og:description" content={`Ontdek de muziektrends van ${selectedYear}: top artiesten, populaire genres, en community statistieken.`} />
+        <title>{`Muziek Jaaroverzicht ${selectedYear} | MusicScan`}</title>
+        <meta name="description" content={`Ontdek het complete muziekjaaroverzicht van ${selectedYear}. Top artiesten, beste albums, awards, virale hits en meer.`} />
       </Helmet>
 
       <div className="min-h-screen flex flex-col bg-background">
         <Navigation />
         
         <main className="flex-grow container mx-auto px-4 py-8">
-          <YearOverviewHero
-            year={selectedYear}
-            onYearChange={setSelectedYear}
-            availableYears={availableYears}
-          />
+          <YearOverviewHero year={selectedYear} onYearChange={setSelectedYear} availableYears={availableYears} />
+
+          {sources && (
+            <div className="flex flex-wrap gap-2 mb-6 justify-center">
+              <span className="text-sm text-muted-foreground">Bronnen:</span>
+              {sources.spotify && <Badge variant="secondary">Spotify</Badge>}
+              {sources.discogs && <Badge variant="secondary">Discogs</Badge>}
+              {sources.perplexity && <Badge variant="secondary">Perplexity</Badge>}
+            </div>
+          )}
 
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
@@ -49,58 +67,42 @@ const YearOverview: React.FC = () => {
             </div>
           ) : error ? (
             <div className="text-center py-20">
-              <p className="text-destructive">Er ging iets mis bij het laden van het overzicht.</p>
+              <p className="text-destructive">Er ging iets mis bij het laden.</p>
             </div>
-          ) : stats ? (
-            <>
-              {/* AI Narrative - Global Overview */}
-              {narratives.global_overview && (
-                <div className="mb-8">
-                  <AIGeneratedNarrative 
-                    title="Globaal Overzicht" 
-                    narrative={narratives.global_overview}
-                    icon="🌍"
-                  />
-                </div>
-              )}
-
-              {/* Stats Cards */}
-              <GlobalStatsCards stats={stats} />
-
-              {/* Charts Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <GenreDistributionChart 
-                  data={data?.data_points?.genres || []} 
-                  narrative={narratives.genre_trends}
-                />
-                <FormatDistributionChart 
-                  stats={stats} 
-                  narrative={narratives.format_analysis}
-                />
-                <DecadeDistributionChart data={data?.data_points?.decades || []} />
-              </div>
-
-              {/* Monthly Trends - Full Width */}
-              <div className="mb-8">
-                <MonthlyTrendsChart data={data?.data_points?.monthly || []} />
-              </div>
-
-              {/* Two Column Layout */}
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
-                <TopArtistsChart data={data?.data_points?.topArtists || []} />
-                <CountryDistributionChart data={data?.data_points?.countries || []} />
-              </div>
-
-              {/* Price Insights */}
-              <PriceInsightsSection data={data?.data_points?.priceInsights || { highest_valued: [], price_ranges: [] }} />
-            </>
+          ) : !data ? (
+            <Card className="max-w-lg mx-auto">
+              <CardContent className="py-12 text-center space-y-4">
+                <Sparkles className="h-12 w-12 mx-auto text-primary/50" />
+                <h3 className="text-lg font-semibold">Nog geen jaaroverzicht voor {selectedYear}</h3>
+                <p className="text-muted-foreground">Genereer een compleet muziekjaaroverzicht met Spotify, Discogs en meer.</p>
+                <Button onClick={handleGenerate} disabled={generateMutation.isPending} size="lg">
+                  {generateMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                  Genereer Jaaroverzicht
+                </Button>
+              </CardContent>
+            </Card>
           ) : (
-            <div className="text-center py-20">
-              <p className="text-muted-foreground">Geen data beschikbaar voor {selectedYear}</p>
+            <div className="space-y-8">
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={handleGenerate} disabled={generateMutation.isPending}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${generateMutation.isPending ? 'animate-spin' : ''}`} />
+                  Vernieuwen
+                </Button>
+              </div>
+              {sections?.global_overview?.narrative && (
+                <AIGeneratedNarrative title={`Het Muziekjaar ${selectedYear}`} narrative={sections.global_overview.narrative} icon="🌍" />
+              )}
+              <TopArtistsSection artists={sections?.top_artists || []} />
+              <TopAlbumsSection albums={sections?.top_albums || []} />
+              <AwardsSection narrative={sections?.awards?.narrative || ''} grammy={sections?.awards?.grammy || []} brit_awards={sections?.awards?.brit_awards || []} edison={sections?.awards?.edison || []} />
+              <StreamingViralSection narrative={sections?.streaming_viral?.narrative || ''} viralHits={sections?.streaming_viral?.viral_hits || []} streamingRecords={sections?.streaming_viral?.streaming_records || []} />
+              <GenreTrendsSection narrative={sections?.genre_trends?.narrative || ''} risingGenres={sections?.genre_trends?.rising_genres} popularGenres={sections?.genre_trends?.popular_genres || []} />
+              <ToursFestivalsSection narrative={sections?.tours_festivals?.narrative || ''} biggestTours={sections?.tours_festivals?.biggest_tours || []} festivals={sections?.tours_festivals?.festivals || []} />
+              <DutchMusicSection narrative={sections?.dutch_music?.narrative || ''} highlights={sections?.dutch_music?.highlights || []} topArtists={sections?.dutch_music?.top_artists || []} edisonWinners={sections?.dutch_music?.edison_winners || []} />
+              <InMemoriamSection narrative={sections?.in_memoriam?.narrative || ''} artists={sections?.in_memoriam?.artists || []} />
             </div>
           )}
         </main>
-
         <Footer />
       </div>
     </>

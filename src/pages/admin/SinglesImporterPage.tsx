@@ -1,4 +1,5 @@
 import { SinglesImporter } from '@/components/admin/SinglesImporter';
+import { DanceHouseQueueManager } from '@/components/admin/DanceHouseQueueManager';
 
 export default function SinglesImporterPage() {
   return (
@@ -9,6 +10,13 @@ export default function SinglesImporterPage() {
           Importeer singles in bulk en laat ze automatisch verwerken tot muziekverhalen
         </p>
       </div>
+      
+      <div className="grid lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-1">
+          <DanceHouseQueueManager />
+        </div>
+      </div>
+      
       <SinglesImporter />
     </div>
   );

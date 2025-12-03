@@ -128,12 +128,12 @@ export function AlbumQuiz() {
 
               <div>
                 <label className="text-sm font-medium mb-2 block">Decennium (optioneel)</label>
-                <Select value={decade} onValueChange={setDecade}>
+                <Select value={decade || 'all'} onValueChange={(v) => setDecade(v === 'all' ? '' : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Alle decennia" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle decennia</SelectItem>
+                    <SelectItem value="all">Alle decennia</SelectItem>
                     <SelectItem value="1960">Jaren 60</SelectItem>
                     <SelectItem value="1970">Jaren 70</SelectItem>
                     <SelectItem value="1980">Jaren 80</SelectItem>

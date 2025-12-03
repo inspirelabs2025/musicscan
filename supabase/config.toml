@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.generate-year-overview]
+verify_jwt = false
+
 [functions.send-quiz-report]
 verify_jwt = false
 

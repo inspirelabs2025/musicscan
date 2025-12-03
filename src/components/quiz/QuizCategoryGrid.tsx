@@ -22,7 +22,7 @@ const QUIZ_CATEGORIES = [
     description: 'Test je kennis van artiesten',
     icon: Users,
     color: 'from-blue-500 to-cyan-500',
-    badge: 'AI',
+    badge: '🎤',
     requiresAuth: false,
   },
   {
@@ -31,7 +31,7 @@ const QUIZ_CATEGORIES = [
     description: 'Hoeveel weet je van albums?',
     icon: Album,
     color: 'from-green-500 to-emerald-500',
-    badge: 'AI',
+    badge: '💿',
     requiresAuth: false,
   },
   {

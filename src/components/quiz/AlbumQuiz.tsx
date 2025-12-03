@@ -148,7 +148,7 @@ export function AlbumQuiz() {
 
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">10 vragen</Badge>
-              <Badge variant="secondary">AI-gegenereerd</Badge>
+              <Badge variant="secondary">Unieke vragen</Badge>
               <Badge variant="secondary">+10 punten per vraag</Badge>
             </div>
 

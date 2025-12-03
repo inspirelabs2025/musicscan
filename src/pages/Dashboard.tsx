@@ -18,7 +18,11 @@ import {
   Newspaper,
   Shield,
   Loader2,
-  Play
+  Play,
+  Trophy,
+  ShoppingBag,
+  BookOpen,
+  Target
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -142,52 +146,107 @@ const Dashboard = () => {
                   🚀 Quick Actions
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                  <Button asChild size="lg" className="h-16 bg-gradient-to-r from-vinyl-purple to-vinyl-purple/80 hover:shadow-lg group">
-                    <Link to="/scanner">
-                      <div className="flex flex-col items-center gap-2">
-                        <Camera className="w-6 h-6 group-hover:animate-pulse" />
-                        <span>📸 Scan Nu</span>
-                      </div>
-                    </Link>
-                  </Button>
-                  
-                  <Button asChild size="lg" variant="outline" className="h-16 bg-gradient-to-r from-blue-500/20 to-violet-500/20 hover:from-blue-500/30 hover:to-violet-500/30 border-blue-500/30 group">
-                    <Link to="/ai-scan">
-                      <div className="flex flex-col items-center gap-2">
-                        <Sparkles className="w-6 h-6 group-hover:animate-pulse text-blue-400" />
-                        <span>⚡ Quick Scan</span>
-                      </div>
-                    </Link>
-                  </Button>
-                  
-                  <Button asChild size="lg" variant="outline" className="h-16 hover:bg-vinyl-gold/10 group">
-                    <Link to="/my-collection">
-                      <div className="flex flex-col items-center gap-2">
-                        <Search className="w-6 h-6 group-hover:animate-pulse" />
-                        <span>🔍 Mijn Collectie</span>
-                      </div>
-                    </Link>
-                  </Button>
-                  
-                  <Button asChild size="lg" variant="outline" className="h-16 hover:bg-vinyl-purple/10 group">
-                    <Link to="/collection-chat">
-                      <div className="flex flex-col items-center gap-2">
-                        <MessageSquare className="w-6 h-6 group-hover:animate-pulse" />
-                        <span>💬 Chat met collectie</span>
-                      </div>
-                    </Link>
-                  </Button>
-                  
-                  <Button asChild size="lg" variant="outline" className="h-16 hover:bg-green-500/10 group">
-                    <Link to="/marketplace">
-                      <div className="flex flex-col items-center gap-2">
-                        <Shuffle className="w-6 h-6 group-hover:animate-pulse" />
-                        <span>🛒 Marketplace</span>
-                      </div>
-                    </Link>
-                  </Button>
+              <CardContent className="space-y-6">
+                {/* Collectie Tools */}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-3 font-medium">🎵 Collectie Tools</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <Button asChild size="lg" className="h-16 bg-gradient-to-r from-vinyl-purple to-vinyl-purple/80 hover:shadow-lg group">
+                      <Link to="/scanner">
+                        <div className="flex flex-col items-center gap-2">
+                          <Camera className="w-6 h-6 group-hover:animate-pulse" />
+                          <span className="text-xs">📸 Scan Nu</span>
+                        </div>
+                      </Link>
+                    </Button>
+                    
+                    <Button asChild size="lg" variant="outline" className="h-16 bg-gradient-to-r from-blue-500/20 to-violet-500/20 hover:from-blue-500/30 hover:to-violet-500/30 border-blue-500/30 group">
+                      <Link to="/ai-scan">
+                        <div className="flex flex-col items-center gap-2">
+                          <Sparkles className="w-6 h-6 group-hover:animate-pulse text-blue-400" />
+                          <span className="text-xs">⚡ Quick Scan</span>
+                        </div>
+                      </Link>
+                    </Button>
+                    
+                    <Button asChild size="lg" variant="outline" className="h-16 hover:bg-vinyl-gold/10 group">
+                      <Link to="/my-collection">
+                        <div className="flex flex-col items-center gap-2">
+                          <Search className="w-6 h-6 group-hover:animate-pulse" />
+                          <span className="text-xs">🔍 Mijn Collectie</span>
+                        </div>
+                      </Link>
+                    </Button>
+                    
+                    <Button asChild size="lg" variant="outline" className="h-16 hover:bg-vinyl-purple/10 group">
+                      <Link to="/collection-chat">
+                        <div className="flex flex-col items-center gap-2">
+                          <MessageSquare className="w-6 h-6 group-hover:animate-pulse" />
+                          <span className="text-xs">💬 Chat</span>
+                        </div>
+                      </Link>
+                    </Button>
+                    
+                    <Button asChild size="lg" variant="outline" className="h-16 hover:bg-green-500/10 group">
+                      <Link to="/marketplace">
+                        <div className="flex flex-col items-center gap-2">
+                          <Shuffle className="w-6 h-6 group-hover:animate-pulse" />
+                          <span className="text-xs">🛒 Marketplace</span>
+                        </div>
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Ontdek & Speel */}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-3 font-medium">🎮 Ontdek & Speel</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <Button asChild size="lg" className="h-16 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white hover:shadow-lg group">
+                      <Link to="/quizzen">
+                        <div className="flex flex-col items-center gap-2">
+                          <Trophy className="w-6 h-6 group-hover:animate-pulse" />
+                          <span className="text-xs">🎯 Quizzen</span>
+                        </div>
+                      </Link>
+                    </Button>
+                    
+                    <Button asChild size="lg" variant="outline" className="h-16 hover:bg-purple-500/10 border-purple-500/30 group">
+                      <Link to="/mijn-quizzen">
+                        <div className="flex flex-col items-center gap-2">
+                          <BarChart3 className="w-6 h-6 group-hover:animate-pulse text-purple-500" />
+                          <span className="text-xs">🏆 Mijn Scores</span>
+                        </div>
+                      </Link>
+                    </Button>
+                    
+                    <Button asChild size="lg" variant="outline" className="h-16 hover:bg-pink-500/10 border-pink-500/30 group">
+                      <Link to="/shop">
+                        <div className="flex flex-col items-center gap-2">
+                          <ShoppingBag className="w-6 h-6 group-hover:animate-pulse text-pink-500" />
+                          <span className="text-xs">🛍️ Shop</span>
+                        </div>
+                      </Link>
+                    </Button>
+                    
+                    <Button asChild size="lg" variant="outline" className="h-16 hover:bg-cyan-500/10 border-cyan-500/30 group">
+                      <Link to="/muziek-verhalen">
+                        <div className="flex flex-col items-center gap-2">
+                          <BookOpen className="w-6 h-6 group-hover:animate-pulse text-cyan-500" />
+                          <span className="text-xs">📖 Verhalen</span>
+                        </div>
+                      </Link>
+                    </Button>
+                    
+                    <Button asChild size="lg" variant="outline" className="h-16 hover:bg-orange-500/10 border-orange-500/30 group">
+                      <Link to="/nieuws">
+                        <div className="flex flex-col items-center gap-2">
+                          <Newspaper className="w-6 h-6 group-hover:animate-pulse text-orange-500" />
+                          <span className="text-xs">📰 Nieuws</span>
+                        </div>
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -349,23 +408,23 @@ const Dashboard = () => {
             <Card className="border-2 hover:border-primary/50 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-primary" />
+                  <Target className="w-5 h-5 text-primary" />
                   🎯 Snelle Navigatie
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-purple/10">
                     <Link to="/collection-overview">
                       <TrendingUp className="w-5 h-5" />
-                      <span className="text-xs">📊 Collectie Overzicht</span>
+                      <span className="text-xs">📊 Overzicht</span>
                     </Link>
                   </Button>
                   
                   <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-vinyl-gold/10">
                     <Link to="/collection-chat">
                       <MessageSquare className="w-5 h-5" />
-                      <span className="text-xs">💬 Collectie Chat</span>
+                      <span className="text-xs">💬 Chat</span>
                     </Link>
                   </Button>
                   
@@ -380,6 +439,34 @@ const Dashboard = () => {
                     <Link to="/unified-scan-overview">
                       <BarChart3 className="w-5 h-5" />
                       <span className="text-xs">📈 Alle Scans</span>
+                    </Link>
+                  </Button>
+
+                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-amber-500/10">
+                    <Link to="/quizzen">
+                      <Trophy className="w-5 h-5 text-amber-500" />
+                      <span className="text-xs">🎯 Quizzen</span>
+                    </Link>
+                  </Button>
+
+                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-purple-500/10">
+                    <Link to="/mijn-quizzen">
+                      <Target className="w-5 h-5 text-purple-500" />
+                      <span className="text-xs">🏆 Scores</span>
+                    </Link>
+                  </Button>
+
+                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-cyan-500/10">
+                    <Link to="/artists">
+                      <Users className="w-5 h-5 text-cyan-500" />
+                      <span className="text-xs">🎤 Artiesten</span>
+                    </Link>
+                  </Button>
+
+                  <Button asChild variant="outline" className="h-16 flex flex-col gap-2 hover:bg-pink-500/10">
+                    <Link to="/shop">
+                      <ShoppingBag className="w-5 h-5 text-pink-500" />
+                      <span className="text-xs">🛍️ Shop</span>
                     </Link>
                   </Button>
                 </div>

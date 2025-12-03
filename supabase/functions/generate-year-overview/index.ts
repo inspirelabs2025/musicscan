@@ -23,30 +23,7 @@ async function fetchDirectAIData(year: number, apiKey: string): Promise<Record<s
   const specificQueries = [
     {
       key: 'grammy_awards',
-      prompt: `Grammy Awards ${year}: Geef de VOLLEDIGE lijst van winnaars.
-
-De Grammy Awards van ${year} (67e editie) vonden plaats op 2 februari 2025 in Los Angeles.
-
-GEEF ALLE WINNAARS:
-• Album of the Year: 
-• Record of the Year: 
-• Song of the Year: 
-• Best New Artist: 
-• Best Pop Vocal Album: 
-• Best Pop Solo Performance: 
-• Best Pop Duo/Group Performance: 
-• Best Rap Album: 
-• Best Rap Song: 
-• Best R&B Album: 
-• Best Rock Album: 
-• Best Alternative Music Album: 
-• Best Country Album: 
-• Best Dance/Electronic Album: 
-• Best Latin Pop Album: 
-• Producer of the Year, Non-Classical: 
-• Best Music Video: 
-
-Antwoord direct met de winnaars per categorie. Geen inleiding nodig.`
+      prompt: `Welke artiesten wonnen de Grammy Awards ${year}?`
     },
     {
       key: 'in_memoriam',

@@ -52,7 +52,7 @@ export default function ArtistSearchResults() {
   return (
     <>
       <Helmet>
-        <title>Zoek naar {debouncedSearch || 'Artiest'} | Vinyl Verzamelaar</title>
+        <title>Zoek naar {debouncedSearch || 'Artiest'} | MusicScan</title>
         <meta name="description" content={`Doorzoek alle content over ${debouncedSearch || 'je favoriete artiest'}`} />
       </Helmet>
 

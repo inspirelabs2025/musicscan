@@ -320,8 +320,8 @@ BELANGRIJK:
     
     const narratives = JSON.parse(content);
     
-    // Enrich with real images from Spotify data
-    const enrichedNarratives = enrichWithRealImages(narratives, spotifyData, discogsData);
+    // Fetch real artwork for AI-generated albums/artists via Spotify Search
+    const enrichedNarratives = await fetchArtworkForNarratives(narratives);
     return enrichedNarratives;
   } catch (error) {
     console.error('AI narrative generation error:', error);
@@ -329,96 +329,95 @@ BELANGRIJK:
   }
 }
 
-function enrichWithRealImages(narratives: any, spotifyData: any, discogsData: any) {
-  const spotifyReleases = spotifyData?.newReleases || [];
-  const discogsReleases = discogsData?.topReleases || [];
+async function fetchArtworkForNarratives(narratives: any) {
+  const clientId = Deno.env.get('SPOTIFY_CLIENT_ID');
+  const clientSecret = Deno.env.get('SPOTIFY_CLIENT_SECRET');
   
-  // Create lookup maps for artist images from Spotify
-  const artistImageMap = new Map<string, string>();
-  const albumImageMap = new Map<string, string>();
-  
-  spotifyReleases.forEach((release: any) => {
-    const artistName = release.artists?.[0]?.name?.toLowerCase();
-    const imageUrl = release.images?.[0]?.url || release.images?.[1]?.url;
+  if (!clientId || !clientSecret) {
+    console.log('Spotify credentials not configured, skipping artwork fetch');
+    return narratives;
+  }
+
+  try {
+    // Get Spotify access token
+    const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + btoa(`${clientId}:${clientSecret}`)
+      },
+      body: 'grant_type=client_credentials'
+    });
+
+    if (!tokenResponse.ok) {
+      console.error('Spotify token error');
+      return narratives;
+    }
+
+    const { access_token } = await tokenResponse.json();
     
-    if (artistName && imageUrl) {
-      if (!artistImageMap.has(artistName)) {
-        artistImageMap.set(artistName, imageUrl);
-      }
-    }
-    
-    // Also map album title to image
-    const albumKey = `${artistName}-${release.name?.toLowerCase()}`;
-    if (imageUrl) {
-      albumImageMap.set(albumKey, imageUrl);
-    }
-  });
-  
-  // Also add Discogs images
-  discogsReleases.forEach((release: any) => {
-    if (release.thumb && release.title) {
-      const parts = release.title.split(' - ');
-      if (parts.length >= 2) {
-        const artistName = parts[0].toLowerCase();
-        if (!artistImageMap.has(artistName)) {
-          artistImageMap.set(artistName, release.thumb);
-        }
-      }
-    }
-  });
-  
-  // Enrich top_artists with real images
-  if (narratives.top_artists && Array.isArray(narratives.top_artists)) {
-    narratives.top_artists = narratives.top_artists.map((artist: any, index: number) => {
-      const artistKey = artist.name?.toLowerCase();
-      let imageUrl = artistImageMap.get(artistKey);
-      
-      // If no direct match, try to find a similar artist
-      if (!imageUrl) {
-        for (const [key, url] of artistImageMap.entries()) {
-          if (key.includes(artistKey) || artistKey.includes(key)) {
-            imageUrl = url;
-            break;
+    // Fetch artwork for top_albums using Spotify Search
+    if (narratives.top_albums && Array.isArray(narratives.top_albums)) {
+      for (let i = 0; i < narratives.top_albums.length; i++) {
+        const album = narratives.top_albums[i];
+        if (album.artist && album.title) {
+          try {
+            const query = encodeURIComponent(`album:${album.title} artist:${album.artist}`);
+            const searchResponse = await fetch(
+              `https://api.spotify.com/v1/search?q=${query}&type=album&limit=1`,
+              { headers: { 'Authorization': `Bearer ${access_token}` } }
+            );
+            
+            if (searchResponse.ok) {
+              const searchData = await searchResponse.json();
+              const foundAlbum = searchData.albums?.items?.[0];
+              if (foundAlbum?.images?.[0]?.url) {
+                narratives.top_albums[i].image_url = foundAlbum.images[0].url;
+                console.log(`Found artwork for album: ${album.artist} - ${album.title}`);
+              }
+            }
+            // Small delay to respect rate limits
+            await new Promise(resolve => setTimeout(resolve, 100));
+          } catch (e) {
+            console.error(`Error fetching artwork for ${album.title}:`, e);
           }
         }
       }
-      
-      // Fallback: use a Spotify release image by index
-      if (!imageUrl && spotifyReleases[index]?.images?.[0]?.url) {
-        imageUrl = spotifyReleases[index].images[0].url;
+    }
+    
+    // Fetch artwork for top_artists using Spotify Search
+    if (narratives.top_artists && Array.isArray(narratives.top_artists)) {
+      for (let i = 0; i < narratives.top_artists.length; i++) {
+        const artist = narratives.top_artists[i];
+        if (artist.name) {
+          try {
+            const query = encodeURIComponent(artist.name);
+            const searchResponse = await fetch(
+              `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`,
+              { headers: { 'Authorization': `Bearer ${access_token}` } }
+            );
+            
+            if (searchResponse.ok) {
+              const searchData = await searchResponse.json();
+              const foundArtist = searchData.artists?.items?.[0];
+              if (foundArtist?.images?.[0]?.url) {
+                narratives.top_artists[i].image_url = foundArtist.images[0].url;
+                console.log(`Found artwork for artist: ${artist.name}`);
+              }
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+          } catch (e) {
+            console.error(`Error fetching artwork for ${artist.name}:`, e);
+          }
+        }
       }
-      
-      return {
-        ...artist,
-        image_url: imageUrl || null
-      };
-    });
+    }
+    
+    return narratives;
+  } catch (error) {
+    console.error('Error fetching artwork:', error);
+    return narratives;
   }
-  
-  // Enrich top_albums with real images
-  if (narratives.top_albums && Array.isArray(narratives.top_albums)) {
-    narratives.top_albums = narratives.top_albums.map((album: any, index: number) => {
-      const albumKey = `${album.artist?.toLowerCase()}-${album.title?.toLowerCase()}`;
-      let imageUrl = albumImageMap.get(albumKey);
-      
-      // Try artist match
-      if (!imageUrl) {
-        imageUrl = artistImageMap.get(album.artist?.toLowerCase());
-      }
-      
-      // Fallback: use Spotify release by index
-      if (!imageUrl && spotifyReleases[index]?.images?.[0]?.url) {
-        imageUrl = spotifyReleases[index].images[0].url;
-      }
-      
-      return {
-        ...album,
-        image_url: imageUrl || null
-      };
-    });
-  }
-  
-  return narratives;
 }
 
 function getFallbackNarratives(year: number, spotifyData: any, discogsData: any) {

@@ -3367,6 +3367,39 @@ export type Database = {
         }
         Relationships: []
       }
+      pageviews: {
+        Row: {
+          created_at: string
+          id: string
+          page_title: string | null
+          path: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_title?: string | null
+          path: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_title?: string | null
+          path?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       part_categories: {
         Row: {
           created_at: string
@@ -6988,6 +7021,15 @@ export type Database = {
           bulk_uploads_used: number
           period_end: string
           period_start: string
+        }[]
+      }
+      get_pageview_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          page_title: string
+          path: string
+          unique_sessions: number
+          view_count: number
         }[]
       }
       get_price_trend: {

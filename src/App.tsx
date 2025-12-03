@@ -13,6 +13,7 @@ import { Navigation } from "@/components/Navigation";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
+import { usePageviewTracker } from "@/hooks/usePageviewTracker";
 import Home from "./pages/Home";
 import ArtistSearchResults from "./pages/ArtistSearchResults";
 import Scanner from "./pages/Scanner";
@@ -197,6 +198,7 @@ const queryClient = new QueryClient({
 // AppContent wrapper to use hooks that need Router context
 const AppContent = () => {
   useGoogleAnalytics();
+  usePageviewTracker(); // Internal pageview tracking parallel to GA4
   
   return (
     <>

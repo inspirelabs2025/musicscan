@@ -64,7 +64,7 @@ async function getSpotifyAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-async function getSpotifyNewReleases(accessToken: string, country: string = 'NL', limit: number = 12) {
+async function getSpotifyNewReleases(accessToken: string, country: string = 'NL', limit: number = 50) {
   const url = `https://api.spotify.com/v1/browse/new-releases?country=${country}&limit=${limit}`;
   
   const response = await fetch(url, {

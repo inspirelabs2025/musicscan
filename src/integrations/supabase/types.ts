@@ -7064,6 +7064,7 @@ export type Database = {
           filter_hash: string | null
           generated_narratives: Json | null
           id: string
+          sources: Json | null
           updated_at: string | null
           year: number
         }
@@ -7074,6 +7075,7 @@ export type Database = {
           filter_hash?: string | null
           generated_narratives?: Json | null
           id?: string
+          sources?: Json | null
           updated_at?: string | null
           year: number
         }
@@ -7084,6 +7086,7 @@ export type Database = {
           filter_hash?: string | null
           generated_narratives?: Json | null
           id?: string
+          sources?: Json | null
           updated_at?: string | null
           year?: number
         }

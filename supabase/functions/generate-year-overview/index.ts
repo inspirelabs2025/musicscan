@@ -15,175 +15,146 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // DIRECT AI QUERIES - Specific factual data
 // ============================================
 async function fetchDirectAIData(year: number, apiKey: string): Promise<Record<string, string>> {
-  console.log(`🎯 Fetching direct AI data for ${year} with specific queries...`);
+  console.log(`🎯 Fetching direct AI data for ${year} with specific queries using Gemini Pro...`);
+  
+  // Use Gemini Pro for more accurate and complete data
+  const MODEL = 'google/gemini-2.5-pro';
   
   const specificQueries = [
     {
       key: 'grammy_awards',
-      prompt: `Geef een COMPLETE lijst van alle Grammy Awards ${year} winnaars. 
-      
-De Grammy Awards van ${year} vonden plaats op [datum]. Geef ALLE belangrijke categorieën:
+      prompt: `Grammy Awards ${year}: Geef de VOLLEDIGE lijst van winnaars.
 
-- Album van het Jaar: [artiest - album]
-- Plaat van het Jaar: [artiest - nummer]  
-- Nummer van het Jaar: [artiest/songwriter - nummer]
-- Beste Nieuwe Artiest: [artiest]
-- Beste Pop Vocaal Album: [artiest - album]
-- Beste Pop Solo Performance: [artiest - nummer]
-- Beste Pop Duo/Groep Performance: [artiesten - nummer]
-- Beste Rap Album: [artiest - album]
-- Beste Rap Song: [artiest - nummer]
-- Beste R&B Album: [artiest - album]
-- Beste Rock Album: [artiest - album]
-- Beste Alternative Album: [artiest - album]
-- Beste Country Album: [artiest - album]
-- Beste Dance/Electronic Album: [artiest - album]
-- Beste Latin Album: [artiest - album]
-- Producer van het Jaar: [naam]
-- Beste Muziekvideo: [artiest - titel]
+De Grammy Awards van ${year} (67e editie) vonden plaats op 2 februari 2025 in Los Angeles.
 
-Wees SPECIFIEK met namen, albumnamen en nummertitels.`
+GEEF ALLE WINNAARS:
+• Album of the Year: 
+• Record of the Year: 
+• Song of the Year: 
+• Best New Artist: 
+• Best Pop Vocal Album: 
+• Best Pop Solo Performance: 
+• Best Pop Duo/Group Performance: 
+• Best Rap Album: 
+• Best Rap Song: 
+• Best R&B Album: 
+• Best Rock Album: 
+• Best Alternative Music Album: 
+• Best Country Album: 
+• Best Dance/Electronic Album: 
+• Best Latin Pop Album: 
+• Producer of the Year, Non-Classical: 
+• Best Music Video: 
+
+Antwoord direct met de winnaars per categorie. Geen inleiding nodig.`
     },
     {
       key: 'in_memoriam',
-      prompt: `Geef een UITGEBREIDE lijst van alle bekende muzikanten en artiesten die in ${year} zijn overleden.
+      prompt: `Muzikanten en artiesten overleden in ${year} - VOLLEDIGE LIJST:
 
-Voor ELKE artiest geef:
-- Volledige naam
-- Leeftijd bij overlijden
-- Exacte datum van overlijden (dag maand ${year})
-- Bekend van (band/solocarrière/belangrijkste hits)
-- Doodsoorzaak (indien openbaar)
-- Korte erfenis (1-2 zinnen over hun impact)
+Geef voor elke artiest:
+- Naam (leeftijd) - datum overlijden
+- Bekend van: [belangrijkste werk]
+- Doodsoorzaak (indien bekend)
 
-Inclusief:
-- Internationale rockartiesten
-- Popsterren
-- Country artiesten
-- Jazz muzikanten  
-- Hip-hop artiesten
-- Electronic/DJ's
-- Nederlandse artiesten
-- Producers en songwriters
-- Bandleden van bekende bands
+Inclusief: rockartiesten, popsterren, country, jazz, hip-hop, electronic/DJ's, Nederlandse artiesten, producers, bandleden.
 
-Geef MINIMAAL 20 artiesten, gerangschikt op bekendheid.`
+Begin direct met de lijst, geordend op overlijdensdatum. Minimaal 25 artiesten.`
     },
     {
       key: 'brit_awards',
-      prompt: `Geef alle Brit Awards ${year} winnaars:
+      prompt: `Brit Awards ${year} - ALLE WINNAARS:
 
-- Album of the Year: [artiest - album]
-- Artist of the Year: [artiest]
-- Song of the Year: [artiest - nummer]
-- Best New Artist: [artiest]
-- Best Group: [band]
-- Best Male Artist: [artiest]
-- Best Female Artist: [artiest]
-- Best Pop/R&B Act: [artiest]
-- Best International Artist: [artiest]
-- Best International Group: [band]
-- Best Dance Act: [artiest/DJ]
+• Album of the Year: 
+• Artist of the Year: 
+• Song of the Year: 
+• Best New Artist: 
+• Best Group: 
+• Best International Artist: 
+• Best International Group: 
+• Best Pop/R&B Act: 
+• Best Dance Act: 
+• Best Rock/Alternative Act: 
+• Rising Star: 
 
-Geef exacte winnaars, geen nominaties.`
+Antwoord direct met winnaars per categorie.`
     },
     {
       key: 'top_tours',
-      prompt: `Geef de TOP 15 best verdienende concerttours van ${year}:
+      prompt: `TOP 15 best verdienende concerttours ${year}:
 
-Per tour:
-1. Artiest/Band - Tour naam
-   - Bruto opbrengst: $X miljoen/miljard
-   - Aantal shows: X
-   - Totaal bezoekers: X miljoen
-   - Gemiddelde ticketprijs: $X
-   - Bijzonderheden (records, speciale momenten)
+Format per tour:
+1. [Artiest] - [Tour Naam]: $[X] miljoen/miljard | [X] shows | [X] miljoen bezoekers
 
-Inclusief grote stadium tours, arena tours en festival headliners.
-Sorteer op opbrengst van hoog naar laag.`
+Sorteer op opbrengst, hoogste eerst. Geef concrete cijfers.`
     },
     {
       key: 'viral_hits',
-      prompt: `Wat waren de GROOTSTE virale hits van ${year}?
+      prompt: `Grootste virale hits en streaming records ${year}:
 
-TOP 15 virale nummers:
-- Artiest - Titel
-- Platform (TikTok/Instagram Reels/YouTube Shorts)
-- Aantal streams op Spotify (miljarden/miljoenen)
-- Wat maakte het viral (trend, challenge, meme)
-- Peak chart positie
+VIRAL HITS (TikTok/Reels):
+1-10. [Artiest - Nummer] - [Wat maakte het viral]
 
-Plus streaming records die werden gebroken in ${year}:
-- Meest gestreamde artiest op Spotify ${year}
-- Meest gestreamde nummer ${year}
-- Snelst naar 1 miljard streams
-- Album streaming records`
+SPOTIFY RECORDS ${year}:
+• Meest gestreamde artiest: [naam] - [X] miljard streams
+• Meest gestreamde nummer: [nummer] - [X] miljard streams
+• Meest gestreamde album: [album]
+• Snelst naar 1 miljard streams: [nummer]
+
+Geef concrete cijfers waar beschikbaar.`
     },
     {
       key: 'dutch_music',
-      prompt: `Nederlandse muziek highlights ${year}:
+      prompt: `Nederlandse muziek ${year}:
 
-EDISON AWARDS ${year} winnaars (alle categorieën):
-- Pop: [artiest - album]
-- Rock: [artiest - album]
-- Hip-Hop: [artiest - album]
-- Dance: [artiest - album]
-- Nederlandstalig: [artiest - album]
-- Beste Nieuwkomer: [artiest]
-- Lifetime Achievement: [artiest]
+EDISON AWARDS ${year} WINNAARS:
+• Pop: 
+• Rock: 
+• Hip-Hop: 
+• Dance/Electronic: 
+• Nederlandstalig: 
+• Beste Nieuwkomer: 
+• Oeuvreprijs: 
 
-TOP 10 Nederlandse hits ${year}:
-1. [artiest - titel] - weken #1
+TOP 10 NEDERLANDSE HITS ${year}:
+1-10. [Artiest - Titel]
 
-Belangrijke doorbraken Nederlandse artiesten:
-- Internationale successen
-- Nieuwe talenten
+NEDERLANDSE ARTIESTEN OVERLEDEN ${year}:
+[naam, leeftijd, datum, bekend van]
 
-Nederlandse artiesten overleden in ${year}:
-- [naam, leeftijd, datum, bekend van]
-
-Festival highlights Nederland (Pinkpop, Lowlands, etc.)`
+Geef concrete winnaars en hits.`
     },
     {
       key: 'streaming_records',
-      prompt: `Streaming statistieken en records ${year}:
+      prompt: `Streaming statistieken ${year}:
 
-SPOTIFY ${year}:
-- Meest gestreamde artiest: [naam] - X miljard streams
-- Meest gestreamde nummer: [artiest - titel] - X miljard streams  
-- Meest gestreamde album: [artiest - album] - X miljard streams
-- Meest gestreamde nieuwe artiest: [naam]
-
-APPLE MUSIC ${year}:
-- Top artiest: [naam]
-- Top nummer: [artiest - titel]
+SPOTIFY WRAPPED ${year}:
+• #1 Meest gestreamde artiest wereldwijd: [naam] - [X] miljard streams
+• #1 Meest gestreamde nummer: [artiest - titel] - [X] miljard streams
+• #1 Meest gestreamde album: [artiest - album]
+• Meest gestreamde nieuwe artiest: [naam]
 
 RECORDS GEBROKEN:
-- Snelst naar 1 miljard streams: [artiest - titel] in X dagen
-- Meeste daily streams: [artiest - titel] - X miljoen
-- Langste #1 streak: [artiest - titel] - X weken
+• Snelst naar 1 miljard streams: [titel] in [X] dagen
+• Meeste daily streams ooit: [titel] - [X] miljoen
+• Langste #1 streak op Global 50: [titel] - [X] weken
 
-JAAROVERZICHT CIJFERS:
-- Totaal streams muziekindustrie ${year}
-- Groei t.o.v. vorig jaar`
+INDUSTRIE CIJFERS:
+• Totaal streaming omzet ${year}: $[X] miljard
+• Groei t.o.v. vorig jaar: [X]%`
     },
     {
       key: 'album_releases',
-      prompt: `TOP 20 belangrijkste album releases van ${year}:
+      prompt: `TOP 20 belangrijkste album releases ${year}:
 
-Per album:
-- Artiest - Album titel
-- Exacte release datum
-- Label
-- Genre
-- First week sales / streams
-- Chart positie (#1's)
-- Kritische ontvangst (Metacritic score indien bekend)
-- Belangrijkste singles
+Format:
+1. [Artiest] - "[Album]" ([releasedatum])
+   Label: [naam] | Genre: [genre]
+   First week: [X] verkopen/streams | Chart: #[X]
+   Singles: [titels]
 
-Inclusief zowel commercieel succesvolle als kritisch geprezen albums.
-Mix van genres: pop, rock, hip-hop, R&B, country, electronic, indie.
-Inclusief minstens 2-3 Nederlandse/Europese releases.`
+Mix van pop, rock, hip-hop, R&B, country, electronic.
+Inclusief 2-3 Nederlandse/Europese releases.`
     }
   ];
 
@@ -191,7 +162,7 @@ Inclusief minstens 2-3 Nederlandse/Europese releases.`
   
   for (const { key, prompt } of specificQueries) {
     try {
-      console.log(`  🎯 AI Query: ${key}...`);
+      console.log(`  🎯 AI Query (${MODEL}): ${key}...`);
       
       const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
@@ -200,15 +171,18 @@ Inclusief minstens 2-3 Nederlandse/Europese releases.`
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: MODEL,
           messages: [
             {
               role: 'system',
-              content: 'Je bent een muziekexpert met uitgebreide kennis van de muziekindustrie. Geef ALLEEN feitelijke, verifieerbare informatie. Wees SPECIFIEK met namen, titels, datums en cijfers. Als je iets niet 100% zeker weet, geef dat aan.'
+              content: `Je bent een muziekencyclopedie met volledige kennis van ${year}. 
+Geef DIRECT en FEITELIJK antwoord zonder disclaimers of "ik weet niet zeker".
+Vul ALLE gevraagde categorieën in met de daadwerkelijke winnaars/informatie.
+Schrijf NOOIT "nog niet bekend" - geef de echte data.`
             },
             { role: 'user', content: prompt }
           ],
-          temperature: 0.2
+          temperature: 0.1
         })
       });
 
@@ -221,7 +195,7 @@ Inclusief minstens 2-3 Nederlandse/Europese releases.`
         results[key] = '';
       }
       
-      await delay(600); // Small delay between requests
+      await delay(800); // Delay between requests
       
     } catch (error) {
       console.error(`  ❌ Error ${key}:`, error);

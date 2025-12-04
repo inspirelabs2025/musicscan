@@ -56,12 +56,15 @@ export default function OwnPodcasts() {
   const [showCreatePodcast, setShowCreatePodcast] = useState(false);
   const [showCreateEpisode, setShowCreateEpisode] = useState(false);
   const [showEditPodcast, setShowEditPodcast] = useState(false);
+  const [showEditEpisode, setShowEditEpisode] = useState(false);
   const [editingPodcast, setEditingPodcast] = useState<OwnPodcast | null>(null);
+  const [editingEpisode, setEditingEpisode] = useState<OwnPodcastEpisode | null>(null);
   const [copiedFeed, setCopiedFeed] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [playingEpisode, setPlayingEpisode] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [editArtworkFile, setEditArtworkFile] = useState<File | null>(null);
+  const [editAudioFile, setEditAudioFile] = useState<File | null>(null);
 
   // Form states
   const [podcastForm, setPodcastForm] = useState({
@@ -256,6 +259,58 @@ export default function OwnPodcasts() {
       setEditArtworkFile(null);
     } catch (error) {
       console.error('Error updating podcast:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const openEditEpisode = (episode: OwnPodcastEpisode) => {
+    setEditingEpisode(episode);
+    setEpisodeForm({
+      title: episode.title,
+      description: episode.description || '',
+      audio_url: episode.audio_url,
+      audio_file_size: episode.audio_file_size || 0,
+      audio_duration_seconds: episode.audio_duration_seconds || 0,
+      episode_number: episode.episode_number || 1,
+      season_number: episode.season_number || 1,
+    });
+    setEditAudioFile(null);
+    setShowEditEpisode(true);
+  };
+
+  const handleUpdateEpisode = async () => {
+    if (!editingEpisode || !selectedPodcast) return;
+    
+    try {
+      setIsUploading(true);
+      let audioUrl = editingEpisode.audio_url;
+      let audioFileSize = editingEpisode.audio_file_size;
+      let audioDuration = editingEpisode.audio_duration_seconds;
+
+      if (editAudioFile) {
+        audioUrl = await uploadPodcastAudio(editAudioFile, selectedPodcast.slug);
+        audioFileSize = editAudioFile.size;
+        audioDuration = await getAudioDuration(editAudioFile);
+      }
+
+      await updateEpisode.mutateAsync({
+        id: editingEpisode.id,
+        podcast_id: selectedPodcast.id,
+        title: episodeForm.title,
+        description: episodeForm.description || null,
+        audio_url: audioUrl,
+        audio_file_size: audioFileSize,
+        audio_duration_seconds: audioDuration,
+        episode_number: episodeForm.episode_number,
+        season_number: episodeForm.season_number,
+      });
+
+      setShowEditEpisode(false);
+      setEditingEpisode(null);
+      setEditAudioFile(null);
+    } catch (error) {
+      console.error('Error updating episode:', error);
     } finally {
       setIsUploading(false);
     }
@@ -695,6 +750,13 @@ export default function OwnPodcasts() {
                             <Button
                               size="icon"
                               variant="ghost"
+                              onClick={() => openEditEpisode(episode)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
                               className="text-destructive"
                               onClick={() => {
                                 if (confirm('Episode verwijderen?')) {
@@ -816,6 +878,102 @@ export default function OwnPodcasts() {
                 Annuleren
               </Button>
               <Button onClick={handleUpdatePodcast} disabled={!podcastForm.name || isUploading}>
+                {isUploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                Opslaan
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Episode Dialog */}
+        <Dialog open={showEditEpisode} onOpenChange={setShowEditEpisode}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Episode Bewerken</DialogTitle>
+              <DialogDescription>
+                Bewerk de episode gegevens of upload een nieuw audio bestand.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="editEpisodeTitle">Episode Titel *</Label>
+                <Input
+                  id="editEpisodeTitle"
+                  value={episodeForm.title}
+                  onChange={(e) => setEpisodeForm({ ...episodeForm, title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editEpisodeDescription">Beschrijving</Label>
+                <Textarea
+                  id="editEpisodeDescription"
+                  value={episodeForm.description}
+                  onChange={(e) => setEpisodeForm({ ...episodeForm, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="editSeasonNumber">Seizoen</Label>
+                  <Input
+                    id="editSeasonNumber"
+                    type="number"
+                    min={1}
+                    value={episodeForm.season_number}
+                    onChange={(e) => setEpisodeForm({ ...episodeForm, season_number: parseInt(e.target.value) || 1 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editEpisodeNumber">Episode Nr.</Label>
+                  <Input
+                    id="editEpisodeNumber"
+                    type="number"
+                    min={1}
+                    value={episodeForm.episode_number}
+                    onChange={(e) => setEpisodeForm({ ...episodeForm, episode_number: parseInt(e.target.value) || 1 })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editAudioFile">Nieuw Audio Bestand (MP3, M4A, WAV)</Label>
+                {editingEpisode?.audio_url && !editAudioFile && (
+                  <div className="flex items-center gap-2 mb-2 p-2 bg-muted/50 rounded-lg">
+                    <Music className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground truncate flex-1">
+                      Huidige audio: {formatDuration(editingEpisode.audio_duration_seconds)}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (audioRef.current) {
+                          audioRef.current.src = editingEpisode.audio_url;
+                          audioRef.current.play();
+                        }
+                      }}
+                    >
+                      <Play className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                <Input
+                  id="editAudioFile"
+                  type="file"
+                  accept="audio/mpeg,audio/mp3,audio/wav,audio/m4a,audio/x-m4a,audio/mp4"
+                  onChange={(e) => setEditAudioFile(e.target.files?.[0] || null)}
+                />
+                {editAudioFile && (
+                  <p className="text-xs text-muted-foreground">
+                    Nieuwe: {editAudioFile.name} ({(editAudioFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                )}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEditEpisode(false)}>
+                Annuleren
+              </Button>
+              <Button onClick={handleUpdateEpisode} disabled={!episodeForm.title || isUploading}>
                 {isUploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 Opslaan
               </Button>

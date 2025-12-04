@@ -321,7 +321,7 @@ export default function OwnPodcasts() {
     }
   };
 
-  const playEpisode = (episode: OwnPodcastEpisode) => {
+  const playEpisode = async (episode: OwnPodcastEpisode) => {
     if (playingEpisode === episode.id) {
       audioRef.current?.pause();
       setPlayingEpisode(null);
@@ -329,10 +329,18 @@ export default function OwnPodcasts() {
     } else {
       if (audioRef.current) {
         audioRef.current.src = episode.audio_url;
-        audioRef.current.play();
+        audioRef.current.load();
+        try {
+          await audioRef.current.play();
+          setPlayingEpisode(episode.id);
+          setPlayingEpisodeData(episode);
+        } catch (error) {
+          console.error('Error playing audio:', error);
+          // Set state anyway so user can click play button in player
+          setPlayingEpisode(episode.id);
+          setPlayingEpisodeData(episode);
+        }
       }
-      setPlayingEpisode(episode.id);
-      setPlayingEpisodeData(episode);
     }
   };
 

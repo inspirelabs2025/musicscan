@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Trophy, Clock, Target, Users, CheckCircle, XCircle, ArrowRight, Medal } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { QuizCompletionDialog } from './QuizCompletionDialog';
 
 interface Question {
   question: string;
@@ -34,6 +35,13 @@ interface LeaderboardEntry {
   display_name?: string;
 }
 
+const getBadge = (percentage: number) => {
+  if (percentage >= 90) return { title: 'Quiz Master', emoji: '👑', color: 'text-yellow-500' };
+  if (percentage >= 70) return { title: 'Expert', emoji: '🌟', color: 'text-purple-500' };
+  if (percentage >= 50) return { title: 'Kenner', emoji: '🎯', color: 'text-blue-500' };
+  return { title: 'Beginner', emoji: '🎵', color: 'text-gray-500' };
+};
+
 export function DailyChallengeQuiz() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -45,6 +53,9 @@ export function DailyChallengeQuiz() {
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const [isComplete, setIsComplete] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
+  const [registrationDialogOpen, setRegistrationDialogOpen] = useState(false);
+  const [timeTaken, setTimeTaken] = useState(0);
+  const [scoreSaved, setScoreSaved] = useState(false);
 
   // Get today's date in UTC
   const today = new Date().toISOString().split('T')[0];
@@ -174,13 +185,56 @@ export function DailyChallengeQuiz() {
       setQuestionStartTime(Date.now());
     } else {
       // Quiz complete
-      const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setTimeTaken(elapsed);
       setIsComplete(true);
       
       if (user && !hasPlayed) {
-        saveResult.mutate({ score, timeTaken });
+        // Logged-in user: save directly
+        saveResult.mutate({ score, timeTaken: elapsed });
+        setScoreSaved(true);
+      } else if (!user) {
+        // Anonymous user: show registration dialog
+        setRegistrationDialogOpen(true);
       }
     }
+  };
+
+  const handleAccountCreated = async (newUserId: string) => {
+    if (!challenge) return;
+    
+    try {
+      // Save to daily_challenge_results for leaderboard
+      await supabase
+        .from('daily_challenge_results')
+        .insert({
+          challenge_id: challenge.id,
+          user_id: newUserId,
+          score: score,
+          time_taken_seconds: timeTaken,
+        });
+
+      // Save to quiz_results for user's quiz history
+      await supabase
+        .from('quiz_results')
+        .insert({
+          user_id: newUserId,
+          quiz_type: 'daily',
+          questions_correct: score,
+          questions_total: totalQuestions,
+          score_percentage: Math.round((score / totalQuestions) * 100),
+          time_taken_seconds: timeTaken,
+        });
+
+      setScoreSaved(true);
+      queryClient.invalidateQueries({ queryKey: ['daily-challenge-leaderboard'] });
+      queryClient.invalidateQueries({ queryKey: ['daily-challenge-result'] });
+      queryClient.invalidateQueries({ queryKey: ['user-quiz-results'] });
+    } catch (error) {
+      console.error('Error saving quiz result:', error);
+    }
+    
+    setRegistrationDialogOpen(false);
   };
 
   if (challengeLoading) {
@@ -240,10 +294,19 @@ export function DailyChallengeQuiz() {
               </Badge>
             </div>
 
-            {!user && (
-              <p className="text-muted-foreground mb-4">
-                <Link to="/auth" className="text-primary hover:underline">Log in</Link> om je score op te slaan en mee te doen aan het leaderboard!
+            {scoreSaved && (
+              <p className="text-green-600 dark:text-green-400 font-medium mb-4">
+                ✓ Je score is opgeslagen!
               </p>
+            )}
+
+            {!user && !scoreSaved && (
+              <Button 
+                onClick={() => setRegistrationDialogOpen(true)}
+                className="mb-4 bg-gradient-to-r from-primary to-purple-600"
+              >
+                Score Opslaan & Account Aanmaken
+              </Button>
             )}
           </div>
 
@@ -395,5 +458,110 @@ export function DailyChallengeQuiz() {
         )}
       </CardContent>
     </Card>
+  );
+
+  const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
+  const badge = getBadge(percentage);
+
+  return (
+    <>
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader className="border-b">
+          <div className="flex items-center justify-between mb-2">
+            <Badge variant="secondary" className="bg-primary/20">
+              <Target className="w-3 h-3 mr-1" />
+              Dagelijkse Challenge
+            </Badge>
+            <span className="text-sm text-muted-foreground">
+              Vraag {currentQuestion + 1} van {totalQuestions}
+            </span>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </CardHeader>
+        
+        <CardContent className="p-6">
+          {currentQ.category && (
+            <Badge variant="outline" className="mb-3">
+              {currentQ.category}
+            </Badge>
+          )}
+          
+          <h2 className="text-xl font-semibold mb-6">{currentQ.question}</h2>
+          
+          <div className="space-y-3 mb-6">
+            {currentQ.options.map((option, index) => {
+              const isCorrect = option === currentQ.correctAnswer;
+              const isSelected = option === selectedAnswer;
+              
+              let buttonClass = 'w-full justify-start text-left h-auto py-3 px-4';
+              
+              if (isAnswered) {
+                if (isCorrect) {
+                  buttonClass += ' bg-green-500/20 border-green-500 text-green-700 dark:text-green-400';
+                } else if (isSelected && !isCorrect) {
+                  buttonClass += ' bg-red-500/20 border-red-500 text-red-700 dark:text-red-400';
+                } else {
+                  buttonClass += ' opacity-50';
+                }
+              } else if (isSelected) {
+                buttonClass += ' border-primary bg-primary/10';
+              }
+              
+              return (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className={buttonClass}
+                  onClick={() => handleAnswer(option)}
+                  disabled={isAnswered}
+                >
+                  <span className="flex items-center gap-2">
+                    {isAnswered && isCorrect && <CheckCircle className="w-5 h-5 text-green-500" />}
+                    {isAnswered && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-red-500" />}
+                    {option}
+                  </span>
+                </Button>
+              );
+            })}
+          </div>
+          
+          {isAnswered && currentQ.explanation && (
+            <div className="p-4 rounded-lg bg-muted/50 mb-4">
+              <p className="text-sm text-muted-foreground">{currentQ.explanation}</p>
+            </div>
+          )}
+          
+          {isAnswered && (
+            <Button 
+              onClick={handleNext} 
+              className="w-full bg-gradient-to-r from-primary to-purple-600"
+            >
+              {currentQuestion < totalQuestions - 1 ? (
+                <>
+                  Volgende Vraag
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              ) : (
+                <>
+                  Bekijk Resultaat
+                  <Trophy className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <QuizCompletionDialog
+        open={registrationDialogOpen}
+        onOpenChange={setRegistrationDialogOpen}
+        score={score}
+        totalQuestions={totalQuestions}
+        percentage={percentage}
+        badge={badge}
+        quizType="daily"
+        onAccountCreated={handleAccountCreated}
+      />
+    </>
   );
 }

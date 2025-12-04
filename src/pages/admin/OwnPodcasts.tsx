@@ -67,6 +67,8 @@ export default function OwnPodcasts() {
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [audioVolume, setAudioVolume] = useState(1);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isAudioLoading, setIsAudioLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [editArtworkFile, setEditArtworkFile] = useState<File | null>(null);
   const [editAudioFile, setEditAudioFile] = useState<File | null>(null);
@@ -326,21 +328,63 @@ export default function OwnPodcasts() {
       audioRef.current?.pause();
       setPlayingEpisode(null);
       setPlayingEpisodeData(null);
-    } else {
-      if (audioRef.current) {
-        audioRef.current.src = episode.audio_url;
-        audioRef.current.load();
+      setIsPlaying(false);
+      return;
+    }
+
+    // Stop current audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
+    setPlayingEpisodeData(episode);
+    setPlayingEpisode(episode.id);
+    setAudioCurrentTime(0);
+    setAudioDuration(0);
+    setIsAudioLoading(true);
+
+    // Wait for state update, then load and play
+    setTimeout(async () => {
+      if (audioRef.current && episode.audio_url) {
         try {
+          audioRef.current.src = episode.audio_url;
+          await audioRef.current.load();
           await audioRef.current.play();
-          setPlayingEpisode(episode.id);
-          setPlayingEpisodeData(episode);
-        } catch (error) {
-          console.error('Error playing audio:', error);
-          // Set state anyway so user can click play button in player
-          setPlayingEpisode(episode.id);
-          setPlayingEpisodeData(episode);
+          setIsPlaying(true);
+        } catch (error: any) {
+          console.error('Play error:', error);
+          setIsAudioLoading(false);
+          if (error.name === 'NotAllowedError') {
+            toast({
+              title: 'Klik op play',
+              description: 'Klik op de play knop om de audio te starten.',
+            });
+          } else {
+            toast({
+              title: 'Audio fout',
+              description: `Kon audio niet afspelen: ${error.message || 'Onbekende fout'}`,
+              variant: 'destructive',
+            });
+          }
         }
       }
+    }, 50);
+  };
+
+  const togglePlayPause = async () => {
+    if (!audioRef.current) return;
+    
+    if (audioRef.current.paused) {
+      try {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      } catch (e) {
+        console.error('Play failed:', e);
+      }
+    } else {
+      audioRef.current.pause();
+      setIsPlaying(false);
     }
   };
 
@@ -823,17 +867,28 @@ export default function OwnPodcasts() {
         {/* Audio Player */}
         <audio
           ref={audioRef}
-          preload="metadata"
+          preload="auto"
           onEnded={() => {
             setPlayingEpisode(null);
             setPlayingEpisodeData(null);
+            setIsPlaying(false);
           }}
           onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
           onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
-          onCanPlay={() => console.log('Audio can play')}
+          onCanPlay={() => setIsAudioLoading(false)}
+          onLoadStart={() => setIsAudioLoading(true)}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
           onError={(e) => {
             const error = e.currentTarget.error;
             console.error('Audio error:', error?.code, error?.message);
+            setIsAudioLoading(false);
+            setIsPlaying(false);
+            toast({
+              title: 'Audio Error',
+              description: `Kon audio niet laden (code: ${error?.code})`,
+              variant: 'destructive',
+            });
           }}
         />
 
@@ -855,10 +910,17 @@ export default function OwnPodcasts() {
                   <Button
                     size="sm"
                     variant="default"
-                    onClick={() => playEpisode(playingEpisodeData)}
+                    onClick={togglePlayPause}
                     className="w-10 h-10 rounded-full"
+                    disabled={isAudioLoading}
                   >
-                    {playingEpisode ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    {isAudioLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : isPlaying ? (
+                      <Pause className="w-4 h-4" />
+                    ) : (
+                      <Play className="w-4 h-4" />
+                    )}
                   </Button>
                 </div>
 
@@ -902,6 +964,7 @@ export default function OwnPodcasts() {
                     audioRef.current?.pause();
                     setPlayingEpisode(null);
                     setPlayingEpisodeData(null);
+                    setIsPlaying(false);
                   }}
                 >
                   <X className="w-4 h-4" />

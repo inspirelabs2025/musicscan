@@ -131,6 +131,7 @@ import FacebookSync from "./pages/admin/FacebookSync";
 import FacebookAdmin from "./pages/admin/FacebookAdmin";
 import InstagramAdmin from "./pages/admin/InstagramAdmin";
 import NewsRssManager from "./pages/admin/NewsRssManager";
+import OwnPodcasts from "./pages/admin/OwnPodcasts";
 import SocksShop from "./pages/SocksShop";
 import TshirtsShop from "./pages/TshirtsShop";
 import MerchandiseShop from "./pages/MerchandiseShop";
@@ -445,6 +446,7 @@ const AppContent = () => {
                 
                 {/* Content Management */}
                 <Route path="album-reviews" element={<AdminAlbumReviews />} />
+                <Route path="own-podcasts" element={<OwnPodcasts />} />
                 <Route path="curated-artists" element={<CuratedArtists />} />
                 <Route path="discogs-lookup" element={<DiscogsLookup />} />
                 <Route path="photo-moderation" element={<PhotoModeration />} />

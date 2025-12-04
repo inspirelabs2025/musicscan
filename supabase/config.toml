@@ -539,3 +539,6 @@ verify_jwt = false
 
 [[functions.post-scheduled-daily-quiz.schedule]]
 cron = "0 10,18 * * *"
+
+[functions.generate-podcast-rss]
+verify_jwt = false

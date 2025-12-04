@@ -823,12 +823,15 @@ export default function OwnPodcasts() {
         {/* Audio Player */}
         <audio
           ref={audioRef}
+          crossOrigin="anonymous"
+          preload="auto"
           onEnded={() => {
             setPlayingEpisode(null);
             setPlayingEpisodeData(null);
           }}
           onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
           onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
+          onError={(e) => console.error('Audio element error:', e.currentTarget.error)}
           className="hidden"
         />
 

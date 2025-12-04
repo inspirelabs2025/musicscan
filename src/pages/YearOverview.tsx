@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { useYearOverview, useAvailableYears, useGenerateYearOverview } from '@/hooks/useYearOverview';
 import { YearOverviewHero } from '@/components/year-overview/YearOverviewHero';
@@ -46,7 +45,6 @@ const YearOverview: React.FC = () => {
       </Helmet>
 
       <div className="min-h-screen flex flex-col bg-background">
-        <Navigation />
         
         <main className="flex-grow container mx-auto px-4 py-8">
           <YearOverviewHero year={selectedYear} onYearChange={setSelectedYear} availableYears={availableYears} />

@@ -85,6 +85,12 @@ export const getStaticRoutes = (): SitemapEntry[] => {
       lastmod: currentDate,
       changefreq: 'weekly',
       priority: 0.7
+    },
+    {
+      url: `${baseUrl}/podcasts`,
+      lastmod: currentDate,
+      changefreq: 'weekly',
+      priority: 0.7
     }
   ];
   
@@ -298,4 +304,61 @@ export const getNLMuziekFeitenRoutes = async (): Promise<SitemapEntry[]> => {
     changefreq: 'monthly' as const,
     priority: 0.6
   }));
+};
+
+// Get podcasts and episodes for sitemap
+export const getPodcastRoutes = async (): Promise<SitemapEntry[]> => {
+  const { supabase } = await import('@/integrations/supabase/client');
+  
+  try {
+    const baseUrl = 'https://www.musicscan.app';
+    const entries: SitemapEntry[] = [];
+    
+    // Get published podcasts
+    const { data: podcasts, error: podcastError } = await supabase
+      .from('own_podcasts')
+      .select('slug, updated_at')
+      .eq('is_published', true);
+
+    if (podcastError) {
+      console.error('Error fetching podcasts for sitemap:', podcastError);
+      return [];
+    }
+
+    // Add podcast overview pages
+    for (const podcast of podcasts || []) {
+      entries.push({
+        url: `${baseUrl}/podcast/${podcast.slug}`,
+        lastmod: podcast.updated_at || new Date().toISOString().split('T')[0],
+        changefreq: 'weekly' as const,
+        priority: 0.8
+      });
+    }
+
+    // Get published episodes
+    const { data: episodes, error: episodeError } = await supabase
+      .from('own_podcast_episodes')
+      .select('slug, podcast_id, updated_at, own_podcasts!inner(slug)')
+      .eq('is_published', true)
+      .not('slug', 'is', null);
+
+    if (!episodeError && episodes) {
+      for (const episode of episodes) {
+        const podcastSlug = (episode.own_podcasts as any)?.slug;
+        if (podcastSlug && episode.slug) {
+          entries.push({
+            url: `${baseUrl}/podcast/${podcastSlug}/${episode.slug}`,
+            lastmod: episode.updated_at || new Date().toISOString().split('T')[0],
+            changefreq: 'monthly' as const,
+            priority: 0.7
+          });
+        }
+      }
+    }
+
+    return entries;
+  } catch (error) {
+    console.error('Error generating podcast sitemap entries:', error);
+    return [];
+  }
 };

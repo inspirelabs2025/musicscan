@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Upload, Copy, Check, Rss, Music, Mic, ExternalLink, Loader2, Play, Pause, Pencil } from 'lucide-react';
+import { Plus, Trash2, Upload, Copy, Check, Rss, Music, Mic, ExternalLink, Loader2, Play, Pause, Pencil, Volume2, VolumeX, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   useOwnPodcasts,
@@ -63,6 +63,10 @@ export default function OwnPodcasts() {
   const [copiedFeed, setCopiedFeed] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [playingEpisode, setPlayingEpisode] = useState<string | null>(null);
+  const [playingEpisodeData, setPlayingEpisodeData] = useState<OwnPodcastEpisode | null>(null);
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [audioVolume, setAudioVolume] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [editArtworkFile, setEditArtworkFile] = useState<File | null>(null);
   const [editAudioFile, setEditAudioFile] = useState<File | null>(null);
@@ -321,13 +325,41 @@ export default function OwnPodcasts() {
     if (playingEpisode === episode.id) {
       audioRef.current?.pause();
       setPlayingEpisode(null);
+      setPlayingEpisodeData(null);
     } else {
       if (audioRef.current) {
         audioRef.current.src = episode.audio_url;
         audioRef.current.play();
       }
       setPlayingEpisode(episode.id);
+      setPlayingEpisodeData(episode);
     }
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!audioRef.current || !audioDuration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    audioRef.current.currentTime = percentage * audioDuration;
+  };
+
+  const toggleMute = () => {
+    if (!audioRef.current) return;
+    if (audioVolume > 0) {
+      audioRef.current.volume = 0;
+      setAudioVolume(0);
+    } else {
+      audioRef.current.volume = 1;
+      setAudioVolume(1);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -780,12 +812,91 @@ export default function OwnPodcasts() {
           </TabsContent>
         </Tabs>
 
-        {/* Hidden audio element for playback */}
+        {/* Audio Player */}
         <audio
           ref={audioRef}
-          onEnded={() => setPlayingEpisode(null)}
+          onEnded={() => {
+            setPlayingEpisode(null);
+            setPlayingEpisodeData(null);
+          }}
+          onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
+          onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
           className="hidden"
         />
+
+        {/* Visible Player */}
+        {playingEpisodeData && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg">
+            <div className="container mx-auto p-4">
+              <div className="flex items-center gap-4">
+                {/* Track Info */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm truncate">{playingEpisodeData.title}</h4>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {selectedPodcast?.name} · S{playingEpisodeData.season_number}E{playingEpisodeData.episode_number}
+                  </p>
+                </div>
+
+                {/* Controls */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => playEpisode(playingEpisodeData)}
+                    className="w-10 h-10 rounded-full"
+                  >
+                    {playingEpisode ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  </Button>
+                </div>
+
+                {/* Progress */}
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {formatTime(audioCurrentTime)}
+                  </span>
+                  <div 
+                    className="flex-1 h-2 bg-muted rounded-full cursor-pointer overflow-hidden"
+                    onClick={handleSeek}
+                  >
+                    <div 
+                      className="h-full bg-primary rounded-full transition-all"
+                      style={{ width: `${audioDuration > 0 ? (audioCurrentTime / audioDuration) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {formatTime(audioDuration)}
+                  </span>
+                </div>
+
+                {/* Volume */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={toggleMute}
+                >
+                  {audioVolume === 0 ? (
+                    <VolumeX className="w-4 h-4" />
+                  ) : (
+                    <Volume2 className="w-4 h-4" />
+                  )}
+                </Button>
+
+                {/* Close */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    audioRef.current?.pause();
+                    setPlayingEpisode(null);
+                    setPlayingEpisodeData(null);
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Edit Podcast Dialog */}
         <Dialog open={showEditPodcast} onOpenChange={setShowEditPodcast}>

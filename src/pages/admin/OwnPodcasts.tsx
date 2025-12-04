@@ -790,7 +790,7 @@ export default function OwnPodcasts() {
           </TabsContent>
         </Tabs>
 
-        {/* Native Audio Player - browser handles everything */}
+        {/* Audio Player Bar - Opens in new tab due to sandbox restrictions */}
         {playingEpisodeData && playingEpisodeData.audio_url && (
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg">
             <div className="container mx-auto p-4">
@@ -803,14 +803,26 @@ export default function OwnPodcasts() {
                   </p>
                 </div>
 
-                {/* Native Audio Element with controls */}
-                <audio 
-                  controls 
-                  autoPlay
-                  src={playingEpisodeData.audio_url}
-                  className="flex-1 h-10"
-                  style={{ minWidth: '200px', maxWidth: '400px' }}
-                />
+                {/* Open in New Tab Button */}
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => window.open(playingEpisodeData.audio_url, '_blank')}
+                  className="flex items-center gap-2"
+                >
+                  <Play className="w-4 h-4" />
+                  Open in nieuw tabblad
+                </Button>
+
+                {/* Direct Link */}
+                <a 
+                  href={playingEpisodeData.audio_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-foreground underline"
+                >
+                  Download MP3
+                </a>
 
                 {/* Close */}
                 <Button

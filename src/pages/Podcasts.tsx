@@ -9,6 +9,7 @@ import { PodcastCategoryFilter } from '@/components/podcast/PodcastCategoryFilte
 import { EpisodeCard } from '@/components/podcast/EpisodeCard';
 import { IndividualEpisodeCard } from '@/components/podcast/IndividualEpisodeCard';
 import { RSSEpisodeCard } from '@/components/podcast/RSSEpisodeCard';
+import { OwnPodcastSection } from '@/components/podcast/OwnPodcastSection';
 
 export default function Podcasts() {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -119,6 +120,9 @@ export default function Podcasts() {
           Ontdek gecureerde podcasts en episodes over muziek, vinyl en alles wat daarbij komt kijken.
         </p>
 
+        {/* MusicScan Original Podcasts */}
+        <OwnPodcastSection />
+
         {/* Featured Individual Episodes - only show if there are featured episodes */}
         {individualEpisodes && individualEpisodes.filter(ep => ep.is_featured).length > 0 && (
           <div className="mb-8">
@@ -135,7 +139,6 @@ export default function Podcasts() {
           </div>
         )}
       </div>
-
       <div className="space-y-6 mb-8">
         <PodcastCategoryFilter
           selectedCategory={selectedCategory}

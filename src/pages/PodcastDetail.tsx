@@ -6,9 +6,7 @@ import { BreadcrumbNavigation } from '@/components/SEO/BreadcrumbNavigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Mic, Clock, Headphones, Rss, Play, ChevronRight } from 'lucide-react';
-import { Navigation } from '@/components/Navigation';
-import { Footer } from '@/components/Footer';
+import { Mic, Clock, Headphones, Rss, ChevronRight } from 'lucide-react';
 
 function formatDuration(seconds: number | null): string {
   if (!seconds) return '';
@@ -29,9 +27,8 @@ export default function PodcastDetail() {
 
   if (podcastLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Navigation />
-        <main className="flex-1 container py-8">
+      <div className="min-h-screen bg-background">
+        <main className="container py-8">
           <div className="animate-pulse space-y-8">
             <div className="h-64 bg-muted rounded-2xl" />
             <div className="space-y-4">
@@ -40,22 +37,19 @@ export default function PodcastDetail() {
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
 
   if (!podcast) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Navigation />
-        <main className="flex-1 container py-8 text-center">
+      <div className="min-h-screen bg-background">
+        <main className="container py-8 text-center">
           <h1 className="text-2xl font-bold mb-4">Podcast niet gevonden</h1>
           <Link to="/podcasts">
             <Button>Terug naar podcasts</Button>
           </Link>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -67,7 +61,7 @@ export default function PodcastDetail() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen bg-background">
       <Helmet>
         <title>{podcast.name} | MusicScan Podcast</title>
         <meta name="description" content={podcast.description || `Luister naar ${podcast.name} - Een MusicScan Original Podcast`} />
@@ -89,9 +83,7 @@ export default function PodcastDetail() {
         language={podcast.language || 'nl'}
       />
 
-      <Navigation />
-
-      <main className="flex-1">
+      <main>
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-primary/10 to-background pt-8 pb-16">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
@@ -260,8 +252,6 @@ export default function PodcastDetail() {
           )}
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }

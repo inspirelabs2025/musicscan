@@ -326,10 +326,10 @@ export async function uploadPodcastAudio(file: File, podcastSlug: string): Promi
 // Upload podcast artwork
 export async function uploadPodcastArtwork(file: File, podcastSlug: string): Promise<string> {
   const fileExt = file.name.split('.').pop();
-  const fileName = `artwork/${podcastSlug}-${Date.now()}.${fileExt}`;
+  const fileName = `${podcastSlug}-${Date.now()}.${fileExt}`;
 
   const { data, error } = await supabase.storage
-    .from('podcast-audio')
+    .from('podcast-artwork')
     .upload(fileName, file, {
       contentType: file.type,
       upsert: true,
@@ -338,7 +338,7 @@ export async function uploadPodcastArtwork(file: File, podcastSlug: string): Pro
   if (error) throw error;
 
   const { data: urlData } = supabase.storage
-    .from('podcast-audio')
+    .from('podcast-artwork')
     .getPublicUrl(data.path);
 
   return urlData.publicUrl;

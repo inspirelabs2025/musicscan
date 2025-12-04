@@ -882,6 +882,7 @@ export default function OwnPodcasts() {
         <audio
           ref={audioRef}
           preload="auto"
+          crossOrigin="anonymous"
           onEnded={() => {
             setPlayingEpisode(null);
             setPlayingEpisodeData(null);

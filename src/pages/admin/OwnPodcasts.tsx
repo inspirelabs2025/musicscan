@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Upload, Copy, Check, Rss, Music, Mic, ExternalLink, Loader2, Play, Pause } from 'lucide-react';
+import { Plus, Trash2, Upload, Copy, Check, Rss, Music, Mic, ExternalLink, Loader2, Play, Pause, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   useOwnPodcasts,
@@ -55,10 +55,13 @@ export default function OwnPodcasts() {
   const [selectedPodcast, setSelectedPodcast] = useState<OwnPodcast | null>(null);
   const [showCreatePodcast, setShowCreatePodcast] = useState(false);
   const [showCreateEpisode, setShowCreateEpisode] = useState(false);
+  const [showEditPodcast, setShowEditPodcast] = useState(false);
+  const [editingPodcast, setEditingPodcast] = useState<OwnPodcast | null>(null);
   const [copiedFeed, setCopiedFeed] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [playingEpisode, setPlayingEpisode] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [editArtworkFile, setEditArtworkFile] = useState<File | null>(null);
 
   // Form states
   const [podcastForm, setPodcastForm] = useState({
@@ -207,6 +210,55 @@ export default function OwnPodcasts() {
       is_published: !episode.is_published,
       published_at: !episode.is_published ? new Date().toISOString() : episode.published_at,
     });
+  };
+
+  const openEditDialog = (podcast: OwnPodcast) => {
+    setEditingPodcast(podcast);
+    setPodcastForm({
+      name: podcast.name,
+      description: podcast.description || '',
+      slug: podcast.slug,
+      author: podcast.author,
+      owner_name: podcast.owner_name,
+      owner_email: podcast.owner_email,
+      category: podcast.category,
+      explicit: podcast.explicit,
+    });
+    setEditArtworkFile(null);
+    setShowEditPodcast(true);
+  };
+
+  const handleUpdatePodcast = async () => {
+    if (!editingPodcast) return;
+    
+    try {
+      setIsUploading(true);
+      let artworkUrl = editingPodcast.artwork_url;
+
+      if (editArtworkFile) {
+        artworkUrl = await uploadPodcastArtwork(editArtworkFile, podcastForm.slug);
+      }
+
+      await updatePodcast.mutateAsync({
+        id: editingPodcast.id,
+        name: podcastForm.name,
+        description: podcastForm.description || null,
+        author: podcastForm.author,
+        owner_name: podcastForm.owner_name,
+        owner_email: podcastForm.owner_email,
+        category: podcastForm.category,
+        explicit: podcastForm.explicit,
+        artwork_url: artworkUrl,
+      });
+
+      setShowEditPodcast(false);
+      setEditingPodcast(null);
+      setEditArtworkFile(null);
+    } catch (error) {
+      console.error('Error updating podcast:', error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const playEpisode = (episode: OwnPodcastEpisode) => {
@@ -444,6 +496,13 @@ export default function OwnPodcasts() {
                           <Button
                             size="sm"
                             variant="ghost"
+                            onClick={() => openEditDialog(podcast)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             onClick={() => window.open(getRSSFeedUrl(podcast.slug), '_blank')}
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -665,6 +724,104 @@ export default function OwnPodcasts() {
           onEnded={() => setPlayingEpisode(null)}
           className="hidden"
         />
+
+        {/* Edit Podcast Dialog */}
+        <Dialog open={showEditPodcast} onOpenChange={setShowEditPodcast}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Podcast Bewerken</DialogTitle>
+              <DialogDescription>
+                Bewerk de podcast gegevens en artwork.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="editName">Podcast Naam *</Label>
+                <Input
+                  id="editName"
+                  value={podcastForm.name}
+                  onChange={(e) => setPodcastForm({ ...podcastForm, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editDescription">Beschrijving</Label>
+                <Textarea
+                  id="editDescription"
+                  value={podcastForm.description}
+                  onChange={(e) => setPodcastForm({ ...podcastForm, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="editAuthor">Auteur</Label>
+                  <Input
+                    id="editAuthor"
+                    value={podcastForm.author}
+                    onChange={(e) => setPodcastForm({ ...podcastForm, author: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editCategory">Categorie</Label>
+                  <Select
+                    value={podcastForm.category}
+                    onValueChange={(value) => setPodcastForm({ ...podcastForm, category: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ITUNES_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editArtwork">Nieuwe Artwork (min. 1400x1400px)</Label>
+                {editingPodcast?.artwork_url && !editArtworkFile && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <img 
+                      src={editingPodcast.artwork_url} 
+                      alt="Current artwork" 
+                      className="w-16 h-16 rounded-lg object-cover"
+                    />
+                    <span className="text-sm text-muted-foreground">Huidige artwork</span>
+                  </div>
+                )}
+                <Input
+                  id="editArtwork"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEditArtworkFile(e.target.files?.[0] || null)}
+                />
+                {editArtworkFile && (
+                  <p className="text-xs text-muted-foreground">
+                    Nieuwe: {editArtworkFile.name}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="editExplicit"
+                  checked={podcastForm.explicit}
+                  onCheckedChange={(checked) => setPodcastForm({ ...podcastForm, explicit: checked })}
+                />
+                <Label htmlFor="editExplicit">Expliciete content</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEditPodcast(false)}>
+                Annuleren
+              </Button>
+              <Button onClick={handleUpdatePodcast} disabled={!podcastForm.name || isUploading}>
+                {isUploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                Opslaan
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

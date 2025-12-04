@@ -8,23 +8,220 @@ const corsHeaders = {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+interface AwardItem {
+  category: string;
+  winner: string;
+  other_nominees?: string[];
+}
+
 // ============================================
-// PERPLEXITY API - Real-time web search data
+// DIRECT AWARD PARSERS - Using Tool Calling
 // ============================================
+
+async function parseGrammyAwardsDirect(year: number, apiKey: string): Promise<AwardItem[]> {
+  console.log(`🏆 Parsing Grammy Awards ${year} directly with tool calling...`);
+  
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-pro',
+        messages: [
+          { role: 'user', content: `Welke artiesten wonnen de Grammy Awards ${year}? Geef alle belangrijke categorieën.` }
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'report_grammy_winners',
+            description: 'Report all Grammy Award winners for the given year',
+            parameters: {
+              type: 'object',
+              properties: {
+                winners: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      category: { type: 'string', description: 'Award category name' },
+                      winner: { type: 'string', description: 'Winner name and work title' },
+                      other_nominees: { type: 'array', items: { type: 'string' } }
+                    },
+                    required: ['category', 'winner']
+                  }
+                }
+              },
+              required: ['winners']
+            }
+          }
+        }],
+        tool_choice: { type: 'function', function: { name: 'report_grammy_winners' } }
+      })
+    });
+
+    if (!response.ok) {
+      console.error(`Grammy API error: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    
+    if (toolCall?.function?.arguments) {
+      const parsed = JSON.parse(toolCall.function.arguments);
+      console.log(`  ✅ Grammy Awards: ${parsed.winners?.length || 0} categories parsed`);
+      return parsed.winners || [];
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Grammy parsing error:', error);
+    return [];
+  }
+}
+
+async function parseBritAwardsDirect(year: number, apiKey: string): Promise<AwardItem[]> {
+  console.log(`🏆 Parsing Brit Awards ${year} directly with tool calling...`);
+  
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-pro',
+        messages: [
+          { role: 'user', content: `Welke artiesten wonnen de Brit Awards ${year}? Geef alle categorieën met winnaars.` }
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'report_brit_winners',
+            description: 'Report all Brit Award winners for the given year',
+            parameters: {
+              type: 'object',
+              properties: {
+                winners: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      category: { type: 'string', description: 'Award category name' },
+                      winner: { type: 'string', description: 'Winner name' },
+                      other_nominees: { type: 'array', items: { type: 'string' } }
+                    },
+                    required: ['category', 'winner']
+                  }
+                }
+              },
+              required: ['winners']
+            }
+          }
+        }],
+        tool_choice: { type: 'function', function: { name: 'report_brit_winners' } }
+      })
+    });
+
+    if (!response.ok) {
+      console.error(`Brit Awards API error: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    
+    if (toolCall?.function?.arguments) {
+      const parsed = JSON.parse(toolCall.function.arguments);
+      console.log(`  ✅ Brit Awards: ${parsed.winners?.length || 0} categories parsed`);
+      return parsed.winners || [];
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Brit Awards parsing error:', error);
+    return [];
+  }
+}
+
+async function parseEdisonAwardsDirect(year: number, apiKey: string): Promise<AwardItem[]> {
+  console.log(`🏆 Parsing Edison Awards ${year} directly with tool calling...`);
+  
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-pro',
+        messages: [
+          { role: 'user', content: `Welke artiesten wonnen de Edison Awards (Nederlandse muziekprijs) ${year}? Geef alle categorieën met winnaars.` }
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'report_edison_winners',
+            description: 'Report all Edison Award winners for the given year',
+            parameters: {
+              type: 'object',
+              properties: {
+                winners: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      category: { type: 'string', description: 'Award category name (Pop, Rock, Hip-Hop, etc.)' },
+                      winner: { type: 'string', description: 'Winner name and album' },
+                      other_nominees: { type: 'array', items: { type: 'string' } }
+                    },
+                    required: ['category', 'winner']
+                  }
+                }
+              },
+              required: ['winners']
+            }
+          }
+        }],
+        tool_choice: { type: 'function', function: { name: 'report_edison_winners' } }
+      })
+    });
+
+    if (!response.ok) {
+      console.error(`Edison Awards API error: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    
+    if (toolCall?.function?.arguments) {
+      const parsed = JSON.parse(toolCall.function.arguments);
+      console.log(`  ✅ Edison Awards: ${parsed.winners?.length || 0} categories parsed`);
+      return parsed.winners || [];
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Edison Awards parsing error:', error);
+    return [];
+  }
+}
+
 // ============================================
-// DIRECT AI QUERIES - Specific factual data
+// DIRECT AI QUERIES - Other sections
 // ============================================
 async function fetchDirectAIData(year: number, apiKey: string): Promise<Record<string, string>> {
   console.log(`🎯 Fetching direct AI data for ${year} with specific queries using Gemini Pro...`);
   
-  // Use Gemini Pro for more accurate and complete data
   const MODEL = 'google/gemini-2.5-pro';
   
   const specificQueries = [
-    {
-      key: 'grammy_awards',
-      prompt: `Welke artiesten wonnen de Grammy Awards ${year}?`
-    },
     {
       key: 'in_memoriam',
       prompt: `Muzikanten en artiesten overleden in ${year} - VOLLEDIGE LIJST:
@@ -37,24 +234,6 @@ Geef voor elke artiest:
 Inclusief: rockartiesten, popsterren, country, jazz, hip-hop, electronic/DJ's, Nederlandse artiesten, producers, bandleden.
 
 Begin direct met de lijst, geordend op overlijdensdatum. Minimaal 25 artiesten.`
-    },
-    {
-      key: 'brit_awards',
-      prompt: `Brit Awards ${year} - ALLE WINNAARS:
-
-• Album of the Year: 
-• Artist of the Year: 
-• Song of the Year: 
-• Best New Artist: 
-• Best Group: 
-• Best International Artist: 
-• Best International Group: 
-• Best Pop/R&B Act: 
-• Best Dance Act: 
-• Best Rock/Alternative Act: 
-• Rising Star: 
-
-Antwoord direct met winnaars per categorie.`
     },
     {
       key: 'top_tours',
@@ -84,22 +263,13 @@ Geef concrete cijfers waar beschikbaar.`
       key: 'dutch_music',
       prompt: `Nederlandse muziek ${year}:
 
-EDISON AWARDS ${year} WINNAARS:
-• Pop: 
-• Rock: 
-• Hip-Hop: 
-• Dance/Electronic: 
-• Nederlandstalig: 
-• Beste Nieuwkomer: 
-• Oeuvreprijs: 
-
 TOP 10 NEDERLANDSE HITS ${year}:
 1-10. [Artiest - Titel]
 
 NEDERLANDSE ARTIESTEN OVERLEDEN ${year}:
 [naam, leeftijd, datum, bekend van]
 
-Geef concrete winnaars en hits.`
+Geef concrete hits en informatie.`
     },
     {
       key: 'streaming_records',
@@ -172,7 +342,7 @@ Schrijf NOOIT "nog niet bekend" - geef de echte data.`
         results[key] = '';
       }
       
-      await delay(800); // Delay between requests
+      await delay(800);
       
     } catch (error) {
       console.error(`  ❌ Error ${key}:`, error);
@@ -190,7 +360,6 @@ async function fetchPerplexityMusicData(year: number, apiKey: string): Promise<R
   console.log(`🔍 Fetching Perplexity data for ${year}...`);
   
   const queries = [
-    { key: 'grammy_awards', query: `Grammy Awards ${year} complete list of winners all categories Album of the Year Record Song Best New Artist` },
     { key: 'in_memoriam', query: `Famous musicians singers artists who died in ${year} complete list with exact dates ages causes of death` },
     { key: 'top_albums', query: `Best selling critically acclaimed albums ${year} sales figures chart positions certifications` },
     { key: 'top_tours', query: `Highest grossing concert tours ${year} revenue attendance Billboard Pollstar` },
@@ -265,7 +434,6 @@ async function fetchSpotifyData(year: number, clientId: string, clientSecret: st
 
     const { access_token } = await tokenResponse.json();
     
-    // Search albums from specific year
     const albumsResponse = await fetch(
       `https://api.spotify.com/v1/search?q=year:${year}&type=album&limit=50&market=NL`,
       { headers: { 'Authorization': `Bearer ${access_token}` } }
@@ -273,7 +441,6 @@ async function fetchSpotifyData(year: number, clientId: string, clientSecret: st
     
     const albumsData = albumsResponse.ok ? await albumsResponse.json() : null;
     
-    // Search artists 
     const artistsResponse = await fetch(
       `https://api.spotify.com/v1/search?q=year:${year}&type=artist&limit=30&market=NL`,
       { headers: { 'Authorization': `Bearer ${access_token}` } }
@@ -402,7 +569,7 @@ async function fetchYouTubeData(year: number, apiKey: string): Promise<any> {
 }
 
 // ============================================
-// AI AGGREGATION - Combine all data sources
+// AI AGGREGATION - Combine all data sources (without awards)
 // ============================================
 async function generateYearOverviewWithAI(
   year: number,
@@ -423,14 +590,8 @@ KRITIEK: Gebruik ALLEEN de onderstaande VERZAMELDE DATA. Verzin GEEN informatie.
                         PRIMAIRE DATA (MEEST BETROUWBAAR)
 ================================================================================
 
-=== GRAMMY AWARDS ${year} (EXACTE WINNAARS) ===
-${directAIData?.grammy_awards || 'Geen data'}
-
 === IN MEMORIAM ${year} (OVERLEDEN ARTIESTEN) ===
 ${directAIData?.in_memoriam || 'Geen data'}
-
-=== BRIT AWARDS ${year} ===
-${directAIData?.brit_awards || 'Geen data'}
 
 === BESTE TOURS ${year} ===
 ${directAIData?.top_tours || 'Geen data'}
@@ -450,7 +611,6 @@ ${directAIData?.album_releases || 'Geen data'}
 ================================================================================
 
 === PERPLEXITY WEB SEARCH ===
-Grammy: ${perplexityData?.grammy_awards?.substring(0, 500) || 'N/A'}
 In Memoriam: ${perplexityData?.in_memoriam?.substring(0, 500) || 'N/A'}
 Tours: ${perplexityData?.top_tours?.substring(0, 500) || 'N/A'}
 NL Muziek: ${perplexityData?.dutch_music?.substring(0, 500) || 'N/A'}
@@ -470,17 +630,13 @@ ${JSON.stringify(youtubeData?.videos?.slice(0, 5) || [])}
 
 ================================================================================
 
-TAAK: Genereer een UITGEBREID jaaroverzicht JSON. 
-- Gebruik ALLE genoemde artiesten, albums, awards uit de data
-- Bij In Memoriam: ALLE overleden artiesten met exacte data
-- Bij Awards: ALLE Grammy/Brit/Edison winnaars per categorie
-- Schrijf alles in het Nederlands
+TAAK: Genereer een UITGEBREID jaaroverzicht JSON (ZONDER awards sectie - die wordt apart afgehandeld).
 
 Retourneer ALLEEN valid JSON (geen markdown):
 
 {
   "global_overview": {
-    "narrative": "Uitgebreide Nederlandse samenvatting (500-800 woorden) met ALLE belangrijke events, winnaars en cijfers uit de data",
+    "narrative": "Uitgebreide Nederlandse samenvatting (500-800 woorden) met ALLE belangrijke events en cijfers",
     "highlights": ["10-15 specifieke hoogtepunten met namen en cijfers"]
   },
   "top_artists": [
@@ -504,26 +660,6 @@ Retourneer ALLEEN valid JSON (geen markdown):
       "image_url": null
     }
   ],
-  "awards": {
-    "narrative": "Awards seizoen ${year} (250-300 woorden) - noem ALLE winnaars",
-    "grammy": [
-      {"category": "Album of the Year", "winner": "Artiest - Album", "other_nominees": []},
-      {"category": "Record of the Year", "winner": "Artiest - Nummer", "other_nominees": []},
-      {"category": "Song of the Year", "winner": "Artiest - Nummer", "other_nominees": []},
-      {"category": "Best New Artist", "winner": "Artiest", "other_nominees": []},
-      {"category": "Best Pop Vocal Album", "winner": "Artiest - Album", "other_nominees": []},
-      {"category": "Best Rap Album", "winner": "Artiest - Album", "other_nominees": []},
-      {"category": "Best Rock Album", "winner": "Artiest - Album", "other_nominees": []},
-      {"category": "Best Country Album", "winner": "Artiest - Album", "other_nominees": []},
-      {"category": "Best Dance/Electronic Album", "winner": "Artiest - Album", "other_nominees": []}
-    ],
-    "brit_awards": [
-      {"category": "Album of the Year", "winner": "Artiest - Album", "other_nominees": []},
-      {"category": "Artist of the Year", "winner": "Artiest", "other_nominees": []}
-    ],
-    "edison": [],
-    "mtv_vma": []
-  },
   "in_memoriam": {
     "narrative": "Respectvolle herdenking (250-300 woorden) - noem ALLE overleden artiesten",
     "artists": [
@@ -541,10 +677,10 @@ Retourneer ALLEEN valid JSON (geen markdown):
     ]
   },
   "dutch_music": {
-    "narrative": "Nederlandse muziekscene ${year} (250 woorden) - Edison, hits, doorbraken",
+    "narrative": "Nederlandse muziekscene ${year} (250 woorden) - hits, doorbraken",
     "highlights": ["NL hoogtepunten"],
     "top_artists": ["Nederlandse artiesten ${year}"],
-    "edison_winners": [{"category": "Pop", "winner": "Artiest - Album"}]
+    "edison_winners": []
   },
   "streaming_viral": {
     "narrative": "Streaming en viral ${year} (250 woorden) met cijfers",
@@ -574,8 +710,6 @@ Retourneer ALLEEN valid JSON (geen markdown):
 KRITIEK:
 - Minimaal 12 top artiesten
 - Minimaal 12 top albums  
-- ALLE Grammy winnaars (minimaal 8 categorieën)
-- ALLE Brit Awards winnaars indien in data
 - ALLE overleden artiesten met exacte data (minimaal 15)
 - Schrijf in het Nederlands
 - Return ALLEEN valid JSON`;
@@ -606,7 +740,6 @@ KRITIEK:
   const aiData = await response.json();
   let content = aiData.choices?.[0]?.message?.content || '';
 
-  // Parse JSON - clean up any markdown
   content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
   
   console.log('AI response length:', content.length);
@@ -616,7 +749,6 @@ KRITIEK:
     console.log('✅ Parsed overview successfully');
     console.log(`  - Top artists: ${overview.top_artists?.length || 0}`);
     console.log(`  - Top albums: ${overview.top_albums?.length || 0}`);
-    console.log(`  - Grammy awards: ${overview.awards?.grammy?.length || 0}`);
     console.log(`  - In Memoriam: ${overview.in_memoriam?.artists?.length || 0}`);
     return overview;
   } catch (parseError) {
@@ -635,7 +767,6 @@ async function enrichWithArtwork(narratives: any, spotifyToken: string | null): 
   console.log('🖼️ Enriching with Spotify artwork...');
   
   try {
-    // Enrich top_artists
     if (narratives.top_artists?.length) {
       for (let i = 0; i < Math.min(narratives.top_artists.length, 10); i++) {
         const artist = narratives.top_artists[i];
@@ -657,7 +788,6 @@ async function enrichWithArtwork(narratives: any, spotifyToken: string | null): 
       }
     }
     
-    // Enrich top_albums
     if (narratives.top_albums?.length) {
       for (let i = 0; i < Math.min(narratives.top_albums.length, 10); i++) {
         const album = narratives.top_albums[i];
@@ -679,7 +809,6 @@ async function enrichWithArtwork(narratives: any, spotifyToken: string | null): 
       }
     }
     
-    // Enrich in_memoriam
     if (narratives.in_memoriam?.artists?.length) {
       for (let i = 0; i < Math.min(narratives.in_memoriam.artists.length, 10); i++) {
         const artist = narratives.in_memoriam.artists[i];
@@ -766,12 +895,22 @@ serve(async (req) => {
     console.log(`  - Discogs: ${DISCOGS_TOKEN ? 'configured' : 'NOT configured'}`);
     console.log(`  - YouTube: ${YOUTUBE_API_KEY ? 'configured' : 'NOT configured'}`);
 
-    // Step 1: Fetch direct AI data with specific queries (most important!)
-    console.log('📊 Step 1: Fetching direct AI data with specific queries...');
+    // Step 1: Fetch AWARDS directly with tool calling (NEW - bypasses second AI)
+    console.log('📊 Step 1: Fetching awards DIRECTLY with tool calling...');
+    const [grammyAwards, britAwards, edisonAwards] = await Promise.all([
+      parseGrammyAwardsDirect(year, LOVABLE_API_KEY),
+      parseBritAwardsDirect(year, LOVABLE_API_KEY),
+      parseEdisonAwardsDirect(year, LOVABLE_API_KEY)
+    ]);
+    
+    console.log(`  📋 Awards fetched: Grammy=${grammyAwards.length}, Brit=${britAwards.length}, Edison=${edisonAwards.length}`);
+
+    // Step 2: Fetch direct AI data for other sections
+    console.log('📊 Step 2: Fetching direct AI data for other sections...');
     const directAIData = await fetchDirectAIData(year, LOVABLE_API_KEY);
 
-    // Step 2: Fetch from other sources in parallel
-    console.log('📊 Step 2: Fetching from external APIs...');
+    // Step 3: Fetch from other sources in parallel
+    console.log('📊 Step 3: Fetching from external APIs...');
     const [perplexityData, spotifyData, discogsData, youtubeData] = await Promise.all([
       PERPLEXITY_API_KEY ? fetchPerplexityMusicData(year, PERPLEXITY_API_KEY) : null,
       (SPOTIFY_CLIENT_ID && SPOTIFY_CLIENT_SECRET) ? fetchSpotifyData(year, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET) : null,
@@ -781,7 +920,7 @@ serve(async (req) => {
 
     console.log('📊 Data collection complete');
 
-    // Step 3: Generate overview with AI using ALL collected data
+    // Step 4: Generate overview with AI (without awards - those are direct)
     let narratives = await generateYearOverviewWithAI(
       year,
       directAIData,
@@ -791,6 +930,16 @@ serve(async (req) => {
       youtubeData,
       LOVABLE_API_KEY
     );
+
+    // Step 5: INJECT AWARDS DIRECTLY (bypassing AI aggregation)
+    console.log('📊 Step 5: Injecting directly fetched awards...');
+    narratives.awards = {
+      narrative: `Het awardsseizoen van ${year} bracht vele memorabele momenten. De Grammy Awards, Brit Awards en Edison Awards bekroonden het beste van de muziekindustrie.`,
+      grammy: grammyAwards,
+      brit_awards: britAwards,
+      edison: edisonAwards,
+      mtv_vma: []
+    };
 
     // Enrich with artwork
     narratives = await enrichWithArtwork(narratives, spotifyData?.access_token || null);
@@ -820,6 +969,9 @@ serve(async (req) => {
     }
 
     console.log(`✅ Year Overview for ${year} generated successfully!`);
+    console.log(`  - Grammy Awards: ${grammyAwards.length} categories`);
+    console.log(`  - Brit Awards: ${britAwards.length} categories`);
+    console.log(`  - Edison Awards: ${edisonAwards.length} categories`);
 
     return new Response(JSON.stringify(cacheData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

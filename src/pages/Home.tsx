@@ -1,7 +1,6 @@
 import { SimpleHero } from '@/components/home/SimpleHero';
 import { ArtistSearchHero } from '@/components/home/ArtistSearchHero';
 import { PublicScannerSpotlight } from '@/components/home/PublicScannerSpotlight';
-import { QuickDiscoveryBar } from '@/components/home/QuickDiscoveryBar';
 import { EchoSpotlight } from '@/components/home/EchoSpotlight';
 import { MetalPrintSpotlight } from '@/components/home/MetalPrintSpotlight';
 import { SocksSpotlight } from '@/components/home/SocksSpotlight';
@@ -47,9 +46,6 @@ const Home = () => {
 
       {/* Hero Section - Simple with 3 CTAs */}
       <SimpleHero />
-
-      {/* Quick Discovery Bar */}
-      <QuickDiscoveryBar />
 
       {/* Echo Spotlight - AI Music Guide */}
       <EchoSpotlight />

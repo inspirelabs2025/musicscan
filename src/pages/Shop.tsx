@@ -172,12 +172,8 @@ const Shop = () => {
     
     // Sort Vector Cartoon style products to the top
     return filtered.sort((a, b) => {
-      const aIsVector = a.tags?.includes('vector') || 
-                        a.tags?.includes('vectorCartoon') ||
-                        (a.metadata?.selected_style as string) === 'vectorCartoon';
-      const bIsVector = b.tags?.includes('vector') || 
-                        b.tags?.includes('vectorCartoon') ||
-                        (b.metadata?.selected_style as string) === 'vectorCartoon';
+      const aIsVector = a.tags?.some(tag => tag.toLowerCase().includes('vector'));
+      const bIsVector = b.tags?.some(tag => tag.toLowerCase().includes('vector'));
       
       if (aIsVector && !bIsVector) return -1;
       if (!aIsVector && bIsVector) return 1;

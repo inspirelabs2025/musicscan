@@ -139,12 +139,12 @@ const useCategoryCounts = () => {
 const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Fetch each category separately
-  const postersQuery = useCategoryProducts('posters', 'POSTER');
-  const canvasQuery = useCategoryProducts('canvas', 'CANVAS');
-  const metalQuery = useCategoryProducts('metal', 'metaalprint');
-  const clothingQuery = useCategoryProducts('clothing', 'merchandise');
-  const accessoriesQuery = useCategoryProducts('accessories', 'buttons');
+  // Fetch each category using the dbFilter from CATEGORIES config
+  const postersQuery = useCategoryProducts('posters', CATEGORIES.find(c => c.key === 'posters')!.dbFilter);
+  const canvasQuery = useCategoryProducts('canvas', CATEGORIES.find(c => c.key === 'canvas')!.dbFilter);
+  const metalQuery = useCategoryProducts('metal', CATEGORIES.find(c => c.key === 'metal')!.dbFilter);
+  const clothingQuery = useCategoryProducts('clothing', CATEGORIES.find(c => c.key === 'clothing')!.dbFilter);
+  const accessoriesQuery = useCategoryProducts('accessories', CATEGORIES.find(c => c.key === 'accessories')!.dbFilter);
   const countsQuery = useCategoryCounts();
 
   const isLoading = postersQuery.isLoading || canvasQuery.isLoading || metalQuery.isLoading || 

@@ -53,6 +53,7 @@ function generateSlug(name: string): string {
 export default function OwnPodcasts() {
   const { toast } = useToast();
   const [selectedPodcast, setSelectedPodcast] = useState<OwnPodcast | null>(null);
+  const [activeTab, setActiveTab] = useState('podcasts');
   const [showCreatePodcast, setShowCreatePodcast] = useState(false);
   const [showCreateEpisode, setShowCreateEpisode] = useState(false);
   const [showEditPodcast, setShowEditPodcast] = useState(false);
@@ -445,7 +446,7 @@ export default function OwnPodcasts() {
           </Dialog>
         </div>
 
-        <Tabs defaultValue="podcasts" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
             <TabsTrigger value="podcasts">
               <Mic className="h-4 w-4 mr-2" />
@@ -542,8 +543,7 @@ export default function OwnPodcasts() {
                             variant="outline"
                             onClick={() => {
                               setSelectedPodcast(podcast);
-                              const tabsTrigger = document.querySelector('[data-state="inactive"][value="episodes"]') as HTMLButtonElement;
-                              tabsTrigger?.click();
+                              setActiveTab('episodes');
                             }}
                           >
                             Episodes

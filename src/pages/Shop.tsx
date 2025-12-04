@@ -142,7 +142,7 @@ const Shop = () => {
   // Fetch each category separately
   const postersQuery = useCategoryProducts('posters', 'POSTER');
   const canvasQuery = useCategoryProducts('canvas', 'CANVAS');
-  const metalQuery = useCategoryProducts('metal', 'metaal');
+  const metalQuery = useCategoryProducts('metal', 'metaalprint');
   const clothingQuery = useCategoryProducts('clothing', 'merchandise');
   const accessoriesQuery = useCategoryProducts('accessories', 'buttons');
   const countsQuery = useCategoryCounts();

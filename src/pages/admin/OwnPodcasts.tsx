@@ -323,7 +323,7 @@ export default function OwnPodcasts() {
     }
   };
 
-  const playEpisode = (episode: OwnPodcastEpisode) => {
+  const playEpisode = async (episode: OwnPodcastEpisode) => {
     if (playingEpisode === episode.id) {
       audioRef.current?.pause();
       setPlayingEpisode(null);
@@ -332,10 +332,15 @@ export default function OwnPodcasts() {
       return;
     }
 
-    // Stop current audio
+    // Stop current audio and revoke old blob URL
     if (audioRef.current) {
+      const oldSrc = audioRef.current.src;
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current.src = '';
+      if (oldSrc.startsWith('blob:')) {
+        URL.revokeObjectURL(oldSrc);
+      }
     }
 
     setPlayingEpisodeData(episode);
@@ -344,45 +349,69 @@ export default function OwnPodcasts() {
     setAudioDuration(0);
     setIsAudioLoading(true);
 
-    if (audioRef.current && episode.audio_url) {
-      const audio = audioRef.current;
+    if (!episode.audio_url) {
+      setIsAudioLoading(false);
+      toast({
+        title: 'Audio fout',
+        description: 'Geen audio URL beschikbaar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // Fetch audio as blob to bypass CORS issues
+      console.log('Fetching audio from:', episode.audio_url);
+      const response = await fetch(episode.audio_url);
       
-      // Set up one-time canplaythrough handler to auto-play when ready
-      const handleCanPlay = async () => {
-        audio.removeEventListener('canplaythrough', handleCanPlay);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const blob = await response.blob();
+      console.log('Audio blob received:', blob.size, 'bytes, type:', blob.type);
+      
+      // Create blob URL
+      const blobUrl = URL.createObjectURL(blob);
+      
+      if (audioRef.current) {
+        audioRef.current.src = blobUrl;
+        
+        // Wait for audio to be ready
+        audioRef.current.onloadedmetadata = () => {
+          setAudioDuration(audioRef.current?.duration || 0);
+        };
+        
+        audioRef.current.oncanplay = () => {
+          setIsAudioLoading(false);
+        };
+        
+        audioRef.current.load();
+        
         try {
-          await audio.play();
+          await audioRef.current.play();
           setIsPlaying(true);
-        } catch (error: any) {
-          console.error('Play error:', error);
-          if (error.name === 'NotAllowedError') {
+        } catch (playError: any) {
+          console.error('Play error:', playError);
+          setIsAudioLoading(false);
+          if (playError.name === 'NotAllowedError') {
             toast({
               title: 'Klik op play',
               description: 'Klik op de play knop om de audio te starten.',
             });
           }
         }
-      };
-      
-      const handleError = () => {
-        audio.removeEventListener('error', handleError);
-        audio.removeEventListener('canplaythrough', handleCanPlay);
-        setIsAudioLoading(false);
-        const error = audio.error;
-        console.error('Audio load error:', error?.code, error?.message);
-        toast({
-          title: 'Audio fout',
-          description: `Kon audio niet laden. Controleer of het bestand toegankelijk is.`,
-          variant: 'destructive',
-        });
-      };
-      
-      audio.addEventListener('canplaythrough', handleCanPlay, { once: true });
-      audio.addEventListener('error', handleError, { once: true });
-      
-      // Set source and load
-      audio.src = episode.audio_url;
-      audio.load();
+      }
+    } catch (error: any) {
+      console.error('Audio fetch error:', error);
+      setIsAudioLoading(false);
+      setPlayingEpisode(null);
+      setPlayingEpisodeData(null);
+      toast({
+        title: 'Audio fout',
+        description: `Kon audio niet laden: ${error.message}`,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -882,29 +911,14 @@ export default function OwnPodcasts() {
         <audio
           ref={audioRef}
           preload="auto"
-          crossOrigin="anonymous"
           onEnded={() => {
             setPlayingEpisode(null);
             setPlayingEpisodeData(null);
             setIsPlaying(false);
           }}
           onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
-          onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
-          onCanPlay={() => setIsAudioLoading(false)}
-          onLoadStart={() => setIsAudioLoading(true)}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
-          onError={(e) => {
-            const error = e.currentTarget.error;
-            console.error('Audio error:', error?.code, error?.message);
-            setIsAudioLoading(false);
-            setIsPlaying(false);
-            toast({
-              title: 'Audio Error',
-              description: `Kon audio niet laden (code: ${error?.code})`,
-              variant: 'destructive',
-            });
-          }}
         />
 
         {/* Visible Player */}

@@ -108,7 +108,8 @@ export function DailyChallengeQuiz() {
     mutationFn: async (result: { score: number; timeTaken: number }) => {
       if (!user || !challenge) throw new Error('Not authenticated or no challenge');
       
-      const { error } = await supabase
+      // Save to daily_challenge_results for leaderboard
+      const { error: dailyError } = await supabase
         .from('daily_challenge_results')
         .insert({
           challenge_id: challenge.id,
@@ -117,11 +118,27 @@ export function DailyChallengeQuiz() {
           time_taken_seconds: result.timeTaken,
         });
 
-      if (error) throw error;
+      if (dailyError) throw dailyError;
+
+      // Also save to quiz_results for user's quiz history
+      const { error: quizError } = await supabase
+        .from('quiz_results')
+        .insert({
+          user_id: user.id,
+          quiz_type: 'daily',
+          questions_correct: result.score,
+          questions_total: totalQuestions,
+          score_percentage: Math.round((result.score / totalQuestions) * 100),
+          time_taken_seconds: result.timeTaken,
+        });
+
+      if (quizError) throw quizError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-challenge-leaderboard'] });
       queryClient.invalidateQueries({ queryKey: ['daily-challenge-result'] });
+      queryClient.invalidateQueries({ queryKey: ['user-quiz-results'] });
+      queryClient.invalidateQueries({ queryKey: ['quiz-leaderboard'] });
     },
   });
 

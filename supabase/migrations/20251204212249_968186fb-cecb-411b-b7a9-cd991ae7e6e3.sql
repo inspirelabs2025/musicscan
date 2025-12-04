@@ -1,0 +1,22 @@
+-- Fix functions search_path (zonder IF EXISTS)
+ALTER FUNCTION public.update_platform_products_updated_at() SET search_path = public;
+ALTER FUNCTION public.update_echo_preferences_updated_at() SET search_path = public;
+ALTER FUNCTION public.update_batch_queue_items_updated_at() SET search_path = public;
+ALTER FUNCTION public.generate_episode_slug(text, integer, integer) SET search_path = public;
+ALTER FUNCTION public.increment_photo_view_count() SET search_path = public;
+ALTER FUNCTION public.refresh_featured_photos() SET search_path = public;
+ALTER FUNCTION public.update_photo_like_count() SET search_path = public;
+ALTER FUNCTION public.update_topic_reply_count() SET search_path = public;
+ALTER FUNCTION public.update_post_vote_counts() SET search_path = public;
+ALTER FUNCTION public.cleanup_cd_scan_null_advice_price() SET search_path = public;
+ALTER FUNCTION public.cleanup_vinyl2_scan_null_advice_price() SET search_path = public;
+ALTER FUNCTION public.cleanup_duplicate_cd_scans() SET search_path = public;
+ALTER FUNCTION public.cleanup_duplicate_vinyl_scans() SET search_path = public;
+ALTER FUNCTION public.generate_order_number() SET search_path = public;
+ALTER FUNCTION public.set_platform_order_number() SET search_path = public;
+ALTER FUNCTION public.update_quiz_results_updated_at() SET search_path = public;
+ALTER FUNCTION public.generate_product_slug(text, text) SET search_path = public;
+ALTER FUNCTION public.generate_artist_slug(text) SET search_path = public;
+ALTER FUNCTION public.generate_spotify_release_slug(text, text) SET search_path = public;
+ALTER FUNCTION public.auto_generate_spotify_release_slug() SET search_path = public;
+ALTER FUNCTION public.search_platform_products(text, text, text, numeric, numeric, integer, integer) SET search_path = public;

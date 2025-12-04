@@ -5,6 +5,7 @@ import { QuizHubHero } from '@/components/quiz/QuizHubHero';
 import { QuizCategoryGrid } from '@/components/quiz/QuizCategoryGrid';
 import { QuizLeaderboard } from '@/components/quiz/QuizLeaderboard';
 import { DailyChallengeBanner } from '@/components/quiz/DailyChallengeBanner';
+import { RecentQuizScores } from '@/components/quiz/RecentQuizScores';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { BarChart3 } from 'lucide-react';
@@ -40,6 +41,13 @@ export default function QuizHub() {
 
           {/* Daily Challenge Banner */}
           <DailyChallengeBanner />
+
+          {/* Recent Scores for logged-in users */}
+          {user && (
+            <section>
+              <RecentQuizScores userId={user.id} limit={5} />
+            </section>
+          )}
           
           {/* Quiz Categories Grid */}
           <section>

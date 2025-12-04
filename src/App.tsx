@@ -229,11 +229,7 @@ const AppContent = () => {
           </ProtectedRoute>
         } />
         <Route path="/scan" element={<Scan />} />
-        <Route path="/scanner" element={
-          <ProtectedRoute>
-            <Scanner />
-          </ProtectedRoute>
-        } />
+        <Route path="/scanner" element={<Scanner />} />
         <Route path="/quick-price-check" element={<QuickPriceCheck />} />
         <Route path="/scanner/discogs" element={
           <ProtectedRoute>

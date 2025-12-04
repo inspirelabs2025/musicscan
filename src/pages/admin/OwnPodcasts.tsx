@@ -323,7 +323,7 @@ export default function OwnPodcasts() {
     }
   };
 
-  const playEpisode = async (episode: OwnPodcastEpisode) => {
+  const playEpisode = (episode: OwnPodcastEpisode) => {
     if (playingEpisode === episode.id) {
       audioRef.current?.pause();
       setPlayingEpisode(null);
@@ -344,32 +344,46 @@ export default function OwnPodcasts() {
     setAudioDuration(0);
     setIsAudioLoading(true);
 
-    // Wait for state update, then load and play
-    setTimeout(async () => {
-      if (audioRef.current && episode.audio_url) {
+    if (audioRef.current && episode.audio_url) {
+      const audio = audioRef.current;
+      
+      // Set up one-time canplaythrough handler to auto-play when ready
+      const handleCanPlay = async () => {
+        audio.removeEventListener('canplaythrough', handleCanPlay);
         try {
-          audioRef.current.src = episode.audio_url;
-          await audioRef.current.load();
-          await audioRef.current.play();
+          await audio.play();
           setIsPlaying(true);
         } catch (error: any) {
           console.error('Play error:', error);
-          setIsAudioLoading(false);
           if (error.name === 'NotAllowedError') {
             toast({
               title: 'Klik op play',
               description: 'Klik op de play knop om de audio te starten.',
             });
-          } else {
-            toast({
-              title: 'Audio fout',
-              description: `Kon audio niet afspelen: ${error.message || 'Onbekende fout'}`,
-              variant: 'destructive',
-            });
           }
         }
-      }
-    }, 50);
+      };
+      
+      const handleError = () => {
+        audio.removeEventListener('error', handleError);
+        audio.removeEventListener('canplaythrough', handleCanPlay);
+        setIsAudioLoading(false);
+        const error = audio.error;
+        console.error('Audio load error:', error?.code, error?.message);
+        toast({
+          title: 'Audio fout',
+          description: `Kon audio niet laden. Controleer of het bestand toegankelijk is.`,
+          variant: 'destructive',
+        });
+      };
+      
+      audio.addEventListener('canplaythrough', handleCanPlay, { once: true });
+      audio.addEventListener('error', handleError, { once: true });
+      
+      // Set source and load
+      audio.src = episode.audio_url;
+      audio.load();
+    }
   };
 
   const togglePlayPause = async () => {

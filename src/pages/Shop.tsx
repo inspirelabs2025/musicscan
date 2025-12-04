@@ -47,7 +47,7 @@ const CATEGORIES = [
     description: "Album art op aluminium",
     link: "/metal-prints",
     gradient: "from-slate-500/20 to-zinc-500/20",
-    dbFilter: "metaal"
+    dbFilter: "metaalprint"
   },
   { 
     key: "clothing", 

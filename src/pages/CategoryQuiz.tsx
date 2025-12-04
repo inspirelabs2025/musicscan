@@ -6,6 +6,7 @@ import { AlbumQuiz } from '@/components/quiz/AlbumQuiz';
 import { CollectionQuiz } from '@/components/CollectionQuiz';
 import { NederlandseMuziekQuiz } from '@/components/nederland/NederlandseMuziekQuiz';
 import { DanceHouseMuziekQuiz } from '@/components/dance-house/DanceHouseMuziekQuiz';
+import { DailyChallengeQuiz } from '@/components/quiz/DailyChallengeQuiz';
 import { useAuth } from '@/contexts/AuthContext';
 
 const CATEGORY_META: Record<string, { title: string; description: string }> = {
@@ -82,7 +83,7 @@ export default function CategoryQuiz() {
       case 'speed':
         return <ArtistQuiz />; // Speed mode
       case 'daily':
-        return <ArtistQuiz />; // Daily challenge
+        return <DailyChallengeQuiz />;
       default:
         return <Navigate to="/quizzen" replace />;
     }

@@ -76,6 +76,8 @@ type ShopProduct = {
   price: number;
   image?: string;
   slug?: string;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
 };
 
 // Hook to fetch products for a specific category
@@ -85,7 +87,7 @@ const useCategoryProducts = (categoryKey: string, dbFilter: string) => {
     queryFn: async () => {
       let query = supabase
         .from('platform_products')
-        .select('id, title, artist, price, images, primary_image, slug')
+        .select('id, title, artist, price, images, primary_image, slug, tags, metadata')
         .eq('status', 'active')
         .not('published_at', 'is', null)
         .or('stock_quantity.gt.0,allow_backorder.eq.true');
@@ -110,6 +112,8 @@ const useCategoryProducts = (categoryKey: string, dbFilter: string) => {
         price: p.price,
         image: p.images?.[0] || p.primary_image || undefined,
         slug: p.slug,
+        tags: p.tags || [],
+        metadata: (p.metadata as Record<string, unknown>) || {},
       })) as ShopProduct[];
     },
     staleTime: 5 * 60 * 1000,
@@ -154,14 +158,31 @@ const Shop = () => {
     accessories: accessoriesQuery.data || [],
   };
 
-  // Filter by search
+  // Filter by search and sort Vector Cartoon products first
   const getFilteredProducts = (products: ShopProduct[]) => {
-    if (!searchQuery) return products;
-    const query = searchQuery.toLowerCase();
-    return products.filter(p => 
-      p.title.toLowerCase().includes(query) || 
-      p.artist?.toLowerCase().includes(query)
-    );
+    let filtered = products;
+    
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = products.filter(p => 
+        p.title.toLowerCase().includes(query) || 
+        p.artist?.toLowerCase().includes(query)
+      );
+    }
+    
+    // Sort Vector Cartoon style products to the top
+    return filtered.sort((a, b) => {
+      const aIsVector = a.tags?.includes('vector') || 
+                        a.tags?.includes('vectorCartoon') ||
+                        (a.metadata?.selected_style as string) === 'vectorCartoon';
+      const bIsVector = b.tags?.includes('vector') || 
+                        b.tags?.includes('vectorCartoon') ||
+                        (b.metadata?.selected_style as string) === 'vectorCartoon';
+      
+      if (aIsVector && !bIsVector) return -1;
+      if (!aIsVector && bIsVector) return 1;
+      return 0;
+    });
   };
 
   const counts: Record<string, number> = (countsQuery.data as Record<string, number>) || { posters: 0, canvas: 0, metal: 0, clothing: 0, accessories: 0 };

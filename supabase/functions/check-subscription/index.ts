@@ -170,20 +170,22 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
     
-    // For network errors, return 200 with free tier instead of 500
-    // This prevents app crashes when Supabase has temporary connection issues
-    const isNetworkError = errorMessage.includes('connection') || 
-                          errorMessage.includes('timeout') ||
-                          errorMessage.includes('ECONNRESET');
+    // For auth errors (session missing/expired) or network errors, return 200 with free tier
+    // This prevents app crashes and allows graceful handling of logged-out users
+    const isGracefulError = errorMessage.includes('Auth session missing') ||
+                           errorMessage.includes('session_not_found') ||
+                           errorMessage.includes('Invalid Refresh Token') ||
+                           errorMessage.includes('connection') || 
+                           errorMessage.includes('timeout') ||
+                           errorMessage.includes('ECONNRESET');
     
     return new Response(JSON.stringify({ 
-      error: errorMessage,
       subscribed: false,
       plan_slug: 'free',
       plan_name: 'FREE - Music Explorer'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: isNetworkError ? 200 : 500,
+      status: 200, // Always return 200 - free tier is valid for non-authenticated users
     });
   }
 });

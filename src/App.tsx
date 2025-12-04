@@ -65,6 +65,8 @@ import AutoComments from "./pages/admin/AutoComments";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Podcasts from "./pages/Podcasts";
+import PodcastDetail from "./pages/PodcastDetail";
+import PodcastEpisodeDetail from "./pages/PodcastEpisodeDetail";
 import { ShopProducts } from "./pages/admin/ShopProducts";
 import PlatformProducts from "./pages/admin/PlatformProducts";
 import AllProducts from "./pages/admin/AllProducts";
@@ -492,6 +494,8 @@ const AppContent = () => {
         <Route path="/time-machine" element={<TimeMachine />} />
         <Route path="/time-machine/:slug" element={<TimeMachineStory />} />
         <Route path="/podcasts" element={<Podcasts />} />
+        <Route path="/podcast/:podcastSlug" element={<PodcastDetail />} />
+        <Route path="/podcast/:podcastSlug/:episodeSlug" element={<PodcastEpisodeDetail />} />
         <Route path="/art-shop" element={<ArtShop />} />
         <Route path="/metaalprints" element={<ArtShop />} />
         <Route path="/posters" element={<PosterShop />} />

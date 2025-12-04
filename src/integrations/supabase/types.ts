@@ -3560,9 +3560,11 @@ export type Database = {
           podcast_id: string
           published_at: string | null
           season_number: number | null
+          slug: string | null
           title: string
           transcript: string | null
           updated_at: string
+          views_count: number | null
         }
         Insert: {
           artwork_url?: string | null
@@ -3578,9 +3580,11 @@ export type Database = {
           podcast_id: string
           published_at?: string | null
           season_number?: number | null
+          slug?: string | null
           title: string
           transcript?: string | null
           updated_at?: string
+          views_count?: number | null
         }
         Update: {
           artwork_url?: string | null
@@ -3596,9 +3600,11 @@ export type Database = {
           podcast_id?: string
           published_at?: string | null
           season_number?: number | null
+          slug?: string | null
           title?: string
           transcript?: string | null
           updated_at?: string
+          views_count?: number | null
         }
         Relationships: [
           {
@@ -3626,6 +3632,7 @@ export type Database = {
           owner_name: string
           slug: string
           subcategory: string | null
+          total_listens: number | null
           updated_at: string
           website_url: string | null
         }
@@ -3644,6 +3651,7 @@ export type Database = {
           owner_name?: string
           slug: string
           subcategory?: string | null
+          total_listens?: number | null
           updated_at?: string
           website_url?: string | null
         }
@@ -3662,6 +3670,7 @@ export type Database = {
           owner_name?: string
           slug?: string
           subcategory?: string | null
+          total_listens?: number | null
           updated_at?: string
           website_url?: string | null
         }
@@ -7479,6 +7488,10 @@ export type Database = {
       }
       generate_artist_slug: {
         Args: { artist_name_input: string }
+        Returns: string
+      }
+      generate_episode_slug: {
+        Args: { episode_number: number; season_number: number; title: string }
         Returns: string
       }
       generate_order_number: { Args: never; Returns: string }

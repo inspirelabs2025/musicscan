@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Upload, Copy, Check, Rss, Music, Mic, ExternalLink, Loader2, Play, Pause, Pencil, Volume2, VolumeX, X } from 'lucide-react';
+import { Plus, Trash2, Upload, Copy, Check, Rss, Music, Mic, ExternalLink, Loader2, Play, Pencil, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   useOwnPodcasts,
@@ -64,12 +64,6 @@ export default function OwnPodcasts() {
   const [isUploading, setIsUploading] = useState(false);
   const [playingEpisode, setPlayingEpisode] = useState<string | null>(null);
   const [playingEpisodeData, setPlayingEpisodeData] = useState<OwnPodcastEpisode | null>(null);
-  const [audioCurrentTime, setAudioCurrentTime] = useState(0);
-  const [audioDuration, setAudioDuration] = useState(0);
-  const [audioVolume, setAudioVolume] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isAudioLoading, setIsAudioLoading] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [editArtworkFile, setEditArtworkFile] = useState<File | null>(null);
   const [editAudioFile, setEditAudioFile] = useState<File | null>(null);
 
@@ -324,30 +318,15 @@ export default function OwnPodcasts() {
   };
 
   const playEpisode = (episode: OwnPodcastEpisode) => {
-    // Toggle pause als zelfde episode
+    // Toggle close als zelfde episode
     if (playingEpisode === episode.id) {
-      audioRef.current?.pause();
       setPlayingEpisode(null);
       setPlayingEpisodeData(null);
-      setIsPlaying(false);
       return;
     }
 
-    // Stop huidige audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-
-    // Update state
-    setPlayingEpisodeData(episode);
-    setPlayingEpisode(episode.id);
-    setAudioCurrentTime(0);
-    setAudioDuration(0);
-    setIsAudioLoading(true);
-
+    // Open player voor deze episode
     if (!episode.audio_url) {
-      setIsAudioLoading(false);
       toast({
         title: 'Audio fout',
         description: 'Geen audio URL beschikbaar.',
@@ -356,102 +335,10 @@ export default function OwnPodcasts() {
       return;
     }
 
-    console.log('Creating new Audio with URL:', episode.audio_url);
-    
-    // Create new Audio object programmatically (works better in sandboxes)
-    const audio = new Audio();
-    audioRef.current = audio;
-    
-    // Set up event handlers BEFORE setting src
-    audio.oncanplaythrough = async () => {
-      console.log('Audio canplaythrough');
-      setIsAudioLoading(false);
-      try {
-        await audio.play();
-        setIsPlaying(true);
-      } catch (err: any) {
-        console.log('Autoplay blocked:', err?.name);
-      }
-    };
-    
-    audio.onloadedmetadata = () => {
-      console.log('Audio loadedmetadata, duration:', audio.duration);
-      setAudioDuration(audio.duration);
-    };
-    
-    audio.ontimeupdate = () => {
-      setAudioCurrentTime(audio.currentTime);
-    };
-    
-    audio.onplay = () => setIsPlaying(true);
-    audio.onpause = () => setIsPlaying(false);
-    
-    audio.onended = () => {
-      setPlayingEpisode(null);
-      setPlayingEpisodeData(null);
-      setIsPlaying(false);
-    };
-    
-    audio.onerror = () => {
-      const error = audio.error;
-      console.error('Audio error - code:', error?.code, 'message:', error?.message);
-      setIsAudioLoading(false);
-      setPlayingEpisode(null);
-      setPlayingEpisodeData(null);
-      toast({
-        title: 'Audio fout',
-        description: error?.message || 'Kon audio niet afspelen',
-        variant: 'destructive',
-      });
-    };
-
-    // Set preload and src
-    audio.preload = 'metadata';
-    audio.src = episode.audio_url;
-    audio.load();
+    setPlayingEpisodeData(episode);
+    setPlayingEpisode(episode.id);
   };
 
-  const togglePlayPause = async () => {
-    if (!audioRef.current) return;
-    
-    if (audioRef.current.paused) {
-      try {
-        await audioRef.current.play();
-        setIsPlaying(true);
-      } catch (e) {
-        console.error('Play failed:', e);
-      }
-    } else {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    }
-  };
-
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current || !audioDuration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percentage = clickX / rect.width;
-    audioRef.current.currentTime = percentage * audioDuration;
-  };
-
-  const toggleMute = () => {
-    if (!audioRef.current) return;
-    if (audioVolume > 0) {
-      audioRef.current.volume = 0;
-      setAudioVolume(0);
-    } else {
-      audioRef.current.volume = 1;
-      setAudioVolume(1);
-    }
-  };
-
-  const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   return (
     <AdminLayout>
@@ -839,7 +726,7 @@ export default function OwnPodcasts() {
                             onClick={() => playEpisode(episode)}
                           >
                             {playingEpisode === episode.id ? (
-                              <Pause className="h-5 w-5" />
+                              <X className="h-5 w-5" />
                             ) : (
                               <Play className="h-5 w-5" />
                             )}
@@ -903,10 +790,8 @@ export default function OwnPodcasts() {
           </TabsContent>
         </Tabs>
 
-        {/* Audio element managed programmatically via audioRef */}
-
-        {/* Visible Player */}
-        {playingEpisodeData && (
+        {/* Native Audio Player - browser handles everything */}
+        {playingEpisodeData && playingEpisodeData.audio_url && (
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg">
             <div className="container mx-auto p-4">
               <div className="flex items-center gap-4">
@@ -918,66 +803,22 @@ export default function OwnPodcasts() {
                   </p>
                 </div>
 
-                {/* Controls */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="default"
-                    onClick={togglePlayPause}
-                    className="w-10 h-10 rounded-full"
-                    disabled={isAudioLoading}
-                  >
-                    {isAudioLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : isPlaying ? (
-                      <Pause className="w-4 h-4" />
-                    ) : (
-                      <Play className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-
-                {/* Progress */}
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatTime(audioCurrentTime)}
-                  </span>
-                  <div 
-                    className="flex-1 h-2 bg-muted rounded-full cursor-pointer overflow-hidden"
-                    onClick={handleSeek}
-                  >
-                    <div 
-                      className="h-full bg-primary rounded-full transition-all"
-                      style={{ width: `${audioDuration > 0 ? (audioCurrentTime / audioDuration) * 100 : 0}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatTime(audioDuration)}
-                  </span>
-                </div>
-
-                {/* Volume */}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={toggleMute}
-                >
-                  {audioVolume === 0 ? (
-                    <VolumeX className="w-4 h-4" />
-                  ) : (
-                    <Volume2 className="w-4 h-4" />
-                  )}
-                </Button>
+                {/* Native Audio Element with controls */}
+                <audio 
+                  controls 
+                  autoPlay
+                  src={playingEpisodeData.audio_url}
+                  className="flex-1 h-10"
+                  style={{ minWidth: '200px', maxWidth: '400px' }}
+                />
 
                 {/* Close */}
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => {
-                    audioRef.current?.pause();
                     setPlayingEpisode(null);
                     setPlayingEpisodeData(null);
-                    setIsPlaying(false);
                   }}
                 >
                   <X className="w-4 h-4" />
@@ -1146,9 +987,8 @@ export default function OwnPodcasts() {
                       size="sm"
                       variant="ghost"
                       onClick={() => {
-                        if (audioRef.current) {
-                          audioRef.current.src = editingEpisode.audio_url;
-                          audioRef.current.play();
+                        if (editingEpisode?.audio_url) {
+                          window.open(editingEpisode.audio_url, '_blank');
                         }
                       }}
                     >

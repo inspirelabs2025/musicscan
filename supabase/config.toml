@@ -542,3 +542,9 @@ cron = "0 10,18 * * *"
 
 [functions.generate-podcast-rss]
 verify_jwt = false
+
+[functions.generate-daily-challenge]
+verify_jwt = false
+
+[[functions.generate-daily-challenge.schedule]]
+cron = "0 5 * * *"

@@ -887,7 +887,7 @@ export default function OwnPodcasts() {
 
         {/* Edit Episode Dialog */}
         <Dialog open={showEditEpisode} onOpenChange={setShowEditEpisode}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Episode Bewerken</DialogTitle>
               <DialogDescription>

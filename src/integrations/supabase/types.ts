@@ -3545,6 +3545,128 @@ export type Database = {
         }
         Relationships: []
       }
+      own_podcast_episodes: {
+        Row: {
+          artwork_url: string | null
+          audio_duration_seconds: number | null
+          audio_file_size: number | null
+          audio_url: string
+          created_at: string
+          description: string | null
+          episode_number: number | null
+          episode_type: string | null
+          id: string
+          is_published: boolean
+          podcast_id: string
+          published_at: string | null
+          season_number: number | null
+          title: string
+          transcript: string | null
+          updated_at: string
+        }
+        Insert: {
+          artwork_url?: string | null
+          audio_duration_seconds?: number | null
+          audio_file_size?: number | null
+          audio_url: string
+          created_at?: string
+          description?: string | null
+          episode_number?: number | null
+          episode_type?: string | null
+          id?: string
+          is_published?: boolean
+          podcast_id: string
+          published_at?: string | null
+          season_number?: number | null
+          title: string
+          transcript?: string | null
+          updated_at?: string
+        }
+        Update: {
+          artwork_url?: string | null
+          audio_duration_seconds?: number | null
+          audio_file_size?: number | null
+          audio_url?: string
+          created_at?: string
+          description?: string | null
+          episode_number?: number | null
+          episode_type?: string | null
+          id?: string
+          is_published?: boolean
+          podcast_id?: string
+          published_at?: string | null
+          season_number?: number | null
+          title?: string
+          transcript?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "own_podcast_episodes_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: false
+            referencedRelation: "own_podcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      own_podcasts: {
+        Row: {
+          artwork_url: string | null
+          author: string
+          category: string
+          created_at: string
+          description: string | null
+          explicit: boolean
+          id: string
+          is_published: boolean
+          language: string
+          name: string
+          owner_email: string
+          owner_name: string
+          slug: string
+          subcategory: string | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          artwork_url?: string | null
+          author?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          explicit?: boolean
+          id?: string
+          is_published?: boolean
+          language?: string
+          name: string
+          owner_email?: string
+          owner_name?: string
+          slug: string
+          subcategory?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          artwork_url?: string | null
+          author?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          explicit?: boolean
+          id?: string
+          is_published?: boolean
+          language?: string
+          name?: string
+          owner_email?: string
+          owner_name?: string
+          slug?: string
+          subcategory?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       pageviews: {
         Row: {
           created_at: string

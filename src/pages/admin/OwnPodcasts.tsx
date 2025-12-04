@@ -823,16 +823,18 @@ export default function OwnPodcasts() {
         {/* Audio Player */}
         <audio
           ref={audioRef}
-          crossOrigin="anonymous"
-          preload="auto"
+          preload="metadata"
           onEnded={() => {
             setPlayingEpisode(null);
             setPlayingEpisodeData(null);
           }}
           onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
           onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
-          onError={(e) => console.error('Audio element error:', e.currentTarget.error)}
-          className="hidden"
+          onCanPlay={() => console.log('Audio can play')}
+          onError={(e) => {
+            const error = e.currentTarget.error;
+            console.error('Audio error:', error?.code, error?.message);
+          }}
         />
 
         {/* Visible Player */}

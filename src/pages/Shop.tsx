@@ -110,7 +110,7 @@ const useCategoryProducts = (categoryKey: string, dbFilter: string) => {
         title: p.title,
         artist: p.artist || undefined,
         price: p.price,
-        image: p.images?.[0] || p.primary_image || undefined,
+        image: p.primary_image || p.images?.[0] || undefined,
         slug: p.slug,
         tags: p.tags || [],
         metadata: (p.metadata as Record<string, unknown>) || {},

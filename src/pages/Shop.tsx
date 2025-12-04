@@ -256,9 +256,9 @@ const Shop = () => {
   // Category Section Component
   const CategorySection = ({ category }: { category: typeof CATEGORIES[0] }) => {
     const products = getFilteredProducts(productsByCategory[category.key] || []);
-    const displayProducts = products.slice(0, 6);
+    const displayProducts = products.slice(0, 8);
     const categoryCount = (counts as Record<string, number>)[category.key] || products.length;
-    const hasMore = categoryCount > 6;
+    const hasMore = categoryCount > 8;
     const Icon = category.icon;
 
     if (products.length === 0) return null;
@@ -287,7 +287,7 @@ const Shop = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4">
           {displayProducts.map((product, index) => (
             <ProductCard key={product.id} product={product} index={index} categoryKey={category.key} />
           ))}
@@ -383,8 +383,8 @@ const Shop = () => {
               {[1, 2, 3].map((i) => (
                 <div key={i}>
                   <Skeleton className="h-24 w-full rounded-2xl mb-6" />
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {Array.from({ length: 6 }).map((_, j) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4">
+                    {Array.from({ length: 8 }).map((_, j) => (
                       <Card key={j} className="overflow-hidden">
                         <Skeleton className="aspect-square w-full" />
                         <CardContent className="p-3">

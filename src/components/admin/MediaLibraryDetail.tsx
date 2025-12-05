@@ -49,6 +49,9 @@ export const MediaLibraryDetail = ({
   isAnalyzing
 }: MediaLibraryDetailProps) => {
   const [manualArtist, setManualArtist] = useState(item?.manual_artist || '');
+  const [manualTitle, setManualTitle] = useState(item?.manual_title || '');
+  const [manualGenre, setManualGenre] = useState(item?.manual_genre || '');
+  const [manualYear, setManualYear] = useState(item?.manual_year?.toString() || '');
   const [notes, setNotes] = useState(item?.notes || '');
   const [saving, setSaving] = useState(false);
 
@@ -61,6 +64,9 @@ export const MediaLibraryDetail = ({
         id: item.id, 
         updates: {
           manual_artist: manualArtist || null,
+          manual_title: manualTitle || null,
+          manual_genre: manualGenre || null,
+          manual_year: manualYear ? parseInt(manualYear, 10) : null,
           notes: notes || null
         }
       });
@@ -174,15 +180,47 @@ export const MediaLibraryDetail = ({
 
             {/* Manual Override */}
             <div className="space-y-3">
-              <h3 className="font-semibold">Handmatige Override</h3>
-              <div className="space-y-2">
-                <Label htmlFor="manual-artist">Artiest naam</Label>
-                <Input
-                  id="manual-artist"
-                  value={manualArtist}
-                  onChange={(e) => setManualArtist(e.target.value)}
-                  placeholder={item.recognized_artist || 'Voer artiest naam in...'}
-                />
+              <h3 className="font-semibold">Metadata Bewerken</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="manual-artist">Artiest</Label>
+                  <Input
+                    id="manual-artist"
+                    value={manualArtist}
+                    onChange={(e) => setManualArtist(e.target.value)}
+                    placeholder={item.recognized_artist || 'Artiest naam...'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="manual-title">Album/Titel</Label>
+                  <Input
+                    id="manual-title"
+                    value={manualTitle}
+                    onChange={(e) => setManualTitle(e.target.value)}
+                    placeholder="Album of single titel..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="manual-genre">Genre</Label>
+                  <Input
+                    id="manual-genre"
+                    value={manualGenre}
+                    onChange={(e) => setManualGenre(e.target.value)}
+                    placeholder="Rock, Pop, Jazz..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="manual-year">Jaar</Label>
+                  <Input
+                    id="manual-year"
+                    type="number"
+                    value={manualYear}
+                    onChange={(e) => setManualYear(e.target.value)}
+                    placeholder="1985"
+                    min={1900}
+                    max={2030}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="notes">Notities</Label>
@@ -191,12 +229,12 @@ export const MediaLibraryDetail = ({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Optionele notities..."
-                  rows={3}
+                  rows={2}
                 />
               </div>
               <Button onClick={handleSave} disabled={saving} className="w-full">
                 <Save className="h-4 w-4 mr-2" />
-                Opslaan
+                {saving ? 'Opslaan...' : 'Wijzigingen Opslaan'}
               </Button>
             </div>
 

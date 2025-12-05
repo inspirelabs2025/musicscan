@@ -8,7 +8,7 @@ import {
   Clock, 
   CheckCircle2, 
   AlertCircle,
-  Eye,
+  Pencil,
   Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -171,8 +171,9 @@ export const MediaLibraryGrid = ({
                     e.stopPropagation();
                     onView(item);
                   }}
+                  title="Bewerken"
                 >
-                  <Eye className="h-4 w-4" />
+                  <Pencil className="h-4 w-4" />
                 </Button>
                 {item.ai_status === 'pending' && (
                   <Button
@@ -182,6 +183,7 @@ export const MediaLibraryGrid = ({
                       onAnalyze(item);
                     }}
                     disabled={isAnalyzing}
+                    title="AI Analyse"
                   >
                     <Sparkles className="h-4 w-4" />
                   </Button>
@@ -193,6 +195,7 @@ export const MediaLibraryGrid = ({
                     e.stopPropagation();
                     onDelete(item);
                   }}
+                  title="Verwijderen"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

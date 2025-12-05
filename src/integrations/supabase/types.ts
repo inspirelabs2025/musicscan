@@ -2880,7 +2880,10 @@ export type Database = {
           height: number | null
           id: string
           manual_artist: string | null
+          manual_genre: string | null
           manual_tags: string[] | null
+          manual_title: string | null
+          manual_year: number | null
           mime_type: string | null
           notes: string | null
           public_url: string
@@ -2912,7 +2915,10 @@ export type Database = {
           height?: number | null
           id?: string
           manual_artist?: string | null
+          manual_genre?: string | null
           manual_tags?: string[] | null
+          manual_title?: string | null
+          manual_year?: number | null
           mime_type?: string | null
           notes?: string | null
           public_url: string
@@ -2944,7 +2950,10 @@ export type Database = {
           height?: number | null
           id?: string
           manual_artist?: string | null
+          manual_genre?: string | null
           manual_tags?: string[] | null
+          manual_title?: string | null
+          manual_year?: number | null
           mime_type?: string | null
           notes?: string | null
           public_url?: string

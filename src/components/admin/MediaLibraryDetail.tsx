@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Sparkles, 
   Save,
@@ -48,12 +49,24 @@ export const MediaLibraryDetail = ({
   onSendToQueue,
   isAnalyzing
 }: MediaLibraryDetailProps) => {
-  const [manualArtist, setManualArtist] = useState(item?.manual_artist || '');
-  const [manualTitle, setManualTitle] = useState(item?.manual_title || '');
-  const [manualGenre, setManualGenre] = useState(item?.manual_genre || '');
-  const [manualYear, setManualYear] = useState(item?.manual_year?.toString() || '');
-  const [notes, setNotes] = useState(item?.notes || '');
+  const { toast } = useToast();
+  const [manualArtist, setManualArtist] = useState('');
+  const [manualTitle, setManualTitle] = useState('');
+  const [manualGenre, setManualGenre] = useState('');
+  const [manualYear, setManualYear] = useState('');
+  const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // Reset form state when item changes
+  useEffect(() => {
+    if (item) {
+      setManualArtist(item.manual_artist || '');
+      setManualTitle(item.manual_title || '');
+      setManualGenre(item.manual_genre || '');
+      setManualYear(item.manual_year?.toString() || '');
+      setNotes(item.notes || '');
+    }
+  }, [item?.id]);
 
   if (!item) return null;
 
@@ -69,6 +82,16 @@ export const MediaLibraryDetail = ({
           manual_year: manualYear ? parseInt(manualYear, 10) : null,
           notes: notes || null
         }
+      });
+      toast({
+        title: 'Opgeslagen',
+        description: 'Wijzigingen zijn opgeslagen'
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Fout bij opslaan',
+        description: error.message,
+        variant: 'destructive'
       });
     } finally {
       setSaving(false);

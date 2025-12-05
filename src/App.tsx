@@ -180,6 +180,7 @@ import DanceHouseFeitDetail from "./pages/DanceHouseFeitDetail";
 import SetPassword from "./pages/SetPassword";
 import MyQuizzes from "./pages/MyQuizzes";
 import YearOverview from "./pages/YearOverview";
+import MonthOverview from "./pages/MonthOverview";
 import AdminYearOverview from "./pages/admin/AdminYearOverview";
 
 // Redirect component for old /blog/ URLs to /plaat-verhaal/
@@ -516,8 +517,10 @@ const AppContent = () => {
         <Route path="/anekdotes" element={<AnecdotesOverview />} />
         <Route path="/anekdotes/:slug" element={<AnecdoteDetail />} />
         
-        {/* Year Overview */}
+        {/* Year/Month Overview */}
         <Route path="/jaar-overzicht" element={<YearOverview />} />
+        <Route path="/maand-overzicht" element={<MonthOverview />} />
+        <Route path="/maand-overzicht/:year/:month" element={<MonthOverview />} />
         
         <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
         <Route path="/singles" element={<Singles />} />

@@ -80,15 +80,15 @@ export default function Statistics() {
     <AdminGuard>
       <AdminLayout>
         <div className="p-6 space-y-6 w-full">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">📊 Statistieken Dashboard</h1>
-              <p className="text-muted-foreground mt-1">
-                Gedetailleerde analytics met admin views uitgesloten
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Quick period buttons */}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-6">
+              <div>
+                <h1 className="text-3xl font-bold">📊 Statistieken Dashboard</h1>
+                <p className="text-muted-foreground mt-1">
+                  Gedetailleerde analytics met admin views uitgesloten
+                </p>
+              </div>
+              {/* Quick period buttons - next to title */}
               <div className="hidden md:flex items-center gap-1 bg-muted rounded-lg p-1">
                 {(['today', 'week', 'month', 'quarter'] as TimePeriod[]).map((p) => (
                   <Button
@@ -102,10 +102,10 @@ export default function Statistics() {
                   </Button>
                 ))}
               </div>
-
+              
               {/* Dropdown for more options */}
               <Select value={period} onValueChange={(v) => setPeriod(v as TimePeriod)}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-[140px] h-8">
                   <SelectValue>{getPeriodLabel()}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -127,13 +127,13 @@ export default function Statistics() {
                 <PopoverTrigger asChild>
                   <Button
                     variant={period === 'custom' ? 'secondary' : 'outline'}
-                    size="icon"
-                    className={cn(period === 'custom' && 'ring-2 ring-primary')}
+                    size="sm"
+                    className={cn('h-8 w-8', period === 'custom' && 'ring-2 ring-primary')}
                   >
                     <CalendarIcon className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="range"
                     selected={customRange}

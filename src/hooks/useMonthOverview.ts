@@ -41,6 +41,22 @@ export interface MonthStreaming {
   artist?: string;
   statistic?: string;
   platform?: string;
+  streams?: number;
+  chart_position?: number;
+}
+
+export interface MonthStatistics {
+  total_streams_billions?: number;
+  top_streamed_song?: string;
+  top_streamed_song_streams?: string;
+  top_streamed_artist?: string;
+  top_streamed_artist_listeners?: string;
+  vinyl_sales_growth?: string;
+  concert_revenue_millions?: number;
+  tickets_sold?: string;
+  tiktok_viral_songs?: number;
+  new_albums_released?: number;
+  grammy_nominations?: number;
 }
 
 export interface MonthAward {
@@ -74,6 +90,7 @@ export interface MonthDataPoints {
   streaming: MonthStreaming[];
   awards: MonthAward[];
   dutch_music: MonthDutchMusic[];
+  statistics?: MonthStatistics;
 }
 
 export interface MonthNarratives {

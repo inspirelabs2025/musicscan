@@ -13,6 +13,20 @@ const MONTH_NAMES_NL = [
   'juli', 'augustus', 'september', 'oktober', 'november', 'december'
 ];
 
+interface MonthStatistics {
+  total_streams_billions?: number;
+  top_streamed_song?: string;
+  top_streamed_song_streams?: string;
+  top_streamed_artist?: string;
+  top_streamed_artist_listeners?: string;
+  vinyl_sales_growth?: string;
+  concert_revenue_millions?: number;
+  tickets_sold?: string;
+  tiktok_viral_songs?: number;
+  new_albums_released?: number;
+  grammy_nominations?: number;
+}
+
 interface MonthData {
   releases: any[];
   news: any[];
@@ -22,6 +36,7 @@ interface MonthData {
   streaming: any[];
   awards: any[];
   dutch_music: any[];
+  statistics: MonthStatistics;
 }
 
 // ============================================
@@ -33,35 +48,39 @@ async function fetchPerplexityMonthData(year: number, month: number, monthName: 
   const queries = [
     { 
       key: 'releases', 
-      query: `Most important new music album releases ${monthName} ${year}. Include artist name, album title, release date, label, genre, chart positions, sales figures. List at least 15 major releases.` 
+      query: `Most important new music album releases ${monthName} ${year}. Include artist name, album title, release date, label, genre, first week sales numbers, chart positions (Billboard 200 position, UK Albums position), streaming numbers in first week. List at least 15 major releases with specific numbers.` 
     },
     { 
       key: 'news', 
-      query: `Music industry news headlines ${monthName} ${year}. Major announcements, record deals, collaborations, controversies, streaming milestones, label news. List at least 10 significant news items.` 
+      query: `Music industry news headlines ${monthName} ${year}. Major announcements, record deals with dollar amounts, collaborations, controversies, streaming milestones with specific numbers, label news. List at least 10 significant news items with concrete figures.` 
     },
     { 
       key: 'stories', 
-      query: `Special music stories and remarkable events ${monthName} ${year}. Reunions, comebacks, viral moments, surprise releases, record-breaking achievements, unique collaborations.` 
+      query: `Special music stories and remarkable events ${monthName} ${year}. Reunions, comebacks, viral moments, surprise releases, record-breaking achievements with specific numbers, unique collaborations.` 
     },
     { 
       key: 'in_memoriam', 
-      query: `Musicians singers songwriters producers who died ${monthName} ${year}. Include exact date, age, cause of death if known, what they were famous for. Complete list.` 
+      query: `Musicians singers songwriters producers who died ${monthName} ${year}. Include exact date, age, cause of death if known, what they were famous for, career statistics (albums sold, awards won). Complete list.` 
     },
     { 
       key: 'concerts', 
-      query: `Major concerts tours festivals ${monthName} ${year}. Include artist/band, venue, city, dates, attendance figures, ticket sales, notable performances.` 
+      query: `Major concerts tours festivals ${monthName} ${year}. Include artist/band, venue, city, dates, exact attendance figures, ticket revenue in dollars, ticket prices. Notable performances with specific numbers.` 
     },
     { 
       key: 'streaming', 
-      query: `Spotify Apple Music streaming records charts ${monthName} ${year}. Most streamed songs, artists, albums. New records broken. Global chart positions. Streaming statistics.` 
+      query: `Spotify Apple Music streaming records charts ${monthName} ${year}. Most streamed songs with exact stream counts, artists with monthly listener numbers, albums with first week streams. New records broken with specific numbers. Global chart positions. Include: total streams for top songs, monthly listeners for top artists, playlist additions.` 
     },
     { 
       key: 'awards', 
-      query: `Music awards ceremonies nominations winners ${monthName} ${year}. Grammy nominations, AMA winners, MTV awards, Edison awards, any music awards that happened this month.` 
+      query: `Music awards ceremonies nominations winners ${monthName} ${year}. Grammy nominations count per artist, AMA winners, MTV awards, Edison awards, any music awards that happened this month. Include number of nominations and wins per artist.` 
     },
     { 
       key: 'dutch_music', 
-      query: `Nederlandse muziek nieuws ${monthName} ${year}. Dutch Top 40, 538 Hitzone, Nederlandse artiesten succes, Edison nominaties, concerten Nederland, Nederlandse releases.` 
+      query: `Nederlandse muziek nieuws ${monthName} ${year}. Dutch Top 40 positions with weeks at #1, 538 Hitzone chart positions, Nederlandse artiesten streaming cijfers, Edison nominaties aantallen, concerten Nederland met bezoekersaantallen, Nederlandse releases met verkoopcijfers.` 
+    },
+    {
+      key: 'statistics',
+      query: `Music industry statistics ${monthName} ${year}. Provide specific numbers for: total global streams on Spotify (in billions), most streamed song with exact stream count, most streamed artist with monthly listeners, vinyl/physical sales percentage growth, total concert ticket revenue (in millions USD), total concert tickets sold globally, TikTok viral songs count, number of new albums released by major labels, Grammy nominations total. Only include verified statistics with exact numbers.`
     }
   ];
 
@@ -124,7 +143,8 @@ async function extractStructuredData(rawData: Record<string, string>, year: numb
     concerts: [],
     streaming: [],
     awards: [],
-    dutch_music: []
+    dutch_music: [],
+    statistics: {}
   };
   
   // Extract releases
@@ -434,6 +454,55 @@ Return ONLY valid JSON array, no markdown.`
       }
     } catch (e) {
       console.error('  ❌ Stories extraction failed:', e);
+    }
+  }
+  
+  // Extract statistics
+  if (rawData.statistics) {
+    try {
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { 
+              role: 'user', 
+              content: `Extract music industry statistics from this text and return as a single JSON object (not array). Include these fields if data is available:
+- total_streams_billions: number (total Spotify streams in billions)
+- top_streamed_song: string (name of most streamed song)
+- top_streamed_song_streams: string (stream count with unit, e.g. "1.2 billion")
+- top_streamed_artist: string (name of most streamed artist)  
+- top_streamed_artist_listeners: string (monthly listeners with unit, e.g. "115 million")
+- vinyl_sales_growth: string (percentage growth, e.g. "+12%")
+- concert_revenue_millions: number (total concert revenue in millions USD)
+- tickets_sold: string (total tickets sold with unit, e.g. "45 million")
+- tiktok_viral_songs: number (count of viral songs)
+- new_albums_released: number (count of major album releases)
+- grammy_nominations: number (total Grammy nominations announced)
+
+Text:
+${rawData.statistics}
+
+Return ONLY valid JSON object, no markdown. Use null for unknown values.` 
+            }
+          ],
+          temperature: 0.1
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content || '{}';
+        const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        result.statistics = JSON.parse(cleaned);
+        console.log(`  ✅ Statistics extracted`);
+      }
+    } catch (e) {
+      console.error('  ❌ Statistics extraction failed:', e);
     }
   }
   

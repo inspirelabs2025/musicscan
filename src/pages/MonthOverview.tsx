@@ -167,7 +167,73 @@ export default function MonthOverview() {
               </Card>
             )}
 
-            {/* Stats Overview */}
+            {/* Key Statistics */}
+            {dataPoints?.statistics && Object.keys(dataPoints.statistics).some(k => dataPoints.statistics?.[k as keyof typeof dataPoints.statistics]) && (
+              <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    📈 Cijfers & Statistieken
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {dataPoints.statistics.total_streams_billions && (
+                      <div className="text-center p-4 rounded-lg bg-background/80">
+                        <div className="text-3xl font-bold text-primary">{dataPoints.statistics.total_streams_billions}B</div>
+                        <div className="text-sm text-muted-foreground">Spotify Streams</div>
+                      </div>
+                    )}
+                    {dataPoints.statistics.top_streamed_song && (
+                      <div className="text-center p-4 rounded-lg bg-background/80">
+                        <div className="text-lg font-bold text-green-500 truncate">{dataPoints.statistics.top_streamed_song}</div>
+                        <div className="text-xs text-muted-foreground">{dataPoints.statistics.top_streamed_song_streams || 'Top Song'}</div>
+                        <Badge variant="secondary" className="mt-1">🎵 #1 Streams</Badge>
+                      </div>
+                    )}
+                    {dataPoints.statistics.top_streamed_artist && (
+                      <div className="text-center p-4 rounded-lg bg-background/80">
+                        <div className="text-lg font-bold text-purple-500 truncate">{dataPoints.statistics.top_streamed_artist}</div>
+                        <div className="text-xs text-muted-foreground">{dataPoints.statistics.top_streamed_artist_listeners || 'Top Artist'}</div>
+                        <Badge variant="secondary" className="mt-1">👤 #1 Listeners</Badge>
+                      </div>
+                    )}
+                    {dataPoints.statistics.concert_revenue_millions && (
+                      <div className="text-center p-4 rounded-lg bg-background/80">
+                        <div className="text-3xl font-bold text-yellow-500">${dataPoints.statistics.concert_revenue_millions}M</div>
+                        <div className="text-sm text-muted-foreground">Concert Revenue</div>
+                      </div>
+                    )}
+                    {dataPoints.statistics.tickets_sold && (
+                      <div className="text-center p-4 rounded-lg bg-background/80">
+                        <div className="text-2xl font-bold text-orange-500">{dataPoints.statistics.tickets_sold}</div>
+                        <div className="text-sm text-muted-foreground">🎫 Tickets Verkocht</div>
+                      </div>
+                    )}
+                    {dataPoints.statistics.vinyl_sales_growth && (
+                      <div className="text-center p-4 rounded-lg bg-background/80">
+                        <div className="text-2xl font-bold text-blue-500">{dataPoints.statistics.vinyl_sales_growth}</div>
+                        <div className="text-sm text-muted-foreground">📀 Vinyl Groei</div>
+                      </div>
+                    )}
+                    {dataPoints.statistics.tiktok_viral_songs && (
+                      <div className="text-center p-4 rounded-lg bg-background/80">
+                        <div className="text-3xl font-bold text-pink-500">{dataPoints.statistics.tiktok_viral_songs}</div>
+                        <div className="text-sm text-muted-foreground">🎵 TikTok Virals</div>
+                      </div>
+                    )}
+                    {dataPoints.statistics.grammy_nominations && (
+                      <div className="text-center p-4 rounded-lg bg-background/80">
+                        <div className="text-3xl font-bold text-amber-500">{dataPoints.statistics.grammy_nominations}</div>
+                        <div className="text-sm text-muted-foreground">🏆 Grammy Nominaties</div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Content Stats Overview */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Card className="text-center p-4">
                 <Disc className="w-8 h-8 mx-auto mb-2 text-primary" />

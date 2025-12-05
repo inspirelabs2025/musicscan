@@ -3034,6 +3034,45 @@ export type Database = {
           },
         ]
       }
+      month_overview_cache: {
+        Row: {
+          created_at: string | null
+          data_points: Json | null
+          expires_at: string | null
+          generated_narratives: Json | null
+          id: string
+          month: number
+          month_name: string
+          sources: Json | null
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          data_points?: Json | null
+          expires_at?: string | null
+          generated_narratives?: Json | null
+          id?: string
+          month: number
+          month_name: string
+          sources?: Json | null
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          data_points?: Json | null
+          expires_at?: string | null
+          generated_narratives?: Json | null
+          id?: string
+          month?: number
+          month_name?: string
+          sources?: Json | null
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       music_anecdotes: {
         Row: {
           anecdote_content: string

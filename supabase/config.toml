@@ -548,3 +548,6 @@ verify_jwt = false
 
 [[functions.generate-daily-challenge.schedule]]
 cron = "0 5 * * *"
+
+[functions.generate-month-overview]
+verify_jwt = false

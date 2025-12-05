@@ -24,6 +24,9 @@ export interface MediaLibraryItem {
   ai_context_type: string | null;
   ai_reasoning: string | null;
   manual_artist: string | null;
+  manual_title: string | null;
+  manual_genre: string | null;
+  manual_year: number | null;
   manual_tags: string[] | null;
   notes: string | null;
   sent_to_posters: boolean;

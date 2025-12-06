@@ -11,9 +11,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full">
         <AdminSidebar />
-        <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto w-full">
+        <div className="w-full max-w-none">
           {children}
-        </main>
+        </div>
+      </main>
       </div>
     </SidebarProvider>
   );

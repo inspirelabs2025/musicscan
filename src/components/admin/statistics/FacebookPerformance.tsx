@@ -24,13 +24,17 @@ const CONTENT_TYPE_CONFIG: Record<string, { label: string; color: string; icon: 
 };
 
 // Custom hook for Facebook posts with pagination
-const useFacebookPosts = (filter: string | null, page: number, pageSize: number = 25) => {
+const useFacebookPosts = (filter: string | null, page: number, days: number, pageSize: number = 25) => {
   return useQuery({
-    queryKey: ['facebook-posts', filter, page, pageSize],
+    queryKey: ['facebook-posts', filter, page, days, pageSize],
     queryFn: async () => {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      
       let query = supabase
         .from('facebook_post_log')
         .select('*', { count: 'exact' })
+        .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: false });
       
       if (filter && filter !== 'all') {
@@ -51,13 +55,17 @@ const useFacebookPosts = (filter: string | null, page: number, pageSize: number 
 };
 
 // Custom hook for category stats
-const useFacebookCategoryStats = () => {
+const useFacebookCategoryStats = (days: number) => {
   return useQuery({
-    queryKey: ['facebook-category-stats'],
+    queryKey: ['facebook-category-stats', days],
     queryFn: async () => {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      
       const { data, error } = await supabase
         .from('facebook_post_log')
-        .select('content_type, status, created_at');
+        .select('content_type, status, created_at')
+        .gte('created_at', startDate.toISOString());
       
       if (error) throw error;
       
@@ -88,14 +96,18 @@ const useFacebookCategoryStats = () => {
   });
 };
 
-export function FacebookPerformance() {
+interface FacebookPerformanceProps {
+  days: number;
+}
+
+export function FacebookPerformance({ days }: FacebookPerformanceProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [categoryFilter, setCategoryFilter] = useState<string | null>('all');
   const [page, setPage] = useState(0);
   const pageSize = 25;
 
-  const { data: stats, isLoading: statsLoading } = useFacebookCategoryStats();
-  const { data: postsData, isLoading: postsLoading } = useFacebookPosts(categoryFilter, page, pageSize);
+  const { data: stats, isLoading: statsLoading } = useFacebookCategoryStats(days);
+  const { data: postsData, isLoading: postsLoading } = useFacebookPosts(categoryFilter, page, days, pageSize);
 
   if (statsLoading) {
     return (

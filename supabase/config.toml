@@ -551,3 +551,30 @@ cron = "0 5 * * *"
 
 [functions.generate-month-overview]
 verify_jwt = false
+
+[functions.tiktok-auth]
+verify_jwt = false
+
+[functions.tiktok-token-refresh]
+verify_jwt = false
+
+[[functions.tiktok-token-refresh.schedule]]
+cron = "0 */6 * * *"
+
+[functions.post-to-tiktok]
+verify_jwt = false
+
+[functions.schedule-tiktok-posts]
+verify_jwt = false
+
+[[functions.schedule-tiktok-posts.schedule]]
+cron = "20 6 * * *"
+
+[functions.post-scheduled-tiktok]
+verify_jwt = false
+
+[[functions.post-scheduled-tiktok.schedule]]
+cron = "0 10,14,17,20 * * *"
+
+[functions.tiktok-queue-manager]
+verify_jwt = false

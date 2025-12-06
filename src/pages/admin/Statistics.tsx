@@ -180,7 +180,7 @@ export default function Statistics() {
             </TabsContent>
 
             <TabsContent value="facebook" className="space-y-4">
-              <FacebookPerformance />
+              <FacebookPerformance days={days} />
             </TabsContent>
 
             <TabsContent value="growth" className="space-y-4">

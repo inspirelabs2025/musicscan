@@ -35,7 +35,8 @@ import {
   Server,
   CloudUpload,
   Bell,
-  Mic
+  Mic,
+  Send
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -140,6 +141,7 @@ const menuItems = [
   {
     title: "Integraties",
     items: [
+      { title: "Metricool Social", url: "/admin/metricool", icon: Send },
       { title: "Facebook Admin", url: "/admin/facebook-admin", icon: Facebook },
       { title: "Facebook Sync", url: "/admin/facebook-sync", icon: Facebook },
       { title: "Instagram Admin", url: "/admin/instagram-admin", icon: Instagram },

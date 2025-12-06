@@ -6362,6 +6362,108 @@ export type Database = {
         }
         Relationships: []
       }
+      tiktok_post_log: {
+        Row: {
+          caption: string | null
+          content_id: string | null
+          content_type: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          media_url: string | null
+          response_data: Json | null
+          status: string
+          tiktok_post_id: string | null
+          title: string | null
+        }
+        Insert: {
+          caption?: string | null
+          content_id?: string | null
+          content_type: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          media_url?: string | null
+          response_data?: Json | null
+          status: string
+          tiktok_post_id?: string | null
+          title?: string | null
+        }
+        Update: {
+          caption?: string | null
+          content_id?: string | null
+          content_type?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          media_url?: string | null
+          response_data?: Json | null
+          status?: string
+          tiktok_post_id?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      tiktok_post_queue: {
+        Row: {
+          attempts: number | null
+          caption: string | null
+          content_id: string | null
+          content_type: string
+          created_at: string | null
+          error_message: string | null
+          hashtags: string[] | null
+          id: string
+          media_url: string | null
+          posted_at: string | null
+          priority: number | null
+          scheduled_for: string | null
+          status: string | null
+          tiktok_post_id: string | null
+          title: string
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          caption?: string | null
+          content_id?: string | null
+          content_type: string
+          created_at?: string | null
+          error_message?: string | null
+          hashtags?: string[] | null
+          id?: string
+          media_url?: string | null
+          posted_at?: string | null
+          priority?: number | null
+          scheduled_for?: string | null
+          status?: string | null
+          tiktok_post_id?: string | null
+          title: string
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          caption?: string | null
+          content_id?: string | null
+          content_type?: string
+          created_at?: string | null
+          error_message?: string | null
+          hashtags?: string[] | null
+          id?: string
+          media_url?: string | null
+          posted_at?: string | null
+          priority?: number | null
+          scheduled_for?: string | null
+          status?: string | null
+          tiktok_post_id?: string | null
+          title?: string
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       time_machine_events: {
         Row: {
           archive_photos: Json | null

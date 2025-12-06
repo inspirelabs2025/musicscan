@@ -133,6 +133,7 @@ import ArtistStoriesGenerator from "./pages/admin/ArtistStoriesGenerator";
 import FacebookSync from "./pages/admin/FacebookSync";
 import FacebookAdmin from "./pages/admin/FacebookAdmin";
 import InstagramAdmin from "./pages/admin/InstagramAdmin";
+import MetricoolAdmin from "./pages/admin/MetricoolAdmin";
 import NewsRssManager from "./pages/admin/NewsRssManager";
 import OwnPodcasts from "./pages/admin/OwnPodcasts";
 import SocksShop from "./pages/SocksShop";
@@ -445,6 +446,7 @@ const AppContent = () => {
                 <Route path="facebook-sync" element={<FacebookSync />} />
                 <Route path="facebook-admin" element={<FacebookAdmin />} />
                 <Route path="instagram-admin" element={<InstagramAdmin />} />
+                <Route path="metricool" element={<MetricoolAdmin />} />
                 <Route path="popups" element={<PopupManager />} />
                 <Route path="artist-spotlight/new" element={<ArtistSpotlightEditor />} />
                 <Route path="artist-spotlight/edit/:id" element={<ArtistSpotlightEditor />} />

@@ -567,12 +567,12 @@ const App = () => {
                     <AppContent />
                   </SitePopupProvider>
                 </BrowserRouter>
-          </ErrorBoundary>
-        </TooltipProvider>
-      </AudioProvider>
-    </CartProvider>
-  </AuthProvider>
-</QueryClientProvider>
+              </ErrorBoundary>
+            </TooltipProvider>
+          </AudioProvider>
+        </CartProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 

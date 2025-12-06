@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { Facebook, FileText, Newspaper, Music, Youtube, ShoppingBag, BookOpen, ExternalLink, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Facebook, FileText, Newspaper, Music, Youtube, ShoppingBag, BookOpen, ExternalLink, Calendar, ChevronLeft, ChevronRight, PenLine } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -54,7 +54,7 @@ const useFacebookPosts = (filter: string | null, page: number, days: number, pag
   });
 };
 
-// Custom hook for category stats
+// Custom hook for category stats with created content counts
 const useFacebookCategoryStats = (days: number) => {
   return useQuery({
     queryKey: ['facebook-category-stats', days],
@@ -62,6 +62,7 @@ const useFacebookCategoryStats = (days: number) => {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
       
+      // Fetch Facebook post stats
       const { data, error } = await supabase
         .from('facebook_post_log')
         .select('content_type, status, created_at')
@@ -69,12 +70,42 @@ const useFacebookCategoryStats = (days: number) => {
       
       if (error) throw error;
       
-      const byType: Record<string, { total: number; success: number; failed: number; lastPost: string | null }> = {};
+      // Fetch created content counts from source tables
+      const [
+        singlesCount,
+        blogCount,
+        anecdotesCount,
+        youtubeCount,
+        productsCount,
+        historyCount,
+        quizCount
+      ] = await Promise.all([
+        supabase.from('music_stories').select('*', { count: 'exact', head: true }).not('single_name', 'is', null),
+        supabase.from('news_blog_posts').select('*', { count: 'exact', head: true }),
+        supabase.from('music_anecdotes').select('*', { count: 'exact', head: true }),
+        supabase.from('youtube_discoveries').select('*', { count: 'exact', head: true }),
+        supabase.from('platform_products').select('*', { count: 'exact', head: true }),
+        supabase.from('music_history_events').select('*', { count: 'exact', head: true }),
+        supabase.from('daily_challenges').select('*', { count: 'exact', head: true }),
+      ]);
+
+      const createdCounts: Record<string, number> = {
+        single: singlesCount.count || 0,
+        blog_post: blogCount.count || 0,
+        news: blogCount.count || 0,
+        anecdote: anecdotesCount.count || 0,
+        youtube: youtubeCount.count || 0,
+        product: productsCount.count || 0,
+        music_history: historyCount.count || 0,
+        daily_quiz: quizCount.count || 0,
+      };
+      
+      const byType: Record<string, { total: number; success: number; failed: number; lastPost: string | null; created: number }> = {};
       
       data?.forEach(post => {
         const type = post.content_type || 'unknown';
         if (!byType[type]) {
-          byType[type] = { total: 0, success: 0, failed: 0, lastPost: null };
+          byType[type] = { total: 0, success: 0, failed: 0, lastPost: null, created: createdCounts[type] || 0 };
         }
         byType[type].total++;
         if (post.status === 'success' || post.status === 'posted') {
@@ -86,9 +117,21 @@ const useFacebookCategoryStats = (days: number) => {
           byType[type].lastPost = post.created_at;
         }
       });
+
+      // Add created counts for types that have no posts yet
+      Object.entries(createdCounts).forEach(([type, count]) => {
+        if (!byType[type]) {
+          byType[type] = { total: 0, success: 0, failed: 0, lastPost: null, created: count };
+        } else {
+          byType[type].created = count;
+        }
+      });
+
+      const totalCreated = Object.values(createdCounts).reduce((sum, c) => sum + c, 0);
       
       return {
         total: data?.length || 0,
+        totalCreated,
         byType,
       };
     },
@@ -129,9 +172,11 @@ export function FacebookPerformance({ days }: FacebookPerformanceProps) {
       value: data.total,
       success: data.success,
       failed: data.failed,
+      created: data.created || 0,
       fill: CONTENT_TYPE_CONFIG[type]?.color || '#6b7280',
     }))
-    .sort((a, b) => b.value - a.value);
+    .filter(item => CONTENT_TYPE_CONFIG[item.type]) // Only show known types
+    .sort((a, b) => b.created - a.created); // Sort by created content
 
   const pieData = chartData.map(item => ({
     name: item.name,
@@ -155,13 +200,34 @@ export function FacebookPerformance({ days }: FacebookPerformanceProps) {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <PenLine className="h-4 w-4 text-purple-600" />
+                <span className="text-xs">Totaal Aangemaakt</span>
+              </div>
+              <p className="text-3xl font-bold">{stats?.totalCreated?.toLocaleString() || 0}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Facebook className="h-4 w-4 text-blue-600" />
-                <span className="text-xs">Totaal Posts</span>
+                <span className="text-xs">Totaal Geplaatst</span>
               </div>
               <p className="text-3xl font-bold">{stats?.total.toLocaleString()}</p>
             </CardContent>
           </Card>
-          {chartData.slice(0, 3).map((item) => {
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <span className="text-xs">Conversie %</span>
+              </div>
+              <p className="text-3xl font-bold">
+                {stats?.totalCreated && stats.totalCreated > 0 
+                  ? ((stats.total / stats.totalCreated) * 100).toFixed(1) 
+                  : '0'}%
+              </p>
+            </CardContent>
+          </Card>
+          {chartData.slice(0, 1).map((item) => {
             const config = CONTENT_TYPE_CONFIG[item.type];
             const Icon = config?.icon || FileText;
             return (
@@ -169,9 +235,9 @@ export function FacebookPerformance({ days }: FacebookPerformanceProps) {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 text-muted-foreground mb-1">
                     <Icon className="h-4 w-4" style={{ color: item.fill }} />
-                    <span className="text-xs">{item.name}</span>
+                    <span className="text-xs">Top: {item.name}</span>
                   </div>
-                  <p className="text-3xl font-bold">{item.value.toLocaleString()}</p>
+                  <p className="text-3xl font-bold">{item.created.toLocaleString()}</p>
                 </CardContent>
               </Card>
             );
@@ -244,9 +310,10 @@ export function FacebookPerformance({ days }: FacebookPerformanceProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Categorie</TableHead>
-                  <TableHead className="text-right">Totaal</TableHead>
-                  <TableHead className="text-right">Succes</TableHead>
-                  <TableHead className="text-right">Gefaald</TableHead>
+                  <TableHead className="text-right">📝 Aangemaakt</TableHead>
+                  <TableHead className="text-right">📤 Geplaatst</TableHead>
+                  <TableHead className="text-right">Verschil</TableHead>
+                  <TableHead className="text-right">Conversie %</TableHead>
                   <TableHead className="text-right">Succes %</TableHead>
                   <TableHead>Laatste Post</TableHead>
                   <TableHead></TableHead>
@@ -257,6 +324,8 @@ export function FacebookPerformance({ days }: FacebookPerformanceProps) {
                   const config = CONTENT_TYPE_CONFIG[item.type];
                   const Icon = config?.icon || FileText;
                   const successRate = item.value > 0 ? ((item.success / item.value) * 100).toFixed(1) : '0';
+                  const conversionRate = item.created > 0 ? ((item.value / item.created) * 100).toFixed(1) : '0';
+                  const difference = item.created - item.value;
                   const categoryData = stats?.byType?.[item.type];
                   
                   return (
@@ -272,9 +341,22 @@ export function FacebookPerformance({ days }: FacebookPerformanceProps) {
                           <span className="font-medium">{item.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-mono">{item.value.toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono text-green-600">{item.success.toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono text-red-600">{item.failed.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono text-purple-600">{item.created.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono text-blue-600">{item.value.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {difference > 0 ? (
+                          <span className="text-orange-600">-{difference.toLocaleString()}</span>
+                        ) : difference < 0 ? (
+                          <span className="text-green-600">+{Math.abs(difference).toLocaleString()}</span>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant={parseFloat(conversionRate) >= 100 ? 'default' : parseFloat(conversionRate) > 50 ? 'secondary' : 'outline'}>
+                          {conversionRate}%
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">
                         <Badge variant={parseFloat(successRate) > 90 ? 'default' : parseFloat(successRate) > 70 ? 'secondary' : 'destructive'}>
                           {successRate}%

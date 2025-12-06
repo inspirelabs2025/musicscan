@@ -551,7 +551,7 @@ const AppContent = () => {
 };
 
 const App = () => {
-  console.log('🎯 App.tsx: Rendering App component');
+  console.log('🎯 App.tsx: Rendering App component - build refresh');
   
   return (
     <QueryClientProvider client={queryClient}>

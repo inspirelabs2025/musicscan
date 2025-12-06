@@ -578,3 +578,18 @@ cron = "0 10,14,17,20 * * *"
 
 [functions.tiktok-queue-manager]
 verify_jwt = false
+
+[functions.post-to-metricool]
+verify_jwt = false
+
+[functions.schedule-metricool-posts]
+verify_jwt = false
+
+[[functions.schedule-metricool-posts.schedule]]
+cron = "0 6 * * *"
+
+[functions.post-scheduled-metricool]
+verify_jwt = false
+
+[[functions.post-scheduled-metricool.schedule]]
+cron = "0 10,13,16,19 * * *"

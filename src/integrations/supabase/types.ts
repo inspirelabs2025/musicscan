@@ -3034,6 +3034,119 @@ export type Database = {
           },
         ]
       }
+      metricool_post_log: {
+        Row: {
+          content: string | null
+          content_type: string
+          created_at: string
+          error_message: string | null
+          id: string
+          metricool_post_id: string | null
+          metricool_response: Json | null
+          posted_at: string | null
+          queue_id: string | null
+          status: string
+          target_platforms: string[] | null
+          title: string | null
+        }
+        Insert: {
+          content?: string | null
+          content_type: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metricool_post_id?: string | null
+          metricool_response?: Json | null
+          posted_at?: string | null
+          queue_id?: string | null
+          status?: string
+          target_platforms?: string[] | null
+          title?: string | null
+        }
+        Update: {
+          content?: string | null
+          content_type?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metricool_post_id?: string | null
+          metricool_response?: Json | null
+          posted_at?: string | null
+          queue_id?: string | null
+          status?: string
+          target_platforms?: string[] | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metricool_post_log_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "metricool_post_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metricool_post_queue: {
+        Row: {
+          attempts: number
+          content: string
+          content_id: string | null
+          content_type: string
+          created_at: string
+          error_message: string | null
+          id: string
+          media_url: string | null
+          metricool_post_id: string | null
+          metricool_response: Json | null
+          posted_at: string | null
+          priority: number
+          scheduled_for: string
+          status: string
+          target_platforms: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          content: string
+          content_id?: string | null
+          content_type: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          media_url?: string | null
+          metricool_post_id?: string | null
+          metricool_response?: Json | null
+          posted_at?: string | null
+          priority?: number
+          scheduled_for: string
+          status?: string
+          target_platforms?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          content?: string
+          content_id?: string | null
+          content_type?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          media_url?: string | null
+          metricool_post_id?: string | null
+          metricool_response?: Json | null
+          posted_at?: string | null
+          priority?: number
+          scheduled_for?: string
+          status?: string
+          target_platforms?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       month_overview_cache: {
         Row: {
           created_at: string | null

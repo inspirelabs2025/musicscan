@@ -105,6 +105,7 @@ import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import ReturnPolicy from "./pages/ReturnPolicy";
 import Privacy from "./pages/Privacy";
+import Voorwaarden from "./pages/Voorwaarden";
 import FacebookCatalogFeed from "./pages/FacebookCatalogFeed";
 import Prestaties from "./pages/Prestaties";
 import SpotifyProfile from "./pages/SpotifyProfile";
@@ -303,6 +304,7 @@ const AppContent = () => {
         <Route path="/about" element={<About />} />
         <Route path="/retourbeleid" element={<ReturnPolicy />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/voorwaarden" element={<Voorwaarden />} />
         <Route path="/feeds/facebook-catalog.csv" element={<FacebookCatalogFeed />} />
         <Route path="/prestaties" element={
           <ProtectedRoute>

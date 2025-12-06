@@ -14,13 +14,21 @@ import { nl } from 'date-fns/locale';
 
 const CONTENT_TYPE_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   blog_post: { label: 'Blog Posts', color: '#8b5cf6', icon: FileText },
+  blog: { label: 'Blog Posts', color: '#8b5cf6', icon: FileText },
   news: { label: 'Nieuws', color: '#3b82f6', icon: Newspaper },
   music_history: { label: 'Muziek Geschiedenis', color: '#22c55e', icon: Music },
   youtube: { label: 'YouTube', color: '#ef4444', icon: Youtube },
+  youtube_discovery: { label: 'YouTube', color: '#ef4444', icon: Youtube },
   product: { label: 'Producten', color: '#eab308', icon: ShoppingBag },
   anecdote: { label: 'Anekdotes', color: '#ec4899', icon: BookOpen },
   single: { label: 'Singles', color: '#06b6d4', icon: Music },
   daily_quiz: { label: 'Dagelijkse Quiz', color: '#f97316', icon: Calendar },
+};
+
+// Mapping to normalize content types for grouping
+const CONTENT_TYPE_NORMALIZE: Record<string, string> = {
+  blog: 'blog_post',
+  youtube_discovery: 'youtube',
 };
 
 // Custom hook for Facebook posts with pagination
@@ -62,13 +70,19 @@ const useFacebookCategoryStats = (days: number) => {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
       
-      // Fetch Facebook post stats
-      const { data, error } = await supabase
+      // Fetch Facebook post stats (all time for created counts comparison)
+      const { data: recentData, error: recentError } = await supabase
         .from('facebook_post_log')
         .select('content_type, status, created_at')
         .gte('created_at', startDate.toISOString());
       
-      if (error) throw error;
+      // Fetch all-time Facebook post stats for total posted comparison
+      const { data: allTimeData, error: allTimeError } = await supabase
+        .from('facebook_post_log')
+        .select('content_type, status, created_at');
+      
+      if (recentError) throw recentError;
+      if (allTimeError) throw allTimeError;
       
       // Fetch created content counts from source tables
       const [
@@ -92,46 +106,71 @@ const useFacebookCategoryStats = (days: number) => {
       const createdCounts: Record<string, number> = {
         single: singlesCount.count || 0,
         blog_post: blogCount.count || 0,
-        news: blogCount.count || 0,
         anecdote: anecdotesCount.count || 0,
         youtube: youtubeCount.count || 0,
         product: productsCount.count || 0,
         music_history: historyCount.count || 0,
         daily_quiz: quizCount.count || 0,
+        news: blogCount.count || 0, // News uses same source as blog
       };
       
-      const byType: Record<string, { total: number; success: number; failed: number; lastPost: string | null; created: number }> = {};
+      // Normalize and aggregate all-time posts by type
+      const allTimeByType: Record<string, number> = {};
+      allTimeData?.forEach(post => {
+        const rawType = post.content_type || 'unknown';
+        const normalizedType = CONTENT_TYPE_NORMALIZE[rawType] || rawType;
+        allTimeByType[normalizedType] = (allTimeByType[normalizedType] || 0) + 1;
+      });
       
-      data?.forEach(post => {
-        const type = post.content_type || 'unknown';
-        if (!byType[type]) {
-          byType[type] = { total: 0, success: 0, failed: 0, lastPost: null, created: createdCounts[type] || 0 };
+      const byType: Record<string, { total: number; success: number; failed: number; lastPost: string | null; created: number; allTimePosted: number }> = {};
+      
+      // Process recent data for display
+      recentData?.forEach(post => {
+        const rawType = post.content_type || 'unknown';
+        const normalizedType = CONTENT_TYPE_NORMALIZE[rawType] || rawType;
+        
+        if (!byType[normalizedType]) {
+          byType[normalizedType] = { 
+            total: 0, 
+            success: 0, 
+            failed: 0, 
+            lastPost: null, 
+            created: createdCounts[normalizedType] || 0,
+            allTimePosted: allTimeByType[normalizedType] || 0
+          };
         }
-        byType[type].total++;
+        byType[normalizedType].total++;
         if (post.status === 'success' || post.status === 'posted') {
-          byType[type].success++;
+          byType[normalizedType].success++;
         } else if (post.status === 'failed' || post.status === 'error') {
-          byType[type].failed++;
+          byType[normalizedType].failed++;
         }
-        if (!byType[type].lastPost || post.created_at > byType[type].lastPost!) {
-          byType[type].lastPost = post.created_at;
+        if (!byType[normalizedType].lastPost || post.created_at > byType[normalizedType].lastPost!) {
+          byType[normalizedType].lastPost = post.created_at;
         }
       });
 
-      // Add created counts for types that have no posts yet
+      // Add created counts for types that have no recent posts but have content
       Object.entries(createdCounts).forEach(([type, count]) => {
-        if (!byType[type]) {
-          byType[type] = { total: 0, success: 0, failed: 0, lastPost: null, created: count };
-        } else {
-          byType[type].created = count;
+        if (!byType[type] && count > 0) {
+          byType[type] = { 
+            total: 0, 
+            success: 0, 
+            failed: 0, 
+            lastPost: null, 
+            created: count,
+            allTimePosted: allTimeByType[type] || 0
+          };
         }
       });
 
       const totalCreated = Object.values(createdCounts).reduce((sum, c) => sum + c, 0);
+      const totalAllTimePosted = Object.values(allTimeByType).reduce((sum, c) => sum + c, 0);
       
       return {
-        total: data?.length || 0,
+        total: recentData?.length || 0,
         totalCreated,
+        totalAllTimePosted,
         byType,
       };
     },
@@ -173,6 +212,7 @@ export function FacebookPerformance({ days }: FacebookPerformanceProps) {
       success: data.success,
       failed: data.failed,
       created: data.created || 0,
+      allTimePosted: data.allTimePosted || 0,
       fill: CONTENT_TYPE_CONFIG[type]?.color || '#6b7280',
     }))
     .filter(item => CONTENT_TYPE_CONFIG[item.type]) // Only show known types
@@ -212,7 +252,7 @@ export function FacebookPerformance({ days }: FacebookPerformanceProps) {
                 <Facebook className="h-4 w-4 text-blue-600" />
                 <span className="text-xs">Totaal Geplaatst</span>
               </div>
-              <p className="text-3xl font-bold">{stats?.total.toLocaleString()}</p>
+              <p className="text-3xl font-bold">{stats?.totalAllTimePosted?.toLocaleString() || 0}</p>
             </CardContent>
           </Card>
           <Card>
@@ -222,7 +262,7 @@ export function FacebookPerformance({ days }: FacebookPerformanceProps) {
               </div>
               <p className="text-3xl font-bold">
                 {stats?.totalCreated && stats.totalCreated > 0 
-                  ? ((stats.total / stats.totalCreated) * 100).toFixed(1) 
+                  ? ((stats.totalAllTimePosted / stats.totalCreated) * 100).toFixed(1) 
                   : '0'}%
               </p>
             </CardContent>
@@ -324,8 +364,8 @@ export function FacebookPerformance({ days }: FacebookPerformanceProps) {
                   const config = CONTENT_TYPE_CONFIG[item.type];
                   const Icon = config?.icon || FileText;
                   const successRate = item.value > 0 ? ((item.success / item.value) * 100).toFixed(1) : '0';
-                  const conversionRate = item.created > 0 ? ((item.value / item.created) * 100).toFixed(1) : '0';
-                  const difference = item.created - item.value;
+                  const conversionRate = item.created > 0 ? ((item.allTimePosted / item.created) * 100).toFixed(1) : '0';
+                  const difference = item.created - item.allTimePosted;
                   const categoryData = stats?.byType?.[item.type];
                   
                   return (
@@ -342,7 +382,7 @@ export function FacebookPerformance({ days }: FacebookPerformanceProps) {
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-mono text-purple-600">{item.created.toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono text-blue-600">{item.value.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono text-blue-600">{item.allTimePosted.toLocaleString()}</TableCell>
                       <TableCell className="text-right font-mono">
                         {difference > 0 ? (
                           <span className="text-orange-600">-{difference.toLocaleString()}</span>

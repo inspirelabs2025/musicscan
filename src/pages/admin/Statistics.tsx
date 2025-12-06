@@ -79,7 +79,7 @@ export default function Statistics() {
   return (
     <AdminGuard>
       <AdminLayout>
-        <div className="pl-2 pr-4 py-6 space-y-6 w-full">
+        <div className="p-6 space-y-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-6">
               <div>

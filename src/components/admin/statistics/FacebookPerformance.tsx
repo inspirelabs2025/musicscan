@@ -84,7 +84,9 @@ const useFacebookCategoryStats = (days: number) => {
       if (recentError) throw recentError;
       if (allTimeError) throw allTimeError;
       
-      // Fetch created content counts from source tables
+      // Fetch created content counts from source tables WITH date filter
+      const startDateStr = startDate.toISOString();
+      
       const [
         singlesCount,
         blogCount,
@@ -94,13 +96,13 @@ const useFacebookCategoryStats = (days: number) => {
         historyCount,
         quizCount
       ] = await Promise.all([
-        supabase.from('music_stories').select('*', { count: 'exact', head: true }).not('single_name', 'is', null),
-        supabase.from('news_blog_posts').select('*', { count: 'exact', head: true }),
-        supabase.from('music_anecdotes').select('*', { count: 'exact', head: true }),
-        supabase.from('youtube_discoveries').select('*', { count: 'exact', head: true }),
-        supabase.from('platform_products').select('*', { count: 'exact', head: true }),
-        supabase.from('music_history_events').select('*', { count: 'exact', head: true }),
-        supabase.from('daily_challenges').select('*', { count: 'exact', head: true }),
+        supabase.from('music_stories').select('*', { count: 'exact', head: true }).not('single_name', 'is', null).gte('created_at', startDateStr),
+        supabase.from('news_blog_posts').select('*', { count: 'exact', head: true }).gte('created_at', startDateStr),
+        supabase.from('music_anecdotes').select('*', { count: 'exact', head: true }).gte('created_at', startDateStr),
+        supabase.from('youtube_discoveries').select('*', { count: 'exact', head: true }).gte('discovered_at', startDateStr),
+        supabase.from('platform_products').select('*', { count: 'exact', head: true }).gte('created_at', startDateStr),
+        supabase.from('music_history_events').select('*', { count: 'exact', head: true }).gte('created_at', startDateStr),
+        supabase.from('daily_challenges').select('*', { count: 'exact', head: true }).gte('created_at', startDateStr),
       ]);
 
       const createdCounts: Record<string, number> = {
@@ -111,7 +113,7 @@ const useFacebookCategoryStats = (days: number) => {
         product: productsCount.count || 0,
         music_history: historyCount.count || 0,
         daily_quiz: quizCount.count || 0,
-        news: blogCount.count || 0, // News uses same source as blog
+        news: blogCount.count || 0,
       };
       
       // Normalize and aggregate all-time posts by type

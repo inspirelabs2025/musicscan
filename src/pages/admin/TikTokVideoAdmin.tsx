@@ -36,6 +36,18 @@ interface BlogPost {
   created_at: string;
 }
 
+// Safe date formatter to prevent "Invalid time value" errors
+const safeFormatDate = (dateStr: string | null | undefined, formatStr: string): string => {
+  if (!dateStr) return '-';
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '-';
+    return format(date, formatStr, { locale: nl });
+  } catch {
+    return '-';
+  }
+};
+
 export default function TikTokVideoAdmin() {
   const queryClient = useQueryClient();
   const [addingBlogIds, setAddingBlogIds] = useState<Set<string>>(new Set());
@@ -398,7 +410,7 @@ export default function TikTokVideoAdmin() {
                         {frontmatter.title || blog.slug}
                       </TableCell>
                       <TableCell>
-                        {format(new Date(blog.created_at), 'dd MMM yyyy', { locale: nl })}
+                        {safeFormatDate(blog.created_at, 'dd MMM yyyy')}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -477,7 +489,7 @@ export default function TikTokVideoAdmin() {
                     <TableCell>{getStatusBadge(item.status)}</TableCell>
                     <TableCell>{item.attempts}/{item.max_attempts}</TableCell>
                     <TableCell>
-                      {format(new Date(item.created_at), 'dd MMM HH:mm', { locale: nl })}
+                      {safeFormatDate(item.created_at, 'dd MMM HH:mm')}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

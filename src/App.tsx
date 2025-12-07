@@ -108,7 +108,6 @@ import Privacy from "./pages/Privacy";
 import Voorwaarden from "./pages/Voorwaarden";
 import FacebookCatalogFeed from "./pages/FacebookCatalogFeed";
 import Feeds from "./pages/Feeds";
-import BlogRssFeed from "./pages/BlogRssFeed";
 import Prestaties from "./pages/Prestaties";
 import SpotifyProfile from "./pages/SpotifyProfile";
 import SpotifyCallback from "./pages/SpotifyCallback";
@@ -309,7 +308,6 @@ const AppContent = () => {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/voorwaarden" element={<Voorwaarden />} />
         <Route path="/feeds/facebook-catalog.csv" element={<FacebookCatalogFeed />} />
-        <Route path="/feeds/blog-posts.xml" element={<BlogRssFeed />} />
         <Route path="/feeds" element={<Feeds />} />
         <Route path="/prestaties" element={
           <ProtectedRoute>

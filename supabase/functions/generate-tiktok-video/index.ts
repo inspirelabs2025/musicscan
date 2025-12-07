@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
         num_frames: 81,
         frames_per_second: 16,
         aspect_ratio: "9:16",
-        resolution: "480p",
+        resolution: "720p",
         go_fast: true,
         sample_shift: 10
       }

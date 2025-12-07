@@ -28,8 +28,8 @@ export const ONBOARDING_STEPS: Omit<OnboardingStep, 'completed'>[] = [
   },
   {
     id: 2,
-    title: 'AI Magic',
-    description: 'Zie hoe AI je muziek herkent en analyseert',
+    title: 'Slimme Herkenning',
+    description: 'Zie hoe het systeem je muziek herkent en analyseert',
     component: 'ai-magic',
     icon: 'Sparkles'
   },
@@ -43,7 +43,7 @@ export const ONBOARDING_STEPS: Omit<OnboardingStep, 'completed'>[] = [
   {
     id: 4,
     title: 'Chat met je Collectie',
-    description: 'Stel vragen over je muziek aan onze AI',
+    description: 'Stel vragen over je muziek aan ons slimme systeem',
     component: 'chat',
     icon: 'MessageCircle'
   },

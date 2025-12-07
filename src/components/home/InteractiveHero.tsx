@@ -8,7 +8,7 @@ const heroVariants = [
   {
     id: 'scan',
     title: 'Ontdek de Waarde van je Collectie',
-    description: 'Scan je platen en cd\'s in seconden met AI. Ontdek verhalen, prijzen en meer.',
+    description: 'Scan je platen en cd\'s in seconden. Ontdek verhalen, prijzen en meer.',
     icon: Disc3,
     cta: 'Start met Scannen',
     ctaLink: '/auth',

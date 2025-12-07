@@ -15,7 +15,7 @@ export const TshirtSpotlight = () => {
 
   const features = [
     { icon: Sparkles, text: '7 Unieke Designs per Album' },
-    { icon: Wand2, text: 'AI-Gegenereerd Artwork' },
+    { icon: Wand2, text: 'Uniek Gegenereerd Artwork' },
     { icon: Check, text: 'Premium Kwaliteit Stof' },
     { icon: Shirt, text: 'Alle Maten Beschikbaar' }
   ];
@@ -143,7 +143,7 @@ export const TshirtSpotlight = () => {
               
               {/* Showcase description */}
               <p className="text-sm text-muted-foreground text-center">
-                Elk album krijgt 7 unieke AI-gegenereerde T-shirt designs
+                Elk album krijgt 7 unieke T-shirt designs
               </p>
             </div>
 

@@ -58,10 +58,10 @@ const Scan = () => {
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-3">
                     <Camera className="w-8 h-8 text-vinyl-purple" />
-                    <h3 className="text-xl font-semibold">AI-Powered Scanning</h3>
+                    <h3 className="text-xl font-semibold">Slimme Herkenning</h3>
                   </div>
                   <p className="text-muted-foreground">
-                    Maak gewoon een foto van je vinyl of CD en onze AI herkent automatisch 
+                    Maak gewoon een foto van je vinyl of CD en ons systeem herkent automatisch 
                     het album, de artiest en alle details. Geen barcode scanner nodig!
                   </p>
                 </CardContent>

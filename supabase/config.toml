@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.generate-content-rss]
+verify_jwt = false
+
 [functions.generate-year-overview]
 verify_jwt = false
 

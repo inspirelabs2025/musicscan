@@ -3,11 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export type VideoStyle = 'contain' | 'cover' | 'blurred-background';
+export type ZoomEffect = 'none' | 'grow-in' | 'grow-out' | 'grow-in-out';
 
 interface VideoGeneratorOptions {
   images: string[];
   fps?: number;
   style?: VideoStyle;
+  zoomEffect?: ZoomEffect;
   durationPerImage?: number; // seconds per image
   resolution?: { width: number; height: number };
 }
@@ -37,10 +39,17 @@ export const useClientVideoGenerator = () => {
     img: HTMLImageElement,
     width: number,
     height: number,
-    style: VideoStyle
+    style: VideoStyle,
+    scale: number = 1
   ) => {
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, width, height);
+
+    // Apply scale transform from center
+    ctx.save();
+    ctx.translate(width / 2, height / 2);
+    ctx.scale(scale, scale);
+    ctx.translate(-width / 2, -height / 2);
 
     const imgAspect = img.width / img.height;
     const canvasAspect = width / height;
@@ -96,6 +105,30 @@ export const useClientVideoGenerator = () => {
       const y = (height - drawHeight) / 2;
       ctx.drawImage(img, x, y, drawWidth, drawHeight);
     }
+
+    ctx.restore();
+  };
+
+  // Calculate zoom scale based on effect and progress (0-1)
+  const calculateZoomScale = (effect: ZoomEffect, progress: number): number => {
+    const minScale = 1.0;
+    const maxScale = 1.15; // 15% zoom
+    
+    switch (effect) {
+      case 'grow-in':
+        // Start small, end big
+        return minScale + (maxScale - minScale) * progress;
+      case 'grow-out':
+        // Start big, end small
+        return maxScale - (maxScale - minScale) * progress;
+      case 'grow-in-out':
+        // Grow in first half, shrink in second half (smooth sine wave)
+        const sineProgress = Math.sin(progress * Math.PI);
+        return minScale + (maxScale - minScale) * sineProgress;
+      case 'none':
+      default:
+        return 1;
+    }
   };
 
   const generateVideo = useCallback(async (options: VideoGeneratorOptions): Promise<VideoGeneratorResult> => {
@@ -103,6 +136,7 @@ export const useClientVideoGenerator = () => {
       images,
       fps = 30,
       style = 'blurred-background',
+      zoomEffect = 'grow-in-out',
       durationPerImage = 3,
       resolution = { width: 1080, height: 1920 }
     } = options;
@@ -162,7 +196,11 @@ export const useClientVideoGenerator = () => {
         const img = loadedImages[imgIndex];
         
         for (let frame = 0; frame < framesPerImage; frame++) {
-          drawImageWithStyle(ctx, img, resolution.width, resolution.height, style);
+          // Calculate zoom progress for this frame (0 to 1)
+          const frameProgress = frame / framesPerImage;
+          const scale = calculateZoomScale(zoomEffect, frameProgress);
+          
+          drawImageWithStyle(ctx, img, resolution.width, resolution.height, style, scale);
           
           // Wait for next frame timing
           await new Promise(resolve => setTimeout(resolve, 1000 / fps));

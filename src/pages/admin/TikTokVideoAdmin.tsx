@@ -272,21 +272,28 @@ export default function TikTokVideoAdmin() {
   // Stop all pending/processing items
   const stopQueue = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
+      console.log('Stopping queue - updating pending/processing items to failed');
+      const { data, error, count } = await supabase
         .from('tiktok_video_queue')
         .update({ 
-          status: 'cancelled', 
+          status: 'failed', 
+          error_message: 'Handmatig gestopt door admin',
           updated_at: new Date().toISOString()
         })
-        .in('status', ['pending', 'processing']);
+        .in('status', ['pending', 'processing'])
+        .select();
+      
+      console.log('Stop queue result:', { data, error, count });
       if (error) throw error;
+      return data?.length || 0;
     },
-    onSuccess: () => {
-      toast.success('Queue gestopt - alle pending/processing items geannuleerd');
+    onSuccess: (count) => {
+      toast.success(`Queue gestopt - ${count} items geannuleerd`);
       queryClient.invalidateQueries({ queryKey: ['tiktok-video-queue'] });
       queryClient.invalidateQueries({ queryKey: ['tiktok-video-stats'] });
     },
     onError: (error: Error) => {
+      console.error('Stop queue error:', error);
       toast.error(`Fout bij stoppen queue: ${error.message}`);
     },
   });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,11 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink, Plus, PlusCircle, Eye, RotateCcw, StopCircle } from 'lucide-react';
+import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink, Plus, PlusCircle, Eye, RotateCcw, StopCircle, Upload, Download, TestTube } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { useClientVideoGenerator, VideoStyle } from '@/hooks/useClientVideoGenerator';
+import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface TikTokQueueItem {
   id: string;
@@ -320,6 +325,55 @@ export default function TikTokVideoAdmin() {
     }
   };
 
+  // Client-side video generator
+  const { generateVideo, uploadVideo, isGenerating, progress } = useClientVideoGenerator();
+  const [testImages, setTestImages] = useState<string[]>([]);
+  const [testImageInput, setTestImageInput] = useState('');
+  const [testStyle, setTestStyle] = useState<VideoStyle>('blurred-background');
+  const [testDuration, setTestDuration] = useState(3);
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handleAddTestImage = () => {
+    if (testImageInput.trim()) {
+      setTestImages(prev => [...prev, testImageInput.trim()]);
+      setTestImageInput('');
+    }
+  };
+
+  const handleGenerateTestVideo = async () => {
+    if (testImages.length === 0) {
+      toast.error('Voeg minimaal 1 afbeelding toe');
+      return;
+    }
+
+    try {
+      const result = await generateVideo({
+        images: testImages,
+        style: testStyle,
+        durationPerImage: testDuration
+      });
+
+      setGeneratedVideoUrl(result.videoUrl);
+      toast.success('Video gegenereerd!');
+    } catch (error: any) {
+      toast.error(`Fout: ${error.message}`);
+    }
+  };
+
+  const handleUploadAndSave = async () => {
+    if (!generatedVideoUrl) return;
+
+    try {
+      const response = await fetch(generatedVideoUrl);
+      const blob = await response.blob();
+      const publicUrl = await uploadVideo(blob, `test_${Date.now()}`);
+      toast.success(`Video opgeslagen: ${publicUrl}`);
+    } catch (error: any) {
+      toast.error(`Upload fout: ${error.message}`);
+    }
+  };
+
   return (
     <AdminLayout>
     <div className="space-y-6">
@@ -327,7 +381,7 @@ export default function TikTokVideoAdmin() {
         <div>
           <h1 className="text-2xl font-bold">TikTok Video Generator</h1>
           <p className="text-muted-foreground">
-            Beheer video generatie met Replicate Wan 2.5 voor TikTok content
+            Client-side video generatie voor TikTok/Reels content (1080×1920)
           </p>
         </div>
         <div className="flex gap-2">
@@ -367,6 +421,144 @@ export default function TikTokVideoAdmin() {
           </Button>
         </div>
       </div>
+
+      {/* Client-Side Video Test Section */}
+      <Card className="border-2 border-dashed border-primary/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TestTube className="w-5 h-5" />
+            🎬 Client-Side Video Test
+          </CardTitle>
+          <CardDescription>
+            Test de client-side video generator met afbeeldingen
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Input Section */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Afbeelding URL toevoegen</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="https://example.com/image.jpg"
+                    value={testImageInput}
+                    onChange={(e) => setTestImageInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddTestImage()}
+                  />
+                  <Button onClick={handleAddTestImage} size="icon" variant="outline">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {testImages.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Afbeeldingen ({testImages.length})</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {testImages.map((img, idx) => (
+                      <div key={idx} className="relative group">
+                        <img src={img} alt={`Test ${idx}`} className="w-16 h-16 object-cover rounded" />
+                        <button
+                          onClick={() => setTestImages(prev => prev.filter((_, i) => i !== idx))}
+                          className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-4 h-4 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Style</Label>
+                  <Select value={testStyle} onValueChange={(v) => setTestStyle(v as VideoStyle)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="contain">Contain (padding)</SelectItem>
+                      <SelectItem value="cover">Cover (crop)</SelectItem>
+                      <SelectItem value="blurred-background">Blurred Background</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Seconden per afbeelding</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={testDuration}
+                    onChange={(e) => setTestDuration(Number(e.target.value))}
+                  />
+                </div>
+              </div>
+
+              <Button
+                onClick={handleGenerateTestVideo}
+                disabled={isGenerating || testImages.length === 0}
+                className="w-full"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Genereren... ({Math.round(progress)}%)
+                  </>
+                ) : (
+                  <>
+                    <Video className="w-4 h-4 mr-2" />
+                    Genereer Video
+                  </>
+                )}
+              </Button>
+
+              {isGenerating && (
+                <Progress value={progress} className="h-2" />
+              )}
+            </div>
+
+            {/* Preview Section */}
+            <div className="space-y-4">
+              <Label>Video Preview (1080×1920 → geschaald)</Label>
+              <div className="bg-muted rounded-lg aspect-[9/16] max-h-[400px] flex items-center justify-center overflow-hidden">
+                {generatedVideoUrl ? (
+                  <video
+                    ref={videoRef}
+                    src={generatedVideoUrl}
+                    controls
+                    autoPlay
+                    loop
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-muted-foreground text-center p-4">
+                    <Video className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>Video preview verschijnt hier</p>
+                  </div>
+                )}
+              </div>
+              
+              {generatedVideoUrl && (
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1" asChild>
+                    <a href={generatedVideoUrl} download="tiktok-video.webm">
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </a>
+                  </Button>
+                  <Button onClick={handleUploadAndSave} className="flex-1">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload naar Storage
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

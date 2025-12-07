@@ -128,7 +128,8 @@ export const useClientVideoGenerator = () => {
   // Calculate zoom scale based on effect and progress (0-1)
   const calculateZoomScale = (effect: ZoomEffect, progress: number): number => {
     const minScale = 1.0;
-    const maxScale = 1.5; // 50% zoom - very noticeable
+    const maxScale = 2.5; // 150% zoom - very dramatic
+    const speed = 3; // Speed multiplier for faster zoom cycles
     
     switch (effect) {
       case 'grow-in':
@@ -138,8 +139,9 @@ export const useClientVideoGenerator = () => {
         // Start big, end small
         return maxScale - (maxScale - minScale) * progress;
       case 'grow-in-out':
-        // Grow in first half, shrink in second half (smooth sine wave)
-        const sineProgress = Math.sin(progress * Math.PI);
+        // Faster zoom cycles with speed multiplier (multiple zoom in/out cycles)
+        const fastProgress = (progress * speed) % 1;
+        const sineProgress = Math.sin(fastProgress * Math.PI);
         return minScale + (maxScale - minScale) * sineProgress;
       case 'none':
       default:

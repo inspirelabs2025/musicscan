@@ -128,7 +128,7 @@ export const useClientVideoGenerator = () => {
   // Calculate zoom scale based on effect and progress (0-1)
   const calculateZoomScale = (effect: ZoomEffect, progress: number): number => {
     const minScale = 1.0;
-    const maxScale = 1.25; // 25% zoom - more noticeable
+    const maxScale = 1.5; // 50% zoom - very noticeable
     
     switch (effect) {
       case 'grow-in':

@@ -437,8 +437,56 @@ export default function TikTokVideoAdmin() {
           <div className="grid md:grid-cols-2 gap-6">
             {/* Input Section */}
             <div className="space-y-4">
+              {/* File Upload */}
               <div className="space-y-2">
-                <Label>Afbeelding URL toevoegen</Label>
+                <Label>Upload afbeeldingen</Label>
+                <div 
+                  className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={() => document.getElementById('file-upload-input')?.click()}
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                    files.forEach(file => {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        if (ev.target?.result) {
+                          setTestImages(prev => [...prev, ev.target!.result as string]);
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    });
+                  }}
+                >
+                  <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Klik of sleep afbeeldingen hierheen</p>
+                  <input
+                    id="file-upload-input"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      files.forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          if (ev.target?.result) {
+                            setTestImages(prev => [...prev, ev.target!.result as string]);
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      });
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* URL Input */}
+              <div className="space-y-2">
+                <Label>Of voeg URL toe</Label>
                 <div className="flex gap-2">
                   <Input
                     placeholder="https://example.com/image.jpg"
@@ -468,6 +516,14 @@ export default function TikTokVideoAdmin() {
                       </div>
                     ))}
                   </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setTestImages([])}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Alles wissen
+                  </Button>
                 </div>
               )}
 

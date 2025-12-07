@@ -884,6 +884,7 @@ export type Database = {
           published_at: string | null
           slug: string
           social_post: string | null
+          tiktok_video_url: string | null
           updated_at: string
           user_id: string
           views_count: number | null
@@ -901,6 +902,7 @@ export type Database = {
           published_at?: string | null
           slug: string
           social_post?: string | null
+          tiktok_video_url?: string | null
           updated_at?: string
           user_id: string
           views_count?: number | null
@@ -918,6 +920,7 @@ export type Database = {
           published_at?: string | null
           slug?: string
           social_post?: string | null
+          tiktok_video_url?: string | null
           updated_at?: string
           user_id?: string
           views_count?: number | null
@@ -6576,6 +6579,65 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      tiktok_video_queue: {
+        Row: {
+          album_cover_url: string
+          artist: string
+          attempts: number
+          blog_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          max_attempts: number
+          operation_name: string | null
+          processed_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          album_cover_url: string
+          artist: string
+          attempts?: number
+          blog_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          max_attempts?: number
+          operation_name?: string | null
+          processed_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          album_cover_url?: string
+          artist?: string
+          attempts?: number
+          blog_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          max_attempts?: number
+          operation_name?: string | null
+          processed_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tiktok_video_queue_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       time_machine_events: {
         Row: {

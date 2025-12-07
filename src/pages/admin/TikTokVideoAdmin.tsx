@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink } from 'lucide-react';
+import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink, Plus, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -14,6 +14,8 @@ interface TikTokQueueItem {
   id: string;
   blog_id: string;
   album_cover_url: string;
+  artist: string;
+  title: string;
   status: string;
   operation_name: string | null;
   video_url: string | null;
@@ -23,9 +25,21 @@ interface TikTokQueueItem {
   updated_at: string;
 }
 
+interface BlogPost {
+  id: string;
+  slug: string;
+  album_cover_url: string;
+  yaml_frontmatter: {
+    title?: string;
+    artist?: string;
+  };
+  created_at: string;
+}
+
 export default function TikTokVideoAdmin() {
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [addingBlogIds, setAddingBlogIds] = useState<Set<string>>(new Set());
 
   // Fetch queue items
   const { data: queueItems, isLoading, refetch } = useQuery({
@@ -40,7 +54,36 @@ export default function TikTokVideoAdmin() {
       if (error) throw error;
       return data as TikTokQueueItem[];
     },
-    refetchInterval: 10000, // Refresh every 10 seconds
+    refetchInterval: 10000,
+  });
+
+  // Fetch blog posts without TikTok video
+  const { data: availableBlogPosts, isLoading: loadingBlogs, refetch: refetchBlogs } = useQuery({
+    queryKey: ['blogs-without-tiktok'],
+    queryFn: async () => {
+      // Get blog_ids already in queue
+      const { data: queuedBlogs } = await supabase
+        .from('tiktok_video_queue')
+        .select('blog_id')
+        .not('blog_id', 'is', null);
+      
+      const queuedBlogIds = new Set((queuedBlogs || []).map(q => q.blog_id));
+
+      // Get blog posts with album_cover_url but no tiktok_video_url
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('id, slug, album_cover_url, yaml_frontmatter, created_at')
+        .is('tiktok_video_url', null)
+        .not('album_cover_url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      
+      // Filter out blogs already in queue
+      return (data as BlogPost[]).filter(blog => !queuedBlogIds.has(blog.id));
+    },
+    refetchInterval: 30000,
   });
 
   // Fetch stats
@@ -89,6 +132,87 @@ export default function TikTokVideoAdmin() {
     },
   });
 
+  // Add single blog to queue
+  const addToQueue = useMutation({
+    mutationFn: async (blog: BlogPost) => {
+      const frontmatter = blog.yaml_frontmatter || {};
+      const artist = frontmatter.artist || 'Unknown Artist';
+      const title = frontmatter.title || 'Unknown Title';
+
+      const { data, error } = await supabase.functions.invoke('queue-tiktok-video', {
+        body: {
+          blogId: blog.id,
+          albumCoverUrl: blog.album_cover_url,
+          artist,
+          title
+        }
+      });
+      if (error) throw error;
+      return { data, blog };
+    },
+    onMutate: async (blog) => {
+      setAddingBlogIds(prev => new Set(prev).add(blog.id));
+    },
+    onSuccess: ({ blog }) => {
+      toast.success(`"${blog.yaml_frontmatter?.title || blog.slug}" toegevoegd aan queue`);
+      queryClient.invalidateQueries({ queryKey: ['tiktok-video-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['tiktok-video-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['blogs-without-tiktok'] });
+    },
+    onError: (error, blog) => {
+      toast.error(`Fout bij toevoegen: ${error.message}`);
+    },
+    onSettled: (_, __, blog) => {
+      setAddingBlogIds(prev => {
+        const next = new Set(prev);
+        next.delete(blog.id);
+        return next;
+      });
+    },
+  });
+
+  // Add all blogs to queue
+  const addAllToQueue = useMutation({
+    mutationFn: async () => {
+      if (!availableBlogPosts || availableBlogPosts.length === 0) {
+        throw new Error('Geen blog posts beschikbaar');
+      }
+
+      const results = [];
+      for (const blog of availableBlogPosts) {
+        const frontmatter = blog.yaml_frontmatter || {};
+        const artist = frontmatter.artist || 'Unknown Artist';
+        const title = frontmatter.title || 'Unknown Title';
+
+        try {
+          const { data, error } = await supabase.functions.invoke('queue-tiktok-video', {
+            body: {
+              blogId: blog.id,
+              albumCoverUrl: blog.album_cover_url,
+              artist,
+              title
+            }
+          });
+          if (error) throw error;
+          results.push({ success: true, blog });
+        } catch (e) {
+          results.push({ success: false, blog, error: e });
+        }
+      }
+      return results;
+    },
+    onSuccess: (results) => {
+      const successCount = results.filter(r => r.success).length;
+      toast.success(`${successCount} van ${results.length} blog posts toegevoegd aan queue`);
+      queryClient.invalidateQueries({ queryKey: ['tiktok-video-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['tiktok-video-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['blogs-without-tiktok'] });
+    },
+    onError: (error) => {
+      toast.error(`Fout bij bulk toevoegen: ${error.message}`);
+    },
+  });
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -116,7 +240,10 @@ export default function TikTokVideoAdmin() {
         <div className="flex gap-2">
           <Button 
             variant="outline" 
-            onClick={() => refetch()}
+            onClick={() => {
+              refetch();
+              refetchBlogs();
+            }}
             disabled={isLoading}
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -170,6 +297,102 @@ export default function TikTokVideoAdmin() {
         </Card>
       </div>
 
+      {/* Available Blog Posts Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <PlusCircle className="w-5 h-5" />
+                Blog Posts zonder TikTok Video
+              </CardTitle>
+              <CardDescription>
+                {availableBlogPosts?.length || 0} blog posts beschikbaar om toe te voegen
+              </CardDescription>
+            </div>
+            {availableBlogPosts && availableBlogPosts.length > 0 && (
+              <Button 
+                onClick={() => addAllToQueue.mutate()}
+                disabled={addAllToQueue.isPending}
+              >
+                {addAllToQueue.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 mr-2" />
+                )}
+                Voeg Alle Toe ({availableBlogPosts.length})
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loadingBlogs ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : availableBlogPosts?.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Alle blog posts hebben al een TikTok video of staan in de queue
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cover</TableHead>
+                  <TableHead>Artiest</TableHead>
+                  <TableHead>Titel</TableHead>
+                  <TableHead>Aangemaakt</TableHead>
+                  <TableHead>Actie</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {availableBlogPosts?.slice(0, 20).map((blog) => {
+                  const frontmatter = blog.yaml_frontmatter || {};
+                  const isAdding = addingBlogIds.has(blog.id);
+                  
+                  return (
+                    <TableRow key={blog.id}>
+                      <TableCell>
+                        {blog.album_cover_url && (
+                          <img 
+                            src={blog.album_cover_url} 
+                            alt="Album cover" 
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {frontmatter.artist || '-'}
+                      </TableCell>
+                      <TableCell>
+                        {frontmatter.title || blog.slug}
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(blog.created_at), 'dd MMM yyyy', { locale: nl })}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => addToQueue.mutate(blog)}
+                          disabled={isAdding}
+                        >
+                          {isAdding ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Plus className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Queue Table */}
       <Card>
         <CardHeader>
@@ -195,6 +418,8 @@ export default function TikTokVideoAdmin() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Cover</TableHead>
+                  <TableHead>Artiest</TableHead>
+                  <TableHead>Titel</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Pogingen</TableHead>
                   <TableHead>Aangemaakt</TableHead>
@@ -213,6 +438,12 @@ export default function TikTokVideoAdmin() {
                           className="w-12 h-12 object-cover rounded"
                         />
                       )}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {item.artist || '-'}
+                    </TableCell>
+                    <TableCell>
+                      {item.title || '-'}
                     </TableCell>
                     <TableCell>{getStatusBadge(item.status)}</TableCell>
                     <TableCell>{item.attempts}/3</TableCell>

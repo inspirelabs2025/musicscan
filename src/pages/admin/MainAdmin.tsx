@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageviewStatsWidget } from "@/components/admin/PageviewStatsWidget";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -365,107 +366,109 @@ export default function MainAdmin() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Centraal overzicht van alle admin tools en functionaliteiten
-        </p>
-      </div>
-
-      {/* Pageview Stats Widget */}
-      <div className="mb-8 max-w-md">
-        <PageviewStatsWidget />
-      </div>
-
-      {/* Search */}
-      <div className="mb-8 max-w-md">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Zoek admin tools..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
-
-      {/* Categories */}
-      <div className="space-y-8">
-        {categories.map((category) => {
-          const categoryPages = filteredPages.filter(
-            (page) => page.category === category.id
-          );
-
-          if (categoryPages.length === 0) return null;
-
-          return (
-            <div key={category.id}>
-              <div className="flex items-center gap-2 mb-4">
-                <category.icon className="h-6 w-6 text-primary" />
-                <h2 className="text-2xl font-semibold">{category.title}</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categoryPages.map((page) => (
-                  <Card
-                    key={page.path}
-                    className="cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => navigate(page.path)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10">
-                            <page.icon className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg">
-                              {page.title}
-                            </CardTitle>
-                          </div>
-                        </div>
-                        {page.status && getStatusIcon(page.status)}
-                      </div>
-                      <CardDescription className="mt-2">
-                        {page.description}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-2">
-                        {page.badge && (
-                          <Badge variant="secondary">{page.badge}</Badge>
-                        )}
-                        {page.testOnly && (
-                          <Badge variant="outline" className="text-xs">
-                            Test Only
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {category.id !== "testing" && <Separator className="mt-8" />}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* No results */}
-      {filteredPages.length === 0 && (
-        <div className="text-center py-12">
-          <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Geen resultaten gevonden</h3>
+    <AdminLayout>
+      <div className="container mx-auto py-8 px-4">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
           <p className="text-muted-foreground">
-            Probeer een andere zoekterm
+            Centraal overzicht van alle admin tools en functionaliteiten
           </p>
         </div>
-      )}
-    </div>
+
+        {/* Pageview Stats Widget */}
+        <div className="mb-8 max-w-md">
+          <PageviewStatsWidget />
+        </div>
+
+        {/* Search */}
+        <div className="mb-8 max-w-md">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Zoek admin tools..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {/* Categories */}
+        <div className="space-y-8">
+          {categories.map((category) => {
+            const categoryPages = filteredPages.filter(
+              (page) => page.category === category.id
+            );
+
+            if (categoryPages.length === 0) return null;
+
+            return (
+              <div key={category.id}>
+                <div className="flex items-center gap-2 mb-4">
+                  <category.icon className="h-6 w-6 text-primary" />
+                  <h2 className="text-2xl font-semibold">{category.title}</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {categoryPages.map((page) => (
+                    <Card
+                      key={page.path}
+                      className="cursor-pointer hover:shadow-lg transition-shadow"
+                      onClick={() => navigate(page.path)}
+                    >
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                              <page.icon className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-lg">
+                                {page.title}
+                              </CardTitle>
+                            </div>
+                          </div>
+                          {page.status && getStatusIcon(page.status)}
+                        </div>
+                        <CardDescription className="mt-2">
+                          {page.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-2">
+                          {page.badge && (
+                            <Badge variant="secondary">{page.badge}</Badge>
+                          )}
+                          {page.testOnly && (
+                            <Badge variant="outline" className="text-xs">
+                              Test Only
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {category.id !== "testing" && <Separator className="mt-8" />}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* No results */}
+        {filteredPages.length === 0 && (
+          <div className="text-center py-12">
+            <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Geen resultaten gevonden</h3>
+            <p className="text-muted-foreground">
+              Probeer een andere zoekterm
+            </p>
+          </div>
+        )}
+      </div>
+    </AdminLayout>
   );
 }

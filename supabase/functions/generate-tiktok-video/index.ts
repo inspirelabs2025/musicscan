@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import Replicate from 'https://esm.sh/replicate@0.25.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,18 +14,6 @@ interface GenerateVideoRequest {
   title: string;
 }
 
-async function imageUrlToBase64(imageUrl: string): Promise<string> {
-  console.log('Fetching image from URL:', imageUrl);
-  const response = await fetch(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${response.status}`);
-  }
-  const arrayBuffer = await response.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-  console.log('Image converted to base64, length:', base64.length);
-  return base64;
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -33,18 +22,19 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const googleApiKey = Deno.env.get('GOOGLE_GEMINI_API_KEY');
+    const replicateApiKey = Deno.env.get('REPLICATE_API_KEY');
 
-    if (!googleApiKey) {
-      throw new Error('GOOGLE_GEMINI_API_KEY is not configured');
+    if (!replicateApiKey) {
+      throw new Error('REPLICATE_API_KEY is not configured');
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const replicate = new Replicate({ auth: replicateApiKey });
 
     const body: GenerateVideoRequest = await req.json();
     const { queueItemId, blogId, albumCoverUrl, artist, title } = body;
 
-    console.log('Generating TikTok video for:', { artist, title, albumCoverUrl });
+    console.log('🎬 Generating TikTok video with Wan 2.5 for:', { artist, title, albumCoverUrl });
 
     // Update queue status to processing if we have a queue item
     if (queueItemId) {
@@ -57,54 +47,31 @@ Deno.serve(async (req) => {
         .eq('id', queueItemId);
     }
 
-    // Convert image URL to base64
-    const imageBase64 = await imageUrlToBase64(albumCoverUrl);
-
-    // Call Google Veo 2 API for video generation
-    console.log('Calling Google Veo 2 API...');
-    const veoResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/veo-2.0-generate-001:predictLongRunning?key=${googleApiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          instances: [{
-            prompt: `Cinematic Ken Burns zoom effect on this album artwork. Slow, professional movement. Subtle parallax effect. Music video aesthetic. Dark, moody lighting. Professional quality. 5 seconds.`,
-            image: { 
-              bytesBase64Encoded: imageBase64 
-            }
-          }],
-          parameters: {
-            aspectRatio: "9:16",
-            durationSeconds: 5,
-            personGeneration: "dont_allow",
-            sampleCount: 1
-          }
-        })
+    // Create prediction using Replicate Wan 2.5 Image-to-Video
+    console.log('📹 Starting Replicate Wan 2.5 prediction...');
+    
+    const prediction = await replicate.predictions.create({
+      model: "wan-video/wan-2.5-i2v-fast",
+      input: {
+        image: albumCoverUrl,
+        prompt: `Cinematic Ken Burns zoom effect on this album artwork. Slow, professional camera movement with subtle parallax. Music video aesthetic. Dark, moody lighting. High quality. Album: ${artist} - ${title}`,
+        num_frames: 81,
+        frames_per_second: 16,
+        aspect_ratio: "9:16",
+        resolution: "480p",
+        go_fast: true,
+        sample_shift: 10
       }
-    );
+    });
 
-    if (!veoResponse.ok) {
-      const errorText = await veoResponse.text();
-      console.error('Veo API error:', veoResponse.status, errorText);
-      throw new Error(`Veo API error: ${veoResponse.status} - ${errorText}`);
-    }
+    console.log('✅ Replicate prediction created:', prediction.id);
 
-    const veoData = await veoResponse.json();
-    console.log('Veo API response:', JSON.stringify(veoData, null, 2));
-
-    // Get the operation name for polling
-    const operationName = veoData.name;
-    if (!operationName) {
-      throw new Error('No operation name returned from Veo API');
-    }
-
-    // Update queue with operation name for polling
+    // Store the prediction ID for polling
     if (queueItemId) {
       await supabase
         .from('tiktok_video_queue')
         .update({ 
-          operation_name: operationName,
+          operation_name: prediction.id,
           updated_at: new Date().toISOString()
         })
         .eq('id', queueItemId);
@@ -113,15 +80,15 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Video generation started',
-        operationName,
+        message: 'Video generation started with Wan 2.5',
+        predictionId: prediction.id,
         queueItemId
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error generating TikTok video:', error);
+    console.error('❌ Error generating TikTok video:', error);
 
     return new Response(
       JSON.stringify({

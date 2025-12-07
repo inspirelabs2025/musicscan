@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-const SITE_URL = 'https://www.musicscan.app';
+const SUPABASE_URL = 'https://ssxbpyqnjfiyubsuonar.supabase.co';
 
 const feeds = [
   {
     title: 'Plaat Verhalen RSS',
     description: 'De nieuwste album verhalen en recensies van MusicScan',
-    url: `${SITE_URL}/feeds/blog-posts.xml`,
+    url: `${SUPABASE_URL}/functions/v1/generate-content-rss?type=blog_posts&limit=50`,
     type: 'blog_posts',
   },
 ];
@@ -82,8 +82,9 @@ const Feeds = () => {
           <div className="mt-12 p-6 bg-muted/50 rounded-lg">
             <h2 className="font-semibold mb-2">Hoe gebruik je deze feeds?</h2>
             <ul className="text-sm text-muted-foreground space-y-2">
-              <li>• <strong>RSS Reader:</strong> Voeg de URL toe aan je favoriete RSS reader (Feedly, Inoreader, etc.)</li>
+              <li>• <strong>SocialChamp:</strong> Ga naar Content → Auto Posting → RSS Feed en plak de URL</li>
               <li>• <strong>Metricool:</strong> Ga naar Content → Autolists → Create Autolist → RSS Feed</li>
+              <li>• <strong>RSS Reader:</strong> Voeg de URL toe aan je favoriete RSS reader (Feedly, Inoreader, etc.)</li>
               <li>• <strong>Zapier/Make:</strong> Gebruik de RSS trigger met deze feed URL</li>
             </ul>
           </div>

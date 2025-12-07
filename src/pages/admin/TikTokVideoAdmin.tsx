@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,6 +54,24 @@ export default function TikTokVideoAdmin() {
   const [addingBlogIds, setAddingBlogIds] = useState<Set<string>>(new Set());
   const [selectedVideo, setSelectedVideo] = useState<TikTokQueueItem | null>(null);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+
+  // Realtime subscription for immediate updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('tiktok-queue-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tiktok_video_queue' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['tiktok-video-queue'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Fetch queue items
   const { data: queueItems = [], isLoading, refetch } = useQuery({

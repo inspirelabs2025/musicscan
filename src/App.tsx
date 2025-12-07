@@ -1,10 +1,10 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { SitePopupProvider } from "@/components/popups/SitePopupProvider";
@@ -15,177 +15,210 @@ import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
 import { usePageviewTracker } from "@/hooks/usePageviewTracker";
+
+// Loading spinner component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[50vh]">
+    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
+
+// Critical pages - loaded immediately
 import Home from "./pages/Home";
-import ArtistSearchResults from "./pages/ArtistSearchResults";
-import Scanner from "./pages/Scanner";
-import Scan from "./pages/Scan";
-import QuickPriceCheck from "./pages/QuickPriceCheck";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import { NewsPost } from "./pages/NewsPost";
-
-
-import BulkerImage from "./pages/BulkerImage";
-import MarketplaceOverview from "./pages/MarketplaceOverview";
-import CollectionOverview from "./pages/CollectionOverview";
-import CollectionChat from "./pages/CollectionChat";
-import AIAnalysis from "./pages/AIAnalysis";
-import AIScan from "./pages/AIScan";
-import AIScanOverview from "./pages/AIScanOverview";
-import AIScanV2 from "./pages/AIScanV2";
-import AIScanV2Overview from "./pages/AIScanV2Overview";
-import UnifiedScanOverview from "./pages/UnifiedScanOverview";
-import MyCollection from "./pages/MyCollection";
-import MyCollectionOld from "./pages/MyCollectionOld";
-import MyShop from "./pages/MyShop";
-import PublicShop from "./pages/PublicShop";
-import ShopOrProductRouter from "./pages/ShopOrProductRouter";
-import PublicCollection from "./pages/PublicCollection";
-import PublicCatalog from "./pages/PublicCatalog";
-import PublicShopsOverview from "./pages/PublicShopsOverview";
-import UserScans from "./pages/UserScans";
-import AlbumDetail from "./pages/AlbumDetail";
-import ReleaseDetail from "./pages/ReleaseDetail";
-import MusicNews from "./pages/MusicNews";
-import Verhalen from "./pages/Verhalen";
-import Nieuws from "./pages/Nieuws";
-import Releases from "./pages/Releases";
-import NewReleaseDetail from "./pages/NewReleaseDetail";
-import TestMusicNews from "./pages/TestMusicNews";
-import TestNewsUpdate from "./pages/TestNewsUpdate";
-import TestNewsGeneration from "./pages/TestNewsGeneration";
-import TestBlogRegeneration from "./pages/TestBlogRegeneration";
-import TestAlbumCoverBackfill from "./pages/TestAlbumCoverBackfill";
-import TestDiscogsFlow from "./pages/TestDiscogsFlow";
-import TestDiscogsBlogGeneration from "./pages/TestDiscogsBlogGeneration";
-import TestDiscogsIdFinder from "./pages/TestDiscogsIdFinder";
-import TestAnecdoteGeneration from "./pages/admin/TestAnecdoteGeneration";
-import DiscogsLookup from "./pages/admin/DiscogsLookup";
-import AutoComments from "./pages/admin/AutoComments";
-import { AdminLayout } from "./components/admin/AdminLayout";
-import SuperAdminDashboard from "./pages/SuperAdminDashboard";
-import Podcasts from "./pages/Podcasts";
-import PodcastDetail from "./pages/PodcastDetail";
-import PodcastEpisodeDetail from "./pages/PodcastEpisodeDetail";
-import { ShopProducts } from "./pages/admin/ShopProducts";
-import PlatformProducts from "./pages/admin/PlatformProducts";
-import AllProducts from "./pages/admin/AllProducts";
-import ShopOrders from "./pages/admin/ShopOrders";
-import ArtGenerator from "./pages/admin/ArtGenerator";
-import BulkArtGenerator from "./pages/admin/BulkArtGenerator";
-import SketchArtGenerator from "./pages/admin/SketchArtGenerator";
-import PhotoStylizer from "./pages/admin/PhotoStylizer";
-import PhotoModeration from "./pages/admin/PhotoModeration";
-import GenerateSeed from "./pages/admin/GenerateSeed";
-import BulkPosterUpload from "./pages/admin/BulkPosterUpload";
-import FixProductTitles from "./pages/admin/FixProductTitles";
-import BulkProductCleanup from "./pages/admin/BulkProductCleanup";
-import AutoCleanupToday from "./pages/admin/AutoCleanupToday";
-import FixBlogSlugs from "./pages/admin/FixBlogSlugs";
-import CleanupDuplicateBlogs from "./pages/CleanupDuplicateBlogs";
-import BackfillArtistFanwalls from "./pages/admin/BackfillArtistFanwalls";
-import CreateArtistFanwall from "./pages/admin/CreateArtistFanwall";
 import NotFound from "./pages/NotFound";
-import { PlaatVerhaal } from "./pages/PlaatVerhaal";
-import Community from "./pages/Community";
-import Social from "./pages/Social";
-import Profile from "./pages/Profile";
-import PriceHistoryAdmin from "./pages/admin/PriceHistoryAdmin";
-import SitemapManagement from "./pages/admin/SitemapManagement";
-import SEOMonitoring from "./pages/admin/SEOMonitoring";
-import CuratedArtists from "./pages/admin/CuratedArtists";
-import MainAdmin from "./pages/admin/MainAdmin";
-import CronjobMonitorPage from "./pages/admin/CronjobMonitorPage";
-import EmailNotificationsPage from "./pages/admin/EmailNotificationsPage";
-import Quiz from "./pages/Quiz";
-import QuizHub from "./pages/QuizHub";
-import CategoryQuiz from "./pages/CategoryQuiz";
-import QuizResult from "./pages/QuizResult";
-import Pricing from "./pages/Pricing";
-import About from "./pages/About";
-import ReturnPolicy from "./pages/ReturnPolicy";
-import Privacy from "./pages/Privacy";
-import Voorwaarden from "./pages/Voorwaarden";
-import FacebookCatalogFeed from "./pages/FacebookCatalogFeed";
-import Feeds from "./pages/Feeds";
-import Prestaties from "./pages/Prestaties";
-import SpotifyProfile from "./pages/SpotifyProfile";
-import SpotifyCallback from "./pages/SpotifyCallback";
-import { TrackOrder } from "./pages/TrackOrder";
-import { OrderSuccess } from "./pages/OrderSuccess";
-import Forum from "./pages/Forum";
-import ForumTopic from "./pages/ForumTopic";
-import MuziekVerhaal from "./pages/MuziekVerhaal";
-import Marketplace from "./pages/Marketplace";
-import PublicShopItemDetail from "./pages/PublicShopItemDetail";
-import PlatformProductDetail from "./pages/PlatformProductDetail";
-import ArtShop from "./pages/ArtShop";
-import PosterShop from "./pages/PosterShop";
-import CanvasShop from "./pages/CanvasShop";
-import TimeMachine from "./pages/TimeMachine";
-import TimeMachineStory from "./pages/TimeMachineStory";
-import TimeMachineManager from "./pages/admin/TimeMachineManager";
-import LyricPosterGenerator from "./pages/admin/LyricPosterGenerator";
-import SockGenerator from "./pages/admin/SockGenerator";
-import TshirtGenerator from "./pages/admin/TshirtGenerator";
-import ButtonGenerator from "./pages/admin/ButtonGenerator";
-import SinglesImporterPage from "./pages/admin/SinglesImporterPage";
-import ArtistStoriesGenerator from "./pages/admin/ArtistStoriesGenerator";
-import FacebookSync from "./pages/admin/FacebookSync";
-import FacebookAdmin from "./pages/admin/FacebookAdmin";
-import InstagramAdmin from "./pages/admin/InstagramAdmin";
-import MetricoolAdmin from "./pages/admin/MetricoolAdmin";
-import TikTokVideoAdmin from "./pages/admin/TikTokVideoAdmin";
-import NewsRssManager from "./pages/admin/NewsRssManager";
-import OwnPodcasts from "./pages/admin/OwnPodcasts";
-import SocksShop from "./pages/SocksShop";
-import TshirtsShop from "./pages/TshirtsShop";
-import MerchandiseShop from "./pages/MerchandiseShop";
-import ButtonsShop from "./pages/ButtonsShop";
-import AnecdotesOverview from "./pages/AnecdotesOverview";
-import AnecdoteDetail from "./pages/AnecdoteDetail";
-import Echo from "./pages/Echo";
-import FanWall from "./pages/FanWall";
-import ArtistFanWallOverview from "./pages/ArtistFanWallOverview";
-import ArtistFanWall from "./pages/ArtistFanWall";
-import PhotoDetail from "./pages/PhotoDetail";
-import UploadPhoto from "./pages/UploadPhoto";
-import MyPhotos from "./pages/MyPhotos";
-import LikedPhotos from "./pages/LikedPhotos";
-import MusicHistory from "./pages/MusicHistory";
-import UserManagement from "./pages/admin/UserManagement";
-import Statistics from "./pages/admin/Statistics";
-import Singles from "./pages/Singles";
-import SingleDetail from "./pages/SingleDetail";
-import Artists from "./pages/Artists";
-import ArtistDetail from "./pages/ArtistDetail";
-import ArtistSpotlights from "./pages/ArtistSpotlights";
-import ArtistSpotlight from "./pages/ArtistSpotlight";
-import ArtistSpotlightsAdmin from "./pages/admin/ArtistSpotlights";
-import { ArtistSpotlightEditor } from "./components/admin/ArtistSpotlightEditor";
-import Reviews from "./pages/Reviews";
-import ReviewDetail from "./pages/ReviewDetail";
-import AdminAlbumReviews from "./pages/admin/AdminAlbumReviews";
-import LlmsTxt from "./pages/LlmsTxt";
-import LlmSitemap from "./pages/LlmSitemap";
-import SEOKeywords from "./pages/admin/SEOKeywords";
-import SystemOverview from "./pages/admin/SystemOverview";
-import StatusDashboard from "./pages/admin/StatusDashboard";
-import MediaLibrary from "./pages/admin/MediaLibrary";
-import YouTubeDiscoveries from "./pages/YouTubeDiscoveries";
-import Shop from "./pages/Shop";
-import PopupManager from "./pages/admin/PopupManager";
-import NederlandseMuziek from "./pages/NederlandseMuziek";
-import NLMuziekDecennium from "./pages/NLMuziekDecennium";
-import NLMuziekFeitDetail from "./pages/NLMuziekFeitDetail";
-import FranseMuziek from "./pages/FranseMuziek";
-import DanceHouseMuziek from "./pages/DanceHouseMuziek";
-import DanceHouseFeitDetail from "./pages/DanceHouseFeitDetail";
-import SetPassword from "./pages/SetPassword";
-import MyQuizzes from "./pages/MyQuizzes";
-import YearOverview from "./pages/YearOverview";
-import MonthOverview from "./pages/MonthOverview";
-import AdminYearOverview from "./pages/admin/AdminYearOverview";
+
+// Lazy loaded pages - grouped by feature
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Scanner = lazy(() => import("./pages/Scanner"));
+const Scan = lazy(() => import("./pages/Scan"));
+const QuickPriceCheck = lazy(() => import("./pages/QuickPriceCheck"));
+const ArtistSearchResults = lazy(() => import("./pages/ArtistSearchResults"));
+
+// Shop pages
+const Shop = lazy(() => import("./pages/Shop"));
+const ArtShop = lazy(() => import("./pages/ArtShop"));
+const PosterShop = lazy(() => import("./pages/PosterShop"));
+const CanvasShop = lazy(() => import("./pages/CanvasShop"));
+const SocksShop = lazy(() => import("./pages/SocksShop"));
+const TshirtsShop = lazy(() => import("./pages/TshirtsShop"));
+const ButtonsShop = lazy(() => import("./pages/ButtonsShop"));
+const MerchandiseShop = lazy(() => import("./pages/MerchandiseShop"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const PublicShopItemDetail = lazy(() => import("./pages/PublicShopItemDetail"));
+const PlatformProductDetail = lazy(() => import("./pages/PlatformProductDetail"));
+const ShopOrProductRouter = lazy(() => import("./pages/ShopOrProductRouter"));
+
+// Content pages
+const Verhalen = lazy(() => import("./pages/Verhalen"));
+const Nieuws = lazy(() => import("./pages/Nieuws"));
+const NewsPost = lazy(() => import("./pages/NewsPost").then(m => ({ default: m.NewsPost })));
+const MuziekVerhaal = lazy(() => import("./pages/MuziekVerhaal"));
+const PlaatVerhaal = lazy(() => import("./pages/PlaatVerhaal").then(m => ({ default: m.PlaatVerhaal })));
+const Singles = lazy(() => import("./pages/Singles"));
+const SingleDetail = lazy(() => import("./pages/SingleDetail"));
+const Artists = lazy(() => import("./pages/Artists"));
+const ArtistDetail = lazy(() => import("./pages/ArtistDetail"));
+const AnecdotesOverview = lazy(() => import("./pages/AnecdotesOverview"));
+const AnecdoteDetail = lazy(() => import("./pages/AnecdoteDetail"));
+const MusicHistory = lazy(() => import("./pages/MusicHistory"));
+const Releases = lazy(() => import("./pages/Releases"));
+const NewReleaseDetail = lazy(() => import("./pages/NewReleaseDetail"));
+
+// Quiz pages
+const Quiz = lazy(() => import("./pages/Quiz"));
+const QuizHub = lazy(() => import("./pages/QuizHub"));
+const CategoryQuiz = lazy(() => import("./pages/CategoryQuiz"));
+const QuizResult = lazy(() => import("./pages/QuizResult"));
+const MyQuizzes = lazy(() => import("./pages/MyQuizzes"));
+
+// Community pages
+const Community = lazy(() => import("./pages/Community"));
+const Social = lazy(() => import("./pages/Social"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Echo = lazy(() => import("./pages/Echo"));
+const FanWall = lazy(() => import("./pages/FanWall"));
+const ArtistFanWallOverview = lazy(() => import("./pages/ArtistFanWallOverview"));
+const ArtistFanWall = lazy(() => import("./pages/ArtistFanWall"));
+const PhotoDetail = lazy(() => import("./pages/PhotoDetail"));
+const UploadPhoto = lazy(() => import("./pages/UploadPhoto"));
+const MyPhotos = lazy(() => import("./pages/MyPhotos"));
+const LikedPhotos = lazy(() => import("./pages/LikedPhotos"));
+const Forum = lazy(() => import("./pages/Forum"));
+const ForumTopic = lazy(() => import("./pages/ForumTopic"));
+
+// Country/Genre pages
+const NederlandseMuziek = lazy(() => import("./pages/NederlandseMuziek"));
+const NLMuziekDecennium = lazy(() => import("./pages/NLMuziekDecennium"));
+const NLMuziekFeitDetail = lazy(() => import("./pages/NLMuziekFeitDetail"));
+const FranseMuziek = lazy(() => import("./pages/FranseMuziek"));
+const DanceHouseMuziek = lazy(() => import("./pages/DanceHouseMuziek"));
+const DanceHouseFeitDetail = lazy(() => import("./pages/DanceHouseFeitDetail"));
+
+// Year/Month overview
+const YearOverview = lazy(() => import("./pages/YearOverview"));
+const MonthOverview = lazy(() => import("./pages/MonthOverview"));
+
+// Collection pages
+const MyCollection = lazy(() => import("./pages/MyCollection"));
+const MyCollectionOld = lazy(() => import("./pages/MyCollectionOld"));
+const CollectionOverview = lazy(() => import("./pages/CollectionOverview"));
+const CollectionChat = lazy(() => import("./pages/CollectionChat"));
+const PublicCollection = lazy(() => import("./pages/PublicCollection"));
+const PublicCatalog = lazy(() => import("./pages/PublicCatalog"));
+const PublicShopsOverview = lazy(() => import("./pages/PublicShopsOverview"));
+const MyShop = lazy(() => import("./pages/MyShop"));
+const PublicShop = lazy(() => import("./pages/PublicShop"));
+
+// AI/Scan pages
+const AIAnalysis = lazy(() => import("./pages/AIAnalysis"));
+const AIScan = lazy(() => import("./pages/AIScan"));
+const AIScanOverview = lazy(() => import("./pages/AIScanOverview"));
+const AIScanV2 = lazy(() => import("./pages/AIScanV2"));
+const AIScanV2Overview = lazy(() => import("./pages/AIScanV2Overview"));
+const UnifiedScanOverview = lazy(() => import("./pages/UnifiedScanOverview"));
+const BulkerImage = lazy(() => import("./pages/BulkerImage"));
+const MarketplaceOverview = lazy(() => import("./pages/MarketplaceOverview"));
+const UserScans = lazy(() => import("./pages/UserScans"));
+const AlbumDetail = lazy(() => import("./pages/AlbumDetail"));
+const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
+
+// Podcast pages
+const Podcasts = lazy(() => import("./pages/Podcasts"));
+const PodcastDetail = lazy(() => import("./pages/PodcastDetail"));
+const PodcastEpisodeDetail = lazy(() => import("./pages/PodcastEpisodeDetail"));
+
+// TimeMachine pages
+const TimeMachine = lazy(() => import("./pages/TimeMachine"));
+const TimeMachineStory = lazy(() => import("./pages/TimeMachineStory"));
+
+// Misc pages
+const Pricing = lazy(() => import("./pages/Pricing"));
+const About = lazy(() => import("./pages/About"));
+const ReturnPolicy = lazy(() => import("./pages/ReturnPolicy"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Voorwaarden = lazy(() => import("./pages/Voorwaarden"));
+const FacebookCatalogFeed = lazy(() => import("./pages/FacebookCatalogFeed"));
+const Feeds = lazy(() => import("./pages/Feeds"));
+const Prestaties = lazy(() => import("./pages/Prestaties"));
+const SpotifyProfile = lazy(() => import("./pages/SpotifyProfile"));
+const SpotifyCallback = lazy(() => import("./pages/SpotifyCallback"));
+const TrackOrder = lazy(() => import("./pages/TrackOrder").then(m => ({ default: m.TrackOrder })));
+const OrderSuccess = lazy(() => import("./pages/OrderSuccess").then(m => ({ default: m.OrderSuccess })));
+const SetPassword = lazy(() => import("./pages/SetPassword"));
+const LlmsTxt = lazy(() => import("./pages/LlmsTxt"));
+const LlmSitemap = lazy(() => import("./pages/LlmSitemap"));
+const MusicNews = lazy(() => import("./pages/MusicNews"));
+const YouTubeDiscoveries = lazy(() => import("./pages/YouTubeDiscoveries"));
+const Reviews = lazy(() => import("./pages/Reviews"));
+const ReviewDetail = lazy(() => import("./pages/ReviewDetail"));
+const ArtistSpotlights = lazy(() => import("./pages/ArtistSpotlights"));
+const ArtistSpotlight = lazy(() => import("./pages/ArtistSpotlight"));
+
+// Admin pages - all lazy loaded
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
+const SuperAdminDashboard = lazy(() => import("./pages/SuperAdminDashboard"));
+const MainAdmin = lazy(() => import("./pages/admin/MainAdmin"));
+const AllProducts = lazy(() => import("./pages/admin/AllProducts"));
+const PlatformProducts = lazy(() => import("./pages/admin/PlatformProducts"));
+const ShopProducts = lazy(() => import("./pages/admin/ShopProducts").then(m => ({ default: m.ShopProducts })));
+const ShopOrders = lazy(() => import("./pages/admin/ShopOrders"));
+const ArtGenerator = lazy(() => import("./pages/admin/ArtGenerator"));
+const BulkArtGenerator = lazy(() => import("./pages/admin/BulkArtGenerator"));
+const SketchArtGenerator = lazy(() => import("./pages/admin/SketchArtGenerator"));
+const PhotoStylizer = lazy(() => import("./pages/admin/PhotoStylizer"));
+const PhotoModeration = lazy(() => import("./pages/admin/PhotoModeration"));
+const GenerateSeed = lazy(() => import("./pages/admin/GenerateSeed"));
+const BulkPosterUpload = lazy(() => import("./pages/admin/BulkPosterUpload"));
+const FixProductTitles = lazy(() => import("./pages/admin/FixProductTitles"));
+const BulkProductCleanup = lazy(() => import("./pages/admin/BulkProductCleanup"));
+const AutoCleanupToday = lazy(() => import("./pages/admin/AutoCleanupToday"));
+const FixBlogSlugs = lazy(() => import("./pages/admin/FixBlogSlugs"));
+const CleanupDuplicateBlogs = lazy(() => import("./pages/CleanupDuplicateBlogs"));
+const BackfillArtistFanwalls = lazy(() => import("./pages/admin/BackfillArtistFanwalls"));
+const CreateArtistFanwall = lazy(() => import("./pages/admin/CreateArtistFanwall"));
+const PriceHistoryAdmin = lazy(() => import("./pages/admin/PriceHistoryAdmin"));
+const SitemapManagement = lazy(() => import("./pages/admin/SitemapManagement"));
+const SEOMonitoring = lazy(() => import("./pages/admin/SEOMonitoring"));
+const CuratedArtists = lazy(() => import("./pages/admin/CuratedArtists"));
+const CronjobMonitorPage = lazy(() => import("./pages/admin/CronjobMonitorPage"));
+const EmailNotificationsPage = lazy(() => import("./pages/admin/EmailNotificationsPage"));
+const TimeMachineManager = lazy(() => import("./pages/admin/TimeMachineManager"));
+const LyricPosterGenerator = lazy(() => import("./pages/admin/LyricPosterGenerator"));
+const SockGenerator = lazy(() => import("./pages/admin/SockGenerator"));
+const TshirtGenerator = lazy(() => import("./pages/admin/TshirtGenerator"));
+const ButtonGenerator = lazy(() => import("./pages/admin/ButtonGenerator"));
+const SinglesImporterPage = lazy(() => import("./pages/admin/SinglesImporterPage"));
+const ArtistStoriesGenerator = lazy(() => import("./pages/admin/ArtistStoriesGenerator"));
+const FacebookSync = lazy(() => import("./pages/admin/FacebookSync"));
+const FacebookAdmin = lazy(() => import("./pages/admin/FacebookAdmin"));
+const InstagramAdmin = lazy(() => import("./pages/admin/InstagramAdmin"));
+const MetricoolAdmin = lazy(() => import("./pages/admin/MetricoolAdmin"));
+const TikTokVideoAdmin = lazy(() => import("./pages/admin/TikTokVideoAdmin"));
+const NewsRssManager = lazy(() => import("./pages/admin/NewsRssManager"));
+const OwnPodcasts = lazy(() => import("./pages/admin/OwnPodcasts"));
+const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
+const Statistics = lazy(() => import("./pages/admin/Statistics"));
+const ArtistSpotlightsAdmin = lazy(() => import("./pages/admin/ArtistSpotlights"));
+const ArtistSpotlightEditor = lazy(() => import("./components/admin/ArtistSpotlightEditor").then(m => ({ default: m.ArtistSpotlightEditor })));
+const AdminAlbumReviews = lazy(() => import("./pages/admin/AdminAlbumReviews"));
+const SEOKeywords = lazy(() => import("./pages/admin/SEOKeywords"));
+const SystemOverview = lazy(() => import("./pages/admin/SystemOverview"));
+const StatusDashboard = lazy(() => import("./pages/admin/StatusDashboard"));
+const MediaLibrary = lazy(() => import("./pages/admin/MediaLibrary"));
+const PopupManager = lazy(() => import("./pages/admin/PopupManager"));
+const AdminYearOverview = lazy(() => import("./pages/admin/AdminYearOverview"));
+const DiscogsLookup = lazy(() => import("./pages/admin/DiscogsLookup"));
+const AutoComments = lazy(() => import("./pages/admin/AutoComments"));
+const TestAnecdoteGeneration = lazy(() => import("./pages/admin/TestAnecdoteGeneration"));
+const TestMusicNews = lazy(() => import("./pages/TestMusicNews"));
+const TestNewsUpdate = lazy(() => import("./pages/TestNewsUpdate"));
+const TestNewsGeneration = lazy(() => import("./pages/TestNewsGeneration"));
+const TestBlogRegeneration = lazy(() => import("./pages/TestBlogRegeneration"));
+const TestAlbumCoverBackfill = lazy(() => import("./pages/TestAlbumCoverBackfill"));
+const TestDiscogsFlow = lazy(() => import("./pages/TestDiscogsFlow"));
+const TestDiscogsBlogGeneration = lazy(() => import("./pages/TestDiscogsBlogGeneration"));
+const TestDiscogsIdFinder = lazy(() => import("./pages/TestDiscogsIdFinder"));
 
 // Redirect component for old /blog/ URLs to /plaat-verhaal/
 const BlogRedirect = () => {
@@ -197,12 +230,11 @@ const BlogRedirect = () => {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 30 * 60 * 1000, // 30 minutes (previously cacheTime)
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
       refetchOnWindowFocus: false,
       refetchOnReconnect: 'always',
       retry: (failureCount, error: any) => {
-        // Don't retry for authentication errors
         if (error?.status === 401 || error?.status === 403) {
           return false;
         }
@@ -215,341 +247,234 @@ const queryClient = new QueryClient({
   },
 });
 
+// Wrapper for lazy routes
+const LazyRoute = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<PageLoader />}>{children}</Suspense>
+);
+
 // AppContent wrapper to use hooks that need Router context
 const AppContent = () => {
   useGoogleAnalytics();
-  usePageviewTracker(); // Internal pageview tracking parallel to GA4
+  usePageviewTracker();
   
   return (
     <>
       <Navigation />
       <Routes>
-        <Route path="/.well-known/llms.txt" element={<LlmsTxt />} />
-        <Route path="/llms.txt" element={<LlmsTxt />} />
-        <Route path="/sitemap-llm.xml" element={<LlmSitemap />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/auth/set-password" element={<SetPassword />} />
+        {/* Core routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/search/artist" element={<ArtistSearchResults />} />
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/scan" element={<Scan />} />
-        <Route path="/scanner" element={<Scanner />} />
-        <Route path="/quick-price-check" element={<QuickPriceCheck />} />
-        <Route path="/scanner/discogs" element={
-          <ProtectedRoute>
-            <BulkerImage />
-          </ProtectedRoute>
-        } />
-        <Route path="/ai-scan" element={
-          <ProtectedRoute>
-            <AIScan />
-          </ProtectedRoute>
-        } />
-        <Route path="/ai-scan-overview" element={
-          <ProtectedRoute>
-            <AIScanOverview />
-          </ProtectedRoute>
-        } />
-        <Route path="/ai-scan-v2" element={
-          <ProtectedRoute>
-            <AIScanV2 />
-          </ProtectedRoute>
-        } />
-        <Route path="/ai-scan-v2-overview" element={
-          <ProtectedRoute>
-            <AIScanV2Overview />
-          </ProtectedRoute>
-        } />
-        <Route path="/unified-scan-overview" element={
-          <ProtectedRoute>
-            <UnifiedScanOverview />
-          </ProtectedRoute>
-        } />
-        <Route path="/bulkerimage" element={
-          <ProtectedRoute>
-            <BulkerImage />
-          </ProtectedRoute>
-        } />
-        <Route path="/marketplace-overview" element={
-          <ProtectedRoute>
-            <MarketplaceOverview />
-          </ProtectedRoute>
-        } />
-        <Route path="/collection-overview" element={
-          <ProtectedRoute>
-            <CollectionOverview />
-          </ProtectedRoute>
-        } />
-        <Route path="/collection-chat" element={
-          <ProtectedRoute>
-            <CollectionChat />
-          </ProtectedRoute>
-        } />
-        <Route path="/echo" element={<Echo />} />
-        <Route path="/quiz" element={
-          <ProtectedRoute>
-            <Quiz />
-          </ProtectedRoute>
-        } />
-        <Route path="/quizzen" element={<QuizHub />} />
-        <Route path="/quizzen/:category" element={<CategoryQuiz />} />
-        <Route path="/quiz/result/:shareToken" element={<QuizResult />} />
-        <Route path="/mijn-quizzen" element={
-          <ProtectedRoute>
-            <MyQuizzes />
-          </ProtectedRoute>
-        } />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/retourbeleid" element={<ReturnPolicy />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/voorwaarden" element={<Voorwaarden />} />
-        <Route path="/feeds/facebook-catalog.csv" element={<FacebookCatalogFeed />} />
-        <Route path="/feeds" element={<Feeds />} />
-        <Route path="/prestaties" element={
-          <ProtectedRoute>
-            <Prestaties />
-          </ProtectedRoute>
-        } />
-        <Route path="/social" element={
-          <ProtectedRoute>
-            <Social />
-          </ProtectedRoute>
-        } />
-        <Route path="/forum" element={<Forum />} />
-        <Route path="/forum/topic/:topicId" element={<ForumTopic />} />
-        <Route path="/community" element={<Community />} />
-        <Route path="/profile/:userId" element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        } />
-        <Route path="/ai-analysis" element={
-          <ProtectedRoute>
-            <AIAnalysis />
-          </ProtectedRoute>
-        } />
-        <Route path="/my-collection" element={
-          <ProtectedRoute>
-            <MyCollection />
-          </ProtectedRoute>
-        } />
-        <Route path="/my-collection-old" element={
-          <ProtectedRoute>
-            <MyCollectionOld />
-          </ProtectedRoute>
-        } />
-        <Route path="/my-shop" element={
-          <ProtectedRoute>
-            <MyShop />
-          </ProtectedRoute>
-        } />
-        <Route path="/shop" element={<Shop />} />
-        <Route path="/shop/:shopSlug" element={<ShopOrProductRouter />} />
-        <Route path="/shop/:shopSlug/item/:itemId" element={<PublicShopItemDetail />} />
-        <Route path="/product/:slug" element={<PlatformProductDetail />} />
-        <Route path="/shop/order-success" element={<OrderSuccess />} />
-        <Route path="/order-success" element={<OrderSuccess />} />
-        <Route path="/track-order" element={<TrackOrder />} />
-        <Route path="/collection/:userId" element={<PublicCollection />} />
-        <Route path="/spotify-profile" element={<ProtectedRoute><SpotifyProfile /></ProtectedRoute>} />
-        <Route path="/auth/spotify/callback" element={<ProtectedRoute><SpotifyCallback /></ProtectedRoute>} />
-        <Route path="/album/:albumId" element={
-          <ProtectedRoute>
-            <AlbumDetail />
-          </ProtectedRoute>
-        } />
-        <Route path="/release/:releaseId" element={<ReleaseDetail />} />
-        <Route path="/catalog" element={<PublicCatalog />} />
-        <Route path="/shops" element={<PublicShopsOverview />} />
-        <Route path="/marketplace" element={<Marketplace />} />
-        <Route path="/user-scans" element={<UserScans />} />
-        <Route path="/verhalen" element={<Verhalen />} />
-        <Route path="/vandaag-in-de-muziekgeschiedenis" element={<MusicHistory />} />
-        <Route path="/nieuws" element={<Nieuws />} />
-        <Route path="/releases" element={<Releases />} />
-        <Route path="/new-release/:slug" element={<NewReleaseDetail />} />
-        <Route path="/nederland" element={<NederlandseMuziek />} />
-        <Route path="/nl-muziek/jaren-:decade" element={<NLMuziekDecennium />} />
-        <Route path="/nl-muziekfeit/:slug" element={<NLMuziekFeitDetail />} />
-        <Route path="/nederlandse-muziek" element={<Navigate to="/nederland" replace />} />
-        <Route path="/frankrijk" element={<FranseMuziek />} />
-        <Route path="/franse-muziek" element={<Navigate to="/frankrijk" replace />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/set-password" element={<LazyRoute><SetPassword /></LazyRoute>} />
         
-        {/* Dance/House Genre Routes */}
-        <Route path="/dance-house" element={<DanceHouseMuziek />} />
-        <Route path="/dh-muziekfeit/:slug" element={<DanceHouseFeitDetail />} />
-        <Route path="/dance-muziek" element={<Navigate to="/dance-house" replace />} />
-        <Route path="/house-muziek" element={<Navigate to="/dance-house" replace />} />
-        <Route path="/electronic" element={<Navigate to="/dance-house" replace />} />
-        <Route path="/edm" element={<Navigate to="/dance-house" replace />} />
+        {/* LLM routes */}
+        <Route path="/.well-known/llms.txt" element={<LazyRoute><LlmsTxt /></LazyRoute>} />
+        <Route path="/llms.txt" element={<LazyRoute><LlmsTxt /></LazyRoute>} />
+        <Route path="/sitemap-llm.xml" element={<LazyRoute><LlmSitemap /></LazyRoute>} />
         
-        <Route path="/news" element={<Navigate to="/verhalen" replace />} />
-        <Route path="/nieuws/:slug" element={<NewsPost />} />
-        <Route path="/artist/:slug" element={<ArtistDetail />} />
-        <Route path="/artist-spotlights" element={<ArtistSpotlights />} />
-        <Route path="/artist-spotlight/:slug" element={<ArtistSpotlight />} />
-        <Route path="/reviews" element={<Reviews />} />
-        <Route path="/reviews/:slug" element={<ReviewDetail />} />
-        <Route path="/youtube-discoveries" element={<YouTubeDiscoveries />} />
+        {/* Dashboard */}
+        <Route path="/dashboard" element={<ProtectedRoute><LazyRoute><Dashboard /></LazyRoute></ProtectedRoute>} />
+        <Route path="/search/artist" element={<LazyRoute><ArtistSearchResults /></LazyRoute>} />
         
-        {/* Test Pages - Redirect to /admin/test/* */}
-        <Route path="/test-music-news" element={<Navigate to="/admin/test/music-news" replace />} />
-        <Route path="/test-news-update" element={<Navigate to="/admin/test/news-update" replace />} />
-        <Route path="/test-news-generation" element={<Navigate to="/admin/test/news-generation" replace />} />
-        <Route path="/test-blog-regeneration" element={<Navigate to="/admin/test/blog-regeneration" replace />} />
-        <Route path="/test-album-cover-backfill" element={<Navigate to="/admin/test/album-cover-backfill" replace />} />
-        <Route path="/test-discogs-flow" element={<Navigate to="/admin/test/discogs-flow" replace />} />
-        <Route path="/test-discogs-blog-generation" element={<Navigate to="/admin/test/discogs-blog-generation" replace />} />
-        <Route path="/test-discogs-id" element={<Navigate to="/admin/test/discogs-id" replace />} />
+        {/* Scanner routes */}
+        <Route path="/scan" element={<LazyRoute><Scan /></LazyRoute>} />
+        <Route path="/scanner" element={<LazyRoute><Scanner /></LazyRoute>} />
+        <Route path="/quick-price-check" element={<LazyRoute><QuickPriceCheck /></LazyRoute>} />
+        <Route path="/scanner/discogs" element={<ProtectedRoute><LazyRoute><BulkerImage /></LazyRoute></ProtectedRoute>} />
+        <Route path="/ai-scan" element={<ProtectedRoute><LazyRoute><AIScan /></LazyRoute></ProtectedRoute>} />
+        <Route path="/ai-scan-overview" element={<ProtectedRoute><LazyRoute><AIScanOverview /></LazyRoute></ProtectedRoute>} />
+        <Route path="/ai-scan-v2" element={<ProtectedRoute><LazyRoute><AIScanV2 /></LazyRoute></ProtectedRoute>} />
+        <Route path="/ai-scan-v2-overview" element={<ProtectedRoute><LazyRoute><AIScanV2Overview /></LazyRoute></ProtectedRoute>} />
+        <Route path="/unified-scan-overview" element={<ProtectedRoute><LazyRoute><UnifiedScanOverview /></LazyRoute></ProtectedRoute>} />
+        <Route path="/bulkerimage" element={<ProtectedRoute><LazyRoute><BulkerImage /></LazyRoute></ProtectedRoute>} />
         
-        {/* Legacy Admin Redirects */}
-        <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="/superadmin-dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+        {/* Collection routes */}
+        <Route path="/marketplace-overview" element={<ProtectedRoute><LazyRoute><MarketplaceOverview /></LazyRoute></ProtectedRoute>} />
+        <Route path="/collection-overview" element={<ProtectedRoute><LazyRoute><CollectionOverview /></LazyRoute></ProtectedRoute>} />
+        <Route path="/collection-chat" element={<ProtectedRoute><LazyRoute><CollectionChat /></LazyRoute></ProtectedRoute>} />
+        <Route path="/my-collection" element={<ProtectedRoute><LazyRoute><MyCollection /></LazyRoute></ProtectedRoute>} />
+        <Route path="/my-collection-old" element={<ProtectedRoute><LazyRoute><MyCollectionOld /></LazyRoute></ProtectedRoute>} />
+        <Route path="/my-shop" element={<ProtectedRoute><LazyRoute><MyShop /></LazyRoute></ProtectedRoute>} />
+        <Route path="/user-scans" element={<ProtectedRoute><LazyRoute><UserScans /></LazyRoute></ProtectedRoute>} />
+        <Route path="/ai-analysis" element={<ProtectedRoute><LazyRoute><AIAnalysis /></LazyRoute></ProtectedRoute>} />
         
-        {/* Admin Routes with Sidebar Layout */}
-        <Route path="/admin/*" element={
-          <ProtectedRoute>
-            <AdminLayout>
-              <Routes>
-                <Route index element={<MainAdmin />} />
-                <Route path="dashboard" element={<SuperAdminDashboard />} />
-                <Route path="status" element={<StatusDashboard />} />
-                <Route path="system-overview" element={<SystemOverview />} />
-                
-                {/* User Management */}
-                <Route path="users" element={<UserManagement />} />
-                <Route path="email-notifications" element={<EmailNotificationsPage />} />
-                
-                {/* Products & Shop */}
-                <Route path="products" element={<AllProducts />} />
-                <Route path="platform-products" element={<PlatformProducts />} />
-                <Route path="shop-products" element={<ShopProducts />} />
-                <Route path="shop-orders" element={<ShopOrders />} />
-                <Route path="time-machine" element={<TimeMachineManager />} />
-                
-                {/* Content Generators */}
-                <Route path="art-generator" element={<ArtGenerator />} />
-                <Route path="bulk-art-generator" element={<BulkArtGenerator />} />
-                <Route path="sketch-art-generator" element={<SketchArtGenerator />} />
-                <Route path="lyric-poster-generator" element={<LyricPosterGenerator />} />
-                <Route path="sock-generator" element={<SockGenerator />} />
-                <Route path="tshirt-generator" element={<TshirtGenerator />} />
-                <Route path="button-generator" element={<ButtonGenerator />} />
-                <Route path="photo-stylizer" element={<PhotoStylizer />} />
-                <Route path="media-library" element={<MediaLibrary />} />
-                <Route path="singles-importer" element={<SinglesImporterPage />} />
-                <Route path="artist-stories-generator" element={<ArtistStoriesGenerator />} />
-                <Route path="news-rss-manager" element={<NewsRssManager />} />
-                <Route path="artist-spotlights" element={<ArtistSpotlightsAdmin />} />
-                <Route path="facebook-sync" element={<FacebookSync />} />
-                <Route path="facebook-admin" element={<FacebookAdmin />} />
-                <Route path="instagram-admin" element={<InstagramAdmin />} />
-                <Route path="metricool" element={<MetricoolAdmin />} />
-                <Route path="tiktok-videos" element={<TikTokVideoAdmin />} />
-                <Route path="popups" element={<PopupManager />} />
-                <Route path="artist-spotlight/new" element={<ArtistSpotlightEditor />} />
-                <Route path="artist-spotlight/edit/:id" element={<ArtistSpotlightEditor />} />
-                
-                {/* Content Management */}
-                <Route path="album-reviews" element={<AdminAlbumReviews />} />
-                <Route path="own-podcasts" element={<OwnPodcasts />} />
-                <Route path="curated-artists" element={<CuratedArtists />} />
-                <Route path="discogs-lookup" element={<DiscogsLookup />} />
-                <Route path="photo-moderation" element={<PhotoModeration />} />
-                <Route path="auto-comments" element={<AutoComments />} />
-                
-                {/* SEO & Analytics */}
-                <Route path="seo-monitoring" element={<SEOMonitoring />} />
-                <Route path="sitemap-management" element={<SitemapManagement />} />
-                <Route path="seo-keywords" element={<SEOKeywords />} />
-                <Route path="price-history" element={<PriceHistoryAdmin />} />
-                <Route path="cronjob-monitor" element={<CronjobMonitorPage />} />
-                <Route path="statistics" element={<Statistics />} />
-                <Route path="year-overview" element={<AdminYearOverview />} />
-                
-                {/* Maintenance */}
-                <Route path="fix-blog-slugs" element={<FixBlogSlugs />} />
-                <Route path="cleanup-duplicate-blogs" element={<CleanupDuplicateBlogs />} />
-                <Route path="fix-product-titles" element={<FixProductTitles />} />
-                <Route path="bulk-cleanup" element={<BulkProductCleanup />} />
-                <Route path="auto-cleanup-today" element={<AutoCleanupToday />} />
-                <Route path="backfill-artist-fanwalls" element={<BackfillArtistFanwalls />} />
-                <Route path="create-artist-fanwall" element={<CreateArtistFanwall />} />
-                <Route path="generate-seed" element={<GenerateSeed />} />
-                <Route path="bulk-poster-upload" element={<BulkPosterUpload />} />
-                
-                {/* Testing */}
-                <Route path="test/music-news" element={<TestMusicNews />} />
-                <Route path="test/news-update" element={<TestNewsUpdate />} />
-                <Route path="test/news-generation" element={<TestNewsGeneration />} />
-                <Route path="test/blog-regeneration" element={<TestBlogRegeneration />} />
-                <Route path="test/album-cover-backfill" element={<TestAlbumCoverBackfill />} />
-                <Route path="test/discogs-flow" element={<TestDiscogsFlow />} />
-                <Route path="test/discogs-blog-generation" element={<TestDiscogsBlogGeneration />} />
-                <Route path="test/discogs-id" element={<TestDiscogsIdFinder />} />
-                <Route path="test/anecdote-generation" element={<TestAnecdoteGeneration />} />
-              </Routes>
-            </AdminLayout>
-          </ProtectedRoute>
-        } />
+        {/* Public collection/shop */}
+        <Route path="/shop/:identifier" element={<LazyRoute><ShopOrProductRouter /></LazyRoute>} />
+        <Route path="/shop/:shopId/:itemId" element={<LazyRoute><PublicShopItemDetail /></LazyRoute>} />
+        <Route path="/collection/:userId" element={<LazyRoute><PublicCollection /></LazyRoute>} />
+        <Route path="/public-catalog" element={<LazyRoute><PublicCatalog /></LazyRoute>} />
+        <Route path="/shops" element={<LazyRoute><PublicShopsOverview /></LazyRoute>} />
         
-        <Route path="/plaat-verhaal/:slug" element={<PlaatVerhaal />} />
+        {/* Shop routes */}
+        <Route path="/shop" element={<LazyRoute><Shop /></LazyRoute>} />
+        <Route path="/product/:slug" element={<LazyRoute><PlatformProductDetail /></LazyRoute>} />
+        <Route path="/art-shop" element={<LazyRoute><ArtShop /></LazyRoute>} />
+        <Route path="/metaalprints" element={<LazyRoute><ArtShop /></LazyRoute>} />
+        <Route path="/posters" element={<LazyRoute><PosterShop /></LazyRoute>} />
+        <Route path="/canvas" element={<LazyRoute><CanvasShop /></LazyRoute>} />
+        <Route path="/doeken" element={<LazyRoute><CanvasShop /></LazyRoute>} />
+        <Route path="/sokken" element={<LazyRoute><SocksShop /></LazyRoute>} />
+        <Route path="/socks" element={<LazyRoute><SocksShop /></LazyRoute>} />
+        <Route path="/shirts" element={<LazyRoute><TshirtsShop /></LazyRoute>} />
+        <Route path="/tshirts" element={<LazyRoute><TshirtsShop /></LazyRoute>} />
+        <Route path="/buttons" element={<LazyRoute><ButtonsShop /></LazyRoute>} />
+        <Route path="/speldjes" element={<LazyRoute><ButtonsShop /></LazyRoute>} />
+        <Route path="/badges" element={<LazyRoute><ButtonsShop /></LazyRoute>} />
+        <Route path="/merchandise" element={<LazyRoute><MerchandiseShop /></LazyRoute>} />
+        <Route path="/merch" element={<LazyRoute><MerchandiseShop /></LazyRoute>} />
+        <Route path="/merchandise-shop" element={<LazyRoute><MerchandiseShop /></LazyRoute>} />
+        <Route path="/marktplaats" element={<LazyRoute><Marketplace /></LazyRoute>} />
+        <Route path="/marketplace" element={<LazyRoute><Marketplace /></LazyRoute>} />
+        <Route path="/marketplace/:itemId" element={<LazyRoute><PublicShopItemDetail /></LazyRoute>} />
+        
+        {/* Order routes */}
+        <Route path="/track-order" element={<LazyRoute><TrackOrder /></LazyRoute>} />
+        <Route path="/order-success" element={<LazyRoute><OrderSuccess /></LazyRoute>} />
+        
+        {/* Content routes */}
+        <Route path="/verhalen" element={<LazyRoute><Verhalen /></LazyRoute>} />
+        <Route path="/nieuws" element={<LazyRoute><Nieuws /></LazyRoute>} />
+        <Route path="/nieuws/:slug" element={<LazyRoute><NewsPost /></LazyRoute>} />
+        <Route path="/releases" element={<LazyRoute><Releases /></LazyRoute>} />
+        <Route path="/new-release/:slug" element={<LazyRoute><NewReleaseDetail /></LazyRoute>} />
+        <Route path="/muziek-verhaal/:slug" element={<LazyRoute><MuziekVerhaal /></LazyRoute>} />
+        <Route path="/plaat-verhaal/:slug" element={<LazyRoute><PlaatVerhaal /></LazyRoute>} />
         <Route path="/blog/:slug" element={<BlogRedirect />} />
-        <Route path="/time-machine" element={<TimeMachine />} />
-        <Route path="/time-machine/:slug" element={<TimeMachineStory />} />
-        <Route path="/podcasts" element={<Podcasts />} />
-        <Route path="/podcast/:podcastSlug" element={<PodcastDetail />} />
-        <Route path="/podcast/:podcastSlug/:episodeSlug" element={<PodcastEpisodeDetail />} />
-        <Route path="/art-shop" element={<ArtShop />} />
-        <Route path="/metaalprints" element={<ArtShop />} />
-        <Route path="/posters" element={<PosterShop />} />
-        <Route path="/canvas" element={<CanvasShop />} />
-        <Route path="/doeken" element={<CanvasShop />} />
-        <Route path="/sokken" element={<SocksShop />} />
-        <Route path="/socks" element={<SocksShop />} />
-        <Route path="/shirts" element={<TshirtsShop />} />
-        <Route path="/tshirts" element={<TshirtsShop />} />
-        <Route path="/buttons" element={<ButtonsShop />} />
-        <Route path="/speldjes" element={<ButtonsShop />} />
-        <Route path="/badges" element={<ButtonsShop />} />
-        <Route path="/merchandise" element={<MerchandiseShop />} />
-        <Route path="/merch" element={<MerchandiseShop />} />
-        <Route path="/merchandise-shop" element={<MerchandiseShop />} />
-        
-        {/* Anecdotes Routes */}
-        <Route path="/anekdotes" element={<AnecdotesOverview />} />
-        <Route path="/anekdotes/:slug" element={<AnecdoteDetail />} />
-        
-        {/* Year/Month Overview */}
-        <Route path="/jaar-overzicht" element={<YearOverview />} />
-        <Route path="/maand-overzicht" element={<MonthOverview />} />
-        <Route path="/maand-overzicht/:year/:month" element={<MonthOverview />} />
-        
-        <Route path="/muziek-verhaal/:slug" element={<MuziekVerhaal />} />
-        <Route path="/singles" element={<Singles />} />
-        <Route path="/singles/:slug" element={<SingleDetail />} />
+        <Route path="/singles" element={<LazyRoute><Singles /></LazyRoute>} />
+        <Route path="/singles/:slug" element={<LazyRoute><SingleDetail /></LazyRoute>} />
         <Route path="/artist" element={<Navigate to="/artists" replace />} />
-        <Route path="/artists" element={<Artists />} />
-        <Route path="/artists/:slug" element={<ArtistDetail />} />
-        <Route path="/fanwall" element={<ArtistFanWallOverview />} />
-        <Route path="/fanwall/:slug" element={<ArtistFanWall />} />
-        <Route path="/photo/:slug" element={<PhotoDetail />} />
-        <Route path="/upload" element={<UploadPhoto />} />
-        <Route path="/my/photos" element={
-          <ProtectedRoute>
-            <MyPhotos />
-          </ProtectedRoute>
-        } />
-        <Route path="/my/liked" element={
-          <ProtectedRoute>
-            <LikedPhotos />
-          </ProtectedRoute>
-        } />
+        <Route path="/artists" element={<LazyRoute><Artists /></LazyRoute>} />
+        <Route path="/artists/:slug" element={<LazyRoute><ArtistDetail /></LazyRoute>} />
+        <Route path="/anekdotes" element={<LazyRoute><AnecdotesOverview /></LazyRoute>} />
+        <Route path="/anekdotes/:slug" element={<LazyRoute><AnecdoteDetail /></LazyRoute>} />
+        <Route path="/vandaag-in-de-muziekgeschiedenis" element={<LazyRoute><MusicHistory /></LazyRoute>} />
+        <Route path="/music-news" element={<LazyRoute><MusicNews /></LazyRoute>} />
+        <Route path="/youtube-discoveries" element={<LazyRoute><YouTubeDiscoveries /></LazyRoute>} />
+        <Route path="/reviews" element={<LazyRoute><Reviews /></LazyRoute>} />
+        <Route path="/reviews/:slug" element={<LazyRoute><ReviewDetail /></LazyRoute>} />
+        <Route path="/spotlights" element={<LazyRoute><ArtistSpotlights /></LazyRoute>} />
+        <Route path="/spotlights/:slug" element={<LazyRoute><ArtistSpotlight /></LazyRoute>} />
+        
+        {/* Quiz routes */}
+        <Route path="/echo" element={<LazyRoute><Echo /></LazyRoute>} />
+        <Route path="/quiz" element={<ProtectedRoute><LazyRoute><Quiz /></LazyRoute></ProtectedRoute>} />
+        <Route path="/quizzen" element={<LazyRoute><QuizHub /></LazyRoute>} />
+        <Route path="/quizzen/:category" element={<LazyRoute><CategoryQuiz /></LazyRoute>} />
+        <Route path="/quiz/result/:shareToken" element={<LazyRoute><QuizResult /></LazyRoute>} />
+        <Route path="/mijn-quizzen" element={<ProtectedRoute><LazyRoute><MyQuizzes /></LazyRoute></ProtectedRoute>} />
+        
+        {/* Country/Genre hubs */}
+        <Route path="/nederland" element={<LazyRoute><NederlandseMuziek /></LazyRoute>} />
+        <Route path="/nederland/decennium/:decade" element={<LazyRoute><NLMuziekDecennium /></LazyRoute>} />
+        <Route path="/nederland/feit/:slug" element={<LazyRoute><NLMuziekFeitDetail /></LazyRoute>} />
+        <Route path="/frankrijk" element={<LazyRoute><FranseMuziek /></LazyRoute>} />
+        <Route path="/dance-house" element={<LazyRoute><DanceHouseMuziek /></LazyRoute>} />
+        <Route path="/dance-house/feit/:slug" element={<LazyRoute><DanceHouseFeitDetail /></LazyRoute>} />
+        
+        {/* Year/Month overview */}
+        <Route path="/jaar-overzicht" element={<LazyRoute><YearOverview /></LazyRoute>} />
+        <Route path="/maand-overzicht" element={<LazyRoute><MonthOverview /></LazyRoute>} />
+        <Route path="/maand-overzicht/:year/:month" element={<LazyRoute><MonthOverview /></LazyRoute>} />
+        
+        {/* Podcast routes */}
+        <Route path="/podcasts" element={<LazyRoute><Podcasts /></LazyRoute>} />
+        <Route path="/podcast/:podcastSlug" element={<LazyRoute><PodcastDetail /></LazyRoute>} />
+        <Route path="/podcast/:podcastSlug/:episodeSlug" element={<LazyRoute><PodcastEpisodeDetail /></LazyRoute>} />
+        
+        {/* TimeMachine */}
+        <Route path="/time-machine" element={<LazyRoute><TimeMachine /></LazyRoute>} />
+        <Route path="/time-machine/:slug" element={<LazyRoute><TimeMachineStory /></LazyRoute>} />
+        
+        {/* Community routes */}
+        <Route path="/community" element={<ProtectedRoute><LazyRoute><Community /></LazyRoute></ProtectedRoute>} />
+        <Route path="/social" element={<ProtectedRoute><LazyRoute><Social /></LazyRoute></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><LazyRoute><Profile /></LazyRoute></ProtectedRoute>} />
+        <Route path="/forum" element={<ProtectedRoute><LazyRoute><Forum /></LazyRoute></ProtectedRoute>} />
+        <Route path="/forum/:topicId" element={<ProtectedRoute><LazyRoute><ForumTopic /></LazyRoute></ProtectedRoute>} />
+        <Route path="/fanwall" element={<LazyRoute><ArtistFanWallOverview /></LazyRoute>} />
+        <Route path="/fanwall/:slug" element={<LazyRoute><ArtistFanWall /></LazyRoute>} />
+        <Route path="/photo/:slug" element={<LazyRoute><PhotoDetail /></LazyRoute>} />
+        <Route path="/upload" element={<LazyRoute><UploadPhoto /></LazyRoute>} />
+        <Route path="/my/photos" element={<ProtectedRoute><LazyRoute><MyPhotos /></LazyRoute></ProtectedRoute>} />
+        <Route path="/my/liked" element={<ProtectedRoute><LazyRoute><LikedPhotos /></LazyRoute></ProtectedRoute>} />
+        
+        {/* Misc pages */}
+        <Route path="/album/:id" element={<LazyRoute><AlbumDetail /></LazyRoute>} />
+        <Route path="/release/:id" element={<LazyRoute><ReleaseDetail /></LazyRoute>} />
+        <Route path="/pricing" element={<LazyRoute><Pricing /></LazyRoute>} />
+        <Route path="/about" element={<LazyRoute><About /></LazyRoute>} />
+        <Route path="/retourneren" element={<LazyRoute><ReturnPolicy /></LazyRoute>} />
+        <Route path="/privacy" element={<LazyRoute><Privacy /></LazyRoute>} />
+        <Route path="/voorwaarden" element={<LazyRoute><Voorwaarden /></LazyRoute>} />
+        <Route path="/feeds/facebook-catalog.csv" element={<LazyRoute><FacebookCatalogFeed /></LazyRoute>} />
+        <Route path="/feeds" element={<LazyRoute><Feeds /></LazyRoute>} />
+        <Route path="/prestaties" element={<ProtectedRoute><LazyRoute><Prestaties /></LazyRoute></ProtectedRoute>} />
+        <Route path="/spotify/profile" element={<ProtectedRoute><LazyRoute><SpotifyProfile /></LazyRoute></ProtectedRoute>} />
+        <Route path="/spotify/callback" element={<LazyRoute><SpotifyCallback /></LazyRoute>} />
+        
+        {/* Admin routes */}
+        <Route path="/admin" element={<ProtectedRoute><LazyRoute><MainAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/superadmin" element={<ProtectedRoute><LazyRoute><SuperAdminDashboard /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/products" element={<ProtectedRoute><LazyRoute><AllProducts /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/platform-products" element={<ProtectedRoute><LazyRoute><PlatformProducts /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/shop-products" element={<ProtectedRoute><LazyRoute><ShopProducts /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/orders" element={<ProtectedRoute><LazyRoute><ShopOrders /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/art-generator" element={<ProtectedRoute><LazyRoute><ArtGenerator /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/bulk-art-generator" element={<ProtectedRoute><LazyRoute><BulkArtGenerator /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/sketch-generator" element={<ProtectedRoute><LazyRoute><SketchArtGenerator /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/photo-stylizer" element={<ProtectedRoute><LazyRoute><PhotoStylizer /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/photo-moderation" element={<ProtectedRoute><LazyRoute><PhotoModeration /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/generate-seed" element={<ProtectedRoute><LazyRoute><GenerateSeed /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/bulk-poster-upload" element={<ProtectedRoute><LazyRoute><BulkPosterUpload /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/fix-product-titles" element={<ProtectedRoute><LazyRoute><FixProductTitles /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/bulk-cleanup" element={<ProtectedRoute><LazyRoute><BulkProductCleanup /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/auto-cleanup" element={<ProtectedRoute><LazyRoute><AutoCleanupToday /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/fix-blog-slugs" element={<ProtectedRoute><LazyRoute><FixBlogSlugs /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/cleanup-duplicate-blogs" element={<ProtectedRoute><LazyRoute><CleanupDuplicateBlogs /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/backfill-fanwalls" element={<ProtectedRoute><LazyRoute><BackfillArtistFanwalls /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/create-fanwall" element={<ProtectedRoute><LazyRoute><CreateArtistFanwall /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/price-history" element={<ProtectedRoute><LazyRoute><PriceHistoryAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/sitemaps" element={<ProtectedRoute><LazyRoute><SitemapManagement /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/seo" element={<ProtectedRoute><LazyRoute><SEOMonitoring /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/seo-keywords" element={<ProtectedRoute><LazyRoute><SEOKeywords /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/curated-artists" element={<ProtectedRoute><LazyRoute><CuratedArtists /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/cronjobs" element={<ProtectedRoute><LazyRoute><CronjobMonitorPage /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/email-notifications" element={<ProtectedRoute><LazyRoute><EmailNotificationsPage /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/time-machine" element={<ProtectedRoute><LazyRoute><TimeMachineManager /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/lyric-poster" element={<ProtectedRoute><LazyRoute><LyricPosterGenerator /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/sock-generator" element={<ProtectedRoute><LazyRoute><SockGenerator /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/tshirt-generator" element={<ProtectedRoute><LazyRoute><TshirtGenerator /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/button-generator" element={<ProtectedRoute><LazyRoute><ButtonGenerator /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/singles-importer" element={<ProtectedRoute><LazyRoute><SinglesImporterPage /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/artist-stories-generator" element={<ProtectedRoute><LazyRoute><ArtistStoriesGenerator /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/facebook-sync" element={<ProtectedRoute><LazyRoute><FacebookSync /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/facebook" element={<ProtectedRoute><LazyRoute><FacebookAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/instagram" element={<ProtectedRoute><LazyRoute><InstagramAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/metricool" element={<ProtectedRoute><LazyRoute><MetricoolAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/tiktok-videos" element={<ProtectedRoute><LazyRoute><TikTokVideoAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/news-rss" element={<ProtectedRoute><LazyRoute><NewsRssManager /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/own-podcasts" element={<ProtectedRoute><LazyRoute><OwnPodcasts /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute><LazyRoute><UserManagement /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/statistics" element={<ProtectedRoute><LazyRoute><Statistics /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/artist-spotlights" element={<ProtectedRoute><LazyRoute><ArtistSpotlightsAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/artist-spotlight/:id" element={<ProtectedRoute><LazyRoute><ArtistSpotlightEditor /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/reviews" element={<ProtectedRoute><LazyRoute><AdminAlbumReviews /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/system" element={<ProtectedRoute><LazyRoute><SystemOverview /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/status" element={<ProtectedRoute><LazyRoute><StatusDashboard /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/media-library" element={<ProtectedRoute><LazyRoute><MediaLibrary /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/popups" element={<ProtectedRoute><LazyRoute><PopupManager /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/year-overview" element={<ProtectedRoute><LazyRoute><AdminYearOverview /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/discogs-lookup" element={<ProtectedRoute><LazyRoute><DiscogsLookup /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/auto-comments" element={<ProtectedRoute><LazyRoute><AutoComments /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/anecdote-generation" element={<ProtectedRoute><LazyRoute><TestAnecdoteGeneration /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/music-news" element={<ProtectedRoute><LazyRoute><TestMusicNews /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/news-update" element={<ProtectedRoute><LazyRoute><TestNewsUpdate /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/news-generation" element={<ProtectedRoute><LazyRoute><TestNewsGeneration /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/blog-regeneration" element={<ProtectedRoute><LazyRoute><TestBlogRegeneration /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/album-cover-backfill" element={<ProtectedRoute><LazyRoute><TestAlbumCoverBackfill /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/discogs-flow" element={<ProtectedRoute><LazyRoute><TestDiscogsFlow /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/discogs-blog-generation" element={<ProtectedRoute><LazyRoute><TestDiscogsBlogGeneration /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/discogs-id-finder" element={<ProtectedRoute><LazyRoute><TestDiscogsIdFinder /></LazyRoute></ProtectedRoute>} />
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
       <ConditionalFooter />
@@ -559,8 +484,6 @@ const AppContent = () => {
 };
 
 const App = () => {
-  console.log('🎯 App.tsx: Rendering App component - build refresh');
-  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

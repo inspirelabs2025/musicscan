@@ -232,7 +232,7 @@ export default function TikTokVideoAdmin() {
         <div>
           <h1 className="text-2xl font-bold">TikTok Video Generator</h1>
           <p className="text-muted-foreground">
-            Beheer video generatie met Google Veo 2 voor TikTok content
+            Beheer video generatie met Replicate Wan 2.5 voor TikTok content
           </p>
         </div>
         <div className="flex gap-2">

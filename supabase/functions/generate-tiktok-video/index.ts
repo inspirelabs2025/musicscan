@@ -30,7 +30,17 @@ async function fetchImageAsBase64(imageUrl: string): Promise<string> {
   }
   
   const arrayBuffer = await response.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+  const uint8Array = new Uint8Array(arrayBuffer);
+  
+  // Use chunked base64 encoding to avoid stack overflow on large images
+  let base64 = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < uint8Array.length; i += chunkSize) {
+    const chunk = uint8Array.subarray(i, i + chunkSize);
+    base64 += String.fromCharCode(...chunk);
+  }
+  base64 = btoa(base64);
+  
   const contentType = response.headers.get('content-type') || 'image/jpeg';
   
   console.log('✅ Image downloaded, size:', arrayBuffer.byteLength, 'bytes');

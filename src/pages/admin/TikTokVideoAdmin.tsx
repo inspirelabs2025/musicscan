@@ -10,6 +10,7 @@ import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalL
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface TikTokQueueItem {
   id: string;
@@ -271,6 +272,7 @@ export default function TikTokVideoAdmin() {
   };
 
   return (
+    <AdminLayout>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -560,11 +562,8 @@ export default function TikTokVideoAdmin() {
                     className="w-10 h-10 object-cover rounded"
                   />
                 )}
-                <div className="text-sm text-muted-foreground">
-                  Gegenereerd: {selectedVideo?.processed_at 
-                    ? format(new Date(selectedVideo.processed_at), 'dd MMM yyyy HH:mm', { locale: nl })
-                    : format(new Date(selectedVideo?.updated_at || ''), 'dd MMM yyyy HH:mm', { locale: nl })
-                  }
+              <div className="text-sm text-muted-foreground">
+                  Gegenereerd: {safeFormatDate(selectedVideo?.processed_at || selectedVideo?.updated_at, 'dd MMM yyyy HH:mm')}
                 </div>
               </div>
               {selectedVideo?.video_url && (
@@ -580,5 +579,6 @@ export default function TikTokVideoAdmin() {
         </DialogContent>
       </Dialog>
     </div>
+    </AdminLayout>
   );
 }

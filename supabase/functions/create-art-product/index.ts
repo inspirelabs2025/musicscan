@@ -503,6 +503,22 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
             } catch (fbErr) {
               console.warn('⚠️ Facebook auto-post failed (non-blocking):', fbErr);
             }
+
+            // Step 11: Queue TikTok video generation
+            console.log('🎬 Queueing TikTok video generation...');
+            try {
+              await supabase.functions.invoke('queue-tiktok-video', {
+                body: {
+                  blogId: blogData.blog.id,
+                  albumCoverUrl: fbImageUrl || artworkUrl,
+                  artist: artistValue,
+                  title: albumTitle
+                }
+              });
+              console.log('✅ TikTok video queued for generation');
+            } catch (tiktokErr) {
+              console.warn('⚠️ TikTok video queue failed (non-blocking):', tiktokErr);
+            }
           }
         }
       } catch (blogErr) {

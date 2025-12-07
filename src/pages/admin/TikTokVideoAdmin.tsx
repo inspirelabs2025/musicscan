@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink, Plus, PlusCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink, Plus, PlusCircle, Eye, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -38,6 +39,8 @@ interface BlogPost {
 export default function TikTokVideoAdmin() {
   const queryClient = useQueryClient();
   const [addingBlogIds, setAddingBlogIds] = useState<Set<string>>(new Set());
+  const [selectedVideo, setSelectedVideo] = useState<TikTokQueueItem | null>(null);
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
 
   // Fetch queue items
   const { data: queueItems = [], isLoading, refetch } = useQuery({
@@ -210,6 +213,35 @@ export default function TikTokVideoAdmin() {
       toast.error(`Fout bij bulk toevoegen: ${error.message}`);
     },
   });
+
+  // Retry failed item
+  const retryItem = useMutation({
+    mutationFn: async (item: TikTokQueueItem) => {
+      const { error } = await supabase
+        .from('tiktok_video_queue')
+        .update({ 
+          status: 'pending', 
+          attempts: 0, 
+          error_message: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', item.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Item opnieuw in queue geplaatst');
+      queryClient.invalidateQueries({ queryKey: ['tiktok-video-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['tiktok-video-stats'] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Fout bij retry: ${error.message}`);
+    },
+  });
+
+  const openVideoPreview = (item: TikTokQueueItem) => {
+    setSelectedVideo(item);
+    setVideoDialogOpen(true);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -421,8 +453,7 @@ export default function TikTokVideoAdmin() {
                   <TableHead>Status</TableHead>
                   <TableHead>Pogingen</TableHead>
                   <TableHead>Aangemaakt</TableHead>
-                  <TableHead>Video</TableHead>
-                  <TableHead>Fout</TableHead>
+                  <TableHead>Acties</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -449,28 +480,34 @@ export default function TikTokVideoAdmin() {
                       {format(new Date(item.created_at), 'dd MMM HH:mm', { locale: nl })}
                     </TableCell>
                     <TableCell>
-                      {item.video_url ? (
-                        <a 
-                          href={item.video_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline flex items-center gap-1"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          Bekijk
-                        </a>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate">
-                      {item.error_message ? (
-                        <span className="text-destructive text-sm" title={item.error_message}>
-                          {item.error_message}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {item.video_url ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openVideoPreview(item)}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Bekijk
+                          </Button>
+                        ) : item.status === 'failed' ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => retryItem.mutate(item)}
+                            disabled={retryItem.isPending}
+                          >
+                            <RotateCcw className="w-4 h-4 mr-1" />
+                            Retry
+                          </Button>
+                        ) : item.error_message ? (
+                          <span className="text-destructive text-xs max-w-[150px] truncate" title={item.error_message}>
+                            {item.error_message}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -479,6 +516,57 @@ export default function TikTokVideoAdmin() {
           )}
         </CardContent>
       </Card>
+
+      {/* Video Preview Dialog */}
+      <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Video className="w-5 h-5" />
+              {selectedVideo?.artist} - {selectedVideo?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedVideo?.video_url && (
+              <div className="aspect-[9/16] max-h-[70vh] mx-auto bg-black rounded-lg overflow-hidden">
+                <video 
+                  src={selectedVideo.video_url} 
+                  controls 
+                  autoPlay
+                  className="w-full h-full object-contain"
+                >
+                  Je browser ondersteunt geen video afspelen.
+                </video>
+              </div>
+            )}
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center gap-2">
+                {selectedVideo?.album_cover_url && (
+                  <img 
+                    src={selectedVideo.album_cover_url} 
+                    alt="Album cover" 
+                    className="w-10 h-10 object-cover rounded"
+                  />
+                )}
+                <div className="text-sm text-muted-foreground">
+                  Gegenereerd: {selectedVideo?.processed_at 
+                    ? format(new Date(selectedVideo.processed_at), 'dd MMM yyyy HH:mm', { locale: nl })
+                    : format(new Date(selectedVideo?.updated_at || ''), 'dd MMM yyyy HH:mm', { locale: nl })
+                  }
+                </div>
+              </div>
+              {selectedVideo?.video_url && (
+                <Button asChild variant="outline" size="sm">
+                  <a href={selectedVideo.video_url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Open in nieuw tabblad
+                  </a>
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

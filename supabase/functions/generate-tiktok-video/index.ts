@@ -18,15 +18,22 @@ interface GenerateVideoRequest {
 async function fetchImageAsBase64(imageUrl: string): Promise<string> {
   console.log('📥 Downloading image:', imageUrl);
   
+  // Try with full browser-like headers to avoid 403 from Discogs
   const response = await fetch(imageUrl, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Accept': 'image/*',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer': 'https://www.discogs.com/',
+      'Sec-Fetch-Dest': 'image',
+      'Sec-Fetch-Mode': 'no-cors',
+      'Sec-Fetch-Site': 'cross-site',
     }
   });
   
   if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    console.error(`❌ Image fetch failed: ${response.status} ${response.statusText} for ${imageUrl}`);
+    throw new Error(`${response.status} Client Error: ${response.statusText} for url: ${imageUrl}`);
   }
   
   const arrayBuffer = await response.arrayBuffer();

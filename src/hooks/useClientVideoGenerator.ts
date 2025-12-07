@@ -128,7 +128,7 @@ export const useClientVideoGenerator = () => {
   // Calculate zoom scale based on effect and progress (0-1)
   const calculateZoomScale = (effect: ZoomEffect, progress: number): number => {
     const minScale = 1.0;
-    const maxScale = 1.15; // 15% zoom
+    const maxScale = 1.25; // 25% zoom - more noticeable
     
     switch (effect) {
       case 'grow-in':
@@ -213,13 +213,18 @@ export const useClientVideoGenerator = () => {
         
         for (let frame = 0; frame < framesPerImage; frame++) {
           // Calculate zoom progress for this frame (0 to 1)
-          const frameProgress = frame / framesPerImage;
+          const frameProgress = frame / (framesPerImage - 1 || 1);
           const scale = calculateZoomScale(zoomEffect, frameProgress);
+          
+          // Log first and last frame scale for debugging
+          if (frame === 0 || frame === framesPerImage - 1) {
+            console.log(`Frame ${frame}/${framesPerImage}: progress=${frameProgress.toFixed(2)}, scale=${scale.toFixed(3)}, effect=${zoomEffect}`);
+          }
           
           drawImageWithStyle(ctx, img, resolution.width, resolution.height, style, scale);
           
-          // Wait for next frame timing
-          await new Promise(resolve => setTimeout(resolve, 1000 / fps));
+          // Use requestAnimationFrame timing for smoother capture
+          await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 1000 / fps)));
           
           currentFrame++;
           setProgress(20 + (currentFrame / totalFrames) * 70); // 20-90% for rendering

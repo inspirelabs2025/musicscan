@@ -14,7 +14,7 @@ const loadingMessages = [
 const tips = [
   "Discogs heeft meer dan 15 miljoen releases in hun database!",
   "We zoeken door deze enorme collectie om de beste match te vinden.",
-  "Onze AI vergelijkt je foto's met duizenden afbeeldingen.",
+  "Ons systeem vergelijkt je foto's met duizenden afbeeldingen.",
   "De prijsanalyse wordt live uit de markt gehaald.",
   "Elke scan wordt geoptimaliseerd voor maximale nauwkeurigheid."
 ];

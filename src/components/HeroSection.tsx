@@ -29,7 +29,7 @@ export const HeroSection = () => {
             <span className="text-vinyl-gold text-2xl md:text-3xl">Ontdek muziek op allerlei leuke manieren</span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">Bekijk de laatste albums, het laatste nieuws, de leukste muziekverhalen, of bouw superslim met AI je eigen collectie, open een winkel of krijg inzicht en ontdek de waarde</p>
+          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">Bekijk de laatste albums, het laatste nieuws, de leukste muziekverhalen, of bouw slim je eigen collectie, open een winkel of krijg inzicht en ontdek de waarde</p>
           
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <Badge variant="secondary" className="px-4 py-2 text-sm">

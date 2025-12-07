@@ -70,8 +70,8 @@ export default function Nieuws() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Muzieknieuws - AI Powered | MusicScan</title>
-        <meta name="description" content="Het laatste muzieknieuws, dagelijks verzameld en herschreven door AI voor jou." />
+        <title>Muzieknieuws | MusicScan</title>
+        <meta name="description" content="Het laatste muzieknieuws, dagelijks automatisch voor jou samengesteld." />
       </Helmet>
 
       <BreadcrumbNavigation className="max-w-7xl mx-auto px-4 pt-4" />
@@ -85,13 +85,13 @@ export default function Nieuws() {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
             <Sparkles className="w-4 h-4" />
-            AI-Powered Nieuws
+            Dagelijks Vers
           </div>
           <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
             Muzieknieuws
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Dagelijks verzameld en herschreven door AI • Altijd actueel • Altijd betrouwbaar
+            Dagelijks automatisch samengesteld • Altijd actueel • Altijd betrouwbaar
           </p>
         </motion.div>
 

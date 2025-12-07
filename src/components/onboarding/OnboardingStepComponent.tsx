@@ -69,7 +69,7 @@ export const OnboardingStepComponent: React.FC<OnboardingStepProps> = ({
                 <CardContent className="p-4 text-center">
                   <Scan className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h3 className="font-semibold">Smart Scanning</h3>
-                  <p className="text-sm text-muted-foreground">AI-powered herkenning</p>
+                  <p className="text-sm text-muted-foreground">Slimme herkenning</p>
                 </CardContent>
               </Card>
               <Card>
@@ -97,7 +97,7 @@ export const OnboardingStepComponent: React.FC<OnboardingStepProps> = ({
               <Camera className="h-16 w-16 mx-auto mb-4 text-primary" />
               <h2 className="text-2xl font-bold mb-3">Scan je eerste item</h2>
               <p className="text-muted-foreground max-w-lg mx-auto">
-                Begin met het maken van een foto van je vinyl of CD. Onze AI herkent automatisch 
+                Begin met het maken van een foto van je vinyl of CD. Ons systeem herkent automatisch 
                 alle details en geeft je een prijsschatting.
               </p>
             </div>
@@ -120,8 +120,8 @@ export const OnboardingStepComponent: React.FC<OnboardingStepProps> = ({
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm">3</div>
                   <div>
-                    <div className="font-medium">Wacht op AI analyse</div>
-                    <div className="text-sm text-muted-foreground">Onze AI doet de rest automatisch</div>
+                    <div className="font-medium">Wacht op analyse</div>
+                    <div className="text-sm text-muted-foreground">Het systeem doet de rest automatisch</div>
                   </div>
                 </div>
               </div>
@@ -134,9 +134,9 @@ export const OnboardingStepComponent: React.FC<OnboardingStepProps> = ({
           <div className="py-8">
             <div className="text-center mb-8">
               <Sparkles className="h-16 w-16 mx-auto mb-4 text-primary" />
-              <h2 className="text-2xl font-bold mb-3">AI Magic in actie</h2>
+              <h2 className="text-2xl font-bold mb-3">Slimme Herkenning in actie</h2>
               <p className="text-muted-foreground max-w-lg mx-auto">
-                Onze geavanceerde AI herkent niet alleen je muziek, maar geeft ook waardevolle insights.
+                Ons geavanceerde systeem herkent niet alleen je muziek, maar geeft ook waardevolle insights.
               </p>
             </div>
             <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -256,7 +256,7 @@ export const OnboardingStepComponent: React.FC<OnboardingStepProps> = ({
               <MessageCircle className="h-16 w-16 mx-auto mb-4 text-primary" />
               <h2 className="text-2xl font-bold mb-3">Chat met je Collectie</h2>
               <p className="text-muted-foreground max-w-lg mx-auto">
-                Stel vragen over je muziek aan onze AI. Krijg gepersonaliseerde aanbevelingen en insights.
+                Stel vragen over je muziek aan ons slimme systeem. Krijg gepersonaliseerde aanbevelingen en insights.
               </p>
             </div>
             <div className="max-w-2xl mx-auto">

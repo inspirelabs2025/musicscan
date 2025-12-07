@@ -79,7 +79,7 @@ const About = () => {
                   </p>
                   
                   <p className="leading-relaxed">
-                    Ik wilde een platform creëren voor iedereen die net als ik meer ziet in een album dan alleen een tracklist. Een plek waar je je collectie kunt scannen, waar je nieuwe muziekverhalen ontdekt, waar AI je helpt om context te vinden, herinneringen vast te leggen en zelfs om prachtige prints van je favoriete albums te maken.
+                    Ik wilde een platform creëren voor iedereen die net als ik meer ziet in een album dan alleen een tracklist. Een plek waar je je collectie kunt scannen, waar je nieuwe muziekverhalen ontdekt, waar slimme tools je helpen om context te vinden, herinneringen vast te leggen en zelfs om prachtige prints van je favoriete albums te maken.
                   </p>
                   
                   <p className="leading-relaxed">

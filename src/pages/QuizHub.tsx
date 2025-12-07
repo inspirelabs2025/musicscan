@@ -19,7 +19,7 @@ export default function QuizHub() {
         <title>Muziek Quizzen | Test Je Kennis | MusicScan</title>
         <meta name="description" content="Test je muziekkennis met onze interactieve quizzen. Speel tegen vrienden, verdien badges en beklim het leaderboard." />
         <meta property="og:title" content="Muziek Quizzen | MusicScan" />
-        <meta property="og:description" content="Test je muziekkennis met AI-gegenereerde quizzen over artiesten, albums, en muziekgeschiedenis." />
+        <meta property="og:description" content="Test je muziekkennis met unieke quizzen over artiesten, albums, en muziekgeschiedenis." />
         <meta property="og:type" content="website" />
       </Helmet>
 

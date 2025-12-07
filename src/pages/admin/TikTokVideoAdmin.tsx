@@ -30,21 +30,17 @@ interface TikTokQueueItem {
 interface BlogPost {
   id: string;
   slug: string;
-  album_cover_url: string;
-  yaml_frontmatter: {
-    title?: string;
-    artist?: string;
-  };
+  album_cover_url: string | null;
+  yaml_frontmatter: Record<string, unknown> | null;
   created_at: string;
 }
 
 export default function TikTokVideoAdmin() {
   const queryClient = useQueryClient();
-  const [isProcessing, setIsProcessing] = useState(false);
   const [addingBlogIds, setAddingBlogIds] = useState<Set<string>>(new Set());
 
   // Fetch queue items
-  const { data: queueItems, isLoading, refetch } = useQuery({
+  const { data: queueItems = [], isLoading, refetch } = useQuery({
     queryKey: ['tiktok-video-queue'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -60,16 +56,15 @@ export default function TikTokVideoAdmin() {
   });
 
   // Fetch blog posts without TikTok video
-  const { data: availableBlogPosts, isLoading: loadingBlogs, refetch: refetchBlogs } = useQuery({
+  const { data: availableBlogPosts = [], isLoading: loadingBlogs, refetch: refetchBlogs } = useQuery({
     queryKey: ['blogs-without-tiktok'],
     queryFn: async () => {
       // Get blog_ids already in queue
       const { data: queuedBlogs } = await supabase
         .from('tiktok_video_queue')
-        .select('blog_id')
-        .not('blog_id', 'is', null);
+        .select('blog_id');
       
-      const queuedBlogIds = new Set((queuedBlogs || []).map(q => q.blog_id));
+      const queuedBlogIds = new Set((queuedBlogs || []).map(q => q.blog_id).filter(Boolean));
 
       // Get blog posts with album_cover_url but no tiktok_video_url
       const { data, error } = await supabase
@@ -103,10 +98,10 @@ export default function TikTokVideoAdmin() {
         processing: 0,
         completed: 0,
         failed: 0,
-        total: data.length,
+        total: data?.length || 0,
       };
       
-      data.forEach((item: { status: string }) => {
+      (data || []).forEach((item: { status: string }) => {
         if (item.status in counts) {
           counts[item.status as keyof typeof counts]++;
         }
@@ -125,11 +120,11 @@ export default function TikTokVideoAdmin() {
       return data;
     },
     onSuccess: (data) => {
-      toast.success(`Queue verwerkt: ${data.processedCount || 0} items`);
+      toast.success(`Queue verwerkt: ${data?.processedCount || 0} items`);
       queryClient.invalidateQueries({ queryKey: ['tiktok-video-queue'] });
       queryClient.invalidateQueries({ queryKey: ['tiktok-video-stats'] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Fout bij verwerken: ${error.message}`);
     },
   });
@@ -137,7 +132,7 @@ export default function TikTokVideoAdmin() {
   // Add single blog to queue
   const addToQueue = useMutation({
     mutationFn: async (blog: BlogPost) => {
-      const frontmatter = blog.yaml_frontmatter || {};
+      const frontmatter = (blog.yaml_frontmatter || {}) as Record<string, string>;
       const artist = frontmatter.artist || 'Unknown Artist';
       const title = frontmatter.title || 'Unknown Title';
 
@@ -156,12 +151,13 @@ export default function TikTokVideoAdmin() {
       setAddingBlogIds(prev => new Set(prev).add(blog.id));
     },
     onSuccess: ({ blog }) => {
-      toast.success(`"${blog.yaml_frontmatter?.title || blog.slug}" toegevoegd aan queue`);
+      const frontmatter = (blog.yaml_frontmatter || {}) as Record<string, string>;
+      toast.success(`"${frontmatter.title || blog.slug}" toegevoegd aan queue`);
       queryClient.invalidateQueries({ queryKey: ['tiktok-video-queue'] });
       queryClient.invalidateQueries({ queryKey: ['tiktok-video-stats'] });
       queryClient.invalidateQueries({ queryKey: ['blogs-without-tiktok'] });
     },
-    onError: (error, blog) => {
+    onError: (error: Error) => {
       toast.error(`Fout bij toevoegen: ${error.message}`);
     },
     onSettled: (_, __, blog) => {
@@ -182,12 +178,12 @@ export default function TikTokVideoAdmin() {
 
       const results = [];
       for (const blog of availableBlogPosts) {
-        const frontmatter = blog.yaml_frontmatter || {};
+        const frontmatter = (blog.yaml_frontmatter || {}) as Record<string, string>;
         const artist = frontmatter.artist || 'Unknown Artist';
         const title = frontmatter.title || 'Unknown Title';
 
         try {
-          const { data, error } = await supabase.functions.invoke('queue-tiktok-video', {
+          const { error } = await supabase.functions.invoke('queue-tiktok-video', {
             body: {
               blogId: blog.id,
               albumCoverUrl: blog.album_cover_url,
@@ -210,7 +206,7 @@ export default function TikTokVideoAdmin() {
       queryClient.invalidateQueries({ queryKey: ['tiktok-video-stats'] });
       queryClient.invalidateQueries({ queryKey: ['blogs-without-tiktok'] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Fout bij bulk toevoegen: ${error.message}`);
     },
   });
@@ -309,10 +305,10 @@ export default function TikTokVideoAdmin() {
                 Blog Posts zonder TikTok Video
               </CardTitle>
               <CardDescription>
-                {availableBlogPosts?.length || 0} blog posts beschikbaar om toe te voegen
+                {availableBlogPosts.length} blog posts beschikbaar om toe te voegen
               </CardDescription>
             </div>
-            {availableBlogPosts && availableBlogPosts.length > 0 && (
+            {availableBlogPosts.length > 0 && (
               <Button 
                 onClick={() => addAllToQueue.mutate()}
                 disabled={addAllToQueue.isPending}
@@ -332,7 +328,7 @@ export default function TikTokVideoAdmin() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
-          ) : availableBlogPosts?.length === 0 ? (
+          ) : availableBlogPosts.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Alle blog posts hebben al een TikTok video of staan in de queue
             </div>
@@ -348,8 +344,8 @@ export default function TikTokVideoAdmin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {availableBlogPosts?.slice(0, 20).map((blog) => {
-                  const frontmatter = blog.yaml_frontmatter || {};
+                {availableBlogPosts.slice(0, 20).map((blog) => {
+                  const frontmatter = (blog.yaml_frontmatter || {}) as Record<string, string>;
                   const isAdding = addingBlogIds.has(blog.id);
                   
                   return (
@@ -411,7 +407,7 @@ export default function TikTokVideoAdmin() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
-          ) : queueItems?.length === 0 ? (
+          ) : queueItems.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Geen video's in de queue
             </div>
@@ -430,7 +426,7 @@ export default function TikTokVideoAdmin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {queueItems?.map((item) => (
+                {queueItems.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>
                       {item.album_cover_url && (
@@ -448,7 +444,7 @@ export default function TikTokVideoAdmin() {
                       {item.title || '-'}
                     </TableCell>
                     <TableCell>{getStatusBadge(item.status)}</TableCell>
-                    <TableCell>{item.attempts}/3</TableCell>
+                    <TableCell>{item.attempts}/{item.max_attempts}</TableCell>
                     <TableCell>
                       {format(new Date(item.created_at), 'dd MMM HH:mm', { locale: nl })}
                     </TableCell>

@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { useClientVideoGenerator, VideoStyle } from '@/hooks/useClientVideoGenerator';
+import { useClientVideoGenerator, VideoStyle, ZoomEffect } from '@/hooks/useClientVideoGenerator';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -330,6 +330,7 @@ export default function TikTokVideoAdmin() {
   const [testImages, setTestImages] = useState<string[]>([]);
   const [testImageInput, setTestImageInput] = useState('');
   const [testStyle, setTestStyle] = useState<VideoStyle>('blurred-background');
+  const [testZoomEffect, setTestZoomEffect] = useState<ZoomEffect>('grow-in-out');
   const [testDuration, setTestDuration] = useState(3);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -351,6 +352,7 @@ export default function TikTokVideoAdmin() {
       const result = await generateVideo({
         images: testImages,
         style: testStyle,
+        zoomEffect: testZoomEffect,
         durationPerImage: testDuration
       });
 
@@ -542,15 +544,31 @@ export default function TikTokVideoAdmin() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Seconden per afbeelding</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={10}
-                    value={testDuration}
-                    onChange={(e) => setTestDuration(Number(e.target.value))}
-                  />
+                  <Label>Zoom Effect</Label>
+                  <Select value={testZoomEffect} onValueChange={(v) => setTestZoomEffect(v as ZoomEffect)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Geen</SelectItem>
+                      <SelectItem value="grow-in">Grow In (klein → groot)</SelectItem>
+                      <SelectItem value="grow-out">Grow Out (groot → klein)</SelectItem>
+                      <SelectItem value="grow-in-out">Grow In-Out (puls)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Seconden per afbeelding</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={testDuration}
+                  onChange={(e) => setTestDuration(Number(e.target.value))}
+                  className="w-24"
+                />
               </div>
 
               <Button

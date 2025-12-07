@@ -12,17 +12,19 @@ import { nl } from 'date-fns/locale';
 
 interface TikTokQueueItem {
   id: string;
-  blog_id: string;
+  blog_id: string | null;
   album_cover_url: string;
-  artist: string;
-  title: string;
+  artist: string | null;
+  title: string | null;
   status: string;
   operation_name: string | null;
   video_url: string | null;
   error_message: string | null;
   attempts: number;
+  max_attempts: number;
   created_at: string;
   updated_at: string;
+  processed_at: string | null;
 }
 
 interface BlogPost {

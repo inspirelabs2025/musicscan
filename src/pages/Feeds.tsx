@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-const SUPABASE_URL = 'https://ssxbpyqnjfiyubsuonar.supabase.co';
+const SITE_URL = 'https://www.musicscan.app';
 
 const feeds = [
   {
     title: 'Plaat Verhalen RSS',
     description: 'De nieuwste album verhalen en recensies van MusicScan',
-    url: `${SUPABASE_URL}/functions/v1/generate-content-rss?type=blog_posts&limit=50`,
+    url: `${SITE_URL}/feeds/blog-posts.xml`,
     type: 'blog_posts',
   },
 ];

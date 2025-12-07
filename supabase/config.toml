@@ -597,14 +597,17 @@ verify_jwt = false
 [[functions.post-scheduled-metricool.schedule]]
 cron = "0 10,13,16,19 * * *"
 
-[functions.generate-tiktok-video]
+[functions.image-to-video]
 verify_jwt = false
 
-[functions.process-tiktok-video-queue]
+[functions.image-to-video-status]
 verify_jwt = false
 
-[[functions.process-tiktok-video-queue.schedule]]
+[functions.process-video-queue]
+verify_jwt = false
+
+[[functions.process-video-queue.schedule]]
 cron = "*/5 * * * *"
 
-[functions.queue-tiktok-video]
+[functions.fetch-album-artwork]
 verify_jwt = false

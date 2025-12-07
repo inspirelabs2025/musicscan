@@ -14,6 +14,30 @@ interface GenerateVideoRequest {
   title: string;
 }
 
+// Download image and convert to base64 data URL to avoid hotlink protection issues
+async function fetchImageAsBase64(imageUrl: string): Promise<string> {
+  console.log('📥 Downloading image:', imageUrl);
+  
+  const response = await fetch(imageUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      'Accept': 'image/*',
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+  }
+  
+  const arrayBuffer = await response.arrayBuffer();
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+  const contentType = response.headers.get('content-type') || 'image/jpeg';
+  
+  console.log('✅ Image downloaded, size:', arrayBuffer.byteLength, 'bytes');
+  
+  return `data:${contentType};base64,${base64}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -36,6 +60,15 @@ Deno.serve(async (req) => {
 
     console.log('🎬 Generating TikTok video with Wan 2.5 for:', { artist, title, albumCoverUrl });
 
+    // Download image and convert to base64 to avoid Discogs/hotlink 403 errors
+    let imageData: string;
+    try {
+      imageData = await fetchImageAsBase64(albumCoverUrl);
+    } catch (imgError) {
+      console.error('❌ Failed to download image:', imgError);
+      throw new Error(`Could not download album cover: ${imgError.message}`);
+    }
+
     // Update queue status to processing if we have a queue item
     if (queueItemId) {
       await supabase
@@ -47,13 +80,13 @@ Deno.serve(async (req) => {
         .eq('id', queueItemId);
     }
 
-    // Create prediction using Replicate Wan 2.5 Image-to-Video
-    console.log('📹 Starting Replicate Wan 2.5 prediction...');
+    // Create prediction using Replicate Wan 2.5 Image-to-Video with base64 image
+    console.log('📹 Starting Replicate Wan 2.5 prediction with base64 image...');
     
     const prediction = await replicate.predictions.create({
       model: "wan-video/wan-2.5-i2v-fast",
       input: {
-        image: albumCoverUrl,
+        image: imageData, // Use base64 data URL instead of direct URL
         prompt: `Cinematic Ken Burns zoom effect on this album artwork. Slow, professional camera movement with subtle parallax. Music video aesthetic. Dark, moody lighting. High quality. Album: ${artist} - ${title}`,
         num_frames: 81,
         frames_per_second: 16,

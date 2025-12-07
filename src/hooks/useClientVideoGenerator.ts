@@ -42,31 +42,19 @@ export const useClientVideoGenerator = () => {
     style: VideoStyle,
     scale: number = 1
   ) => {
+    // Clear with black background BEFORE any transforms
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, width, height);
-
-    // Apply scale transform from center
-    ctx.save();
-    ctx.translate(width / 2, height / 2);
-    ctx.scale(scale, scale);
-    ctx.translate(-width / 2, -height / 2);
+    ctx.restore();
 
     const imgAspect = img.width / img.height;
     const canvasAspect = width / height;
 
-    if (style === 'cover') {
-      // Crop to fill
-      let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height;
-      if (imgAspect > canvasAspect) {
-        sWidth = img.height * canvasAspect;
-        sx = (img.width - sWidth) / 2;
-      } else {
-        sHeight = img.width / canvasAspect;
-        sy = (img.height - sHeight) / 2;
-      }
-      ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, width, height);
-    } else if (style === 'blurred-background') {
-      // Draw blurred background
+    if (style === 'blurred-background') {
+      // Draw blurred background (no scale for bg)
+      ctx.save();
       let bgSx = 0, bgSy = 0, bgSWidth = img.width, bgSHeight = img.height;
       if (imgAspect > canvasAspect) {
         bgSWidth = img.height * canvasAspect;
@@ -78,8 +66,14 @@ export const useClientVideoGenerator = () => {
       ctx.filter = 'blur(20px)';
       ctx.drawImage(img, bgSx, bgSy, bgSWidth, bgSHeight, -20, -20, width + 40, height + 40);
       ctx.filter = 'none';
+      ctx.restore();
 
-      // Draw foreground (contain)
+      // Draw foreground with scale
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+      ctx.scale(scale, scale);
+      ctx.translate(-width / 2, -height / 2);
+      
       let fgWidth, fgHeight;
       if (imgAspect > canvasAspect) {
         fgWidth = width;
@@ -91,8 +85,31 @@ export const useClientVideoGenerator = () => {
       const fgX = (width - fgWidth) / 2;
       const fgY = (height - fgHeight) / 2;
       ctx.drawImage(img, fgX, fgY, fgWidth, fgHeight);
+      ctx.restore();
+    } else if (style === 'cover') {
+      // Apply scale transform from center
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+      ctx.scale(scale, scale);
+      ctx.translate(-width / 2, -height / 2);
+
+      let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height;
+      if (imgAspect > canvasAspect) {
+        sWidth = img.height * canvasAspect;
+        sx = (img.width - sWidth) / 2;
+      } else {
+        sHeight = img.width / canvasAspect;
+        sy = (img.height - sHeight) / 2;
+      }
+      ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, width, height);
+      ctx.restore();
     } else {
-      // contain (default)
+      // contain (default) with scale
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+      ctx.scale(scale, scale);
+      ctx.translate(-width / 2, -height / 2);
+
       let drawWidth, drawHeight;
       if (imgAspect > canvasAspect) {
         drawWidth = width;
@@ -104,9 +121,8 @@ export const useClientVideoGenerator = () => {
       const x = (width - drawWidth) / 2;
       const y = (height - drawHeight) / 2;
       ctx.drawImage(img, x, y, drawWidth, drawHeight);
+      ctx.restore();
     }
-
-    ctx.restore();
   };
 
   // Calculate zoom scale based on effect and progress (0-1)

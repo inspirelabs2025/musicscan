@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink, Plus, PlusCircle, Eye, RotateCcw } from 'lucide-react';
+import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink, Plus, PlusCircle, Eye, RotateCcw, StopCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -269,6 +269,28 @@ export default function TikTokVideoAdmin() {
     },
   });
 
+  // Stop all pending/processing items
+  const stopQueue = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('tiktok_video_queue')
+        .update({ 
+          status: 'cancelled', 
+          updated_at: new Date().toISOString()
+        })
+        .in('status', ['pending', 'processing']);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Queue gestopt - alle pending/processing items geannuleerd');
+      queryClient.invalidateQueries({ queryKey: ['tiktok-video-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['tiktok-video-stats'] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Fout bij stoppen queue: ${error.message}`);
+    },
+  });
+
   const openVideoPreview = (item: TikTokQueueItem) => {
     setSelectedVideo(item);
     setVideoDialogOpen(true);
@@ -284,6 +306,8 @@ export default function TikTokVideoAdmin() {
         return <Badge variant="default" className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" /> Voltooid</Badge>;
       case 'failed':
         return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" /> Mislukt</Badge>;
+      case 'cancelled':
+        return <Badge variant="outline" className="text-orange-500 border-orange-500"><StopCircle className="w-3 h-3 mr-1" /> Geannuleerd</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -310,6 +334,18 @@ export default function TikTokVideoAdmin() {
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Vernieuwen
+          </Button>
+          <Button 
+            variant="destructive"
+            onClick={() => stopQueue.mutate()}
+            disabled={stopQueue.isPending || ((stats?.pending || 0) + (stats?.processing || 0) === 0)}
+          >
+            {stopQueue.isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <StopCircle className="w-4 h-4 mr-2" />
+            )}
+            Stop Queue
           </Button>
           <Button 
             onClick={() => triggerProcessing.mutate()}

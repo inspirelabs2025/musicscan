@@ -42,9 +42,9 @@ function generateZoomFrame(
 ): Image {
   // SLOW LINEAR GROW ZOOM - NO BOUNCE BACK
   // Frame 0: scale = 1.0 (100%)
-  // Frame N: scale = 1.2 (120%) - 20% zoom over full duration
+  // Frame N: scale = 1.3 (130%) - 30% zoom over full duration for more visible effect
   const progress = frameIndex / Math.max(totalFrames - 1, 1);
-  const scale = 1.0 + (progress * 0.2);
+  const scale = 1.0 + (progress * 0.3);
   
   console.log(`🔍 Frame ${frameIndex}/${totalFrames}: progress=${progress.toFixed(2)}, scale=${scale.toFixed(3)}`);
   
@@ -166,6 +166,7 @@ async function generateGifVideo(
       console.log(`🎞️ Processing frame ${i + 1}/${totalFrames}`);
     }
     
+    // Generate background with zoom effect
     const frameImage = generateZoomFrame(
       sourceImage,
       i,
@@ -174,8 +175,10 @@ async function generateGifVideo(
       outputHeight
     );
     
-    // Composite the framed overlay in the center
-    frameImage.composite(framedOverlay, overlayX + 1, overlayY + 1); // 1-indexed
+    // CRITICAL: Clone the framedOverlay for EACH frame to prevent reference issues
+    // The overlay should be STATIC (not zoomed) - only the background zooms
+    const staticOverlay = framedOverlay.clone();
+    frameImage.composite(staticOverlay, overlayX + 1, overlayY + 1); // 1-indexed
     
     // Create frame with delay (in 10ms units for GIF)
     const frame = Frame.from(frameImage, frameDelay / 10);

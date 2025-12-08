@@ -74,7 +74,9 @@ serve(async (req) => {
             imageUrl: item.album_cover_url,
             queueItemId: item.id,
             durationSeconds: 5,
-            fps: 6  // 30 frames total
+            fps: 6,  // 30 frames total
+            artist: item.artist || '',
+            title: item.title || ''
           }
         });
 

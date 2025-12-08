@@ -3342,6 +3342,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          video_url: string | null
           views_count: number | null
           word_count: number | null
           yaml_frontmatter: Json | null
@@ -3370,6 +3371,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          video_url?: string | null
           views_count?: number | null
           word_count?: number | null
           yaml_frontmatter?: Json | null
@@ -3398,6 +3400,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          video_url?: string | null
           views_count?: number | null
           word_count?: number | null
           yaml_frontmatter?: Json | null
@@ -6590,7 +6593,9 @@ export type Database = {
           error_message: string | null
           id: string
           max_attempts: number
+          music_story_id: string | null
           operation_name: string | null
+          priority: number | null
           processed_at: string | null
           status: string
           template_used: string | null
@@ -6607,7 +6612,9 @@ export type Database = {
           error_message?: string | null
           id?: string
           max_attempts?: number
+          music_story_id?: string | null
           operation_name?: string | null
+          priority?: number | null
           processed_at?: string | null
           status?: string
           template_used?: string | null
@@ -6624,7 +6631,9 @@ export type Database = {
           error_message?: string | null
           id?: string
           max_attempts?: number
+          music_story_id?: string | null
           operation_name?: string | null
+          priority?: number | null
           processed_at?: string | null
           status?: string
           template_used?: string | null
@@ -6638,6 +6647,13 @@ export type Database = {
             columns: ["blog_id"]
             isOneToOne: false
             referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tiktok_video_queue_music_story_id_fkey"
+            columns: ["music_story_id"]
+            isOneToOne: false
+            referencedRelation: "music_stories"
             referencedColumns: ["id"]
           },
         ]

@@ -52,19 +52,35 @@ export const VideoQueueProcessor: React.FC<VideoQueueProcessorProps> = ({
 
   const { generateVideo, uploadVideo, isGenerating, progress } = useClientVideoGenerator();
 
-  // Fetch ready_for_client items
+  // Fetch ready_for_client OR stuck processing items (older than 5 min)
   const { data: readyItems = [], refetch } = useQuery({
     queryKey: ['video-queue-ready'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get ready_for_client items
+      const { data: readyData, error: readyError } = await supabase
         .from('tiktok_video_queue')
         .select('*')
         .eq('status', 'ready_for_client')
         .order('created_at', { ascending: true })
         .limit(50);
 
-      if (error) throw error;
-      return data as QueueItem[];
+      if (readyError) throw readyError;
+      
+      // Also get stuck processing items (older than 5 minutes)
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data: stuckData, error: stuckError } = await supabase
+        .from('tiktok_video_queue')
+        .select('*')
+        .eq('status', 'processing')
+        .lt('created_at', fiveMinutesAgo)
+        .order('created_at', { ascending: true })
+        .limit(10);
+
+      if (stuckError) throw stuckError;
+      
+      // Combine and dedupe
+      const allItems = [...(readyData || []), ...(stuckData || [])];
+      return allItems as QueueItem[];
     },
     refetchInterval: isAutoProcessing ? 5000 : 30000,
   });

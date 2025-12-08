@@ -880,14 +880,22 @@ export default function TikTokVideoAdmin() {
           <div className="space-y-4">
             {selectedVideo?.video_url && (
               <div className="aspect-[9/16] max-h-[70vh] mx-auto bg-black rounded-lg overflow-hidden">
-                <video 
-                  src={selectedVideo.video_url} 
-                  controls 
-                  autoPlay
-                  className="w-full h-full object-contain"
-                >
-                  Je browser ondersteunt geen video afspelen.
-                </video>
+                {selectedVideo.video_url.toLowerCase().endsWith('.gif') ? (
+                  <img 
+                    src={selectedVideo.video_url} 
+                    alt={`${selectedVideo.artist} - ${selectedVideo.title}`}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <video 
+                    src={selectedVideo.video_url} 
+                    controls 
+                    autoPlay
+                    className="w-full h-full object-contain"
+                  >
+                    Je browser ondersteunt geen video afspelen.
+                  </video>
+                )}
               </div>
             )}
             <div className="flex items-center justify-between pt-2">

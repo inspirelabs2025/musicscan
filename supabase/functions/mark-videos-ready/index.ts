@@ -40,7 +40,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Mark videos ready - checking pending, failed (retryable), and stuck processing items...");
+    console.log("Mark videos ready for CLIENT-SIDE processing...");
 
     // Get pending items
     const { data: pendingItems, error: fetchError } = await supabase
@@ -92,15 +92,16 @@ serve(async (req) => {
     }
 
     const ids = allItems.map((item) => item.id);
-    console.log(`Marking ${ids.length} items as pending for server-side processing:`, allItems.map(i => `${i.artist} - ${i.title}`));
+    console.log(`Marking ${ids.length} items as ready_for_client:`, allItems.map(i => `${i.artist} - ${i.title}`));
     if (stuckItems?.length) {
       console.log(`Including ${stuckItems.length} stuck processing items`);
     }
 
+    // Set to ready_for_client so the browser-based VideoQueueProcessor picks them up
     const { error: updateError, count } = await supabase
       .from("tiktok_video_queue")
       .update({ 
-        status: "pending",
+        status: "ready_for_client",
         attempts: 0,
         updated_at: new Date().toISOString()
       })
@@ -111,7 +112,7 @@ serve(async (req) => {
       throw updateError;
     }
 
-    console.log(`Successfully marked ${count || ids.length} items as pending for automatic processing`);
+    console.log(`Successfully marked ${count || ids.length} items as ready_for_client`);
 
     return new Response(
       JSON.stringify({ 

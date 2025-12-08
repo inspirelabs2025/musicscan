@@ -19,12 +19,13 @@ serve(async (req) => {
 
     console.log('🎬 Processing TikTok video queue (server-side GIF)...');
 
-    // Get pending items - process 1 at a time to avoid CPU limits
+    // Get pending items - process 1 at a time, highest priority first
     const { data: pendingItems, error: fetchError } = await supabase
       .from('tiktok_video_queue')
       .select('*')
       .eq('status', 'pending')
       .lt('attempts', 3)
+      .order('priority', { ascending: false })
       .order('created_at', { ascending: true })
       .limit(1);
 
@@ -99,15 +100,15 @@ serve(async (req) => {
           })
           .eq('id', item.id);
 
-        // Update blog post if linked
+        // Post to Facebook with GIF - handle both blog posts AND singles
         if (item.blog_id) {
+          // ALBUM BLOG: Update blog post and post to Facebook
           await supabase
             .from('blog_posts')
             .update({ tiktok_video_url: videoUrl })
             .eq('id', item.blog_id);
           console.log(`✅ Updated blog post ${item.blog_id} with video URL`);
 
-          // Fetch blog details for Facebook post
           const { data: blogData } = await supabase
             .from('blog_posts')
             .select('slug, yaml_frontmatter, markdown_content, album_cover_url')
@@ -115,14 +116,12 @@ serve(async (req) => {
             .single();
 
           if (blogData) {
-            // Post to Facebook with video (GIF)
             try {
               const title = blogData.yaml_frontmatter?.title || `${item.artist} - ${item.title}`;
               let summary = blogData.yaml_frontmatter?.description || 
                             blogData.yaml_frontmatter?.summary || 
                             blogData.markdown_content?.substring(0, 280) || '';
               
-              // Clean markdown from summary
               summary = summary
                 .replace(/^---[\s\S]*?---\n?/m, '')
                 .replace(/```[\s\S]*?```/g, '')
@@ -133,7 +132,7 @@ serve(async (req) => {
               
               const blogUrl = `https://www.musicscan.app/plaat-verhaal/${blogData.slug}`;
               
-              console.log(`📱 Posting to Facebook with GIF: ${title}`);
+              console.log(`📱 Posting ALBUM to Facebook with GIF: ${title}`);
               
               await supabase.functions.invoke('post-to-facebook', {
                 body: {
@@ -141,15 +140,64 @@ serve(async (req) => {
                   title: title,
                   content: summary,
                   url: blogUrl,
-                  video_url: videoUrl, // GIF first!
-                  image_url: blogData.album_cover_url || item.album_cover_url, // Fallback
+                  video_url: videoUrl,
+                  image_url: blogData.album_cover_url || item.album_cover_url,
                   artist: item.artist
                 }
               });
               
-              console.log(`✅ Facebook post created with GIF for: ${title}`);
+              console.log(`✅ Facebook post created with GIF for album: ${title}`);
             } catch (fbError) {
-              console.warn(`⚠️ Facebook post failed (non-blocking):`, fbError);
+              console.warn(`⚠️ Facebook post failed for album (non-blocking):`, fbError);
+            }
+          }
+        } else if (item.music_story_id) {
+          // SINGLE: Update music_story and post to Facebook
+          await supabase
+            .from('music_stories')
+            .update({ video_url: videoUrl })
+            .eq('id', item.music_story_id);
+          console.log(`✅ Updated music_story ${item.music_story_id} with video URL`);
+
+          const { data: storyData } = await supabase
+            .from('music_stories')
+            .select('slug, title, single_name, artist, artwork_url, markdown_content')
+            .eq('id', item.music_story_id)
+            .single();
+
+          if (storyData) {
+            try {
+              const singleTitle = storyData.single_name || storyData.title || item.title;
+              const artistName = storyData.artist || item.artist;
+              let summary = storyData.markdown_content?.substring(0, 280) || '';
+              
+              summary = summary
+                .replace(/^---[\s\S]*?---\n?/m, '')
+                .replace(/```[\s\S]*?```/g, '')
+                .replace(/\*\*([^*]+)\*\*/g, '$1')
+                .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+                .trim()
+                .substring(0, 280);
+              
+              const singleUrl = `https://www.musicscan.app/singles/${storyData.slug}`;
+              
+              console.log(`📱 Posting SINGLE to Facebook with GIF: ${artistName} - ${singleTitle}`);
+              
+              await supabase.functions.invoke('post-to-facebook', {
+                body: {
+                  content_type: 'single',
+                  title: `${artistName} - ${singleTitle}`,
+                  content: summary,
+                  url: singleUrl,
+                  video_url: videoUrl,
+                  image_url: storyData.artwork_url || item.album_cover_url,
+                  artist: artistName
+                }
+              });
+              
+              console.log(`✅ Facebook post created with GIF for single: ${artistName} - ${singleTitle}`);
+            } catch (fbError) {
+              console.warn(`⚠️ Facebook post failed for single (non-blocking):`, fbError);
             }
           }
         }

@@ -251,32 +251,42 @@ Geef ALTIJD specifieke details wanneer je iets beweert.`;
       // Don't fail the whole request for artwork errors
     }
 
-    // Add to Facebook queue with HIGH PRIORITY (new singles get priority 100)
+    // Queue TikTok video generation (priority 100 = highest)
+    // Facebook posting happens automatically after GIF is generated
     try {
-      console.log('📱 Adding single to Facebook queue with high priority...');
+      console.log('🎬 Queueing TikTok video for single (Facebook post follows after GIF)...');
       
-      const { error: queueError } = await supabase
-        .from('singles_facebook_queue')
-        .upsert({
-          music_story_id: newStory.id,
+      await supabase.functions.invoke('queue-tiktok-video', {
+        body: {
+          musicStoryId: newStory.id,
+          albumCoverUrl: artworkUrl || '',
           artist: artist,
-          single_name: single_name,
-          slug: newStory.slug,
-          artwork_url: artworkUrl,
-          priority: 100, // High priority for new singles
-          status: 'pending'
-        }, {
-          onConflict: 'music_story_id'
-        });
-
-      if (queueError) {
-        console.log('⚠️ Failed to add to Facebook queue:', queueError.message);
-      } else {
-        console.log('✅ Added to Facebook queue with priority 100');
+          title: single_name,
+          priority: 100 // Highest priority for new singles
+        }
+      });
+      
+      console.log('✅ TikTok video queued with priority 100');
+    } catch (tiktokError) {
+      console.error('⚠️ TikTok queue error (will fallback to direct FB post):', tiktokError);
+      
+      // Fallback: Add to Facebook queue without GIF if TikTok queue fails
+      try {
+        await supabase
+          .from('singles_facebook_queue')
+          .upsert({
+            music_story_id: newStory.id,
+            artist: artist,
+            single_name: single_name,
+            slug: newStory.slug,
+            artwork_url: artworkUrl,
+            priority: 100,
+            status: 'pending'
+          }, { onConflict: 'music_story_id' });
+        console.log('✅ Fallback: Added to Facebook queue with static image');
+      } catch (fbError) {
+        console.error('❌ Fallback Facebook queue also failed:', fbError);
       }
-    } catch (fbError) {
-      console.error('❌ Facebook queue error:', fbError);
-      // Don't fail the whole request for queue errors
     }
 
     return new Response(JSON.stringify({

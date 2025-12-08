@@ -106,8 +106,12 @@ export const useClientVideoGenerator = () => {
     const canvasAspect = width / height;
 
     if (style === 'blurred-background') {
-      // Draw blurred background (no scale for bg)
+      // Draw blurred background WITH ZOOM SCALE (Ken Burns effect on background)
       ctx.save();
+      ctx.translate(width / 2, height / 2);
+      ctx.scale(scale, scale); // Apply zoom to background
+      ctx.translate(-width / 2, -height / 2);
+      
       let bgSx = 0, bgSy = 0, bgSWidth = img.width, bgSHeight = img.height;
       if (imgAspect > canvasAspect) {
         bgSWidth = img.height * canvasAspect;
@@ -121,12 +125,8 @@ export const useClientVideoGenerator = () => {
       ctx.filter = 'none';
       ctx.restore();
 
-      // Draw foreground with scale
+      // Draw foreground STATIC (no scale - album art stays still)
       ctx.save();
-      ctx.translate(width / 2, height / 2);
-      ctx.scale(scale, scale);
-      ctx.translate(-width / 2, -height / 2);
-      
       let fgWidth, fgHeight;
       if (imgAspect > canvasAspect) {
         fgWidth = width;

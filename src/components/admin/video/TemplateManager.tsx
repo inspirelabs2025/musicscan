@@ -80,7 +80,12 @@ export function TemplateManager() {
         continue;
       }
       
-      await uploadMutation.mutateAsync(file);
+      try {
+        await uploadMutation.mutateAsync(file);
+      } catch (error) {
+        console.error('Upload error:', error);
+        // Error already shown via mutation onError
+      }
     }
     
     setUploading(false);

@@ -40,10 +40,10 @@ function generateZoomFrame(
   outputWidth: number,
   outputHeight: number
 ): Image {
-  // Calculate zoom scale (1.0 -> 1.3 -> 1.0 for smooth zoom in/out)
-  const progress = frameIndex / (totalFrames - 1);
-  const zoomCycle = Math.sin(progress * Math.PI); // 0 -> 1 -> 0
-  const scale = 1.0 + (zoomCycle * 0.3); // 1.0 -> 1.3 -> 1.0
+  // Calculate zoom scale - slow smooth zoom in over entire duration
+  // Goes from 1.0 to 1.2 linearly over 5 seconds (Ken Burns style)
+  const progress = frameIndex / Math.max(totalFrames - 1, 1);
+  const scale = 1.0 + (progress * 0.2); // 1.0 -> 1.2 linear
   
   // Create output image with black background
   const outputImage = new Image(outputWidth, outputHeight);

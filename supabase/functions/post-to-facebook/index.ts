@@ -23,6 +23,7 @@ interface PostRequest {
   content: string;
   url?: string;
   image_url?: string;
+  video_url?: string; // GIF/MP4 video URL - takes priority over image_url
   artist?: string;
   year?: number;
   hashtags?: string[]; // Deprecated - smart hashtags are now always used
@@ -39,7 +40,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { content_type, title, content, url, image_url, artist, year }: PostRequest = await req.json();
+    const { content_type, title, content, url, image_url, video_url, artist, year }: PostRequest = await req.json();
 
     if (!content) {
       return new Response(
@@ -49,6 +50,7 @@ Deno.serve(async (req) => {
     }
 
     console.log(`📘 Posting to Facebook: ${content_type} - ${title}`);
+    console.log(`🎬 Video URL: ${video_url || 'GEEN VIDEO'}`);
     console.log(`📸 Image URL: ${image_url || 'GEEN AFBEELDING'}`);
 
     // Get Facebook credentials from app_secrets
@@ -136,9 +138,24 @@ Deno.serve(async (req) => {
       appsecret_proof: appsecretProof,
     };
 
-    // If there's an image, post as photo instead
+    // Priority: video_url > image_url > text only
     let response;
-    if (image_url) {
+    if (video_url) {
+      // Post as video (GIF/MP4)
+      const videoApiUrl = `https://graph.facebook.com/v18.0/${pageId}/videos`;
+      console.log(`🎬 Posting video to Facebook: ${video_url}`);
+      response = await fetch(videoApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          access_token: pageAccessToken,
+          appsecret_proof: appsecretProof,
+          file_url: video_url,
+          description: postMessage,
+        }),
+      });
+    } else if (image_url) {
+      // Post as photo
       const photoApiUrl = `https://graph.facebook.com/v18.0/${pageId}/photos`;
       response = await fetch(photoApiUrl, {
         method: 'POST',
@@ -150,6 +167,7 @@ Deno.serve(async (req) => {
         }),
       });
     } else {
+      // Text only post
       response = await fetch(fbApiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

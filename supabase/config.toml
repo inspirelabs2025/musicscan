@@ -626,3 +626,6 @@ cron = "*/2 * * * *"
 
 [functions.generate-tiktok-video]
 verify_jwt = false
+
+[functions.generate-mp4-video]
+verify_jwt = false

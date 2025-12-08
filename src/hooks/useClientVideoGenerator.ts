@@ -24,23 +24,44 @@ interface VideoGeneratorResult {
 // Singleton FFmpeg instance
 let ffmpegInstance: FFmpeg | null = null;
 let ffmpegLoaded = false;
+let ffmpegLoadFailed = false;
 
-const getFFmpeg = async (): Promise<FFmpeg> => {
+const getFFmpeg = async (): Promise<FFmpeg | null> => {
+  // If we already know loading failed, don't retry
+  if (ffmpegLoadFailed) {
+    return null;
+  }
+  
   if (ffmpegInstance && ffmpegLoaded) {
     return ffmpegInstance;
   }
   
-  ffmpegInstance = new FFmpeg();
-  
-  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-  
-  await ffmpegInstance.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-  });
-  
-  ffmpegLoaded = true;
-  return ffmpegInstance;
+  try {
+    ffmpegInstance = new FFmpeg();
+    
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+    
+    // Add timeout for FFmpeg loading (30 seconds max)
+    const loadPromise = ffmpegInstance.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+    
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('FFmpeg load timeout')), 30000)
+    );
+    
+    await Promise.race([loadPromise, timeoutPromise]);
+    
+    ffmpegLoaded = true;
+    console.log('FFmpeg loaded successfully');
+    return ffmpegInstance;
+  } catch (error) {
+    console.error('FFmpeg loading failed:', error);
+    ffmpegLoadFailed = true;
+    ffmpegInstance = null;
+    return null;
+  }
 };
 
 export const useClientVideoGenerator = () => {
@@ -181,41 +202,56 @@ export const useClientVideoGenerator = () => {
     }
   };
 
-  // Convert WebM to MP4 using FFmpeg.wasm
+  // Convert WebM to MP4 using FFmpeg.wasm (with fallback to WebM)
   const convertToMp4 = async (webmBlob: Blob): Promise<Blob> => {
     toast({ title: '🔄 Converteren naar MP4...', description: 'FFmpeg laden...' });
     
     const ffmpeg = await getFFmpeg();
     
-    // Write input file
-    const webmData = await fetchFile(webmBlob);
-    await ffmpeg.writeFile('input.webm', webmData);
+    // If FFmpeg failed to load, return WebM as fallback
+    if (!ffmpeg) {
+      console.warn('FFmpeg not available, using WebM format');
+      toast({ title: '⚠️ MP4 conversie niet beschikbaar', description: 'WebM format wordt gebruikt' });
+      return webmBlob;
+    }
     
-    toast({ title: '🔄 Converteren naar MP4...', description: 'Video transcoden...' });
-    
-    // Convert to MP4 with H.264 codec for maximum compatibility
-    await ffmpeg.exec([
-      '-i', 'input.webm',
-      '-c:v', 'libx264',
-      '-preset', 'fast',
-      '-crf', '23',
-      '-pix_fmt', 'yuv420p',
-      '-movflags', '+faststart',
-      'output.mp4'
-    ]);
-    
-    // Read output file
-    const mp4Data = await ffmpeg.readFile('output.mp4');
-    
-    // Cleanup
-    await ffmpeg.deleteFile('input.webm');
-    await ffmpeg.deleteFile('output.mp4');
-    
-    // Convert to Blob - copy buffer to new ArrayBuffer for type compatibility
-    const uint8Array = mp4Data as Uint8Array;
-    const arrayBuffer = new ArrayBuffer(uint8Array.byteLength);
-    new Uint8Array(arrayBuffer).set(uint8Array);
-    return new Blob([arrayBuffer], { type: 'video/mp4' });
+    try {
+      // Write input file
+      const webmData = await fetchFile(webmBlob);
+      await ffmpeg.writeFile('input.webm', webmData);
+      
+      toast({ title: '🔄 Converteren naar MP4...', description: 'Video transcoden...' });
+      
+      // Convert to MP4 with H.264 codec for maximum compatibility
+      await ffmpeg.exec([
+        '-i', 'input.webm',
+        '-c:v', 'libx264',
+        '-preset', 'fast',
+        '-crf', '23',
+        '-pix_fmt', 'yuv420p',
+        '-movflags', '+faststart',
+        'output.mp4'
+      ]);
+      
+      // Read output file
+      const mp4Data = await ffmpeg.readFile('output.mp4');
+      
+      // Cleanup
+      await ffmpeg.deleteFile('input.webm');
+      await ffmpeg.deleteFile('output.mp4');
+      
+      // Convert to Blob - copy buffer to new ArrayBuffer for type compatibility
+      const uint8Array = mp4Data as Uint8Array;
+      const arrayBuffer = new ArrayBuffer(uint8Array.byteLength);
+      new Uint8Array(arrayBuffer).set(uint8Array);
+      
+      console.log('MP4 conversion successful');
+      return new Blob([arrayBuffer], { type: 'video/mp4' });
+    } catch (error) {
+      console.error('MP4 conversion failed, using WebM fallback:', error);
+      toast({ title: '⚠️ MP4 conversie mislukt', description: 'WebM format wordt gebruikt' });
+      return webmBlob;
+    }
   };
 
   const generateVideo = useCallback(async (options: VideoGeneratorOptions): Promise<VideoGeneratorResult> => {

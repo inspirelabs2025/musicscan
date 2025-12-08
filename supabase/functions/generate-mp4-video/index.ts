@@ -98,7 +98,7 @@ function generateZoomFrame(
 async function generateGifVideo(
   imageUrl: string,
   durationSeconds: number = 3,
-  fps: number = 8
+  fps: number = 5 // Reduced from 8 to prevent CPU timeout
 ): Promise<Uint8Array> {
   console.log(`🎬 Generating GIF: ${durationSeconds}s @ ${fps}fps`);
   
@@ -175,10 +175,9 @@ async function generateGifVideo(
       outputHeight
     );
     
-    // CRITICAL: Clone the framedOverlay for EACH frame to prevent reference issues
-    // The overlay should be STATIC (not zoomed) - only the background zooms
-    const staticOverlay = framedOverlay.clone();
-    frameImage.composite(staticOverlay, overlayX + 1, overlayY + 1); // 1-indexed
+    // Composite the STATIC framed overlay on the ZOOMING background
+    // No clone needed - composite copies pixels, doesn't modify source
+    frameImage.composite(framedOverlay, overlayX + 1, overlayY + 1);
     
     // Create frame with delay (in 10ms units for GIF)
     const frame = Frame.from(frameImage, frameDelay / 10);

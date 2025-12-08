@@ -40,10 +40,13 @@ function generateZoomFrame(
   outputWidth: number,
   outputHeight: number
 ): Image {
-  // Calculate zoom scale - slow linear grow effect (Ken Burns style)
-  // Goes from 1.0 to 1.15 over the full duration (no zoom back)
+  // SLOW LINEAR GROW ZOOM - NO BOUNCE BACK
+  // Frame 0: scale = 1.0 (100%)
+  // Frame N: scale = 1.2 (120%) - 20% zoom over full duration
   const progress = frameIndex / Math.max(totalFrames - 1, 1);
-  const scale = 1.0 + (progress * 0.15); // 1.0 -> 1.15 over 5 seconds
+  const scale = 1.0 + (progress * 0.2);
+  
+  console.log(`🔍 Frame ${frameIndex}/${totalFrames}: progress=${progress.toFixed(2)}, scale=${scale.toFixed(3)}`);
   
   // Create output image with black background
   const outputImage = new Image(outputWidth, outputHeight);

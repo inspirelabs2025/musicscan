@@ -112,19 +112,51 @@ async function generateGifVideo(
   const frameDelay = Math.floor(1000 / fps); // Delay in ms
   
   // Create static square overlay (center crop of source image)
-  const squareSize = 90;
+  const squareSize = 80; // Slightly smaller to make room for frame
+  const frameWidth = 6; // Frame border width
+  const framedSize = squareSize + (frameWidth * 2); // Total size with frame
+  
   const minDim = Math.min(sourceImage.width, sourceImage.height);
   const cropX = Math.floor((sourceImage.width - minDim) / 2);
   const cropY = Math.floor((sourceImage.height - minDim) / 2);
-  const squareOverlay = sourceImage.clone()
+  const croppedImage = sourceImage.clone()
     .crop(cropX + 1, cropY + 1, minDim, minDim) // ImageScript uses 1-indexed
     .resize(squareSize, squareSize);
   
-  // Calculate center position for overlay
-  const overlayX = Math.floor((outputWidth - squareSize) / 2);
-  const overlayY = Math.floor((outputHeight - squareSize) / 2);
+  // Create framed overlay with painting-style border
+  const framedOverlay = new Image(framedSize, framedSize);
   
-  console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight} with ${squareSize}x${squareSize} overlay`);
+  // Draw outer frame (dark gold/brown)
+  framedOverlay.fill(0x8B6914FF); // Dark gold
+  
+  // Draw inner frame highlight (lighter gold) - 2px inset
+  for (let y = 2; y < framedSize - 2; y++) {
+    for (let x = 2; x < framedSize - 2; x++) {
+      if (x < frameWidth || x >= framedSize - frameWidth || 
+          y < frameWidth || y >= framedSize - frameWidth) {
+        framedOverlay.setPixelAt(x + 1, y + 1, 0xD4A017FF); // Golden
+      }
+    }
+  }
+  
+  // Draw inner shadow line (dark) - just before image
+  for (let y = frameWidth - 1; y < framedSize - frameWidth + 1; y++) {
+    for (let x = frameWidth - 1; x < framedSize - frameWidth + 1; x++) {
+      if (x === frameWidth - 1 || x === framedSize - frameWidth || 
+          y === frameWidth - 1 || y === framedSize - frameWidth) {
+        framedOverlay.setPixelAt(x + 1, y + 1, 0x5C4A0AFF); // Dark shadow
+      }
+    }
+  }
+  
+  // Composite the cropped image onto the frame
+  framedOverlay.composite(croppedImage, frameWidth + 1, frameWidth + 1);
+  
+  // Calculate center position for framed overlay
+  const overlayX = Math.floor((outputWidth - framedSize) / 2);
+  const overlayY = Math.floor((outputHeight - framedSize) / 2);
+  
+  console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight} with ${framedSize}x${framedSize} framed overlay`);
   
   // Create frames array
   const frames: Frame[] = [];
@@ -142,8 +174,8 @@ async function generateGifVideo(
       outputHeight
     );
     
-    // Composite the static square overlay in the center
-    frameImage.composite(squareOverlay, overlayX + 1, overlayY + 1); // 1-indexed
+    // Composite the framed overlay in the center
+    frameImage.composite(framedOverlay, overlayX + 1, overlayY + 1); // 1-indexed
     
     // Create frame with delay (in 10ms units for GIF)
     const frame = Frame.from(frameImage, frameDelay / 10);

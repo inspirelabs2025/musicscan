@@ -1,14 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { decode, Image } from "https://deno.land/x/imagescript@1.2.15/mod.ts";
-import HME from "https://esm.sh/h264-mp4-encoder@1.0.12";
+import { decode, Image, GIF, Frame } from "https://deno.land/x/imagescript@1.2.15/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Download image and decode to RGBA pixels
+// Download image and decode to ImageScript Image
 async function downloadAndDecodeImage(url: string): Promise<Image> {
   console.log(`📥 Downloading image from: ${url}`);
   
@@ -26,25 +25,25 @@ async function downloadAndDecodeImage(url: string): Promise<Image> {
   const imageData = new Uint8Array(arrayBuffer);
   console.log(`✅ Downloaded ${imageData.byteLength} bytes`);
   
-  // Decode image to RGBA
+  // Decode image
   const image = await decode(imageData);
   console.log(`✅ Decoded image: ${image.width}x${image.height}`);
   
   return image as Image;
 }
 
-// Generate zoom animation frame - returns RGBA buffer
+// Generate a single frame with zoom effect
 function generateZoomFrame(
   sourceImage: Image,
   frameIndex: number,
   totalFrames: number,
   outputWidth: number,
   outputHeight: number
-): Uint8Array {
-  // Calculate zoom scale (1.0 -> 1.5 -> 1.0 for smooth zoom in/out)
+): Image {
+  // Calculate zoom scale (1.0 -> 1.3 -> 1.0 for smooth zoom in/out)
   const progress = frameIndex / (totalFrames - 1);
   const zoomCycle = Math.sin(progress * Math.PI); // 0 -> 1 -> 0
-  const scale = 1.0 + (zoomCycle * 0.5); // 1.0 -> 1.5 -> 1.0
+  const scale = 1.0 + (zoomCycle * 0.3); // 1.0 -> 1.3 -> 1.0
   
   // Create output image with black background
   const outputImage = new Image(outputWidth, outputHeight);
@@ -90,48 +89,36 @@ function generateZoomFrame(
     }
   }
   
-  // Return RGBA buffer
-  return outputImage.bitmap;
+  return outputImage;
 }
 
-async function generateMp4Video(
+async function generateGifVideo(
   imageUrl: string,
   durationSeconds: number = 3,
-  fps: number = 10 // Reduced to 10 fps for edge function CPU limits
+  fps: number = 8
 ): Promise<Uint8Array> {
-  console.log(`🎬 Generating MP4 video: ${durationSeconds}s @ ${fps}fps`);
+  console.log(`🎬 Generating GIF: ${durationSeconds}s @ ${fps}fps`);
   
   // Download and decode source image
   const sourceImage = await downloadAndDecodeImage(imageUrl);
   
-  // TikTok format: 360x640 (9:16) - minimal resolution for edge function CPU limits
-  const outputWidth = 360;
-  const outputHeight = 640;
-  const totalFrames = durationSeconds * fps; // 20 frames at 2s/10fps
+  // TikTok format: 480x854 (9:16) - good balance for GIF size
+  const outputWidth = 480;
+  const outputHeight = 854;
+  const totalFrames = Math.floor(durationSeconds * fps);
+  const frameDelay = Math.floor(1000 / fps); // Delay in ms
   
   console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight}`);
   
-  // Initialize encoder
-  console.log(`📦 Loading H264 encoder...`);
-  const encoder = await HME.createH264MP4Encoder();
-  console.log(`✅ Encoder created`);
+  // Create frames array
+  const frames: Frame[] = [];
   
-  encoder.width = outputWidth;
-  encoder.height = outputHeight;
-  encoder.frameRate = fps;
-  encoder.quantizationParameter = 28; // Quality (lower = better, 10-51)
-  encoder.speed = 5; // Speed preset (0-10, higher = faster)
-  encoder.initialize();
-  
-  console.log(`✅ Encoder initialized`);
-  
-  // Generate and encode frames
   for (let i = 0; i < totalFrames; i++) {
-    if (i % 10 === 0) {
+    if (i % 5 === 0) {
       console.log(`🎞️ Processing frame ${i + 1}/${totalFrames}`);
     }
     
-    const frameData = generateZoomFrame(
+    const frameImage = generateZoomFrame(
       sourceImage,
       i,
       totalFrames,
@@ -139,19 +126,20 @@ async function generateMp4Video(
       outputHeight
     );
     
-    encoder.addFrameRgba(frameData);
+    // Create frame with delay (in 10ms units for GIF)
+    const frame = Frame.from(frameImage, frameDelay / 10);
+    frames.push(frame);
   }
   
-  console.log(`✅ All frames added, finalizing...`);
+  console.log(`✅ All frames created, encoding GIF...`);
   
-  // Finalize and get MP4 data
-  encoder.finalize();
-  const mp4Data = encoder.FS.readFile(encoder.outputFilename);
-  encoder.delete();
+  // Create GIF from frames
+  const gif = new GIF(frames);
+  const gifData = await gif.encode();
   
-  console.log(`✅ MP4 generated: ${mp4Data.byteLength} bytes`);
+  console.log(`✅ GIF generated: ${gifData.byteLength} bytes`);
   
-  return mp4Data;
+  return gifData;
 }
 
 serve(async (req) => {
@@ -165,7 +153,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { imageUrl, queueItemId, durationSeconds = 3, fps = 30 } = await req.json();
+    const { imageUrl, queueItemId, durationSeconds = 3, fps = 8 } = await req.json();
 
     if (!imageUrl) {
       return new Response(
@@ -174,20 +162,20 @@ serve(async (req) => {
       );
     }
 
-    console.log(`🎥 Processing video for queue item: ${queueItemId || 'manual'}`);
+    console.log(`🎥 Processing GIF for queue item: ${queueItemId || 'manual'}`);
 
-    // Generate MP4 video
-    const mp4Data = await generateMp4Video(imageUrl, durationSeconds, fps);
+    // Generate GIF
+    const gifData = await generateGifVideo(imageUrl, durationSeconds, fps);
 
     // Generate unique filename
     const timestamp = Date.now();
-    const filename = `videos/${timestamp}_${queueItemId?.substring(0, 8) || 'manual'}.mp4`;
+    const filename = `videos/${timestamp}_${queueItemId?.substring(0, 8) || 'manual'}.gif`;
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('tiktok-videos')
-      .upload(filename, mp4Data, {
-        contentType: 'video/mp4',
+      .upload(filename, gifData, {
+        contentType: 'image/gif',
         upsert: true,
       });
 
@@ -201,7 +189,7 @@ serve(async (req) => {
       .from('tiktok-videos')
       .getPublicUrl(filename);
 
-    console.log(`✅ Video uploaded: ${urlData.publicUrl}`);
+    console.log(`✅ GIF uploaded: ${urlData.publicUrl}`);
 
     // Update queue item if provided
     if (queueItemId) {
@@ -223,8 +211,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         video_url: urlData.publicUrl,
-        format: 'mp4',
-        size_bytes: mp4Data.byteLength,
+        format: 'gif',
+        size_bytes: gifData.byteLength,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

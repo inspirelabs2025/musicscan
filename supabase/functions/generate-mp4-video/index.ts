@@ -1,17 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { decode, Image } from "https://deno.land/x/imagescript@1.2.15/mod.ts";
+import HME from "https://esm.sh/h264-mp4-encoder@1.0.12";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// H.264 MP4 Encoder - Pure WASM implementation
-async function loadH264Encoder() {
-  const { createH264MP4Encoder } = await import("https://esm.sh/h264-mp4-encoder@1.0.12");
-  return createH264MP4Encoder;
-}
 
 // Download image and decode to RGBA pixels
 async function downloadAndDecodeImage(url: string): Promise<Image> {
@@ -35,10 +30,10 @@ async function downloadAndDecodeImage(url: string): Promise<Image> {
   const image = await decode(imageData);
   console.log(`✅ Decoded image: ${image.width}x${image.height}`);
   
-  return image;
+  return image as Image;
 }
 
-// Generate zoom animation frame
+// Generate zoom animation frame - returns RGBA buffer
 function generateZoomFrame(
   sourceImage: Image,
   frameIndex: number,
@@ -51,22 +46,9 @@ function generateZoomFrame(
   const zoomCycle = Math.sin(progress * Math.PI); // 0 -> 1 -> 0
   const scale = 1.0 + (zoomCycle * 0.5); // 1.0 -> 1.5 -> 1.0
   
-  // Create output image
+  // Create output image with black background
   const outputImage = new Image(outputWidth, outputHeight);
-  
-  // Calculate scaled dimensions
-  const scaledWidth = Math.floor(sourceImage.width * scale);
-  const scaledHeight = Math.floor(sourceImage.height * scale);
-  
-  // Resize source image
-  const scaledImage = sourceImage.clone().resize(scaledWidth, scaledHeight);
-  
-  // Calculate crop position (center)
-  const cropX = Math.floor((scaledWidth - outputWidth) / 2);
-  const cropY = Math.floor((scaledHeight - outputHeight) / 2);
-  
-  // Fill background with black
-  outputImage.fill(0x000000FF);
+  outputImage.fill(0x000000FF); // Black background
   
   // Calculate aspect ratios
   const sourceAspect = sourceImage.width / sourceImage.height;
@@ -88,7 +70,7 @@ function generateZoomFrame(
   const zoomedWidth = Math.floor(fitWidth * scale);
   const zoomedHeight = Math.floor(fitHeight * scale);
   
-  // Resize and composite
+  // Resize source image
   const resizedImage = sourceImage.clone().resize(zoomedWidth, zoomedHeight);
   
   // Center the image
@@ -108,32 +90,32 @@ function generateZoomFrame(
     }
   }
   
-  // Convert to RGBA buffer
+  // Return RGBA buffer
   return outputImage.bitmap;
 }
 
 async function generateMp4Video(
   imageUrl: string,
   durationSeconds: number = 3,
-  fps: number = 30
+  fps: number = 15 // Reduced from 30 to 15 fps for edge function limits
 ): Promise<Uint8Array> {
   console.log(`🎬 Generating MP4 video: ${durationSeconds}s @ ${fps}fps`);
-  
-  // Load encoder
-  const createH264MP4Encoder = await loadH264Encoder();
   
   // Download and decode source image
   const sourceImage = await downloadAndDecodeImage(imageUrl);
   
-  // TikTok format: 1080x1920 (9:16)
-  const outputWidth = 1080;
-  const outputHeight = 1920;
-  const totalFrames = durationSeconds * fps;
+  // TikTok format: 720x1280 (9:16) - reduced from 1080x1920 for speed
+  const outputWidth = 720;
+  const outputHeight = 1280;
+  const totalFrames = durationSeconds * fps; // 45 frames instead of 90
   
   console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight}`);
   
   // Initialize encoder
-  const encoder = await createH264MP4Encoder();
+  console.log(`📦 Loading H264 encoder...`);
+  const encoder = await HME.createH264MP4Encoder();
+  console.log(`✅ Encoder created`);
+  
   encoder.width = outputWidth;
   encoder.height = outputHeight;
   encoder.frameRate = fps;

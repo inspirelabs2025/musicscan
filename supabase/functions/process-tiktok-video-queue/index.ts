@@ -106,6 +106,52 @@ serve(async (req) => {
             .update({ tiktok_video_url: videoUrl })
             .eq('id', item.blog_id);
           console.log(`✅ Updated blog post ${item.blog_id} with video URL`);
+
+          // Fetch blog details for Facebook post
+          const { data: blogData } = await supabase
+            .from('blog_posts')
+            .select('slug, yaml_frontmatter, markdown_content, album_cover_url')
+            .eq('id', item.blog_id)
+            .single();
+
+          if (blogData) {
+            // Post to Facebook with video (GIF)
+            try {
+              const title = blogData.yaml_frontmatter?.title || `${item.artist} - ${item.title}`;
+              let summary = blogData.yaml_frontmatter?.description || 
+                            blogData.yaml_frontmatter?.summary || 
+                            blogData.markdown_content?.substring(0, 280) || '';
+              
+              // Clean markdown from summary
+              summary = summary
+                .replace(/^---[\s\S]*?---\n?/m, '')
+                .replace(/```[\s\S]*?```/g, '')
+                .replace(/\*\*([^*]+)\*\*/g, '$1')
+                .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+                .trim()
+                .substring(0, 280);
+              
+              const blogUrl = `https://www.musicscan.app/plaat-verhaal/${blogData.slug}`;
+              
+              console.log(`📱 Posting to Facebook with GIF: ${title}`);
+              
+              await supabase.functions.invoke('post-to-facebook', {
+                body: {
+                  content_type: 'blog',
+                  title: title,
+                  content: summary,
+                  url: blogUrl,
+                  video_url: videoUrl, // GIF first!
+                  image_url: blogData.album_cover_url || item.album_cover_url, // Fallback
+                  artist: item.artist
+                }
+              });
+              
+              console.log(`✅ Facebook post created with GIF for: ${title}`);
+            } catch (fbError) {
+              console.warn(`⚠️ Facebook post failed (non-blocking):`, fbError);
+            }
+          }
         }
 
         successCount++;

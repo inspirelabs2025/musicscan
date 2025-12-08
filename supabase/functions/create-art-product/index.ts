@@ -486,39 +486,44 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
               
               // Use album_cover_url from blog (fetched via fetch-album-artwork) instead of initial artworkUrl
               const fbImageUrl = blogData.blog.album_cover_url || artworkUrl;
-              console.log('📸 Facebook post image URL:', fbImageUrl);
+              console.log('📸 Blog image URL for GIF generation:', fbImageUrl);
               
-              await supabase.functions.invoke('post-to-facebook', {
-                body: {
-                  content_type: 'blog',
-                  title: blogTitle,
-                  content: summary,
-                  url: blogUrl,
-                  image_url: fbImageUrl,
-                  artist: artistValue,
-                  year: yearValue || undefined
+              // NOTE: Facebook posting is now handled by process-tiktok-video-queue
+              // after GIF generation completes. This ensures Facebook posts use GIF instead of static image.
+              
+              // Queue TikTok video generation - Facebook post happens after GIF is ready
+              console.log('🎬 Queueing TikTok video generation (Facebook post will follow after GIF)...');
+              try {
+                await supabase.functions.invoke('queue-tiktok-video', {
+                  body: {
+                    blogId: blogData.blog.id,
+                    albumCoverUrl: fbImageUrl || artworkUrl,
+                    artist: artistValue,
+                    title: albumTitle
+                  }
+                });
+                console.log('✅ TikTok video queued - Facebook post will be sent after GIF generation');
+              } catch (tiktokErr) {
+                console.warn('⚠️ TikTok video queue failed, falling back to direct Facebook post:', tiktokErr);
+                
+                // Fallback: post to Facebook without GIF if queue fails
+                try {
+                  await supabase.functions.invoke('post-to-facebook', {
+                    body: {
+                      content_type: 'blog',
+                      title: blogTitle,
+                      content: summary,
+                      url: blogUrl,
+                      image_url: fbImageUrl,
+                      artist: artistValue,
+                      year: yearValue || undefined
+                    }
+                  });
+                  console.log('✅ Fallback: Blog posted to Facebook with static image');
+                } catch (fbErr) {
+                  console.warn('⚠️ Fallback Facebook post also failed:', fbErr);
                 }
-              });
-              console.log('✅ Blog auto-posted to Facebook');
-            } catch (fbErr) {
-              console.warn('⚠️ Facebook auto-post failed (non-blocking):', fbErr);
-            }
-
-            // Step 11: Queue TikTok video generation
-            console.log('🎬 Queueing TikTok video generation...');
-            try {
-              await supabase.functions.invoke('queue-tiktok-video', {
-                body: {
-                  blogId: blogData.blog.id,
-                  albumCoverUrl: fbImageUrl || artworkUrl,
-                  artist: artistValue,
-                  title: albumTitle
-                }
-              });
-              console.log('✅ TikTok video queued for generation');
-            } catch (tiktokErr) {
-              console.warn('⚠️ TikTok video queue failed (non-blocking):', tiktokErr);
-            }
+              }
           }
         }
       } catch (blogErr) {

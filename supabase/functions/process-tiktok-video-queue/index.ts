@@ -73,7 +73,7 @@ serve(async (req) => {
             imageUrl: item.album_cover_url,
             queueItemId: item.id,
             durationSeconds: 3,
-            fps: 30
+            fps: 15 // Reduced from 30 to 15 fps for edge function CPU limits
           }
         });
 

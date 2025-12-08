@@ -97,7 +97,7 @@ function generateZoomFrame(
 async function generateMp4Video(
   imageUrl: string,
   durationSeconds: number = 3,
-  fps: number = 15 // Reduced from 30 to 15 fps for edge function limits
+  fps: number = 10 // Reduced to 10 fps for edge function CPU limits
 ): Promise<Uint8Array> {
   console.log(`🎬 Generating MP4 video: ${durationSeconds}s @ ${fps}fps`);
   

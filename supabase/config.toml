@@ -629,3 +629,6 @@ verify_jwt = false
 
 [functions.generate-mp4-video]
 verify_jwt = false
+
+[functions.queue-render-job]
+verify_jwt = false

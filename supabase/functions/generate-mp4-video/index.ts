@@ -124,110 +124,106 @@ async function downloadAndDecodeImage(url: string): Promise<Image> {
   return image as Image;
 }
 
-// Generate a single frame with zoom effect
-function generateZoomFrame(
-  sourceImage: Image,
-  frameIndex: number,
-  totalFrames: number,
-  outputWidth: number,
-  outputHeight: number
-): Image {
-  // SLOW LINEAR GROW ZOOM - NO BOUNCE BACK
-  // Frame 0: scale = 1.0 (100%)
-  // Frame N: scale = 1.2 (120%) - 20% zoom over full duration
-  const progress = frameIndex / Math.max(totalFrames - 1, 1);
-  const scale = 1.0 + (progress * 0.2);
+// Load random template from video-templates bucket
+async function loadRandomTemplate(supabase: any): Promise<{ frames: Frame[], templateName: string, frameDelay: number }> {
+  console.log('📂 Loading templates from video-templates bucket...');
   
-  // Create output image with black background
-  const outputImage = new Image(outputWidth, outputHeight);
-  outputImage.fill(0x000000FF); // Black background
+  // List all templates in bucket
+  const { data: files, error: listError } = await supabase.storage
+    .from('video-templates')
+    .list('', { limit: 100 });
   
-  // Calculate aspect ratios
-  const sourceAspect = sourceImage.width / sourceImage.height;
-  const outputAspect = outputWidth / outputHeight;
-  
-  let fitWidth: number, fitHeight: number;
-  
-  if (sourceAspect > outputAspect) {
-    // Source is wider - fit to height
-    fitHeight = outputHeight;
-    fitWidth = Math.floor(fitHeight * sourceAspect);
-  } else {
-    // Source is taller or same - fit to width
-    fitWidth = outputWidth;
-    fitHeight = Math.floor(fitWidth / sourceAspect);
+  if (listError) {
+    throw new Error(`Failed to list templates: ${listError.message}`);
   }
   
-  // Apply zoom to fit dimensions
-  const zoomedWidth = Math.floor(fitWidth * scale);
-  const zoomedHeight = Math.floor(fitHeight * scale);
+  // Filter only .gif files
+  const templates = (files || []).filter((f: any) => f.name.toLowerCase().endsWith('.gif'));
   
-  // Resize source image
-  const resizedImage = sourceImage.clone().resize(zoomedWidth, zoomedHeight);
+  if (templates.length === 0) {
+    throw new Error('No GIF templates found in video-templates bucket. Please upload template GIF files.');
+  }
   
-  // Center the image
-  const offsetX = Math.floor((outputWidth - zoomedWidth) / 2);
-  const offsetY = Math.floor((outputHeight - zoomedHeight) / 2);
+  console.log(`📋 Found ${templates.length} templates: ${templates.map((t: any) => t.name).join(', ')}`);
   
-  // Composite onto output (manually copy pixels)
-  for (let y = 0; y < zoomedHeight; y++) {
-    for (let x = 0; x < zoomedWidth; x++) {
-      const destX = offsetX + x;
-      const destY = offsetY + y;
-      
-      if (destX >= 0 && destX < outputWidth && destY >= 0 && destY < outputHeight) {
-        const pixel = resizedImage.getPixelAt(x + 1, y + 1); // 1-indexed
-        outputImage.setPixelAt(destX + 1, destY + 1, pixel);
-      }
+  // Random selection
+  const selected = templates[Math.floor(Math.random() * templates.length)];
+  console.log(`🎲 Selected template: ${selected.name}`);
+  
+  // Download template
+  const { data: templateData, error: downloadError } = await supabase.storage
+    .from('video-templates')
+    .download(selected.name);
+  
+  if (downloadError) {
+    throw new Error(`Failed to download template: ${downloadError.message}`);
+  }
+  
+  // Decode GIF to frames
+  const gifData = new Uint8Array(await templateData.arrayBuffer());
+  console.log(`✅ Downloaded template: ${gifData.byteLength} bytes`);
+  
+  const gif = await GIF.decode(gifData);
+  console.log(`✅ Decoded template GIF: ${gif.length} frames`);
+  
+  // Extract frames and get frame delay from first frame
+  const frames: Frame[] = [];
+  let frameDelay = 100; // Default 100ms
+  
+  for (let i = 0; i < gif.length; i++) {
+    const frame = gif[i];
+    frames.push(frame);
+    if (i === 0 && frame.duration) {
+      frameDelay = frame.duration;
     }
   }
   
-  return outputImage;
+  return { frames, templateName: selected.name, frameDelay };
 }
 
 async function generateGifVideo(
+  supabase: any,
   imageUrl: string,
-  durationSeconds: number = 3,
-  fps: number = 8,
   artist: string = '',
   title: string = ''
-): Promise<Uint8Array> {
-  console.log(`🎬 Generating GIF: ${durationSeconds}s @ ${fps}fps`);
+): Promise<{ gifData: Uint8Array, templateUsed: string }> {
+  console.log(`🎬 Generating template-based GIF video`);
   console.log(`📝 Artist: "${artist}", Title: "${title}"`);
   
-  // Download and decode source image
+  // Load random template
+  const { frames: templateFrames, templateName, frameDelay } = await loadRandomTemplate(supabase);
+  
+  // Download and decode source image for overlay
   const sourceImage = await downloadAndDecodeImage(imageUrl);
   
-  // Compact format to stay within CPU limits: 160x284 (9:16)
+  // Output dimensions (match template: 160x284)
   const outputWidth = 160;
   const outputHeight = 284;
-  const totalFrames = Math.floor(durationSeconds * fps);
-  const frameDelay = Math.floor(1000 / fps); // Delay in ms
   
   // Create static square overlay (center crop of source image) - BIGGER!
-  const squareSize = 100; // Increased from 80
-  const frameWidth = 5;   // Frame border width
+  const squareSize = 100;
+  const frameWidth = 5;
   const framedSize = squareSize + (frameWidth * 2); // 110 total
   
   const minDim = Math.min(sourceImage.width, sourceImage.height);
   const cropX = Math.floor((sourceImage.width - minDim) / 2);
   const cropY = Math.floor((sourceImage.height - minDim) / 2);
   const croppedImage = sourceImage.clone()
-    .crop(cropX + 1, cropY + 1, minDim, minDim) // ImageScript uses 1-indexed
+    .crop(cropX + 1, cropY + 1, minDim, minDim)
     .resize(squareSize, squareSize);
   
   // Create framed overlay with painting-style border
   const framedOverlay = new Image(framedSize, framedSize);
   
   // Draw outer frame (dark gold/brown)
-  framedOverlay.fill(0x8B6914FF); // Dark gold
+  framedOverlay.fill(0x8B6914FF);
   
   // Draw inner frame highlight (lighter gold) - 2px inset
   for (let y = 2; y < framedSize - 2; y++) {
     for (let x = 2; x < framedSize - 2; x++) {
       if (x < frameWidth || x >= framedSize - frameWidth || 
           y < frameWidth || y >= framedSize - frameWidth) {
-        framedOverlay.setPixelAt(x + 1, y + 1, 0xD4A017FF); // Golden
+        framedOverlay.setPixelAt(x + 1, y + 1, 0xD4A017FF);
       }
     }
   }
@@ -237,7 +233,7 @@ async function generateGifVideo(
     for (let x = frameWidth - 1; x < framedSize - frameWidth + 1; x++) {
       if (x === frameWidth - 1 || x === framedSize - frameWidth || 
           y === frameWidth - 1 || y === framedSize - frameWidth) {
-        framedOverlay.setPixelAt(x + 1, y + 1, 0x5C4A0AFF); // Dark shadow
+        framedOverlay.setPixelAt(x + 1, y + 1, 0x5C4A0AFF);
       }
     }
   }
@@ -250,7 +246,7 @@ async function generateGifVideo(
   const overlayY = Math.floor((outputHeight - framedSize) / 2);
   
   // Prepare text (truncate if too long)
-  const maxTextWidth = outputWidth - 10; // 5px padding on each side
+  const maxTextWidth = outputWidth - 10;
   const artistText = artist ? truncateText(artist.toUpperCase(), maxTextWidth) : '';
   const titleText = title ? truncateText(title.toUpperCase(), maxTextWidth) : '';
   
@@ -261,29 +257,25 @@ async function generateGifVideo(
   const titleX = Math.floor((outputWidth - titleWidth) / 2);
   
   // Text Y positions
-  const artistY = overlayY - 15; // Above frame
-  const titleY = overlayY + framedSize + 5; // Below frame
+  const artistY = overlayY - 15;
+  const titleY = overlayY + framedSize + 5;
   
-  console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight} with ${framedSize}x${framedSize} framed overlay`);
+  console.log(`📹 Processing ${templateFrames.length} template frames with ${framedSize}x${framedSize} overlay`);
   
-  // Create frames array
-  const frames: Frame[] = [];
+  // Create output frames
+  const outputFrames: Frame[] = [];
   
-  for (let i = 0; i < totalFrames; i++) {
-    if (i % 5 === 0) {
-      console.log(`🎞️ Processing frame ${i + 1}/${totalFrames}`);
+  for (let i = 0; i < templateFrames.length; i++) {
+    if (i % 10 === 0) {
+      console.log(`🎞️ Processing frame ${i + 1}/${templateFrames.length}`);
     }
     
-    const frameImage = generateZoomFrame(
-      sourceImage,
-      i,
-      totalFrames,
-      outputWidth,
-      outputHeight
-    );
+    // Clone template frame
+    const templateFrame = templateFrames[i];
+    const frameImage = templateFrame.clone() as Image;
     
     // Composite the framed overlay in the center
-    frameImage.composite(framedOverlay, overlayX + 1, overlayY + 1); // 1-indexed
+    frameImage.composite(framedOverlay, overlayX + 1, overlayY + 1);
     
     // Draw artist name (white with black shadow)
     if (artistText) {
@@ -295,20 +287,20 @@ async function generateGifVideo(
       drawText(frameImage, titleText, titleX, titleY, 0xFFFFFFFF, 0x000000FF);
     }
     
-    // Create frame with delay (in 10ms units for GIF)
-    const frame = Frame.from(frameImage, frameDelay / 10);
-    frames.push(frame);
+    // Create frame with same delay as template
+    const frame = Frame.from(frameImage, templateFrame.duration || frameDelay / 10);
+    outputFrames.push(frame);
   }
   
-  console.log(`✅ All frames created, encoding GIF...`);
+  console.log(`✅ All frames processed, encoding GIF...`);
   
   // Create GIF from frames
-  const gif = new GIF(frames);
+  const gif = new GIF(outputFrames);
   const gifData = await gif.encode();
   
-  console.log(`✅ GIF generated: ${gifData.byteLength} bytes`);
+  console.log(`✅ GIF generated: ${gifData.byteLength} bytes using template: ${templateName}`);
   
-  return gifData;
+  return { gifData, templateUsed: templateName };
 }
 
 serve(async (req) => {
@@ -322,7 +314,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { imageUrl, queueItemId, durationSeconds = 3, fps = 8, artist = '', title = '' } = await req.json();
+    const { imageUrl, queueItemId, artist = '', title = '' } = await req.json();
 
     if (!imageUrl) {
       return new Response(
@@ -333,8 +325,8 @@ serve(async (req) => {
 
     console.log(`🎥 Processing GIF for queue item: ${queueItemId || 'manual'}`);
 
-    // Generate GIF with artist/title text
-    const gifData = await generateGifVideo(imageUrl, durationSeconds, fps, artist, title);
+    // Generate GIF with template background
+    const { gifData, templateUsed } = await generateGifVideo(supabase, imageUrl, artist, title);
 
     // Generate unique filename
     const timestamp = Date.now();
@@ -367,6 +359,7 @@ serve(async (req) => {
         .update({
           status: 'completed',
           video_url: urlData.publicUrl,
+          template_used: templateUsed,
           updated_at: new Date().toISOString(),
         })
         .eq('id', queueItemId);
@@ -380,6 +373,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         video_url: urlData.publicUrl,
+        template_used: templateUsed,
         format: 'gif',
         size_bytes: gifData.byteLength,
       }),

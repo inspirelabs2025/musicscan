@@ -40,11 +40,10 @@ function generateZoomFrame(
   outputWidth: number,
   outputHeight: number
 ): Image {
-  // Calculate zoom scale - very subtle breathing effect
-  // Goes from 1.0 to 1.1 to 1.0 over the duration (gentle Ken Burns)
+  // Calculate zoom scale - slow linear grow effect (Ken Burns style)
+  // Goes from 1.0 to 1.15 over the full duration (no zoom back)
   const progress = frameIndex / Math.max(totalFrames - 1, 1);
-  const zoomCycle = Math.sin(progress * Math.PI); // 0 -> 1 -> 0
-  const scale = 1.0 + (zoomCycle * 0.1); // 1.0 -> 1.1 -> 1.0 (subtle)
+  const scale = 1.0 + (progress * 0.15); // 1.0 -> 1.15 over 5 seconds
   
   // Create output image with black background
   const outputImage = new Image(outputWidth, outputHeight);

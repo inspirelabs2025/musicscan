@@ -17,16 +17,16 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('🎬 Processing TikTok video queue (server-side MP4)...');
+    console.log('🎬 Processing TikTok video queue (server-side GIF)...');
 
-    // Get pending items
+    // Get pending items - process 1 at a time to avoid CPU limits
     const { data: pendingItems, error: fetchError } = await supabase
       .from('tiktok_video_queue')
       .select('*')
       .eq('status', 'pending')
       .lt('attempts', 3)
       .order('created_at', { ascending: true })
-      .limit(1); // Process 1 at a time for server-side video generation
+      .limit(1);
 
     if (fetchError) {
       console.error('Error fetching pending items:', fetchError);
@@ -49,25 +49,67 @@ serve(async (req) => {
 
     for (const item of pendingItems) {
       try {
-        console.log(`🎥 Marking ready for client: ${item.artist} - ${item.title}`);
+        console.log(`🎥 Processing: ${item.artist} - ${item.title}`);
 
         if (!item.album_cover_url) {
           throw new Error('No album cover URL available');
         }
 
-        // Mark as ready_for_client - actual video generation happens client-side
-        // This avoids CPU timeout issues with server-side video generation
+        // Update status to processing
         await supabase
           .from('tiktok_video_queue')
           .update({
-            status: 'ready_for_client',
+            status: 'processing',
             attempts: item.attempts + 1,
             updated_at: new Date().toISOString()
           })
           .eq('id', item.id);
 
+        // Call generate-mp4-video for server-side GIF generation
+        // Using very low settings to stay within CPU limits
+        console.log(`📹 Generating GIF for ${item.id}...`);
+        
+        const { data: videoResult, error: videoError } = await supabase.functions.invoke('generate-mp4-video', {
+          body: {
+            imageUrl: item.album_cover_url,
+            queueItemId: item.id,
+            durationSeconds: 3,  // Shorter duration
+            fps: 6  // Lower FPS = fewer frames = less CPU
+          }
+        });
+
+        if (videoError) {
+          throw new Error(`Video generation failed: ${videoError.message}`);
+        }
+
+        if (!videoResult?.success) {
+          throw new Error(videoResult?.error || 'Video generation returned no success');
+        }
+
+        const videoUrl = videoResult.video_url;
+        console.log(`✅ GIF generated: ${videoUrl} (${videoResult.size_bytes} bytes)`);
+
+        // Update queue item status to completed
+        await supabase
+          .from('tiktok_video_queue')
+          .update({
+            status: 'completed',
+            video_url: videoUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', item.id);
+
+        // Update blog post if linked
+        if (item.blog_id) {
+          await supabase
+            .from('blog_posts')
+            .update({ tiktok_video_url: videoUrl })
+            .eq('id', item.blog_id);
+          console.log(`✅ Updated blog post ${item.blog_id} with video URL`);
+        }
+
         successCount++;
-        console.log(`✅ Marked ready for client: ${item.artist} - ${item.title}`);
+        console.log(`✅ Completed: ${item.artist} - ${item.title}`);
 
       } catch (itemError) {
         console.error(`❌ Error processing item ${item.id}:`, itemError);

@@ -111,9 +111,20 @@ async function generateGifVideo(
   const totalFrames = Math.floor(durationSeconds * fps);
   const frameDelay = Math.floor(1000 / fps); // Delay in ms
   
-  console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight}`);
+  // Create static square overlay (center crop of source image)
+  const squareSize = 90;
+  const minDim = Math.min(sourceImage.width, sourceImage.height);
+  const cropX = Math.floor((sourceImage.width - minDim) / 2);
+  const cropY = Math.floor((sourceImage.height - minDim) / 2);
+  const squareOverlay = sourceImage.clone()
+    .crop(cropX + 1, cropY + 1, minDim, minDim) // ImageScript uses 1-indexed
+    .resize(squareSize, squareSize);
   
-  console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight}`);
+  // Calculate center position for overlay
+  const overlayX = Math.floor((outputWidth - squareSize) / 2);
+  const overlayY = Math.floor((outputHeight - squareSize) / 2);
+  
+  console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight} with ${squareSize}x${squareSize} overlay`);
   
   // Create frames array
   const frames: Frame[] = [];
@@ -130,6 +141,9 @@ async function generateGifVideo(
       outputWidth,
       outputHeight
     );
+    
+    // Composite the static square overlay in the center
+    frameImage.composite(squareOverlay, overlayX + 1, overlayY + 1); // 1-indexed
     
     // Create frame with delay (in 10ms units for GIF)
     const frame = Frame.from(frameImage, frameDelay / 10);

@@ -105,13 +105,13 @@ async function generateGifVideo(
   // Download and decode source image
   const sourceImage = await downloadAndDecodeImage(imageUrl);
   
-  // Ultra-compact format: 180x320 (9:16) - minimum viable for CPU limits
-  const outputWidth = 180;
-  const outputHeight = 320;
+  // TikTok format: 240x426 (9:16)
+  const outputWidth = 240;
+  const outputHeight = 426;
   const totalFrames = Math.floor(durationSeconds * fps);
   const frameDelay = Math.floor(1000 / fps); // Delay in ms
   
-  console.log(`⚡ CPU-optimized: ${outputWidth}x${outputHeight}, ${totalFrames} frames @ ${fps}fps`);
+  console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight}`);
   
   console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight}`);
   

@@ -124,8 +124,8 @@ async function downloadAndDecodeImage(url: string): Promise<Image> {
   return image as Image;
 }
 
-// Load random template from video-templates bucket
-async function loadRandomTemplate(supabase: any): Promise<{ frames: Frame[], templateName: string, frameDelay: number }> {
+// Load random template - only first frame to save memory
+async function loadTemplateFirstFrame(supabase: any): Promise<{ backgroundImage: Image, templateName: string }> {
   console.log('📂 Loading templates from video-templates bucket...');
   
   // List all templates in bucket
@@ -159,26 +159,15 @@ async function loadRandomTemplate(supabase: any): Promise<{ frames: Frame[], tem
     throw new Error(`Failed to download template: ${downloadError.message}`);
   }
   
-  // Decode GIF to frames
+  // Decode GIF - only extract first frame to save memory
   const gifData = new Uint8Array(await templateData.arrayBuffer());
   console.log(`✅ Downloaded template: ${gifData.byteLength} bytes`);
   
-  const gif = await GIF.decode(gifData);
-  console.log(`✅ Decoded template GIF: ${gif.length} frames`);
+  // Decode as image (gets first frame only)
+  const firstFrame = await decode(gifData);
+  console.log(`✅ Extracted first frame: ${firstFrame.width}x${firstFrame.height}`);
   
-  // Extract frames and get frame delay from first frame
-  const frames: Frame[] = [];
-  let frameDelay = 100; // Default 100ms
-  
-  for (let i = 0; i < gif.length; i++) {
-    const frame = gif[i];
-    frames.push(frame);
-    if (i === 0 && frame.duration) {
-      frameDelay = frame.duration;
-    }
-  }
-  
-  return { frames, templateName: selected.name, frameDelay };
+  return { backgroundImage: firstFrame as Image, templateName: selected.name };
 }
 
 async function generateGifVideo(
@@ -187,23 +176,23 @@ async function generateGifVideo(
   artist: string = '',
   title: string = ''
 ): Promise<{ gifData: Uint8Array, templateUsed: string }> {
-  console.log(`🎬 Generating template-based GIF video`);
+  console.log(`🎬 Generating static-background GIF video`);
   console.log(`📝 Artist: "${artist}", Title: "${title}"`);
   
-  // Load random template
-  const { frames: templateFrames, templateName, frameDelay } = await loadRandomTemplate(supabase);
+  // Load first frame of random template (saves memory)
+  const { backgroundImage, templateName } = await loadTemplateFirstFrame(supabase);
   
   // Download and decode source image for overlay
   const sourceImage = await downloadAndDecodeImage(imageUrl);
   
-  // Output dimensions (match template: 160x284)
-  const outputWidth = 160;
-  const outputHeight = 284;
+  // Output dimensions (match template size or default to 160x284)
+  const outputWidth = backgroundImage.width || 160;
+  const outputHeight = backgroundImage.height || 284;
   
-  // Create static square overlay (center crop of source image) - BIGGER!
-  const squareSize = 100;
+  // Create static square overlay (center crop of source image)
+  const squareSize = Math.min(100, Math.floor(outputWidth * 0.6));
   const frameWidth = 5;
-  const framedSize = squareSize + (frameWidth * 2); // 110 total
+  const framedSize = squareSize + (frameWidth * 2);
   
   const minDim = Math.min(sourceImage.width, sourceImage.height);
   const cropX = Math.floor((sourceImage.width - minDim) / 2);
@@ -260,42 +249,27 @@ async function generateGifVideo(
   const artistY = overlayY - 15;
   const titleY = overlayY + framedSize + 5;
   
-  console.log(`📹 Processing ${templateFrames.length} template frames with ${framedSize}x${framedSize} overlay`);
+  console.log(`📹 Creating static GIF with ${framedSize}x${framedSize} overlay on ${outputWidth}x${outputHeight} background`);
   
-  // Create output frames
-  const outputFrames: Frame[] = [];
+  // Create single output frame with static background
+  const outputImage = backgroundImage.clone() as Image;
   
-  for (let i = 0; i < templateFrames.length; i++) {
-    if (i % 10 === 0) {
-      console.log(`🎞️ Processing frame ${i + 1}/${templateFrames.length}`);
-    }
-    
-    // Clone template frame
-    const templateFrame = templateFrames[i];
-    const frameImage = templateFrame.clone() as Image;
-    
-    // Composite the framed overlay in the center
-    frameImage.composite(framedOverlay, overlayX + 1, overlayY + 1);
-    
-    // Draw artist name (white with black shadow)
-    if (artistText) {
-      drawText(frameImage, artistText, artistX, artistY, 0xFFFFFFFF, 0x000000FF);
-    }
-    
-    // Draw title (white with black shadow)
-    if (titleText) {
-      drawText(frameImage, titleText, titleX, titleY, 0xFFFFFFFF, 0x000000FF);
-    }
-    
-    // Create frame with same delay as template
-    const frame = Frame.from(frameImage, templateFrame.duration || frameDelay / 10);
-    outputFrames.push(frame);
+  // Composite the framed overlay in the center
+  outputImage.composite(framedOverlay, overlayX + 1, overlayY + 1);
+  
+  // Draw artist name (white with black shadow)
+  if (artistText) {
+    drawText(outputImage, artistText, artistX, artistY, 0xFFFFFFFF, 0x000000FF);
   }
   
-  console.log(`✅ All frames processed, encoding GIF...`);
+  // Draw title (white with black shadow)
+  if (titleText) {
+    drawText(outputImage, titleText, titleX, titleY, 0xFFFFFFFF, 0x000000FF);
+  }
   
-  // Create GIF from frames
-  const gif = new GIF(outputFrames);
+  // Create a simple GIF with single frame (3 second duration = 300 centiseconds)
+  const frame = Frame.from(outputImage, 300);
+  const gif = new GIF([frame]);
   const gifData = await gif.encode();
   
   console.log(`✅ GIF generated: ${gifData.byteLength} bytes using template: ${templateName}`);

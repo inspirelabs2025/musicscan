@@ -7,9 +7,11 @@ const corsHeaders = {
 
 interface QueueVideoRequest {
   blogId?: string;
+  musicStoryId?: string;
   albumCoverUrl: string;
   artist: string;
   title: string;
+  priority?: number;
 }
 
 Deno.serve(async (req) => {
@@ -24,7 +26,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body: QueueVideoRequest = await req.json();
-    const { blogId, albumCoverUrl, artist, title } = body;
+    const { blogId, musicStoryId, albumCoverUrl, artist, title, priority = 0 } = body;
 
     if (!albumCoverUrl || !artist || !title) {
       return new Response(
@@ -39,23 +41,29 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Queueing TikTok video for:', { artist, title, blogId });
+    console.log('Queueing TikTok video for:', { artist, title, blogId, musicStoryId, priority });
 
-    // Check if a video is already queued or completed for this blog
-    if (blogId) {
-      const { data: existing } = await supabase
+    // Check if a video is already queued or completed for this blog or music story
+    if (blogId || musicStoryId) {
+      let query = supabase
         .from('tiktok_video_queue')
         .select('id, status')
-        .eq('blog_id', blogId)
-        .in('status', ['pending', 'processing', 'completed'])
-        .maybeSingle();
+        .in('status', ['pending', 'processing', 'completed']);
+      
+      if (blogId) {
+        query = query.eq('blog_id', blogId);
+      } else if (musicStoryId) {
+        query = query.eq('music_story_id', musicStoryId);
+      }
+
+      const { data: existing } = await query.maybeSingle();
 
       if (existing) {
-        console.log('Video already exists in queue for blog:', blogId, 'status:', existing.status);
+        console.log('Video already exists in queue:', existing.id, 'status:', existing.status);
         return new Response(
           JSON.stringify({
             success: true,
-            message: `Video already ${existing.status} for this blog`,
+            message: `Video already ${existing.status}`,
             queueItemId: existing.id,
             alreadyExists: true
           }),
@@ -64,15 +72,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Insert into queue
+    // Insert into queue with priority (higher = processed first)
     const { data: queueItem, error: insertError } = await supabase
       .from('tiktok_video_queue')
       .insert({
         blog_id: blogId || null,
+        music_story_id: musicStoryId || null,
         album_cover_url: albumCoverUrl,
         artist,
         title,
-        status: 'pending'
+        status: 'pending',
+        priority: priority
       })
       .select()
       .single();

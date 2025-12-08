@@ -73,7 +73,7 @@ serve(async (req) => {
             imageUrl: item.album_cover_url,
             queueItemId: item.id,
             durationSeconds: 10,
-            fps: 8
+            fps: 5
           }
         });
 

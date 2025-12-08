@@ -104,10 +104,10 @@ async function generateMp4Video(
   // Download and decode source image
   const sourceImage = await downloadAndDecodeImage(imageUrl);
   
-  // TikTok format: 540x960 (9:16) - reduced from 720x1280 for edge function CPU limits
-  const outputWidth = 540;
-  const outputHeight = 960;
-  const totalFrames = durationSeconds * fps; // 45 frames instead of 90
+  // TikTok format: 360x640 (9:16) - minimal resolution for edge function CPU limits
+  const outputWidth = 360;
+  const outputHeight = 640;
+  const totalFrames = durationSeconds * fps; // 20 frames at 2s/10fps
   
   console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight}`);
   

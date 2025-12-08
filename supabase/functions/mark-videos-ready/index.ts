@@ -16,12 +16,35 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log("Mark videos ready - checking pending and stuck processing items...");
+    // Check for reset_id parameter to force-reset a specific item
+    const body = await req.json().catch(() => ({}));
+    const resetId = body.reset_id;
+
+    if (resetId) {
+      console.log(`Force resetting item: ${resetId}`);
+      const { error: resetError } = await supabase
+        .from("tiktok_video_queue")
+        .update({ 
+          status: "ready_for_client",
+          error_message: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", resetId);
+
+      if (resetError) throw resetError;
+      
+      return new Response(
+        JSON.stringify({ success: true, message: "Item reset", markedCount: 1 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Mark videos ready - checking pending, failed (retryable), and stuck processing items...");
 
     // Get pending items
     const { data: pendingItems, error: fetchError } = await supabase
       .from("tiktok_video_queue")
-      .select("id, artist, title")
+      .select("id, artist, title, attempts, max_attempts")
       .eq("status", "pending")
       .order("created_at", { ascending: true })
       .limit(10);
@@ -44,10 +67,23 @@ serve(async (req) => {
       console.error("Error fetching stuck items:", stuckError);
     }
 
-    const allItems = [...(pendingItems || []), ...(stuckItems || [])];
+    // Also get failed items that can be retried (attempts < max_attempts)
+    const { data: failedItems, error: failedError } = await supabase
+      .from("tiktok_video_queue")
+      .select("id, artist, title, attempts, max_attempts")
+      .eq("status", "failed")
+      .lt("attempts", 3) // retry if under max attempts
+      .order("updated_at", { ascending: true })
+      .limit(5);
+
+    if (failedError) {
+      console.error("Error fetching failed items:", failedError);
+    }
+
+    const allItems = [...(pendingItems || []), ...(stuckItems || []), ...(failedItems || [])];
 
     if (allItems.length === 0) {
-      console.log("No pending or stuck items to mark as ready");
+      console.log("No pending, stuck, or retryable items to mark as ready");
       return new Response(
         JSON.stringify({ success: true, message: "No pending items", markedCount: 0 }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }

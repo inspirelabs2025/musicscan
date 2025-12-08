@@ -24,35 +24,21 @@ export const useClientVideoGenerator = () => {
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
 
-  // Load image with CORS proxy fallback for external images
+  // Load image via proxy to bypass CORS for external images
   const loadImage = async (url: string): Promise<HTMLImageElement> => {
-    // First try to fetch as blob to bypass CORS issues
-    try {
-      const response = await fetch(url, { mode: 'cors' });
-      if (response.ok) {
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => {
-            URL.revokeObjectURL(blobUrl); // Clean up
-            resolve(img);
-          };
-          img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-          img.src = blobUrl;
-        });
-      }
-    } catch (e) {
-      console.log('Direct fetch failed, trying with crossOrigin attribute:', url);
+    // Use image proxy for external URLs (Discogs, etc.)
+    let imageUrl = url;
+    if (url.includes('discogs.com') || url.includes('i.scdn.co')) {
+      const proxyUrl = `https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/image-proxy?url=${encodeURIComponent(url)}`;
+      imageUrl = proxyUrl;
     }
     
-    // Fallback: try loading directly with crossOrigin
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => resolve(img);
       img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-      img.src = url;
+      img.src = imageUrl;
     });
   };
 

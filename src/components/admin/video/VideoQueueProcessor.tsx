@@ -36,7 +36,10 @@ export const VideoQueueProcessor: React.FC<VideoQueueProcessorProps> = ({
   durationPerImage = 3
 }) => {
   const queryClient = useQueryClient();
-  const [isAutoProcessing, setIsAutoProcessing] = useState(false);
+  const [isAutoProcessing, setIsAutoProcessing] = useState(() => {
+    // Load saved setting from localStorage
+    return localStorage.getItem('video-auto-processing') === 'true';
+  });
   const [currentItem, setCurrentItem] = useState<QueueItem | null>(null);
   const [processedCount, setProcessedCount] = useState(0);
   const [failedCount, setFailedCount] = useState(0);
@@ -199,8 +202,11 @@ export const VideoQueueProcessor: React.FC<VideoQueueProcessorProps> = ({
   };
 
   const toggleAutoProcessing = () => {
-    setIsAutoProcessing(!isAutoProcessing);
-    if (!isAutoProcessing) {
+    const newValue = !isAutoProcessing;
+    setIsAutoProcessing(newValue);
+    // Save to localStorage
+    localStorage.setItem('video-auto-processing', String(newValue));
+    if (newValue) {
       toast.success('Auto-processing gestart - wacht op items in queue');
     } else {
       toast.info('Auto-processing gepauzeerd');

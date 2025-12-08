@@ -24,7 +24,29 @@ export const useClientVideoGenerator = () => {
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
 
-  const loadImage = (url: string): Promise<HTMLImageElement> => {
+  // Load image with CORS proxy fallback for external images
+  const loadImage = async (url: string): Promise<HTMLImageElement> => {
+    // First try to fetch as blob to bypass CORS issues
+    try {
+      const response = await fetch(url, { mode: 'cors' });
+      if (response.ok) {
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            URL.revokeObjectURL(blobUrl); // Clean up
+            resolve(img);
+          };
+          img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+          img.src = blobUrl;
+        });
+      }
+    } catch (e) {
+      console.log('Direct fetch failed, trying with crossOrigin attribute:', url);
+    }
+    
+    // Fallback: try loading directly with crossOrigin
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';

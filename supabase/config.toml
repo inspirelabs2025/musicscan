@@ -614,3 +614,6 @@ verify_jwt = false
 
 [functions.mark-videos-ready]
 verify_jwt = false
+
+[functions.image-proxy]
+verify_jwt = false

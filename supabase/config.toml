@@ -617,3 +617,12 @@ verify_jwt = false
 
 [functions.image-proxy]
 verify_jwt = false
+
+[functions.process-tiktok-video-queue]
+verify_jwt = false
+
+[[functions.process-tiktok-video-queue.schedule]]
+cron = "*/2 * * * *"
+
+[functions.generate-tiktok-video]
+verify_jwt = false

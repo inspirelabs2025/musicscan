@@ -112,9 +112,9 @@ async function generateGifVideo(
   const frameDelay = Math.floor(1000 / fps); // Delay in ms
   
   // Create static square overlay (center crop of source image)
-  const squareSize = 80; // Slightly smaller to make room for frame
-  const frameWidth = 6; // Frame border width
-  const framedSize = squareSize + (frameWidth * 2); // Total size with frame
+  const squareSize = 110; // Larger square for better visibility
+  const frameWidth = 5; // Frame border width
+  const framedSize = squareSize + (frameWidth * 2); // Total size with frame = 120
   
   const minDim = Math.min(sourceImage.width, sourceImage.height);
   const cropX = Math.floor((sourceImage.width - minDim) / 2);

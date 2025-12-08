@@ -32,14 +32,27 @@ export function TemplateManager() {
     },
   });
 
-  // Upload template
+  // Upload template with timeout
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      const { error } = await supabase.storage
+      console.log('📤 Starting upload:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+      
+      const uploadPromise = supabase.storage
         .from('video-templates')
         .upload(file.name, file, { upsert: true });
       
-      if (error) throw error;
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Upload timeout na 2 minuten')), 120000)
+      );
+      
+      const result = await Promise.race([uploadPromise, timeoutPromise]);
+      
+      if ('error' in result && result.error) {
+        console.error('❌ Upload error:', result.error);
+        throw result.error;
+      }
+      
+      console.log('✅ Upload success:', file.name);
       return file.name;
     },
     onSuccess: (filename) => {
@@ -75,10 +88,21 @@ export function TemplateManager() {
     setUploading(true);
     
     for (const file of acceptedFiles) {
+      // Validate file type
       if (!file.name.toLowerCase().endsWith('.gif')) {
         toast.error(`${file.name} is geen GIF bestand`);
         continue;
       }
+      
+      // Validate file size (max 20MB)
+      const maxSize = 20 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error(`${file.name} is te groot (${formatBytes(file.size)}). Max 20MB.`);
+        continue;
+      }
+      
+      // Show upload starting toast
+      toast.info(`Upload gestart: ${file.name} (${formatBytes(file.size)})`);
       
       try {
         await uploadMutation.mutateAsync(file);

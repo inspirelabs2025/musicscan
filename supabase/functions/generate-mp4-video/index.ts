@@ -105,9 +105,9 @@ async function generateGifVideo(
   // Download and decode source image
   const sourceImage = await downloadAndDecodeImage(imageUrl);
   
-  // TikTok format: 240x426 (9:16)
-  const outputWidth = 240;
-  const outputHeight = 426;
+  // Compact format to stay within CPU limits: 160x284 (9:16)
+  const outputWidth = 160;
+  const outputHeight = 284;
   const totalFrames = Math.floor(durationSeconds * fps);
   const frameDelay = Math.floor(1000 / fps); // Delay in ms
   

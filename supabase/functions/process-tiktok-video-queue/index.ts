@@ -6,43 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Generate a simple MP4 video from an image using basic encoding
-// This creates a static video with the image displayed for the duration
-async function generateVideoFromImage(
-  imageUrl: string,
-  durationSeconds: number = 5
-): Promise<{ videoBlob: Blob; contentType: string }> {
-  console.log(`🎬 Generating video from image: ${imageUrl}`);
-  
-  // Download the source image
-  const imageResponse = await fetch(imageUrl, {
-    headers: {
-      'User-Agent': 'MusicScan/1.0 (Video Generator)',
-    },
-  });
-  
-  if (!imageResponse.ok) {
-    throw new Error(`Failed to download image: ${imageResponse.status}`);
-  }
-  
-  const imageBlob = await imageResponse.blob();
-  const imageBuffer = await imageBlob.arrayBuffer();
-  
-  console.log(`✅ Downloaded image: ${imageBuffer.byteLength} bytes`);
-  
-  // For server-side video generation without FFmpeg, we have limited options
-  // We'll create a simple video file or return the image for client-side processing
-  
-  // Since true video encoding requires FFmpeg or complex WebM muxing,
-  // we'll return the image data and mark it for client-side completion
-  // The client-side VideoQueueProcessor will handle the actual video creation
-  
-  return {
-    videoBlob: new Blob([imageBuffer], { type: imageBlob.type }),
-    contentType: imageBlob.type || 'image/jpeg'
-  };
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -54,7 +17,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('🎬 Processing TikTok video queue (server-side)...');
+    console.log('🎬 Processing TikTok video queue (server-side MP4)...');
 
     // Get pending items
     const { data: pendingItems, error: fetchError } = await supabase
@@ -63,7 +26,7 @@ serve(async (req) => {
       .eq('status', 'pending')
       .lt('attempts', 3)
       .order('created_at', { ascending: true })
-      .limit(2);
+      .limit(1); // Process 1 at a time for server-side video generation
 
     if (fetchError) {
       console.error('Error fetching pending items:', fetchError);
@@ -102,46 +65,28 @@ serve(async (req) => {
           throw new Error('No album cover URL available');
         }
 
-        // Download and process the image
-        const { videoBlob, contentType } = await generateVideoFromImage(item.album_cover_url, 5);
+        // Call the generate-mp4-video edge function
+        console.log(`📹 Calling generate-mp4-video for ${item.id}...`);
+        
+        const { data: videoResult, error: videoError } = await supabase.functions.invoke('generate-mp4-video', {
+          body: {
+            imageUrl: item.album_cover_url,
+            queueItemId: item.id,
+            durationSeconds: 3,
+            fps: 30
+          }
+        });
 
-        // Generate filename
-        const timestamp = Date.now();
-        const safeTitle = (item.title || 'video').replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
-        const extension = contentType.includes('png') ? 'png' : 'jpg';
-        const fileName = `videos/${timestamp}_${item.artist?.replace(/[^a-zA-Z0-9]/g, '_') || 'unknown'}_${safeTitle}.${extension}`;
-
-        // Upload to storage
-        const { error: uploadError } = await supabase.storage
-          .from('tiktok-videos')
-          .upload(fileName, videoBlob, {
-            contentType: contentType,
-            upsert: true
-          });
-
-        if (uploadError) {
-          throw new Error(`Upload failed: ${uploadError.message}`);
+        if (videoError) {
+          throw new Error(`Video generation failed: ${videoError.message}`);
         }
 
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('tiktok-videos')
-          .getPublicUrl(fileName);
+        if (!videoResult?.success) {
+          throw new Error(videoResult?.error || 'Video generation returned no success');
+        }
 
-        const videoUrl = urlData.publicUrl;
-        console.log(`✅ Uploaded to: ${videoUrl}`);
-
-        // Update queue item as completed
-        // Note: This stores the image URL - true video generation happens client-side
-        await supabase
-          .from('tiktok_video_queue')
-          .update({
-            status: 'completed',
-            video_url: videoUrl,
-            processed_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', item.id);
+        const videoUrl = videoResult.video_url;
+        console.log(`✅ MP4 video generated: ${videoUrl} (${videoResult.size_bytes} bytes)`);
 
         // Update blog post if linked
         if (item.blog_id) {
@@ -149,13 +94,11 @@ serve(async (req) => {
             .from('blog_posts')
             .update({ tiktok_video_url: videoUrl })
             .eq('id', item.blog_id);
+          console.log(`✅ Updated blog post ${item.blog_id} with video URL`);
         }
 
         successCount++;
         console.log(`✅ Completed: ${item.artist} - ${item.title}`);
-
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 2000));
 
       } catch (itemError) {
         console.error(`❌ Error processing item ${item.id}:`, itemError);

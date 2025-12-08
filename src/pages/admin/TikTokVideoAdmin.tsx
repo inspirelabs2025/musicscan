@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink, Plus, PlusCircle, Eye, RotateCcw, StopCircle, Upload, Download, TestTube } from 'lucide-react';
+import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink, Plus, PlusCircle, Eye, RotateCcw, StopCircle, Upload, Download, TestTube, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -16,6 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { VideoQueueProcessor } from '@/components/admin/video/VideoQueueProcessor';
 
 interface TikTokQueueItem {
   id: string;
@@ -312,6 +313,8 @@ export default function TikTokVideoAdmin() {
     switch (status) {
       case 'pending':
         return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" /> Wachtend</Badge>;
+      case 'ready_for_client':
+        return <Badge variant="default" className="bg-purple-500"><Zap className="w-3 h-3 mr-1" /> Klaar</Badge>;
       case 'processing':
         return <Badge variant="default" className="bg-blue-500"><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Bezig</Badge>;
       case 'completed':
@@ -423,6 +426,13 @@ export default function TikTokVideoAdmin() {
           </Button>
         </div>
       </div>
+
+      {/* Client-Side Queue Processor */}
+      <VideoQueueProcessor 
+        style={testStyle}
+        zoomEffect={testZoomEffect}
+        durationPerImage={testDuration}
+      />
 
       {/* Client-Side Video Test Section */}
       <Card className="border-2 border-dashed border-primary/30">

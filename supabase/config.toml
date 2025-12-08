@@ -611,3 +611,6 @@ cron = "*/5 * * * *"
 
 [functions.fetch-album-artwork]
 verify_jwt = false
+
+[functions.mark-videos-ready]
+verify_jwt = false

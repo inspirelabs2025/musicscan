@@ -25,7 +25,7 @@ serve(async (req) => {
       const { error: resetError } = await supabase
         .from("tiktok_video_queue")
         .update({ 
-          status: "pending",
+          status: "ready_for_client",
           attempts: 0,
           error_message: null,
           updated_at: new Date().toISOString()
@@ -100,7 +100,7 @@ serve(async (req) => {
     const { error: updateError, count } = await supabase
       .from("tiktok_video_queue")
       .update({ 
-        status: "pending",
+        status: "ready_for_client",
         attempts: 0,
         updated_at: new Date().toISOString()
       })
@@ -111,7 +111,7 @@ serve(async (req) => {
       throw updateError;
     }
 
-    console.log(`Successfully marked ${count || ids.length} items as pending for automatic processing`);
+    console.log(`Successfully marked ${count || ids.length} items as ready_for_client for browser processing`);
 
     return new Response(
       JSON.stringify({ 

@@ -56,7 +56,7 @@ const FONT: Record<string, number[][]> = {
 
 // Draw text on image with shadow
 function drawText(image: Image, text: string, startX: number, startY: number, color: number, shadowColor: number) {
-  const charWidth = 6;
+  const charWidth = 6; // 5 pixels + 1 spacing
   const charHeight = 7;
   const upperText = text.toUpperCase();
   
@@ -88,7 +88,7 @@ function drawText(image: Image, text: string, startX: number, startY: number, co
 
 // Calculate text width
 function getTextWidth(text: string): number {
-  return text.length * 6;
+  return text.length * 6; // 5px char + 1px spacing
 }
 
 // Truncate text to fit within max width
@@ -117,121 +117,127 @@ async function downloadAndDecodeImage(url: string): Promise<Image> {
   const imageData = new Uint8Array(arrayBuffer);
   console.log(`✅ Downloaded ${imageData.byteLength} bytes`);
   
+  // Decode image
   const image = await decode(imageData);
   console.log(`✅ Decoded image: ${image.width}x${image.height}`);
   
   return image as Image;
 }
 
-// Create blurred background from image
-function createBlurredBackground(sourceImage: Image, width: number, height: number): Image {
-  // Create background by scaling and cropping source image to fill
-  const scale = Math.max(width / sourceImage.width, height / sourceImage.height);
-  const scaledWidth = Math.floor(sourceImage.width * scale);
-  const scaledHeight = Math.floor(sourceImage.height * scale);
+// Generate a single frame with zoom effect
+function generateZoomFrame(
+  sourceImage: Image,
+  frameIndex: number,
+  totalFrames: number,
+  outputWidth: number,
+  outputHeight: number
+): Image {
+  // SLOW LINEAR GROW ZOOM - NO BOUNCE BACK
+  // Frame 0: scale = 1.0 (100%)
+  // Frame N: scale = 1.2 (120%) - 20% zoom over full duration
+  const progress = frameIndex / Math.max(totalFrames - 1, 1);
+  const scale = 1.0 + (progress * 0.2);
   
-  const scaled = sourceImage.clone().resize(scaledWidth, scaledHeight);
+  // Create output image with black background
+  const outputImage = new Image(outputWidth, outputHeight);
+  outputImage.fill(0x000000FF); // Black background
   
-  // Crop to center
-  const cropX = Math.floor((scaledWidth - width) / 2);
-  const cropY = Math.floor((scaledHeight - height) / 2);
-  const background = scaled.crop(cropX + 1, cropY + 1, width, height);
+  // Calculate aspect ratios
+  const sourceAspect = sourceImage.width / sourceImage.height;
+  const outputAspect = outputWidth / outputHeight;
   
-  // Apply simple blur by averaging pixels (3x3 box blur)
-  const blurred = new Image(width, height);
-  for (let y = 1; y <= height; y++) {
-    for (let x = 1; x <= width; x++) {
-      let r = 0, g = 0, b = 0, a = 0, count = 0;
+  let fitWidth: number, fitHeight: number;
+  
+  if (sourceAspect > outputAspect) {
+    // Source is wider - fit to height
+    fitHeight = outputHeight;
+    fitWidth = Math.floor(fitHeight * sourceAspect);
+  } else {
+    // Source is taller or same - fit to width
+    fitWidth = outputWidth;
+    fitHeight = Math.floor(fitWidth / sourceAspect);
+  }
+  
+  // Apply zoom to fit dimensions
+  const zoomedWidth = Math.floor(fitWidth * scale);
+  const zoomedHeight = Math.floor(fitHeight * scale);
+  
+  // Resize source image
+  const resizedImage = sourceImage.clone().resize(zoomedWidth, zoomedHeight);
+  
+  // Center the image
+  const offsetX = Math.floor((outputWidth - zoomedWidth) / 2);
+  const offsetY = Math.floor((outputHeight - zoomedHeight) / 2);
+  
+  // Composite onto output (manually copy pixels)
+  for (let y = 0; y < zoomedHeight; y++) {
+    for (let x = 0; x < zoomedWidth; x++) {
+      const destX = offsetX + x;
+      const destY = offsetY + y;
       
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          const px = Math.max(1, Math.min(width, x + dx));
-          const py = Math.max(1, Math.min(height, y + dy));
-          const pixel = background.getPixelAt(px, py);
-          r += (pixel >> 24) & 0xFF;
-          g += (pixel >> 16) & 0xFF;
-          b += (pixel >> 8) & 0xFF;
-          a += pixel & 0xFF;
-          count++;
-        }
+      if (destX >= 0 && destX < outputWidth && destY >= 0 && destY < outputHeight) {
+        const pixel = resizedImage.getPixelAt(x + 1, y + 1); // 1-indexed
+        outputImage.setPixelAt(destX + 1, destY + 1, pixel);
       }
-      
-      const avgR = Math.floor(r / count);
-      const avgG = Math.floor(g / count);
-      const avgB = Math.floor(b / count);
-      const avgA = Math.floor(a / count);
-      blurred.setPixelAt(x, y, (avgR << 24) | (avgG << 16) | (avgB << 8) | avgA);
     }
   }
   
-  // Darken the blurred background for better contrast
-  for (let y = 1; y <= height; y++) {
-    for (let x = 1; x <= width; x++) {
-      const pixel = blurred.getPixelAt(x, y);
-      const r = Math.floor(((pixel >> 24) & 0xFF) * 0.5);
-      const g = Math.floor(((pixel >> 16) & 0xFF) * 0.5);
-      const b = Math.floor(((pixel >> 8) & 0xFF) * 0.5);
-      const a = pixel & 0xFF;
-      blurred.setPixelAt(x, y, (r << 24) | (g << 16) | (b << 8) | a);
-    }
-  }
-  
-  return blurred;
+  return outputImage;
 }
 
 async function generateGifVideo(
   imageUrl: string,
+  durationSeconds: number = 3,
+  fps: number = 8,
   artist: string = '',
   title: string = ''
-): Promise<{ gifData: Uint8Array }> {
-  console.log(`🎬 Generating GIF video with album cover background`);
+): Promise<Uint8Array> {
+  console.log(`🎬 Generating GIF: ${durationSeconds}s @ ${fps}fps`);
   console.log(`📝 Artist: "${artist}", Title: "${title}"`);
   
-  // Download source image
+  // Download and decode source image
   const sourceImage = await downloadAndDecodeImage(imageUrl);
   
-  // Output dimensions (9:16 vertical format for TikTok)
+  // Compact format to stay within CPU limits: 160x284 (9:16)
   const outputWidth = 160;
   const outputHeight = 284;
+  const totalFrames = Math.floor(durationSeconds * fps);
+  const frameDelay = Math.floor(1000 / fps); // Delay in ms
   
-  // Create blurred background from source image
-  const background = createBlurredBackground(sourceImage, outputWidth, outputHeight);
+  // Create static square overlay (center crop of source image) - BIGGER!
+  const squareSize = 100; // Increased from 80
+  const frameWidth = 5;   // Frame border width
+  const framedSize = squareSize + (frameWidth * 2); // 110 total
   
-  // Create square overlay (album artwork with frame)
-  const squareSize = 90;
-  const frameWidth = 4;
-  const framedSize = squareSize + (frameWidth * 2);
-  
-  // Center crop source image
   const minDim = Math.min(sourceImage.width, sourceImage.height);
   const cropX = Math.floor((sourceImage.width - minDim) / 2);
   const cropY = Math.floor((sourceImage.height - minDim) / 2);
   const croppedImage = sourceImage.clone()
-    .crop(cropX + 1, cropY + 1, minDim, minDim)
+    .crop(cropX + 1, cropY + 1, minDim, minDim) // ImageScript uses 1-indexed
     .resize(squareSize, squareSize);
   
   // Create framed overlay with painting-style border
   const framedOverlay = new Image(framedSize, framedSize);
   
   // Draw outer frame (dark gold/brown)
-  framedOverlay.fill(0x8B6914FF);
+  framedOverlay.fill(0x8B6914FF); // Dark gold
   
-  // Draw inner frame highlight (lighter gold)
+  // Draw inner frame highlight (lighter gold) - 2px inset
   for (let y = 2; y < framedSize - 2; y++) {
     for (let x = 2; x < framedSize - 2; x++) {
       if (x < frameWidth || x >= framedSize - frameWidth || 
           y < frameWidth || y >= framedSize - frameWidth) {
-        framedOverlay.setPixelAt(x + 1, y + 1, 0xD4A017FF);
+        framedOverlay.setPixelAt(x + 1, y + 1, 0xD4A017FF); // Golden
       }
     }
   }
   
-  // Draw inner shadow line
+  // Draw inner shadow line (dark) - just before image
   for (let y = frameWidth - 1; y < framedSize - frameWidth + 1; y++) {
     for (let x = frameWidth - 1; x < framedSize - frameWidth + 1; x++) {
       if (x === frameWidth - 1 || x === framedSize - frameWidth || 
           y === frameWidth - 1 || y === framedSize - frameWidth) {
-        framedOverlay.setPixelAt(x + 1, y + 1, 0x5C4A0AFF);
+        framedOverlay.setPixelAt(x + 1, y + 1, 0x5C4A0AFF); // Dark shadow
       }
     }
   }
@@ -243,8 +249,8 @@ async function generateGifVideo(
   const overlayX = Math.floor((outputWidth - framedSize) / 2);
   const overlayY = Math.floor((outputHeight - framedSize) / 2);
   
-  // Prepare text
-  const maxTextWidth = outputWidth - 10;
+  // Prepare text (truncate if too long)
+  const maxTextWidth = outputWidth - 10; // 5px padding on each side
   const artistText = artist ? truncateText(artist.toUpperCase(), maxTextWidth) : '';
   const titleText = title ? truncateText(title.toUpperCase(), maxTextWidth) : '';
   
@@ -255,59 +261,54 @@ async function generateGifVideo(
   const titleX = Math.floor((outputWidth - titleWidth) / 2);
   
   // Text Y positions
-  const artistY = overlayY - 15;
-  const titleY = overlayY + framedSize + 8;
+  const artistY = overlayY - 15; // Above frame
+  const titleY = overlayY + framedSize + 5; // Below frame
   
-  console.log(`📹 Creating GIF with blurred album background`);
+  console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight} with ${framedSize}x${framedSize} framed overlay`);
   
-  // Generate multiple frames with subtle zoom animation
-  const frameCount = 30; // 5 seconds at 6fps
+  // Create frames array
   const frames: Frame[] = [];
   
-  for (let i = 0; i < frameCount; i++) {
-    // Create frame from background
-    const outputImage = background.clone() as Image;
-    
-    // Calculate subtle zoom for overlay (1.0 to 1.05 and back)
-    const progress = i / frameCount;
-    const zoomPhase = Math.sin(progress * Math.PI * 2) * 0.02; // Subtle 2% oscillation
-    const zoomScale = 1.0 + zoomPhase;
-    
-    // Scale overlay if zooming
-    let currentOverlay = framedOverlay;
-    let currentOverlayX = overlayX;
-    let currentOverlayY = overlayY;
-    
-    if (zoomScale !== 1.0) {
-      const newSize = Math.floor(framedSize * zoomScale);
-      currentOverlay = framedOverlay.clone().resize(newSize, newSize) as Image;
-      currentOverlayX = Math.floor((outputWidth - newSize) / 2);
-      currentOverlayY = Math.floor((outputHeight - newSize) / 2);
+  for (let i = 0; i < totalFrames; i++) {
+    if (i % 5 === 0) {
+      console.log(`🎞️ Processing frame ${i + 1}/${totalFrames}`);
     }
     
-    // Composite the framed overlay
-    outputImage.composite(currentOverlay, currentOverlayX + 1, currentOverlayY + 1);
+    const frameImage = generateZoomFrame(
+      sourceImage,
+      i,
+      totalFrames,
+      outputWidth,
+      outputHeight
+    );
     
-    // Draw artist name
+    // Composite the framed overlay in the center
+    frameImage.composite(framedOverlay, overlayX + 1, overlayY + 1); // 1-indexed
+    
+    // Draw artist name (white with black shadow)
     if (artistText) {
-      drawText(outputImage, artistText, artistX, artistY, 0xFFFFFFFF, 0x000000FF);
+      drawText(frameImage, artistText, artistX, artistY, 0xFFFFFFFF, 0x000000FF);
     }
     
-    // Draw title
+    // Draw title (white with black shadow)
     if (titleText) {
-      drawText(outputImage, titleText, titleX, titleY, 0xFFFFFFFF, 0x000000FF);
+      drawText(frameImage, titleText, titleX, titleY, 0xFFFFFFFF, 0x000000FF);
     }
     
-    // Add frame (166ms = 6fps)
-    frames.push(Frame.from(outputImage, 16));
+    // Create frame with delay (in 10ms units for GIF)
+    const frame = Frame.from(frameImage, frameDelay / 10);
+    frames.push(frame);
   }
   
+  console.log(`✅ All frames created, encoding GIF...`);
+  
+  // Create GIF from frames
   const gif = new GIF(frames);
   const gifData = await gif.encode();
   
-  console.log(`✅ GIF generated: ${gifData.byteLength} bytes, ${frameCount} frames`);
+  console.log(`✅ GIF generated: ${gifData.byteLength} bytes`);
   
-  return { gifData };
+  return gifData;
 }
 
 serve(async (req) => {
@@ -321,7 +322,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { imageUrl, queueItemId, artist = '', title = '' } = await req.json();
+    const { imageUrl, queueItemId, durationSeconds = 3, fps = 8, artist = '', title = '' } = await req.json();
 
     if (!imageUrl) {
       return new Response(
@@ -332,8 +333,8 @@ serve(async (req) => {
 
     console.log(`🎥 Processing GIF for queue item: ${queueItemId || 'manual'}`);
 
-    // Generate GIF with album cover background
-    const { gifData } = await generateGifVideo(imageUrl, artist, title);
+    // Generate GIF with artist/title text
+    const gifData = await generateGifVideo(imageUrl, durationSeconds, fps, artist, title);
 
     // Generate unique filename
     const timestamp = Date.now();
@@ -366,7 +367,6 @@ serve(async (req) => {
         .update({
           status: 'completed',
           video_url: urlData.publicUrl,
-          template_used: 'album-cover-blur',
           updated_at: new Date().toISOString(),
         })
         .eq('id', queueItemId);
@@ -380,7 +380,6 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         video_url: urlData.publicUrl,
-        template_used: 'album-cover-blur',
         format: 'gif',
         size_bytes: gifData.byteLength,
       }),

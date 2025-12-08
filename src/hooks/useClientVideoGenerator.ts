@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 export type VideoStyle = 'contain' | 'cover' | 'blurred-background';
 export type ZoomEffect = 'none' | 'grow-in' | 'grow-out' | 'grow-in-out';
@@ -18,6 +20,28 @@ interface VideoGeneratorResult {
   videoUrl: string;
   blob: Blob;
 }
+
+// Singleton FFmpeg instance
+let ffmpegInstance: FFmpeg | null = null;
+let ffmpegLoaded = false;
+
+const getFFmpeg = async (): Promise<FFmpeg> => {
+  if (ffmpegInstance && ffmpegLoaded) {
+    return ffmpegInstance;
+  }
+  
+  ffmpegInstance = new FFmpeg();
+  
+  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+  
+  await ffmpegInstance.load({
+    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+  });
+  
+  ffmpegLoaded = true;
+  return ffmpegInstance;
+};
 
 export const useClientVideoGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -157,6 +181,43 @@ export const useClientVideoGenerator = () => {
     }
   };
 
+  // Convert WebM to MP4 using FFmpeg.wasm
+  const convertToMp4 = async (webmBlob: Blob): Promise<Blob> => {
+    toast({ title: '🔄 Converteren naar MP4...', description: 'FFmpeg laden...' });
+    
+    const ffmpeg = await getFFmpeg();
+    
+    // Write input file
+    const webmData = await fetchFile(webmBlob);
+    await ffmpeg.writeFile('input.webm', webmData);
+    
+    toast({ title: '🔄 Converteren naar MP4...', description: 'Video transcoden...' });
+    
+    // Convert to MP4 with H.264 codec for maximum compatibility
+    await ffmpeg.exec([
+      '-i', 'input.webm',
+      '-c:v', 'libx264',
+      '-preset', 'fast',
+      '-crf', '23',
+      '-pix_fmt', 'yuv420p',
+      '-movflags', '+faststart',
+      'output.mp4'
+    ]);
+    
+    // Read output file
+    const mp4Data = await ffmpeg.readFile('output.mp4');
+    
+    // Cleanup
+    await ffmpeg.deleteFile('input.webm');
+    await ffmpeg.deleteFile('output.mp4');
+    
+    // Convert to Blob - copy buffer to new ArrayBuffer for type compatibility
+    const uint8Array = mp4Data as Uint8Array;
+    const arrayBuffer = new ArrayBuffer(uint8Array.byteLength);
+    new Uint8Array(arrayBuffer).set(uint8Array);
+    return new Blob([arrayBuffer], { type: 'video/mp4' });
+  };
+
   const generateVideo = useCallback(async (options: VideoGeneratorOptions): Promise<VideoGeneratorResult> => {
     const {
       images,
@@ -191,7 +252,7 @@ export const useClientVideoGenerator = () => {
       for (let i = 0; i < images.length; i++) {
         const img = await loadImage(images[i]);
         loadedImages.push(img);
-        setProgress((i + 1) / images.length * 20); // 0-20% for loading
+        setProgress((i + 1) / images.length * 15); // 0-15% for loading
       }
 
       // Setup MediaRecorder
@@ -211,7 +272,7 @@ export const useClientVideoGenerator = () => {
       // Start recording
       mediaRecorder.start(100); // Collect data every 100ms
 
-      toast({ title: '🎬 Video genereren...', description: 'Dit kan even duren' });
+      toast({ title: '🎬 Video genereren...', description: 'Frames renderen...' });
 
       // Render frames
       const framesPerImage = fps * durationPerImage;
@@ -237,31 +298,34 @@ export const useClientVideoGenerator = () => {
           await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 1000 / fps)));
           
           currentFrame++;
-          setProgress(20 + (currentFrame / totalFrames) * 70); // 20-90% for rendering
+          setProgress(15 + (currentFrame / totalFrames) * 55); // 15-70% for rendering
         }
       }
 
-      // Stop recording and wait for data
-      return new Promise((resolve, reject) => {
-        mediaRecorder.onstop = async () => {
-          try {
-            const webmBlob = new Blob(chunks, { type: 'video/webm' });
-            
-            // Create object URL
-            const videoUrl = URL.createObjectURL(webmBlob);
-            
-            setProgress(100);
-            toast({ title: '✅ Video klaar!', description: 'Uploaden naar storage...' });
-
-            resolve({ videoUrl, blob: webmBlob });
-          } catch (err) {
-            reject(err);
-          }
+      // Stop recording and wait for WebM data
+      const webmBlob = await new Promise<Blob>((resolve, reject) => {
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          resolve(blob);
         };
-
         mediaRecorder.onerror = (e) => reject(e);
         mediaRecorder.stop();
       });
+
+      setProgress(70);
+      
+      // Convert WebM to MP4
+      const mp4Blob = await convertToMp4(webmBlob);
+      
+      setProgress(95);
+      
+      // Create object URL
+      const videoUrl = URL.createObjectURL(mp4Blob);
+      
+      setProgress(100);
+      toast({ title: '✅ MP4 Video klaar!', description: 'Uploaden naar storage...' });
+
+      return { videoUrl, blob: mp4Blob };
 
     } catch (error) {
       console.error('Video generation error:', error);
@@ -272,11 +336,16 @@ export const useClientVideoGenerator = () => {
   }, [toast]);
 
   const uploadVideo = useCallback(async (blob: Blob, filename: string): Promise<string> => {
-    const filePath = `videos/${Date.now()}_${filename}.webm`;
+    // Determine file extension based on blob type
+    const isMP4 = blob.type === 'video/mp4';
+    const extension = isMP4 ? 'mp4' : 'webm';
+    const contentType = isMP4 ? 'video/mp4' : 'video/webm';
+    
+    const filePath = `videos/${Date.now()}_${filename}.${extension}`;
     
     const { error: uploadError } = await supabase.storage
       .from('tiktok-videos')
-      .upload(filePath, blob, { contentType: 'video/webm' });
+      .upload(filePath, blob, { contentType });
 
     if (uploadError) {
       throw new Error(`Upload failed: ${uploadError.message}`);

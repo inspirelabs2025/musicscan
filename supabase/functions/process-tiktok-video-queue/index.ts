@@ -72,8 +72,8 @@ serve(async (req) => {
           body: {
             imageUrl: item.album_cover_url,
             queueItemId: item.id,
-            durationSeconds: 3,
-            fps: 8 // Lower fps for GIF (smoother animation, smaller file)
+            durationSeconds: 10,
+            fps: 8
           }
         });
 

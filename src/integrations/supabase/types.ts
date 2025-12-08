@@ -6593,6 +6593,7 @@ export type Database = {
           operation_name: string | null
           processed_at: string | null
           status: string
+          template_used: string | null
           title: string
           updated_at: string
           video_url: string | null
@@ -6609,6 +6610,7 @@ export type Database = {
           operation_name?: string | null
           processed_at?: string | null
           status?: string
+          template_used?: string | null
           title: string
           updated_at?: string
           video_url?: string | null
@@ -6625,6 +6627,7 @@ export type Database = {
           operation_name?: string | null
           processed_at?: string | null
           status?: string
+          template_used?: string | null
           title?: string
           updated_at?: string
           video_url?: string | null

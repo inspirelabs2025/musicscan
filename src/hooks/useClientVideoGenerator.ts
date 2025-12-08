@@ -179,23 +179,19 @@ export const useClientVideoGenerator = () => {
   };
 
   // Calculate zoom scale based on effect and progress (0-1)
+  // SLOW LINEAR GROW - cinema-style Ken Burns effect
   const calculateZoomScale = (effect: ZoomEffect, progress: number): number => {
-    const minScale = 1.0;
-    const maxScale = 2.5; // 150% zoom - very dramatic
-    const speed = 3; // Speed multiplier for faster zoom cycles
-    
     switch (effect) {
       case 'grow-in':
-        // Start small, end big
-        return minScale + (maxScale - minScale) * progress;
+        // SLOW LINEAR ZOOM: 1.0 → 1.2 (20% zoom over full duration)
+        // No bounce back, just smooth grow
+        return 1.0 + (progress * 0.2);
       case 'grow-out':
-        // Start big, end small
-        return maxScale - (maxScale - minScale) * progress;
+        // Start at 1.2, end at 1.0
+        return 1.2 - (progress * 0.2);
       case 'grow-in-out':
-        // Faster zoom cycles with speed multiplier (multiple zoom in/out cycles)
-        const fastProgress = (progress * speed) % 1;
-        const sineProgress = Math.sin(fastProgress * Math.PI);
-        return minScale + (maxScale - minScale) * sineProgress;
+        // Same as grow-in for now: smooth linear zoom
+        return 1.0 + (progress * 0.2);
       case 'none':
       default:
         return 1;

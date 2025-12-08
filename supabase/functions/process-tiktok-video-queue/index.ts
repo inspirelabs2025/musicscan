@@ -49,56 +49,25 @@ serve(async (req) => {
 
     for (const item of pendingItems) {
       try {
-        console.log(`🎥 Processing: ${item.artist} - ${item.title}`);
-
-        // Update status to processing
-        await supabase
-          .from('tiktok_video_queue')
-          .update({
-            status: 'processing',
-            attempts: item.attempts + 1,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', item.id);
+        console.log(`🎥 Marking ready for client: ${item.artist} - ${item.title}`);
 
         if (!item.album_cover_url) {
           throw new Error('No album cover URL available');
         }
 
-        // Call the generate-mp4-video edge function
-        console.log(`📹 Calling generate-mp4-video for ${item.id}...`);
-        
-        const { data: videoResult, error: videoError } = await supabase.functions.invoke('generate-mp4-video', {
-          body: {
-            imageUrl: item.album_cover_url,
-            queueItemId: item.id,
-            durationSeconds: 5,
-            fps: 2  // 10 frames total for CPU safety
-          }
-        });
-
-        if (videoError) {
-          throw new Error(`Video generation failed: ${videoError.message}`);
-        }
-
-        if (!videoResult?.success) {
-          throw new Error(videoResult?.error || 'Video generation returned no success');
-        }
-
-        const videoUrl = videoResult.video_url;
-        console.log(`✅ MP4 video generated: ${videoUrl} (${videoResult.size_bytes} bytes)`);
-
-        // Update blog post if linked
-        if (item.blog_id) {
-          await supabase
-            .from('blog_posts')
-            .update({ tiktok_video_url: videoUrl })
-            .eq('id', item.blog_id);
-          console.log(`✅ Updated blog post ${item.blog_id} with video URL`);
-        }
+        // Mark as ready_for_client - actual video generation happens client-side
+        // This avoids CPU timeout issues with server-side video generation
+        await supabase
+          .from('tiktok_video_queue')
+          .update({
+            status: 'ready_for_client',
+            attempts: item.attempts + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', item.id);
 
         successCount++;
-        console.log(`✅ Completed: ${item.artist} - ${item.title}`);
+        console.log(`✅ Marked ready for client: ${item.artist} - ${item.title}`);
 
       } catch (itemError) {
         console.error(`❌ Error processing item ${item.id}:`, itemError);

@@ -524,6 +524,9 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
                   console.warn('⚠️ Fallback Facebook post also failed:', fbErr);
                 }
               }
+            } catch (postErr) {
+              console.warn('⚠️ Auto-post to Facebook failed (non-blocking):', postErr);
+            }
           }
         }
       } catch (blogErr) {
@@ -556,3 +559,4 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
     );
   }
 });
+

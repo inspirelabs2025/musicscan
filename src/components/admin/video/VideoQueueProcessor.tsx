@@ -36,14 +36,19 @@ export const VideoQueueProcessor: React.FC<VideoQueueProcessorProps> = ({
   durationPerImage = 3
 }) => {
   const queryClient = useQueryClient();
-  const [isAutoProcessing, setIsAutoProcessing] = useState(() => {
-    // Load saved setting from localStorage
-    return localStorage.getItem('video-auto-processing') === 'true';
-  });
+  const [isAutoProcessing, setIsAutoProcessing] = useState(false);
   const [currentItem, setCurrentItem] = useState<QueueItem | null>(null);
   const [processedCount, setProcessedCount] = useState(0);
   const [failedCount, setFailedCount] = useState(0);
   const processingRef = useRef(false);
+
+  // Load auto-processing setting from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('video-auto-processing');
+    if (saved === 'true') {
+      setIsAutoProcessing(true);
+    }
+  }, []);
 
   const { generateVideo, uploadVideo, isGenerating, progress } = useClientVideoGenerator();
 

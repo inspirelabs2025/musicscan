@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { VideoQueueProcessor } from '@/components/admin/video/VideoQueueProcessor';
+import { TemplateManager } from '@/components/admin/video/TemplateManager';
 
 interface TikTokQueueItem {
   id: string;
@@ -426,6 +427,9 @@ export default function TikTokVideoAdmin() {
           </Button>
         </div>
       </div>
+
+      {/* Template Manager */}
+      <TemplateManager />
 
       {/* Client-Side Queue Processor */}
       <VideoQueueProcessor 

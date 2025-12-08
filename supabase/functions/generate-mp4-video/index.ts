@@ -7,98 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Simple 5x7 bitmap font for basic characters
-const FONT: Record<string, number[][]> = {
-  'A': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
-  'B': [[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0]],
-  'C': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[0,1,1,1,0]],
-  'D': [[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0]],
-  'E': [[1,1,1,1,1],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
-  'F': [[1,1,1,1,1],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0]],
-  'G': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,0],[1,0,1,1,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
-  'H': [[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
-  'I': [[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[1,1,1,1,1]],
-  'J': [[0,0,1,1,1],[0,0,0,1,0],[0,0,0,1,0],[0,0,0,1,0],[1,0,0,1,0],[1,0,0,1,0],[0,1,1,0,0]],
-  'K': [[1,0,0,0,1],[1,0,0,1,0],[1,0,1,0,0],[1,1,0,0,0],[1,0,1,0,0],[1,0,0,1,0],[1,0,0,0,1]],
-  'L': [[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
-  'M': [[1,0,0,0,1],[1,1,0,1,1],[1,0,1,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
-  'N': [[1,0,0,0,1],[1,1,0,0,1],[1,0,1,0,1],[1,0,0,1,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
-  'O': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
-  'P': [[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0]],
-  'Q': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,1,0,1],[1,0,0,1,0],[0,1,1,0,1]],
-  'R': [[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0],[1,0,1,0,0],[1,0,0,1,0],[1,0,0,0,1]],
-  'S': [[0,1,1,1,1],[1,0,0,0,0],[1,0,0,0,0],[0,1,1,1,0],[0,0,0,0,1],[0,0,0,0,1],[1,1,1,1,0]],
-  'T': [[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],
-  'U': [[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
-  'V': [[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,0,1,0],[0,1,0,1,0],[0,0,1,0,0]],
-  'W': [[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,1,0,1],[1,0,1,0,1],[1,1,0,1,1],[1,0,0,0,1]],
-  'X': [[1,0,0,0,1],[1,0,0,0,1],[0,1,0,1,0],[0,0,1,0,0],[0,1,0,1,0],[1,0,0,0,1],[1,0,0,0,1]],
-  'Y': [[1,0,0,0,1],[1,0,0,0,1],[0,1,0,1,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],
-  'Z': [[1,1,1,1,1],[0,0,0,0,1],[0,0,0,1,0],[0,0,1,0,0],[0,1,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
-  '0': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,1,1],[1,0,1,0,1],[1,1,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
-  '1': [[0,0,1,0,0],[0,1,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,1,1,1,0]],
-  '2': [[0,1,1,1,0],[1,0,0,0,1],[0,0,0,0,1],[0,0,1,1,0],[0,1,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
-  '3': [[0,1,1,1,0],[1,0,0,0,1],[0,0,0,0,1],[0,0,1,1,0],[0,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
-  '4': [[0,0,0,1,0],[0,0,1,1,0],[0,1,0,1,0],[1,0,0,1,0],[1,1,1,1,1],[0,0,0,1,0],[0,0,0,1,0]],
-  '5': [[1,1,1,1,1],[1,0,0,0,0],[1,1,1,1,0],[0,0,0,0,1],[0,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
-  '6': [[0,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
-  '7': [[1,1,1,1,1],[0,0,0,0,1],[0,0,0,1,0],[0,0,1,0,0],[0,1,0,0,0],[0,1,0,0,0],[0,1,0,0,0]],
-  '8': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
-  '9': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,1],[0,0,0,0,1],[0,0,0,0,1],[0,1,1,1,0]],
-  ' ': [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
-  '-': [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[1,1,1,1,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
-  '.': [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,1,0,0]],
-  "'": [[0,0,1,0,0],[0,0,1,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
-  '&': [[0,1,1,0,0],[1,0,0,1,0],[1,0,0,1,0],[0,1,1,0,0],[1,0,0,1,1],[1,0,0,1,0],[0,1,1,0,1]],
-  '(': [[0,0,0,1,0],[0,0,1,0,0],[0,1,0,0,0],[0,1,0,0,0],[0,1,0,0,0],[0,0,1,0,0],[0,0,0,1,0]],
-  ')': [[0,1,0,0,0],[0,0,1,0,0],[0,0,0,1,0],[0,0,0,1,0],[0,0,0,1,0],[0,0,1,0,0],[0,1,0,0,0]],
-};
-
-// Draw text on image with shadow
-function drawText(image: Image, text: string, startX: number, startY: number, color: number, shadowColor: number) {
-  const charWidth = 6; // 5 pixels + 1 spacing
-  const charHeight = 7;
-  const upperText = text.toUpperCase();
-  
-  for (let c = 0; c < upperText.length; c++) {
-    const char = upperText[c];
-    const charData = FONT[char] || FONT[' '];
-    const charX = startX + (c * charWidth);
-    
-    for (let y = 0; y < charHeight; y++) {
-      for (let x = 0; x < 5; x++) {
-        if (charData[y][x] === 1) {
-          const px = charX + x;
-          const py = startY + y;
-          
-          // Draw shadow first (offset by 1)
-          if (px + 2 > 0 && px + 2 <= image.width && py + 2 > 0 && py + 2 <= image.height) {
-            image.setPixelAt(px + 2, py + 2, shadowColor);
-          }
-          
-          // Draw main text
-          if (px + 1 > 0 && px + 1 <= image.width && py + 1 > 0 && py + 1 <= image.height) {
-            image.setPixelAt(px + 1, py + 1, color);
-          }
-        }
-      }
-    }
-  }
-}
-
-// Calculate text width
-function getTextWidth(text: string): number {
-  return text.length * 6; // 5px char + 1px spacing
-}
-
-// Truncate text to fit within max width
-function truncateText(text: string, maxWidth: number): string {
-  const charWidth = 6;
-  const maxChars = Math.floor(maxWidth / charWidth);
-  if (text.length <= maxChars) return text;
-  return text.substring(0, maxChars - 2) + '..';
-}
-
 // Download image and decode to ImageScript Image
 async function downloadAndDecodeImage(url: string): Promise<Image> {
   console.log(`📥 Downloading image from: ${url}`);
@@ -137,6 +45,8 @@ function generateZoomFrame(
   // Frame N: scale = 1.2 (120%) - 20% zoom over full duration
   const progress = frameIndex / Math.max(totalFrames - 1, 1);
   const scale = 1.0 + (progress * 0.2);
+  
+  console.log(`🔍 Frame ${frameIndex}/${totalFrames}: progress=${progress.toFixed(2)}, scale=${scale.toFixed(3)}`);
   
   // Create output image with black background
   const outputImage = new Image(outputWidth, outputHeight);
@@ -188,12 +98,9 @@ function generateZoomFrame(
 async function generateGifVideo(
   imageUrl: string,
   durationSeconds: number = 3,
-  fps: number = 8,
-  artist: string = '',
-  title: string = ''
+  fps: number = 8
 ): Promise<Uint8Array> {
   console.log(`🎬 Generating GIF: ${durationSeconds}s @ ${fps}fps`);
-  console.log(`📝 Artist: "${artist}", Title: "${title}"`);
   
   // Download and decode source image
   const sourceImage = await downloadAndDecodeImage(imageUrl);
@@ -204,10 +111,10 @@ async function generateGifVideo(
   const totalFrames = Math.floor(durationSeconds * fps);
   const frameDelay = Math.floor(1000 / fps); // Delay in ms
   
-  // Create static square overlay (center crop of source image) - BIGGER!
-  const squareSize = 100; // Increased from 80
-  const frameWidth = 5;   // Frame border width
-  const framedSize = squareSize + (frameWidth * 2); // 110 total
+  // Create static square overlay (center crop of source image)
+  const squareSize = 80; // Slightly smaller to make room for frame
+  const frameWidth = 6; // Frame border width
+  const framedSize = squareSize + (frameWidth * 2); // Total size with frame
   
   const minDim = Math.min(sourceImage.width, sourceImage.height);
   const cropX = Math.floor((sourceImage.width - minDim) / 2);
@@ -249,21 +156,6 @@ async function generateGifVideo(
   const overlayX = Math.floor((outputWidth - framedSize) / 2);
   const overlayY = Math.floor((outputHeight - framedSize) / 2);
   
-  // Prepare text (truncate if too long)
-  const maxTextWidth = outputWidth - 10; // 5px padding on each side
-  const artistText = artist ? truncateText(artist.toUpperCase(), maxTextWidth) : '';
-  const titleText = title ? truncateText(title.toUpperCase(), maxTextWidth) : '';
-  
-  // Calculate text positions (centered)
-  const artistWidth = getTextWidth(artistText);
-  const titleWidth = getTextWidth(titleText);
-  const artistX = Math.floor((outputWidth - artistWidth) / 2);
-  const titleX = Math.floor((outputWidth - titleWidth) / 2);
-  
-  // Text Y positions
-  const artistY = overlayY - 15; // Above frame
-  const titleY = overlayY + framedSize + 5; // Below frame
-  
   console.log(`📹 Creating ${totalFrames} frames at ${outputWidth}x${outputHeight} with ${framedSize}x${framedSize} framed overlay`);
   
   // Create frames array
@@ -284,16 +176,6 @@ async function generateGifVideo(
     
     // Composite the framed overlay in the center
     frameImage.composite(framedOverlay, overlayX + 1, overlayY + 1); // 1-indexed
-    
-    // Draw artist name (white with black shadow)
-    if (artistText) {
-      drawText(frameImage, artistText, artistX, artistY, 0xFFFFFFFF, 0x000000FF);
-    }
-    
-    // Draw title (white with black shadow)
-    if (titleText) {
-      drawText(frameImage, titleText, titleX, titleY, 0xFFFFFFFF, 0x000000FF);
-    }
     
     // Create frame with delay (in 10ms units for GIF)
     const frame = Frame.from(frameImage, frameDelay / 10);
@@ -322,7 +204,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { imageUrl, queueItemId, durationSeconds = 3, fps = 8, artist = '', title = '' } = await req.json();
+    const { imageUrl, queueItemId, durationSeconds = 3, fps = 8 } = await req.json();
 
     if (!imageUrl) {
       return new Response(
@@ -333,8 +215,8 @@ serve(async (req) => {
 
     console.log(`🎥 Processing GIF for queue item: ${queueItemId || 'manual'}`);
 
-    // Generate GIF with artist/title text
-    const gifData = await generateGifVideo(imageUrl, durationSeconds, fps, artist, title);
+    // Generate GIF
+    const gifData = await generateGifVideo(imageUrl, durationSeconds, fps);
 
     // Generate unique filename
     const timestamp = Date.now();

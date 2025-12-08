@@ -97,8 +97,8 @@ function generateZoomFrame(
 
 async function generateGifVideo(
   imageUrl: string,
-  durationSeconds: number = 3,
-  fps: number = 5 // Reduced from 8 to prevent CPU timeout
+  durationSeconds: number = 6,  // Longer duration for slower animation
+  fps: number = 3 // Lower FPS for smoother, slower zoom effect
 ): Promise<Uint8Array> {
   console.log(`🎬 Generating GIF: ${durationSeconds}s @ ${fps}fps`);
   

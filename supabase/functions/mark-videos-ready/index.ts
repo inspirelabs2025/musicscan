@@ -16,9 +16,9 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log("Mark videos ready - checking pending items...");
+    console.log("Mark videos ready - checking pending and stuck processing items...");
 
-    // Get pending items and mark them as ready_for_client
+    // Get pending items
     const { data: pendingItems, error: fetchError } = await supabase
       .from("tiktok_video_queue")
       .select("id, artist, title")
@@ -31,16 +31,34 @@ serve(async (req) => {
       throw fetchError;
     }
 
-    if (!pendingItems || pendingItems.length === 0) {
-      console.log("No pending items to mark as ready");
+    // Also get stuck processing items (older than 5 minutes)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { data: stuckItems, error: stuckError } = await supabase
+      .from("tiktok_video_queue")
+      .select("id, artist, title")
+      .eq("status", "processing")
+      .lt("updated_at", fiveMinutesAgo)
+      .limit(10);
+
+    if (stuckError) {
+      console.error("Error fetching stuck items:", stuckError);
+    }
+
+    const allItems = [...(pendingItems || []), ...(stuckItems || [])];
+
+    if (allItems.length === 0) {
+      console.log("No pending or stuck items to mark as ready");
       return new Response(
         JSON.stringify({ success: true, message: "No pending items", markedCount: 0 }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const ids = pendingItems.map((item) => item.id);
-    console.log(`Marking ${ids.length} items as ready_for_client:`, pendingItems.map(i => `${i.artist} - ${i.title}`));
+    const ids = allItems.map((item) => item.id);
+    console.log(`Marking ${ids.length} items as ready_for_client:`, allItems.map(i => `${i.artist} - ${i.title}`));
+    if (stuckItems?.length) {
+      console.log(`Including ${stuckItems.length} stuck processing items`);
+    }
 
     const { error: updateError, count } = await supabase
       .from("tiktok_video_queue")

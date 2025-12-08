@@ -199,13 +199,9 @@ export const VideoQueueProcessor: React.FC<VideoQueueProcessorProps> = ({
   };
 
   const toggleAutoProcessing = () => {
-    if (!isAutoProcessing && readyItems.length === 0) {
-      toast.error('Geen items in queue om te verwerken');
-      return;
-    }
     setIsAutoProcessing(!isAutoProcessing);
     if (!isAutoProcessing) {
-      toast.success('Auto-processing gestart');
+      toast.success('Auto-processing gestart - wacht op items in queue');
     } else {
       toast.info('Auto-processing gepauzeerd');
     }

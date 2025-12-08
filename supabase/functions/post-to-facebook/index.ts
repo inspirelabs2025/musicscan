@@ -138,12 +138,15 @@ Deno.serve(async (req) => {
       appsecret_proof: appsecretProof,
     };
 
-    // Priority: video_url > image_url > text only
+    // Priority: video_url > image_url > text only (with fallback)
     let response;
+    let usedMediaType = 'text';
+    
     if (video_url) {
-      // Post as video (GIF/MP4)
+      // Try to post as video (GIF/MP4)
       const videoApiUrl = `https://graph.facebook.com/v18.0/${pageId}/videos`;
-      console.log(`🎬 Posting video to Facebook: ${video_url}`);
+      console.log(`🎬 Attempting video post to Facebook: ${video_url}`);
+      
       response = await fetch(videoApiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -154,6 +157,26 @@ Deno.serve(async (req) => {
           description: postMessage,
         }),
       });
+      
+      // Check if video post failed - fallback to image if available
+      if (!response.ok && image_url) {
+        const videoError = await response.json();
+        console.warn(`⚠️ Video post failed, falling back to image: ${videoError.error?.message}`);
+        
+        const photoApiUrl = `https://graph.facebook.com/v18.0/${pageId}/photos`;
+        response = await fetch(photoApiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            ...postBody,
+            url: image_url,
+            caption: postMessage,
+          }),
+        });
+        usedMediaType = 'image (fallback)';
+      } else {
+        usedMediaType = 'video';
+      }
     } else if (image_url) {
       // Post as photo
       const photoApiUrl = `https://graph.facebook.com/v18.0/${pageId}/photos`;
@@ -166,6 +189,7 @@ Deno.serve(async (req) => {
           caption: postMessage,
         }),
       });
+      usedMediaType = 'image';
     } else {
       // Text only post
       response = await fetch(fbApiUrl, {
@@ -174,6 +198,8 @@ Deno.serve(async (req) => {
         body: new URLSearchParams(postBody),
       });
     }
+    
+    console.log(`📤 Posted using: ${usedMediaType}`);
 
     const result = await response.json();
 

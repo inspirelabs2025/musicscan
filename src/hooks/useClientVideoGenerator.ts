@@ -275,7 +275,7 @@ export const useClientVideoGenerator = () => {
     const filePath = `videos/${Date.now()}_${filename}.webm`;
     
     const { error: uploadError } = await supabase.storage
-      .from('tiktok_videos')
+      .from('tiktok-videos')
       .upload(filePath, blob, { contentType: 'video/webm' });
 
     if (uploadError) {
@@ -283,7 +283,7 @@ export const useClientVideoGenerator = () => {
     }
 
     const { data: { publicUrl } } = supabase.storage
-      .from('tiktok_videos')
+      .from('tiktok-videos')
       .getPublicUrl(filePath);
 
     return publicUrl;

@@ -21,10 +21,12 @@ import { VideoQueueProcessor } from '@/components/admin/video/VideoQueueProcesso
 interface TikTokQueueItem {
   id: string;
   blog_id: string | null;
+  music_story_id: string | null;
   album_cover_url: string;
   artist: string | null;
   title: string | null;
   status: string;
+  priority: number;
   operation_name: string | null;
   video_url: string | null;
   error_message: string | null;
@@ -86,6 +88,7 @@ export default function TikTokVideoAdmin() {
       const { data, error } = await supabase
         .from('tiktok_video_queue')
         .select('*')
+        .order('priority', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(100);
       
@@ -799,8 +802,10 @@ export default function TikTokVideoAdmin() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Cover</TableHead>
+                  <TableHead>Bron</TableHead>
                   <TableHead>Artiest</TableHead>
                   <TableHead>Titel</TableHead>
+                  <TableHead>Priority</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Pogingen</TableHead>
                   <TableHead>Aangemaakt</TableHead>
@@ -808,60 +813,76 @@ export default function TikTokVideoAdmin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {queueItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      {item.album_cover_url && (
-                        <img 
-                          src={item.album_cover_url} 
-                          alt="Album cover" 
-                          className="w-12 h-12 object-cover rounded"
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {item.artist || '-'}
-                    </TableCell>
-                    <TableCell>
-                      {item.title || '-'}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(item.status)}</TableCell>
-                    <TableCell>{item.attempts}/{item.max_attempts}</TableCell>
-                    <TableCell>
-                      {safeFormatDate(item.created_at, 'dd MMM HH:mm')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {item.video_url ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openVideoPreview(item)}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            Bekijk
-                          </Button>
-                        ) : item.status === 'failed' ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => retryItem.mutate(item)}
-                            disabled={retryItem.isPending}
-                          >
-                            <RotateCcw className="w-4 h-4 mr-1" />
-                            Retry
-                          </Button>
-                        ) : item.error_message ? (
-                          <span className="text-destructive text-xs max-w-[150px] truncate" title={item.error_message}>
-                            {item.error_message}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
+                {queueItems.map((item) => {
+                  const sourceType = item.music_story_id ? 'single' : item.blog_id ? 'album' : 'manual';
+                  const sourceLabel = sourceType === 'single' ? '🎵 Single' : sourceType === 'album' ? '💿 Album' : '📷 Handmatig';
+                  const sourceBadgeVariant = sourceType === 'single' ? 'default' : sourceType === 'album' ? 'secondary' : 'outline';
+                  
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        {item.album_cover_url && (
+                          <img 
+                            src={item.album_cover_url} 
+                            alt="Album cover" 
+                            className="w-12 h-12 object-cover rounded"
+                          />
                         )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={sourceBadgeVariant as "default" | "secondary" | "outline"}>
+                          {sourceLabel}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {item.artist || '-'}
+                      </TableCell>
+                      <TableCell>
+                        {item.title || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={item.priority >= 100 ? "default" : item.priority > 0 ? "secondary" : "outline"}>
+                          {item.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(item.status)}</TableCell>
+                      <TableCell>{item.attempts}/{item.max_attempts}</TableCell>
+                      <TableCell>
+                        {safeFormatDate(item.created_at, 'dd MMM HH:mm')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {item.video_url ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openVideoPreview(item)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              Bekijk
+                            </Button>
+                          ) : item.status === 'failed' ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => retryItem.mutate(item)}
+                              disabled={retryItem.isPending}
+                            >
+                              <RotateCcw className="w-4 h-4 mr-1" />
+                              Retry
+                            </Button>
+                          ) : item.error_message ? (
+                            <span className="text-destructive text-xs max-w-[150px] truncate" title={item.error_message}>
+                              {item.error_message}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

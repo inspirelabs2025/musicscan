@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink, Eye, RotateCcw, StopCircle, Upload, Download, TestTube, Zap } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, RefreshCw, Video, CheckCircle, XCircle, Clock, Play, ExternalLink, Eye, RotateCcw, StopCircle, Upload, Download, TestTube, Zap, Music, Disc } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -53,6 +54,8 @@ export default function TikTokVideoAdmin() {
   const queryClient = useQueryClient();
   const [selectedVideo, setSelectedVideo] = useState<TikTokQueueItem | null>(null);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [queueTab, setQueueTab] = useState<'pending' | 'completed' | 'failed'>('completed');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'album' | 'single'>('all');
 
   // Realtime subscription for immediate updates
   useEffect(() => {
@@ -559,115 +562,290 @@ export default function TikTokVideoAdmin() {
         </Card>
       </div>
 
-      {/* Queue Table */}
+      {/* Queue Tabs */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Video className="w-5 h-5" />
-            Video Queue
-          </CardTitle>
-          <CardDescription>
-            Recente video generatie opdrachten
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Video className="w-5 h-5" />
+                Video Queue
+              </CardTitle>
+              <CardDescription>
+                Bekijk gegenereerde GIF's en queue status
+              </CardDescription>
+            </div>
+            <Select value={sourceFilter} onValueChange={(v) => setSourceFilter(v as 'all' | 'album' | 'single')}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Filter bron" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle bronnen</SelectItem>
+                <SelectItem value="album">💿 Albums</SelectItem>
+                <SelectItem value="single">🎵 Singles</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : queueItems.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Geen video's in de queue
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cover</TableHead>
-                  <TableHead>Bron</TableHead>
-                  <TableHead>Artiest</TableHead>
-                  <TableHead>Titel</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Pogingen</TableHead>
-                  <TableHead>Aangemaakt</TableHead>
-                  <TableHead>Acties</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {queueItems.map((item) => {
-                  const sourceType = item.music_story_id ? 'single' : item.blog_id ? 'album' : 'manual';
-                  const sourceLabel = sourceType === 'single' ? '🎵 Single' : sourceType === 'album' ? '💿 Album' : '📷 Handmatig';
-                  const sourceBadgeVariant = sourceType === 'single' ? 'default' : sourceType === 'album' ? 'secondary' : 'outline';
-                  
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        {item.album_cover_url && (
-                          <img 
-                            src={item.album_cover_url} 
-                            alt="Album cover" 
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={sourceBadgeVariant as "default" | "secondary" | "outline"}>
-                          {sourceLabel}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {item.artist || '-'}
-                      </TableCell>
-                      <TableCell>
-                        {item.title || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={item.priority >= 100 ? "default" : item.priority > 0 ? "secondary" : "outline"}>
-                          {item.priority}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(item.status)}</TableCell>
-                      <TableCell>{item.attempts}/{item.max_attempts}</TableCell>
-                      <TableCell>
-                        {safeFormatDate(item.created_at, 'dd MMM HH:mm')}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {item.video_url ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
+          <Tabs value={queueTab} onValueChange={(v) => setQueueTab(v as 'pending' | 'completed' | 'failed')}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="completed" className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                Voltooid ({stats?.completed || 0})
+              </TabsTrigger>
+              <TabsTrigger value="pending" className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Wachtrij ({(stats?.pending || 0) + (stats?.processing || 0)})
+              </TabsTrigger>
+              <TabsTrigger value="failed" className="flex items-center gap-2">
+                <XCircle className="w-4 h-4" />
+                Mislukt ({stats?.failed || 0})
+              </TabsTrigger>
+            </TabsList>
+
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                {/* Completed Tab - Grid with GIF previews */}
+                <TabsContent value="completed" className="mt-0">
+                  {(() => {
+                    const completedItems = queueItems
+                      .filter(item => item.status === 'completed')
+                      .filter(item => {
+                        if (sourceFilter === 'all') return true;
+                        if (sourceFilter === 'album') return !!item.blog_id && !item.music_story_id;
+                        if (sourceFilter === 'single') return !!item.music_story_id;
+                        return true;
+                      });
+                    
+                    if (completedItems.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-muted-foreground">
+                          Nog geen voltooide GIF's
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        {completedItems.map((item) => {
+                          const sourceType = item.music_story_id ? 'single' : item.blog_id ? 'album' : 'manual';
+                          return (
+                            <div 
+                              key={item.id} 
+                              className="group relative bg-card border rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
                               onClick={() => openVideoPreview(item)}
                             >
-                              <Eye className="w-4 h-4 mr-1" />
-                              Bekijk
-                            </Button>
-                          ) : item.status === 'failed' ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => retryItem.mutate(item)}
-                              disabled={retryItem.isPending}
-                            >
-                              <RotateCcw className="w-4 h-4 mr-1" />
-                              Retry
-                            </Button>
-                          ) : item.error_message ? (
-                            <span className="text-destructive text-xs max-w-[150px] truncate" title={item.error_message}>
-                              {item.error_message}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
+                              {/* GIF/Video Preview */}
+                              <div className="aspect-[9/16] bg-muted relative">
+                                {item.video_url ? (
+                                  item.video_url.toLowerCase().endsWith('.gif') ? (
+                                    <img 
+                                      src={item.video_url} 
+                                      alt={`${item.artist} - ${item.title}`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <video 
+                                      src={item.video_url}
+                                      className="w-full h-full object-cover"
+                                      muted
+                                      loop
+                                      onMouseEnter={(e) => e.currentTarget.play()}
+                                      onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                    />
+                                  )
+                                ) : item.album_cover_url ? (
+                                  <img 
+                                    src={item.album_cover_url} 
+                                    alt={`${item.artist} - ${item.title}`}
+                                    className="w-full h-full object-cover opacity-50"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Video className="w-8 h-8 text-muted-foreground" />
+                                  </div>
+                                )}
+                                
+                                {/* Source Badge */}
+                                <div className="absolute top-2 left-2">
+                                  <Badge variant={sourceType === 'single' ? 'default' : 'secondary'} className="text-xs">
+                                    {sourceType === 'single' ? (
+                                      <><Music className="w-3 h-3 mr-1" /> Single</>
+                                    ) : (
+                                      <><Disc className="w-3 h-3 mr-1" /> Album</>
+                                    )}
+                                  </Badge>
+                                </div>
+
+                                {/* Hover overlay */}
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <Eye className="w-8 h-8 text-white" />
+                                </div>
+                              </div>
+
+                              {/* Info */}
+                              <div className="p-3 space-y-1">
+                                <p className="font-medium text-sm truncate">{item.artist || 'Onbekend'}</p>
+                                <p className="text-xs text-muted-foreground truncate">{item.title || 'Zonder titel'}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {safeFormatDate(item.processed_at || item.updated_at, 'dd MMM HH:mm')}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </TabsContent>
+
+                {/* Pending Tab - Table view */}
+                <TabsContent value="pending" className="mt-0">
+                  {(() => {
+                    const pendingItems = queueItems
+                      .filter(item => item.status === 'pending' || item.status === 'processing' || item.status === 'ready_for_client')
+                      .filter(item => {
+                        if (sourceFilter === 'all') return true;
+                        if (sourceFilter === 'album') return !!item.blog_id && !item.music_story_id;
+                        if (sourceFilter === 'single') return !!item.music_story_id;
+                        return true;
+                      });
+                    
+                    if (pendingItems.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-muted-foreground">
+                          Geen items in de wachtrij
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
+                      );
+                    }
+
+                    return (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Cover</TableHead>
+                            <TableHead>Bron</TableHead>
+                            <TableHead>Artiest</TableHead>
+                            <TableHead>Titel</TableHead>
+                            <TableHead>Priority</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Aangemaakt</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {pendingItems.slice(0, 50).map((item) => {
+                            const sourceType = item.music_story_id ? 'single' : item.blog_id ? 'album' : 'manual';
+                            const sourceLabel = sourceType === 'single' ? '🎵 Single' : sourceType === 'album' ? '💿 Album' : '📷 Handmatig';
+                            
+                            return (
+                              <TableRow key={item.id}>
+                                <TableCell>
+                                  {item.album_cover_url && (
+                                    <img src={item.album_cover_url} alt="Cover" className="w-10 h-10 object-cover rounded" />
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant={sourceType === 'single' ? 'default' : 'secondary'}>{sourceLabel}</Badge>
+                                </TableCell>
+                                <TableCell className="font-medium">{item.artist || '-'}</TableCell>
+                                <TableCell>{item.title || '-'}</TableCell>
+                                <TableCell>
+                                  <Badge variant={item.priority >= 100 ? 'default' : 'outline'}>{item.priority}</Badge>
+                                </TableCell>
+                                <TableCell>{getStatusBadge(item.status)}</TableCell>
+                                <TableCell>{safeFormatDate(item.created_at, 'dd MMM HH:mm')}</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    );
+                  })()}
+                </TabsContent>
+
+                {/* Failed Tab - Table with retry */}
+                <TabsContent value="failed" className="mt-0">
+                  {(() => {
+                    const failedItems = queueItems
+                      .filter(item => item.status === 'failed')
+                      .filter(item => {
+                        if (sourceFilter === 'all') return true;
+                        if (sourceFilter === 'album') return !!item.blog_id && !item.music_story_id;
+                        if (sourceFilter === 'single') return !!item.music_story_id;
+                        return true;
+                      });
+                    
+                    if (failedItems.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-muted-foreground">
+                          Geen mislukte items
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Cover</TableHead>
+                            <TableHead>Bron</TableHead>
+                            <TableHead>Artiest</TableHead>
+                            <TableHead>Titel</TableHead>
+                            <TableHead>Foutmelding</TableHead>
+                            <TableHead>Pogingen</TableHead>
+                            <TableHead>Actie</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {failedItems.map((item) => {
+                            const sourceType = item.music_story_id ? 'single' : item.blog_id ? 'album' : 'manual';
+                            const sourceLabel = sourceType === 'single' ? '🎵 Single' : sourceType === 'album' ? '💿 Album' : '📷 Handmatig';
+                            
+                            return (
+                              <TableRow key={item.id}>
+                                <TableCell>
+                                  {item.album_cover_url && (
+                                    <img src={item.album_cover_url} alt="Cover" className="w-10 h-10 object-cover rounded" />
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant={sourceType === 'single' ? 'default' : 'secondary'}>{sourceLabel}</Badge>
+                                </TableCell>
+                                <TableCell className="font-medium">{item.artist || '-'}</TableCell>
+                                <TableCell>{item.title || '-'}</TableCell>
+                                <TableCell>
+                                  <span className="text-destructive text-xs max-w-[200px] truncate block" title={item.error_message || ''}>
+                                    {item.error_message || '-'}
+                                  </span>
+                                </TableCell>
+                                <TableCell>{item.attempts}/{item.max_attempts}</TableCell>
+                                <TableCell>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => retryItem.mutate(item)}
+                                    disabled={retryItem.isPending}
+                                  >
+                                    <RotateCcw className="w-4 h-4 mr-1" />
+                                    Retry
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    );
+                  })()}
+                </TabsContent>
+              </>
+            )}
+          </Tabs>
         </CardContent>
       </Card>
 

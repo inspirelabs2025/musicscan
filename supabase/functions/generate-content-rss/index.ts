@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
 
       const { data: blogs, error } = await supabase
         .from('blog_posts')
-        .select('id, slug, album_cover_url, published_at, yaml_frontmatter, markdown_content')
+        .select('id, slug, album_cover_url, published_at, yaml_frontmatter, markdown_content, tiktok_video_url')
         .eq('is_published', true)
         .order('published_at', { ascending: false })
         .limit(limit);
@@ -86,6 +86,7 @@ Deno.serve(async (req) => {
           description,
           pubDate: new Date(blog.published_at || Date.now()).toUTCString(),
           imageUrl: blog.album_cover_url,
+          videoUrl: blog.tiktok_video_url,
           categories,
         };
       });
@@ -119,7 +120,9 @@ ${items.map(item => `    <item>
       <pubDate>${item.pubDate}</pubDate>
       <guid isPermaLink="false">${escapeXml(item.id)}</guid>
 ${item.categories.map((cat: string) => `      <category>${escapeXml(cat)}</category>`).join('\n')}
-${item.imageUrl ? `      <media:content url="${escapeXml(item.imageUrl)}" medium="image" type="image/jpeg"/>
+${item.videoUrl ? `      <media:content url="${escapeXml(item.videoUrl)}" medium="video" type="image/gif"/>
+      <enclosure url="${escapeXml(item.videoUrl)}" length="0" type="image/gif"/>` : 
+  item.imageUrl ? `      <media:content url="${escapeXml(item.imageUrl)}" medium="image" type="image/jpeg"/>
       <enclosure url="${escapeXml(item.imageUrl)}" length="0" type="image/jpeg"/>` : ''}
     </item>`).join('\n')}
   </channel>

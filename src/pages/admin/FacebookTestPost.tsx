@@ -92,10 +92,12 @@ const FacebookTestPost = () => {
 
     setIsPosting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("post-to-facebook-test", {
+      const { data, error } = await supabase.functions.invoke("post-to-facebook", {
         body: {
-          message: testMessage,
-          imageUrl: testImageUrl || undefined,
+          content_type: "test",
+          title: "Test Post",
+          content: testMessage,
+          image_url: testImageUrl || undefined,
           usePage2: selectedPage === "page2"
         }
       });

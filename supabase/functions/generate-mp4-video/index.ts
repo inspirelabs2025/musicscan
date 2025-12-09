@@ -224,48 +224,76 @@ serve(async (req) => {
     const timestamp = Date.now();
     const filename = `videos/${timestamp}_${queueItemId?.substring(0, 8) || 'manual'}.gif`;
 
-    // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('tiktok-videos')
-      .upload(filename, gifData, {
-        contentType: 'image/gif',
-        upsert: true,
-      });
+    // Pre-generate public URL (predictable path)
+    const publicUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/tiktok-videos/${filename}`;
 
-    if (uploadError) {
-      console.error('❌ Upload error:', uploadError);
-      throw new Error(`Failed to upload: ${uploadError.message}`);
-    }
+    console.log(`📤 Starting background upload for: ${filename} (${gifData.byteLength} bytes)`);
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('tiktok-videos')
-      .getPublicUrl(filename);
+    // Upload and update in background to avoid CPU timeout
+    const backgroundTask = async () => {
+      try {
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('tiktok-videos')
+          .upload(filename, gifData, {
+            contentType: 'image/gif',
+            upsert: true,
+          });
 
-    console.log(`✅ GIF uploaded: ${urlData.publicUrl}`);
+        if (uploadError) {
+          console.error('❌ Background upload error:', uploadError);
+          if (queueItemId) {
+            await supabase.from('tiktok_video_queue').update({
+              status: 'failed',
+              error_message: `Upload failed: ${uploadError.message}`,
+              updated_at: new Date().toISOString(),
+            }).eq('id', queueItemId);
+          }
+          return;
+        }
 
-    // Update queue item if provided
-    if (queueItemId) {
-      const { error: updateError } = await supabase
-        .from('tiktok_video_queue')
-        .update({
-          status: 'completed',
-          video_url: urlData.publicUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', queueItemId);
+        console.log(`✅ GIF uploaded: ${publicUrl}`);
 
-      if (updateError) {
-        console.error('⚠️ Failed to update queue item:', updateError);
+        // Update queue item if provided
+        if (queueItemId) {
+          const { error: updateError } = await supabase
+            .from('tiktok_video_queue')
+            .update({
+              status: 'completed',
+              video_url: publicUrl,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', queueItemId);
+
+          if (updateError) {
+            console.error('⚠️ Failed to update queue item:', updateError);
+          } else {
+            console.log(`✅ Queue item ${queueItemId} marked completed`);
+          }
+        }
+      } catch (err) {
+        console.error('❌ Background task error:', err);
+        if (queueItemId) {
+          await supabase.from('tiktok_video_queue').update({
+            status: 'failed',
+            error_message: `Background error: ${err.message}`,
+            updated_at: new Date().toISOString(),
+          }).eq('id', queueItemId);
+        }
       }
-    }
+    };
 
+    // Use waitUntil to run upload in background
+    EdgeRuntime.waitUntil(backgroundTask());
+
+    // Return immediately after GIF generation
     return new Response(
       JSON.stringify({ 
         success: true, 
-        video_url: urlData.publicUrl,
+        video_url: publicUrl,
         format: 'gif',
         size_bytes: gifData.byteLength,
+        note: 'Upload running in background',
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -192,6 +192,7 @@ const SinglesImporterPage = lazy(() => import("./pages/admin/SinglesImporterPage
 const ArtistStoriesGenerator = lazy(() => import("./pages/admin/ArtistStoriesGenerator"));
 const FacebookSync = lazy(() => import("./pages/admin/FacebookSync"));
 const FacebookAdmin = lazy(() => import("./pages/admin/FacebookAdmin"));
+const FacebookTestPost = lazy(() => import("./pages/admin/FacebookTestPost"));
 const InstagramAdmin = lazy(() => import("./pages/admin/InstagramAdmin"));
 const MetricoolAdmin = lazy(() => import("./pages/admin/MetricoolAdmin"));
 const TikTokVideoAdmin = lazy(() => import("./pages/admin/TikTokVideoAdmin"));
@@ -448,6 +449,7 @@ const AppContent = () => {
         <Route path="/admin/artist-stories-generator" element={<ProtectedRoute><LazyRoute><ArtistStoriesGenerator /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/facebook-sync" element={<ProtectedRoute><LazyRoute><FacebookSync /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/facebook" element={<ProtectedRoute><LazyRoute><FacebookAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/facebook-test" element={<ProtectedRoute><LazyRoute><FacebookTestPost /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/instagram" element={<ProtectedRoute><LazyRoute><InstagramAdmin /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/metricool" element={<ProtectedRoute><LazyRoute><MetricoolAdmin /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/tiktok-videos" element={<ProtectedRoute><LazyRoute><TikTokVideoAdmin /></LazyRoute></ProtectedRoute>} />

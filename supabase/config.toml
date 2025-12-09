@@ -171,12 +171,6 @@ verify_jwt = false
 [functions.optimized-catalog-search]
 verify_jwt = false
 
-[functions.fix-blog-slugs]
-verify_jwt = false
-
-[functions.generate-sitemaps]
-verify_jwt = false
-
 [functions.generate-static-sitemaps]
 verify_jwt = false
 
@@ -207,9 +201,6 @@ verify_jwt = false
 [[functions.sitemap-queue-processor.schedule]]
 cron = "*/3 * * * *"
 
-[functions.serve-sitemap]
-verify_jwt = false
-
 [functions.gsc-sitemap-submit]
 verify_jwt = false
 
@@ -217,9 +208,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-bot-users]
-verify_jwt = false
-
-[functions.fix-bot-user-names]
 verify_jwt = false
 
 [functions.generate-ai-comment]
@@ -231,19 +219,7 @@ verify_jwt = false
 [[functions.indexnow-cron.schedule]]
 cron = "*/15 * * * *"
 
-[functions.verify-sitemaps]
-verify_jwt = false
-
-[functions.verify-blog-coverage]
-verify_jwt = false
-
 [functions.sitemap-proxy]
-verify_jwt = false
-
-[functions.sitemap-index-proxy]
-verify_jwt = false
-
-[functions.sitemaps-proxy]
 verify_jwt = false
 
 [functions.universal-ssr-proxy]
@@ -398,9 +374,6 @@ verify_jwt = false
 
 [[functions.artist-stories-batch-processor.schedule]]
 cron = "* * * * *"
-
-[functions.cleanup-duplicate-blogs]
-verify_jwt = false
 
 [functions.serve-llms-txt]
 verify_jwt = false
@@ -612,9 +585,6 @@ verify_jwt = false
 [functions.ai-photo-analysis-v2]
 verify_jwt = false
 
-[functions.admin-bulk-cleanup-today]
-verify_jwt = false
-
 [functions.admin-shop-orders]
 verify_jwt = false
 
@@ -624,13 +594,7 @@ verify_jwt = false
 [functions.backfill-artist-fanwalls]
 verify_jwt = false
 
-[functions.bulk-fix-art-media-type]
-verify_jwt = false
-
 [functions.check-subscription]
-verify_jwt = false
-
-[functions.cleanup-news-duplicates]
 verify_jwt = false
 
 [functions.album-ai-insights]
@@ -661,9 +625,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.fetch-discogs-images]
-verify_jwt = false
-
-[functions.fix-art-product-titles]
 verify_jwt = false
 
 [functions.generate-news-images]
@@ -697,9 +658,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.update-news-summaries]
-verify_jwt = false
-
-[functions.add-news-summaries]
 verify_jwt = false
 
 [functions.upload-spotlight-image]

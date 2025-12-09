@@ -66,48 +66,57 @@ serve(async (req) => {
           })
           .eq('id', item.id);
 
-        // Call generate-mp4-video for server-side GIF generation
-        // Using very low settings to stay within CPU limits
-        console.log(`📹 Generating GIF for ${item.id}...`);
+        // Try GIF generation, fallback to static image if it fails
+        let videoUrl: string | null = null;
+        let useStaticImage = false;
         
-        const { data: videoResult, error: videoError } = await supabase.functions.invoke('generate-mp4-video', {
-          body: {
-            imageUrl: item.album_cover_url,
-            queueItemId: item.id,
-            durationSeconds: 5,
-            fps: 6  // 30 frames total
+        try {
+          console.log(`📹 Generating GIF for ${item.id}...`);
+          
+          const { data: videoResult, error: videoError } = await supabase.functions.invoke('generate-mp4-video', {
+            body: {
+              imageUrl: item.album_cover_url,
+              queueItemId: item.id,
+              durationSeconds: 3,
+              fps: 2  // Ultra-low: 6 frames total to stay within CPU limits
+            }
+          });
+
+          if (videoError || !videoResult?.success) {
+            console.warn(`⚠️ GIF generation failed, falling back to static image: ${videoError?.message || videoResult?.error}`);
+            useStaticImage = true;
+          } else {
+            videoUrl = videoResult.video_url;
+            console.log(`✅ GIF generated: ${videoUrl} (${videoResult.size_bytes} bytes)`);
           }
-        });
-
-        if (videoError) {
-          throw new Error(`Video generation failed: ${videoError.message}`);
+        } catch (gifError) {
+          console.warn(`⚠️ GIF generation error, falling back to static image:`, gifError);
+          useStaticImage = true;
         }
 
-        if (!videoResult?.success) {
-          throw new Error(videoResult?.error || 'Video generation returned no success');
-        }
-
-        const videoUrl = videoResult.video_url;
-        console.log(`✅ GIF generated: ${videoUrl} (${videoResult.size_bytes} bytes)`);
-
-        // Update queue item status to completed
+        // Update queue item status to completed (with video or image fallback)
         await supabase
           .from('tiktok_video_queue')
           .update({
             status: 'completed',
-            video_url: videoUrl,
+            video_url: videoUrl, // Will be null if using static image
+            error_message: useStaticImage ? 'Fallback to static image' : null,
             updated_at: new Date().toISOString()
           })
           .eq('id', item.id);
 
-        // Post to Facebook with GIF - handle both blog posts AND singles
+        // Post to Facebook with GIF or static image - handle both blog posts AND singles
+        const imageForFacebook = item.album_cover_url;
+        
         if (item.blog_id) {
           // ALBUM BLOG: Update blog post and post to Facebook
-          await supabase
-            .from('blog_posts')
-            .update({ tiktok_video_url: videoUrl })
-            .eq('id', item.blog_id);
-          console.log(`✅ Updated blog post ${item.blog_id} with video URL`);
+          if (videoUrl) {
+            await supabase
+              .from('blog_posts')
+              .update({ tiktok_video_url: videoUrl })
+              .eq('id', item.blog_id);
+            console.log(`✅ Updated blog post ${item.blog_id} with video URL`);
+          }
 
           const { data: blogData } = await supabase
             .from('blog_posts')
@@ -132,7 +141,8 @@ serve(async (req) => {
               
               const blogUrl = `https://www.musicscan.app/plaat-verhaal/${blogData.slug}`;
               
-              console.log(`📱 Posting ALBUM to Facebook with GIF: ${title}`);
+              const mediaType = videoUrl ? 'GIF' : 'static image';
+              console.log(`📱 Posting ALBUM to Facebook with ${mediaType}: ${title}`);
               
               await supabase.functions.invoke('post-to-facebook', {
                 body: {
@@ -140,24 +150,26 @@ serve(async (req) => {
                   title: title,
                   content: summary,
                   url: blogUrl,
-                  video_url: videoUrl,
-                  image_url: blogData.album_cover_url || item.album_cover_url,
+                  video_url: videoUrl, // Will be null if using static image
+                  image_url: blogData.album_cover_url || imageForFacebook,
                   artist: item.artist
                 }
               });
               
-              console.log(`✅ Facebook post created with GIF for album: ${title}`);
+              console.log(`✅ Facebook post created with ${mediaType} for album: ${title}`);
             } catch (fbError) {
               console.warn(`⚠️ Facebook post failed for album (non-blocking):`, fbError);
             }
           }
         } else if (item.music_story_id) {
           // SINGLE: Update music_story and post to Facebook
-          await supabase
-            .from('music_stories')
-            .update({ video_url: videoUrl })
-            .eq('id', item.music_story_id);
-          console.log(`✅ Updated music_story ${item.music_story_id} with video URL`);
+          if (videoUrl) {
+            await supabase
+              .from('music_stories')
+              .update({ video_url: videoUrl })
+              .eq('id', item.music_story_id);
+            console.log(`✅ Updated music_story ${item.music_story_id} with video URL`);
+          }
 
           const { data: storyData } = await supabase
             .from('music_stories')
@@ -181,7 +193,8 @@ serve(async (req) => {
               
               const singleUrl = `https://www.musicscan.app/singles/${storyData.slug}`;
               
-              console.log(`📱 Posting SINGLE to Facebook with GIF: ${artistName} - ${singleTitle}`);
+              const mediaType = videoUrl ? 'GIF' : 'static image';
+              console.log(`📱 Posting SINGLE to Facebook with ${mediaType}: ${artistName} - ${singleTitle}`);
               
               await supabase.functions.invoke('post-to-facebook', {
                 body: {
@@ -189,13 +202,13 @@ serve(async (req) => {
                   title: `${artistName} - ${singleTitle}`,
                   content: summary,
                   url: singleUrl,
-                  video_url: videoUrl,
-                  image_url: storyData.artwork_url || item.album_cover_url,
+                  video_url: videoUrl, // Will be null if using static image
+                  image_url: storyData.artwork_url || imageForFacebook,
                   artist: artistName
                 }
               });
               
-              console.log(`✅ Facebook post created with GIF for single: ${artistName} - ${singleTitle}`);
+              console.log(`✅ Facebook post created with ${mediaType} for single: ${artistName} - ${singleTitle}`);
             } catch (fbError) {
               console.warn(`⚠️ Facebook post failed for single (non-blocking):`, fbError);
             }

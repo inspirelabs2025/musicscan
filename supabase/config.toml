@@ -366,8 +366,6 @@ verify_jwt = false
 [functions.generate-artist-story]
 verify_jwt = false
 
-[functions.backfill-singles-artwork]
-verify_jwt = false
 
 [functions.artist-stories-batch-processor]
 verify_jwt = false
@@ -447,14 +445,10 @@ cron = "0 8 * * *"
 [functions.send-order-email]
 verify_jwt = false
 
-[functions.seed-dutch-artist-stories]
-verify_jwt = false
 
 [functions.fetch-artist-artwork]
 verify_jwt = false
 
-[functions.queue-nl-muziek-artists]
-verify_jwt = false
 
 [functions.generate-quiz-share-image]
 verify_jwt = false
@@ -591,9 +585,6 @@ verify_jwt = false
 [functions.artist-photo-backfill]
 verify_jwt = false
 
-[functions.backfill-artist-fanwalls]
-verify_jwt = false
-
 [functions.check-subscription]
 verify_jwt = false
 
@@ -627,9 +618,6 @@ verify_jwt = false
 [functions.fetch-discogs-images]
 verify_jwt = false
 
-[functions.generate-news-images]
-verify_jwt = false
-
 [functions.generate-static-html]
 verify_jwt = false
 
@@ -655,9 +643,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.threads-token-exchange]
-verify_jwt = false
-
-[functions.update-news-summaries]
 verify_jwt = false
 
 [functions.upload-spotlight-image]

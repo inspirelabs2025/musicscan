@@ -6705,14 +6705,14 @@ export type Database = {
           {
             foreignKeyName: "tiktok_video_queue_blog_id_fkey"
             columns: ["blog_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "blog_posts"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tiktok_video_queue_music_story_id_fkey"
             columns: ["music_story_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "music_stories"
             referencedColumns: ["id"]
           },

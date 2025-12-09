@@ -5238,66 +5238,6 @@ export type Database = {
         }
         Relationships: []
       }
-      render_jobs: {
-        Row: {
-          artist: string | null
-          attempts: number
-          completed_at: string | null
-          created_at: string
-          error_message: string | null
-          id: string
-          image_url: string
-          max_attempts: number
-          output_url: string | null
-          priority: number
-          source_id: string | null
-          source_type: string
-          started_at: string | null
-          status: string
-          title: string | null
-          updated_at: string
-          worker_id: string | null
-        }
-        Insert: {
-          artist?: string | null
-          attempts?: number
-          completed_at?: string | null
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          image_url: string
-          max_attempts?: number
-          output_url?: string | null
-          priority?: number
-          source_id?: string | null
-          source_type: string
-          started_at?: string | null
-          status?: string
-          title?: string | null
-          updated_at?: string
-          worker_id?: string | null
-        }
-        Update: {
-          artist?: string | null
-          attempts?: number
-          completed_at?: string | null
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          image_url?: string
-          max_attempts?: number
-          output_url?: string | null
-          priority?: number
-          source_id?: string | null
-          source_type?: string
-          started_at?: string | null
-          status?: string
-          title?: string | null
-          updated_at?: string
-          worker_id?: string | null
-        }
-        Relationships: []
-      }
       rss_feed_episodes: {
         Row: {
           audio_url: string
@@ -7815,24 +7755,9 @@ export type Database = {
           plan_name: string
         }[]
       }
-      claim_render_job: {
-        Args: { p_worker_id: string }
-        Returns: {
-          artist: string
-          image_url: string
-          job_id: string
-          source_id: string
-          source_type: string
-          title: string
-        }[]
-      }
       cleanup_duplicate_cd_scans: { Args: never; Returns: number }
       cleanup_duplicate_vinyl_scans: { Args: never; Returns: number }
       cleanup_stuck_batch_processes: { Args: never; Returns: undefined }
-      complete_render_job: {
-        Args: { p_job_id: string; p_output_url: string }
-        Returns: undefined
-      }
       decrement_product_stock: {
         Args: { p_product_id: string; p_quantity?: number }
         Returns: boolean
@@ -7841,10 +7766,6 @@ export type Database = {
       extract_discogs_id_from_url: {
         Args: { url_text: string }
         Returns: number
-      }
-      fail_render_job: {
-        Args: { p_error_message: string; p_job_id: string }
-        Returns: undefined
       }
       find_or_create_artist_fanwall: {
         Args: { artist_name_input: string }

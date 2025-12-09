@@ -61,10 +61,7 @@ serve(async (req) => {
     const summary = storyContent.substring(0, 280).replace(/\n/g, ' ').trim() + '...';
     const singleUrl = `https://musicscan.nl/singles/${queueItem.slug}`;
 
-    // Post to Facebook - ALWAYS include image_url for visual posts
-    const imageUrl = queueItem.artwork_url || null;
-    console.log(`📷 Using image for Facebook post: ${imageUrl ? 'Yes' : 'No (missing artwork)'}`);
-    
+    // Post to Facebook
     try {
       const fbResponse = await fetch(`${supabaseUrl}/functions/v1/post-to-facebook`, {
         method: 'POST',
@@ -77,7 +74,7 @@ serve(async (req) => {
           title: `🎵 ${queueItem.artist} - ${queueItem.single_name}`,
           content: summary,
           url: singleUrl,
-          image_url: imageUrl, // Always pass artwork for visual Facebook posts
+          image_url: queueItem.artwork_url,
           artist: queueItem.artist,
           year: year
         })

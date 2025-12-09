@@ -144,8 +144,17 @@ verify_jwt = false
 [functions.format-spotlight-text]
 verify_jwt = true
 
+[functions.add-images-to-spotlight]
+verify_jwt = true
+
 [functions.generate-spotlight-images]
 verify_jwt = true
+
+[functions.insert-images-to-spotlight]
+verify_jwt = true
+
+[functions.test-email-notification]
+verify_jwt = false
 
 [functions.spotify-podcast-manager]
 verify_jwt = true
@@ -169,6 +178,12 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.optimized-catalog-search]
+verify_jwt = false
+
+[functions.fix-blog-slugs]
+verify_jwt = false
+
+[functions.generate-sitemaps]
 verify_jwt = false
 
 [functions.generate-static-sitemaps]
@@ -201,6 +216,9 @@ verify_jwt = false
 [[functions.sitemap-queue-processor.schedule]]
 cron = "*/3 * * * *"
 
+[functions.serve-sitemap]
+verify_jwt = false
+
 [functions.gsc-sitemap-submit]
 verify_jwt = false
 
@@ -208,6 +226,9 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-bot-users]
+verify_jwt = false
+
+[functions.fix-bot-user-names]
 verify_jwt = false
 
 [functions.generate-ai-comment]
@@ -219,7 +240,19 @@ verify_jwt = false
 [[functions.indexnow-cron.schedule]]
 cron = "*/15 * * * *"
 
+[functions.verify-sitemaps]
+verify_jwt = false
+
+[functions.verify-blog-coverage]
+verify_jwt = false
+
 [functions.sitemap-proxy]
+verify_jwt = false
+
+[functions.sitemap-index-proxy]
+verify_jwt = false
+
+[functions.sitemaps-proxy]
 verify_jwt = false
 
 [functions.universal-ssr-proxy]
@@ -366,12 +399,17 @@ verify_jwt = false
 [functions.generate-artist-story]
 verify_jwt = false
 
+[functions.backfill-singles-artwork]
+verify_jwt = false
 
 [functions.artist-stories-batch-processor]
 verify_jwt = false
 
 [[functions.artist-stories-batch-processor.schedule]]
 cron = "* * * * *"
+
+[functions.cleanup-duplicate-blogs]
+verify_jwt = false
 
 [functions.serve-llms-txt]
 verify_jwt = false
@@ -445,10 +483,14 @@ cron = "0 8 * * *"
 [functions.send-order-email]
 verify_jwt = false
 
+[functions.seed-dutch-artist-stories]
+verify_jwt = false
 
 [functions.fetch-artist-artwork]
 verify_jwt = false
 
+[functions.queue-nl-muziek-artists]
+verify_jwt = false
 
 [functions.generate-quiz-share-image]
 verify_jwt = false
@@ -555,6 +597,18 @@ verify_jwt = false
 [[functions.post-scheduled-metricool.schedule]]
 cron = "0 10,13,16,19 * * *"
 
+[functions.image-to-video]
+verify_jwt = false
+
+[functions.image-to-video-status]
+verify_jwt = false
+
+[functions.process-video-queue]
+verify_jwt = false
+
+[[functions.process-video-queue.schedule]]
+cron = "*/5 * * * *"
+
 [functions.fetch-album-artwork]
 verify_jwt = false
 
@@ -570,80 +624,8 @@ verify_jwt = false
 [[functions.process-tiktok-video-queue.schedule]]
 cron = "*/2 * * * *"
 
+[functions.generate-tiktok-video]
+verify_jwt = false
+
 [functions.generate-mp4-video]
-verify_jwt = false
-
-[functions.queue-tiktok-video]
-verify_jwt = false
-
-[functions.ai-photo-analysis-v2]
-verify_jwt = false
-
-[functions.admin-shop-orders]
-verify_jwt = false
-
-[functions.artist-photo-backfill]
-verify_jwt = false
-
-[functions.check-subscription]
-verify_jwt = false
-
-[functions.album-ai-insights]
-verify_jwt = false
-
-[functions.collection-chat]
-verify_jwt = false
-
-[functions.create-checkout]
-verify_jwt = false
-
-[functions.create-guest-shop-payment]
-verify_jwt = false
-
-[functions.create-shop-payment]
-verify_jwt = false
-
-[functions.customer-portal]
-verify_jwt = false
-
-[functions.delete-product]
-verify_jwt = false
-
-[functions.enrich-collection-metadata]
-verify_jwt = false
-
-[functions.fetch-artist-discogs-releases]
-verify_jwt = false
-
-[functions.fetch-discogs-images]
-verify_jwt = false
-
-[functions.generate-static-html]
-verify_jwt = false
-
-[functions.google-sitemap-ping]
-verify_jwt = false
-
-[functions.import-audit-report]
-verify_jwt = false
-
-[functions.notify-search-engines]
-verify_jwt = false
-
-[functions.process-blogs-from-import-log]
-verify_jwt = false
-
-[functions.random-music-query]
-verify_jwt = false
-
-[functions.rss-feed-parser]
-verify_jwt = false
-
-[functions.superadmin-stats]
-verify_jwt = false
-
-[functions.threads-token-exchange]
-verify_jwt = false
-
-[functions.upload-spotlight-image]
 verify_jwt = false

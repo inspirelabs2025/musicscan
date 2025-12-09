@@ -97,24 +97,24 @@ function generateZoomFrame(
 
 async function generateGifVideo(
   imageUrl: string,
-  durationSeconds: number = 5,  // 5 seconds for smooth slow animation
-  fps: number = 3 // Low FPS to stay within CPU limits
+  durationSeconds: number = 10,  // Much longer duration for very slow animation
+  fps: number = 2 // Very low FPS for ultra-slow zoom effect
 ): Promise<Uint8Array> {
   console.log(`🎬 Generating GIF: ${durationSeconds}s @ ${fps}fps`);
   
   // Download and decode source image
   const sourceImage = await downloadAndDecodeImage(imageUrl);
   
-  // Optimized resolution: 270x480 (9:16) - balance between quality and CPU limits
-  const outputWidth = 270;
-  const outputHeight = 480;
+  // Compact format to stay within CPU limits: 160x284 (9:16)
+  const outputWidth = 160;
+  const outputHeight = 284;
   const totalFrames = Math.floor(durationSeconds * fps);
   const frameDelay = Math.floor(1000 / fps); // Delay in ms
   
   // Create static square overlay (center crop of source image)
-  const squareSize = 185; // Sharp square at optimized resolution
-  const frameWidth = 6; // Frame border width proportional to size
-  const framedSize = squareSize + (frameWidth * 2); // Total size with frame = 197
+  const squareSize = 110; // Larger square for better visibility
+  const frameWidth = 5; // Frame border width
+  const framedSize = squareSize + (frameWidth * 2); // Total size with frame = 120
   
   const minDim = Math.min(sourceImage.width, sourceImage.height);
   const cropX = Math.floor((sourceImage.width - minDim) / 2);

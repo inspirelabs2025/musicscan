@@ -18,7 +18,7 @@ const corsHeaders = {
 };
 
 interface PostRequest {
-  content_type: 'anecdote' | 'news' | 'blog' | 'product' | 'youtube_discovery';
+  content_type: 'anecdote' | 'news' | 'blog' | 'product' | 'youtube_discovery' | 'test';
   title: string;
   content: string;
   url?: string;
@@ -27,6 +27,7 @@ interface PostRequest {
   artist?: string;
   year?: number;
   hashtags?: string[]; // Deprecated - smart hashtags are now always used
+  usePage2?: boolean; // Post to Page 2 (MusicScan Dance) instead of Page 1
 }
 
 Deno.serve(async (req) => {
@@ -40,7 +41,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { content_type, title, content, url, image_url, video_url, artist, year }: PostRequest = await req.json();
+    const { content_type, title, content, url, image_url, video_url, artist, year, usePage2 }: PostRequest = await req.json();
 
     if (!content) {
       return new Response(
@@ -49,19 +50,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`📘 Posting to Facebook: ${content_type} - ${title}`);
+    const targetPage = usePage2 ? 'Page 2 (MusicScan Dance)' : 'Page 1 (MusicScan)';
+    console.log(`📘 Posting to Facebook ${targetPage}: ${content_type} - ${title}`);
     console.log(`🎬 Video URL: ${video_url || 'GEEN VIDEO'}`);
     console.log(`📸 Image URL: ${image_url || 'GEEN AFBEELDING'}`);
+
+    // Determine which credentials to fetch based on usePage2
+    const tokenKey = usePage2 ? 'FACEBOOK_PAGE_2_ACCESS_TOKEN' : 'FACEBOOK_PAGE_ACCESS_TOKEN';
+    const pageIdKey = usePage2 ? 'FACEBOOK_PAGE_2_ID' : 'FACEBOOK_PAGE_ID';
 
     // Get Facebook credentials from app_secrets
     const { data: secrets, error: secretsError } = await supabase
       .from('app_secrets')
       .select('secret_key, secret_value')
-      .in('secret_key', ['FACEBOOK_PAGE_ACCESS_TOKEN', 'FACEBOOK_APP_SECRET', 'FACEBOOK_PAGE_ID']);
+      .in('secret_key', [tokenKey, 'FACEBOOK_APP_SECRET', pageIdKey]);
 
     if (secretsError || !secrets || secrets.length === 0) {
       console.error('Failed to fetch Facebook credentials:', secretsError);
-      throw new Error('Facebook credentials not configured');
+      throw new Error(`Facebook credentials not configured for ${targetPage}`);
     }
 
     const credentials: Record<string, string> = {};
@@ -69,12 +75,12 @@ Deno.serve(async (req) => {
       credentials[s.secret_key] = s.secret_value;
     });
 
-    const pageAccessToken = credentials['FACEBOOK_PAGE_ACCESS_TOKEN'];
+    const pageAccessToken = credentials[tokenKey];
     const appSecret = credentials['FACEBOOK_APP_SECRET'];
-    const pageId = credentials['FACEBOOK_PAGE_ID'];
+    const pageId = credentials[pageIdKey];
 
     if (!pageAccessToken || !appSecret || !pageId) {
-      throw new Error('Missing Facebook credentials (PAGE_ACCESS_TOKEN, APP_SECRET, or PAGE_ID)');
+      throw new Error(`Missing Facebook credentials for ${targetPage} (${tokenKey}, APP_SECRET, or ${pageIdKey})`);
     }
 
     // Generate appsecret_proof for secure API calls

@@ -144,17 +144,8 @@ verify_jwt = false
 [functions.format-spotlight-text]
 verify_jwt = true
 
-[functions.add-images-to-spotlight]
-verify_jwt = true
-
 [functions.generate-spotlight-images]
 verify_jwt = true
-
-[functions.insert-images-to-spotlight]
-verify_jwt = true
-
-[functions.test-email-notification]
-verify_jwt = false
 
 [functions.spotify-podcast-manager]
 verify_jwt = true
@@ -597,18 +588,6 @@ verify_jwt = false
 [[functions.post-scheduled-metricool.schedule]]
 cron = "0 10,13,16,19 * * *"
 
-[functions.image-to-video]
-verify_jwt = false
-
-[functions.image-to-video-status]
-verify_jwt = false
-
-[functions.process-video-queue]
-verify_jwt = false
-
-[[functions.process-video-queue.schedule]]
-cron = "*/5 * * * *"
-
 [functions.fetch-album-artwork]
 verify_jwt = false
 
@@ -624,11 +603,104 @@ verify_jwt = false
 [[functions.process-tiktok-video-queue.schedule]]
 cron = "*/2 * * * *"
 
-[functions.generate-tiktok-video]
-verify_jwt = false
-
 [functions.generate-mp4-video]
 verify_jwt = false
 
-[functions.queue-render-job]
+[functions.queue-tiktok-video]
+verify_jwt = false
+
+[functions.ai-photo-analysis-v2]
+verify_jwt = false
+
+[functions.admin-bulk-cleanup-today]
+verify_jwt = false
+
+[functions.admin-shop-orders]
+verify_jwt = false
+
+[functions.artist-photo-backfill]
+verify_jwt = false
+
+[functions.backfill-artist-fanwalls]
+verify_jwt = false
+
+[functions.bulk-fix-art-media-type]
+verify_jwt = false
+
+[functions.check-subscription]
+verify_jwt = false
+
+[functions.cleanup-news-duplicates]
+verify_jwt = false
+
+[functions.album-ai-insights]
+verify_jwt = false
+
+[functions.collection-chat]
+verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.create-guest-shop-payment]
+verify_jwt = false
+
+[functions.create-shop-payment]
+verify_jwt = false
+
+[functions.customer-portal]
+verify_jwt = false
+
+[functions.delete-product]
+verify_jwt = false
+
+[functions.enrich-collection-metadata]
+verify_jwt = false
+
+[functions.fetch-artist-discogs-releases]
+verify_jwt = false
+
+[functions.fetch-discogs-images]
+verify_jwt = false
+
+[functions.fix-art-product-titles]
+verify_jwt = false
+
+[functions.generate-news-images]
+verify_jwt = false
+
+[functions.generate-static-html]
+verify_jwt = false
+
+[functions.google-sitemap-ping]
+verify_jwt = false
+
+[functions.import-audit-report]
+verify_jwt = false
+
+[functions.notify-search-engines]
+verify_jwt = false
+
+[functions.process-blogs-from-import-log]
+verify_jwt = false
+
+[functions.random-music-query]
+verify_jwt = false
+
+[functions.rss-feed-parser]
+verify_jwt = false
+
+[functions.superadmin-stats]
+verify_jwt = false
+
+[functions.threads-token-exchange]
+verify_jwt = false
+
+[functions.update-news-summaries]
+verify_jwt = false
+
+[functions.add-news-summaries]
+verify_jwt = false
+
+[functions.upload-spotlight-image]
 verify_jwt = false

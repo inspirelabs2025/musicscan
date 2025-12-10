@@ -7603,6 +7603,36 @@ export type Database = {
           },
         ]
       }
+      worker_stats: {
+        Row: {
+          created_at: string
+          id: string
+          last_heartbeat: string
+          metadata: Json | null
+          polling_interval_ms: number | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          last_heartbeat?: string
+          metadata?: Json | null
+          polling_interval_ms?: number | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_heartbeat?: string
+          metadata?: Json | null
+          polling_interval_ms?: number | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       year_overview_cache: {
         Row: {
           created_at: string | null

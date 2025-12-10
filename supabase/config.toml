@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.worker_heartbeat]
+verify_jwt = false
+
 [functions.enqueue_render_job]
 verify_jwt = false
 

@@ -4,14 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, RotateCcw, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { RefreshCw, RotateCcw, ChevronLeft, ChevronRight, Loader2, Heart } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
 interface RenderJob {
   id: string;
-  status: 'pending' | 'running' | 'done' | 'error';
+  status: 'pending' | 'running' | 'done' | 'error' | 'poison';
   type: string;
   payload: Record<string, unknown>;
   priority: number;
@@ -28,7 +28,15 @@ interface Stats {
   running: number;
   done: number;
   error: number;
+  poison?: number;
   total: number;
+}
+
+interface WorkerStats {
+  id: string;
+  last_heartbeat: string;
+  polling_interval_ms: number;
+  status: string;
 }
 
 const SUPABASE_URL = 'https://ssxbpyqnjfiyubsuonar.supabase.co';
@@ -38,11 +46,21 @@ const statusColors: Record<string, string> = {
   running: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   done: 'bg-green-500/20 text-green-400 border-green-500/30',
   error: 'bg-red-500/20 text-red-400 border-red-500/30',
+  poison: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+};
+
+const getWorkerStatus = (lastHeartbeat: string | null): { label: string; color: string } => {
+  if (!lastHeartbeat) return { label: 'Offline', color: 'bg-gray-500' };
+  const diff = Date.now() - new Date(lastHeartbeat).getTime();
+  if (diff < 60000) return { label: 'Active', color: 'bg-green-500' };
+  if (diff < 300000) return { label: 'Idle', color: 'bg-yellow-500' };
+  return { label: 'Offline', color: 'bg-red-500' };
 };
 
 export default function RenderJobsPage() {
   const [jobs, setJobs] = useState<RenderJob[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [workerStats, setWorkerStats] = useState<WorkerStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState(false);
   const [requeueingId, setRequeuingId] = useState<string | null>(null);
@@ -51,6 +69,20 @@ export default function RenderJobsPage() {
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
   const limit = 25;
+
+  const fetchWorkerStats = async () => {
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/list_render_jobs?worker_stats=true`
+      );
+      const data = await response.json();
+      if (data.ok && data.worker_stats) {
+        setWorkerStats(data.worker_stats);
+      }
+    } catch (error) {
+      console.error('Error fetching worker stats:', error);
+    }
+  };
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -86,6 +118,7 @@ export default function RenderJobsPage() {
 
   useEffect(() => {
     fetchJobs();
+    fetchWorkerStats();
   }, [statusFilter, offset]);
 
   const handleRetryFailed = async () => {
@@ -180,6 +213,38 @@ export default function RenderJobsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Worker Status Card */}
+      <Card className="border-primary/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Heart className="h-4 w-4 text-red-500" />
+            Worker Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {workerStats ? (
+            <div className="flex items-center gap-6 flex-wrap">
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${getWorkerStatus(workerStats.last_heartbeat).color} animate-pulse`} />
+                <span className="font-medium">{getWorkerStatus(workerStats.last_heartbeat).label}</span>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">ID:</span> {workerStats.id}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">Last heartbeat:</span>{' '}
+                {formatDistanceToNow(new Date(workerStats.last_heartbeat), { addSuffix: true, locale: nl })}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">Polling:</span> {workerStats.polling_interval_ms}ms
+              </div>
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">Geen worker actief</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       {stats && (

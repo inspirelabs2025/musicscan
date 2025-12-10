@@ -37,7 +37,8 @@ import {
   Bell,
   Mic,
   Send,
-  Video
+  Video,
+  Cog
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -142,6 +143,7 @@ const menuItems = [
   {
     title: "Integraties",
     items: [
+      { title: "Render Queue", url: "/admin/render-queue", icon: Cog },
       { title: "TikTok Videos", url: "/admin/tiktok-videos", icon: Video },
       { title: "Metricool Social", url: "/admin/metricool", icon: Send },
       { title: "Facebook Admin", url: "/admin/facebook-admin", icon: Facebook },

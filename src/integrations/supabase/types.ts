@@ -5247,14 +5247,18 @@ export type Database = {
           error_message: string | null
           id: string
           image_url: string
+          locked_at: string | null
           max_attempts: number
           output_url: string | null
+          payload: Json | null
           priority: number
+          result: Json | null
           source_id: string | null
           source_type: string
           started_at: string | null
           status: string
           title: string | null
+          type: string | null
           updated_at: string
           worker_id: string | null
         }
@@ -5266,14 +5270,18 @@ export type Database = {
           error_message?: string | null
           id?: string
           image_url: string
+          locked_at?: string | null
           max_attempts?: number
           output_url?: string | null
+          payload?: Json | null
           priority?: number
+          result?: Json | null
           source_id?: string | null
           source_type: string
           started_at?: string | null
           status?: string
           title?: string | null
+          type?: string | null
           updated_at?: string
           worker_id?: string | null
         }
@@ -5285,14 +5293,18 @@ export type Database = {
           error_message?: string | null
           id?: string
           image_url?: string
+          locked_at?: string | null
           max_attempts?: number
           output_url?: string | null
+          payload?: Json | null
           priority?: number
+          result?: Json | null
           source_id?: string | null
           source_type?: string
           started_at?: string | null
           status?: string
           title?: string | null
+          type?: string | null
           updated_at?: string
           worker_id?: string | null
         }
@@ -7815,6 +7827,10 @@ export type Database = {
           plan_name: string
         }[]
       }
+      claim_next_render_job: {
+        Args: { p_job_types?: string[]; p_worker_id?: string }
+        Returns: Json
+      }
       claim_render_job: {
         Args: { p_worker_id: string }
         Returns: {
@@ -8083,6 +8099,15 @@ export type Database = {
       update_release_aggregated_data: {
         Args: { release_uuid: string }
         Returns: undefined
+      }
+      update_render_job_status: {
+        Args: {
+          p_error_message?: string
+          p_job_id: string
+          p_result?: Json
+          p_status: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

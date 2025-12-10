@@ -485,13 +485,13 @@ export default function RenderQueue() {
             <CardContent className="space-y-3">
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div className="p-3 bg-muted rounded-lg">
-                  <p className="font-medium mb-1">POST /functions/v1/worker-poll</p>
+                  <p className="font-medium mb-1">POST /functions/v1/claim_next_render_job</p>
                   <p className="text-muted-foreground text-xs">
                     Claim next job (beveiligd met X-WORKER-KEY header)
                   </p>
                 </div>
                 <div className="p-3 bg-muted rounded-lg">
-                  <p className="font-medium mb-1">POST /functions/v1/worker-update</p>
+                  <p className="font-medium mb-1">POST /functions/v1/update_render_job_status</p>
                   <p className="text-muted-foreground text-xs">
                     Update job status (beveiligd met X-WORKER-KEY header)
                   </p>

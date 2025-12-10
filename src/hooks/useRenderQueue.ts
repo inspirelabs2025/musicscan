@@ -80,8 +80,8 @@ export function useRenderQueue() {
       }, {} as Record<string, number>);
 
       return {
-        pending: counts.pending || 0,
-        running: (counts.running || 0) + (counts.processing || 0),
+        pending: 0,
+        running: (counts.pending || 0) + (counts.running || 0) + (counts.processing || 0),
         done: (counts.done || 0) + (counts.completed || 0),
         error: (counts.error || 0) + (counts.failed || 0),
         total: counts.total || 0,

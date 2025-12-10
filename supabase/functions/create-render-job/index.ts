@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { type, payload, priority = 0 } = await req.json();
+    const { type, payload, priority = 0, input_url, image_url } = await req.json();
 
     if (!type) {
       return new Response(
@@ -25,21 +25,28 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract image_url from payload for the required column
-    const imageUrl = payload?.album_cover_url || payload?.images?.[0] || null;
+    // Extract image_url from multiple sources (input_url, image_url, payload fields)
+    const resolvedImageUrl = input_url || image_url || payload?.input_url || payload?.image_url || payload?.album_cover_url || payload?.images?.[0] || null;
 
-    console.log(`📥 Creating render job: type=${type}, priority=${priority}, image_url=${imageUrl}`);
+    if (!resolvedImageUrl) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Missing required field: input_url or image_url' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`📥 Creating render job: type=${type}, priority=${priority}, image_url=${resolvedImageUrl}`);
 
     const { data, error } = await supabaseClient
       .from('render_jobs')
       .insert({
         type,
-        payload: payload || {},
+        payload: { ...(payload || {}), input_url: resolvedImageUrl },
         priority,
         status: 'pending',
         attempts: 0,
         max_attempts: 3,
-        image_url: imageUrl,
+        image_url: resolvedImageUrl,
         source_type: 'manual'
       })
       .select('id')

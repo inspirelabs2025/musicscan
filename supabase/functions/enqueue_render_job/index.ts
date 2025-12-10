@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body = await req.json();
-    const { type, payload, priority = 0, request_id } = body;
+    const { type, payload, priority = 0, request_id, input_url, image_url } = body;
 
     // Validate required fields
     if (!type) {
@@ -39,6 +39,16 @@ Deno.serve(async (req) => {
     if (!payload || typeof payload !== 'object') {
       return new Response(
         JSON.stringify({ ok: false, error: 'Missing or invalid payload' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Resolve input_url from multiple sources
+    const resolvedInputUrl = input_url || image_url || payload?.input_url || payload?.image_url || payload?.album_cover_url || payload?.images?.[0] || null;
+
+    if (!resolvedInputUrl) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Missing required field: input_url or image_url' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -65,15 +75,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Extract image_url from payload (required column)
-    const imageUrl = payload?.album_cover_url || payload?.image_url || payload?.images?.[0] || 'pending';
-    
-    // Store request_id in payload for deduplication
-    const enrichedPayload = request_id 
-      ? { ...payload, request_id } 
-      : payload;
+    // Store request_id and input_url in payload for deduplication and worker compatibility
+    const enrichedPayload = {
+      ...payload,
+      input_url: resolvedInputUrl,
+      ...(request_id ? { request_id } : {})
+    };
 
-    console.log(`📥 Enqueueing render job: type=${type}, priority=${priority}, request_id=${request_id || 'none'}`);
+    console.log(`📥 Enqueueing render job: type=${type}, priority=${priority}, input_url=${resolvedInputUrl}, request_id=${request_id || 'none'}`);
 
     // Insert new job
     const { data, error } = await supabaseClient
@@ -85,7 +94,7 @@ Deno.serve(async (req) => {
         status: 'pending',
         attempts: 0,
         max_attempts: 3,
-        image_url: imageUrl,
+        image_url: resolvedInputUrl,
         source_type: 'admin_enqueue'
       })
       .select('id')

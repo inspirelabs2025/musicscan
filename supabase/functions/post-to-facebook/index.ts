@@ -144,46 +144,11 @@ Deno.serve(async (req) => {
       appsecret_proof: appsecretProof,
     };
 
-    // Priority: video_url > image_url > text only (with fallback)
+    // Priority: image_url > text only (video/GIF disabled for now)
     let response;
     let usedMediaType = 'text';
     
-    if (video_url) {
-      // Try to post as video (GIF/MP4)
-      const videoApiUrl = `https://graph.facebook.com/v18.0/${pageId}/videos`;
-      console.log(`🎬 Attempting video post to Facebook: ${video_url}`);
-      
-      response = await fetch(videoApiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          access_token: pageAccessToken,
-          appsecret_proof: appsecretProof,
-          file_url: video_url,
-          description: postMessage,
-        }),
-      });
-      
-      // Check if video post failed - fallback to image if available
-      if (!response.ok && image_url) {
-        const videoError = await response.json();
-        console.warn(`⚠️ Video post failed, falling back to image: ${videoError.error?.message}`);
-        
-        const photoApiUrl = `https://graph.facebook.com/v18.0/${pageId}/photos`;
-        response = await fetch(photoApiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            ...postBody,
-            url: image_url,
-            caption: postMessage,
-          }),
-        });
-        usedMediaType = 'image (fallback)';
-      } else {
-        usedMediaType = 'video';
-      }
-    } else if (image_url) {
+    if (image_url) {
       // Post as photo
       const photoApiUrl = `https://graph.facebook.com/v18.0/${pageId}/photos`;
       response = await fetch(photoApiUrl, {

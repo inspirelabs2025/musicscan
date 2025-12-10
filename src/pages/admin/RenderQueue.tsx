@@ -8,11 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RefreshCw, Trash2, Play, Eye, Plus, Clock, CheckCircle, XCircle, Loader2, Copy, Code, Pause } from 'lucide-react';
+import { RefreshCw, Trash2, Play, Eye, Plus, Clock, CheckCircle, XCircle, Loader2, Copy, Code, Pause, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { generateWorkerExampleCode } from '@/lib/workerClient';
+import { supabase } from '@/integrations/supabase/client';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500',
@@ -336,6 +337,30 @@ export default function RenderQueue() {
                 <CardTitle className="text-2xl text-blue-700">{stats?.running || 0}</CardTitle>
                 <CardDescription className="text-blue-600">Running</CardDescription>
               </CardHeader>
+              {(stats?.running || 0) > 0 && (
+                <CardContent className="pt-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs"
+                    onClick={async () => {
+                      try {
+                        const { data, error } = await supabase.functions.invoke('reset-stuck-render-jobs', {
+                          body: { minutes: 5 }
+                        });
+                        if (error) throw error;
+                        toast.success(`${data.reset_count} stuck jobs gereset naar pending`);
+                        refetch();
+                      } catch (err) {
+                        toast.error('Reset mislukt: ' + (err as Error).message);
+                      }
+                    }}
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1" />
+                    Reset Stuck Jobs
+                  </Button>
+                </CardContent>
+              )}
             </Card>
             <Card className="border-green-200 bg-green-50">
               <CardHeader className="pb-2">

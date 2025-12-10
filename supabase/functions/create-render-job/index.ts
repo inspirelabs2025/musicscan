@@ -25,7 +25,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`📥 Creating render job: type=${type}, priority=${priority}`);
+    // Extract image_url from payload for the required column
+    const imageUrl = payload?.album_cover_url || payload?.images?.[0] || null;
+
+    console.log(`📥 Creating render job: type=${type}, priority=${priority}, image_url=${imageUrl}`);
 
     const { data, error } = await supabaseClient
       .from('render_jobs')
@@ -35,7 +38,9 @@ Deno.serve(async (req) => {
         priority,
         status: 'pending',
         attempts: 0,
-        max_attempts: 3
+        max_attempts: 3,
+        image_url: imageUrl,
+        source_type: 'manual'
       })
       .select('id')
       .single();

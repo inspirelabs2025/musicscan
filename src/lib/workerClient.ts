@@ -67,7 +67,8 @@ export async function updateRenderJob(
   jobId: string,
   status: 'done' | 'error' | 'pending' | 'running',
   result?: Record<string, unknown>,
-  errorMessage?: string
+  errorMessage?: string,
+  outputUrl?: string
 ): Promise<JobUpdateResult> {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/update_render_job_status`, {
     method: 'POST',
@@ -80,6 +81,7 @@ export async function updateRenderJob(
       status,
       result,
       error_message: errorMessage,
+      output_url: outputUrl,
     }),
   });
 
@@ -173,7 +175,7 @@ async function pollForJob() {
   }
 }
 
-async function updateJob(jobId, status, result = null, errorMessage = null) {
+async function updateJob(jobId, status, result = null, errorMessage = null, outputUrl = null) {
   try {
     const res = await fetch(\`\${API_URL}/functions/v1/update_render_job_status\`, {
       method: "POST",
@@ -185,7 +187,8 @@ async function updateJob(jobId, status, result = null, errorMessage = null) {
         id: jobId,
         status,
         result,
-        error_message: errorMessage
+        error_message: errorMessage,
+        output_url: outputUrl
       })
     });
 
@@ -211,17 +214,17 @@ async function processJob(job) {
     // YOUR RENDERING LOGIC HERE
     // ============================================
     // Example for GIF rendering:
-    // const outputUrl = await renderGif(job.payload);
+    // const gifUrl = await renderGif(job.payload);
     
     // Simulate work for demo
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const outputUrl = "https://example.com/output.gif";
+    const gifUrl = "https://example.com/output.gif";
     // ============================================
 
-    // Report success
-    await updateJob(job.id, "done", { output_url: outputUrl });
-    console.log(\`✅ Job \${job.id} completed\`);
+    // Report success with output_url
+    await updateJob(job.id, "done", { gif_url: gifUrl }, null, gifUrl);
+    console.log(\`✅ Job \${job.id} completed - GIF: \${gifUrl}\`);
     
   } catch (error) {
     console.error(\`❌ Job \${job.id} failed:\`, error.message);

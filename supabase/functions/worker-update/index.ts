@@ -30,36 +30,62 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => null);
 
-    if (!body?.id || !body?.status) {
-      console.error('❌ Missing id or status in request body');
+    // Validate required fields
+    if (!body?.id) {
+      console.error('❌ Missing id in request body');
       return new Response(
-        JSON.stringify({ ok: false, error: 'Missing id or status' }),
+        JSON.stringify({ ok: false, error: 'Missing id' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { id, status, result, error_message } = body;
+    if (!body?.status) {
+      console.error('❌ Missing status in request body');
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Missing status' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { id, status, result, error_message, output_url } = body;
 
     console.log(`📝 Worker updating job ${id} to status: ${status}`);
 
-    // Direct table update instead of RPC
+    // Build update object
     const updateData: Record<string, unknown> = {
       status,
       updated_at: new Date().toISOString(),
     };
 
-    if (status === 'done') {
+    // Handle completion states
+    if (status === 'done' || status === 'completed') {
       updateData.completed_at = new Date().toISOString();
+      updateData.locked_at = null;
+      
       if (result) {
         updateData.result = result;
       }
+      
+      // Save output_url - check body first, then extract from result
+      const gifUrl = output_url || result?.gif_url || result?.video_url || result?.url;
+      if (gifUrl) {
+        updateData.output_url = gifUrl;
+        console.log(`✅ Saving output_url: ${gifUrl}`);
+      }
     }
 
-    if (status === 'error' && error_message) {
-      updateData.error_message = error_message;
+    // Handle error states
+    if (status === 'error' || status === 'failed') {
+      updateData.completed_at = new Date().toISOString();
+      updateData.locked_at = null;
+      
+      if (error_message) {
+        updateData.error_message = error_message;
+        updateData.last_error = error_message;
+      }
     }
 
-    const { error, count } = await supabaseClient
+    const { error } = await supabaseClient
       .from('render_jobs')
       .update(updateData)
       .eq('id', id);
@@ -72,7 +98,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`✅ Job ${id} updated to ${status}`);
+    console.log(`✅ Job ${id} updated to ${status}${output_url ? ` with output_url` : ''}`);
 
     return new Response(
       JSON.stringify({ ok: true }),

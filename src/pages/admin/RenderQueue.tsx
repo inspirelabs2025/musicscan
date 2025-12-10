@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRenderQueue, RenderJob } from '@/hooks/useRenderQueue';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,9 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { RefreshCw, Trash2, Play, Eye, Plus, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RefreshCw, Trash2, Play, Eye, Plus, Clock, CheckCircle, XCircle, Loader2, Copy, Code, Pause } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { toast } from 'sonner';
+import { generateWorkerExampleCode } from '@/lib/workerClient';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500',
@@ -200,6 +203,49 @@ function CreateJobDialog({ onSubmit }: { onSubmit: (type: string, payload: Recor
   );
 }
 
+function WorkerExampleCode() {
+  const workerCode = generateWorkerExampleCode('https://ssxbpyqnjfiyubsuonar.supabase.co');
+  
+  const copyCode = () => {
+    navigator.clipboard.writeText(workerCode);
+    toast.success('Code gekopieerd naar clipboard!');
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Code className="h-5 w-5" />
+              Fly.io Worker Code
+            </CardTitle>
+            <CardDescription>
+              Kopieer deze code naar je Fly.io worker
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={copyCode}>
+            <Copy className="h-4 w-4 mr-2" />
+            Kopieer
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="bg-muted p-4 rounded-lg overflow-x-auto max-h-96">
+          <pre className="text-xs font-mono whitespace-pre">{workerCode}</pre>
+        </div>
+        <div className="mt-4 space-y-2 text-sm">
+          <p className="font-medium">Environment variables:</p>
+          <ul className="list-disc list-inside text-muted-foreground space-y-1">
+            <li><code className="bg-muted px-1 rounded">WORKER_API_URL</code> = https://ssxbpyqnjfiyubsuonar.supabase.co</li>
+            <li><code className="bg-muted px-1 rounded">WORKER_SECRET</code> = Je worker secret key</li>
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function RenderQueue() {
   const { 
     jobs, 
@@ -214,6 +260,19 @@ export default function RenderQueue() {
     clearByStatus 
   } = useRenderQueue();
 
+  const [autoRefresh, setAutoRefresh] = useState(true);
+
+  // Auto-refresh every 5 seconds
+  useEffect(() => {
+    if (!autoRefresh) return;
+    
+    const interval = setInterval(() => {
+      refetch();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, refetch]);
+
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -224,8 +283,25 @@ export default function RenderQueue() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant={autoRefresh ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setAutoRefresh(!autoRefresh)}
+          >
+            {autoRefresh ? (
+              <>
+                <Pause className="h-4 w-4 mr-2" />
+                Auto-refresh aan
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 mr-2" />
+                Auto-refresh uit
+              </>
+            )}
+          </Button>
           <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           <CreateJobDialog 
@@ -234,177 +310,207 @@ export default function RenderQueue() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-2xl">{stats?.total || 0}</CardTitle>
-            <CardDescription>Totaal</CardDescription>
-          </CardHeader>
-        </Card>
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-2xl text-yellow-700">{stats?.pending || 0}</CardTitle>
-            <CardDescription className="text-yellow-600">Pending</CardDescription>
-          </CardHeader>
-        </Card>
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-2xl text-blue-700">{stats?.running || 0}</CardTitle>
-            <CardDescription className="text-blue-600">Running</CardDescription>
-          </CardHeader>
-        </Card>
-        <Card className="border-green-200 bg-green-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-2xl text-green-700">{stats?.done || 0}</CardTitle>
-            <CardDescription className="text-green-600">Done</CardDescription>
-          </CardHeader>
-        </Card>
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-2xl text-red-700">{stats?.error || 0}</CardTitle>
-            <CardDescription className="text-red-600">Errors</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+      <Tabs defaultValue="queue">
+        <TabsList>
+          <TabsTrigger value="queue">Queue ({stats?.total || 0})</TabsTrigger>
+          <TabsTrigger value="worker-code">Worker Code</TabsTrigger>
+        </TabsList>
 
-      {/* Filter & Actions */}
-      <div className="flex items-center gap-4">
-        <Select value={statusFilter || 'all'} onValueChange={(v) => setStatusFilter(v === 'all' ? null : v)}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter op status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle statussen</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="running">Running</SelectItem>
-            <SelectItem value="done">Done</SelectItem>
-            <SelectItem value="error">Error</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {(stats?.error || 0) > 0 && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => clearByStatus.mutate('error')}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Clear Errors
-          </Button>
-        )}
-        {(stats?.done || 0) > 0 && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => clearByStatus.mutate('done')}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Clear Done
-          </Button>
-        )}
-      </div>
-
-      {/* Jobs Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Status</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Info</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Attempts</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Acties</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-                  </TableCell>
-                </TableRow>
-              ) : jobs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Geen jobs gevonden
-                  </TableCell>
-                </TableRow>
-              ) : (
-                jobs.map((job) => (
-                  <TableRow key={job.id}>
-                    <TableCell>
-                      <Badge className={`${statusColors[job.status]} flex items-center gap-1 w-fit`}>
-                        {statusIcons[job.status]}
-                        {job.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {job.type || job.source_type || 'N/A'}
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {job.artist && job.title 
-                        ? `${job.artist} - ${job.title}`
-                        : job.payload?.artist && job.payload?.title
-                        ? `${job.payload.artist} - ${job.payload.title}`
-                        : job.id.slice(0, 8)}
-                    </TableCell>
-                    <TableCell>{job.priority}</TableCell>
-                    <TableCell>{job.attempts}/{job.max_attempts}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {format(new Date(job.created_at), 'dd/MM HH:mm', { locale: nl })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <JobDetailsDialog job={job} />
-                        {(job.status === 'error' || job.status === 'failed') && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => retryJob.mutate(job)}
-                          >
-                            <Play className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => deleteJob.mutate(job.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Fly.io Worker Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">🚀 Fly.io Worker</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>
-            De externe Fly.io worker pollt elke 5 seconden <code className="bg-muted px-1 rounded">/functions/v1/get-next-job</code>
-          </p>
-          <p>
-            Na verwerking updatet de worker de status via <code className="bg-muted px-1 rounded">/functions/v1/update-render-job</code>
-          </p>
-          <div className="flex gap-2 mt-4">
-            <Badge variant="outline">SKIP LOCKED atomaire job claiming</Badge>
-            <Badge variant="outline">Max 3 retry attempts</Badge>
-            <Badge variant="outline">5 min stale lock timeout</Badge>
+        <TabsContent value="queue" className="space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-2xl">{stats?.total || 0}</CardTitle>
+                <CardDescription>Totaal</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-2xl text-yellow-700">{stats?.pending || 0}</CardTitle>
+                <CardDescription className="text-yellow-600">Pending</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card className="border-blue-200 bg-blue-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-2xl text-blue-700">{stats?.running || 0}</CardTitle>
+                <CardDescription className="text-blue-600">Running</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card className="border-green-200 bg-green-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-2xl text-green-700">{stats?.done || 0}</CardTitle>
+                <CardDescription className="text-green-600">Done</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card className="border-red-200 bg-red-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-2xl text-red-700">{stats?.error || 0}</CardTitle>
+                <CardDescription className="text-red-600">Errors</CardDescription>
+              </CardHeader>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Filter & Actions */}
+          <div className="flex items-center gap-4">
+            <Select value={statusFilter || 'all'} onValueChange={(v) => setStatusFilter(v === 'all' ? null : v)}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter op status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle statussen</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="running">Running</SelectItem>
+                <SelectItem value="done">Done</SelectItem>
+                <SelectItem value="error">Error</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {(stats?.error || 0) > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => clearByStatus.mutate('error')}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear Errors
+              </Button>
+            )}
+            {(stats?.done || 0) > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => clearByStatus.mutate('done')}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear Done
+              </Button>
+            )}
+          </div>
+
+          {/* Jobs Table */}
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Info</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Attempts</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Acties</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                      </TableCell>
+                    </TableRow>
+                  ) : jobs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        Geen jobs gevonden
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    jobs.map((job) => (
+                      <TableRow key={job.id}>
+                        <TableCell>
+                          <Badge className={`${statusColors[job.status]} flex items-center gap-1 w-fit`}>
+                            {statusIcons[job.status]}
+                            {job.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {job.type || job.source_type || 'N/A'}
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {job.artist && job.title 
+                            ? `${job.artist} - ${job.title}`
+                            : job.payload?.artist && job.payload?.title
+                            ? `${job.payload.artist} - ${job.payload.title}`
+                            : job.id.slice(0, 8)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{job.priority}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className={job.attempts >= job.max_attempts ? 'text-red-500 font-medium' : ''}>
+                            {job.attempts}/{job.max_attempts}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {format(new Date(job.created_at), 'dd/MM HH:mm', { locale: nl })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <JobDetailsDialog job={job} />
+                            {(job.status === 'error' || job.status === 'failed') && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => retryJob.mutate(job)}
+                                title="Retry job"
+                              >
+                                <Play className="h-4 w-4 text-green-500" />
+                              </Button>
+                            )}
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => deleteJob.mutate(job.id)}
+                              title="Delete job"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Worker Endpoints Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">🔌 Worker Endpoints</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="font-medium mb-1">POST /functions/v1/worker-poll</p>
+                  <p className="text-muted-foreground text-xs">
+                    Claim next job (beveiligd met X-WORKER-KEY header)
+                  </p>
+                </div>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="font-medium mb-1">POST /functions/v1/worker-update</p>
+                  <p className="text-muted-foreground text-xs">
+                    Update job status (beveiligd met X-WORKER-KEY header)
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-4">
+                <Badge variant="outline">SKIP LOCKED atomaire claiming</Badge>
+                <Badge variant="outline">Max 3 retry attempts</Badge>
+                <Badge variant="outline">5 min stale lock timeout</Badge>
+                <Badge variant="outline">Priority-based ordering</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="worker-code">
+          <WorkerExampleCode />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

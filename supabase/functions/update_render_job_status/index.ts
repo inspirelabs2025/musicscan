@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { id, status, result, error_message } = body;
+    const { id, status, result, error_message, output_url } = body;
 
     console.log(`📝 Updating job ${id} to status: ${status}`);
 
@@ -52,6 +52,11 @@ Deno.serve(async (req) => {
       updateData.completed_at = new Date().toISOString();
       if (result) {
         updateData.result = result;
+      }
+      // Save output_url from body or extract from result
+      const gifUrl = output_url || result?.gif_url || result?.video_url || result?.url;
+      if (gifUrl) {
+        updateData.output_url = gifUrl;
       }
     }
 

@@ -28,42 +28,47 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { id, status, result, error_message } = await req.json();
+    const body = await req.json().catch(() => null);
 
-    if (!id) {
+    if (!body?.id || !body?.status) {
+      console.error('❌ Missing id or status in request body');
       return new Response(
-        JSON.stringify({ ok: false, error: 'Missing required field: id' }),
+        JSON.stringify({ ok: false, error: 'Missing id or status' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!status || !['done', 'error', 'pending', 'running'].includes(status)) {
-      return new Response(
-        JSON.stringify({ ok: false, error: 'Invalid status. Must be: done, error, pending, or running' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const { id, status, result, error_message } = body;
 
     console.log(`📝 Worker updating job ${id} to status: ${status}`);
 
-    // Use the database function for updating job status
-    const { data: success, error } = await supabaseClient
-      .rpc('update_render_job_status', {
-        p_job_id: id,
-        p_status: status,
-        p_result: result || null,
-        p_error_message: error_message || null
-      });
+    // Direct table update instead of RPC
+    const updateData: Record<string, unknown> = {
+      status,
+      updated_at: new Date().toISOString(),
+    };
 
-    if (error) {
-      console.error('❌ Error updating job:', error);
-      throw error;
+    if (status === 'done') {
+      updateData.completed_at = new Date().toISOString();
+      if (result) {
+        updateData.result = result;
+      }
     }
 
-    if (!success) {
+    if (status === 'error' && error_message) {
+      updateData.error_message = error_message;
+    }
+
+    const { error, count } = await supabaseClient
+      .from('render_jobs')
+      .update(updateData)
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Update error:', error);
       return new Response(
-        JSON.stringify({ ok: false, error: 'Job not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ ok: false, error: error.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

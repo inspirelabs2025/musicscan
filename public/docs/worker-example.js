@@ -13,10 +13,39 @@ import fetch from "node-fetch";
 const API_URL = process.env.WORKER_API_URL || "https://ssxbpyqnjfiyubsuonar.supabase.co";
 const WORKER_SECRET = process.env.WORKER_SECRET;
 const WORKER_ID = process.env.FLY_ALLOC_ID || "fly-worker-" + Date.now();
+const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL || "5000");
+const HEARTBEAT_INTERVAL = 60000; // 1 minute
 
 if (!WORKER_SECRET) {
   console.error("❌ WORKER_SECRET is required");
   process.exit(1);
+}
+
+// Send heartbeat to server every minute
+async function sendHeartbeat() {
+  try {
+    const res = await fetch(`${API_URL}/functions/v1/worker_heartbeat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-WORKER-KEY": WORKER_SECRET
+      },
+      body: JSON.stringify({
+        id: WORKER_ID,
+        ts: new Date().toISOString(),
+        status: "active",
+        polling_interval_ms: POLL_INTERVAL
+      })
+    });
+
+    if (res.ok) {
+      console.log("💓 Heartbeat sent");
+    } else {
+      console.error("❌ Heartbeat failed:", await res.text());
+    }
+  } catch (error) {
+    console.error("❌ Heartbeat error:", error.message);
+  }
 }
 
 async function pollForJob() {
@@ -105,6 +134,14 @@ async function processJob(job) {
 async function mainLoop() {
   console.log(`🚀 Worker ${WORKER_ID} starting...`);
   console.log(`🔗 API URL: ${API_URL}`);
+  console.log(`⏱️ Poll interval: ${POLL_INTERVAL}ms`);
+  console.log(`💓 Heartbeat interval: ${HEARTBEAT_INTERVAL}ms`);
+
+  // Send initial heartbeat
+  await sendHeartbeat();
+
+  // Start heartbeat interval
+  setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
 
   while (true) {
     const job = await pollForJob();
@@ -113,7 +150,7 @@ async function mainLoop() {
       await processJob(job);
     } else {
       // No job available, wait before polling again
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
     }
   }
 }

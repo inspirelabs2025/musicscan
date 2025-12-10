@@ -39,24 +39,38 @@ Deno.serve(async (req) => {
     }
 
     // Get stats
-    const { data: stats } = await supabaseClient
+    const { data: statsData } = await supabaseClient
       .from('render_jobs')
-      .select('status')
-      .then(({ data }) => {
-        const counts = {
-          pending: 0,
-          running: 0,
-          done: 0,
-          error: 0,
-          total: data?.length || 0
-        };
-        data?.forEach(job => {
-          if (job.status in counts) {
-            counts[job.status as keyof typeof counts]++;
-          }
-        });
-        return { data: counts };
-      });
+      .select('status');
+    
+    const stats = {
+      pending: 0,
+      running: 0,
+      done: 0,
+      error: 0,
+      poison: 0,
+      total: statsData?.length || 0
+    };
+    statsData?.forEach(job => {
+      if (job.status in stats) {
+        stats[job.status as keyof typeof stats]++;
+      }
+    });
+
+    // Get worker stats if requested
+    let workerStats = null;
+    const includeWorkerStats = url.searchParams.get('worker_stats') === 'true';
+    if (includeWorkerStats) {
+      const { data: workers } = await supabaseClient
+        .from('worker_stats')
+        .select('id, last_heartbeat, polling_interval_ms, status')
+        .order('last_heartbeat', { ascending: false })
+        .limit(1);
+      
+      if (workers && workers.length > 0) {
+        workerStats = workers[0];
+      }
+    }
 
     console.log(`📋 Listed ${jobs?.length} render jobs (offset: ${offset}, limit: ${limit})`);
 
@@ -65,6 +79,7 @@ Deno.serve(async (req) => {
         ok: true, 
         jobs, 
         stats,
+        worker_stats: workerStats,
         pagination: {
           total: count,
           limit,

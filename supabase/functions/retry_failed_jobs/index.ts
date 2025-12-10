@@ -31,11 +31,15 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get failed jobs (limit 50)
+    console.log('🔄 Fetching failed jobs for retry...');
+
+    // Fetch jobs: status='error', retry_count < 3, dead_letter=false
     const { data: failedJobs, error: fetchError } = await supabaseClient
       .from('render_jobs')
-      .select('id, attempts')
+      .select('id, retry_count')
       .eq('status', 'error')
+      .eq('dead_letter', false)
+      .lt('retry_count', MAX_RETRIES)
       .limit(BATCH_LIMIT);
 
     if (fetchError) {
@@ -44,81 +48,73 @@ Deno.serve(async (req) => {
     }
 
     if (!failedJobs || failedJobs.length === 0) {
-      console.log('ℹ️ No failed jobs to retry');
+      console.log('✅ No failed jobs to retry');
       return new Response(
-        JSON.stringify({ ok: true, retried: 0, poisoned: 0, message: 'No failed jobs to retry' }),
+        JSON.stringify({ ok: true, retried: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Separate jobs: retryable vs poison
-    const retryableJobs = failedJobs.filter(job => (job.attempts || 0) < MAX_RETRIES);
-    const poisonJobs = failedJobs.filter(job => (job.attempts || 0) >= MAX_RETRIES);
-
-    console.log(`🔄 Found ${failedJobs.length} failed jobs: ${retryableJobs.length} retryable, ${poisonJobs.length} poison`);
+    console.log(`📋 Found ${failedJobs.length} failed jobs to process`);
 
     let retriedCount = 0;
-    let poisonedCount = 0;
 
-    // Reset retryable jobs to pending with incremented attempts
-    if (retryableJobs.length > 0) {
-      const retryableIds = retryableJobs.map(j => j.id);
-      
-      // Update each job individually to increment attempts
-      for (const job of retryableJobs) {
-        const { error: updateError } = await supabaseClient
+    // Process each job - increment retry_count and reset to pending
+    for (const job of failedJobs) {
+      const newRetryCount = (job.retry_count || 0) + 1;
+
+      // Check if this would exceed max retries
+      if (newRetryCount >= MAX_RETRIES) {
+        // Mark as dead letter (poison)
+        const { error: poisonError } = await supabaseClient
           .from('render_jobs')
-          .update({ 
-            status: 'pending', 
-            attempts: (job.attempts || 0) + 1,
-            error_message: null,
+          .update({
+            dead_letter: true,
+            last_error: `Exceeded max retries (${MAX_RETRIES})`,
+            retry_count: newRetryCount,
             updated_at: new Date().toISOString()
           })
           .eq('id', job.id);
 
-        if (!updateError) {
-          retriedCount++;
+        if (poisonError) {
+          console.error(`❌ Error marking job ${job.id} as dead_letter:`, poisonError);
         } else {
-          console.error(`❌ Failed to retry job ${job.id}:`, updateError);
+          console.log(`☠️ Job ${job.id} marked as dead_letter (retry_count: ${newRetryCount})`);
+        }
+      } else {
+        // Retry the job
+        const { error: retryError } = await supabaseClient
+          .from('render_jobs')
+          .update({
+            status: 'pending',
+            retry_count: newRetryCount,
+            last_error: null,
+            locked_at: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', job.id);
+
+        if (retryError) {
+          console.error(`❌ Error retrying job ${job.id}:`, retryError);
+        } else {
+          console.log(`🔄 Job ${job.id} queued for retry (attempt ${newRetryCount}/${MAX_RETRIES})`);
+          retriedCount++;
         }
       }
-      
-      console.log(`✅ Reset ${retriedCount} jobs to pending`);
     }
 
-    // Mark poison jobs
-    if (poisonJobs.length > 0) {
-      const poisonIds = poisonJobs.map(j => j.id);
-      
-      const { error: poisonError } = await supabaseClient
-        .from('render_jobs')
-        .update({ 
-          status: 'poison',
-          error_message: `Exceeded max retries (${MAX_RETRIES})`,
-          updated_at: new Date().toISOString()
-        })
-        .in('id', poisonIds);
-
-      if (!poisonError) {
-        poisonedCount = poisonJobs.length;
-        console.log(`☠️ Marked ${poisonedCount} jobs as poison`);
-      } else {
-        console.error('❌ Error marking poison jobs:', poisonError);
-      }
-    }
+    console.log(`✅ Retry complete: ${retriedCount} jobs queued for retry`);
 
     return new Response(
       JSON.stringify({ 
         ok: true, 
-        retried: retriedCount,
-        poisoned: poisonedCount,
-        message: `${retriedCount} jobs retried, ${poisonedCount} marked as poison`
+        retried: retriedCount
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error in retry_failed_jobs:', error);
+    console.error('❌ Error in retry_failed_jobs:', error);
     return new Response(
       JSON.stringify({ ok: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

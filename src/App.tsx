@@ -196,6 +196,7 @@ const FacebookTestPost = lazy(() => import("./pages/admin/FacebookTestPost"));
 const InstagramAdmin = lazy(() => import("./pages/admin/InstagramAdmin"));
 const MetricoolAdmin = lazy(() => import("./pages/admin/MetricoolAdmin"));
 const TikTokVideoAdmin = lazy(() => import("./pages/admin/TikTokVideoAdmin"));
+const RenderQueue = lazy(() => import("./pages/admin/RenderQueue"));
 const NewsRssManager = lazy(() => import("./pages/admin/NewsRssManager"));
 const OwnPodcasts = lazy(() => import("./pages/admin/OwnPodcasts"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
@@ -453,6 +454,7 @@ const AppContent = () => {
         <Route path="/admin/instagram" element={<ProtectedRoute><LazyRoute><InstagramAdmin /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/metricool" element={<ProtectedRoute><LazyRoute><MetricoolAdmin /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/tiktok-videos" element={<ProtectedRoute><LazyRoute><TikTokVideoAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/render-queue" element={<ProtectedRoute><LazyRoute><RenderQueue /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/news-rss" element={<ProtectedRoute><LazyRoute><NewsRssManager /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/own-podcasts" element={<ProtectedRoute><LazyRoute><OwnPodcasts /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute><LazyRoute><UserManagement /></LazyRoute></ProtectedRoute>} />

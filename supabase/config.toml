@@ -665,3 +665,6 @@ verify_jwt = false
 
 [functions.update_render_job_status]
 verify_jwt = false
+
+[functions.reset-stuck-render-jobs]
+verify_jwt = false

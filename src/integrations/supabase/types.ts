@@ -7867,7 +7867,7 @@ export type Database = {
         }[]
       }
       claim_next_render_job: {
-        Args: { p_job_types?: string[]; p_worker_id?: string }
+        Args: { p_job_types?: string[]; p_worker_id: string }
         Returns: Json
       }
       claim_render_job: {

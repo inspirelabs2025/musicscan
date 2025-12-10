@@ -1,0 +1,9 @@
+
+-- Insert 5 new render jobs for GIF generation
+INSERT INTO render_jobs (type, source_type, source_id, image_url, artist, title, payload, priority, status)
+VALUES 
+  ('gif', 'blog_post', '2eb2bfb0-233f-4710-970e-b4a19f027fc3', 'https://i.discogs.com/WNrEoOwDvUckAJTRqzOYvgb94ElIyjswpRnEz22H0fQ/rs:fit/g:sm/q:90/h:592/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTIxODIx/NDMtMTQ1NDAxNzgz/Ni0yNTI3LmpwZWc.jpeg', 'Sonic Youth', 'Bad Moon Rising', '{"slug": "sonic-youth-bad-moon-rising"}'::jsonb, 100, 'pending'),
+  ('gif', 'blog_post', '7f928192-90da-48ae-ba4d-4edba5f629b4', 'https://i.discogs.com/JzNdiyAZASryjHGYvRFT5EHsY9do-Xo37ctPjpKZNiA/rs:fit/g:sm/q:90/h:600/w:586/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTExNjEy/MTYyLTE1MTk0MTE2/NTctNTE5MS5qcGVn.jpeg', 'The Mission', 'Bending The Arc', '{"slug": "the-mission-bending-the-arc-live-at-cato-"}'::jsonb, 100, 'pending'),
+  ('gif', 'blog_post', 'd1166365-f27c-4623-9527-d802e2a4501c', 'https://i.discogs.com/7PxAMCxtxnx5ySGK-0P2kUC5T7jJZYeRa67mmQU66sA/rs:fit/g:sm/q:90/h:595/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTUwNjQ4/MTEtMTM4MzUzMTYx/Mi0zMDk2LmpwZWc.jpeg', 'Cocteau Twins', 'Wax and Wane', '{"slug": "cocteau-twins-wax-and-wane"}'::jsonb, 100, 'pending'),
+  ('gif', 'blog_post', '5b5dc621-8c1a-4c60-96ec-f096c1eb3dfb', 'https://i.discogs.com/ARJ2pM1DmFn1fT66A9Z_8Xh9emN7Gz3BYL4r8YWbzkU/rs:fit/g:sm/q:90/h:595/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTk1Nzg3/MzItMTQ4MzkyODAy/MS04NDQ0LmpwZWc.jpeg', 'Billy Joel', 'Turnstiles', '{"slug": "billy-joel-turnstiles"}'::jsonb, 100, 'pending'),
+  ('gif', 'blog_post', '5c7e4d82-38d6-4c3b-a9b6-f1e3a58556ed', 'https://i.discogs.com/UNNwJR0yQt6KcqMnL55YT6vMEEnyrWd7uYSvZaSeP8s/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTQ5MDQy/MzctMTM3ODk5NzM3/Ny02MTkxLmpwZWc.jpeg', 'MGMT', 'MGMT', '{"slug": "mgmt-mgmt"}'::jsonb, 100, 'pending');

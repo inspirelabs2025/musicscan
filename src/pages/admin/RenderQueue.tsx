@@ -35,6 +35,55 @@ const statusIcons: Record<string, React.ReactNode> = {
   failed: <XCircle className="h-4 w-4" />,
 };
 
+function GifPreviewDialog({ job }: { job: RenderJob }) {
+  const gifUrl = job.output_url || (job.result as any)?.video_url || (job.result as any)?.gif_url;
+  
+  if (!gifUrl) return null;
+  
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" title="Preview GIF">
+          <Play className="h-4 w-4 text-green-600" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>GIF Preview</DialogTitle>
+          <DialogDescription>
+            {job.artist && job.title ? `${job.artist} - ${job.title}` : job.id.slice(0, 8)}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col items-center gap-4">
+          <img 
+            src={gifUrl} 
+            alt="Generated GIF" 
+            className="max-w-full max-h-[60vh] rounded-lg border"
+          />
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <a href={gifUrl} target="_blank" rel="noopener noreferrer">
+                Open in nieuw tabblad
+              </a>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                navigator.clipboard.writeText(gifUrl);
+                toast.success('URL gekopieerd!');
+              }}
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              Kopieer URL
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function JobDetailsDialog({ job }: { job: RenderJob }) {
   return (
     <Dialog>
@@ -473,6 +522,7 @@ export default function RenderQueue() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
+                            <GifPreviewDialog job={job} />
                             <JobDetailsDialog job={job} />
                             {(job.status === 'error' || job.status === 'failed') && (
                               <Button 

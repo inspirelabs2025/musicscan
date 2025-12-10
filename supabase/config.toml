@@ -647,3 +647,9 @@ verify_jwt = false
 
 [functions.worker-update]
 verify_jwt = false
+
+[functions.claim_next_render_job]
+verify_jwt = false
+
+[functions.update_render_job_status]
+verify_jwt = false

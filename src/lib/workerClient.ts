@@ -38,7 +38,7 @@ export async function fetchNextRenderJob(
   workerId?: string,
   jobTypes?: string[]
 ): Promise<RenderJob | null> {
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/worker-poll`, {
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/claim_next_render_job`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export async function updateRenderJob(
   result?: Record<string, unknown>,
   errorMessage?: string
 ): Promise<JobUpdateResult> {
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/worker-update`, {
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/update_render_job_status`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ if (!WORKER_SECRET) {
 
 async function pollForJob() {
   try {
-    const res = await fetch(\`\${API_URL}/functions/v1/worker-poll\`, {
+    const res = await fetch(\`\${API_URL}/functions/v1/claim_next_render_job\`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -175,7 +175,7 @@ async function pollForJob() {
 
 async function updateJob(jobId, status, result = null, errorMessage = null) {
   try {
-    const res = await fetch(\`\${API_URL}/functions/v1/worker-update\`, {
+    const res = await fetch(\`\${API_URL}/functions/v1/update_render_job_status\`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

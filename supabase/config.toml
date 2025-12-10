@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.enqueue_render_job]
 verify_jwt = false
 
+[functions.process-render-queue]
+verify_jwt = false
+
 [functions.list_render_jobs]
 verify_jwt = false
 

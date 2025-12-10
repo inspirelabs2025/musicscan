@@ -5244,15 +5244,18 @@ export type Database = {
           attempts: number
           completed_at: string | null
           created_at: string
+          dead_letter: boolean
           error_message: string | null
           id: string
           image_url: string
+          last_error: string | null
           locked_at: string | null
           max_attempts: number
           output_url: string | null
           payload: Json | null
           priority: number
           result: Json | null
+          retry_count: number
           source_id: string | null
           source_type: string
           started_at: string | null
@@ -5267,15 +5270,18 @@ export type Database = {
           attempts?: number
           completed_at?: string | null
           created_at?: string
+          dead_letter?: boolean
           error_message?: string | null
           id?: string
           image_url: string
+          last_error?: string | null
           locked_at?: string | null
           max_attempts?: number
           output_url?: string | null
           payload?: Json | null
           priority?: number
           result?: Json | null
+          retry_count?: number
           source_id?: string | null
           source_type: string
           started_at?: string | null
@@ -5290,15 +5296,18 @@ export type Database = {
           attempts?: number
           completed_at?: string | null
           created_at?: string
+          dead_letter?: boolean
           error_message?: string | null
           id?: string
           image_url?: string
+          last_error?: string | null
           locked_at?: string | null
           max_attempts?: number
           output_url?: string | null
           payload?: Json | null
           priority?: number
           result?: Json | null
+          retry_count?: number
           source_id?: string | null
           source_type?: string
           started_at?: string | null

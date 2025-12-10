@@ -126,8 +126,11 @@ async function processJob(job) {
     console.log(`✅ Job ${job.id} completed`);
     
   } catch (error) {
-    console.error(`❌ Job ${job.id} failed:`, error.message);
+    // Mark as error - retry will come from retry_failed_jobs externally
+    console.error(`❌ Job ${job.id} failed. Marked error. Will retry externally.`);
+    console.error(`   Error: ${error.message}`);
     await updateJob(job.id, "error", null, error.message);
+    // Do NOT requeue here - retry_failed_jobs handles retry logic
   }
 }
 

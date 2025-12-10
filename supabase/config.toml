@@ -641,3 +641,9 @@ verify_jwt = false
 
 [functions.update-render-job]
 verify_jwt = false
+
+[functions.worker-poll]
+verify_jwt = false
+
+[functions.worker-update]
+verify_jwt = false

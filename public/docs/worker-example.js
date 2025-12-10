@@ -1,162 +1,179 @@
 /**
- * Fly.io Worker Example - MusicScan Render Queue
+ * MusicScan Fly.io Worker - GIF Render Queue Processor
  * 
- * Copy this code to your Fly.io worker to process render jobs.
- * 
- * Environment variables required:
- * - WORKER_API_URL: https://ssxbpyqnjfiyubsuonar.supabase.co
- * - WORKER_SECRET: Your worker secret key
+ * This worker polls for render jobs and processes them using ffmpeg.
+ * Deploy to Fly.io and set these environment variables:
+ * - SUPABASE_URL: Your Supabase project URL
+ * - WORKER_SECRET: The secret key for authentication
  */
 
-import fetch from "node-fetch";
-
-const API_URL = process.env.WORKER_API_URL || "https://ssxbpyqnjfiyubsuonar.supabase.co";
+// Configuration
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ssxbpyqnjfiyubsuonar.supabase.co';
 const WORKER_SECRET = process.env.WORKER_SECRET;
-const WORKER_ID = process.env.FLY_ALLOC_ID || "fly-worker-" + Date.now();
-const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL || "5000");
-const HEARTBEAT_INTERVAL = 60000; // 1 minute
+const WORKER_ID = process.env.WORKER_ID || 'fly-worker';
+const POLL_INTERVAL_MS = 5000; // 5 seconds between polls
+const HEARTBEAT_INTERVAL_MS = 30000; // 30 seconds between heartbeats
 
 if (!WORKER_SECRET) {
-  console.error("❌ WORKER_SECRET is required");
+  console.error('❌ WORKER_SECRET environment variable is required');
   process.exit(1);
 }
 
-// Send heartbeat to server every minute
+console.log(`🚀 MusicScan Worker starting...`);
+console.log(`   Supabase URL: ${SUPABASE_URL}`);
+console.log(`   Worker ID: ${WORKER_ID}`);
+
+// Send heartbeat to let the system know worker is alive
 async function sendHeartbeat() {
   try {
-    const res = await fetch(`${API_URL}/functions/v1/worker_heartbeat`, {
-      method: "POST",
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/worker_heartbeat`, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "X-WORKER-KEY": WORKER_SECRET
+        'Content-Type': 'application/json',
+        'X-WORKER-KEY': WORKER_SECRET
       },
       body: JSON.stringify({
         id: WORKER_ID,
         ts: new Date().toISOString(),
-        status: "active",
-        polling_interval_ms: POLL_INTERVAL
+        status: 'active',
+        polling_interval_ms: POLL_INTERVAL_MS
       })
     });
-
-    if (res.ok) {
-      console.log("💓 Heartbeat sent");
+    
+    if (response.ok) {
+      console.log(`💓 Heartbeat sent`);
     } else {
-      console.error("❌ Heartbeat failed:", await res.text());
+      console.warn(`⚠️ Heartbeat failed: ${response.status}`);
     }
   } catch (error) {
-    console.error("❌ Heartbeat error:", error.message);
+    console.error(`❌ Heartbeat error:`, error.message);
   }
 }
 
+// Poll for the next available job using claim_next_render_job
 async function pollForJob() {
   try {
-    const res = await fetch(`${API_URL}/functions/v1/worker-poll`, {
-      method: "POST",
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/claim_next_render_job`, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "X-WORKER-KEY": WORKER_SECRET
+        'Content-Type': 'application/json',
+        'X-WORKER-KEY': WORKER_SECRET
       },
       body: JSON.stringify({
         worker_id: WORKER_ID,
-        job_types: null // or ["gif", "video"] to filter
+        job_types: ['gif', 'render_gif']
       })
     });
 
-    if (!res.ok) {
-      console.error("❌ Poll failed:", await res.text());
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`❌ Poll failed: ${response.status} - ${text}`);
       return null;
     }
 
-    const data = await res.json();
-    return data.job;
+    const data = await response.json();
+    return data.job || null;
   } catch (error) {
-    console.error("❌ Poll error:", error.message);
+    console.error(`❌ Poll error:`, error.message);
     return null;
   }
 }
 
+// Update job status using update_render_job_status
 async function updateJob(jobId, status, result = null, errorMessage = null) {
   try {
-    const res = await fetch(`${API_URL}/functions/v1/worker-update`, {
-      method: "POST",
+    const body = {
+      id: jobId,
+      status: status
+    };
+    
+    if (result) body.result = result;
+    if (errorMessage) body.error_message = errorMessage;
+
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/update_render_job_status`, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "X-WORKER-KEY": WORKER_SECRET
+        'Content-Type': 'application/json',
+        'X-WORKER-KEY': WORKER_SECRET
       },
-      body: JSON.stringify({
-        id: jobId,
-        status,
-        result,
-        error_message: errorMessage
-      })
+      body: JSON.stringify(body)
     });
 
-    if (!res.ok) {
-      console.error("❌ Update failed:", await res.text());
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`❌ Update failed: ${response.status} - ${text}`);
       return false;
     }
 
-    const data = await res.json();
-    return data.ok;
+    return true;
   } catch (error) {
-    console.error("❌ Update error:", error.message);
+    console.error(`❌ Update error:`, error.message);
     return false;
   }
 }
 
+// Process a single job
 async function processJob(job) {
-  console.log(`🎬 Processing job ${job.id} (type: ${job.type})`);
-  console.log(`📦 Payload:`, JSON.stringify(job.payload, null, 2));
+  console.log(`\n🎬 Processing job ${job.id}`);
+  console.log(`   Type: ${job.type}`);
+  console.log(`   Image: ${job.image_url || job.payload?.album_cover_url}`);
 
   try {
-    // ============================================
-    // YOUR RENDERING LOGIC HERE
-    // ============================================
-    // Example for GIF rendering:
-    // const outputUrl = await renderGif(job.payload);
-    
-    // Simulate work for demo
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const outputUrl = "https://example.com/output.gif";
-    // ============================================
+    // TODO: Implement your rendering logic here
+    // This is where you would:
+    // 1. Download the image from job.image_url or job.payload.album_cover_url
+    // 2. Generate the GIF using ffmpeg
+    // 3. Upload the result to Supabase Storage
+    // 4. Return the output URL
 
-    // Report success
-    await updateJob(job.id, "done", { output_url: outputUrl });
+    // Placeholder: simulate work
+    console.log(`   ⏳ Rendering...`);
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // Example result
+    const outputUrl = `https://example.com/rendered/${job.id}.gif`;
+    
+    await updateJob(job.id, 'done', { output_url: outputUrl });
     console.log(`✅ Job ${job.id} completed`);
     
   } catch (error) {
     // Mark as error - retry will come from retry_failed_jobs externally
     console.error(`❌ Job ${job.id} failed. Marked error. Will retry externally.`);
     console.error(`   Error: ${error.message}`);
-    await updateJob(job.id, "error", null, error.message);
+    await updateJob(job.id, 'error', null, error.message);
     // Do NOT requeue here - retry_failed_jobs handles retry logic
   }
 }
 
+// Main worker loop
 async function mainLoop() {
-  console.log(`🚀 Worker ${WORKER_ID} starting...`);
-  console.log(`🔗 API URL: ${API_URL}`);
-  console.log(`⏱️ Poll interval: ${POLL_INTERVAL}ms`);
-  console.log(`💓 Heartbeat interval: ${HEARTBEAT_INTERVAL}ms`);
-
-  // Send initial heartbeat
+  console.log(`\n🔄 Worker loop started`);
+  
+  // Initial heartbeat
   await sendHeartbeat();
-
+  
   // Start heartbeat interval
-  setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
+  setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
 
   while (true) {
-    const job = await pollForJob();
-
-    if (job) {
-      await processJob(job);
-    } else {
-      // No job available, wait before polling again
-      await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
+    try {
+      const job = await pollForJob();
+      
+      if (job) {
+        await processJob(job);
+      } else {
+        console.log(`📭 No jobs available, waiting ${POLL_INTERVAL_MS / 1000}s...`);
+      }
+    } catch (error) {
+      console.error(`❌ Loop error:`, error.message);
     }
+
+    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
   }
 }
 
 // Start the worker
-mainLoop().catch(console.error);
+mainLoop().catch(error => {
+  console.error(`💥 Fatal error:`, error);
+  process.exit(1);
+});

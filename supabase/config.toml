@@ -3,6 +3,12 @@ project_id = "ssxbpyqnjfiyubsuonar"
 [functions.enqueue_render_job]
 verify_jwt = false
 
+[functions.list_render_jobs]
+verify_jwt = false
+
+[functions.retry_failed_jobs]
+verify_jwt = false
+
 [functions.generate-content-rss]
 verify_jwt = false
 

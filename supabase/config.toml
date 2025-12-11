@@ -681,5 +681,8 @@ verify_jwt = false
 [functions.christmas-batch-processor]
 verify_jwt = false
 
+[[functions.christmas-batch-processor.schedule]]
+cron = "* * * * *"
+
 [functions.import-christmas-batch]
 verify_jwt = false

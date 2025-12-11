@@ -132,11 +132,15 @@ STIJL:
       tags: tags || ['christmas', 'kerst'],
     };
 
+    // System user ID for batch-generated content
+    const systemUserId = '567d3376-a797-447c-86cb-4c2f1260e997';
+    
     // Insert into music_stories
     const { data: newStory, error: insertError } = await supabase
       .from('music_stories')
       .insert({
         slug,
+        user_id: systemUserId,
         artist: artist,
         single_name: song_title,
         story_content: storyContent,

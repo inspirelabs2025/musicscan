@@ -107,9 +107,12 @@ export default function ChristmasImporter() {
 
     try {
       // Parse input - expect format: "Artist - Song Title" per line
+      // Support multiple separators: " - ", " – ", " — "
       const lines = bulkInput.trim().split('\n').filter(l => l.trim());
       const songs = lines.map(line => {
-        const [artist, ...titleParts] = line.split(' - ');
+        // Normalize different dash types to standard hyphen
+        const normalizedLine = line.replace(/\s*[–—]\s*/g, ' - ');
+        const [artist, ...titleParts] = normalizedLine.split(' - ');
         return {
           artist: artist?.trim(),
           song_title: titleParts.join(' - ').trim(),

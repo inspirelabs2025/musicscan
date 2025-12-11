@@ -102,6 +102,7 @@ const MonthOverview = lazy(() => import("./pages/MonthOverview"));
 
 // Christmas pages
 const Christmas = lazy(() => import("./pages/Christmas"));
+const ChristmasAnecdotesPage = lazy(() => import("./pages/ChristmasAnecdotesPage"));
 const ChristmasImporter = lazy(() => import("./pages/admin/ChristmasImporter"));
 
 // Collection pages
@@ -389,6 +390,7 @@ const AppContent = () => {
         
         {/* Christmas */}
         <Route path="/kerst" element={<LazyRoute><Christmas /></LazyRoute>} />
+        <Route path="/kerst/anekdotes" element={<LazyRoute><ChristmasAnecdotesPage /></LazyRoute>} />
         <Route path="/maand-overzicht/:year/:month" element={<LazyRoute><MonthOverview /></LazyRoute>} />
         
         {/* Podcast routes */}

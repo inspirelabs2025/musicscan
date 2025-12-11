@@ -1161,6 +1161,305 @@ export type Database = {
         }
         Relationships: []
       }
+      christmas_advent_calendar: {
+        Row: {
+          content_data: Json | null
+          content_type: string
+          created_at: string | null
+          day_number: number
+          description: string | null
+          id: string
+          image_url: string | null
+          is_unlocked: boolean | null
+          title: string
+          year: number
+        }
+        Insert: {
+          content_data?: Json | null
+          content_type: string
+          created_at?: string | null
+          day_number: number
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_unlocked?: boolean | null
+          title: string
+          year?: number
+        }
+        Update: {
+          content_data?: Json | null
+          content_type?: string
+          created_at?: string | null
+          day_number?: number
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_unlocked?: boolean | null
+          title?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      christmas_gift_guide: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          external_links: Json | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          price_range: string | null
+          product_ids: string[] | null
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          external_links?: Json | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          price_range?: string | null
+          product_ids?: string[] | null
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          external_links?: Json | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          price_range?: string | null
+          product_ids?: string[] | null
+          title?: string
+        }
+        Relationships: []
+      }
+      christmas_import_queue: {
+        Row: {
+          album: string | null
+          anecdote_id: string | null
+          artist: string
+          attempts: number | null
+          chart_country: string | null
+          chart_peak: number | null
+          content_type: string | null
+          country_origin: string | null
+          created_at: string | null
+          decade: string | null
+          error_message: string | null
+          genre: string | null
+          id: string
+          is_classic: boolean | null
+          is_dutch: boolean | null
+          lyrics: string | null
+          music_story_id: string | null
+          processed_at: string | null
+          product_ids: string[] | null
+          royalty_estimate: number | null
+          song_title: string
+          status: string | null
+          tags: string[] | null
+          year: number | null
+          youtube_video_id: string | null
+        }
+        Insert: {
+          album?: string | null
+          anecdote_id?: string | null
+          artist: string
+          attempts?: number | null
+          chart_country?: string | null
+          chart_peak?: number | null
+          content_type?: string | null
+          country_origin?: string | null
+          created_at?: string | null
+          decade?: string | null
+          error_message?: string | null
+          genre?: string | null
+          id?: string
+          is_classic?: boolean | null
+          is_dutch?: boolean | null
+          lyrics?: string | null
+          music_story_id?: string | null
+          processed_at?: string | null
+          product_ids?: string[] | null
+          royalty_estimate?: number | null
+          song_title: string
+          status?: string | null
+          tags?: string[] | null
+          year?: number | null
+          youtube_video_id?: string | null
+        }
+        Update: {
+          album?: string | null
+          anecdote_id?: string | null
+          artist?: string
+          attempts?: number | null
+          chart_country?: string | null
+          chart_peak?: number | null
+          content_type?: string | null
+          country_origin?: string | null
+          created_at?: string | null
+          decade?: string | null
+          error_message?: string | null
+          genre?: string | null
+          id?: string
+          is_classic?: boolean | null
+          is_dutch?: boolean | null
+          lyrics?: string | null
+          music_story_id?: string | null
+          processed_at?: string | null
+          product_ids?: string[] | null
+          royalty_estimate?: number | null
+          song_title?: string
+          status?: string | null
+          tags?: string[] | null
+          year?: number | null
+          youtube_video_id?: string | null
+        }
+        Relationships: []
+      }
+      christmas_karaoke_lyrics: {
+        Row: {
+          artist: string
+          created_at: string | null
+          has_timing: boolean | null
+          id: string
+          language: string | null
+          lyrics_lines: Json | null
+          song_title: string
+        }
+        Insert: {
+          artist: string
+          created_at?: string | null
+          has_timing?: boolean | null
+          id?: string
+          language?: string | null
+          lyrics_lines?: Json | null
+          song_title: string
+        }
+        Update: {
+          artist?: string
+          created_at?: string | null
+          has_timing?: boolean | null
+          id?: string
+          language?: string | null
+          lyrics_lines?: Json | null
+          song_title?: string
+        }
+        Relationships: []
+      }
+      christmas_memory_scores: {
+        Row: {
+          created_at: string | null
+          difficulty: string | null
+          id: string
+          moves: number
+          score: number
+          session_id: string | null
+          time_seconds: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          difficulty?: string | null
+          id?: string
+          moves: number
+          score: number
+          session_id?: string | null
+          time_seconds: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          difficulty?: string | null
+          id?: string
+          moves?: number
+          score?: number
+          session_id?: string | null
+          time_seconds?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      christmas_poll_votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          poll_id: string | null
+          selected_options: Json | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          poll_id?: string | null
+          selected_options?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          poll_id?: string | null
+          selected_options?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "christmas_poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "christmas_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      christmas_polls: {
+        Row: {
+          created_at: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          options: Json
+          poll_type: string | null
+          question: string
+          starts_at: string | null
+          total_votes: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          options: Json
+          poll_type?: string | null
+          question: string
+          starts_at?: string | null
+          total_votes?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          options?: Json
+          poll_type?: string | null
+          question?: string
+          starts_at?: string | null
+          total_votes?: number | null
+        }
+        Relationships: []
+      }
       clean_analytics: {
         Row: {
           ad_blocker_detected: boolean | null

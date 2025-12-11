@@ -100,6 +100,10 @@ const DanceHouseFeitDetail = lazy(() => import("./pages/DanceHouseFeitDetail"));
 const YearOverview = lazy(() => import("./pages/YearOverview"));
 const MonthOverview = lazy(() => import("./pages/MonthOverview"));
 
+// Christmas pages
+const Christmas = lazy(() => import("./pages/Christmas"));
+const ChristmasImporter = lazy(() => import("./pages/admin/ChristmasImporter"));
+
 // Collection pages
 const MyCollection = lazy(() => import("./pages/MyCollection"));
 const MyCollectionOld = lazy(() => import("./pages/MyCollectionOld"));
@@ -382,6 +386,9 @@ const AppContent = () => {
         {/* Year/Month overview */}
         <Route path="/jaar-overzicht" element={<LazyRoute><YearOverview /></LazyRoute>} />
         <Route path="/maand-overzicht" element={<LazyRoute><MonthOverview /></LazyRoute>} />
+        
+        {/* Christmas */}
+        <Route path="/kerst" element={<LazyRoute><Christmas /></LazyRoute>} />
         <Route path="/maand-overzicht/:year/:month" element={<LazyRoute><MonthOverview /></LazyRoute>} />
         
         {/* Podcast routes */}
@@ -478,6 +485,7 @@ const AppContent = () => {
         <Route path="/admin/discogs-lookup" element={<ProtectedRoute><LazyRoute><DiscogsLookup /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/auto-comments" element={<ProtectedRoute><LazyRoute><AutoComments /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/anecdote-generation" element={<ProtectedRoute><LazyRoute><TestAnecdoteGeneration /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/christmas-importer" element={<ProtectedRoute><LazyRoute><ChristmasImporter /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/music-news" element={<ProtectedRoute><LazyRoute><TestMusicNews /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/news-update" element={<ProtectedRoute><LazyRoute><TestNewsUpdate /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/news-generation" element={<ProtectedRoute><LazyRoute><TestNewsGeneration /></LazyRoute></ProtectedRoute>} />

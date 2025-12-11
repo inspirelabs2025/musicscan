@@ -45,21 +45,28 @@ export default function ChristmasImporter() {
   const [bulkInput, setBulkInput] = useState('');
 
   const fetchQueue = async () => {
-    const { data, error } = await supabase
-      .from('christmas_import_queue')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100);
+    // Fetch stats separately with count to get accurate totals
+    const [queueResult, statsResult] = await Promise.all([
+      supabase
+        .from('christmas_import_queue')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(500),
+      supabase
+        .from('christmas_import_queue')
+        .select('status')
+    ]);
 
-    if (error) {
-      console.error('Error fetching queue:', error);
+    if (queueResult.error) {
+      console.error('Error fetching queue:', queueResult.error);
       return;
     }
 
-    setQueue(data || []);
+    setQueue(queueResult.data || []);
 
-    // Calculate stats
-    const newStats = (data || []).reduce((acc, item) => {
+    // Calculate stats from full count query
+    const allItems = statsResult.data || [];
+    const newStats = allItems.reduce((acc, item) => {
       acc[item.status as keyof QueueStats] = (acc[item.status as keyof QueueStats] || 0) + 1;
       acc.total++;
       return acc;

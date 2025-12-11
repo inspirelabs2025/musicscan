@@ -356,10 +356,11 @@ serve(async (req) => {
       referrer, 
       path, 
       sessionId,
-      // New fields
+      // Visitor tracking
       visitorId,
       isNewVisitor,
       sessionStartAt,
+      // Engagement
       scrollDepth,
       timeOnPage,
       previousPath,
@@ -371,9 +372,42 @@ serve(async (req) => {
       utm_campaign,
       utm_term,
       utm_content,
+      // Device info
+      screen_resolution,
+      viewport_width,
+      viewport_height,
+      color_depth,
+      timezone,
+      language,
+      platform,
+      touch_support,
+      connection_type,
+      device_memory,
+      cpu_cores,
+      ad_blocker_detected,
+      do_not_track,
+      cookies_enabled,
+      java_enabled,
+      online_status,
+      webgl_vendor,
+      webgl_renderer,
+      // Battery info
+      battery_level,
+      battery_charging,
+      // Performance timing
+      dns_time,
+      connect_time,
+      ttfb,
+      dom_interactive,
+      fully_loaded,
+      // Interaction counts
+      click_count,
+      copy_events,
+      print_attempts,
+      download_clicks,
     } = body;
 
-    console.log(`[log-clean-analytics] Processing: city=${city}, country=${country}, path=${path}, visitor=${visitorId?.substring(0, 10)}...`);
+    console.log(`[log-clean-analytics] Processing: city=${city}, country=${country}, path=${path}, visitor=${visitorId?.substring(0, 10)}..., device=${platform}`);
 
     // Classify the traffic
     const classification = classifyTraffic({
@@ -405,10 +439,11 @@ serve(async (req) => {
         referrer,
         path,
         session_id: sessionId,
-        // New fields
+        // Visitor tracking
         visitor_id: visitorId,
         is_new_visitor: isNewVisitor || false,
         session_start_at: sessionStartAt,
+        // Engagement
         scroll_depth: scrollDepth,
         time_on_page: timeOnPage,
         previous_path: previousPath,
@@ -420,6 +455,39 @@ serve(async (req) => {
         utm_campaign,
         utm_term,
         utm_content,
+        // Device info
+        screen_resolution,
+        viewport_width,
+        viewport_height,
+        color_depth,
+        timezone,
+        language,
+        platform,
+        touch_support,
+        connection_type,
+        device_memory,
+        cpu_cores,
+        ad_blocker_detected,
+        do_not_track,
+        cookies_enabled,
+        java_enabled,
+        online_status,
+        webgl_vendor,
+        webgl_renderer,
+        // Battery info
+        battery_level,
+        battery_charging,
+        // Performance timing
+        dns_time,
+        connect_time,
+        ttfb,
+        dom_interactive,
+        fully_loaded,
+        // Interaction counts
+        click_count: click_count || 0,
+        copy_events: copy_events || 0,
+        print_attempts: print_attempts || 0,
+        download_clicks: download_clicks || 0,
       })
       .select()
       .single();

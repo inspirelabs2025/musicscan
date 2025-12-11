@@ -15,6 +15,7 @@ import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
 import { usePageviewTracker } from "@/hooks/usePageviewTracker";
+import { initCleanAnalytics } from "@/lib/cleanAnalyticsTracker";
 
 // Loading spinner component
 const PageLoader = () => (
@@ -259,6 +260,11 @@ const LazyRoute = ({ children }: { children: React.ReactNode }) => (
 const AppContent = () => {
   useGoogleAnalytics();
   usePageviewTracker();
+  
+  // Initialize clean analytics for datacenter/bot traffic detection
+  React.useEffect(() => {
+    initCleanAnalytics();
+  }, []);
   
   return (
     <>

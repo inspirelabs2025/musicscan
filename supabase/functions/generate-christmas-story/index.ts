@@ -137,13 +137,12 @@ STIJL:
       .from('music_stories')
       .insert({
         slug,
-        artist_name: artist,
+        artist: artist,
         single_name: song_title,
         story_content: storyContent,
         yaml_frontmatter: yamlFrontmatter,
         reading_time: readingTime,
         is_published: true,
-        published_at: new Date().toISOString(),
       })
       .select('id')
       .single();

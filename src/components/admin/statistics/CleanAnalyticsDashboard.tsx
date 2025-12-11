@@ -16,7 +16,13 @@ import {
   Tablet,
   Activity,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  UserCheck,
+  FileText,
+  Clock,
+  Search,
+  Share2,
+  Link2
 } from 'lucide-react';
 import { 
   useCleanAnalyticsOverview, 
@@ -36,7 +42,9 @@ import {
   Cell,
   LineChart,
   Line,
-  Legend
+  Legend,
+  AreaChart,
+  Area
 } from 'recharts';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -45,7 +53,14 @@ interface CleanAnalyticsDashboardProps {
   days: number;
 }
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--destructive))', 'hsl(var(--muted))', '#10b981', '#f59e0b', '#8b5cf6'];
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--destructive))', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+const CATEGORY_COLORS: Record<string, string> = {
+  search: '#10b981',
+  social: '#8b5cf6',
+  direct: 'hsl(var(--primary))',
+  referral: '#f59e0b',
+  other: 'hsl(var(--muted-foreground))',
+};
 
 export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = ({ days }) => {
   const [showDatacenter, setShowDatacenter] = useState(false);
@@ -80,20 +95,35 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
       ? 'text-yellow-500' 
       : 'text-red-500';
 
+  const qualityColor = (overview?.qualityScore || 0) >= 80 
+    ? 'text-green-500' 
+    : (overview?.qualityScore || 0) >= 60 
+      ? 'text-yellow-500' 
+      : 'text-red-500';
+
   const deviceIconMap: Record<string, React.ReactNode> = {
     desktop: <Monitor className="h-4 w-4" />,
     mobile: <Smartphone className="h-4 w-4" />,
     tablet: <Tablet className="h-4 w-4" />,
     bot: <Server className="h-4 w-4" />,
+    tv: <Monitor className="h-4 w-4" />,
     unknown: <Activity className="h-4 w-4" />,
+  };
+
+  const categoryIconMap: Record<string, React.ReactNode> = {
+    search: <Search className="h-4 w-4" />,
+    social: <Share2 className="h-4 w-4" />,
+    direct: <Users className="h-4 w-4" />,
+    referral: <Link2 className="h-4 w-4" />,
+    other: <Globe className="h-4 w-4" />,
   };
 
   // Chart data for daily trend
   const trendData = (summary || []).slice(0, 14).reverse().map(item => ({
     date: format(new Date(item.date), 'd MMM', { locale: nl }),
-    'Echte Gebruikers': item.real_users,
+    'Unieke Sessies': item.unique_sessions,
+    'Echte Pageviews': item.real_users,
     'Datacenter': showDatacenter ? item.datacenter_hits : 0,
-    'Purity %': item.purity_score,
   }));
 
   // Pie chart data for traffic split
@@ -102,40 +132,72 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
     { name: 'Datacenter/Bots', value: overview?.datacenterHits || 0 },
   ];
 
+  // Referrer category data
+  const referrerCategoryData = ['search', 'social', 'direct', 'referral'].map(cat => {
+    const sources = (overview?.referrerSources || []).filter(s => s.category === cat);
+    return {
+      name: cat === 'search' ? 'Zoekmachines' : cat === 'social' ? 'Social Media' : cat === 'direct' ? 'Direct' : 'Referrals',
+      sessions: sources.reduce((a, b) => a + b.unique_sessions, 0),
+      category: cat,
+    };
+  }).filter(d => d.sessions > 0);
+
+  // Hourly distribution chart
+  const hourlyData = (overview?.hourlyDistribution || []).map(h => ({
+    hour: `${h.hour}:00`,
+    'Echte Gebruikers': h.real_users,
+    'Datacenter': showDatacenter ? h.datacenter : 0,
+  }));
+
   return (
     <div className="space-y-6">
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Main KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Purity Score</CardTitle>
-            <Shield className={`h-4 w-4 ${purityColor}`} />
+            <CardTitle className="text-sm font-medium">Unieke Sessies</CardTitle>
+            <UserCheck className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${purityColor}`}>
-              {overview?.totalHits === 0 ? 'N/A' : `${overview?.purityScore || 0}%`}
+            <div className="text-2xl font-bold text-green-500">
+              {(overview?.uniqueSessions || 0).toLocaleString()}
             </div>
-            <Progress 
-              value={overview?.purityScore || 0} 
-              className="mt-2"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Confidence-gewogen score (max 97%)
+            <p className="text-xs text-muted-foreground">
+              Alleen echte gebruikers
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Echte Gebruikers</CardTitle>
-            <Users className="h-4 w-4 text-green-500" />
+            <CardTitle className="text-sm font-medium">Kwaliteitsscore</CardTitle>
+            <Shield className={`h-4 w-4 ${qualityColor}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">
-              {(overview?.realUsers || 0).toLocaleString()}
+            <div className={`text-2xl font-bold ${qualityColor}`}>
+              {overview?.totalHits === 0 ? 'N/A' : `${overview?.qualityScore || 0}%`}
+            </div>
+            <Progress 
+              value={overview?.qualityScore || 0} 
+              className="mt-2"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Gem. confidence echte traffic
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pagina's/Sessie</CardTitle>
+            <FileText className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {overview?.pagesPerSession || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              Gemiddelde score: {overview?.avgRealScore || 0}
+              Engagement metric
             </p>
           </CardContent>
         </Card>
@@ -150,22 +212,22 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
               {(overview?.datacenterHits || 0).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              Gefilterd uit statistieken
+              {overview?.totalHits ? Math.round((overview.datacenterHits / overview.totalHits) * 100) : 0}% gefilterd
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Totaal Hits</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Purity Score</CardTitle>
+            <Shield className={`h-4 w-4 ${purityColor}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {(overview?.totalHits || 0).toLocaleString()}
+            <div className={`text-2xl font-bold ${purityColor}`}>
+              {overview?.totalHits === 0 ? 'N/A' : `${overview?.purityScore || 0}%`}
             </div>
             <p className="text-xs text-muted-foreground">
-              Laatste {days} dagen
+              Max 97% (onzekerheid)
             </p>
           </CardContent>
         </Card>
@@ -181,7 +243,7 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
         <Label htmlFor="show-datacenter">Toon datacenter nodes in grafieken</Label>
       </div>
 
-      {/* Charts Row */}
+      {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Traffic Split Pie Chart */}
         <Card>
@@ -212,42 +274,104 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
           </CardContent>
         </Card>
 
-        {/* Daily Trend Chart */}
+        {/* Referrer Sources Pie */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Dagelijkse Trend</CardTitle>
-            <CardDescription>Echte gebruikers per dag</CardDescription>
+            <CardTitle className="text-lg">Verkeersbronnen (Echte Gebruikers)</CardTitle>
+            <CardDescription>Hoe bezoekers ons vinden</CardDescription>
           </CardHeader>
           <CardContent>
-            {loadingSummary ? (
-              <Skeleton className="h-[250px] w-full" />
-            ) : (
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={trendData}>
-                  <XAxis dataKey="date" fontSize={12} />
-                  <YAxis fontSize={12} />
-                  <Tooltip />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="Echte Gebruikers" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={2}
-                  />
-                  {showDatacenter && (
-                    <Line 
-                      type="monotone" 
-                      dataKey="Datacenter" 
-                      stroke="hsl(var(--destructive))" 
-                      strokeWidth={2}
-                    />
-                  )}
-                </LineChart>
-              </ResponsiveContainer>
-            )}
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={referrerCategoryData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="sessions"
+                >
+                  {referrerCategoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.category] || COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
+
+      {/* Daily Trend Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Dagelijkse Trend (Echte Gebruikers)</CardTitle>
+          <CardDescription>Unieke sessies en pageviews per dag</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingSummary ? (
+            <Skeleton className="h-[250px] w-full" />
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={trendData}>
+                <XAxis dataKey="date" fontSize={12} />
+                <YAxis fontSize={12} />
+                <Tooltip />
+                <Legend />
+                <Area 
+                  type="monotone" 
+                  dataKey="Unieke Sessies" 
+                  stroke="#10b981" 
+                  fill="#10b98133"
+                  strokeWidth={2}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="Echte Pageviews" 
+                  stroke="hsl(var(--primary))" 
+                  fill="hsl(var(--primary) / 0.2)"
+                  strokeWidth={2}
+                />
+                {showDatacenter && (
+                  <Area 
+                    type="monotone" 
+                    dataKey="Datacenter" 
+                    stroke="hsl(var(--destructive))" 
+                    fill="hsl(var(--destructive) / 0.2)"
+                    strokeWidth={2}
+                  />
+                )}
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Hourly Distribution */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Uurverdeling (UTC)
+          </CardTitle>
+          <CardDescription>Wanneer echte gebruikers actief zijn</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={hourlyData}>
+              <XAxis dataKey="hour" fontSize={10} interval={2} />
+              <YAxis fontSize={12} />
+              <Tooltip />
+              <Bar dataKey="Echte Gebruikers" fill="hsl(var(--primary))" />
+              {showDatacenter && (
+                <Bar dataKey="Datacenter" fill="hsl(var(--destructive))" />
+              )}
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Details Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -275,21 +399,29 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
           </CardContent>
         </Card>
 
-        {/* Browser Breakdown */}
+        {/* Top Referrer Sources */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Browsers</CardTitle>
-            <CardDescription>Alleen echte gebruikers</CardDescription>
+            <CardTitle className="text-lg">Top Bronnen</CardTitle>
+            <CardDescription>Echte gebruikers per bron</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {overview?.browserBreakdown.slice(0, 5).map((item) => (
-                <div key={item.browser} className="flex items-center justify-between">
-                  <span>{item.browser}</span>
-                  <Badge variant="secondary">{item.count}</Badge>
+              {overview?.referrerSources.slice(0, 6).map((item) => (
+                <div key={item.source} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {categoryIconMap[item.category] || <Globe className="h-4 w-4" />}
+                    <span className="text-sm truncate max-w-[120px]" title={item.source}>
+                      {item.source}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">{item.avg_score}%</Badge>
+                    <Badge variant="secondary">{item.unique_sessions}</Badge>
+                  </div>
                 </div>
               ))}
-              {(!overview?.browserBreakdown || overview.browserBreakdown.length === 0) && (
+              {(!overview?.referrerSources || overview.referrerSources.length === 0) && (
                 <p className="text-muted-foreground text-sm">Geen data</p>
               )}
             </div>
@@ -326,6 +458,47 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
         </Card>
       </div>
 
+      {/* Top Pages (Real Users Only) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Top Pagina's (Echte Gebruikers)
+          </CardTitle>
+          <CardDescription>Populairste content zonder datacenter traffic</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-2">Pagina</th>
+                  <th className="text-right py-2 px-2">Sessies</th>
+                  <th className="text-right py-2 px-2">Pageviews</th>
+                  <th className="text-right py-2 px-2">Kwaliteit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {overview?.topPages.slice(0, 10).map((page) => (
+                  <tr key={page.path} className="border-b hover:bg-muted/50">
+                    <td className="py-2 px-2 truncate max-w-[300px]" title={page.path}>
+                      {page.path}
+                    </td>
+                    <td className="py-2 px-2 text-right font-medium">{page.unique_sessions}</td>
+                    <td className="py-2 px-2 text-right text-muted-foreground">{page.hits}</td>
+                    <td className="py-2 px-2 text-right">
+                      <Badge variant={page.avg_score >= 80 ? 'default' : page.avg_score >= 60 ? 'secondary' : 'destructive'}>
+                        {page.avg_score}%
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Country Breakdown */}
       <Card>
         <CardHeader>
@@ -333,7 +506,7 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
             <Globe className="h-5 w-5" />
             Landen (Alleen Echte Gebruikers)
           </CardTitle>
-          <CardDescription>Gefilterde locatiedata zonder datacenter traffic</CardDescription>
+          <CardDescription>Gesorteerd op unieke sessies</CardDescription>
         </CardHeader>
         <CardContent>
           {loadingCountry ? (
@@ -343,8 +516,8 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
               <BarChart data={(byCountry || []).slice(0, 10)} layout="vertical">
                 <XAxis type="number" fontSize={12} />
                 <YAxis dataKey="display_country" type="category" width={100} fontSize={12} />
-                <Tooltip />
-                <Bar dataKey="hit_count" fill="hsl(var(--primary))" name="Hits" />
+                <Tooltip formatter={(value, name) => [value, name === 'unique_sessions' ? 'Sessies' : 'Hits']} />
+                <Bar dataKey="unique_sessions" fill="#10b981" name="Sessies" />
               </BarChart>
             </ResponsiveContainer>
           )}

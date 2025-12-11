@@ -355,10 +355,25 @@ serve(async (req) => {
       userAgent, 
       referrer, 
       path, 
-      sessionId 
+      sessionId,
+      // New fields
+      visitorId,
+      isNewVisitor,
+      sessionStartAt,
+      scrollDepth,
+      timeOnPage,
+      previousPath,
+      isBounce,
+      pageLoadTime,
+      // UTM params
+      utm_source,
+      utm_medium,
+      utm_campaign,
+      utm_term,
+      utm_content,
     } = body;
 
-    console.log(`[log-clean-analytics] Processing: city=${city}, country=${country}, ip=${ip?.substring(0, 10)}...`);
+    console.log(`[log-clean-analytics] Processing: city=${city}, country=${country}, path=${path}, visitor=${visitorId?.substring(0, 10)}...`);
 
     // Classify the traffic
     const classification = classifyTraffic({
@@ -370,7 +385,7 @@ serve(async (req) => {
       referrer,
     });
 
-    console.log(`[log-clean-analytics] Result: is_datacenter=${classification.is_datacenter}, datacenter=${classification.datacenter_name}, score=${classification.real_user_score}, device=${classification.device_type}, browser=${classification.browser}`);
+    console.log(`[log-clean-analytics] Result: is_datacenter=${classification.is_datacenter}, score=${classification.real_user_score}, device=${classification.device_type}`);
 
     // Insert into clean_analytics
     const { data, error } = await supabase
@@ -390,6 +405,21 @@ serve(async (req) => {
         referrer,
         path,
         session_id: sessionId,
+        // New fields
+        visitor_id: visitorId,
+        is_new_visitor: isNewVisitor || false,
+        session_start_at: sessionStartAt,
+        scroll_depth: scrollDepth,
+        time_on_page: timeOnPage,
+        previous_path: previousPath,
+        is_bounce: isBounce,
+        page_load_time: pageLoadTime,
+        // UTM params
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_term,
+        utm_content,
       })
       .select()
       .single();
@@ -404,7 +434,6 @@ serve(async (req) => {
         success: true,
         id: data.id,
         is_datacenter: classification.is_datacenter,
-        datacenter_name: classification.datacenter_name,
         real_user_score: classification.real_user_score,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

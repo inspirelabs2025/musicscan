@@ -160,13 +160,52 @@ STIJL:
 
     console.log(`🎄 Story created with ID: ${newStory.id}`);
 
-    // Try to fetch artwork
+    // Step 2: Fetch artwork
+    let artworkUrl = null;
     try {
-      await supabase.functions.invoke('fetch-album-artwork', {
+      const artworkResult = await supabase.functions.invoke('fetch-album-artwork', {
         body: { artist, title: song_title, storyId: newStory.id }
       });
+      artworkUrl = artworkResult?.data?.artwork_url;
+      console.log(`🖼️ Artwork fetched: ${artworkUrl}`);
     } catch (artworkError) {
       console.log('Artwork fetch failed (non-critical):', artworkError);
+    }
+
+    // Step 3: Create poster product
+    let productId = null;
+    try {
+      const productResult = await supabase.functions.invoke('create-poster-product', {
+        body: { 
+          artist, 
+          title: song_title, 
+          image_url: artworkUrl,
+          tags: ['christmas', 'kerst', 'poster'],
+          category: 'POSTER'
+        }
+      });
+      productId = productResult?.data?.product_id;
+      console.log(`🛍️ Product created: ${productId}`);
+    } catch (productError) {
+      console.log('Product creation failed (non-critical):', productError);
+    }
+
+    // Step 4: Queue Facebook auto-post
+    try {
+      const singleUrl = `https://www.musicscan.app/singles/${slug}`;
+      await supabase.from('singles_facebook_queue').insert({
+        music_story_id: newStory.id,
+        artist: artist,
+        title: song_title,
+        image_url: artworkUrl,
+        story_url: singleUrl,
+        status: 'pending',
+        priority: 100, // High priority for new content
+        scheduled_for: new Date().toISOString()
+      });
+      console.log(`📘 Facebook post queued for: ${artist} - ${song_title}`);
+    } catch (fbError) {
+      console.log('Facebook queue failed (non-critical):', fbError);
     }
 
     return new Response(JSON.stringify({ 
@@ -174,7 +213,9 @@ STIJL:
       story_id: newStory.id,
       slug,
       word_count: wordCount,
-      reading_time: readingTime
+      reading_time: readingTime,
+      artwork_url: artworkUrl,
+      product_id: productId
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

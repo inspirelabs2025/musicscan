@@ -1163,100 +1163,187 @@ export type Database = {
       }
       clean_analytics: {
         Row: {
+          ad_blocker_detected: boolean | null
+          battery_charging: boolean | null
+          battery_level: number | null
           browser: string | null
           city: string | null
+          click_count: number | null
+          color_depth: number | null
+          connect_time: number | null
+          connection_type: string | null
+          cookies_enabled: boolean | null
+          copy_events: number | null
           country: string | null
+          cpu_cores: number | null
           created_at: string
           datacenter_name: string | null
+          device_memory: number | null
           device_type: string | null
+          dns_time: number | null
+          do_not_track: boolean | null
+          dom_interactive: number | null
+          download_clicks: number | null
           exit_page: boolean | null
+          fully_loaded: number | null
           id: string
           ip: string | null
           is_bounce: boolean | null
           is_datacenter: boolean
           is_new_visitor: boolean | null
+          java_enabled: boolean | null
+          language: string | null
+          online_status: boolean | null
           page_load_time: number | null
           path: string | null
+          platform: string | null
           previous_path: string | null
+          print_attempts: number | null
           real_country: string | null
           real_user_score: number
           referrer: string | null
           region: string | null
+          screen_resolution: string | null
           scroll_depth: number | null
           session_id: string | null
           session_start_at: string | null
           time_on_page: number | null
+          timezone: string | null
+          touch_support: boolean | null
+          ttfb: number | null
           user_agent: string | null
           utm_campaign: string | null
           utm_content: string | null
           utm_medium: string | null
           utm_source: string | null
           utm_term: string | null
+          viewport_height: number | null
+          viewport_width: number | null
           visitor_id: string | null
+          webgl_renderer: string | null
+          webgl_vendor: string | null
         }
         Insert: {
+          ad_blocker_detected?: boolean | null
+          battery_charging?: boolean | null
+          battery_level?: number | null
           browser?: string | null
           city?: string | null
+          click_count?: number | null
+          color_depth?: number | null
+          connect_time?: number | null
+          connection_type?: string | null
+          cookies_enabled?: boolean | null
+          copy_events?: number | null
           country?: string | null
+          cpu_cores?: number | null
           created_at?: string
           datacenter_name?: string | null
+          device_memory?: number | null
           device_type?: string | null
+          dns_time?: number | null
+          do_not_track?: boolean | null
+          dom_interactive?: number | null
+          download_clicks?: number | null
           exit_page?: boolean | null
+          fully_loaded?: number | null
           id?: string
           ip?: string | null
           is_bounce?: boolean | null
           is_datacenter?: boolean
           is_new_visitor?: boolean | null
+          java_enabled?: boolean | null
+          language?: string | null
+          online_status?: boolean | null
           page_load_time?: number | null
           path?: string | null
+          platform?: string | null
           previous_path?: string | null
+          print_attempts?: number | null
           real_country?: string | null
           real_user_score?: number
           referrer?: string | null
           region?: string | null
+          screen_resolution?: string | null
           scroll_depth?: number | null
           session_id?: string | null
           session_start_at?: string | null
           time_on_page?: number | null
+          timezone?: string | null
+          touch_support?: boolean | null
+          ttfb?: number | null
           user_agent?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
           visitor_id?: string | null
+          webgl_renderer?: string | null
+          webgl_vendor?: string | null
         }
         Update: {
+          ad_blocker_detected?: boolean | null
+          battery_charging?: boolean | null
+          battery_level?: number | null
           browser?: string | null
           city?: string | null
+          click_count?: number | null
+          color_depth?: number | null
+          connect_time?: number | null
+          connection_type?: string | null
+          cookies_enabled?: boolean | null
+          copy_events?: number | null
           country?: string | null
+          cpu_cores?: number | null
           created_at?: string
           datacenter_name?: string | null
+          device_memory?: number | null
           device_type?: string | null
+          dns_time?: number | null
+          do_not_track?: boolean | null
+          dom_interactive?: number | null
+          download_clicks?: number | null
           exit_page?: boolean | null
+          fully_loaded?: number | null
           id?: string
           ip?: string | null
           is_bounce?: boolean | null
           is_datacenter?: boolean
           is_new_visitor?: boolean | null
+          java_enabled?: boolean | null
+          language?: string | null
+          online_status?: boolean | null
           page_load_time?: number | null
           path?: string | null
+          platform?: string | null
           previous_path?: string | null
+          print_attempts?: number | null
           real_country?: string | null
           real_user_score?: number
           referrer?: string | null
           region?: string | null
+          screen_resolution?: string | null
           scroll_depth?: number | null
           session_id?: string | null
           session_start_at?: string | null
           time_on_page?: number | null
+          timezone?: string | null
+          touch_support?: boolean | null
+          ttfb?: number | null
           user_agent?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
           visitor_id?: string | null
+          webgl_renderer?: string | null
+          webgl_vendor?: string | null
         }
         Relationships: []
       }

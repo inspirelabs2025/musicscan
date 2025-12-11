@@ -15,6 +15,40 @@ interface UTMParams {
   utm_content?: string;
 }
 
+interface DeviceInfo {
+  screen_resolution: string;
+  viewport_width: number;
+  viewport_height: number;
+  color_depth: number;
+  timezone: string;
+  language: string;
+  platform: string;
+  touch_support: boolean;
+  connection_type: string | null;
+  device_memory: number | null;
+  cpu_cores: number | null;
+  ad_blocker_detected: boolean;
+  do_not_track: boolean;
+  cookies_enabled: boolean;
+  java_enabled: boolean;
+  online_status: boolean;
+  webgl_vendor: string | null;
+  webgl_renderer: string | null;
+}
+
+interface PerformanceTiming {
+  dns_time: number | null;
+  connect_time: number | null;
+  ttfb: number | null;
+  dom_interactive: number | null;
+  fully_loaded: number | null;
+}
+
+interface BatteryInfo {
+  battery_level: number | null;
+  battery_charging: boolean | null;
+}
+
 // Cache for geo data to avoid repeated API calls
 let geoDataCache: TrackingData | null = null;
 let geoFetchPromise: Promise<TrackingData> | null = null;
@@ -25,6 +59,12 @@ let pageStartTime: number | null = null;
 let previousPath: string | null = null;
 let maxScrollDepth = 0;
 let pageviewCount = 0;
+
+// Interaction tracking
+let clickCount = 0;
+let copyEvents = 0;
+let printAttempts = 0;
+let downloadClicks = 0;
 
 // Visitor ID (persistent across sessions)
 const VISITOR_ID_KEY = 'musicscan_visitor_id';
@@ -58,6 +98,140 @@ function getUTMParams(): UTMParams {
     utm_campaign: params.get('utm_campaign') || undefined,
     utm_term: params.get('utm_term') || undefined,
     utm_content: params.get('utm_content') || undefined,
+  };
+}
+
+/**
+ * Get comprehensive device/browser info
+ */
+function getDeviceInfo(): DeviceInfo {
+  const nav = navigator as any;
+  
+  // Screen info
+  const screenResolution = `${screen.width}x${screen.height}`;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const colorDepth = screen.colorDepth;
+  
+  // System info
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const language = navigator.language;
+  const platform = navigator.platform || nav.userAgentData?.platform || 'Unknown';
+  
+  // Capabilities
+  const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const deviceMemory = nav.deviceMemory || null;
+  const cpuCores = navigator.hardwareConcurrency || null;
+  
+  // Connection info
+  let connectionType = null;
+  if (nav.connection) {
+    connectionType = nav.connection.effectiveType || nav.connection.type || null;
+  }
+  
+  // Privacy settings
+  const doNotTrack = navigator.doNotTrack === '1' || (nav.globalPrivacyControl === true);
+  const cookiesEnabled = navigator.cookieEnabled;
+  const javaEnabled = false;
+  const onlineStatus = navigator.onLine;
+  
+  // Ad blocker detection
+  let adBlockerDetected = false;
+  try {
+    const testAd = document.createElement('div');
+    testAd.innerHTML = '&nbsp;';
+    testAd.className = 'adsbox ad-banner';
+    testAd.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(testAd);
+    adBlockerDetected = testAd.offsetHeight === 0;
+    document.body.removeChild(testAd);
+  } catch (e) {
+    adBlockerDetected = false;
+  }
+  
+  // WebGL info (GPU)
+  let webglVendor = null;
+  let webglRenderer = null;
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl') as WebGLRenderingContext | null;
+    if (gl) {
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (debugInfo) {
+        webglVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+        webglRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+      }
+    }
+  } catch (e) {
+    // WebGL not available
+  }
+  
+  return {
+    screen_resolution: screenResolution,
+    viewport_width: viewportWidth,
+    viewport_height: viewportHeight,
+    color_depth: colorDepth,
+    timezone,
+    language,
+    platform,
+    touch_support: touchSupport,
+    connection_type: connectionType,
+    device_memory: deviceMemory,
+    cpu_cores: cpuCores,
+    ad_blocker_detected: adBlockerDetected,
+    do_not_track: doNotTrack,
+    cookies_enabled: cookiesEnabled,
+    java_enabled: javaEnabled,
+    online_status: onlineStatus,
+    webgl_vendor: webglVendor,
+    webgl_renderer: webglRenderer,
+  };
+}
+
+/**
+ * Get battery info (async)
+ */
+async function getBatteryInfo(): Promise<BatteryInfo> {
+  try {
+    const nav = navigator as any;
+    if (nav.getBattery) {
+      const battery = await nav.getBattery();
+      return {
+        battery_level: Math.round(battery.level * 100),
+        battery_charging: battery.charging,
+      };
+    }
+  } catch (e) {
+    // Battery API not available
+  }
+  return { battery_level: null, battery_charging: null };
+}
+
+/**
+ * Get performance timing
+ */
+function getPerformanceTiming(): PerformanceTiming {
+  try {
+    const entries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+    if (entries.length > 0) {
+      const nav = entries[0];
+      return {
+        dns_time: Math.round(nav.domainLookupEnd - nav.domainLookupStart),
+        connect_time: Math.round(nav.connectEnd - nav.connectStart),
+        ttfb: Math.round(nav.responseStart - nav.requestStart),
+        dom_interactive: Math.round(nav.domInteractive - nav.fetchStart),
+        fully_loaded: Math.round(nav.loadEventEnd - nav.fetchStart),
+      };
+    }
+  } catch (e) {
+    // Performance API not available
+  }
+  return {
+    dns_time: null,
+    connect_time: null,
+    ttfb: null,
+    dom_interactive: null,
+    fully_loaded: null,
   };
 }
 
@@ -174,6 +348,28 @@ function trackScrollDepth() {
 }
 
 /**
+ * Reset interaction counters for new page
+ */
+function resetInteractionCounters() {
+  clickCount = 0;
+  copyEvents = 0;
+  printAttempts = 0;
+  downloadClicks = 0;
+}
+
+/**
+ * Get current interaction counts
+ */
+function getInteractionCounts() {
+  return {
+    click_count: clickCount,
+    copy_events: copyEvents,
+    print_attempts: printAttempts,
+    download_clicks: downloadClicks,
+  };
+}
+
+/**
  * Debounce tracking to avoid duplicate calls
  */
 let lastTrackedPath = '';
@@ -202,9 +398,11 @@ export async function trackCleanPageview(path?: string): Promise<void> {
   const prevPath = previousPath;
   previousPath = currentPath;
   
-  // Reset scroll depth for new page
+  // Get scroll depth and interaction counts before resetting
   const scrollDepth = maxScrollDepth;
+  const interactions = getInteractionCounts();
   maxScrollDepth = 0;
+  resetInteractionCounters();
   
   lastTrackedPath = currentPath;
   lastTrackedTime = now;
@@ -217,33 +415,58 @@ export async function trackCleanPageview(path?: string): Promise<void> {
   }
   
   try {
-    const geoData = await fetchGeoData();
+    // Gather all data
+    const [geoData, batteryInfo] = await Promise.all([
+      fetchGeoData(),
+      getBatteryInfo(),
+    ]);
+    
     const sessionId = getSessionId();
     const { visitorId, isNew } = getVisitorId();
     const utmParams = getUTMParams();
+    const deviceInfo = getDeviceInfo();
+    const perfTiming = getPerformanceTiming();
     
-    // Determine if this might be a bounce (will be updated server-side)
-    // First pageview in session is potentially a bounce until more pages are viewed
+    // Determine if this might be a bounce
     const isBounce = pageviewCount === 1;
     
     const payload = {
+      // Geo data
       ip: geoData.ip,
       city: geoData.city,
       country: geoData.country,
       region: geoData.region,
+      
+      // Basic tracking
       userAgent: navigator.userAgent,
       referrer: document.referrer || null,
       path: currentPath,
       sessionId,
-      // New fields
+      
+      // Visitor tracking
       visitorId,
       isNewVisitor: isNew,
       sessionStartAt: new Date(sessionStartTime).toISOString(),
+      
+      // Engagement
       scrollDepth: scrollDepth > 0 ? scrollDepth : undefined,
       timeOnPage: timeOnPage,
       previousPath: prevPath,
       isBounce,
       pageLoadTime: Math.round(performance.now()),
+      
+      // Device info
+      ...deviceInfo,
+      
+      // Battery info
+      ...batteryInfo,
+      
+      // Performance timing
+      ...perfTiming,
+      
+      // Interaction counts (from previous page)
+      ...interactions,
+      
       // UTM params
       ...utmParams,
     };
@@ -268,6 +491,7 @@ function sendExitData() {
   const timeOnPage = Math.round((Date.now() - pageStartTime) / 1000);
   const scrollDepth = maxScrollDepth;
   const sessionId = getSessionId();
+  const interactions = getInteractionCounts();
   
   // Use sendBeacon for reliable delivery on page exit
   const data = JSON.stringify({
@@ -276,10 +500,11 @@ function sendExitData() {
     timeOnPage,
     scrollDepth,
     exitPage: true,
+    ...interactions,
   });
   
   // Try sendBeacon first, fall back to sync XHR
-  const url = `${import.meta.env.VITE_SUPABASE_URL || 'https://ssxbpyqnjfiyubsuonar.supabase.co'}/functions/v1/log-clean-analytics-exit`;
+  const url = 'https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/log-clean-analytics-exit';
   navigator.sendBeacon(url, data);
 }
 
@@ -310,6 +535,29 @@ export function initCleanAnalytics(): void {
       scrollTimeout = null;
     }, 200);
   }, { passive: true });
+  
+  // Track clicks
+  window.addEventListener('click', (e) => {
+    clickCount++;
+    
+    // Track download clicks
+    const target = e.target as HTMLElement;
+    const link = target.closest('a');
+    if (link) {
+      const href = link.getAttribute('href') || '';
+      const hasDownload = link.hasAttribute('download');
+      const isFileLink = /\.(pdf|zip|doc|docx|xls|xlsx|csv|mp3|mp4|wav|rar|7z)$/i.test(href);
+      if (hasDownload || isFileLink) {
+        downloadClicks++;
+      }
+    }
+  }, { passive: true });
+  
+  // Track copy events
+  document.addEventListener('copy', () => { copyEvents++; });
+  
+  // Track print attempts
+  window.addEventListener('beforeprint', () => { printAttempts++; });
   
   // Track navigation changes for SPA using History API
   const originalPushState = history.pushState;

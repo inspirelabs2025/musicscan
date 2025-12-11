@@ -1161,6 +1161,63 @@ export type Database = {
         }
         Relationships: []
       }
+      clean_analytics: {
+        Row: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          datacenter_name: string | null
+          device_type: string | null
+          id: string
+          ip: string | null
+          is_datacenter: boolean
+          path: string | null
+          real_country: string | null
+          real_user_score: number
+          referrer: string | null
+          region: string | null
+          session_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          datacenter_name?: string | null
+          device_type?: string | null
+          id?: string
+          ip?: string | null
+          is_datacenter?: boolean
+          path?: string | null
+          real_country?: string | null
+          real_user_score?: number
+          referrer?: string | null
+          region?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          datacenter_name?: string | null
+          device_type?: string | null
+          id?: string
+          ip?: string | null
+          is_datacenter?: boolean
+          path?: string | null
+          real_country?: string | null
+          real_user_score?: number
+          referrer?: string | null
+          region?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       comment_generation_stats: {
         Row: {
           created_at: string | null
@@ -7794,6 +7851,26 @@ export type Database = {
       }
     }
     Views: {
+      clean_analytics_by_country: {
+        Row: {
+          avg_score: number | null
+          display_country: string | null
+          hit_count: number | null
+          real_hits: number | null
+        }
+        Relationships: []
+      }
+      clean_analytics_summary: {
+        Row: {
+          avg_real_score: number | null
+          datacenter_hits: number | null
+          date: string | null
+          purity_score: number | null
+          real_users: number | null
+          total_hits: number | null
+        }
+        Relationships: []
+      }
       cronjob_stats: {
         Row: {
           avg_execution_time_ms: number | null

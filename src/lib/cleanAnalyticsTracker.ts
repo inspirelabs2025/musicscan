@@ -7,9 +7,59 @@ interface TrackingData {
   region?: string;
 }
 
+interface UTMParams {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+}
+
 // Cache for geo data to avoid repeated API calls
 let geoDataCache: TrackingData | null = null;
 let geoFetchPromise: Promise<TrackingData> | null = null;
+
+// Session tracking
+let sessionStartTime: number | null = null;
+let pageStartTime: number | null = null;
+let previousPath: string | null = null;
+let maxScrollDepth = 0;
+let pageviewCount = 0;
+
+// Visitor ID (persistent across sessions)
+const VISITOR_ID_KEY = 'musicscan_visitor_id';
+const VISITOR_FIRST_SEEN_KEY = 'musicscan_first_seen';
+
+/**
+ * Get or create a persistent visitor ID
+ */
+function getVisitorId(): { visitorId: string; isNew: boolean } {
+  let visitorId = localStorage.getItem(VISITOR_ID_KEY);
+  let isNew = false;
+  
+  if (!visitorId) {
+    visitorId = `v_${Date.now()}_${Math.random().toString(36).substr(2, 12)}`;
+    localStorage.setItem(VISITOR_ID_KEY, visitorId);
+    localStorage.setItem(VISITOR_FIRST_SEEN_KEY, new Date().toISOString());
+    isNew = true;
+  }
+  
+  return { visitorId, isNew };
+}
+
+/**
+ * Extract UTM parameters from URL
+ */
+function getUTMParams(): UTMParams {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    utm_source: params.get('utm_source') || undefined,
+    utm_medium: params.get('utm_medium') || undefined,
+    utm_campaign: params.get('utm_campaign') || undefined,
+    utm_term: params.get('utm_term') || undefined,
+    utm_content: params.get('utm_content') || undefined,
+  };
+}
 
 /**
  * Fetch geo data from multiple IP geolocation services with fallback
@@ -105,6 +155,25 @@ function getSessionId(): string {
 }
 
 /**
+ * Track scroll depth
+ */
+function trackScrollDepth() {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const docHeight = Math.max(
+    document.body.scrollHeight,
+    document.documentElement.scrollHeight,
+    document.body.offsetHeight,
+    document.documentElement.offsetHeight
+  );
+  const winHeight = window.innerHeight;
+  const scrollPercent = Math.round((scrollTop / (docHeight - winHeight)) * 100);
+  
+  if (scrollPercent > maxScrollDepth) {
+    maxScrollDepth = Math.min(scrollPercent, 100);
+  }
+}
+
+/**
  * Debounce tracking to avoid duplicate calls
  */
 let lastTrackedPath = '';
@@ -123,12 +192,39 @@ export async function trackCleanPageview(path?: string): Promise<void> {
     return;
   }
   
+  // Calculate time on previous page
+  let timeOnPage: number | undefined;
+  if (pageStartTime && previousPath) {
+    timeOnPage = Math.round((now - pageStartTime) / 1000);
+  }
+  
+  // Track previous path for exit page analysis
+  const prevPath = previousPath;
+  previousPath = currentPath;
+  
+  // Reset scroll depth for new page
+  const scrollDepth = maxScrollDepth;
+  maxScrollDepth = 0;
+  
   lastTrackedPath = currentPath;
   lastTrackedTime = now;
+  pageStartTime = now;
+  pageviewCount++;
+  
+  // Initialize session start if first pageview
+  if (!sessionStartTime) {
+    sessionStartTime = now;
+  }
   
   try {
     const geoData = await fetchGeoData();
     const sessionId = getSessionId();
+    const { visitorId, isNew } = getVisitorId();
+    const utmParams = getUTMParams();
+    
+    // Determine if this might be a bounce (will be updated server-side)
+    // First pageview in session is potentially a bounce until more pages are viewed
+    const isBounce = pageviewCount === 1;
     
     const payload = {
       ip: geoData.ip,
@@ -139,6 +235,17 @@ export async function trackCleanPageview(path?: string): Promise<void> {
       referrer: document.referrer || null,
       path: currentPath,
       sessionId,
+      // New fields
+      visitorId,
+      isNewVisitor: isNew,
+      sessionStartAt: new Date(sessionStartTime).toISOString(),
+      scrollDepth: scrollDepth > 0 ? scrollDepth : undefined,
+      timeOnPage: timeOnPage,
+      previousPath: prevPath,
+      isBounce,
+      pageLoadTime: Math.round(performance.now()),
+      // UTM params
+      ...utmParams,
     };
 
     // Call the edge function (fire and forget for performance)
@@ -153,6 +260,30 @@ export async function trackCleanPageview(path?: string): Promise<void> {
 }
 
 /**
+ * Send exit page data when leaving
+ */
+function sendExitData() {
+  if (!previousPath || !pageStartTime) return;
+  
+  const timeOnPage = Math.round((Date.now() - pageStartTime) / 1000);
+  const scrollDepth = maxScrollDepth;
+  const sessionId = getSessionId();
+  
+  // Use sendBeacon for reliable delivery on page exit
+  const data = JSON.stringify({
+    sessionId,
+    path: previousPath,
+    timeOnPage,
+    scrollDepth,
+    exitPage: true,
+  });
+  
+  // Try sendBeacon first, fall back to sync XHR
+  const url = `${import.meta.env.VITE_SUPABASE_URL || 'https://ssxbpyqnjfiyubsuonar.supabase.co'}/functions/v1/log-clean-analytics-exit`;
+  navigator.sendBeacon(url, data);
+}
+
+/**
  * Initialize clean analytics tracking
  * Call this once on app startup
  */
@@ -163,8 +294,22 @@ export function initCleanAnalytics(): void {
     return;
   }
   
+  // Initialize timing
+  sessionStartTime = Date.now();
+  pageStartTime = Date.now();
+  
   // Track initial pageview
   trackCleanPageview();
+  
+  // Track scroll depth with throttle
+  let scrollTimeout: number | null = null;
+  window.addEventListener('scroll', () => {
+    if (scrollTimeout) return;
+    scrollTimeout = window.setTimeout(() => {
+      trackScrollDepth();
+      scrollTimeout = null;
+    }, 200);
+  }, { passive: true });
   
   // Track navigation changes for SPA using History API
   const originalPushState = history.pushState;
@@ -184,4 +329,14 @@ export function initCleanAnalytics(): void {
   window.addEventListener('popstate', () => {
     trackCleanPageview();
   });
+  
+  // Track page visibility changes (tab switch)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      sendExitData();
+    }
+  });
+  
+  // Track page unload
+  window.addEventListener('beforeunload', sendExitData);
 }

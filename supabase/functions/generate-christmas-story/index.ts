@@ -141,6 +141,7 @@ STIJL:
       .insert({
         slug,
         user_id: systemUserId,
+        query: `${artist} - ${song_title}`, // Required field
         artist: artist,
         single_name: song_title,
         story_content: storyContent,

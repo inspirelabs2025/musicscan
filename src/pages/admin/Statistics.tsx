@@ -17,6 +17,7 @@ import { TimeAnalysis } from '@/components/admin/statistics/TimeAnalysis';
 import { FacebookPerformance } from '@/components/admin/statistics/FacebookPerformance';
 import { GrowthMetrics } from '@/components/admin/statistics/GrowthMetrics';
 import { TopPagesTable } from '@/components/admin/statistics/TopPagesTable';
+import { CleanAnalyticsDashboard } from '@/components/admin/statistics/CleanAnalyticsDashboard';
 import { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 
@@ -149,8 +150,9 @@ export default function Statistics() {
 
           <TrafficOverview days={days} />
 
-          <Tabs defaultValue="sources" className="space-y-4">
-            <TabsList className="grid grid-cols-6 w-full max-w-3xl">
+          <Tabs defaultValue="clean" className="space-y-4">
+            <TabsList className="grid grid-cols-7 w-full max-w-4xl">
+              <TabsTrigger value="clean">🛡️ Clean</TabsTrigger>
               <TabsTrigger value="sources">Bronnen</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="devices">Devices</TabsTrigger>
@@ -158,6 +160,10 @@ export default function Statistics() {
               <TabsTrigger value="facebook">Facebook</TabsTrigger>
               <TabsTrigger value="growth">Groei</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="clean" className="space-y-4">
+              <CleanAnalyticsDashboard days={days} />
+            </TabsContent>
 
             <TabsContent value="sources" className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">

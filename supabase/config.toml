@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.log-clean-analytics]
+verify_jwt = false
+
 [functions.worker_heartbeat]
 verify_jwt = false
 

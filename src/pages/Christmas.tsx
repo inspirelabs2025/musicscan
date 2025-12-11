@@ -3,20 +3,14 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChristmasCountdown } from '@/components/christmas/ChristmasCountdown';
-import { ChristmasMemoryGame } from '@/components/christmas/ChristmasMemoryGame';
-import { ChristmasAdventCalendar } from '@/components/christmas/ChristmasAdventCalendar';
 import { ChristmasRoyaltiesCalculator } from '@/components/christmas/ChristmasRoyaltiesCalculator';
 import { ChristmasCardGenerator } from '@/components/christmas/ChristmasCardGenerator';
 import { ChristmasRadioStream } from '@/components/christmas/ChristmasRadioStream';
-import { ChristmasKaraoke } from '@/components/christmas/ChristmasKaraoke';
-import { ChristmasWorldMap } from '@/components/christmas/ChristmasWorldMap';
 import { ChristmasDecades } from '@/components/christmas/ChristmasDecades';
-import { ChristmasNLTraditions } from '@/components/christmas/ChristmasNLTraditions';
 import { ChristmasPoll } from '@/components/christmas/ChristmasPoll';
-import { ChristmasGiftGuide } from '@/components/christmas/ChristmasGiftGuide';
 import { ChristmasBehindTheClip } from '@/components/christmas/ChristmasBehindTheClip';
 import { Link } from 'react-router-dom';
-import { Gift, Music, Sparkles } from 'lucide-react';
+import { Music, Sparkles } from 'lucide-react';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 
@@ -52,9 +46,9 @@ export default function Christmas() {
     <>
       <Helmet>
         <title>🎄 Kerst Muziek Platform | MusicScan</title>
-        <meta name="description" content="Ontdek de mooiste kerstmuziek: klassiekers, verhalen, advent kalender, quiz en meer. Van Wham! tot Mariah Carey - alles over kerstliedjes." />
+        <meta name="description" content="Ontdek de mooiste kerstmuziek: klassiekers, verhalen achter videoclips, royalties van kerstliedjes en meer." />
         <meta property="og:title" content="🎄 Kerst Muziek Platform | MusicScan" />
-        <meta property="og:description" content="Ontdek de mooiste kerstmuziek: klassiekers, verhalen, advent kalender, quiz en meer." />
+        <meta property="og:description" content="Ontdek de mooiste kerstmuziek: klassiekers, verhalen achter videoclips en meer." />
         <meta property="og:type" content="website" />
       </Helmet>
 
@@ -97,18 +91,13 @@ export default function Christmas() {
               
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Ontdek de magie van kerstmuziek! Van klassiekers tot moderne hits, 
-                van wereldtradities tot Nederlandse gewoontes - alles op één plek.
+                verhalen achter de videoclips en hoeveel artiesten verdienen.
               </p>
 
               <div className="flex flex-wrap justify-center gap-4 mb-12">
                 <Link to="/quizzen">
                   <Button size="lg" className="bg-gradient-to-r from-red-600 to-red-700">
                     <Music className="h-5 w-5 mr-2" /> Kerst Quiz
-                  </Button>
-                </Link>
-                <Link to="/shop">
-                  <Button size="lg" variant="outline" className="border-green-500 text-green-500 hover:bg-green-500/10">
-                    <Gift className="h-5 w-5 mr-2" /> Kerst Cadeaus
                   </Button>
                 </Link>
               </div>
@@ -123,41 +112,23 @@ export default function Christmas() {
 
         {/* Main Content */}
         <section className="container mx-auto px-4 pb-20 space-y-12 relative z-10">
-          {/* Row 1: Advent Calendar & Memory Game */}
-          <div className="grid lg:grid-cols-2 gap-8">
-            <ChristmasAdventCalendar />
-            <ChristmasMemoryGame />
-          </div>
+          {/* Radio Stream */}
+          <ChristmasRadioStream />
 
-          {/* Row 2: Radio & Karaoke */}
-          <div className="grid lg:grid-cols-2 gap-8">
-            <ChristmasRadioStream />
-            <ChristmasKaraoke />
-          </div>
-
-          {/* Row 3: Behind the Clip (Full Width) */}
+          {/* Behind the Clip (Full Width) */}
           <ChristmasBehindTheClip />
 
-          {/* Row 4: World Map & Decades */}
+          {/* Decades Timeline & Poll */}
           <div className="grid lg:grid-cols-2 gap-8">
-            <ChristmasWorldMap />
             <ChristmasDecades />
-          </div>
-
-          {/* Row 5: NL Traditions & Poll */}
-          <div className="grid lg:grid-cols-2 gap-8">
-            <ChristmasNLTraditions />
             <ChristmasPoll />
           </div>
 
-          {/* Row 6: Royalties Calculator & Card Generator */}
+          {/* Royalties Calculator & Card Generator */}
           <div className="grid lg:grid-cols-2 gap-8">
             <ChristmasRoyaltiesCalculator />
             <ChristmasCardGenerator />
           </div>
-
-          {/* Row 7: Gift Guide (Full Width) */}
-          <ChristmasGiftGuide />
         </section>
 
         <Footer />

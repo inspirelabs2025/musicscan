@@ -9,6 +9,7 @@ import { ChristmasRadioStream } from '@/components/christmas/ChristmasRadioStrea
 import { ChristmasDecades } from '@/components/christmas/ChristmasDecades';
 import { ChristmasPoll } from '@/components/christmas/ChristmasPoll';
 import { ChristmasBehindTheClip } from '@/components/christmas/ChristmasBehindTheClip';
+import ChristmasAnecdote from '@/components/christmas/ChristmasAnecdote';
 import { Link } from 'react-router-dom';
 import { Music, Sparkles } from 'lucide-react';
 import { Navigation } from '@/components/Navigation';
@@ -114,6 +115,9 @@ export default function Christmas() {
         <section className="container mx-auto px-4 pb-20 space-y-12 relative z-10">
           {/* Radio Stream */}
           <ChristmasRadioStream />
+
+          {/* Daily Anecdote */}
+          <ChristmasAnecdote />
 
           {/* Behind the Clip (Full Width) */}
           <ChristmasBehindTheClip />

@@ -113,14 +113,14 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${purityColor}`}>
-              {overview?.purityScore || 0}%
+              {overview?.totalHits === 0 ? 'N/A' : `${overview?.purityScore || 0}%`}
             </div>
             <Progress 
               value={overview?.purityScore || 0} 
               className="mt-2"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Percentage echte gebruikers
+              Confidence-gewogen score (max 97%)
             </p>
           </CardContent>
         </Card>

@@ -75,12 +75,25 @@ export const useCleanAnalyticsSummary = (days: number = 7) => {
       
       const summary: CleanAnalyticsSummary[] = [];
       byDate.forEach((value, date) => {
+        // Calculate confidence-weighted purity (max 97%)
+        let purityScore = 0;
+        if (value.total > 0) {
+          const avgConfidence = value.scores.length > 0
+            ? value.scores.reduce((a, b) => a + b, 0) / value.scores.length / 100
+            : 0;
+          const basePurity = (value.real / value.total) * 100;
+          purityScore = Math.min(
+            Math.round(basePurity * avgConfidence * 0.97 * 10) / 10,
+            97
+          );
+        }
+        
         summary.push({
           date,
           total_hits: value.total,
           real_users: value.real,
           datacenter_hits: value.datacenter,
-          purity_score: value.total > 0 ? Math.round((value.real / value.total) * 100 * 10) / 10 : 0,
+          purity_score: purityScore,
           avg_real_score: value.scores.length > 0 
             ? Math.round(value.scores.reduce((a, b) => a + b, 0) / value.scores.length) 
             : 0,
@@ -160,7 +173,32 @@ export const useCleanAnalyticsOverview = (days: number = 7) => {
       const totalHits = records.length;
       const realUsers = records.filter(r => !r.is_datacenter).length;
       const datacenterHits = records.filter(r => r.is_datacenter).length;
-      const purityScore = totalHits > 0 ? Math.round((realUsers / totalHits) * 100 * 10) / 10 : 100;
+      
+      // Calculate confidence-weighted purity score
+      // Even "real" users have varying confidence - factor that in
+      // Max realistic purity is ~97% (some traffic will always be ambiguous)
+      let purityScore = 0;
+      if (totalHits > 0) {
+        const realUserRecords = records.filter(r => !r.is_datacenter);
+        const avgConfidence = realUserRecords.length > 0
+          ? realUserRecords.reduce((a, b) => a + b.real_user_score, 0) / realUserRecords.length / 100
+          : 0;
+        
+        // Base purity = real users / total, weighted by confidence
+        const basePurity = (realUsers / totalHits) * 100;
+        // Apply confidence factor (reduces score based on how confident we are)
+        // Also apply a "detection uncertainty" factor of ~3% (we can never be 100% sure)
+        const uncertaintyFactor = 0.97; // Max 97% purity possible
+        purityScore = Math.min(
+          Math.round(basePurity * avgConfidence * uncertaintyFactor * 10) / 10,
+          97 // Hard cap at 97%
+        );
+        
+        // If we have very few records, reduce confidence further
+        if (totalHits < 10) {
+          purityScore = Math.round(purityScore * 0.8 * 10) / 10;
+        }
+      }
       
       // Datacenter breakdown
       const datacenterBreakdown = new Map<string, number>();

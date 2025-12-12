@@ -6,6 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// This function runs automatically via cron to backfill missing Christmas artwork
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -16,29 +17,40 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find Christmas stories without artwork
+    // Find Christmas stories without artwork (limit 5 per run for rate limiting)
     const { data: storiesWithoutArtwork, error: fetchError } = await supabase
       .from('music_stories')
       .select('id, artist, single_name, slug')
       .filter('yaml_frontmatter->>is_christmas', 'eq', 'true')
       .is('artwork_url', null)
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(5);
 
     if (fetchError) {
       throw new Error(`Fetch error: ${fetchError.message}`);
     }
 
-    console.log(`🎄 Found ${storiesWithoutArtwork?.length || 0} Christmas stories without artwork`);
+    if (!storiesWithoutArtwork || storiesWithoutArtwork.length === 0) {
+      console.log('🎄 No Christmas stories need artwork backfill');
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: 'No stories need artwork',
+        processed: 0 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    console.log(`🎄 Found ${storiesWithoutArtwork.length} Christmas stories without artwork`);
 
     const results = {
-      total: storiesWithoutArtwork?.length || 0,
+      total: storiesWithoutArtwork.length,
       success: 0,
       failed: 0,
       details: [] as any[]
     };
 
-    for (const story of storiesWithoutArtwork || []) {
+    for (const story of storiesWithoutArtwork) {
       try {
         console.log(`🖼️ Fetching artwork for: ${story.artist} - ${story.single_name}`);
         
@@ -74,8 +86,8 @@ serve(async (req) => {
           console.log(`❌ No artwork found for ${story.artist} - ${story.single_name}`);
         }
 
-        // Rate limiting - 1 second between requests
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Rate limiting - 2 seconds between requests
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
       } catch (error) {
         results.failed++;

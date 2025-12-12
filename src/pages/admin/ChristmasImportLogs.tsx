@@ -1,12 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle, XCircle, Clock, Music, Image, ShoppingBag, Facebook } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Music, Image, ShoppingBag, Facebook, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
-
+import { useState } from "react";
+import { toast } from "sonner";
 interface ChristmasLogItem {
   id: string;
   artist: string;
@@ -30,6 +32,8 @@ interface FacebookQueueItem {
 }
 
 export default function ChristmasImportLogs() {
+  const queryClient = useQueryClient();
+  const [isBackfilling, setIsBackfilling] = useState(false);
   // Fetch Christmas import queue
   const { data: queueItems, isLoading: loadingQueue } = useQuery({
     queryKey: ['christmas-import-logs'],
@@ -135,9 +139,30 @@ export default function ChristmasImportLogs() {
     return <div className="p-8 text-center">Laden...</div>;
   }
 
+  const handleBackfillArtwork = async () => {
+    setIsBackfilling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('backfill-christmas-artwork');
+      if (error) throw error;
+      toast.success(`Artwork backfill: ${data.success} geslaagd, ${data.failed} mislukt`);
+      queryClient.invalidateQueries({ queryKey: ['christmas-music-stories'] });
+    } catch (error) {
+      console.error('Backfill error:', error);
+      toast.error('Backfill mislukt');
+    } finally {
+      setIsBackfilling(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <h1 className="text-3xl font-bold">🎄 Christmas Import Logs</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">🎄 Christmas Import Logs</h1>
+        <Button onClick={handleBackfillArtwork} disabled={isBackfilling}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
+          {isBackfilling ? 'Bezig...' : 'Backfill Artwork'}
+        </Button>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">

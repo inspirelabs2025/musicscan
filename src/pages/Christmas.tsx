@@ -72,7 +72,7 @@ export default function Christmas() {
               transition={{ duration: 0.6 }}
             >
               <Badge className="mb-4 bg-gradient-to-r from-red-600 to-green-600 text-white border-0">
-                <Sparkles className="h-3 w-3 mr-1" /> MusicScan Kerst Special 2024
+                <Sparkles className="h-3 w-3 mr-1" /> Kerst Muziek
               </Badge>
               
               <motion.div
@@ -84,7 +84,7 @@ export default function Christmas() {
               </motion.div>
               
               <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-red-500 via-green-500 to-red-500 bg-clip-text text-transparent">
-                Kerst Muziek Platform
+                MusicScan Kerst Special 2024
               </h1>
               
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">

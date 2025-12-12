@@ -686,3 +686,9 @@ cron = "* * * * *"
 
 [functions.import-christmas-batch]
 verify_jwt = false
+
+[functions.backfill-christmas-artwork]
+verify_jwt = false
+
+[functions.backfill-christmas-facebook]
+verify_jwt = false

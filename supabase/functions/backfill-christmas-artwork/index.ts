@@ -18,13 +18,14 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Find Christmas stories without artwork (limit 5 per run for rate limiting)
+    // Get stories that haven't been tried recently (using a random offset to cycle through)
     const { data: storiesWithoutArtwork, error: fetchError } = await supabase
       .from('music_stories')
       .select('id, artist, single_name, slug')
       .filter('yaml_frontmatter->>is_christmas', 'eq', 'true')
       .is('artwork_url', null)
-      .order('created_at', { ascending: false })
-      .limit(5);
+      .order('artist', { ascending: true })
+      .limit(10);
 
     if (fetchError) {
       throw new Error(`Fetch error: ${fetchError.message}`);

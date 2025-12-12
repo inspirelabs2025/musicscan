@@ -190,18 +190,16 @@ STIJL:
       console.log('Product creation failed (non-critical):', productError);
     }
 
-    // Step 4: Queue Facebook auto-post
+    // Step 4: Queue Facebook auto-post (using correct column names)
     try {
-      const singleUrl = `https://www.musicscan.app/singles/${slug}`;
       await supabase.from('singles_facebook_queue').insert({
         music_story_id: newStory.id,
         artist: artist,
-        title: song_title,
-        image_url: artworkUrl,
-        story_url: singleUrl,
+        single_name: song_title,
+        slug: slug,
+        artwork_url: artworkUrl,
         status: 'pending',
-        priority: 100, // High priority for new content
-        scheduled_for: new Date().toISOString()
+        priority: 100 // High priority for new content
       });
       console.log(`📘 Facebook post queued for: ${artist} - ${song_title}`);
     } catch (fbError) {

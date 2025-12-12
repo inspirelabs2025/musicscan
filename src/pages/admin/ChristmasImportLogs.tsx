@@ -40,7 +40,8 @@ export default function ChristmasImportLogs() {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as ChristmasLogItem[];
-    }
+    },
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 
   // Fetch music stories for artwork status
@@ -53,7 +54,8 @@ export default function ChristmasImportLogs() {
         .not('single_name', 'is', null);
       if (error) throw error;
       return data as MusicStory[];
-    }
+    },
+    refetchInterval: 30000,
   });
 
   // Fetch Facebook queue status
@@ -65,7 +67,8 @@ export default function ChristmasImportLogs() {
         .select('music_story_id, status, posted_at');
       if (error) throw error;
       return data as FacebookQueueItem[];
-    }
+    },
+    refetchInterval: 30000,
   });
 
   const getStoryStatus = (item: ChristmasLogItem) => {

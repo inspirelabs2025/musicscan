@@ -17,13 +17,13 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find Christmas stories without artwork (limit 5 per run for rate limiting)
-    // Get stories that haven't been tried recently (using a random offset to cycle through)
+    // Find Christmas stories without artwork that haven't been attempted yet
     const { data: storiesWithoutArtwork, error: fetchError } = await supabase
       .from('music_stories')
       .select('id, artist, single_name, slug')
       .filter('yaml_frontmatter->>is_christmas', 'eq', 'true')
       .is('artwork_url', null)
+      .or('artwork_fetch_attempted.is.null,artwork_fetch_attempted.eq.false')
       .order('artist', { ascending: true })
       .limit(10);
 
@@ -67,6 +67,12 @@ serve(async (req) => {
         const artworkUrl = artworkResult?.data?.artwork_url;
         
         if (artworkUrl) {
+          // Mark as attempted with successful artwork
+          await supabase
+            .from('music_stories')
+            .update({ artwork_fetch_attempted: true })
+            .eq('id', story.id);
+            
           results.success++;
           results.details.push({ 
             id: story.id, 
@@ -77,6 +83,12 @@ serve(async (req) => {
           });
           console.log(`✅ Artwork found: ${artworkUrl}`);
         } else {
+          // Mark as attempted even if no artwork found (skip next time)
+          await supabase
+            .from('music_stories')
+            .update({ artwork_fetch_attempted: true })
+            .eq('id', story.id);
+            
           results.failed++;
           results.details.push({ 
             id: story.id, 
@@ -91,6 +103,12 @@ serve(async (req) => {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
       } catch (error) {
+        // Mark as attempted even on error
+        await supabase
+          .from('music_stories')
+          .update({ artwork_fetch_attempted: true })
+          .eq('id', story.id);
+          
         results.failed++;
         results.details.push({ 
           id: story.id, 

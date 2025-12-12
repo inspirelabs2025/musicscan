@@ -12,7 +12,6 @@ import { ChristmasBehindTheClip } from '@/components/christmas/ChristmasBehindTh
 import ChristmasAnecdote from '@/components/christmas/ChristmasAnecdote';
 import { Link } from 'react-router-dom';
 import { Music, Sparkles } from 'lucide-react';
-import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 
 const Snowflake = ({ style }: { style: React.CSSProperties }) => (
@@ -54,8 +53,6 @@ export default function Christmas() {
       </Helmet>
 
       <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-background via-red-950/5 to-green-950/5">
-        <Navigation />
-        
         {/* Snowfall Effect */}
         <div className="fixed inset-0 pointer-events-none z-0">
           {snowflakes.map((style, i) => (

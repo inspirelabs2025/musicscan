@@ -3807,6 +3807,7 @@ export type Database = {
         Row: {
           album: string | null
           artist: string | null
+          artwork_fetch_attempted: boolean | null
           artwork_url: string | null
           catalog: string | null
           created_at: string
@@ -3836,6 +3837,7 @@ export type Database = {
         Insert: {
           album?: string | null
           artist?: string | null
+          artwork_fetch_attempted?: boolean | null
           artwork_url?: string | null
           catalog?: string | null
           created_at?: string
@@ -3865,6 +3867,7 @@ export type Database = {
         Update: {
           album?: string | null
           artist?: string | null
+          artwork_fetch_attempted?: boolean | null
           artwork_url?: string | null
           catalog?: string | null
           created_at?: string

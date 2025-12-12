@@ -47,28 +47,17 @@ export const ChristmasCountdown = () => {
   }, []);
 
   const TimeBlock = ({ value, label }: { value: number; label: string }) => (
-    <motion.div 
-      className="flex flex-col items-center"
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <motion.div 
-        className="relative bg-gradient-to-b from-red-600 to-red-800 text-white rounded-lg px-4 py-3 min-w-[70px] shadow-lg"
-        key={value}
-        initial={{ rotateX: -90 }}
-        animate={{ rotateX: 0 }}
-        transition={{ duration: 0.3 }}
-      >
+    <div className="flex flex-col items-center">
+      <div className="relative bg-gradient-to-b from-red-600 to-red-800 text-white rounded-lg px-4 py-3 min-w-[70px] shadow-lg">
         <span className="text-3xl md:text-4xl font-bold tabular-nums">
           {value.toString().padStart(2, '0')}
         </span>
         <div className="absolute inset-x-0 top-1/2 h-px bg-red-900/50" />
-      </motion.div>
+      </div>
       <span className="text-xs md:text-sm text-muted-foreground mt-2 uppercase tracking-wider">
         {label}
       </span>
-    </motion.div>
+    </div>
   );
 
   if (isChristmas) {

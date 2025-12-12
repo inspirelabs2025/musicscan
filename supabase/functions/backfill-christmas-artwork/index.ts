@@ -55,12 +55,13 @@ serve(async (req) => {
       try {
         console.log(`🖼️ Fetching artwork for: ${story.artist} - ${story.single_name}`);
         
-        // Call fetch-album-artwork
+        // Call fetch-album-artwork - MUST use item_id and item_type for DB update
         const artworkResult = await supabase.functions.invoke('fetch-album-artwork', {
           body: { 
             artist: story.artist, 
             title: story.single_name, 
-            storyId: story.id 
+            item_id: story.id,
+            item_type: 'music_stories'
           }
         });
 

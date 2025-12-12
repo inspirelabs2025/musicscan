@@ -690,5 +690,14 @@ verify_jwt = false
 [functions.backfill-christmas-artwork]
 verify_jwt = false
 
+[[functions.backfill-christmas-artwork.schedule]]
+cron = "*/5 * * * *"
+
 [functions.backfill-christmas-facebook]
 verify_jwt = false
+
+[functions.backfill-christmas-products]
+verify_jwt = false
+
+[[functions.backfill-christmas-products.schedule]]
+cron = "*/3 * * * *"

@@ -160,11 +160,16 @@ STIJL:
 
     console.log(`🎄 Story created with ID: ${newStory.id}`);
 
-    // Step 2: Fetch artwork
+    // Step 2: Fetch artwork - MUST use item_id and item_type for DB update
     let artworkUrl = null;
     try {
       const artworkResult = await supabase.functions.invoke('fetch-album-artwork', {
-        body: { artist, title: song_title, storyId: newStory.id }
+        body: { 
+          artist, 
+          title: song_title, 
+          item_id: newStory.id,
+          item_type: 'music_stories'
+        }
       });
       artworkUrl = artworkResult?.data?.artwork_url;
       console.log(`🖼️ Artwork fetched: ${artworkUrl}`);

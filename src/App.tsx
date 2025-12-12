@@ -104,6 +104,7 @@ const MonthOverview = lazy(() => import("./pages/MonthOverview"));
 const Christmas = lazy(() => import("./pages/Christmas"));
 const ChristmasAnecdotesPage = lazy(() => import("./pages/ChristmasAnecdotesPage"));
 const ChristmasImporter = lazy(() => import("./pages/admin/ChristmasImporter"));
+const ChristmasImportLogs = lazy(() => import("./pages/admin/ChristmasImportLogs"));
 
 // Collection pages
 const MyCollection = lazy(() => import("./pages/MyCollection"));
@@ -488,6 +489,7 @@ const AppContent = () => {
         <Route path="/admin/auto-comments" element={<ProtectedRoute><LazyRoute><AutoComments /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/anecdote-generation" element={<ProtectedRoute><LazyRoute><TestAnecdoteGeneration /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/christmas-importer" element={<ProtectedRoute><LazyRoute><ChristmasImporter /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/christmas-logs" element={<ProtectedRoute><LazyRoute><ChristmasImportLogs /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/music-news" element={<ProtectedRoute><LazyRoute><TestMusicNews /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/news-update" element={<ProtectedRoute><LazyRoute><TestNewsUpdate /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/news-generation" element={<ProtectedRoute><LazyRoute><TestNewsGeneration /></LazyRoute></ProtectedRoute>} />

@@ -534,6 +534,78 @@ export function getStudioTag(text: string): string | null {
 }
 
 // ============================================
+// CHRISTMAS DETECTION
+// ============================================
+export function isChristmasContent(title: string, artist?: string, content?: string): boolean {
+  const searchText = `${title} ${artist || ''} ${content || ''}`.toLowerCase();
+  const christmasKeywords = [
+    'christmas', 'kerst', 'xmas', 'santa', 'jingle', 'winter wonderland',
+    'silent night', 'holy night', 'noel', 'snowman', 'frosty', 'rudolph',
+    'last christmas', 'all i want for christmas', 'white christmas',
+    'feliz navidad', 'let it snow', 'rockin around', 'little drummer',
+    'carol', 'deck the halls', 'joy to the world', 'o holy night',
+    'have yourself a merry', 'sleigh ride', 'holly jolly', 'mistletoe'
+  ];
+  return christmasKeywords.some(kw => searchText.includes(kw));
+}
+
+// ============================================
+// CHRISTMAS SMART HASHTAGS (MAX 5)
+// ============================================
+export function buildChristmasHashtags(options: {
+  artist?: string;
+  year?: number;
+}): string[] {
+  const hashtags: string[] = [];
+  
+  // 1. BRANDED + CHRISTMAS HASHTAG
+  hashtags.push('#MusicScan');
+  hashtags.push(randomPick(['#KerstMuziek', '#ChristmasMusic', '#Kerstklassiekers']));
+  
+  // 2. ARTIEST HASHTAG
+  if (options.artist) {
+    const artistHashtag = options.artist
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .split(' ')
+      .filter(w => w.length > 0)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join('');
+    if (artistHashtag && artistHashtag.length > 2) {
+      hashtags.push(`#${artistHashtag}`);
+    }
+  }
+  
+  // 3. CHRISTMAS CONTEXT HASHTAG
+  hashtags.push(randomPick([
+    '#ChristmasSongs', '#HolidayMusic', '#KerstHits', 
+    '#XmasSongs', '#KerstPlaylist', '#ChristmasClassics'
+  ]));
+  
+  // 4. DECADE HASHTAG (if relevant)
+  if (options.year && hashtags.length < 5) {
+    const decade = detectDecade(options.year);
+    const decadeHashtags: Record<string, string> = {
+      '50s': '#50sMusic',
+      '60s': '#60sMusic',
+      '70s': '#70sMusic',
+      '80s': '#80sMusic',
+      '90s': '#90sMusic',
+      '2000s': '#2000sMusic',
+    };
+    if (decade && decadeHashtags[decade]) {
+      hashtags.push(decadeHashtags[decade]);
+    }
+  }
+  
+  // 5. EVERGREEN CHRISTMAS HASHTAG
+  if (hashtags.length < 5) {
+    hashtags.push(randomPick(['#VrolijkKerstfeest', '#MerryChristmas', '#HappyHolidays']));
+  }
+  
+  return hashtags.slice(0, 5);
+}
+
+// ============================================
 // RANDOM TEKST VARIATIES
 // ============================================
 export const introVariations = {
@@ -563,6 +635,18 @@ export const introVariations = {
     '💎 Hidden gem:',
     '🌟 Aanrader:',
   ],
+  christmas: [
+    '🎄 Kerstklassieker!',
+    '❄️ Feestelijke muziek:',
+    '🎅 Ho ho ho! Kersthit:',
+    '⛄ Winter wonderland:',
+    '🌟 Kerstsfeer met:',
+    '🔔 Jingle bells! Check:',
+    '🎁 Kerst cadeau tip:',
+    '✨ Magische kerstmuziek:',
+    '❄️ Winterse klanken:',
+    '🎄 Onder de kerstboom:',
+  ],
   generic: [
     '🎵 Muzieknieuws:',
     '📰 Just in:',
@@ -591,6 +675,13 @@ export const ctaVariations = {
     '✨ Bekijk onze collectie op',
     '🔗 Meer ontdekkingen op',
     '🎬 Meer video\'s op',
+  ],
+  christmas: [
+    '🎄 Meer kerstmuziek op',
+    '❄️ Ontdek kerstklassiekers op',
+    '🎅 Meer feestelijke hits op',
+    '🌟 Bekijk het kerstverhaal op',
+    '🔔 Meer kersthits op',
   ],
   generic: [
     '👉 Lees meer op',

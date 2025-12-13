@@ -8670,6 +8670,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_podcast_rotation: {
+        Args: { p_episode_id: string }
+        Returns: undefined
+      }
       increment_product_view: {
         Args: { p_product_id: string }
         Returns: undefined

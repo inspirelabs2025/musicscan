@@ -1,0 +1,8 @@
+# Podcast RSS Feed redirects for SEO-friendly URLs
+/feeds/podcast/:slug.xml https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/feeds-podcast?slug=:slug 200
+
+# Legacy RSS feed redirect
+/feeds/podcast-rss/* https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/feeds-podcast?slug=:splat 200
+
+# SPA fallback - must be last
+/* /index.html 200

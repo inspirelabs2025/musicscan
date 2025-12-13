@@ -4,7 +4,9 @@ import {
   randomPick, 
   introVariations, 
   ctaVariations, 
-  buildSmartHashtags, 
+  buildSmartHashtags,
+  buildChristmasHashtags,
+  isChristmasContent,
   getArtistTag, 
   getStudioTag, 
   detectGenre,
@@ -88,9 +90,21 @@ Deno.serve(async (req) => {
       .update(pageAccessToken)
       .digest('hex');
 
-    // Format the post content with random intro
-    const intro = randomPick(introVariations.generic);
-    let postMessage = `${intro} ${title}\n\n`;
+    // Detect if this is Christmas content
+    const isChristmas = isChristmasContent(title, artist, content);
+    console.log(`🎄 Christmas content detected: ${isChristmas}`);
+
+    // Format the post content with appropriate intro
+    const intro = isChristmas 
+      ? randomPick(introVariations.christmas)
+      : randomPick(introVariations.generic);
+    
+    // Use Christmas emoji in title for Christmas content
+    const formattedTitle = isChristmas 
+      ? `🎄 ${title.replace(/^🎵\s*/, '')}` 
+      : title;
+    
+    let postMessage = `${intro} ${formattedTitle}\n\n`;
     postMessage += content;
     
     // Artiest @tag detecteren in content
@@ -110,25 +124,34 @@ Deno.serve(async (req) => {
       postMessage += foundArtistTag ? `\n🎹 ${studioTag}` : `\n\n🎹 ${studioTag}`;
     }
     
-    // Genre detectie MET artiest voor betere nauwkeurigheid
-    const genre = detectGenre(artist || '', content);
-    
-    // ALTIJD buildSmartHashtags gebruiken - negeer handmatige hashtags
-    const smartHashtags = buildSmartHashtags({
-      artist: artist,
-      genre: genre,
-      year: year,
-      category: content_type === 'anecdote' ? 'story' : 
-                content_type === 'news' ? 'history' : 
-                content_type === 'youtube_discovery' ? 'video' : 'release',
-      isVinyl: content.toLowerCase().includes('vinyl') || content.toLowerCase().includes('plaat'),
-    });
+    // Use Christmas hashtags for Christmas content, otherwise smart hashtags
+    let smartHashtags: string[];
+    if (isChristmas) {
+      smartHashtags = buildChristmasHashtags({
+        artist: artist,
+        year: year,
+      });
+    } else {
+      // Genre detectie MET artiest voor betere nauwkeurigheid
+      const genre = detectGenre(artist || '', content);
+      smartHashtags = buildSmartHashtags({
+        artist: artist,
+        genre: genre,
+        year: year,
+        category: content_type === 'anecdote' ? 'story' : 
+                  content_type === 'news' ? 'history' : 
+                  content_type === 'youtube_discovery' ? 'video' : 'release',
+        isVinyl: content.toLowerCase().includes('vinyl') || content.toLowerCase().includes('plaat'),
+      });
+    }
     
     postMessage += '\n\n' + smartHashtags.join(' ');
     
-    // URL met random CTA
+    // URL met appropriate CTA
     if (url) {
-      const cta = randomPick(ctaVariations.generic);
+      const cta = isChristmas 
+        ? randomPick(ctaVariations.christmas)
+        : randomPick(ctaVariations.generic);
       postMessage += `\n\n${cta} ${url}`;
     }
     

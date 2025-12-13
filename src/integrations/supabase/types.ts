@@ -5128,6 +5128,98 @@ export type Database = {
           },
         ]
       }
+      podcast_facebook_queue: {
+        Row: {
+          created_at: string
+          episode_id: string | null
+          error_message: string | null
+          facebook_post_id: string | null
+          id: string
+          podcast_id: string | null
+          post_type: string
+          posted_at: string | null
+          scheduled_for: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          episode_id?: string | null
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          podcast_id?: string | null
+          post_type?: string
+          posted_at?: string | null
+          scheduled_for?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          episode_id?: string | null
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          podcast_id?: string | null
+          post_type?: string
+          posted_at?: string | null
+          scheduled_for?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_facebook_queue_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "own_podcast_episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "podcast_facebook_queue_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: false
+            referencedRelation: "own_podcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      podcast_rotation_tracker: {
+        Row: {
+          created_at: string
+          episode_id: string
+          id: string
+          last_posted_at: string | null
+          times_posted: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          episode_id: string
+          id?: string
+          last_posted_at?: string | null
+          times_posted?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          episode_id?: string
+          id?: string
+          last_posted_at?: string | null
+          times_posted?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_rotation_tracker_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: true
+            referencedRelation: "own_podcast_episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       poster_processing_queue: {
         Row: {
           artist_name: string

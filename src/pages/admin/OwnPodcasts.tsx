@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Upload, Copy, Check, Rss, Music, Mic, ExternalLink, Loader2, Play, Pencil, X } from 'lucide-react';
+import { Plus, Trash2, Upload, Copy, Check, Rss, Music, Mic, ExternalLink, Loader2, Play, Pencil, X, Image } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   useOwnPodcasts,
@@ -24,6 +24,7 @@ import {
   useDeleteEpisode,
   uploadPodcastAudio,
   uploadPodcastArtwork,
+  uploadEpisodeArtwork,
   getRSSFeedUrl,
   type OwnPodcast,
   type OwnPodcastEpisode,
@@ -66,6 +67,8 @@ export default function OwnPodcasts() {
   const [playingEpisodeData, setPlayingEpisodeData] = useState<OwnPodcastEpisode | null>(null);
   const [editArtworkFile, setEditArtworkFile] = useState<File | null>(null);
   const [editAudioFile, setEditAudioFile] = useState<File | null>(null);
+  const [episodeArtworkFile, setEpisodeArtworkFile] = useState<File | null>(null);
+  const [editEpisodeArtworkFile, setEditEpisodeArtworkFile] = useState<File | null>(null);
 
   // Form states
   const [podcastForm, setPodcastForm] = useState({
@@ -147,6 +150,12 @@ export default function OwnPodcasts() {
       // Get audio duration
       const audioDuration = await getAudioDuration(audioFile);
 
+      // Upload episode artwork if provided
+      let episodeArtworkUrl: string | undefined;
+      if (episodeArtworkFile) {
+        episodeArtworkUrl = await uploadEpisodeArtwork(episodeArtworkFile, selectedPodcast.slug);
+      }
+
       await createEpisode.mutateAsync({
         podcast_id: selectedPodcast.id,
         title: episodeForm.title,
@@ -156,6 +165,7 @@ export default function OwnPodcasts() {
         audio_duration_seconds: audioDuration,
         episode_number: episodeForm.episode_number,
         season_number: episodeForm.season_number,
+        artwork_url: episodeArtworkUrl,
       });
 
       setShowCreateEpisode(false);
@@ -169,6 +179,7 @@ export default function OwnPodcasts() {
         season_number: 1,
       });
       setAudioFile(null);
+      setEpisodeArtworkFile(null);
     } catch (error) {
       console.error('Error creating episode:', error);
     } finally {
@@ -277,6 +288,7 @@ export default function OwnPodcasts() {
       season_number: episode.season_number || 1,
     });
     setEditAudioFile(null);
+    setEditEpisodeArtworkFile(null);
     setShowEditEpisode(true);
   };
 
@@ -288,11 +300,16 @@ export default function OwnPodcasts() {
       let audioUrl = editingEpisode.audio_url;
       let audioFileSize = editingEpisode.audio_file_size;
       let audioDuration = editingEpisode.audio_duration_seconds;
+      let artworkUrl = editingEpisode.artwork_url;
 
       if (editAudioFile) {
         audioUrl = await uploadPodcastAudio(editAudioFile, selectedPodcast.slug);
         audioFileSize = editAudioFile.size;
         audioDuration = await getAudioDuration(editAudioFile);
+      }
+
+      if (editEpisodeArtworkFile) {
+        artworkUrl = await uploadEpisodeArtwork(editEpisodeArtworkFile, selectedPodcast.slug, editingEpisode.id);
       }
 
       await updateEpisode.mutateAsync({
@@ -305,11 +322,13 @@ export default function OwnPodcasts() {
         audio_duration_seconds: audioDuration,
         episode_number: episodeForm.episode_number,
         season_number: episodeForm.season_number,
+        artwork_url: artworkUrl,
       });
 
       setShowEditEpisode(false);
       setEditingEpisode(null);
       setEditAudioFile(null);
+      setEditEpisodeArtworkFile(null);
     } catch (error) {
       console.error('Error updating episode:', error);
     } finally {
@@ -682,6 +701,23 @@ export default function OwnPodcasts() {
                             </p>
                           )}
                         </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="episodeArtwork">Episode Cover (optioneel, vierkant)</Label>
+                          <Input
+                            id="episodeArtwork"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setEpisodeArtworkFile(e.target.files?.[0] || null)}
+                          />
+                          {episodeArtworkFile && (
+                            <p className="text-xs text-muted-foreground">
+                              {episodeArtworkFile.name}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            Zonder cover wordt de podcast artwork gebruikt.
+                          </p>
+                        </div>
                       </div>
                       <DialogFooter>
                         <Button variant="outline" onClick={() => setShowCreateEpisode(false)}>
@@ -719,6 +755,19 @@ export default function OwnPodcasts() {
                     {episodes?.map((episode) => (
                       <Card key={episode.id}>
                         <CardContent className="flex items-center gap-4 py-4">
+                          {/* Episode Artwork */}
+                          {episode.artwork_url || selectedPodcast?.artwork_url ? (
+                            <img
+                              src={episode.artwork_url || selectedPodcast?.artwork_url || ''}
+                              alt={episode.title}
+                              className="w-12 h-12 rounded-lg object-cover shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                              <Image className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
+                          
                           <Button
                             size="icon"
                             variant="ghost"
@@ -1017,6 +1066,30 @@ export default function OwnPodcasts() {
                 {editAudioFile && (
                   <p className="text-xs text-muted-foreground">
                     Nieuwe: {editAudioFile.name} ({(editAudioFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editEpisodeArtwork">Episode Cover</Label>
+                {editingEpisode?.artwork_url && !editEpisodeArtworkFile && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <img 
+                      src={editingEpisode.artwork_url} 
+                      alt="Current artwork" 
+                      className="w-16 h-16 rounded-lg object-cover"
+                    />
+                    <span className="text-sm text-muted-foreground">Huidige cover</span>
+                  </div>
+                )}
+                <Input
+                  id="editEpisodeArtwork"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEditEpisodeArtworkFile(e.target.files?.[0] || null)}
+                />
+                {editEpisodeArtworkFile && (
+                  <p className="text-xs text-muted-foreground">
+                    Nieuwe: {editEpisodeArtworkFile.name}
                   </p>
                 )}
               </div>

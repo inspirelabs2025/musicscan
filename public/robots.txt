@@ -68,6 +68,12 @@ Allow: /nl-muziekfeit
 Allow: /nl-muziekfeit/*
 Allow: /nl-muziek
 Allow: /nl-muziek/*
+Allow: /podcasts
+Allow: /podcasts/*
+Allow: /podcast
+Allow: /podcast/*
+Allow: /onze-podcasts
+Allow: /feeds/podcast/*
 
 # LLM-Optimized Markdown Content
 Allow: /api/llm/
@@ -80,23 +86,24 @@ Crawl-delay: 2
 
 # LLM Documentation Files
 # For AI systems to better understand and index our site
-LLMs.txt: https://www.musicscan.app/llms.txt
-LLMs-full.txt: https://www.musicscan.app/llms-full.txt
+LLMs.txt: https://musicscan.nl/llms.txt
+LLMs-full.txt: https://musicscan.nl/llms-full.txt
 
-# Sitemaps - All served from musicscan.app domain
-Sitemap: https://www.musicscan.app/sitemap.xml
-Sitemap: https://www.musicscan.app/sitemap-llm.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-artists.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-singles.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-music-stories.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-posters.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-metal-prints.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-blog.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-anecdotes.xml
-Sitemap: https://www.musicscan.app/sm/sitemap-nl-muziekfeiten.xml
+# Sitemaps - All served from musicscan.nl domain
+Sitemap: https://musicscan.nl/sitemap.xml
+Sitemap: https://musicscan.nl/sitemap-llm.xml
+Sitemap: https://musicscan.nl/sitemap-podcasts.xml
+Sitemap: https://musicscan.nl/sm/sitemap-artists.xml
+Sitemap: https://musicscan.nl/sm/sitemap-singles.xml
+Sitemap: https://musicscan.nl/sm/sitemap-music-stories.xml
+Sitemap: https://musicscan.nl/sm/sitemap-posters.xml
+Sitemap: https://musicscan.nl/sm/sitemap-metal-prints.xml
+Sitemap: https://musicscan.nl/sm/sitemap-blog.xml
+Sitemap: https://musicscan.nl/sm/sitemap-anecdotes.xml
+Sitemap: https://musicscan.nl/sm/sitemap-nl-muziekfeiten.xml
 
 # IndexNow Key
-Sitemap: https://www.musicscan.app/indexnow-key.txt
+Sitemap: https://musicscan.nl/indexnow-key.txt
 
 # SEO optimizations - High Priority
 Allow: /posters

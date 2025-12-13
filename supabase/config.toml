@@ -707,3 +707,6 @@ verify_jwt = false
 
 [functions.feeds-podcast]
 verify_jwt = false
+
+[functions.generate-podcast-sitemap]
+verify_jwt = false

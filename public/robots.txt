@@ -72,6 +72,7 @@ Allow: /podcasts
 Allow: /podcasts/*
 Allow: /podcast
 Allow: /podcast/*
+Allow: /de-plaat-en-het-verhaal
 Allow: /onze-podcasts
 Allow: /feeds/podcast/*
 

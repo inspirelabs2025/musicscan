@@ -134,6 +134,7 @@ const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 const Podcasts = lazy(() => import("./pages/Podcasts"));
 const PodcastDetail = lazy(() => import("./pages/PodcastDetail"));
 const PodcastEpisodeDetail = lazy(() => import("./pages/PodcastEpisodeDetail"));
+const DePlaatEnHetVerhaal = lazy(() => import("./pages/DePlaatEnHetVerhaal"));
 
 // TimeMachine pages
 const TimeMachine = lazy(() => import("./pages/TimeMachine"));
@@ -395,6 +396,7 @@ const AppContent = () => {
         <Route path="/maand-overzicht/:year/:month" element={<LazyRoute><MonthOverview /></LazyRoute>} />
         
         {/* Podcast routes */}
+        <Route path="/de-plaat-en-het-verhaal" element={<LazyRoute><DePlaatEnHetVerhaal /></LazyRoute>} />
         <Route path="/podcasts" element={<LazyRoute><Podcasts /></LazyRoute>} />
         <Route path="/podcast/:podcastSlug" element={<LazyRoute><PodcastDetail /></LazyRoute>} />
         <Route path="/podcast/:podcastSlug/:episodeSlug" element={<LazyRoute><PodcastEpisodeDetail /></LazyRoute>} />

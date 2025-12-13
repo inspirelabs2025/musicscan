@@ -701,3 +701,9 @@ verify_jwt = false
 
 [[functions.backfill-christmas-products.schedule]]
 cron = "*/3 * * * *"
+
+[functions.podcast-rss]
+verify_jwt = false
+
+[functions.feeds-podcast]
+verify_jwt = false

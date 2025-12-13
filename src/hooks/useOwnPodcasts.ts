@@ -366,8 +366,8 @@ export async function uploadEpisodeArtwork(file: File, podcastSlug: string, epis
   return urlData.publicUrl;
 }
 
-// Generate RSS feed URL
+// Generate RSS feed URL - uses MusicScan domain for SEO
 export function getRSSFeedUrl(podcastSlug: string): string {
-  const supabaseUrl = 'https://ssxbpyqnjfiyubsuonar.supabase.co';
-  return `${supabaseUrl}/functions/v1/generate-podcast-rss?podcast=${podcastSlug}`;
+  // Use the branded MusicScan URL
+  return `https://musicscan.nl/feeds/podcast/${podcastSlug}.xml`;
 }

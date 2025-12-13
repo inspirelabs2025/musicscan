@@ -344,6 +344,28 @@ export async function uploadPodcastArtwork(file: File, podcastSlug: string): Pro
   return urlData.publicUrl;
 }
 
+// Upload episode artwork
+export async function uploadEpisodeArtwork(file: File, podcastSlug: string, episodeId?: string): Promise<string> {
+  const fileExt = file.name.split('.').pop();
+  const uniqueId = episodeId || `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+  const fileName = `${podcastSlug}/episodes/${uniqueId}.${fileExt}`;
+
+  const { data, error } = await supabase.storage
+    .from('podcast-artwork')
+    .upload(fileName, file, {
+      contentType: file.type,
+      upsert: true,
+    });
+
+  if (error) throw error;
+
+  const { data: urlData } = supabase.storage
+    .from('podcast-artwork')
+    .getPublicUrl(data.path);
+
+  return urlData.publicUrl;
+}
+
 // Generate RSS feed URL
 export function getRSSFeedUrl(podcastSlug: string): string {
   const supabaseUrl = 'https://ssxbpyqnjfiyubsuonar.supabase.co';

@@ -18,6 +18,7 @@ import { FacebookPerformance } from '@/components/admin/statistics/FacebookPerfo
 import { GrowthMetrics } from '@/components/admin/statistics/GrowthMetrics';
 import { TopPagesTable } from '@/components/admin/statistics/TopPagesTable';
 import { CleanAnalyticsDashboard } from '@/components/admin/statistics/CleanAnalyticsDashboard';
+import { PodcastStatistics } from '@/components/admin/statistics/PodcastStatistics';
 import { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 
@@ -151,13 +152,14 @@ export default function Statistics() {
           <TrafficOverview days={days} />
 
           <Tabs defaultValue="clean" className="space-y-4">
-            <TabsList className="grid grid-cols-7 w-full max-w-4xl">
+            <TabsList className="grid grid-cols-8 w-full max-w-5xl">
               <TabsTrigger value="clean">🛡️ Clean</TabsTrigger>
               <TabsTrigger value="sources">Bronnen</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="devices">Devices</TabsTrigger>
               <TabsTrigger value="time">Tijd</TabsTrigger>
               <TabsTrigger value="facebook">Facebook</TabsTrigger>
+              <TabsTrigger value="podcasts">🎙️ Podcasts</TabsTrigger>
               <TabsTrigger value="growth">Groei</TabsTrigger>
             </TabsList>
 
@@ -187,6 +189,10 @@ export default function Statistics() {
 
             <TabsContent value="facebook" className="space-y-4">
               <FacebookPerformance days={days} />
+            </TabsContent>
+
+            <TabsContent value="podcasts" className="space-y-4">
+              <PodcastStatistics days={days} />
             </TabsContent>
 
             <TabsContent value="growth" className="space-y-4">

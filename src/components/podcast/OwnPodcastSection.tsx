@@ -20,9 +20,14 @@ function OwnPodcastCard({ podcast }: OwnPodcastCardProps) {
   const { data: episodes = [] } = useOwnPodcastEpisodes(podcast.id);
   const publishedEpisodes = episodes.filter(ep => ep.is_published);
 
+  // Use dedicated page for "de-plaat-en-het-verhaal", otherwise generic podcast route
+  const podcastUrl = podcast.slug === 'de-plaat-en-het-verhaal' 
+    ? '/de-plaat-en-het-verhaal' 
+    : `/podcast/${podcast.slug}`;
+
   return (
     <Card className="overflow-hidden group hover:shadow-lg transition-all">
-      <Link to={`/podcast/${podcast.slug}`}>
+      <Link to={podcastUrl}>
         <div className="relative aspect-square overflow-hidden">
           {podcast.artwork_url ? (
             <img
@@ -59,7 +64,7 @@ function OwnPodcastCard({ podcast }: OwnPodcastCardProps) {
             <Headphones className="w-4 h-4" />
             {publishedEpisodes.length} aflevering{publishedEpisodes.length !== 1 ? 'en' : ''}
           </span>
-          <Link to={`/podcast/${podcast.slug}`}>
+          <Link to={podcastUrl}>
             <Button variant="ghost" size="sm" className="gap-1 group-hover:text-primary">
               Bekijk podcast
               <ChevronRight className="w-4 h-4" />

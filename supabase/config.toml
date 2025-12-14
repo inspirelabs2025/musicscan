@@ -12,6 +12,15 @@ verify_jwt = false
 [functions.import-top2000]
 verify_jwt = false
 
+[functions.enrich-top2000-songs]
+verify_jwt = false
+
+[functions.analyze-top2000-year]
+verify_jwt = false
+
+[functions.compare-top2000-years]
+verify_jwt = false
+
 [functions.log-clean-analytics]
 verify_jwt = false
 

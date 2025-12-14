@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileJson, Table, Play, CheckCircle, Loader2, Download, RefreshCw, Trash2, AlertCircle, Search, Zap, FileText } from 'lucide-react';
+import { Upload, FileJson, Table, Play, CheckCircle, Loader2, Download, RefreshCw, Trash2, AlertCircle, Search, Zap, FileText, Sparkles, BarChart3, GitCompare } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,6 +37,13 @@ export default function Top2000Importer() {
   const [isImporting, setIsImporting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isClearingAll, setIsClearingAll] = useState(false);
+  
+  // Enrichment state
+  const [isEnriching, setIsEnriching] = useState(false);
+  const [enrichmentProgress, setEnrichmentProgress] = useState<{ processed: number; remaining: number } | null>(null);
+  const [isAnalyzingYear, setIsAnalyzingYear] = useState(false);
+  const [isComparing, setIsComparing] = useState(false);
+  const [selectedAnalysisYear, setSelectedAnalysisYear] = useState<number | null>(null);
   const [selectedEditionYear, setSelectedEditionYear] = useState<number | null>(null);
   
   // Scraping state
@@ -261,24 +268,32 @@ export default function Top2000Importer() {
       const { count: totalCount } = await supabase
         .from('top2000_entries')
         .select('*', { count: 'exact', head: true });
+
+      // Get enriched count
+      const { count: enrichedCount } = await supabase
+        .from('top2000_entries')
+        .select('*', { count: 'exact', head: true })
+        .not('enriched_at', 'is', null);
       
       // Query each possible year directly (2016-2025) to avoid 1000 row limit issues
       const yearCounts: Record<number, number> = {};
+      const yearEnrichedCounts: Record<number, number> = {};
       const years: number[] = [];
       
       const yearPromises = Array.from({ length: 10 }, (_, i) => 2016 + i).map(async (year) => {
-        const { count } = await supabase
-          .from('top2000_entries')
-          .select('*', { count: 'exact', head: true })
-          .eq('year', year);
-        return { year, count: count || 0 };
+        const [totalRes, enrichedRes] = await Promise.all([
+          supabase.from('top2000_entries').select('*', { count: 'exact', head: true }).eq('year', year),
+          supabase.from('top2000_entries').select('*', { count: 'exact', head: true }).eq('year', year).not('enriched_at', 'is', null),
+        ]);
+        return { year, count: totalRes.count || 0, enriched: enrichedRes.count || 0 };
       });
       
       const results = await Promise.all(yearPromises);
-      results.forEach(({ year, count }) => {
+      results.forEach(({ year, count, enriched }) => {
         if (count > 0) {
           years.push(year);
           yearCounts[year] = count;
+          yearEnrichedCounts[year] = enriched;
         }
       });
       years.sort((a, b) => a - b);
@@ -288,15 +303,86 @@ export default function Top2000Importer() {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(1);
+
+      // Fetch year analyses
+      const { data: yearAnalyses } = await supabase
+        .from('top2000_year_analyses')
+        .select('*')
+        .order('edition_year', { ascending: true });
       
       return {
         totalEntries: totalCount || 0,
+        enrichedEntries: enrichedCount || 0,
         years,
         yearCounts,
+        yearEnrichedCounts,
         latestAnalysis: analyses?.[0] || null,
+        yearAnalyses: yearAnalyses || [],
       };
     },
   });
+
+  // Enrichment handler
+  const handleEnrichBatch = async () => {
+    setIsEnriching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('enrich-top2000-songs', {
+        body: { batch_size: 50 },
+      });
+
+      if (error) throw error;
+
+      setEnrichmentProgress({
+        processed: data.succeeded,
+        remaining: data.remaining,
+      });
+
+      toast.success(`${data.succeeded} songs verrijkt, nog ${data.remaining} te gaan`);
+      refetchStats();
+    } catch (error: any) {
+      toast.error(error.message || 'Enrichment mislukt');
+    } finally {
+      setIsEnriching(false);
+    }
+  };
+
+  // Analyze year handler
+  const handleAnalyzeYear = async (year: number) => {
+    setIsAnalyzingYear(true);
+    setSelectedAnalysisYear(year);
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-top2000-year', {
+        body: { edition_year: year },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Analyse voor ${year} voltooid`);
+      refetchStats();
+    } catch (error: any) {
+      toast.error(error.message || 'Jaar analyse mislukt');
+    } finally {
+      setIsAnalyzingYear(false);
+      setSelectedAnalysisYear(null);
+    }
+  };
+
+  // Compare years handler
+  const handleCompareYears = async () => {
+    setIsComparing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('compare-top2000-years');
+
+      if (error) throw error;
+
+      toast.success('Vergelijkingsanalyse voltooid');
+      refetchStats();
+    } catch (error: any) {
+      toast.error(error.message || 'Vergelijking mislukt');
+    } finally {
+      setIsComparing(false);
+    }
+  };
 
   // Clear all data
   const handleClearAll = async () => {
@@ -637,7 +723,7 @@ export default function Top2000Importer() {
           </div>
 
           <Tabs defaultValue="pdf">
-            <TabsList>
+            <TabsList className="flex-wrap">
               <TabsTrigger value="pdf">
                 <FileText className="h-4 w-4 mr-2" />
                 PDF Import
@@ -654,9 +740,21 @@ export default function Top2000Importer() {
                 <Table className="h-4 w-4 mr-2" />
                 Preview ({parsedData.length + scrapedData.length + pdfParsedData.length})
               </TabsTrigger>
+              <TabsTrigger value="enrichment">
+                <Sparkles className="h-4 w-4 mr-2" />
+                Verrijking
+              </TabsTrigger>
+              <TabsTrigger value="year-analysis">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Jaar Analyse
+              </TabsTrigger>
+              <TabsTrigger value="comparison">
+                <GitCompare className="h-4 w-4 mr-2" />
+                Vergelijking
+              </TabsTrigger>
               <TabsTrigger value="analysis">
                 <Play className="h-4 w-4 mr-2" />
-                Analyse
+                Legacy Analyse
               </TabsTrigger>
             </TabsList>
 
@@ -1196,6 +1294,108 @@ export default function Top2000Importer() {
                         </div>
                       )}
                     </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Enrichment Tab */}
+            <TabsContent value="enrichment" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Song Verrijking met AI
+                  </CardTitle>
+                  <CardDescription>
+                    Verrijk songs met genre, artiest type (man/vrouw/band), taal, en energie niveau
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-muted rounded-lg">
+                      <div className="text-2xl font-bold">{stats?.enrichedEntries || 0}</div>
+                      <p className="text-sm text-muted-foreground">Verrijkt</p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <div className="text-2xl font-bold">{(stats?.totalEntries || 0) - (stats?.enrichedEntries || 0)}</div>
+                      <p className="text-sm text-muted-foreground">Nog te verrijken</p>
+                    </div>
+                  </div>
+
+                  {stats?.totalEntries && stats.totalEntries > 0 && (
+                    <Progress value={(stats.enrichedEntries || 0) / stats.totalEntries * 100} className="h-2" />
+                  )}
+
+                  <Button onClick={handleEnrichBatch} disabled={isEnriching || (stats?.totalEntries || 0) === (stats?.enrichedEntries || 0)} size="lg">
+                    {isEnriching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                    {isEnriching ? 'Verrijken...' : 'Verrijk 50 Songs'}
+                  </Button>
+
+                  <p className="text-sm text-muted-foreground">
+                    AI analyseert elke song voor: artiest type (solo man/vrouw/band), taal (NL/EN/etc), subgenre, energie niveau, en decade.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Year Analysis Tab */}
+            <TabsContent value="year-analysis" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Per-Jaar Analyse
+                  </CardTitle>
+                  <CardDescription>
+                    Genereer statistieken en narratief per Top 2000 editiejaar
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                    {stats?.years?.map((year: number) => {
+                      const yearAnalysis = stats.yearAnalyses?.find((a: any) => a.edition_year === year);
+                      const enrichedPct = stats.yearEnrichedCounts?.[year] ? Math.round((stats.yearEnrichedCounts[year] / stats.yearCounts[year]) * 100) : 0;
+                      return (
+                        <div key={year} className="p-3 border rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-bold">{year}</span>
+                            {yearAnalysis && <Badge variant="outline" className="text-xs">✓</Badge>}
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-2">{enrichedPct}% verrijkt</p>
+                          <Button size="sm" variant="outline" className="w-full" onClick={() => handleAnalyzeYear(year)} disabled={isAnalyzingYear}>
+                            {isAnalyzingYear && selectedAnalysisYear === year ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Analyseer'}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Comparison Tab */}
+            <TabsContent value="comparison" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <GitCompare className="h-5 w-5" />
+                    Jaar Vergelijking
+                  </CardTitle>
+                  <CardDescription>
+                    Vergelijk alle jaren en ontdek trends in de Top 2000 canon
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Vergelijk alle geanalyseerde jaren om trends te ontdekken: welke genres stijgen/dalen, hoe verandert het Nederlandse aandeel, welke generaties domineren.
+                  </p>
+                  <Button onClick={handleCompareYears} disabled={isComparing || (stats?.yearAnalyses?.length || 0) < 2} size="lg">
+                    {isComparing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <GitCompare className="h-4 w-4 mr-2" />}
+                    {isComparing ? 'Vergelijken...' : 'Start Vergelijking'}
+                  </Button>
+                  {(stats?.yearAnalyses?.length || 0) < 2 && (
+                    <p className="text-sm text-destructive">Minimaal 2 jaar-analyses nodig voor vergelijking</p>
                   )}
                 </CardContent>
               </Card>

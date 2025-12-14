@@ -37,31 +37,43 @@ export default function Top2000Importer() {
   const [isClearingAll, setIsClearingAll] = useState(false);
   const [selectedEditionYear, setSelectedEditionYear] = useState<number | null>(null);
 
-  // Fetch existing data stats
+  // Fetch existing data stats using proper COUNT queries (avoid 1000 row limit)
   const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ['top2000-stats'],
     queryFn: async () => {
-      const { data: entries } = await supabase
+      // Get total count
+      const { count: totalCount } = await supabase
         .from('top2000_entries')
-        .select('year', { count: 'exact' });
+        .select('*', { count: 'exact', head: true });
+      
+      // Get counts per edition year using a raw query approach
+      // First get distinct years
+      const { data: yearData } = await supabase
+        .from('top2000_entries')
+        .select('year')
+        .order('year');
+      
+      const years = yearData ? [...new Set(yearData.map((e: any) => e.year))].sort() as number[] : [];
+      
+      // For each year, get the count (we need separate queries due to Supabase limitations)
+      const yearCounts: Record<number, number> = {};
+      for (const year of years) {
+        const { count } = await supabase
+          .from('top2000_entries')
+          .select('*', { count: 'exact', head: true })
+          .eq('year', year);
+        yearCounts[year] = count || 0;
+      }
       
       const { data: analyses } = await supabase
         .from('top2000_analyses')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(1);
-
-      const years = entries ? [...new Set(entries.map((e: any) => e.year))].sort() : [];
-      
-      // Count entries per year
-      const yearCounts: Record<number, number> = {};
-      entries?.forEach((e: any) => {
-        yearCounts[e.year] = (yearCounts[e.year] || 0) + 1;
-      });
       
       return {
-        totalEntries: entries?.length || 0,
-        years: years as number[],
+        totalEntries: totalCount || 0,
+        years,
         yearCounts,
         latestAnalysis: analyses?.[0] || null,
       };

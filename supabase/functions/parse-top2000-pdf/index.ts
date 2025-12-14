@@ -83,15 +83,14 @@ serve(async (req) => {
           messages: [
             {
             role: 'system',
-            content: `Je extraheert Top 2000 data uit PDFs. Geef ALLEEN posities ${startPosition}-${endPosition}. Return compacte JSON:
-{"entries":[{"position":1,"artist":"Queen","title":"Bohemian Rhapsody","release_year":1975}]}`
+            content: `Je extraheert Top 2000 data uit PDFs. Voor elke call krijg je een bereik met start- en eindpositie. \n\nREGELS:\n- Geef ALLEEN posities ${startPosition}-${endPosition}\n- Er zijn precies ${endPosition - startPosition + 1} posities in dit bereik\n- Sla GEEN enkele positie over\n- Als je twijfelt, maak de best mogelijke interpretatie uit de tabel, maar vul de positie toch in\n- Gebruik dit compacte JSON formaat, zonder extra tekst of uitleg:\n{"entries":[{"position":1,"artist":"Queen","title":"Bohemian Rhapsody","release_year":1975}]}`
             },
             {
               role: 'user',
               content: [
                 {
                   type: 'text',
-                  text: `Extraheer posities ${startPosition}-${endPosition} uit deze Top 2000 ${editionYear} PDF. Return JSON met position, artist, title, release_year.`
+                  text: `Extraheer ALLE posities ${startPosition}-${endPosition} uit deze Top 2000 ${editionYear} PDF.\n\nBELANGRIJK:\n- Doorloop systematisch alle posities in dit bereik (inclusief)\n- Als je een positie niet 100% zeker kunt lezen, maak dan de best mogelijke gok op basis van de tabel\n- Retourneer voor ELKE positie een entry met position, artist, title, release_year. Sla niets over.\n- Return ENKEL geldige JSON met velden: position, artist, title, release_year.`
                 },
                 {
                   type: 'image_url',

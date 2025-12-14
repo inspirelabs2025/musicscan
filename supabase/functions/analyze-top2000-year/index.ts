@@ -26,10 +26,13 @@ serve(async (req) => {
 
     console.log(`Analyzing Top 2000 edition ${edition_year}`);
 
-    // Fetch all entries for this year
+    // Fetch all entries for this year with joined song metadata
     const { data: entries, error: fetchError } = await supabase
       .from('top2000_entries')
-      .select('*')
+      .select(`
+        *,
+        song:top2000_songs(artist_type, language, subgenre, energy_level, decade, enriched_at)
+      `)
       .eq('year', edition_year)
       .order('position', { ascending: true });
 
@@ -50,32 +53,35 @@ serve(async (req) => {
     let dutchCount = 0;
 
     for (const entry of entries) {
+      // Get song metadata from joined relation
+      const song = entry.song;
+      
       // Count enriched entries
-      if (entry.enriched_at) {
+      if (song?.enriched_at) {
         enrichedCount++;
       }
 
-      // Artist type distribution
-      if (entry.artist_type) {
-        artistTypeDistribution[entry.artist_type] = (artistTypeDistribution[entry.artist_type] || 0) + 1;
+      // Artist type distribution (from song master)
+      if (song?.artist_type) {
+        artistTypeDistribution[song.artist_type] = (artistTypeDistribution[song.artist_type] || 0) + 1;
       }
 
-      // Language distribution
-      if (entry.language) {
-        languageDistribution[entry.language] = (languageDistribution[entry.language] || 0) + 1;
-        if (entry.language === 'dutch') {
+      // Language distribution (from song master)
+      if (song?.language) {
+        languageDistribution[song.language] = (languageDistribution[song.language] || 0) + 1;
+        if (song.language === 'dutch') {
           dutchCount++;
         }
       }
 
-      // Decade distribution
-      if (entry.decade) {
-        decadeDistribution[entry.decade] = (decadeDistribution[entry.decade] || 0) + 1;
+      // Decade distribution (from song master)
+      if (song?.decade) {
+        decadeDistribution[song.decade] = (decadeDistribution[song.decade] || 0) + 1;
       }
 
-      // Genre distribution (from subgenre or genres array)
-      if (entry.subgenre) {
-        const genre = entry.subgenre.toLowerCase();
+      // Genre distribution (from song subgenre or entry genres array)
+      if (song?.subgenre) {
+        const genre = song.subgenre.toLowerCase();
         genreDistribution[genre] = (genreDistribution[genre] || 0) + 1;
       } else if (entry.genres && entry.genres.length > 0) {
         for (const genre of entry.genres) {

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileJson, Table, Play, CheckCircle, Loader2, Download, RefreshCw, Trash2, AlertCircle, Search, Zap } from 'lucide-react';
+import { Upload, FileJson, Table, Play, CheckCircle, Loader2, Download, RefreshCw, Trash2, AlertCircle, Search, Zap, FileText } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,6 +45,13 @@ export default function Top2000Importer() {
   const [scrapeProgress, setScrapeProgress] = useState(0);
   const [scrapedData, setScrapedData] = useState<ImportEntry[]>([]);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
+
+  // PDF parsing state
+  const [pdfEditionYear, setPdfEditionYear] = useState<number | null>(null);
+  const [isParsing, setIsParsing] = useState(false);
+  const [pdfParsedData, setPdfParsedData] = useState<ImportEntry[]>([]);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [pdfParsingNotes, setPdfParsingNotes] = useState<string | null>(null);
 
   // Scrape via Perplexity
   const handleScrape = async () => {
@@ -108,6 +115,91 @@ export default function Top2000Importer() {
       setIsScraping(false);
     }
   };
+
+  // PDF Upload Handler
+  const handlePdfUpload = async (file: File) => {
+    if (!pdfEditionYear) {
+      toast.error('Selecteer eerst een Top 2000 editiejaar');
+      return;
+    }
+
+    setIsParsing(true);
+    setPdfError(null);
+    setPdfParsedData([]);
+    setPdfParsingNotes(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('pdf', file);
+      formData.append('edition_year', pdfEditionYear.toString());
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-top2000-pdf`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'PDF parsing mislukt');
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'PDF parsing mislukt');
+      }
+
+      setPdfParsedData(data.entries);
+      setPdfParsingNotes(data.parsing_notes);
+      toast.success(`${data.entries.length} entries gevonden in PDF voor Top 2000 ${pdfEditionYear}`);
+    } catch (error: any) {
+      console.error('PDF parsing error:', error);
+      setPdfError(error.message || 'PDF parsing mislukt');
+      toast.error(error.message || 'PDF parsing mislukt');
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
+  // Import PDF parsed data
+  const handleImportPdfData = async () => {
+    if (pdfParsedData.length === 0) {
+      toast.error('Geen geparseerde PDF data om te importeren');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('import-top2000', {
+        body: { entries: pdfParsedData, clear_existing: clearExisting },
+      });
+
+      if (error) throw error;
+
+      toast.success(`${data.inserted} entries geïmporteerd vanuit PDF`);
+      queryClient.invalidateQueries({ queryKey: ['top2000-stats'] });
+      setPdfParsedData([]);
+      setPdfParsingNotes(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Import mislukt');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // PDF Dropzone
+  const pdfDropzone = useDropzone({
+    onDrop: (files) => {
+      if (files[0]) handlePdfUpload(files[0]);
+    },
+    accept: { 'application/pdf': ['.pdf'] },
+    maxFiles: 1,
+    maxSize: 10 * 1024 * 1024, // 10MB max
+    disabled: !pdfEditionYear || isParsing,
+  });
 
   // Import scraped data
   const handleImportScraped = async () => {
@@ -516,25 +608,185 @@ export default function Top2000Importer() {
             </Card>
           </div>
 
-          <Tabs defaultValue="scrape">
+          <Tabs defaultValue="pdf">
             <TabsList>
+              <TabsTrigger value="pdf">
+                <FileText className="h-4 w-4 mr-2" />
+                PDF Import
+              </TabsTrigger>
               <TabsTrigger value="scrape">
                 <Zap className="h-4 w-4 mr-2" />
                 Scrape
               </TabsTrigger>
               <TabsTrigger value="import">
                 <Upload className="h-4 w-4 mr-2" />
-                Import
+                CSV/JSON
               </TabsTrigger>
               <TabsTrigger value="preview">
                 <Table className="h-4 w-4 mr-2" />
-                Preview ({parsedData.length + scrapedData.length})
+                Preview ({parsedData.length + scrapedData.length + pdfParsedData.length})
               </TabsTrigger>
               <TabsTrigger value="analysis">
                 <Play className="h-4 w-4 mr-2" />
                 Analyse
               </TabsTrigger>
             </TabsList>
+
+            {/* PDF Import Tab */}
+            <TabsContent value="pdf" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    PDF Import met AI Parsing
+                  </CardTitle>
+                  <CardDescription>
+                    Upload een PDF bestand met de Top 2000 lijst. AI extraheert automatisch alle entries.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Select
+                      value={pdfEditionYear?.toString() || ''}
+                      onValueChange={(val) => {
+                        setPdfEditionYear(parseInt(val, 10));
+                        setPdfParsedData([]);
+                        setPdfError(null);
+                        setPdfParsingNotes(null);
+                      }}
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Selecteer editiejaar..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EDITION_YEARS.map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            Top 2000 van {year}
+                            {stats?.yearCounts?.[year] ? ` (${stats.yearCounts[year]} in DB)` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {pdfEditionYear && (
+                      <Badge variant="outline" className="text-lg px-4 py-1">
+                        Editie: {pdfEditionYear}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div
+                    {...pdfDropzone.getRootProps()}
+                    className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                      ${!pdfEditionYear || isParsing ? 'opacity-50 cursor-not-allowed' : ''}
+                      ${pdfDropzone.isDragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'}`}
+                  >
+                    <input {...pdfDropzone.getInputProps()} />
+                    <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    {!pdfEditionYear ? (
+                      <p className="text-muted-foreground">Selecteer eerst een editiejaar hierboven</p>
+                    ) : isParsing ? (
+                      <div className="space-y-2">
+                        <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
+                        <p>PDF wordt geanalyseerd door AI...</p>
+                        <p className="text-sm text-muted-foreground">Dit kan even duren afhankelijk van de grootte</p>
+                      </div>
+                    ) : pdfDropzone.isDragActive ? (
+                      <p>Drop de PDF hier...</p>
+                    ) : (
+                      <div>
+                        <p className="font-medium">Sleep een PDF hierheen of klik om te selecteren</p>
+                        <p className="text-sm text-muted-foreground mt-1">Max 10MB, alleen .pdf bestanden</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {pdfError && (
+                    <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{pdfError}</span>
+                    </div>
+                  )}
+
+                  {pdfParsingNotes && (
+                    <div className="p-3 bg-muted rounded-lg text-sm">
+                      <strong>AI notities:</strong> {pdfParsingNotes}
+                    </div>
+                  )}
+
+                  {pdfParsedData.length > 0 && !isParsing && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                          <span>{pdfParsedData.length} entries gevonden in PDF voor {pdfEditionYear}</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              id="clear-existing-pdf"
+                              checked={clearExisting}
+                              onCheckedChange={setClearExisting}
+                            />
+                            <Label htmlFor="clear-existing-pdf">Overschrijf bestaande data</Label>
+                          </div>
+                          <Button onClick={handleImportPdfData} disabled={isImporting}>
+                            {isImporting ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Upload className="h-4 w-4 mr-2" />
+                            )}
+                            Importeren
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Preview eerste 10 entries */}
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted">
+                            <tr>
+                              <th className="px-3 py-2 text-left">#</th>
+                              <th className="px-3 py-2 text-left">Artiest</th>
+                              <th className="px-3 py-2 text-left">Titel</th>
+                              <th className="px-3 py-2 text-left">Release</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pdfParsedData.slice(0, 10).map((entry, idx) => (
+                              <tr key={idx} className="border-t">
+                                <td className="px-3 py-2">{entry.position}</td>
+                                <td className="px-3 py-2">{entry.artist}</td>
+                                <td className="px-3 py-2">{entry.title}</td>
+                                <td className="px-3 py-2">{entry.release_year || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {pdfParsedData.length > 10 && (
+                          <div className="px-3 py-2 bg-muted text-sm text-muted-foreground text-center">
+                            ... en nog {pdfParsedData.length - 10} entries
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Hoe werkt PDF Import?</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• AI (Gemini) analyseert de PDF en extraheert automatisch alle entries</li>
+                    <li>• Ondersteunt verschillende PDF formaten en tabelstructuren</li>
+                    <li>• Herkent positie, artiest, titel en jaar van release</li>
+                    <li>• Controleer de preview voordat je importeert</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             {/* Scrape Tab */}
             <TabsContent value="scrape" className="space-y-4">

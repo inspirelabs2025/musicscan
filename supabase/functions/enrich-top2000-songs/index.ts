@@ -30,20 +30,13 @@ serve(async (req) => {
       // No body, use defaults
     }
 
-    // Fetch unenriched songs
-    let query = supabase
-      .from('top2000_entries')
-      .select('id, artist, title, release_year, genres, country')
+    // Fetch unenriched songs from master songs table (deduplicated)
+    const { data: songs, error: fetchError } = await supabase
+      .from('top2000_songs')
+      .select('id, artist, title, release_year, genre')
       .is('enriched_at', null)
-      .order('year', { ascending: true })
-      .order('position', { ascending: true })
+      .order('created_at', { ascending: true })
       .limit(batchSize);
-
-    if (editionYear) {
-      query = query.eq('year', editionYear);
-    }
-
-    const { data: songs, error: fetchError } = await query;
 
     if (fetchError) {
       console.error('Error fetching songs:', fetchError);
@@ -152,7 +145,7 @@ Geef ALLEEN de JSON array terug, geen andere tekst.`;
       }
 
       const { error: updateError } = await supabase
-        .from('top2000_entries')
+        .from('top2000_songs')
         .update({
           artist_type: enrichment.artist_type || null,
           language: enrichment.language || null,
@@ -171,9 +164,9 @@ Geef ALLEEN de JSON array terug, geen andere tekst.`;
       }
     }
 
-    // Get remaining count
+    // Get remaining count from master songs table
     const { count: remainingCount } = await supabase
-      .from('top2000_entries')
+      .from('top2000_songs')
       .select('*', { count: 'exact', head: true })
       .is('enriched_at', null);
 

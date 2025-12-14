@@ -7577,6 +7577,7 @@ export type Database = {
           language: string | null
           position: number
           release_year: number | null
+          song_id: string | null
           subgenre: string | null
           title: string
           year: number
@@ -7596,6 +7597,7 @@ export type Database = {
           language?: string | null
           position: number
           release_year?: number | null
+          song_id?: string | null
           subgenre?: string | null
           title: string
           year: number
@@ -7615,11 +7617,20 @@ export type Database = {
           language?: string | null
           position?: number
           release_year?: number | null
+          song_id?: string | null
           subgenre?: string | null
           title?: string
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "top2000_entries_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "top2000_songs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       top2000_pipeline_status: {
         Row: {
@@ -7651,6 +7662,60 @@ export type Database = {
           last_year_analysis_run?: string | null
           updated_at?: string | null
           year_analysis_in_progress?: boolean | null
+        }
+        Relationships: []
+      }
+      top2000_songs: {
+        Row: {
+          artist: string
+          artist_normalized: string
+          artist_type: string | null
+          created_at: string
+          decade: string | null
+          energy_level: string | null
+          enriched_at: string | null
+          genre: string | null
+          id: string
+          language: string | null
+          release_year: number | null
+          subgenre: string | null
+          title: string
+          title_normalized: string
+          updated_at: string
+        }
+        Insert: {
+          artist: string
+          artist_normalized: string
+          artist_type?: string | null
+          created_at?: string
+          decade?: string | null
+          energy_level?: string | null
+          enriched_at?: string | null
+          genre?: string | null
+          id?: string
+          language?: string | null
+          release_year?: number | null
+          subgenre?: string | null
+          title: string
+          title_normalized: string
+          updated_at?: string
+        }
+        Update: {
+          artist?: string
+          artist_normalized?: string
+          artist_type?: string | null
+          created_at?: string
+          decade?: string | null
+          energy_level?: string | null
+          enriched_at?: string | null
+          genre?: string | null
+          id?: string
+          language?: string | null
+          release_year?: number | null
+          subgenre?: string | null
+          title?: string
+          title_normalized?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -18,13 +18,13 @@ serve(async (req) => {
 
     console.log('🔄 Top 2000 Auto Processor starting...');
 
-    // Step 1: Check for unenriched songs
+    // Step 1: Check for unenriched songs in master songs table
     const { count: unenrichedCount } = await supabase
-      .from('top2000_entries')
+      .from('top2000_songs')
       .select('*', { count: 'exact', head: true })
       .is('enriched_at', null);
 
-    console.log(`📊 Unenriched songs: ${unenrichedCount}`);
+    console.log(`📊 Unenriched unique songs: ${unenrichedCount}`);
 
     if (unenrichedCount && unenrichedCount > 0) {
       // Still have songs to enrich - process a batch

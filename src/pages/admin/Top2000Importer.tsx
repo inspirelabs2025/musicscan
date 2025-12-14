@@ -46,12 +46,12 @@ export default function Top2000Importer() {
         .from('top2000_entries')
         .select('*', { count: 'exact', head: true });
       
-      // Get counts per edition year using a raw query approach
-      // First get distinct years
+      // Get counts per edition year - need high limit to get all years across 20k entries
       const { data: yearData } = await supabase
         .from('top2000_entries')
         .select('year')
-        .order('year');
+        .order('year')
+        .limit(25000);
       
       const years = yearData ? [...new Set(yearData.map((e: any) => e.year))].sort() as number[] : [];
       

@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -61,18 +62,26 @@ serve(async (req) => {
 
     // We'll process in chunks to handle large PDFs
     // First, extract text using a simpler approach by sending PDF content to AI
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: `Je bent een expert in het extraheren van gestructureerde data uit Top 2000 lijsten.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 45000); // 45s timeout to avoid Supabase 60s hard limit
+
+    let aiResponse: Response;
+    try {
+      aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            {
+              role: 'system',
+              content: `Je bent een expert in het extraheren van gestructureerde data uit Top 2000 lijsten.
 Je ontvangt PDF content en moet ALLE entries extraheren.
 
 BELANGRIJK:
@@ -90,27 +99,38 @@ Output format (ALLEEN JSON, geen markdown):
   "total_found": 2000,
   "parsing_notes": "optionele notities over parsing"
 }`
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Extraheer alle Top 2000 ${editionYear} entries uit deze PDF. Return de data als JSON met position, artist, title, en release_year voor elke entry.`
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:application/pdf;base64,${base64}`
+            },
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `Extraheer alle Top 2000 ${editionYear} entries uit deze PDF. Return de data als JSON met position, artist, title, en release_year voor elke entry.`
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:application/pdf;base64,${base64}`
+                  }
                 }
-              }
-            ]
-          }
-        ],
-        max_tokens: 8192,
-        temperature: 0.1,
-      }),
-    });
+              ]
+            }
+          ],
+          max_tokens: 8192,
+          temperature: 0.1,
+        }),
+      });
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        console.error('AI request aborted due to timeout');
+        throw new Error('AI parsing duurde te lang (timeout na 45 seconden)');
+      }
+      console.error('AI fetch error:', err);
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();

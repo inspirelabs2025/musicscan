@@ -80,24 +80,21 @@ serve(async (req) => {
           model: 'google/gemini-2.5-flash',
           messages: [
             {
-              role: 'system',
-              content: `Je bent een expert in het extraheren van gestructureerde data uit Top 2000 lijsten.
-Je ontvangt PDF content en moet ALLE entries extraheren.
+            role: 'system',
+            content: `Je bent een expert in het extraheren van gestructureerde data uit Top 2000 lijsten.
 
 BELANGRIJK:
-- Extraheer ELKE entry uit de lijst (tot 2000 entries)
+- Extraheer ALLEEN posities 1-200 uit de lijst
 - Formaat: positie, artiest, titel, en optioneel het jaar van release
 - Return ALLEEN geldige JSON zonder markdown code blocks
-- Als je niet alle entries kunt extraheren, geef aan hoeveel je hebt gevonden
+- Korte, compacte output
 
 Output format (ALLEEN JSON, geen markdown):
 {
   "entries": [
-    {"position": 1, "artist": "Queen", "title": "Bohemian Rhapsody", "release_year": 1975},
-    {"position": 2, "artist": "Eagles", "title": "Hotel California", "release_year": 1977}
+    {"position": 1, "artist": "Queen", "title": "Bohemian Rhapsody", "release_year": 1975}
   ],
-  "total_found": 2000,
-  "parsing_notes": "optionele notities over parsing"
+  "total_found": 200
 }`
             },
             {
@@ -105,7 +102,7 @@ Output format (ALLEEN JSON, geen markdown):
               content: [
                 {
                   type: 'text',
-                  text: `Extraheer alle Top 2000 ${editionYear} entries uit deze PDF. Return de data als JSON met position, artist, title, en release_year voor elke entry.`
+                  text: `Extraheer ALLEEN posities 1-200 uit deze Top 2000 ${editionYear} PDF. Return compacte JSON met position, artist, title, release_year.`
                 },
                 {
                   type: 'image_url',

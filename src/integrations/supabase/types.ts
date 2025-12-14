@@ -7565,41 +7565,110 @@ export type Database = {
         Row: {
           album: string | null
           artist: string
+          artist_type: string | null
           country: string | null
           created_at: string
+          decade: string | null
           discogs_release_id: number | null
+          energy_level: string | null
+          enriched_at: string | null
           genres: string[] | null
           id: string
+          language: string | null
           position: number
           release_year: number | null
+          subgenre: string | null
           title: string
           year: number
         }
         Insert: {
           album?: string | null
           artist: string
+          artist_type?: string | null
           country?: string | null
           created_at?: string
+          decade?: string | null
           discogs_release_id?: number | null
+          energy_level?: string | null
+          enriched_at?: string | null
           genres?: string[] | null
           id?: string
+          language?: string | null
           position: number
           release_year?: number | null
+          subgenre?: string | null
           title: string
           year: number
         }
         Update: {
           album?: string | null
           artist?: string
+          artist_type?: string | null
           country?: string | null
           created_at?: string
+          decade?: string | null
           discogs_release_id?: number | null
+          energy_level?: string | null
+          enriched_at?: string | null
           genres?: string[] | null
           id?: string
+          language?: string | null
           position?: number
           release_year?: number | null
+          subgenre?: string | null
           title?: string
           year?: number
+        }
+        Relationships: []
+      }
+      top2000_year_analyses: {
+        Row: {
+          analysis_narrative: string | null
+          artist_type_distribution: Json | null
+          created_at: string | null
+          decade_distribution: Json | null
+          dutch_percentage: number | null
+          edition_year: number
+          enriched_entries: number | null
+          genre_distribution: Json | null
+          id: string
+          language_distribution: Json | null
+          top_10_summary: string | null
+          total_entries: number | null
+          unique_insights: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          analysis_narrative?: string | null
+          artist_type_distribution?: Json | null
+          created_at?: string | null
+          decade_distribution?: Json | null
+          dutch_percentage?: number | null
+          edition_year: number
+          enriched_entries?: number | null
+          genre_distribution?: Json | null
+          id?: string
+          language_distribution?: Json | null
+          top_10_summary?: string | null
+          total_entries?: number | null
+          unique_insights?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          analysis_narrative?: string | null
+          artist_type_distribution?: Json | null
+          created_at?: string | null
+          decade_distribution?: Json | null
+          dutch_percentage?: number | null
+          edition_year?: number
+          enriched_entries?: number | null
+          genre_distribution?: Json | null
+          id?: string
+          language_distribution?: Json | null
+          top_10_summary?: string | null
+          total_entries?: number | null
+          unique_insights?: string[] | null
+          updated_at?: string | null
         }
         Relationships: []
       }

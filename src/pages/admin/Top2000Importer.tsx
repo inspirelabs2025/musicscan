@@ -57,82 +57,101 @@ export default function Top2000Importer() {
   });
 
   // Parse CSV line handling quoted values with commas inside
-  const parseCSVLine = (line: string): string[] => {
+  // Parse a single CSV line using a specific delimiter and handling quotes
+  const parseCSVLine = (line: string, delimiter: string): string[] => {
     const result: string[] = [];
     let current = '';
     let inQuotes = false;
-    
+
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-      
+
       if (char === '"') {
         inQuotes = !inQuotes;
-      } else if ((char === ',' || char === ';' || char === '\t') && !inQuotes) {
-        result.push(current.trim().replace(/^"|"$/g, ''));
+        continue;
+      }
+
+      if (char === delimiter && !inQuotes) {
+        result.push(current.trim());
         current = '';
       } else {
         current += char;
       }
     }
-    result.push(current.trim().replace(/^"|"$/g, ''));
-    return result;
+
+    if (current.length > 0) {
+      result.push(current.trim());
+    }
+
+    return result.map(v => v.replace(/^"|"$/g, ''));
   };
 
-  // Detect delimiter from header line
+  // Detect most likely delimiter from header line
   const detectDelimiter = (headerLine: string): string => {
-    const counts = {
-      ',': (headerLine.match(/,/g) || []).length,
-      ';': (headerLine.match(/;/g) || []).length,
-      '\t': (headerLine.match(/\t/g) || []).length,
-    };
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+    const candidates = [',', ';', '\t'];
+    let best = ',';
+    let bestCount = 0;
+
+    for (const d of candidates) {
+      const count = (headerLine.match(new RegExp(`\\${d}`, 'g')) || []).length;
+      if (count > bestCount) {
+        best = d;
+        bestCount = count;
+      }
+    }
+
+    return best;
   };
 
   const parseCSV = (text: string): ImportEntry[] => {
     const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) {
-      console.error('CSV has no data rows');
+      console.warn('CSV heeft geen datarijen');
       return [];
     }
 
     const delimiter = detectDelimiter(lines[0]);
-    console.log('Detected delimiter:', delimiter === '\t' ? 'TAB' : delimiter);
-    
-    const headerLine = lines[0].toLowerCase();
-    const headers = parseCSVLine(headerLine).map(h => h.trim().replace(/^"|"$/g, ''));
-    console.log('Parsed headers:', headers);
-    
+    console.log('Top2000 CSV delimiter gedetecteerd:', delimiter === '\t' ? 'TAB' : delimiter);
+
+    const headers = parseCSVLine(lines[0].toLowerCase(), delimiter).map(h => h.trim());
+    console.log('Top2000 CSV headers:', headers);
+
     const entries: ImportEntry[] = [];
-    
+
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
       if (!line.trim()) continue;
-      
-      const values = parseCSVLine(line);
+
+      const values = parseCSVLine(line, delimiter);
       const entry: any = {};
-      
+
       headers.forEach((header, idx) => {
-        const value = values[idx]?.trim() || '';
-        const h = header.toLowerCase().replace(/['"]/g, '');
-        
-        if (h === 'year' || h === 'jaar') entry.year = parseInt(value) || undefined;
-        else if (h === 'position' || h === 'positie' || h === 'pos') entry.position = parseInt(value) || undefined;
+        const value = (values[idx] ?? '').trim();
+        const h = header.replace(/['"]/g, '');
+
+        if (h === 'year' || h === 'jaar') entry.year = value ? parseInt(value, 10) : undefined;
+        else if (h === 'position' || h === 'positie' || h === 'pos') entry.position = value ? parseInt(value, 10) : undefined;
         else if (h === 'artist' || h === 'artiest') entry.artist = value || undefined;
         else if (h === 'title' || h === 'titel' || h === 'song' || h === 'nummer') entry.title = value || undefined;
         else if (h === 'album') entry.album = value || undefined;
-        else if (h === 'release_year' || h === 'releasejaar' || h === 'release') entry.release_year = parseInt(value) || undefined;
+        else if (h === 'release_year' || h === 'releasejaar' || h === 'release') entry.release_year = value ? parseInt(value, 10) : undefined;
         else if (h === 'genres' || h === 'genre') entry.genres = value ? value.split(/[;|]/).map(g => g.trim()).filter(Boolean) : undefined;
         else if (h === 'country' || h === 'land') entry.country = value || undefined;
       });
-      
+
       if (entry.year && entry.position && entry.artist && entry.title) {
         entries.push(entry);
       } else {
-        console.log(`Row ${i} skipped - missing required fields:`, { year: entry.year, position: entry.position, artist: entry.artist, title: entry.title });
+        console.warn(`Top2000 rij ${i + 1} overgeslagen, ontbrekende verplichte velden`, {
+          year: entry.year,
+          position: entry.position,
+          artist: entry.artist,
+          title: entry.title,
+        });
       }
     }
-    
-    console.log(`Parsed ${entries.length} valid entries from ${lines.length - 1} data rows`);
+
+    console.log(`Top2000 CSV parsing: ${entries.length} geldige entries van ${lines.length - 1} datarijen`);
     return entries;
   };
 
@@ -160,7 +179,7 @@ export default function Top2000Importer() {
         toast.success(`${parsed.length} entries geparsed`);
       } catch (error) {
         toast.error('Fout bij parsen van bestand');
-        console.error(error);
+        console.error('Top2000 parse error:', error);
       }
     };
     reader.readAsText(file);

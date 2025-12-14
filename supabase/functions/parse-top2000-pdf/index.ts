@@ -42,8 +42,14 @@ serve(async (req) => {
     const arrayBuffer = await pdfFile.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
     
-    // Convert to base64 for sending to AI
-    const base64 = btoa(String.fromCharCode(...bytes));
+    // Convert to base64 in chunks to avoid stack overflow
+    let base64 = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+      base64 += String.fromCharCode(...chunk);
+    }
+    base64 = btoa(base64);
 
     // Use AI to extract structured data from PDF
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');

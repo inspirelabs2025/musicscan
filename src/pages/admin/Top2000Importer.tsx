@@ -259,14 +259,13 @@ export default function Top2000Importer() {
   const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ['top2000-stats'],
     queryFn: async () => {
-      // Get total count
+      // Get total unique songs and enriched songs from master table
       const { count: totalCount } = await supabase
-        .from('top2000_entries')
+        .from('top2000_songs')
         .select('*', { count: 'exact', head: true });
 
-      // Get enriched count
       const { count: enrichedCount } = await supabase
-        .from('top2000_entries')
+        .from('top2000_songs')
         .select('*', { count: 'exact', head: true })
         .not('enriched_at', 'is', null);
       

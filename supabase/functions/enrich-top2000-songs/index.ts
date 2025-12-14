@@ -144,7 +144,7 @@ Geef ALLEEN de JSON array terug, geen andere tekst.`;
         continue;
       }
 
-      const { error: updateError } = await supabase
+      const { error: updateSongError } = await supabase
         .from('top2000_songs')
         .update({
           artist_type: enrichment.artist_type || null,
@@ -156,8 +156,28 @@ Geef ALLEEN de JSON array terug, geen andere tekst.`;
         })
         .eq('id', song.id);
 
-      if (updateError) {
-        console.error(`Error updating song ${song.id}:`, updateError);
+      if (updateSongError) {
+        console.error(`Error updating song ${song.id}:`, updateSongError);
+        errorCount++;
+        continue;
+      }
+
+      // Also propagate enrichment to all Top 2000 entries that reference this song
+      const { error: updateEntriesError } = await supabase
+        .from('top2000_entries')
+        .update({
+          artist_type: enrichment.artist_type || null,
+          language: enrichment.language || null,
+          subgenre: enrichment.subgenre || null,
+          energy_level: enrichment.energy_level || null,
+          decade: enrichment.decade || null,
+          enriched_at: now
+        })
+        .eq('song_id', song.id);
+
+      if (updateEntriesError) {
+        console.error(`Error updating entries for song ${song.id}:`, updateEntriesError);
+        // We still count the song as enriched, but log entry update issues
         errorCount++;
       } else {
         successCount++;

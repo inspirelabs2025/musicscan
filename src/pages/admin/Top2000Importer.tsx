@@ -117,6 +117,7 @@ export default function Top2000Importer() {
     console.log('Top2000 CSV headers:', headers);
 
     const entries: ImportEntry[] = [];
+    const perYearPositionCounter: Record<number, number> = {};
 
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
@@ -139,7 +140,15 @@ export default function Top2000Importer() {
         else if (h === 'country' || h === 'land') entry.country = value || undefined;
       });
 
-      if (entry.year && entry.position && entry.artist && entry.title) {
+      // Fallback: als positie ontbreekt, bepaal positie op basis van volgorde per jaar
+      if (entry.year && (!entry.position || Number.isNaN(entry.position))) {
+        const current = perYearPositionCounter[entry.year] ?? 0;
+        entry.position = current + 1;
+        perYearPositionCounter[entry.year] = entry.position;
+      }
+
+      // Vereist: jaar, artiest, titel. Positie vullen we desnoods zelf in.
+      if (entry.year && entry.artist && entry.title && entry.position) {
         entries.push(entry);
       } else {
         console.warn(`Top2000 rij ${i + 1} overgeslagen, ontbrekende verplichte velden`, {
@@ -154,11 +163,10 @@ export default function Top2000Importer() {
     console.log(`Top2000 CSV parsing: ${entries.length} geldige entries van ${lines.length - 1} datarijen`);
     return entries;
   };
-
   const parseJSON = (text: string): ImportEntry[] => {
     const data = JSON.parse(text);
     const entries = Array.isArray(data) ? data : data.entries || data.data || [];
-    return entries.filter((e: any) => e.year && e.position && e.artist && e.title);
+    return entries.filter((e: any) => e.year && e.artist && e.title);
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {

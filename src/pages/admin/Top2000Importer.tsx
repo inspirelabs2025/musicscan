@@ -116,7 +116,7 @@ export default function Top2000Importer() {
     }
   };
 
-  // PDF Upload Handler
+  // PDF Upload Handler - processes in 4 batches of 500 entries
   const handlePdfUpload = async (file: File) => {
     if (!pdfEditionYear) {
       toast.error('Selecteer eerst een Top 2000 editiejaar');
@@ -128,33 +128,56 @@ export default function Top2000Importer() {
     setPdfParsedData([]);
     setPdfParsingNotes(null);
 
+    const batches = [
+      { start: 1, end: 500 },
+      { start: 501, end: 1000 },
+      { start: 1001, end: 1500 },
+      { start: 1501, end: 2000 },
+    ];
+
+    let allEntries: any[] = [];
+
     try {
-      const formData = new FormData();
-      formData.append('pdf', file);
-      formData.append('edition_year', pdfEditionYear.toString());
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        toast.info(`Batch ${i + 1}/4: Posities ${batch.start}-${batch.end}...`);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-top2000-pdf`,
-        {
-          method: 'POST',
-          body: formData,
+        const formData = new FormData();
+        formData.append('pdf', file);
+        formData.append('edition_year', pdfEditionYear.toString());
+        formData.append('start_position', batch.start.toString());
+        formData.append('end_position', batch.end.toString());
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-top2000-pdf`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Batch ${i + 1} parsing mislukt`);
         }
-      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'PDF parsing mislukt');
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || `Batch ${i + 1} parsing mislukt`);
+        }
+
+        allEntries = [...allEntries, ...data.entries];
+        setPdfParsedData([...allEntries]);
+        
+        // Small delay between batches
+        if (i < batches.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
 
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'PDF parsing mislukt');
-      }
-
-      setPdfParsedData(data.entries);
-      setPdfParsingNotes(data.parsing_notes);
-      toast.success(`${data.entries.length} entries gevonden in PDF voor Top 2000 ${pdfEditionYear}`);
+      setPdfParsingNotes(`${allEntries.length} entries gevonden in 4 batches`);
+      toast.success(`${allEntries.length} entries gevonden in PDF voor Top 2000 ${pdfEditionYear}`);
     } catch (error: any) {
       console.error('PDF parsing error:', error);
       setPdfError(error.message || 'PDF parsing mislukt');

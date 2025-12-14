@@ -22,6 +22,8 @@ serve(async (req) => {
     const formData = await req.formData();
     const pdfFile = formData.get('pdf') as File;
     const editionYear = parseInt(formData.get('edition_year') as string, 10);
+    const startPosition = parseInt(formData.get('start_position') as string, 10) || 1;
+    const endPosition = parseInt(formData.get('end_position') as string, 10) || 500;
 
     if (!pdfFile) {
       return new Response(
@@ -37,7 +39,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Parsing PDF for Top 2000 ${editionYear}, file size: ${pdfFile.size} bytes`);
+    console.log(`Parsing PDF for Top 2000 ${editionYear}, positions ${startPosition}-${endPosition}, file size: ${pdfFile.size} bytes`);
 
     // Read PDF as ArrayBuffer and convert to base64 for AI processing
     const arrayBuffer = await pdfFile.arrayBuffer();
@@ -81,28 +83,15 @@ serve(async (req) => {
           messages: [
             {
             role: 'system',
-            content: `Je bent een expert in het extraheren van gestructureerde data uit Top 2000 lijsten.
-
-BELANGRIJK:
-- Extraheer ALLEEN posities 1-200 uit de lijst
-- Formaat: positie, artiest, titel, en optioneel het jaar van release
-- Return ALLEEN geldige JSON zonder markdown code blocks
-- Korte, compacte output
-
-Output format (ALLEEN JSON, geen markdown):
-{
-  "entries": [
-    {"position": 1, "artist": "Queen", "title": "Bohemian Rhapsody", "release_year": 1975}
-  ],
-  "total_found": 200
-}`
+            content: `Je extraheert Top 2000 data uit PDFs. Geef ALLEEN posities ${startPosition}-${endPosition}. Return compacte JSON:
+{"entries":[{"position":1,"artist":"Queen","title":"Bohemian Rhapsody","release_year":1975}]}`
             },
             {
               role: 'user',
               content: [
                 {
                   type: 'text',
-                  text: `Extraheer ALLEEN posities 1-200 uit deze Top 2000 ${editionYear} PDF. Return compacte JSON met position, artist, title, release_year.`
+                  text: `Extraheer posities ${startPosition}-${endPosition} uit deze Top 2000 ${editionYear} PDF. Return JSON met position, artist, title, release_year.`
                 },
                 {
                   type: 'image_url',
@@ -113,8 +102,8 @@ Output format (ALLEEN JSON, geen markdown):
               ]
             }
           ],
-          max_tokens: 8192,
-          temperature: 0.1,
+          max_tokens: 32000,
+          temperature: 0,
         }),
       });
     } catch (err) {

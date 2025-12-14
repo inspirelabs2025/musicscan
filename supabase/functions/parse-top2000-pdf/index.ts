@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 interface ParsedEntry {
+  year: number;
   position: number;
   artist: string;
   title: string;

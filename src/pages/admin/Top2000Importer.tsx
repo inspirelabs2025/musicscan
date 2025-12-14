@@ -56,28 +56,84 @@ export default function Top2000Importer() {
     },
   });
 
-  const parseCSV = (text: string): ImportEntry[] => {
-    const lines = text.trim().split('\n');
-    const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+  // Parse CSV line handling quoted values with commas inside
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
     
-    return lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if ((char === ',' || char === ';' || char === '\t') && !inQuotes) {
+        result.push(current.trim().replace(/^"|"$/g, ''));
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim().replace(/^"|"$/g, ''));
+    return result;
+  };
+
+  // Detect delimiter from header line
+  const detectDelimiter = (headerLine: string): string => {
+    const counts = {
+      ',': (headerLine.match(/,/g) || []).length,
+      ';': (headerLine.match(/;/g) || []).length,
+      '\t': (headerLine.match(/\t/g) || []).length,
+    };
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+  };
+
+  const parseCSV = (text: string): ImportEntry[] => {
+    const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) {
+      console.error('CSV has no data rows');
+      return [];
+    }
+
+    const delimiter = detectDelimiter(lines[0]);
+    console.log('Detected delimiter:', delimiter === '\t' ? 'TAB' : delimiter);
+    
+    const headerLine = lines[0].toLowerCase();
+    const headers = parseCSVLine(headerLine).map(h => h.trim().replace(/^"|"$/g, ''));
+    console.log('Parsed headers:', headers);
+    
+    const entries: ImportEntry[] = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.trim()) continue;
+      
+      const values = parseCSVLine(line);
       const entry: any = {};
       
-      headers.forEach((header, i) => {
-        const value = values[i];
-        if (header === 'year' || header === 'jaar') entry.year = parseInt(value);
-        else if (header === 'position' || header === 'positie') entry.position = parseInt(value);
-        else if (header === 'artist' || header === 'artiest') entry.artist = value;
-        else if (header === 'title' || header === 'titel') entry.title = value;
-        else if (header === 'album') entry.album = value;
-        else if (header === 'release_year' || header === 'releasejaar') entry.release_year = parseInt(value);
-        else if (header === 'genres' || header === 'genre') entry.genres = value ? value.split(';').map(g => g.trim()) : undefined;
-        else if (header === 'country' || header === 'land') entry.country = value;
+      headers.forEach((header, idx) => {
+        const value = values[idx]?.trim() || '';
+        const h = header.toLowerCase().replace(/['"]/g, '');
+        
+        if (h === 'year' || h === 'jaar') entry.year = parseInt(value) || undefined;
+        else if (h === 'position' || h === 'positie' || h === 'pos') entry.position = parseInt(value) || undefined;
+        else if (h === 'artist' || h === 'artiest') entry.artist = value || undefined;
+        else if (h === 'title' || h === 'titel' || h === 'song' || h === 'nummer') entry.title = value || undefined;
+        else if (h === 'album') entry.album = value || undefined;
+        else if (h === 'release_year' || h === 'releasejaar' || h === 'release') entry.release_year = parseInt(value) || undefined;
+        else if (h === 'genres' || h === 'genre') entry.genres = value ? value.split(/[;|]/).map(g => g.trim()).filter(Boolean) : undefined;
+        else if (h === 'country' || h === 'land') entry.country = value || undefined;
       });
       
-      return entry;
-    }).filter(e => e.year && e.position && e.artist && e.title);
+      if (entry.year && entry.position && entry.artist && entry.title) {
+        entries.push(entry);
+      } else {
+        console.log(`Row ${i} skipped - missing required fields:`, { year: entry.year, position: entry.position, artist: entry.artist, title: entry.title });
+      }
+    }
+    
+    console.log(`Parsed ${entries.length} valid entries from ${lines.length - 1} data rows`);
+    return entries;
   };
 
   const parseJSON = (text: string): ImportEntry[] => {

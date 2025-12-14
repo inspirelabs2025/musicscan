@@ -38,7 +38,8 @@ import {
   Mic,
   Send,
   Video,
-  Cog
+  Cog,
+  ListMusic
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -98,6 +99,7 @@ const menuItems = [
       { title: "Singles Importer", url: "/admin/singles-importer", icon: Music },
       { title: "Artist Stories", url: "/admin/artist-stories-generator", icon: Users },
       { title: "Artist Spotlights", url: "/admin/artist-spotlights", icon: Sparkles },
+      { title: "Top 2000 Importer", url: "/admin/top2000-importer", icon: ListMusic },
     ]
   },
   {

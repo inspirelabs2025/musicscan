@@ -1,5 +1,11 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.top2000-auto-processor]
+verify_jwt = false
+
+[[functions.top2000-auto-processor.schedule]]
+cron = "* * * * *"
+
 [functions.parse-top2000-pdf]
 verify_jwt = false
 

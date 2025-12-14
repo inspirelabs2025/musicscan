@@ -7621,10 +7621,44 @@ export type Database = {
         }
         Relationships: []
       }
+      top2000_pipeline_status: {
+        Row: {
+          comparison_in_progress: boolean | null
+          enrichment_in_progress: boolean | null
+          id: string
+          last_comparison_run: string | null
+          last_enrichment_run: string | null
+          last_year_analysis_run: string | null
+          updated_at: string | null
+          year_analysis_in_progress: boolean | null
+        }
+        Insert: {
+          comparison_in_progress?: boolean | null
+          enrichment_in_progress?: boolean | null
+          id?: string
+          last_comparison_run?: string | null
+          last_enrichment_run?: string | null
+          last_year_analysis_run?: string | null
+          updated_at?: string | null
+          year_analysis_in_progress?: boolean | null
+        }
+        Update: {
+          comparison_in_progress?: boolean | null
+          enrichment_in_progress?: boolean | null
+          id?: string
+          last_comparison_run?: string | null
+          last_enrichment_run?: string | null
+          last_year_analysis_run?: string | null
+          updated_at?: string | null
+          year_analysis_in_progress?: boolean | null
+        }
+        Relationships: []
+      }
       top2000_year_analyses: {
         Row: {
           analysis_narrative: string | null
           artist_type_distribution: Json | null
+          comparison_included: boolean | null
           created_at: string | null
           decade_distribution: Json | null
           dutch_percentage: number | null
@@ -7641,6 +7675,7 @@ export type Database = {
         Insert: {
           analysis_narrative?: string | null
           artist_type_distribution?: Json | null
+          comparison_included?: boolean | null
           created_at?: string | null
           decade_distribution?: Json | null
           dutch_percentage?: number | null
@@ -7657,6 +7692,7 @@ export type Database = {
         Update: {
           analysis_narrative?: string | null
           artist_type_distribution?: Json | null
+          comparison_included?: boolean | null
           created_at?: string | null
           decade_distribution?: Json | null
           dutch_percentage?: number | null

@@ -1,5 +1,8 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.scrape-top2000-perplexity]
+verify_jwt = false
+
 [functions.analyze-top2000]
 verify_jwt = false
 

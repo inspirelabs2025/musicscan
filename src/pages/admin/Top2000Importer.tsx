@@ -8,7 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, FileJson, Table, Play, CheckCircle, Loader2, Download, RefreshCw, Trash2, AlertCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Upload, FileJson, Table, Play, CheckCircle, Loader2, Download, RefreshCw, Trash2, AlertCircle, Search, Zap } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,8 +26,9 @@ interface ImportEntry {
   country?: string;
 }
 
-// Beschikbare Top 2000 editiejaren
+// Beschikbare Top 2000 editiejaren (uitgebreid voor scraping)
 const EDITION_YEARS = [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
+const SCRAPE_YEARS = Array.from({ length: 27 }, (_, i) => 1999 + i); // 1999-2025
 
 export default function Top2000Importer() {
   const queryClient = useQueryClient();
@@ -36,6 +38,102 @@ export default function Top2000Importer() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isClearingAll, setIsClearingAll] = useState(false);
   const [selectedEditionYear, setSelectedEditionYear] = useState<number | null>(null);
+  
+  // Scraping state
+  const [scrapeYear, setScrapeYear] = useState<number | null>(null);
+  const [isScraping, setIsScraping] = useState(false);
+  const [scrapeProgress, setScrapeProgress] = useState(0);
+  const [scrapedData, setScrapedData] = useState<ImportEntry[]>([]);
+  const [scrapeError, setScrapeError] = useState<string | null>(null);
+
+  // Scrape via Perplexity
+  const handleScrape = async () => {
+    if (!scrapeYear) {
+      toast.error('Selecteer eerst een editiejaar');
+      return;
+    }
+
+    setIsScraping(true);
+    setScrapeProgress(0);
+    setScrapedData([]);
+    setScrapeError(null);
+
+    const allEntries: ImportEntry[] = [];
+    const batchSize = 100; // Posities per request
+    const totalBatches = 20; // 2000 / 100 = 20 batches
+
+    try {
+      for (let batch = 0; batch < totalBatches; batch++) {
+        const startPos = batch * batchSize + 1;
+        const endPos = (batch + 1) * batchSize;
+
+        console.log(`Scraping batch ${batch + 1}/${totalBatches}: posities ${startPos}-${endPos}`);
+
+        const { data, error } = await supabase.functions.invoke('scrape-top2000-perplexity', {
+          body: {
+            edition_year: scrapeYear,
+            start_position: startPos,
+            end_position: endPos,
+          },
+        });
+
+        if (error) throw error;
+
+        if (!data?.success) {
+          throw new Error(data?.error || 'Scraping mislukt');
+        }
+
+        // Add entries with correct year
+        const entries = (data.entries || []).map((e: any) => ({
+          ...e,
+          year: scrapeYear,
+        }));
+        
+        allEntries.push(...entries);
+        setScrapeProgress(((batch + 1) / totalBatches) * 100);
+        setScrapedData([...allEntries]);
+
+        // Rate limiting delay
+        if (batch < totalBatches - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+      }
+
+      toast.success(`${allEntries.length} entries gescraped voor Top 2000 ${scrapeYear}`);
+    } catch (error: any) {
+      console.error('Scrape error:', error);
+      setScrapeError(error.message || 'Scraping mislukt');
+      toast.error(error.message || 'Scraping mislukt');
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
+  // Import scraped data
+  const handleImportScraped = async () => {
+    if (scrapedData.length === 0) {
+      toast.error('Geen gescrapete data om te importeren');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('import-top2000', {
+        body: { entries: scrapedData, clear_existing: clearExisting },
+      });
+
+      if (error) throw error;
+
+      toast.success(`${data.inserted} entries geïmporteerd vanuit scrape`);
+      queryClient.invalidateQueries({ queryKey: ['top2000-stats'] });
+      setScrapedData([]);
+      setScrapeProgress(0);
+    } catch (error: any) {
+      toast.error(error.message || 'Import mislukt');
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   // Fetch existing data stats using proper COUNT queries (avoid 1000 row limit)
   const { data: stats, refetch: refetchStats } = useQuery({
@@ -418,21 +516,170 @@ export default function Top2000Importer() {
             </Card>
           </div>
 
-          <Tabs defaultValue="import">
+          <Tabs defaultValue="scrape">
             <TabsList>
+              <TabsTrigger value="scrape">
+                <Zap className="h-4 w-4 mr-2" />
+                Scrape
+              </TabsTrigger>
               <TabsTrigger value="import">
                 <Upload className="h-4 w-4 mr-2" />
                 Import
               </TabsTrigger>
               <TabsTrigger value="preview">
                 <Table className="h-4 w-4 mr-2" />
-                Preview ({parsedData.length})
+                Preview ({parsedData.length + scrapedData.length})
               </TabsTrigger>
               <TabsTrigger value="analysis">
                 <Play className="h-4 w-4 mr-2" />
                 Analyse
               </TabsTrigger>
             </TabsList>
+
+            {/* Scrape Tab */}
+            <TabsContent value="scrape" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Search className="h-5 w-5" />
+                    Scrape via Perplexity AI
+                  </CardTitle>
+                  <CardDescription>
+                    Haal automatisch Top 2000 data op via Perplexity AI (1999-2025)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Select
+                      value={scrapeYear?.toString() || ''}
+                      onValueChange={(val) => {
+                        setScrapeYear(parseInt(val, 10));
+                        setScrapedData([]);
+                        setScrapeProgress(0);
+                        setScrapeError(null);
+                      }}
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Selecteer editiejaar..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {SCRAPE_YEARS.map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            Top 2000 van {year}
+                            {stats?.yearCounts?.[year] ? ` (${stats.yearCounts[year]} in DB)` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Button 
+                      onClick={handleScrape} 
+                      disabled={!scrapeYear || isScraping}
+                      size="lg"
+                    >
+                      {isScraping ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Zap className="h-4 w-4 mr-2" />
+                      )}
+                      {isScraping ? 'Scraping...' : 'Start Scraping'}
+                    </Button>
+                  </div>
+
+                  {isScraping && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Scraping Top 2000 {scrapeYear}...</span>
+                        <span>{Math.round(scrapeProgress)}%</span>
+                      </div>
+                      <Progress value={scrapeProgress} className="h-2" />
+                      <p className="text-xs text-muted-foreground">
+                        {scrapedData.length} / 2000 posities opgehaald
+                      </p>
+                    </div>
+                  )}
+
+                  {scrapeError && (
+                    <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{scrapeError}</span>
+                    </div>
+                  )}
+
+                  {scrapedData.length > 0 && !isScraping && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                          <span>{scrapedData.length} entries gescraped voor {scrapeYear}</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              id="clear-existing-scrape"
+                              checked={clearExisting}
+                              onCheckedChange={setClearExisting}
+                            />
+                            <Label htmlFor="clear-existing-scrape">Overschrijf bestaande data</Label>
+                          </div>
+                          <Button onClick={handleImportScraped} disabled={isImporting}>
+                            {isImporting ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Upload className="h-4 w-4 mr-2" />
+                            )}
+                            Importeren
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Preview eerste 10 entries */}
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted">
+                            <tr>
+                              <th className="px-3 py-2 text-left">#</th>
+                              <th className="px-3 py-2 text-left">Artiest</th>
+                              <th className="px-3 py-2 text-left">Titel</th>
+                              <th className="px-3 py-2 text-left">Jaar</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {scrapedData.slice(0, 10).map((entry, idx) => (
+                              <tr key={idx} className="border-t">
+                                <td className="px-3 py-2">{entry.position}</td>
+                                <td className="px-3 py-2">{entry.artist}</td>
+                                <td className="px-3 py-2">{entry.title}</td>
+                                <td className="px-3 py-2">{entry.release_year || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {scrapedData.length > 10 && (
+                          <div className="px-3 py-2 bg-muted text-sm text-muted-foreground text-center">
+                            ... en nog {scrapedData.length - 10} entries
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Hoe werkt het?</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Perplexity AI doorzoekt het web naar officiële Top 2000 data</li>
+                    <li>• Data wordt opgehaald in batches van 100 posities</li>
+                    <li>• Complete scrape duurt ~30-40 seconden</li>
+                    <li>• Controleer de preview voordat je importeert</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="import" className="space-y-4">
               <Card>

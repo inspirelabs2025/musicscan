@@ -3,16 +3,16 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminGuard } from '@/components/admin/AdminGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileJson, Table, Play, CheckCircle, AlertCircle, Loader2, Download, RefreshCw } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Upload, FileJson, Table, Play, CheckCircle, Loader2, Download, RefreshCw, Trash2, AlertCircle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface ImportEntry {
   year: number;
@@ -25,15 +25,20 @@ interface ImportEntry {
   country?: string;
 }
 
+// Beschikbare Top 2000 editiejaren
+const EDITION_YEARS = [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
+
 export default function Top2000Importer() {
   const queryClient = useQueryClient();
   const [parsedData, setParsedData] = useState<ImportEntry[]>([]);
   const [clearExisting, setClearExisting] = useState(true);
   const [isImporting, setIsImporting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
+  const [selectedEditionYear, setSelectedEditionYear] = useState<number | null>(null);
 
   // Fetch existing data stats
-  const { data: stats } = useQuery({
+  const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ['top2000-stats'],
     queryFn: async () => {
       const { data: entries } = await supabase
@@ -48,13 +53,45 @@ export default function Top2000Importer() {
 
       const years = entries ? [...new Set(entries.map((e: any) => e.year))].sort() : [];
       
+      // Count entries per year
+      const yearCounts: Record<number, number> = {};
+      entries?.forEach((e: any) => {
+        yearCounts[e.year] = (yearCounts[e.year] || 0) + 1;
+      });
+      
       return {
         totalEntries: entries?.length || 0,
         years: years as number[],
+        yearCounts,
         latestAnalysis: analyses?.[0] || null,
       };
     },
   });
+
+  // Clear all data
+  const handleClearAll = async () => {
+    if (!confirm('Weet je zeker dat je ALLE Top 2000 data wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
+      return;
+    }
+    
+    setIsClearingAll(true);
+    try {
+      const { error } = await supabase
+        .from('top2000_entries')
+        .delete()
+        .gte('year', 1900); // Delete all entries
+      
+      if (error) throw error;
+      
+      toast.success('Alle Top 2000 data verwijderd');
+      setParsedData([]);
+      queryClient.invalidateQueries({ queryKey: ['top2000-stats'] });
+    } catch (error: any) {
+      toast.error(error.message || 'Fout bij verwijderen');
+    } finally {
+      setIsClearingAll(false);
+    }
+  };
 
   // Parse CSV line handling quoted values with commas inside
   // Parse a single CSV line using a specific delimiter and handling quotes
@@ -103,7 +140,7 @@ export default function Top2000Importer() {
     return best;
   };
 
-  const parseCSV = (text: string): ImportEntry[] => {
+  const parseCSV = (text: string, editionYear: number): ImportEntry[] => {
     const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) {
       console.warn('CSV heeft geen datarijen');
@@ -117,20 +154,25 @@ export default function Top2000Importer() {
     console.log('Top2000 CSV headers:', headers);
 
     const entries: ImportEntry[] = [];
-    const perYearPositionCounter: Record<number, number> = {};
+    let positionCounter = 0;
 
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
       if (!line.trim()) continue;
 
       const values = parseCSVLine(line, delimiter);
-      const entry: any = {};
+      const entry: any = {
+        year: editionYear, // Altijd het geselecteerde editiejaar
+      };
 
       headers.forEach((header, idx) => {
         const value = (values[idx] ?? '').trim();
         const h = header.replace(/['"]/g, '');
 
-        if (h === 'year' || h === 'jaar') entry.year = value ? parseInt(value, 10) : undefined;
+        // 'jaar' of 'year' in CSV wordt nu release_year (jaar van uitbrengen)
+        if (h === 'year' || h === 'jaar') {
+          entry.release_year = value ? parseInt(value, 10) : undefined;
+        }
         else if (h === 'position' || h === 'positie' || h === 'pos') entry.position = value ? parseInt(value, 10) : undefined;
         else if (h === 'artist' || h === 'artiest') entry.artist = value || undefined;
         else if (h === 'title' || h === 'titel' || h === 'song' || h === 'nummer') entry.title = value || undefined;
@@ -140,36 +182,51 @@ export default function Top2000Importer() {
         else if (h === 'country' || h === 'land') entry.country = value || undefined;
       });
 
-      // Fallback: als positie ontbreekt, bepaal positie op basis van volgorde per jaar
-      if (entry.year && (!entry.position || Number.isNaN(entry.position))) {
-        const current = perYearPositionCounter[entry.year] ?? 0;
-        entry.position = current + 1;
-        perYearPositionCounter[entry.year] = entry.position;
+      // Positie automatisch toekennen op volgorde als niet aanwezig
+      if (!entry.position || Number.isNaN(entry.position)) {
+        positionCounter++;
+        entry.position = positionCounter;
       }
 
-      // Vereist: jaar, artiest, titel. Positie vullen we desnoods zelf in.
-      if (entry.year && entry.artist && entry.title && entry.position) {
+      // Vereist: artiest, titel. Year en position worden automatisch gezet.
+      if (entry.artist && entry.title) {
         entries.push(entry);
       } else {
         console.warn(`Top2000 rij ${i + 1} overgeslagen, ontbrekende verplichte velden`, {
-          year: entry.year,
-          position: entry.position,
           artist: entry.artist,
           title: entry.title,
         });
       }
     }
 
-    console.log(`Top2000 CSV parsing: ${entries.length} geldige entries van ${lines.length - 1} datarijen`);
+    console.log(`Top2000 CSV parsing: ${entries.length} geldige entries voor editie ${editionYear}`);
     return entries;
   };
-  const parseJSON = (text: string): ImportEntry[] => {
+
+  const parseJSON = (text: string, editionYear: number): ImportEntry[] => {
     const data = JSON.parse(text);
-    const entries = Array.isArray(data) ? data : data.entries || data.data || [];
-    return entries.filter((e: any) => e.year && e.artist && e.title);
+    const rawEntries = Array.isArray(data) ? data : data.entries || data.data || [];
+    
+    return rawEntries
+      .filter((e: any) => e.artist && e.title)
+      .map((e: any, idx: number) => ({
+        year: editionYear,
+        position: e.position || idx + 1,
+        artist: e.artist,
+        title: e.title,
+        album: e.album,
+        release_year: e.year || e.jaar || e.release_year,
+        genres: e.genres,
+        country: e.country,
+      }));
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (!selectedEditionYear) {
+      toast.error('Selecteer eerst een Top 2000 editiejaar');
+      return;
+    }
+
     const file = acceptedFiles[0];
     if (!file) return;
 
@@ -179,19 +236,19 @@ export default function Top2000Importer() {
       try {
         let parsed: ImportEntry[];
         if (file.name.endsWith('.json')) {
-          parsed = parseJSON(text);
+          parsed = parseJSON(text, selectedEditionYear);
         } else {
-          parsed = parseCSV(text);
+          parsed = parseCSV(text, selectedEditionYear);
         }
         setParsedData(parsed);
-        toast.success(`${parsed.length} entries geparsed`);
+        toast.success(`${parsed.length} entries geparsed voor Top 2000 ${selectedEditionYear}`);
       } catch (error) {
         toast.error('Fout bij parsen van bestand');
         console.error('Top2000 parse error:', error);
       }
     };
     reader.readAsText(file);
-  }, []);
+  }, [selectedEditionYear]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -270,12 +327,26 @@ export default function Top2000Importer() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">Top 2000 Importer</h1>
-              <p className="text-muted-foreground">Import en analyseer Top 2000 data</p>
+              <p className="text-muted-foreground">Import en analyseer Top 2000 data (2016-2025)</p>
             </div>
-            <Button variant="outline" onClick={downloadTemplate}>
-              <Download className="h-4 w-4 mr-2" />
-              Download Template
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={downloadTemplate}>
+                <Download className="h-4 w-4 mr-2" />
+                Template
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleClearAll}
+                disabled={isClearingAll || (stats?.totalEntries || 0) === 0}
+              >
+                {isClearingAll ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4 mr-2" />
+                )}
+                Wis Alle Data
+              </Button>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -294,15 +365,21 @@ export default function Top2000Importer() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Jaren in Database</CardTitle>
+                <CardTitle className="text-sm font-medium">Edities in Database</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-1">
-                  {stats?.years?.slice(-5).map((year: number) => (
-                    <Badge key={year} variant="secondary">{year}</Badge>
+                  {stats?.years?.map((year: number) => (
+                    <Badge 
+                      key={year} 
+                      variant={stats?.yearCounts?.[year] === 2000 ? "default" : "secondary"}
+                      title={`${stats?.yearCounts?.[year] || 0} entries`}
+                    >
+                      {year} ({stats?.yearCounts?.[year] || 0})
+                    </Badge>
                   ))}
-                  {(stats?.years?.length || 0) > 5 && (
-                    <Badge variant="outline">+{(stats?.years?.length || 0) - 5}</Badge>
+                  {(stats?.years?.length || 0) === 0 && (
+                    <span className="text-muted-foreground text-sm">Geen data</span>
                   )}
                 </div>
               </CardContent>
@@ -348,20 +425,60 @@ export default function Top2000Importer() {
             <TabsContent value="import" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Bestand Uploaden</CardTitle>
+                  <CardTitle>Stap 1: Selecteer Top 2000 Editie</CardTitle>
                   <CardDescription>
-                    Upload een CSV of JSON bestand met Top 2000 data
+                    Kies het jaar van de Top 2000 lijst die je wilt importeren
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4">
+                    <Select
+                      value={selectedEditionYear?.toString() || ''}
+                      onValueChange={(val) => {
+                        setSelectedEditionYear(parseInt(val, 10));
+                        setParsedData([]); // Reset parsed data when changing year
+                      }}
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Selecteer editiejaar..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EDITION_YEARS.map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            Top 2000 van {year}
+                            {stats?.yearCounts?.[year] ? ` (${stats.yearCounts[year]} in DB)` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedEditionYear && (
+                      <Badge variant="outline" className="text-lg px-4 py-1">
+                        Editie: {selectedEditionYear}
+                      </Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Stap 2: Upload Bestand</CardTitle>
+                  <CardDescription>
+                    Upload een CSV of JSON bestand met de Top 2000 {selectedEditionYear || ''} data
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div
                     {...getRootProps()}
                     className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                      ${!selectedEditionYear ? 'opacity-50 cursor-not-allowed' : ''}
                       ${isDragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'}`}
                   >
-                    <input {...getInputProps()} />
+                    <input {...getInputProps()} disabled={!selectedEditionYear} />
                     <FileJson className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    {isDragActive ? (
+                    {!selectedEditionYear ? (
+                      <p className="text-muted-foreground">Selecteer eerst een editiejaar hierboven</p>
+                    ) : isDragActive ? (
                       <p>Drop het bestand hier...</p>
                     ) : (
                       <div>
@@ -402,18 +519,14 @@ export default function Top2000Importer() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Vereiste Kolommen</CardTitle>
+                  <CardTitle>Kolom Mapping</CardTitle>
+                  <CardDescription>
+                    Het editiejaar wordt automatisch ingesteld op basis van je selectie hierboven.
+                    De "jaar" kolom in je CSV wordt gebruikt als release_year (jaar van uitbrengen).
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <Badge>year / jaar</Badge>
-                      <p className="text-muted-foreground mt-1">Verplicht</p>
-                    </div>
-                    <div>
-                      <Badge>position / positie</Badge>
-                      <p className="text-muted-foreground mt-1">Verplicht</p>
-                    </div>
                     <div>
                       <Badge>artist / artiest</Badge>
                       <p className="text-muted-foreground mt-1">Verplicht</p>
@@ -423,11 +536,15 @@ export default function Top2000Importer() {
                       <p className="text-muted-foreground mt-1">Verplicht</p>
                     </div>
                     <div>
-                      <Badge variant="outline">album</Badge>
-                      <p className="text-muted-foreground mt-1">Optioneel</p>
+                      <Badge variant="outline">position / positie</Badge>
+                      <p className="text-muted-foreground mt-1">Auto (volgorde)</p>
                     </div>
                     <div>
-                      <Badge variant="outline">release_year</Badge>
+                      <Badge variant="outline">jaar / year</Badge>
+                      <p className="text-muted-foreground mt-1">→ Release jaar</p>
+                    </div>
+                    <div>
+                      <Badge variant="outline">album</Badge>
                       <p className="text-muted-foreground mt-1">Optioneel</p>
                     </div>
                     <div>
@@ -455,7 +572,7 @@ export default function Top2000Importer() {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b">
-                            <th className="text-left p-2">Jaar</th>
+                            <th className="text-left p-2">Editie</th>
                             <th className="text-left p-2">Pos</th>
                             <th className="text-left p-2">Artiest</th>
                             <th className="text-left p-2">Titel</th>

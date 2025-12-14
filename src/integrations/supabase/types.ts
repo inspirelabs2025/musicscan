@@ -7507,6 +7507,102 @@ export type Database = {
           },
         ]
       }
+      top2000_analyses: {
+        Row: {
+          ai_model: string | null
+          analysis_year: number
+          canon_tracks: Json | null
+          created_at: string
+          decade_analysis: Json | null
+          dominant_artists: Json | null
+          dutch_analysis: Json | null
+          generation_time_ms: number | null
+          genre_shifts: Json | null
+          id: string
+          key_insights: Json | null
+          main_narrative: string | null
+          story_hooks: Json | null
+          updated_at: string
+          years_covered: number[]
+        }
+        Insert: {
+          ai_model?: string | null
+          analysis_year: number
+          canon_tracks?: Json | null
+          created_at?: string
+          decade_analysis?: Json | null
+          dominant_artists?: Json | null
+          dutch_analysis?: Json | null
+          generation_time_ms?: number | null
+          genre_shifts?: Json | null
+          id?: string
+          key_insights?: Json | null
+          main_narrative?: string | null
+          story_hooks?: Json | null
+          updated_at?: string
+          years_covered: number[]
+        }
+        Update: {
+          ai_model?: string | null
+          analysis_year?: number
+          canon_tracks?: Json | null
+          created_at?: string
+          decade_analysis?: Json | null
+          dominant_artists?: Json | null
+          dutch_analysis?: Json | null
+          generation_time_ms?: number | null
+          genre_shifts?: Json | null
+          id?: string
+          key_insights?: Json | null
+          main_narrative?: string | null
+          story_hooks?: Json | null
+          updated_at?: string
+          years_covered?: number[]
+        }
+        Relationships: []
+      }
+      top2000_entries: {
+        Row: {
+          album: string | null
+          artist: string
+          country: string | null
+          created_at: string
+          discogs_release_id: number | null
+          genres: string[] | null
+          id: string
+          position: number
+          release_year: number | null
+          title: string
+          year: number
+        }
+        Insert: {
+          album?: string | null
+          artist: string
+          country?: string | null
+          created_at?: string
+          discogs_release_id?: number | null
+          genres?: string[] | null
+          id?: string
+          position: number
+          release_year?: number | null
+          title: string
+          year: number
+        }
+        Update: {
+          album?: string | null
+          artist?: string
+          country?: string | null
+          created_at?: string
+          discogs_release_id?: number | null
+          genres?: string[] | null
+          id?: string
+          position?: number
+          release_year?: number | null
+          title?: string
+          year?: number
+        }
+        Relationships: []
+      }
       usage_tracking: {
         Row: {
           ai_chat_used: number | null

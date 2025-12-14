@@ -216,6 +216,8 @@ const AdminAlbumReviews = lazy(() => import("./pages/admin/AdminAlbumReviews"));
 const SEOKeywords = lazy(() => import("./pages/admin/SEOKeywords"));
 const SystemOverview = lazy(() => import("./pages/admin/SystemOverview"));
 const StatusDashboard = lazy(() => import("./pages/admin/StatusDashboard"));
+const Top2000Importer = lazy(() => import("./pages/admin/Top2000Importer"));
+const Top2000Analyse = lazy(() => import("./pages/Top2000Analyse"));
 const MediaLibrary = lazy(() => import("./pages/admin/MediaLibrary"));
 const PopupManager = lazy(() => import("./pages/admin/PopupManager"));
 const AdminYearOverview = lazy(() => import("./pages/admin/AdminYearOverview"));
@@ -389,6 +391,7 @@ const AppContent = () => {
         {/* Year/Month overview */}
         <Route path="/jaar-overzicht" element={<LazyRoute><YearOverview /></LazyRoute>} />
         <Route path="/maand-overzicht" element={<LazyRoute><MonthOverview /></LazyRoute>} />
+        <Route path="/top-2000-analyse" element={<LazyRoute><Top2000Analyse /></LazyRoute>} />
         
         {/* Christmas */}
         <Route path="/kerst" element={<LazyRoute><Christmas /></LazyRoute>} />
@@ -492,6 +495,7 @@ const AppContent = () => {
         <Route path="/admin/test/anecdote-generation" element={<ProtectedRoute><LazyRoute><TestAnecdoteGeneration /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/christmas-importer" element={<ProtectedRoute><LazyRoute><ChristmasImporter /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/christmas-logs" element={<ProtectedRoute><LazyRoute><ChristmasImportLogs /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/top2000-importer" element={<ProtectedRoute><LazyRoute><Top2000Importer /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/music-news" element={<ProtectedRoute><LazyRoute><TestMusicNews /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/news-update" element={<ProtectedRoute><LazyRoute><TestNewsUpdate /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/news-generation" element={<ProtectedRoute><LazyRoute><TestNewsGeneration /></LazyRoute></ProtectedRoute>} />

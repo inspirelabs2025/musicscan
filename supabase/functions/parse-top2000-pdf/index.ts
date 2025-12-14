@@ -107,7 +107,7 @@ Output format (ALLEEN JSON, geen markdown):
             ]
           }
         ],
-        max_tokens: 100000,
+        max_tokens: 8192,
         temperature: 0.1,
       }),
     });

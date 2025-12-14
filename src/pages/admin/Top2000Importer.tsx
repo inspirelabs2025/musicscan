@@ -131,7 +131,8 @@ export default function Top2000Importer() {
     const batches = [
       { start: 1, end: 500 },
       { start: 501, end: 1000 },
-      { start: 1001, end: 1500 },
+      { start: 1001, end: 1250 },
+      { start: 1251, end: 1500 },
       { start: 1501, end: 2000 },
     ];
 
@@ -140,7 +141,7 @@ export default function Top2000Importer() {
     try {
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
-        toast.info(`Batch ${i + 1}/4: Posities ${batch.start}-${batch.end}...`);
+        toast.info(`Batch ${i + 1}/${batches.length}: Posities ${batch.start}-${batch.end}...`);
 
         const formData = new FormData();
         formData.append('pdf', file);
@@ -176,7 +177,7 @@ export default function Top2000Importer() {
         }
       }
 
-      setPdfParsingNotes(`${allEntries.length} entries gevonden in 4 batches`);
+      setPdfParsingNotes(`${allEntries.length} entries gevonden in ${batches.length} batches`);
       toast.success(`${allEntries.length} entries gevonden in PDF voor Top 2000 ${pdfEditionYear}`);
     } catch (error: any) {
       console.error('PDF parsing error:', error);

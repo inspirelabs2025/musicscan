@@ -153,20 +153,46 @@ serve(async (req) => {
       throw new Error('Kon AI response niet parsen als JSON');
     }
 
-    const entries: ParsedEntry[] = parsedResult.entries || [];
+    const entries: any[] = parsedResult.entries || [];
 
-    // Validate and clean entries
-    const validEntries = entries
-      .filter((e: any) => e.artist && e.title)
-      .map((e: any, idx: number) => ({
-        year: editionYear,
-        position: e.position || idx + 1,
-        artist: String(e.artist).trim(),
-        title: String(e.title).trim(),
-        release_year: e.release_year ? parseInt(String(e.release_year), 10) : undefined,
-      }));
+    // Build a position → entry map from AI output
+    const entriesByPosition = new Map<number, any>();
+    entries.forEach((e, idx) => {
+      const rawPos = e.position;
+      const inferredPos = Number.isFinite(rawPos) && rawPos > 0 ? rawPos : startPosition + idx;
+      if (!entriesByPosition.has(inferredPos)) {
+        entriesByPosition.set(inferredPos, e);
+      }
+    });
 
-    console.log(`Successfully parsed ${validEntries.length} entries from PDF`);
+    // Ensure we have an entry for every position in the requested range
+    const validEntries = [] as ParsedEntry[];
+    let missingCount = 0;
+
+    for (let pos = startPosition; pos <= endPosition; pos++) {
+      const raw = entriesByPosition.get(pos) || {};
+
+      const artistRaw = raw.artist ?? raw.Artist ?? raw.artist_name ?? '';
+      const titleRaw = raw.title ?? raw.Titel ?? raw.song_title ?? raw.track ?? '';
+      const releaseYearRaw = raw.release_year ?? raw.year ?? raw.jaar ?? undefined;
+
+      const artist = String(artistRaw || `Onbekende artiest (${pos})`).trim();
+      const title = String(titleRaw || `Nog in te vullen (${pos})`).trim();
+      const release_year = releaseYearRaw ? parseInt(String(releaseYearRaw), 10) : undefined;
+
+      if (!artistRaw || !titleRaw) {
+        missingCount++;
+      }
+
+      validEntries.push({
+        position: pos,
+        artist,
+        title,
+        release_year,
+      });
+    }
+
+    console.log(`PDF parser: opgebouwd ${validEntries.length} entries voor posities ${startPosition}-${endPosition}, ontbrekende ruwe regels: ${missingCount}`);
 
     return new Response(
       JSON.stringify({

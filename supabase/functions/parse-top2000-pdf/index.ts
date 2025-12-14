@@ -1,0 +1,180 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface ParsedEntry {
+  position: number;
+  artist: string;
+  title: string;
+  release_year?: number;
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const formData = await req.formData();
+    const pdfFile = formData.get('pdf') as File;
+    const editionYear = parseInt(formData.get('edition_year') as string, 10);
+
+    if (!pdfFile) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Geen PDF bestand ontvangen' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!editionYear || isNaN(editionYear)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Ongeldig editiejaar' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Parsing PDF for Top 2000 ${editionYear}, file size: ${pdfFile.size} bytes`);
+
+    // Read PDF as ArrayBuffer and convert to base64 for AI processing
+    const arrayBuffer = await pdfFile.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    
+    // Convert to base64 for sending to AI
+    const base64 = btoa(String.fromCharCode(...bytes));
+
+    // Use AI to extract structured data from PDF
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY niet geconfigureerd');
+    }
+
+    console.log('Sending PDF to AI for parsing...');
+
+    // We'll process in chunks to handle large PDFs
+    // First, extract text using a simpler approach by sending PDF content to AI
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: `Je bent een expert in het extraheren van gestructureerde data uit Top 2000 lijsten.
+Je ontvangt PDF content en moet ALLE entries extraheren.
+
+BELANGRIJK:
+- Extraheer ELKE entry uit de lijst (tot 2000 entries)
+- Formaat: positie, artiest, titel, en optioneel het jaar van release
+- Return ALLEEN geldige JSON zonder markdown code blocks
+- Als je niet alle entries kunt extraheren, geef aan hoeveel je hebt gevonden
+
+Output format (ALLEEN JSON, geen markdown):
+{
+  "entries": [
+    {"position": 1, "artist": "Queen", "title": "Bohemian Rhapsody", "release_year": 1975},
+    {"position": 2, "artist": "Eagles", "title": "Hotel California", "release_year": 1977}
+  ],
+  "total_found": 2000,
+  "parsing_notes": "optionele notities over parsing"
+}`
+          },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `Extraheer alle Top 2000 ${editionYear} entries uit deze PDF. Return de data als JSON met position, artist, title, en release_year voor elke entry.`
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:application/pdf;base64,${base64}`
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 100000,
+        temperature: 0.1,
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('AI API error:', aiResponse.status, errorText);
+      throw new Error(`AI parsing mislukt: ${aiResponse.status}`);
+    }
+
+    const aiData = await aiResponse.json();
+    const content = aiData.choices?.[0]?.message?.content;
+
+    if (!content) {
+      throw new Error('Geen response van AI ontvangen');
+    }
+
+    console.log('AI response received, parsing JSON...');
+
+    // Clean up the response - remove markdown code blocks if present
+    let cleanContent = content.trim();
+    if (cleanContent.startsWith('```json')) {
+      cleanContent = cleanContent.slice(7);
+    } else if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.slice(3);
+    }
+    if (cleanContent.endsWith('```')) {
+      cleanContent = cleanContent.slice(0, -3);
+    }
+    cleanContent = cleanContent.trim();
+
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(cleanContent);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      console.log('Raw content:', cleanContent.substring(0, 500));
+      throw new Error('Kon AI response niet parsen als JSON');
+    }
+
+    const entries: ParsedEntry[] = parsedResult.entries || [];
+
+    // Validate and clean entries
+    const validEntries = entries
+      .filter((e: any) => e.artist && e.title)
+      .map((e: any, idx: number) => ({
+        year: editionYear,
+        position: e.position || idx + 1,
+        artist: String(e.artist).trim(),
+        title: String(e.title).trim(),
+        release_year: e.release_year ? parseInt(String(e.release_year), 10) : undefined,
+      }));
+
+    console.log(`Successfully parsed ${validEntries.length} entries from PDF`);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        entries: validEntries,
+        total: validEntries.length,
+        parsing_notes: parsedResult.parsing_notes || null,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('PDF parsing error:', error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Onbekende fout bij PDF parsing',
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});

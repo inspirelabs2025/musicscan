@@ -132,7 +132,9 @@ export default function Top2000Importer() {
       { start: 1, end: 500 },
       { start: 501, end: 1000 },
       { start: 1001, end: 1250 },
-      { start: 1251, end: 1500 },
+      { start: 1251, end: 1350 },
+      { start: 1351, end: 1450 },
+      { start: 1451, end: 1500 },
       { start: 1501, end: 2000 },
     ];
 

@@ -262,24 +262,26 @@ export default function Top2000Importer() {
         .from('top2000_entries')
         .select('*', { count: 'exact', head: true });
       
-      // Get counts per edition year - need high limit to get all years across 20k entries
-      const { data: yearData } = await supabase
-        .from('top2000_entries')
-        .select('year')
-        .order('year')
-        .limit(25000);
-      
-      const years = yearData ? [...new Set(yearData.map((e: any) => e.year))].sort() as number[] : [];
-      
-      // For each year, get the count (we need separate queries due to Supabase limitations)
+      // Query each possible year directly (2016-2025) to avoid 1000 row limit issues
       const yearCounts: Record<number, number> = {};
-      for (const year of years) {
+      const years: number[] = [];
+      
+      const yearPromises = Array.from({ length: 10 }, (_, i) => 2016 + i).map(async (year) => {
         const { count } = await supabase
           .from('top2000_entries')
           .select('*', { count: 'exact', head: true })
           .eq('year', year);
-        yearCounts[year] = count || 0;
-      }
+        return { year, count: count || 0 };
+      });
+      
+      const results = await Promise.all(yearPromises);
+      results.forEach(({ year, count }) => {
+        if (count > 0) {
+          years.push(year);
+          yearCounts[year] = count;
+        }
+      });
+      years.sort((a, b) => a - b);
       
       const { data: analyses } = await supabase
         .from('top2000_analyses')

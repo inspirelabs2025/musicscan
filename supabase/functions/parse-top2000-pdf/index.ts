@@ -185,6 +185,7 @@ serve(async (req) => {
       }
 
       validEntries.push({
+        year: editionYear,
         position: pos,
         artist,
         title,

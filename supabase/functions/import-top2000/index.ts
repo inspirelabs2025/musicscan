@@ -41,6 +41,17 @@ serve(async (req) => {
     const validEntries: Top2000Entry[] = [];
     const errors: string[] = [];
 
+    // Debug: log keys of first entry
+    if (entries.length > 0) {
+      try {
+        const first = entries[0];
+        console.log('import-top2000: first entry raw', first);
+        console.log('import-top2000: first entry keys', Object.keys(first || {}));
+      } catch (e) {
+        console.log('import-top2000: failed to log first entry', e);
+      }
+    }
+
     entries.forEach((entry, index) => {
       if (!entry.year || !entry.position || !entry.artist || !entry.title) {
         errors.push(`Row ${index + 1}: Missing required fields (year, position, artist, title)`);

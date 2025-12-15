@@ -146,7 +146,7 @@ export const ChristmasSocks = () => {
   const shuffledSocks = useMemo(() => {
     if (!socks || socks.length === 0) return [];
     const shuffled = [...socks].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 8);
+    return shuffled.slice(0, 2);
   }, [socks]);
 
   const hasSocks = shuffledSocks.length > 0;

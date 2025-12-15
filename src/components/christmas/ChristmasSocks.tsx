@@ -54,6 +54,8 @@ export const ChristmasSocks = () => {
           .select('id, slug, title, artist, price, primary_image, view_count, is_featured')
           .in('id', ids)
           .eq('status', 'active')
+          // Base64 images veroorzaken timeouts/overload → altijd uitsluiten in de query
+          .not('primary_image', 'like', 'data:%')
           .order('created_at', { ascending: false });
 
         if (error) throw error;

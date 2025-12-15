@@ -230,6 +230,7 @@ const TestNewsUpdate = lazy(() => import("./pages/TestNewsUpdate"));
 const TestNewsGeneration = lazy(() => import("./pages/TestNewsGeneration"));
 const TestBlogRegeneration = lazy(() => import("./pages/TestBlogRegeneration"));
 const TestAlbumCoverBackfill = lazy(() => import("./pages/TestAlbumCoverBackfill"));
+const TestBase64ImageCleanup = lazy(() => import("./pages/TestBase64ImageCleanup"));
 const TestDiscogsFlow = lazy(() => import("./pages/TestDiscogsFlow"));
 const TestDiscogsBlogGeneration = lazy(() => import("./pages/TestDiscogsBlogGeneration"));
 const TestDiscogsIdFinder = lazy(() => import("./pages/TestDiscogsIdFinder"));

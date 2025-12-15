@@ -333,6 +333,14 @@ const adminPages: AdminPage[] = [
     category: "testing",
     testOnly: true
   },
+  {
+    title: "Base64 Image Cleanup",
+    description: "Verwijder base64 afbeeldingen uit platform_products (herstelt /kerst)",
+    path: "/admin/test/base64-image-cleanup",
+    icon: Image,
+    category: "testing",
+    testOnly: true
+  },
 ];
 
 const categories = [

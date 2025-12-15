@@ -148,7 +148,7 @@ export default function Top2000Analyse() {
           </Badge>
           <h1 className="text-4xl font-bold mb-4">Top 2000 Culturele Analyse</h1>
           <p className="text-xl text-muted-foreground max-w-3xl">
-            Een diepgaande AI-analyse van de Nederlandse muziekcanon, gebaseerd op {analysis.years_covered?.length || 0} jaar stemgedrag.
+            Een diepgaande analyse van de Nederlandse muziekcanon, gebaseerd op {analysis.years_covered?.length || 0} jaar stemgedrag.
           </p>
         </div>
 

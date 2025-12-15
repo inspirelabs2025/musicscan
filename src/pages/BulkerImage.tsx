@@ -160,7 +160,7 @@ const BulkerImage = () => {
       autoStartTriggered.current = true;
       
       toast({
-        title: "AI-scan herkend",
+        title: "Smart scan herkend",
         description: `${urlArtist} - ${urlTitle} wordt automatisch gezocht${urlCondition ? ' met conditie ingevuld' : ''}...`,
         variant: "default"
       });

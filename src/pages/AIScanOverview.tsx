@@ -240,7 +240,7 @@ const AIScanOverview = () => {
 
     const headers = [
       "Date", "Artist", "Title", "Label", "Catalog Number", "Media Type", 
-      "Condition", "Confidence Score", "Status", "Discogs URL", "AI Description"
+      "Condition", "Confidence Score", "Status", "Discogs URL", "Description"
     ];
 
     const csvContent = [
@@ -320,11 +320,11 @@ const AIScanOverview = () => {
   }, [toast, resetProcessed]);
 
   const handleEditScan = useCallback((scan: UnifiedScanResult) => {
-    // Only allow editing AI scan results for now
+    // Only allow editing scan results for now
     if (scan.source_table !== 'ai_scan_results') {
       toast({
         title: "Niet ondersteund",
-        description: "Bewerken is alleen beschikbaar voor AI scans.",
+        description: "Bewerken is alleen beschikbaar voor Smart scans.",
         variant: "destructive",
       });
       return;
@@ -334,11 +334,11 @@ const AIScanOverview = () => {
   }, [toast]);
 
   const handleDeleteScan = useCallback((scan: UnifiedScanResult) => {
-    // Only allow deleting AI scan results for now
+    // Only allow deleting scan results for now
     if (scan.source_table !== 'ai_scan_results') {
       toast({
         title: "Niet ondersteund",
-        description: "Verwijderen is alleen beschikbaar voor AI scans.",
+        description: "Verwijderen is alleen beschikbaar voor Smart scans.",
         variant: "destructive",
       });
       return;
@@ -348,11 +348,11 @@ const AIScanOverview = () => {
   }, [toast]);
 
   const handleCommentScan = useCallback((scan: UnifiedScanResult) => {
-    // Only allow commenting on AI scan results for now
+    // Only allow commenting on scan results for now
     if (scan.source_table !== 'ai_scan_results') {
       toast({
         title: "Niet ondersteund",
-        description: "Opmerkingen zijn alleen beschikbaar voor AI scans.",
+        description: "Opmerkingen zijn alleen beschikbaar voor Smart scans.",
         variant: "destructive",
       });
       return;
@@ -398,11 +398,11 @@ const AIScanOverview = () => {
     try {
       const newFlaggedStatus = !scan.is_flagged_incorrect;
       
-      // Only allow flagging for AI scan results
+      // Only allow flagging for scan results
       if (scan.source_table !== 'ai_scan_results') {
         toast({
           title: "Niet ondersteund",
-          description: "Markeren als incorrect is alleen beschikbaar voor AI scans.",
+          description: "Markeren als incorrect is alleen beschikbaar voor Smart scans.",
           variant: "destructive",
         });
         return;
@@ -505,7 +505,7 @@ const AIScanOverview = () => {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p>Loading AI scan data...</p>
+              <p>Scan data laden...</p>
             </div>
           </div>
         </div>
@@ -550,7 +550,7 @@ const AIScanOverview = () => {
                 title="Gem. Vertrouwen"
                 value={`${Math.round(statsData.avgConfidence * 100)}%`}
                 icon={TrendingUp}
-                subtitle="AI confidence score"
+                subtitle="Herkenningsscore"
               />
               <StatCard
                 title="Duplicaten"

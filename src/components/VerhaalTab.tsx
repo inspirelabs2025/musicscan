@@ -291,7 +291,7 @@ export const VerhaalTab: React.FC = () => {
                   <SelectItem value="all">Alle types</SelectItem>
                   <SelectItem value="cd">CD</SelectItem>
                   <SelectItem value="vinyl">Vinyl</SelectItem>
-                  <SelectItem value="ai">AI Scan</SelectItem>
+                  <SelectItem value="ai">Smart Scan</SelectItem>
                   <SelectItem value="release">Release</SelectItem>
                 </SelectContent>
               </Select>

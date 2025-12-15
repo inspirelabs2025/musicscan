@@ -89,7 +89,7 @@ export default function Privacy() {
                   <li>Muziekcollectie-informatie (vinyl, CDs, scans)</li>
                   <li>Geüploade fotos en afbeeldingen</li>
                   <li>Interacties met de community (likes, comments)</li>
-                  <li>AI-analyses en chatgeschiedenis</li>
+                  <li>Slimme analyses en chatgeschiedenis</li>
                 </ul>
               </div>
 

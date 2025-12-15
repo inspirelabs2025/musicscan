@@ -11,11 +11,11 @@ import { ChristmasPoll } from '@/components/christmas/ChristmasPoll';
 import { ChristmasBehindTheClip } from '@/components/christmas/ChristmasBehindTheClip';
 import ChristmasAnecdote from '@/components/christmas/ChristmasAnecdote';
 import { ChristmasProducts } from '@/components/christmas/ChristmasProducts';
-import { ChristmasSingles } from '@/components/christmas/ChristmasSingles';
 import { ChristmasShopProducts } from '@/components/christmas/ChristmasShopProducts';
 import { Link } from 'react-router-dom';
-import { Music, Sparkles } from 'lucide-react';
+import { Music, Sparkles, ArrowRight } from 'lucide-react';
 import { Footer } from '@/components/Footer';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Snowflake = ({ style }: { style: React.CSSProperties }) => (
   <motion.div
@@ -113,8 +113,30 @@ export default function Christmas() {
 
         {/* Main Content */}
         <section className="container mx-auto px-4 pb-20 space-y-12 relative z-10">
-          {/* Christmas Singles Collection - Full International */}
-          <ChristmasSingles />
+          {/* Christmas Singles Link Card */}
+          <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-red-500/5 pointer-events-none" />
+            <CardHeader className="relative">
+              <CardTitle className="flex items-center gap-2">
+                <Music className="h-6 w-6 text-green-500" />
+                <span className="bg-gradient-to-r from-green-500 to-red-500 bg-clip-text text-transparent">
+                  200+ Kerst Singles
+                </span>
+                <span className="text-2xl">🎄</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="relative">
+              <p className="text-muted-foreground mb-4">
+                Van Mariah Carey tot Wham!, van klassiekers tot moderne hits. Ontdek alle kerst singles met verhalen en artwork.
+              </p>
+              <Link to="/kerst-singles">
+                <Button className="bg-gradient-to-r from-green-600 to-red-600 hover:from-green-700 hover:to-red-700 group">
+                  Bekijk alle kerst singles
+                  <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
 
           {/* Christmas Music Stories (filtered by tags) */}
           <ChristmasProducts />

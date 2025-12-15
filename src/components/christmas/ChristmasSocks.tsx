@@ -24,30 +24,52 @@ export const ChristmasSocks = () => {
   const { data: socks, isLoading } = useQuery({
     queryKey: ['christmas-sock-products'],
     queryFn: async () => {
-      // First get Christmas sock IDs from album_socks
+      // 1) Haal de christmas sock product_id's op
       const { data: albumSocks, error: albumError } = await supabase
         .from('album_socks')
         .select('product_id')
         .eq('pattern_type', 'christmas')
-        .not('product_id', 'is', null);
+        .not('product_id', 'is', null)
+        .limit(50);
 
       if (albumError) throw albumError;
-      
-      const productIds = albumSocks?.map(s => s.product_id).filter(Boolean) || [];
-      
+
+      const productIds = (albumSocks || [])
+        .map((s) => s.product_id)
+        .filter(Boolean) as string[];
+
       if (productIds.length === 0) return [];
 
-      // Fetch the actual products with proper images
-      const { data: products, error: productsError } = await supabase
-        .from('platform_products')
-        .select('id, slug, title, artist, price, primary_image, view_count, is_featured')
-        .in('id', productIds)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(8);
+      // 2) Fetch de shop producten (sock mockup via primary_image)
+      // BELANGRIJK: in() met veel UUIDs kan timeouts geven; daarom chunking.
+      const chunkSize = 10;
+      const chunks: string[][] = [];
+      for (let i = 0; i < productIds.length; i += chunkSize) {
+        chunks.push(productIds.slice(i, i + chunkSize));
+      }
 
-      if (productsError) throw productsError;
-      return (products || []) as ChristmasSockProduct[];
+      const results = await Promise.all(
+        chunks.map(async (ids) => {
+          const { data, error } = await supabase
+            .from('platform_products')
+            .select('id, slug, title, artist, price, primary_image, view_count, is_featured')
+            .in('id', ids)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(8);
+
+          if (error) throw error;
+          return (data || []) as ChristmasSockProduct[];
+        })
+      );
+
+      // Dedup + sort op created_at order (grofweg)
+      const byId = new Map<string, ChristmasSockProduct>();
+      for (const arr of results) {
+        for (const p of arr) byId.set(p.id, p);
+      }
+
+      return Array.from(byId.values()).slice(0, 8);
     },
   });
 

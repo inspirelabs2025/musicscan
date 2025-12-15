@@ -6,6 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function decodeBase64(base64: string): Uint8Array {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
 // Repair Christmas sock products that have base64 images by re-fetching artwork and uploading to storage
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -25,7 +34,7 @@ serve(async (req) => {
       .select('id, title, artist, slug, primary_image')
       .like('primary_image', 'data:image%')
       .contains('tags', ['christmas'])
-      .limit(5); // Process 5 at a time
+      .limit(2); // Process 2 at a time to avoid timeout
 
     if (fetchError) {
       console.error('❌ Error fetching broken products:', fetchError);
@@ -77,8 +86,7 @@ serve(async (req) => {
         const stylizeResponse = await supabase.functions.invoke('stylize-photo', {
           body: {
             imageUrl: artworkUrl,
-            style: 'posterize',
-            outputPath: `socks/christmas-repair-${Date.now()}.png`
+            style: 'posterize'
           }
         });
 
@@ -88,15 +96,60 @@ serve(async (req) => {
           continue;
         }
 
-        const styledImageUrl = stylizeResponse.data.stylizedImageUrl;
-        console.log(`   ✅ Styled image: ${styledImageUrl}`);
+        const styledImageBase64 = stylizeResponse.data.stylizedImageUrl;
+        console.log(`   ✅ Styled image generated (base64)`);
+
+        // Check if it's a base64 string and upload to storage
+        let finalImageUrl = styledImageBase64;
+        
+        if (styledImageBase64.startsWith('data:image')) {
+          console.log(`   📤 Uploading to storage...`);
+          
+          // Extract base64 data
+          const matches = styledImageBase64.match(/^data:image\/(png|jpg|jpeg|webp);base64,(.+)$/);
+          if (!matches) {
+            console.error(`   ❌ Invalid base64 format`);
+            errors.push(`${product.id}: Invalid base64 format`);
+            continue;
+          }
+          
+          const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+          const base64Data = matches[2];
+          const imageBytes = decodeBase64(base64Data);
+          
+          // Create unique filename
+          const slug = product.slug || product.id;
+          const fileName = `socks/christmas-${slug}-${Date.now()}.${ext}`;
+          
+          // Upload to storage
+          const { error: uploadError } = await supabase.storage
+            .from('time-machine-posters')
+            .upload(fileName, imageBytes, {
+              contentType: `image/${ext}`,
+              upsert: true
+            });
+
+          if (uploadError) {
+            console.error(`   ❌ Upload failed:`, uploadError);
+            errors.push(`${product.id}: Upload failed - ${uploadError.message}`);
+            continue;
+          }
+
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from('time-machine-posters')
+            .getPublicUrl(fileName);
+
+          finalImageUrl = urlData.publicUrl;
+          console.log(`   ✅ Uploaded to storage: ${finalImageUrl}`);
+        }
 
         // Update the product with the new image URL
         const { error: updateError } = await supabase
           .from('platform_products')
           .update({
-            primary_image: styledImageUrl,
-            images: [styledImageUrl]
+            primary_image: finalImageUrl,
+            images: [finalImageUrl]
           })
           .eq('id', product.id);
 
@@ -110,7 +163,7 @@ serve(async (req) => {
         repaired++;
 
         // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500));
 
       } catch (err) {
         console.error(`   ❌ Error processing ${product.id}:`, err);

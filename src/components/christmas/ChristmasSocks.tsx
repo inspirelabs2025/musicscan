@@ -5,44 +5,49 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
-import { ShoppingBag, ArrowRight } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Eye, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-interface Sock {
+interface ChristmasSockProduct {
   id: string;
-  artist_name: string;
-  album_title: string;
   slug: string;
-  album_cover_url: string;
-  mockup_url: string | null;
-  product_id: string | null;
+  title: string;
+  artist: string;
+  price: number;
+  primary_image: string | null;
+  view_count: number;
+  is_featured: boolean;
 }
 
-// Christmas-related artists and keywords
-const CHRISTMAS_KEYWORDS = ['christmas', 'kerst', 'xmas', 'holiday', 'winter', 'snow', 'santa', 'jingle'];
-const CHRISTMAS_ARTISTS = [
-  'wham!', 'mariah carey', 'michael bublé', 'bing crosby', 'nat king cole',
-  'frank sinatra', 'dean martin', 'andy williams', 'johnny mathis', 'brenda lee',
-  'jose feliciano', 'the ronettes', 'band aid', 'chris rea', 'slade',
-  'paul mccartney', 'john lennon', 'boney m', 'shakin\' stevens', 'wizzard',
-  'the pogues', 'kirsty maccoll', 'elton john', 'bobby helms', 'gene autry',
-  'eartha kitt', 'chuck berry', 'darlene love', 'jackson 5', 'kelly clarkson'
-];
-
 export const ChristmasSocks = () => {
+  // Fetch Christmas socks from platform_products (the actual shop products)
   const { data: socks, isLoading } = useQuery({
-    queryKey: ['christmas-socks'],
+    queryKey: ['christmas-sock-products'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get Christmas sock IDs from album_socks
+      const { data: albumSocks, error: albumError } = await supabase
         .from('album_socks')
-        .select('id, artist_name, album_title, slug, album_cover_url, mockup_url, product_id')
-        .eq('is_published', true)
+        .select('product_id')
         .eq('pattern_type', 'christmas')
+        .not('product_id', 'is', null);
+
+      if (albumError) throw albumError;
+      
+      const productIds = albumSocks?.map(s => s.product_id).filter(Boolean) || [];
+      
+      if (productIds.length === 0) return [];
+
+      // Fetch the actual products with proper images
+      const { data: products, error: productsError } = await supabase
+        .from('platform_products')
+        .select('id, slug, title, artist, price, primary_image, view_count, is_featured')
+        .in('id', productIds)
+        .eq('is_published', true)
         .order('created_at', { ascending: false })
         .limit(8);
 
-      if (error) throw error;
-      return (data || []) as Sock[];
+      if (productsError) throw productsError;
+      return (products || []) as ChristmasSockProduct[];
     },
   });
 
@@ -92,7 +97,7 @@ export const ChristmasSocks = () => {
       </CardHeader>
       
       <CardContent className="relative">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {socks.map((sock, index) => (
             <motion.div
               key={sock.id}
@@ -100,38 +105,66 @@ export const ChristmasSocks = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Link to={sock.product_id ? `/product/${sock.slug}` : `/socks/${sock.slug}`}>
-                <div className="group bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-border/50">
-                  {/* Image section */}
-                  <div className="relative aspect-square bg-muted">
-                    <img
-                      src={sock.mockup_url || sock.album_cover_url}
-                      alt={`${sock.artist_name} kerst sokken`}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    <div className="absolute top-3 right-3">
-                      <span className="text-xl">🎄</span>
+              <Link to={`/product/${sock.slug}`}>
+                <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-green-500 h-full">
+                  {/* Image */}
+                  <div className="relative aspect-square overflow-hidden bg-muted">
+                    {sock.primary_image ? (
+                      <img
+                        src={sock.primary_image}
+                        alt={`${sock.artist} - ${sock.title} kerst sokken`}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20">
+                        <span className="text-6xl">🧦</span>
+                      </div>
+                    )}
+                    
+                    {/* Badges Overlay */}
+                    <div className="absolute top-3 left-3 flex flex-col gap-2">
+                      <Badge className="bg-red-600 text-white font-bold">
+                        🎄 Kerst Editie
+                      </Badge>
+                      {sock.is_featured && (
+                        <Badge className="bg-vinyl-gold text-black font-bold">
+                          <Sparkles className="h-3 w-3 mr-1" />
+                          Featured
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* View Count */}
+                    <div className="absolute bottom-3 right-3">
+                      <Badge variant="secondary" className="bg-black/60 text-white border-0">
+                        <Eye className="h-3 w-3 mr-1" />
+                        {sock.view_count || 0}
+                      </Badge>
                     </div>
                   </div>
-                  
-                  {/* Content footer */}
+
+                  {/* Content */}
                   <div className="p-4 space-y-2">
                     <div className="flex items-center gap-2 text-green-600">
                       <ShoppingBag className="h-4 w-4" />
-                      <span className="text-xs font-bold uppercase tracking-wide">Kerst Sokken</span>
+                      <span className="text-xs font-bold uppercase tracking-wide">Premium Merino</span>
                     </div>
-                    <h3 className="font-semibold text-foreground line-clamp-1">
-                      {sock.artist_name}
+                    <p className="text-sm text-muted-foreground font-medium line-clamp-1">
+                      {sock.artist}
+                    </p>
+                    <h3 className="font-bold text-foreground line-clamp-1 group-hover:text-green-600 transition-colors">
+                      {sock.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground line-clamp-1">{sock.album_title}</p>
-                    <p className="text-sm font-medium text-foreground">€24,95</p>
-                    <div className="flex items-center gap-1 text-sm text-green-600 group-hover:text-green-700 pt-1">
-                      <span>Bekijk product</span>
-                      <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                    <div className="flex items-center justify-between pt-2">
+                      <p className="text-lg font-bold text-primary">€{sock.price.toFixed(2)}</p>
+                      <div className="flex items-center gap-1 text-sm text-green-600 group-hover:text-green-700">
+                        <span>Bekijk</span>
+                        <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Card>
               </Link>
             </motion.div>
           ))}

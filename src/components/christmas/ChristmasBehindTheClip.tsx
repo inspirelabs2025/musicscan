@@ -4,6 +4,18 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Play, Film, Clock, Star, ChevronRight } from 'lucide-react';
 
+// Fallback chain for YouTube thumbnails
+const getThumbnailUrl = (youtubeId: string, quality: 'maxres' | 'sd' | 'hq' | 'mq' | 'default' = 'hq') => {
+  const qualityMap = {
+    maxres: 'maxresdefault',
+    sd: 'sddefault', 
+    hq: 'hqdefault',
+    mq: 'mqdefault',
+    default: 'default'
+  };
+  return `https://img.youtube.com/vi/${youtubeId}/${qualityMap[quality]}.jpg`;
+};
+
 interface VideoClip {
   id: string;
   title: string;
@@ -421,7 +433,18 @@ export const ChristmasBehindTheClip = () => {
 
   const displayedClips = showAll ? CHRISTMAS_CLIPS : CHRISTMAS_CLIPS.slice(0, 8);
 
-  const getThumbnail = (youtubeId: string) => `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+  // Robust thumbnail handler with fallback chain
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, youtubeId: string) => {
+    const img = e.currentTarget;
+    const currentSrc = img.src;
+    
+    // Try fallback chain: hq -> mq -> default
+    if (currentSrc.includes('hqdefault')) {
+      img.src = getThumbnailUrl(youtubeId, 'mq');
+    } else if (currentSrc.includes('mqdefault')) {
+      img.src = getThumbnailUrl(youtubeId, 'default');
+    }
+  };
 
   return (
     <>
@@ -443,9 +466,10 @@ export const ChristmasBehindTheClip = () => {
                 className="group relative aspect-video rounded-xl overflow-hidden bg-muted/20"
               >
                 <img 
-                  src={getThumbnail(clip.youtubeId)} 
+                  src={getThumbnailUrl(clip.youtubeId, 'hq')} 
                   alt={`${clip.title} - ${clip.artist}`}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => handleImageError(e, clip.youtubeId)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 
@@ -527,9 +551,10 @@ export const ChristmasBehindTheClip = () => {
                     className="relative w-full h-full group"
                   >
                     <img 
-                      src={getThumbnail(selectedClip.youtubeId)} 
+                      src={getThumbnailUrl(selectedClip.youtubeId, 'hq')} 
                       alt={selectedClip.title}
                       className="w-full h-full object-cover"
+                      onError={(e) => handleImageError(e, selectedClip.youtubeId)}
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                       <div className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center group-hover:scale-110 transition-transform">

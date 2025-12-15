@@ -236,18 +236,10 @@ export default function SingleDetail() {
         <meta name="twitter:title" content={single?.meta_title || `${single.artist} - ${single.single_name}`} />
         <meta name="twitter:description" content={singleDescription} />
         <meta name="twitter:image" content={singleImage} />
-        {single?.reading_time && (
-          <>
-            <meta name="twitter:label1" content="Leestijd" />
-            <meta name="twitter:data1" content={`${single.reading_time} min`} />
-          </>
-        )}
-        {single?.views_count && (
-          <>
-            <meta name="twitter:label2" content="Views" />
-            <meta name="twitter:data2" content={single.views_count.toString()} />
-          </>
-        )}
+        {single?.reading_time && <meta name="twitter:label1" content="Leestijd" />}
+        {single?.reading_time && <meta name="twitter:data1" content={`${single.reading_time} min`} />}
+        {single?.views_count && <meta name="twitter:label2" content="Views" />}
+        {single?.views_count && <meta name="twitter:data2" content={single.views_count.toString()} />}
       </Helmet>
       
       <MusicRecordingStructuredData

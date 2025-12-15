@@ -135,7 +135,7 @@ export const ChristmasProducts = () => {
 
         {/* CTA Section */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 border-t border-border/50">
-          <Link to="/singles?tag=kerst">
+          <Link to="/kerst-singles">
             <Button variant="outline" className="group border-red-500/50 hover:bg-red-500/10">
               <ShoppingBag className="h-4 w-4 mr-2 text-red-500" />
               Bekijk alle kerstverhalen

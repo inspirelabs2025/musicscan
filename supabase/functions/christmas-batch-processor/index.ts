@@ -178,21 +178,23 @@ serve(async (req) => {
         console.error('T-shirt creation failed:', e);
       }
 
-      // Step 2d: Create Sock Products (1 pop art)
+      // Step 2d: Create Sock Products (1 pop art) - Using create-christmas-sock
       console.log(`🧦 Step 2d: Creating sock products...`);
       try {
-        const { data: sockResult } = await supabase.functions.invoke('create-sock-products', {
+        const { data: sockResult } = await supabase.functions.invoke('create-christmas-sock', {
           body: {
             artist: queueItem.artist,
             title: queueItem.song_title,
             imageUrl: artworkUrl,
-            tags: ['christmas', 'kerst', 'socks'],
-            category: 'socks'
+            tags: ['christmas', 'kerst', 'socks']
           }
         });
         if (sockResult?.productIds) {
           productIds.push(...sockResult.productIds);
           console.log(`✅ Socks created: ${sockResult.productIds.length}`);
+        } else if (sockResult?.productId) {
+          productIds.push(sockResult.productId);
+          console.log(`✅ Sock created: ${sockResult.productId}`);
         }
       } catch (e) {
         console.error('Sock creation failed:', e);

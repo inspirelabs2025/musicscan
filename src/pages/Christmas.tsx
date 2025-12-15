@@ -13,6 +13,7 @@ import ChristmasAnecdote from '@/components/christmas/ChristmasAnecdote';
 import { ChristmasProducts } from '@/components/christmas/ChristmasProducts';
 import { ChristmasShopProducts } from '@/components/christmas/ChristmasShopProducts';
 import { ChristmasSocks } from '@/components/christmas/ChristmasSocks';
+import { ChristmasPosters } from '@/components/christmas/ChristmasPosters';
 import { Link } from 'react-router-dom';
 import { Music, Sparkles, ArrowRight } from 'lucide-react';
 import { Footer } from '@/components/Footer';
@@ -142,11 +143,14 @@ export default function Christmas() {
           {/* Christmas Music Stories (filtered by tags) */}
           <ChristmasProducts />
 
-          {/* Christmas Shop Products (Posters & Canvas) */}
-          <ChristmasShopProducts />
+          {/* Christmas Posters & Art Prints */}
+          <ChristmasPosters />
 
           {/* Christmas Socks */}
           <ChristmasSocks />
+
+          {/* Other Christmas Shop Products */}
+          <ChristmasShopProducts />
 
           {/* Radio Stream */}
           <ChristmasRadioStream />

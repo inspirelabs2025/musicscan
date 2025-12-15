@@ -40,64 +40,97 @@ const Home = () => {
   });
 
   return (
-    <div className="min-h-screen relative">
-      {/* Snowfall overlay */}
+    <div className="min-h-screen relative bg-gradient-to-b from-christmas-cream via-background to-christmas-cream/50 dark:from-christmas-burgundy/20 dark:via-background dark:to-christmas-pine/20">
+      {/* Snowfall overlay - background */}
       <SnowfallOverlay />
 
       {/* Christmas Hero Banner - TOP */}
       <ChristmasHeroBanner />
 
       {/* Artist Search Hero */}
-      <ArtistSearchHero />
+      <section className="relative z-10">
+        <ArtistSearchHero />
+      </section>
 
       {/* Public Scanner - Scan je collectie */}
-      <PublicScannerSpotlight />
+      <section className="relative z-10">
+        <PublicScannerSpotlight />
+      </section>
 
       {/* Hero Section - Simple with 3 CTAs */}
-      <SimpleHero />
+      <section className="relative z-10">
+        <SimpleHero />
+      </section>
 
       {/* Echo Spotlight - AI Music Guide */}
-      <EchoSpotlight />
+      <section className="relative z-10">
+        <EchoSpotlight />
+      </section>
+
       {/* Metal Print Spotlight - Prominent ART Section */}
-      <MetalPrintSpotlight />
+      <section className="relative z-10">
+        <MetalPrintSpotlight />
+      </section>
 
       {/* Time Machine Spotlight */}
-      <TimeMachineSpotlight />
+      <section className="relative z-10">
+        <TimeMachineSpotlight />
+      </section>
 
       {/* Daily Music Anecdote */}
-      <DailyAnecdote />
+      <section className="relative z-10">
+        <DailyAnecdote />
+      </section>
 
       {/* Spotify New Releases - Always visible */}
-      <SpotifyNewReleasesSection />
+      <section className="relative z-10">
+        <SpotifyNewReleasesSection />
+      </section>
 
       {/* Album Verhalen - Always visible on mobile */}
-      {isMobile && <NewsAndStoriesSection />}
+      {isMobile && (
+        <section className="relative z-10">
+          <NewsAndStoriesSection />
+        </section>
+      )}
 
       {/* Music History - Always visible on mobile */}
-      {isMobile && <MusicHistorySpotlight />}
+      {isMobile && (
+        <section className="relative z-10">
+          <MusicHistorySpotlight />
+        </section>
+      )}
 
       {/* Featured Photos from FanWall - Always visible */}
-      <FeaturedPhotos />
+      <section className="relative z-10">
+        <FeaturedPhotos />
+      </section>
 
       {/* T-shirts Spotlight - Always visible */}
-      <TshirtSpotlight />
+      <section className="relative z-10">
+        <TshirtSpotlight />
+      </section>
 
       {/* Podcast Spotlight - Always visible */}
-      <PodcastSpotlight />
+      <section className="relative z-10">
+        <PodcastSpotlight />
+      </section>
 
       {/* YouTube Discoveries Section */}
-      <YouTubeDiscoveriesSection />
+      <section className="relative z-10">
+        <YouTubeDiscoveriesSection />
+      </section>
 
-      {/* Shop Categories - Compact on mobile */}
-      <section className={isMobile ? "py-8 bg-muted/30" : "py-16 bg-muted/30"}>
+      {/* Shop Categories - Christmas themed */}
+      <section className={`relative z-10 ${isMobile ? "py-8" : "py-16"} bg-gradient-to-br from-christmas-red/10 via-christmas-gold/10 to-christmas-green/10`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-6">
             <h2 className={isMobile ? "text-2xl font-bold mb-2" : "text-4xl font-bold mb-4"}>
-              🛍️ Onze Shop
+              🎁 Kerst Cadeaus
             </h2>
             {!isMobile && (
               <p className="text-xl text-muted-foreground">
-                Van vintage vinyl tot moderne art prints
+                Unieke muziekcadeaus voor onder de kerstboom
               </p>
             )}
           </div>
@@ -105,16 +138,16 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Products - Compact on mobile */}
-      <section className={isMobile ? "py-8" : "py-16"}>
+      {/* Featured Products - Christmas themed */}
+      <section className={`relative z-10 ${isMobile ? "py-8" : "py-16"} bg-christmas-cream/30 dark:bg-christmas-burgundy/10`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-6">
             <h2 className={isMobile ? "text-2xl font-bold mb-2" : "text-4xl font-bold mb-4"}>
-              ⭐ Uitgelichte Producten
+              ⭐ Uitgelichte Cadeaus
             </h2>
             {!isMobile && (
               <p className="text-xl text-muted-foreground">
-                Handpicked items uit onze collectie
+                Handpicked items voor muziekliefhebbers
               </p>
             )}
           </div>
@@ -124,21 +157,23 @@ const Home = () => {
 
 
       {/* Album Reviews Spotlight */}
-      <ReviewsSpotlight />
+      <section className="relative z-10">
+        <ReviewsSpotlight />
+      </section>
 
       {/* More Features - Collapsible on mobile */}
       {isMobile && !showMoreFeatures ? (
-        <div className="py-8 text-center">
+        <div className="py-8 text-center relative z-10">
           <button
             onClick={() => setShowMoreFeatures(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-christmas-red text-white rounded-lg hover:bg-christmas-red/90 transition-all"
           >
             Bekijk Meer Content
             <ChevronDown className="w-4 h-4" />
           </button>
         </div>
       ) : (
-        <>
+        <div className="relative z-10">
           {/* News & Stories Section with Tabs - Desktop only here */}
           {!isMobile && <NewsAndStoriesSection />}
 
@@ -153,39 +188,39 @@ const Home = () => {
 
           {/* Community Stats */}
           <CommunityStats />
-        </>
+        </div>
       )}
 
-      {/* Final CTA - Compact on mobile */}
-      <section className={isMobile ? "py-8 bg-gradient-to-br from-vinyl-purple/20 via-vinyl-gold/20 to-accent/20" : "py-16 bg-gradient-to-br from-vinyl-purple/20 via-vinyl-gold/20 to-accent/20"}>
+      {/* Final CTA - Christmas themed */}
+      <section className={`relative z-10 ${isMobile ? "py-8" : "py-16"} bg-gradient-to-br from-christmas-red/30 via-christmas-gold/20 to-christmas-green/30`}>
         <div className="container mx-auto px-4">
           <div className="text-center space-y-6 max-w-3xl mx-auto">
             <h2 className={isMobile ? "text-2xl md:text-3xl font-bold" : "text-4xl md:text-5xl font-bold"}>
-              Klaar om te Beginnen?
+              🎄 Fijne Feestdagen!
             </h2>
             {!isMobile && (
               <p className="text-xl text-muted-foreground">
-                Sluit je aan bij duizenden muziekliefhebbers en ontdek wat je collectie waard is
+                Ontdek de magie van muziek deze kerst
               </p>
             )}
             <div className={isMobile ? "grid grid-cols-2 gap-2" : "flex gap-4 justify-center flex-wrap"}>
               <a
+                href="/kerst"
+                className={isMobile ? "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-christmas-red to-christmas-burgundy px-3 py-2.5 text-sm font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all" : "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-christmas-red to-christmas-burgundy px-8 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"}
+              >
+                🎵 Kerstverhalen
+              </a>
+              <a
                 href="/shop"
-                className={isMobile ? "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-vinyl-gold to-amber-500 px-3 py-2.5 text-sm font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all" : "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-vinyl-gold to-amber-500 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"}
+                className={isMobile ? "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-christmas-gold to-amber-500 px-3 py-2.5 text-sm font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all" : "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-christmas-gold to-amber-500 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"}
               >
-                🛍️ Shop
+                🎁 Cadeaus
               </a>
               <a
-                href="/music-news"
-                className={isMobile ? "inline-flex items-center justify-center rounded-lg border-2 border-primary bg-transparent px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition-all" : "inline-flex items-center justify-center rounded-lg border-2 border-primary bg-transparent px-8 py-4 text-lg font-semibold text-primary hover:bg-primary/10 transition-all"}
+                href="/quizzen"
+                className={isMobile ? "inline-flex items-center justify-center rounded-lg border-2 border-christmas-green bg-christmas-green/10 px-3 py-2.5 text-sm font-semibold text-christmas-green hover:bg-christmas-green/20 transition-all col-span-2" : "inline-flex items-center justify-center rounded-lg border-2 border-christmas-green bg-christmas-green/10 px-8 py-4 text-lg font-semibold text-christmas-green hover:bg-christmas-green/20 transition-all"}
               >
-                📰 Nieuws
-              </a>
-              <a
-                href="/auth"
-                className={isMobile ? "inline-flex items-center justify-center rounded-lg border-2 border-vinyl-purple bg-transparent px-3 py-2.5 text-sm font-semibold text-vinyl-purple hover:bg-vinyl-purple/10 transition-all col-span-2" : "inline-flex items-center justify-center rounded-lg border-2 border-vinyl-purple bg-transparent px-8 py-4 text-lg font-semibold text-vinyl-purple hover:bg-vinyl-purple/10 transition-all"}
-              >
-                📸 Scan Gratis
+                🎄 Kerstquiz
               </a>
             </div>
           </div>

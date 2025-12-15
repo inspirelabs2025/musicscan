@@ -119,20 +119,17 @@ serve(async (req) => {
 
     // Generate default description if not provided
     const finalDescription = cleanDescription || `
-Transform your space with this stunning ${style} artwork of ${cleanArtist}.
-"${cleanTitle}" is a unique AI-generated poster that combines modern digital art techniques with classic artistic styles.
+Verrijk je interieur met deze prachtige ${style} kunstprint van ${cleanArtist}.
+"${cleanTitle}" is een unieke poster die moderne digitale kunsttechnieken combineert met klassieke artistieke stijlen.
 
-✨ Features:
-- High-quality print ready
-- Unique ${style} style
-- Perfect for home decor or collectors
-- Museum-quality poster
+✨ Kenmerken:
+- Hoogwaardige printklare kwaliteit
+- Unieke ${style} stijl
+- Perfect voor interieur of verzamelaars
+- Museum-kwaliteit poster
 
 📐 Afmetingen: 50x70cm
 🚚 Levertijd: 3-4 werkdagen
-
-🎨 Style: ${style}
-👤 Subject: ${cleanArtist}
     `.trim();
 
     // Generate slug using database function

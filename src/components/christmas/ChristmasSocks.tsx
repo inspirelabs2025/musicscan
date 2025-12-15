@@ -115,6 +115,19 @@ export const ChristmasSocks = () => {
     },
   });
 
+  const hasSocks = (socks?.length ?? 0) > 0;
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    if (!hasSocks) return;
+
+    const key = 'christmas_socks_regen_once';
+    if (sessionStorage.getItem(key) === 'true') return;
+    sessionStorage.setItem(key, 'true');
+    regenerate.mutate();
+  }, [isAdmin, hasSocks]);
+
+
   if (isLoading) {
     return (
       <Card className="bg-card/80 backdrop-blur-sm border-border/50">
@@ -132,17 +145,9 @@ export const ChristmasSocks = () => {
     );
   }
 
-  if (!socks || socks.length === 0) {
+  if (!hasSocks) {
     return null;
   }
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    const key = 'christmas_socks_regen_once';
-    if (sessionStorage.getItem(key) === 'true') return;
-    sessionStorage.setItem(key, 'true');
-    regenerate.mutate();
-  }, [isAdmin]);
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">

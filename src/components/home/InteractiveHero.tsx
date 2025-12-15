@@ -12,7 +12,7 @@ const heroVariants = [
     icon: Disc3,
     cta: 'Start met Scannen',
     ctaLink: '/auth',
-    gradient: 'from-vinyl-purple/20 to-vinyl-gold/20',
+    gradient: 'from-red-600/15 to-green-600/15',
     stats: '10.000+ albums gescand'
   },
   {
@@ -56,8 +56,8 @@ export const InteractiveHero = () => {
     <section className={`relative overflow-hidden bg-gradient-to-br ${variant.gradient} transition-all duration-1000`}>
       {/* Animated background elements */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-      <div className="absolute top-20 left-10 w-32 h-32 bg-vinyl-purple/10 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-20 right-10 w-40 h-40 bg-vinyl-gold/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-20 left-10 w-32 h-32 bg-red-600/10 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-20 right-10 w-40 h-40 bg-green-600/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
 
       <div className="container mx-auto px-4 py-20 md:py-32 relative z-10">
         <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">

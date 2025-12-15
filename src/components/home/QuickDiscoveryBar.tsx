@@ -11,25 +11,25 @@ export const QuickDiscoveryBar = () => {
       icon: Dice3,
       label: 'Plaat Roulette',
       href: '/dashboard',
-      gradient: 'from-vinyl-purple to-accent'
+      gradient: 'from-red-600 to-green-600'
     },
     {
       icon: Search,
       label: 'Quick Price Check',
       href: '/quick-price-check',
-      gradient: 'from-vinyl-gold to-amber-500'
+      gradient: 'from-red-600 to-red-800'
     },
     {
       icon: Camera,
       label: 'Scan Nu',
       href: user ? '/scanner' : '/auth',
-      gradient: 'from-primary to-vinyl-purple'
+      gradient: 'from-green-600 to-green-800'
     },
     {
       icon: MessageCircle,
       label: 'Stel een Vraag',
       href: user ? '/collection-chat' : '/auth',
-      gradient: 'from-accent to-primary'
+      gradient: 'from-red-700 to-green-700'
     }
   ];
 

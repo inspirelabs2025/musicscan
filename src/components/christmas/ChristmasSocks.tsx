@@ -40,13 +40,19 @@ export const ChristmasSocks = () => {
   const regenerate = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('regenerate-christmas-sock-designs', {
-        body: { limit: 5 },
+        body: { limit: 10 },
       });
       if (error) throw error;
       return data as any;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['christmas-sock-products'] });
+      if (data?.regenerated > 0) {
+        toast({
+          title: `${data.regenerated} kerst sokken bijgewerkt`,
+          description: 'De sok-ontwerpen zijn succesvol opnieuw gegenereerd.',
+        });
+      }
     },
     onError: (error: any) => {
       console.error('Regenerate christmas socks error:', error);

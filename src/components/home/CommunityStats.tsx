@@ -21,7 +21,7 @@ export const CommunityStats = () => {
   });
 
   return (
-    <section className="py-12 bg-gradient-to-r from-vinyl-purple/10 via-vinyl-gold/10 to-accent/10">
+    <section className="py-12 bg-gradient-to-r from-red-100/50 via-green-100/30 to-red-100/50 dark:from-red-950/20 dark:via-green-950/10 dark:to-red-950/20">
       <div className="container mx-auto px-4">
         <div className="text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-bold">

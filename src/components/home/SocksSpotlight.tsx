@@ -19,7 +19,7 @@ export const SocksSpotlight = () => {
   ];
 
   return (
-    <section className="py-16 bg-gradient-to-br from-background via-vinyl-purple/5 to-background relative overflow-hidden">
+    <section className="py-16 bg-gradient-to-br from-background via-green-100/20 to-background dark:via-green-950/10 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       
@@ -49,8 +49,8 @@ export const SocksSpotlight = () => {
                 ) : sockProducts && sockProducts.length > 0 ? (
                   sockProducts.slice(0, 4).map((product, index) => (
                     <Link key={product.id} to={`/product/${product.slug}`}>
-                      <Card className="aspect-square p-3 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-vinyl-purple relative overflow-hidden">
-                        <div className="w-full h-full rounded-lg overflow-hidden bg-gradient-to-br from-vinyl-purple/10 to-accent/10 flex items-center justify-center">
+                      <Card className="aspect-square p-3 hover:shadow-2xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-red-500 relative overflow-hidden">
+                        <div className="w-full h-full rounded-lg overflow-hidden bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20 flex items-center justify-center">
                           {product.primary_image ? (
                             <img 
                               src={product.primary_image} 
@@ -66,7 +66,7 @@ export const SocksSpotlight = () => {
                           €{product.price}
                         </span>
                         {/* Glow effect */}
-                        <div className="absolute -inset-1 bg-gradient-to-br from-vinyl-purple/30 to-accent/30 blur-lg -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute -inset-1 bg-gradient-to-br from-red-500/30 to-green-500/30 blur-lg -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </Card>
                     </Link>
                   ))
@@ -74,7 +74,7 @@ export const SocksSpotlight = () => {
                   // Placeholder socks
                   Array(4).fill(0).map((_, i) => (
                     <Card key={i} className="aspect-square p-3 border-2 border-dashed border-border">
-                      <div className="w-full h-full rounded-lg bg-gradient-to-br from-vinyl-purple/10 to-accent/10 flex items-center justify-center">
+                      <div className="w-full h-full rounded-lg bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20 flex items-center justify-center">
                         <div className="text-4xl opacity-50">🧦</div>
                       </div>
                     </Card>
@@ -96,7 +96,7 @@ export const SocksSpotlight = () => {
                   const Icon = feature.icon;
                   return (
                     <div key={index} className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-green-600 flex items-center justify-center flex-shrink-0">
                         <Icon className="w-5 h-5 text-white" />
                       </div>
                       <span className="text-lg font-semibold">{feature.text}</span>
@@ -124,7 +124,7 @@ export const SocksSpotlight = () => {
                 <Button 
                   asChild 
                   size="lg" 
-                  className="text-lg bg-gradient-to-r from-vinyl-purple to-accent hover:shadow-lg hover:scale-105 transition-all"
+                  className="text-lg bg-gradient-to-r from-red-600 to-green-600 hover:shadow-lg hover:scale-105 transition-all"
                 >
                   <Link to="/socks">
                     🧦 Browse Socks Shop
@@ -134,7 +134,7 @@ export const SocksSpotlight = () => {
                   asChild 
                   size="lg" 
                   variant="outline"
-                  className="text-lg border-2 border-vinyl-purple text-vinyl-purple hover:bg-vinyl-purple/10"
+                  className="text-lg border-2 border-red-600 text-red-600 hover:bg-red-600/10"
                 >
                   <Link to="/admin/sock-generator">
                     <Wand2 className="w-5 h-5 mr-2" />
@@ -152,7 +152,7 @@ export const SocksSpotlight = () => {
               <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
                 {sockProducts.map((product) => (
                   <Link key={product.id} to={`/product/${product.slug}`}>
-                    <Card className="aspect-square overflow-hidden hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-vinyl-purple">
+                    <Card className="aspect-square overflow-hidden hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-green-500">
                       {product.primary_image ? (
                         <img 
                           src={product.primary_image} 
@@ -160,7 +160,7 @@ export const SocksSpotlight = () => {
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-vinyl-purple/10 to-accent/10">
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20">
                           <span className="text-4xl">🧦</span>
                         </div>
                       )}

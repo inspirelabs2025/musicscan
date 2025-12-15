@@ -44,7 +44,7 @@ export const NewsAndStoriesSection = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary" />
+              <FileText className="w-5 h-5 text-red-600" />
               <h2 className="text-lg font-bold">Album Verhalen</h2>
             </div>
             <Button
@@ -83,7 +83,7 @@ export const NewsAndStoriesSection = () => {
                     <CarouselItem key={blog.id} className="pl-2 basis-[70%]">
                       <Link to={`/plaat-verhaal/${blog.slug}`}>
                         <Card className="overflow-hidden hover:shadow-md transition-shadow">
-                          <div className="aspect-video overflow-hidden bg-gradient-to-br from-accent/20 to-primary/20">
+                          <div className="aspect-video overflow-hidden bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20">
                             {blog.album_cover_url ? (
                               <img 
                                 src={blog.album_cover_url} 
@@ -133,7 +133,7 @@ export const NewsAndStoriesSection = () => {
             <Link to="/releases">
               <Card className="p-3 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-vinyl-purple to-primary flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-green-600 flex items-center justify-center">
                     <Music className="w-4 h-4 text-white" />
                   </div>
                   <div>
@@ -208,7 +208,7 @@ export const NewsAndStoriesSection = () => {
                     </span>
                   )}
                 </div>
-                <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
+                <h3 className="font-bold text-lg line-clamp-2 group-hover:text-red-600 transition-colors">
                   {news.title}
                 </h3>
                 {news.summary && (
@@ -262,7 +262,7 @@ export const NewsAndStoriesSection = () => {
           return (
             <Link key={blog.id} to={`/plaat-verhaal/${blog.slug}`}>
               <Card className="overflow-hidden hover:shadow-xl transition-all hover:scale-105 group h-full border-2 hover:border-accent">
-                <div className="aspect-video overflow-hidden bg-gradient-to-br from-accent/20 to-primary/20">
+                <div className="aspect-video overflow-hidden bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20">
                   {blog.album_cover_url ? (
                     <img 
                       src={blog.album_cover_url} 
@@ -289,7 +289,7 @@ export const NewsAndStoriesSection = () => {
                       })}
                     </span>
                   </div>
-                  <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
+                  <h3 className="font-bold text-lg line-clamp-2 group-hover:text-red-600 transition-colors">
                     {title}
                   </h3>
                   {description && (
@@ -310,7 +310,7 @@ export const NewsAndStoriesSection = () => {
     <section className="py-16 bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent">
             🎵 Ontdek Muzieknieuws
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -322,12 +322,12 @@ export const NewsAndStoriesSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Verhalen */}
           <Link to="/verhalen" className="group">
-            <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-primary">
+            <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-red-500">
               <CardHeader className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-vinyl-purple to-primary flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-red-600 to-green-600 flex items-center justify-center">
                   <FileText className="h-8 w-8 text-white" />
                 </div>
-                <CardTitle className="text-2xl group-hover:text-primary transition-colors">
+                <CardTitle className="text-2xl group-hover:text-red-600 transition-colors">
                   📚 Verhalen
                 </CardTitle>
               </CardHeader>
@@ -335,7 +335,7 @@ export const NewsAndStoriesSection = () => {
                 <p className="text-muted-foreground mb-4">
                   Ontdek de verhalen achter albums en artiesten
                 </p>
-                <Button variant="ghost" className="group-hover:bg-primary/10">
+                <Button variant="ghost" className="group-hover:bg-red-600/10">
                   Bekijk Verhalen
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -345,12 +345,12 @@ export const NewsAndStoriesSection = () => {
 
           {/* Nieuws */}
           <Link to="/nieuws" className="group">
-            <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-primary">
+            <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-green-500">
               <CardHeader className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-vinyl-purple to-primary flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-600 to-red-600 flex items-center justify-center">
                   <Newspaper className="h-8 w-8 text-white" />
                 </div>
-                <CardTitle className="text-2xl group-hover:text-primary transition-colors">
+                <CardTitle className="text-2xl group-hover:text-green-600 transition-colors">
                   📰 Nieuws
                 </CardTitle>
               </CardHeader>
@@ -358,7 +358,7 @@ export const NewsAndStoriesSection = () => {
                 <p className="text-muted-foreground mb-4">
                   Het laatste muzieknieuws en updates
                 </p>
-                <Button variant="ghost" className="group-hover:bg-primary/10">
+                <Button variant="ghost" className="group-hover:bg-green-600/10">
                   Bekijk Nieuws
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>

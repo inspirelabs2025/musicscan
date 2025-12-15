@@ -75,9 +75,10 @@ export const useArtistStories = (options: UseArtistStoriesOptions = {}) => {
   return useQuery({
     queryKey: ['artist-stories', search, genre, country, sortBy, limit],
     queryFn: async () => {
+      // Performance: select only fields needed for listings
       let query = supabase
         .from('artist_stories')
-        .select('*')
+        .select('id,artist_name,slug,artwork_url,biography,music_style,views_count,reading_time,published_at,is_spotlight,spotlight_description')
         .eq('is_published', true)
         .neq('is_deep_dive', true);
 
@@ -121,6 +122,8 @@ export const useArtistStories = (options: UseArtistStoriesOptions = {}) => {
 
       return data as ArtistStory[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
   });
 };
 
@@ -133,23 +136,27 @@ export const useArtistStory = (slug: string) => {
         .select('*')
         .eq('slug', slug)
         .eq('is_published', true)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching artist story:', error);
         throw error;
       }
 
-      // Increment view count
+      // Increment view count in background (don't await)
       if (data) {
-        await supabase
+        supabase
           .from('artist_stories')
           .update({ views_count: data.views_count + 1 })
-          .eq('id', data.id);
+          .eq('id', data.id)
+          .then(() => {});
       }
 
-      return data as ArtistStory;
+      return data as ArtistStory | null;
     },
+    staleTime: 10 * 60 * 1000, // 10 minutes for detail pages
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    enabled: !!slug,
   });
 };
 
@@ -181,5 +188,7 @@ export const useArtistStoriesStats = () => {
         genres: Array.from(genres).sort()
       };
     },
+    staleTime: 30 * 60 * 1000, // 30 minutes for stats
+    gcTime: 60 * 60 * 1000, // 1 hour
   });
 };

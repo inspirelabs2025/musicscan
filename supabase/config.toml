@@ -755,3 +755,9 @@ cron = "0 6 * * 1"
 
 [functions.reset-christmas-artwork-attempts]
 verify_jwt = false
+
+[functions.backfill-christmas-socks]
+verify_jwt = false
+
+[[functions.backfill-christmas-socks.schedule]]
+cron = "*/2 * * * *"

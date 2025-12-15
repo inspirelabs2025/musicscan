@@ -10,7 +10,6 @@ import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Sparkles, Eye, Shirt } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
-import { SocksMockup } from "@/components/shop/SocksMockup";
 
 export default function SocksShop() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -215,58 +214,57 @@ export default function SocksShop() {
                 
                   return (
                     <Link key={product.id} to={`/product/${product.slug}`} className="group block">
-                      <article className="h-full">
-                        <div className="relative">
-                          {/* Sock visual (geen card) */}
-                          <div className="relative aspect-[2/3]">
-                            <SocksMockup
-                              imageUrl={product.primary_image || '/placeholder.svg'}
+                      <Card className="overflow-hidden hover:shadow-xl hover:scale-105 transition-all cursor-pointer border-2 hover:border-primary">
+                        <div className="relative aspect-square">
+                          {product.primary_image ? (
+                            <img 
+                              src={product.primary_image} 
                               alt={`${product.artist || 'Various Artists'} - ${product.title} sokken`}
-                              className="h-full w-full"
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                             />
-
-                            {/* Badges Overlay */}
-                            <div className="absolute top-3 left-3 flex flex-col gap-2">
-                              <Badge className="bg-purple-600 text-white font-bold">
-                                ✨ Premium Merino
-                              </Badge>
-                              {product.is_featured && (
-                                <Badge className="bg-vinyl-gold text-black font-bold">
-                                  <Sparkles className="h-3 w-3 mr-1" />
-                                  Featured
-                                </Badge>
-                              )}
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100/30 to-red-100/30 dark:from-orange-950/20 dark:to-red-950/20">
+                              <span className="text-4xl">🧦</span>
                             </div>
-
-                            {/* View Count */}
-                            <div className="absolute bottom-3 right-3">
-                              <Badge variant="secondary" className="bg-black/60 text-white border-0">
-                                <Eye className="h-3 w-3 mr-1" />
-                                {product.view_count}
+                          )}
+                          
+                          {/* Badges Overlay */}
+                          <div className="absolute top-3 left-3 flex flex-col gap-2">
+                            <Badge className="bg-purple-600 text-white font-bold">
+                              ✨ Premium Merino
+                            </Badge>
+                            {product.is_featured && (
+                              <Badge className="bg-vinyl-gold text-black font-bold">
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                Featured
                               </Badge>
-                            </div>
+                            )}
                           </div>
 
-                          {/* Info */}
-                          <div className="pt-3 space-y-2">
-                            <div className="space-y-1">
-                              <p className="text-sm text-muted-foreground font-medium line-clamp-1">
-                                {product.artist || 'Various Artists'}
-                              </p>
-                              <h3 className="font-bold text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                                {product.title}
-                              </h3>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                              <p className="text-lg font-bold text-primary">€{product.price.toFixed(2)}</p>
-                              <Button variant="outline" size="sm">
-                                Bekijk
-                              </Button>
-                            </div>
+                          {/* View Count */}
+                          <div className="absolute bottom-3 right-3">
+                            <Badge variant="secondary" className="bg-black/60 text-white border-0">
+                              <Eye className="h-3 w-3 mr-1" />
+                              {product.view_count}
+                            </Badge>
                           </div>
                         </div>
-                      </article>
+
+                        <CardContent className="p-4 space-y-2">
+                          <p className="text-sm text-muted-foreground font-medium line-clamp-1">
+                            {product.artist || 'Various Artists'}
+                          </p>
+                          <h3 className="font-bold text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                            {product.title}
+                          </h3>
+                          <div className="flex items-center justify-between pt-2">
+                            <p className="text-lg font-bold text-primary">€{product.price.toFixed(2)}</p>
+                            <Button variant="outline" size="sm">
+                              Bekijk
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </Link>
                   );
               })}

@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Sparkles, Eye, Shirt } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
+import { useSocksProducts } from "@/hooks/useSocksProducts";
 
 export default function SocksShop() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -19,15 +19,9 @@ export default function SocksShop() {
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc" | "popular">("newest");
   const [showFeatured, setShowFeatured] = useState(false);
 
-  const { data: allProducts, isLoading } = usePlatformProducts({ 
-    mediaType: 'merchandise',
+  const { data: sockProducts, isLoading } = useSocksProducts({
     featured: showFeatured || undefined,
   });
-
-  // Filter only SOCK products
-  const sockProducts = allProducts?.filter(product => 
-    product.categories?.includes('socks')
-  );
 
   // Filter and sort products
   const filteredProducts = sockProducts
@@ -218,7 +212,7 @@ export default function SocksShop() {
                       {/* Image */}
                       <div className="relative aspect-square overflow-hidden bg-muted">
                         <img
-                          src={product.primary_image || product.images[0] || '/placeholder.svg'}
+                          src={product.image_url || '/placeholder.svg'}
                           alt={`${product.artist} - ${product.title} sokken`}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />

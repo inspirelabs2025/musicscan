@@ -3,38 +3,39 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Volume2, VolumeX, Radio, SkipForward } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Radio, SkipForward, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const CHRISTMAS_STATIONS = [
   { 
     id: 'christmas-classics',
     name: 'Kerst Klassiekers',
     genre: 'Classic',
-    url: 'https://streams.ilovemusic.de/iloveradio17.mp3',
+    url: 'https://listen.181fm.com/181-xtraditional_128k.mp3',
     description: 'Tijdloze kersthits',
     emoji: '🎄'
   },
   { 
-    id: 'christmas-pop',
-    name: 'Christmas Pop',
-    genre: 'Pop',
-    url: 'https://streams.ilovemusic.de/iloveradio17.mp3',
-    description: 'Moderne kerstpop',
+    id: 'christmas-lounge',
+    name: 'Christmas Lounge',
+    genre: 'Chill',
+    url: 'https://ice5.somafm.com/christmas-128-mp3',
+    description: 'Relaxte kerstgrooves',
     emoji: '🎅'
   },
   { 
-    id: 'smooth-christmas',
-    name: 'Smooth Christmas',
-    genre: 'Jazz',
-    url: 'https://streams.ilovemusic.de/iloveradio17.mp3',
-    description: 'Relaxte kerst jazz',
+    id: 'christmas-rnb',
+    name: 'Christmas Soul',
+    genre: 'R&B',
+    url: 'https://listen.181fm.com/181-xtrue_128k.mp3',
+    description: 'Soulful kerstmuziek',
     emoji: '🎷'
   },
   { 
     id: 'christmas-rock',
     name: 'Christmas Rock',
     genre: 'Rock',
-    url: 'https://streams.ilovemusic.de/iloveradio17.mp3',
+    url: 'https://listen.181fm.com/181-xrock_128k.mp3',
     description: 'Kerst met een rockend randje',
     emoji: '🎸'
   },
@@ -42,23 +43,45 @@ const CHRISTMAS_STATIONS = [
 
 export const ChristmasRadioStream = () => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [volume, setVolume] = useState([0.7]);
   const [isMuted, setIsMuted] = useState(false);
   const [currentStation, setCurrentStation] = useState(CHRISTMAS_STATIONS[0]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const setupAudioEvents = (audio: HTMLAudioElement) => {
+    audio.onloadstart = () => setIsLoading(true);
+    audio.oncanplay = () => setIsLoading(false);
+    audio.onplaying = () => {
+      setIsLoading(false);
+      setIsPlaying(true);
+    };
+    audio.onerror = () => {
+      setIsLoading(false);
+      setIsPlaying(false);
+      toast.error('Stream niet beschikbaar. Probeer een ander station.');
+    };
+  };
+
   const togglePlay = () => {
     if (!audioRef.current) {
-      audioRef.current = new Audio(currentStation.url);
-      audioRef.current.volume = volume[0];
+      const audio = new Audio(currentStation.url);
+      audio.volume = volume[0];
+      setupAudioEvents(audio);
+      audioRef.current = audio;
     }
 
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play().catch(console.error);
+      setIsLoading(true);
+      audioRef.current.play().catch((err) => {
+        console.error('Play error:', err);
+        setIsLoading(false);
+        toast.error('Kan stream niet afspelen');
+      });
     }
-    setIsPlaying(!isPlaying);
   };
 
   const changeStation = (station: typeof CHRISTMAS_STATIONS[0]) => {
@@ -68,6 +91,7 @@ export const ChristmasRadioStream = () => {
     }
     setCurrentStation(station);
     setIsPlaying(false);
+    setIsLoading(false);
   };
 
   const handleVolumeChange = (newVolume: number[]) => {
@@ -110,7 +134,8 @@ export const ChristmasRadioStream = () => {
             </div>
             <div className="flex-1">
               <Badge variant="secondary" className="mb-1">
-                <Radio className="h-3 w-3 mr-1" /> {isPlaying ? 'Nu Live' : 'Gestopt'}
+                <Radio className="h-3 w-3 mr-1" /> 
+                {isLoading ? 'Laden...' : isPlaying ? 'Nu Live' : 'Gestopt'}
               </Badge>
               <h3 className="text-xl font-bold">{currentStation.name}</h3>
               <p className="text-sm text-muted-foreground">{currentStation.description}</p>
@@ -122,9 +147,16 @@ export const ChristmasRadioStream = () => {
             <Button
               size="lg"
               onClick={togglePlay}
+              disabled={isLoading}
               className="w-14 h-14 rounded-full"
             >
-              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
+              {isLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="h-6 w-6" />
+              ) : (
+                <Play className="h-6 w-6 ml-1" />
+              )}
             </Button>
             
             <Button size="icon" variant="outline" onClick={nextStation}>
@@ -168,6 +200,11 @@ export const ChristmasRadioStream = () => {
             </button>
           ))}
         </div>
+
+        {/* Credits */}
+        <p className="text-xs text-muted-foreground opacity-60 text-center">
+          Streams powered by SomaFM & 181.FM
+        </p>
       </CardContent>
     </Card>
   );

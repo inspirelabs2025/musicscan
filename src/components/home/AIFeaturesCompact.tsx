@@ -11,7 +11,7 @@ export const AIFeaturesCompact = () => {
       description: 'Smart herkenning',
       href: '/scanner',
       badge: 'Gratis',
-      gradient: 'from-primary to-vinyl-purple'
+      gradient: 'from-red-600 to-red-800'
     },
     {
       icon: Search,
@@ -27,7 +27,7 @@ export const AIFeaturesCompact = () => {
       description: 'Vraag alles',
       href: '/collection-chat',
       badge: 'Premium',
-      gradient: 'from-accent to-primary'
+      gradient: 'from-green-600 to-green-800'
     },
     {
       icon: Brain,
@@ -35,7 +35,7 @@ export const AIFeaturesCompact = () => {
       description: 'Inzichten',
       href: '/ai-analysis',
       badge: 'Nieuw',
-      gradient: 'from-vinyl-purple to-accent'
+      gradient: 'from-red-700 to-green-700'
     },
     {
       icon: TrendingUp,
@@ -43,7 +43,7 @@ export const AIFeaturesCompact = () => {
       description: 'Ontdek meer',
       href: '/dashboard',
       badge: 'Populair',
-      gradient: 'from-primary to-vinyl-gold'
+      gradient: 'from-green-700 to-red-600'
     },
     {
       icon: Store,
@@ -51,7 +51,7 @@ export const AIFeaturesCompact = () => {
       description: 'Verkoop vinyl',
       href: '/my-shop',
       badge: 'Beta',
-      gradient: 'from-vinyl-gold to-vinyl-purple'
+      gradient: 'from-red-600 to-green-600'
     }
   ];
 
@@ -76,7 +76,7 @@ export const AIFeaturesCompact = () => {
                   to={feature.href}
                   className="flex-shrink-0 w-48 snap-start"
                 >
-                  <Card className="p-6 h-full hover:shadow-lg transition-all hover:scale-105 group relative overflow-hidden border-2 hover:border-primary">
+                  <Card className="p-6 h-full hover:shadow-lg transition-all hover:scale-105 group relative overflow-hidden border-2 hover:border-red-500 dark:hover:border-red-400">
                     {/* Gradient background */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity`} />
                     

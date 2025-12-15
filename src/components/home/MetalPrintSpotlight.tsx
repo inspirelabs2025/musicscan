@@ -66,7 +66,7 @@ export const MetalPrintSpotlight = () => {
                   </span>
                 </div>
                 <div className="relative">
-                  <Card className="p-1 bg-gradient-to-br from-vinyl-gold/20 to-vinyl-purple/20 border border-vinyl-gold/50">
+                  <Card className="p-1 bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20 border border-red-300/50">
                     <div className="aspect-square rounded overflow-hidden relative bg-muted flex items-center justify-center">
                       {isLoading ? (
                         <Skeleton className="w-full h-full" />
@@ -121,7 +121,7 @@ export const MetalPrintSpotlight = () => {
                       </span>
                     </div>
                     <div className="relative group">
-                      <Card className="p-2 bg-gradient-to-br from-vinyl-gold/20 to-vinyl-purple/20 border-2 border-vinyl-gold/50 hover:border-vinyl-gold transition-all">
+                      <Card className="p-2 bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20 border-2 border-red-400/50 hover:border-red-500 transition-all">
                         <div className="aspect-square rounded-lg overflow-hidden relative metal-print-effect bg-muted flex items-center justify-center">
                           {isLoading ? (
                             <Skeleton className="w-full h-full" />
@@ -139,7 +139,7 @@ export const MetalPrintSpotlight = () => {
                       <span className="absolute top-4 right-4 bg-vinyl-gold/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white border border-vinyl-gold">
                         ✨ Op Metaal
                       </span>
-                      <div className="absolute -inset-2 bg-gradient-to-br from-vinyl-gold/30 to-vinyl-purple/30 blur-xl -z-10 group-hover:blur-2xl transition-all" />
+                      <div className="absolute -inset-2 bg-gradient-to-br from-red-500/30 to-green-500/30 blur-xl -z-10 group-hover:blur-2xl transition-all" />
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground text-center">
@@ -197,7 +197,7 @@ export const MetalPrintSpotlight = () => {
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
                     {artProducts.map((product) => (
                       <Link key={product.id} to={`/product/${product.slug}`}>
-                        <Card className="aspect-square overflow-hidden hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-vinyl-gold">
+                        <Card className="aspect-square overflow-hidden hover:shadow-xl hover:scale-105 transition-all cursor-pointer group border-2 hover:border-red-500">
                           <img src={product.primary_image || ''} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                         </Card>
                       </Link>

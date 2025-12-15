@@ -196,10 +196,6 @@ export const NewsPost = () => {
           className={`mb-12 ${post.image_url ? 'relative z-10 -mt-12' : ''}`}
         >
           <div className="flex items-center gap-2 mb-6">
-            <Badge className="bg-primary/10 text-primary border-primary/20">
-              <Sparkles className="w-3 h-3 mr-1" />
-              AI Herschreven
-            </Badge>
             {post.category && (
               <Badge variant="secondary">
                 {post.category}

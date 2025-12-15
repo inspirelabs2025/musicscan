@@ -29,6 +29,7 @@ import { useState } from 'react';
 
 import { SnowfallOverlay } from '@/components/christmas/SnowfallOverlay';
 import { ChristmasHeroBanner } from '@/components/christmas/ChristmasHeroBanner';
+import { ChristmasDecorations } from '@/components/christmas/ChristmasDecorations';
 
 const Home = () => {
   const isMobile = useIsMobile();
@@ -41,11 +42,11 @@ const Home = () => {
 
   return (
     <div className="min-h-screen relative bg-christmas-cream dark:bg-christmas-burgundy/30">
+      {/* Christmas Decorations - fairy lights & ornaments */}
+      <ChristmasDecorations />
+      
       {/* Snowfall overlay - background */}
       <SnowfallOverlay />
-
-      {/* Christmas Hero Banner - TOP */}
-      <ChristmasHeroBanner />
 
       {/* Artist Search Hero - Christmas styled */}
       <section className="relative z-10 bg-gradient-to-b from-christmas-burgundy via-christmas-red/90 to-christmas-gold/20">

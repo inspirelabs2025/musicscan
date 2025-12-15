@@ -42,32 +42,28 @@ export const ChristmasSocks = () => {
 
       // 2) Fetch de shop producten (sock mockup via primary_image)
       // BELANGRIJK: in() met veel UUIDs kan timeouts geven; daarom chunking.
-      const chunkSize = 10;
+      const chunkSize = 5;
       const chunks: string[][] = [];
       for (let i = 0; i < productIds.length; i += chunkSize) {
         chunks.push(productIds.slice(i, i + chunkSize));
       }
 
-      const results = await Promise.all(
-        chunks.map(async (ids) => {
-          const { data, error } = await supabase
-            .from('platform_products')
-            .select('id, slug, title, artist, price, primary_image, view_count, is_featured')
-            .in('id', ids)
-            .eq('status', 'active')
-            .order('created_at', { ascending: false })
-            .limit(8);
+      const all: ChristmasSockProduct[] = [];
+      for (const ids of chunks) {
+        const { data, error } = await supabase
+          .from('platform_products')
+          .select('id, slug, title, artist, price, primary_image, view_count, is_featured')
+          .in('id', ids)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false });
 
-          if (error) throw error;
-          return (data || []) as ChristmasSockProduct[];
-        })
-      );
-
-      // Dedup + sort op created_at order (grofweg)
-      const byId = new Map<string, ChristmasSockProduct>();
-      for (const arr of results) {
-        for (const p of arr) byId.set(p.id, p);
+        if (error) throw error;
+        all.push(...((data || []) as ChristmasSockProduct[]));
       }
+
+      // Dedup + limit
+      const byId = new Map<string, ChristmasSockProduct>();
+      for (const p of all) byId.set(p.id, p);
 
       return Array.from(byId.values()).slice(0, 8);
     },

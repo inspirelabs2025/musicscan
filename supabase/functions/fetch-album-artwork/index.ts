@@ -7,13 +7,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Helper function to strip featured artists from song titles
+// Helper function to strip featured artists and descriptive annotations from song titles
 function stripFeaturedArtists(title: string): string {
   return title
+    // Remove featured artist patterns
     .replace(/\(feat\.?\s+.+?\)/gi, '')
     .replace(/\[feat\.?\s+.+?\]/gi, '')
     .replace(/featuring\s+.+/gi, '')
     .replace(/ft\.?\s+.+/gi, '')
+    // Remove descriptive annotations that break matching
+    .replace(/\(live.*?\)/gi, '')
+    .replace(/\(cover.*?\)/gi, '')
+    .replace(/\(BBC.*?\)/gi, '')
+    .replace(/\(instrumental.*?\)/gi, '')
+    .replace(/\(instrumentaal.*?\)/gi, '')
+    .replace(/\(met\s+.+?\)/gi, '')
+    .replace(/\(with\s+.+?\)/gi, '')
+    .replace(/\(John Lewis.*?\)/gi, '')
+    .replace(/\(winter.*?\)/gi, '')
+    .replace(/\(kerstklassieker.*?\)/gi, '')
+    .replace(/\(kerstfavoriet.*?\)/gi, '')
+    .replace(/\(version.*?\)/gi, '')
+    .replace(/\(versions.*?\)/gi, '')
+    // Remove any remaining parenthetical descriptions that don't contain years
+    .replace(/\([^0-9]+\)/gi, '')
     .trim();
 }
 

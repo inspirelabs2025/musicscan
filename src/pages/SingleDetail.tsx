@@ -13,7 +13,7 @@ import { MusicRecordingStructuredData } from '@/components/SEO/MusicRecordingStr
 import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ShareButtons';
 import { Helmet } from 'react-helmet';
-import { formatDate } from 'date-fns';
+import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
 interface Single {
@@ -203,7 +203,7 @@ export default function SingleDetail() {
     { name: `${single.artist} - ${single.single_name}`, url: `/singles/${slug}` }
   ];
 
-  const publishedDate = formatDate(new Date(single.created_at), 'dd MMMM yyyy', { locale: nl });
+  const publishedDate = format(new Date(single.created_at), 'dd MMMM yyyy', { locale: nl });
   const readingTime = single.reading_time || Math.ceil(single.story_content.length / 1000);
 
   const faqQuestions = [

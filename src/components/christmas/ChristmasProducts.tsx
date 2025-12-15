@@ -72,19 +72,19 @@ export const ChristmasProducts = () => {
       
       <CardHeader className="relative">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Gift className="h-6 w-6 text-red-500" />
+          <CardTitle className="flex items-center gap-3">
+            <BookOpen className="h-6 w-6 text-red-500" />
             <span className="bg-gradient-to-r from-red-500 to-green-500 bg-clip-text text-transparent">
-              Kerst Muziek Collectie
+              Kerst Muziek Verhalen
             </span>
-            <Sparkles className="h-4 w-4 text-yellow-500" />
+            <span className="text-xl">🎄</span>
           </CardTitle>
-          <Badge variant="outline" className="border-red-500/50 text-red-500">
-            {songs.length} items
+          <Badge className="bg-red-500/10 text-red-600 border-red-500/30">
+            📖 {songs.length} verhalen
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Ontdek de verhalen achter de mooiste kerstliedjes
+        <p className="text-base text-muted-foreground mt-2">
+          <span className="font-semibold text-foreground">Ontdek de fascinerende verhalen</span> achter de mooiste kerstklassiekers
         </p>
       </CardHeader>
       
@@ -98,34 +98,34 @@ export const ChristmasProducts = () => {
               transition={{ delay: index * 0.05 }}
             >
               <Link to={`/singles/${song.slug}`}>
-                <div className="group relative aspect-square rounded-xl overflow-hidden bg-muted cursor-pointer shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <img
-                    src={song.artwork_url}
-                    alt={song.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  
-                  {/* Stronger gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  
-                  {/* Christmas badge */}
-                  <div className="absolute top-3 right-3">
-                    <span className="text-xl">🎄</span>
+                <div className="group bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-border/50">
+                  {/* Image section */}
+                  <div className="relative aspect-[4/3]">
+                    <img
+                      src={song.artwork_url}
+                      alt={song.title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute top-3 right-3">
+                      <span className="text-xl">🎄</span>
+                    </div>
                   </div>
                   
-                  {/* Prominent "Lees het verhaal" badge */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 mb-3">
-                      <BookOpen className="h-4 w-4 text-white" />
-                      <span className="text-sm font-medium text-white">Lees het verhaal</span>
+                  {/* Content footer - card background */}
+                  <div className="p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-red-600">
+                      <BookOpen className="h-4 w-4" />
+                      <span className="text-xs font-bold uppercase tracking-wide">Verhaal</span>
                     </div>
-                    <p className="text-white font-semibold text-base truncate">
+                    <h3 className="font-semibold text-foreground line-clamp-1">
                       {song.single_name || song.title.split(' - ')[1] || song.title}
-                    </p>
-                    <p className="text-white/80 text-sm truncate">
-                      {song.artist}
-                    </p>
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{song.artist}</p>
+                    <div className="flex items-center gap-1 text-sm text-red-600 group-hover:text-red-700 pt-1">
+                      <span>Lees het verhaal</span>
+                      <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                    </div>
                   </div>
                 </div>
               </Link>

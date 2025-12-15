@@ -761,3 +761,6 @@ verify_jwt = false
 
 [[functions.backfill-christmas-socks.schedule]]
 cron = "*/2 * * * *"
+
+[functions.create-christmas-sock]
+verify_jwt = false

@@ -59,7 +59,7 @@ export const AIFeaturesCompact = () => {
     <section className="py-12 bg-muted/30">
       <div className="container mx-auto px-4">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-2">🤖 Ontdek Onze Slimme Tools</h2>
+          <h2 className="text-3xl font-bold mb-2">✨ Ontdek Onze Slimme Tools</h2>
           <p className="text-muted-foreground">
             Slimme tools om meer uit je collectie te halen
           </p>

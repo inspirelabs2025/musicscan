@@ -22,10 +22,10 @@ const Pricing = () => {
       period: '/maand',
       description: 'Perfect om te beginnen met je muziekcollectie',
       features: [
-        '10 AI foto scans per maand',
+        '10 foto scans per maand',
         'Basis collectie management',
         'Publieke catalogus toegang',
-        '5 AI chat queries per maand',
+        '5 chat queries per maand',
         'Community features'
       ],
       icon: Music,
@@ -41,9 +41,9 @@ const Pricing = () => {
       period: '/maand',
       description: 'Perfect voor wie serieus wil beginnen met collectie beheer',
       features: [
-        '50 AI foto scans per maand',
+        '50 foto scans per maand',
         'Volledige collectie features',
-        '20 AI chat queries per maand',
+        '20 chat queries per maand',
         'Basis blog generatie',
         'Email ondersteuning'
       ],
@@ -60,8 +60,8 @@ const Pricing = () => {
       period: '/maand',
       description: 'Voor de echte muziekliefhebber met een groeiende collectie',
       features: [
-        '200 AI foto scans per maand',
-        'Onbeperkte AI chat',
+        '200 foto scans per maand',
+        'Onbeperkte chat',
         'Geavanceerde analytics',
         'Marketplace integratie',
         'Priority support',
@@ -80,8 +80,8 @@ const Pricing = () => {
       period: '/maand',
       description: 'Voor de serieuze verzamelaar die alles uit zijn collectie wil halen',
       features: [
-        'Onbeperkte AI foto scans',
-        'Onbeperkte AI chat',
+        'Onbeperkte foto scans',
+        'Onbeperkte chat',
         'Bulk upload (50 foto\'s tegelijk)',
         'Geavanceerde marketplace tools',
         'White-label opties',

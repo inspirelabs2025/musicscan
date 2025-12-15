@@ -279,7 +279,7 @@ export const OnboardingStepComponent: React.FC<OnboardingStepProps> = ({
                         <Sparkles className="h-4 w-4 text-primary-foreground" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium mb-1 text-primary">MusicScan AI</p>
+                        <p className="text-sm font-medium mb-1 text-primary">MusicScan</p>
                         <p className="text-sm">Je duurste vinyl is "Dark Side of the Moon" van Pink Floyd (€87). Het is een originele pressing uit 1973 in VG+ conditie!</p>
                       </div>
                     </div>

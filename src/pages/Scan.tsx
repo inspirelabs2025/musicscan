@@ -94,11 +94,11 @@ const Scan = () => {
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-3">
                     <Sparkles className="w-8 h-8 text-vinyl-purple" />
-                    <h3 className="text-xl font-semibold">AI Muziek Analyse</h3>
+                    <h3 className="text-xl font-semibold">Slimme Muziek Analyse</h3>
                   </div>
                   <p className="text-muted-foreground">
                     Ontdek je muzikale DNA en krijg persoonlijke inzichten over je collectie. 
-                    AI analyseert je smaak, genres en muziekgeschiedenis.
+                    Analyseer je smaak, genres en muziekgeschiedenis.
                   </p>
                 </CardContent>
               </Card>
@@ -110,7 +110,7 @@ const Scan = () => {
                     <h3 className="text-xl font-semibold">Chat met je Collectie</h3>
                   </div>
                   <p className="text-muted-foreground">
-                    Praat met een AI die alles weet over je muziekcollectie. 
+                    Ontdek alles over je muziekcollectie. 
                     Krijg aanbevelingen en ontdek nieuwe albums gebaseerd op je smaak.
                   </p>
                 </CardContent>

@@ -43,7 +43,7 @@ export const DailyAnecdote = () => {
 
   if (isLoading) {
     return (
-      <section className={isMobile ? "py-4" : "py-6 bg-gradient-to-br from-vinyl-purple/10 via-accent/5 to-background"}>
+      <section className={isMobile ? "py-4" : "py-6 bg-gradient-to-br from-red-50/40 via-green-50/25 to-background dark:from-red-950/15 dark:via-green-950/10 dark:to-background"}>
         <div className="container mx-auto px-4">
           <Card className={isMobile ? "p-3 animate-pulse" : "max-w-6xl mx-auto p-4 md:p-6 animate-pulse"}>
             <div className="flex items-center gap-3">
@@ -68,17 +68,17 @@ export const DailyAnecdote = () => {
     return (
       <section className="py-4">
         <div className="container mx-auto px-4">
-          <Card 
-            className="p-3 border border-vinyl-purple/20 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => navigate(`/anekdotes/${anecdote.slug}`)}
-          >
-            <div className="flex items-center gap-3">
-              {/* Icon */}
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
+            <Card 
+              className="p-3 border border-red-500/20 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate(`/anekdotes/${anecdote.slug}`)}
+            >
+              <div className="flex items-center gap-3">
+                {/* Icon */}
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-green-600 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
                 </div>
-              </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
@@ -113,13 +113,13 @@ export const DailyAnecdote = () => {
   };
 
   return (
-    <section className="py-6 bg-gradient-to-br from-vinyl-purple/10 via-accent/5 to-background">
+    <section className="py-6 bg-gradient-to-br from-red-50/40 via-green-50/25 to-background dark:from-red-950/15 dark:via-green-950/10 dark:to-background">
       <div className="container mx-auto px-4">
-        <Card className="max-w-6xl mx-auto p-4 md:p-6 border-2 border-vinyl-purple/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <Card className="max-w-6xl mx-auto p-4 md:p-6 border-2 border-red-500/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <div className="flex flex-col md:flex-row items-center gap-4">
             {/* Icon */}
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-vinyl-purple to-accent flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-600 to-green-600 flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -145,7 +145,7 @@ export const DailyAnecdote = () => {
               <Button
                 variant="default"
                 onClick={() => navigate(`/anekdotes/${anecdote.slug}`)}
-                className="gap-2"
+                className="gap-2 bg-gradient-to-r from-red-600 to-green-600 hover:opacity-90"
               >
                 Lees meer
                 <ArrowRight className="w-4 h-4" />

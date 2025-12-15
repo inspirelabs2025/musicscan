@@ -40,96 +40,96 @@ const Home = () => {
   });
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-b from-christmas-cream via-background to-christmas-cream/50 dark:from-christmas-burgundy/20 dark:via-background dark:to-christmas-pine/20">
+    <div className="min-h-screen relative bg-christmas-cream dark:bg-christmas-burgundy/30">
       {/* Snowfall overlay - background */}
       <SnowfallOverlay />
 
       {/* Christmas Hero Banner - TOP */}
       <ChristmasHeroBanner />
 
-      {/* Artist Search Hero */}
-      <section className="relative z-10">
+      {/* Artist Search Hero - Christmas styled */}
+      <section className="relative z-10 bg-gradient-to-b from-christmas-burgundy via-christmas-red/90 to-christmas-gold/20">
         <ArtistSearchHero />
       </section>
 
       {/* Public Scanner - Scan je collectie */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-christmas-cream/80 dark:bg-christmas-pine/30">
         <PublicScannerSpotlight />
       </section>
 
       {/* Hero Section - Simple with 3 CTAs */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-gradient-to-b from-christmas-gold/10 to-christmas-cream dark:from-christmas-gold/20 dark:to-christmas-burgundy/20">
         <SimpleHero />
       </section>
 
       {/* Echo Spotlight - AI Music Guide */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-christmas-cream dark:bg-christmas-burgundy/20">
         <EchoSpotlight />
       </section>
 
       {/* Metal Print Spotlight - Prominent ART Section */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-gradient-to-br from-christmas-red/10 via-christmas-cream to-christmas-green/10 dark:from-christmas-red/20 dark:via-christmas-burgundy/30 dark:to-christmas-pine/20">
         <MetalPrintSpotlight />
       </section>
 
       {/* Time Machine Spotlight */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-christmas-cream/90 dark:bg-christmas-pine/20">
         <TimeMachineSpotlight />
       </section>
 
       {/* Daily Music Anecdote */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-gradient-to-b from-christmas-gold/15 to-christmas-cream dark:from-christmas-gold/10 dark:to-christmas-burgundy/20">
         <DailyAnecdote />
       </section>
 
       {/* Spotify New Releases - Always visible */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-christmas-cream dark:bg-christmas-burgundy/20">
         <SpotifyNewReleasesSection />
       </section>
 
       {/* Album Verhalen - Always visible on mobile */}
       {isMobile && (
-        <section className="relative z-10">
+        <section className="relative z-10 bg-christmas-cream/80 dark:bg-christmas-pine/20">
           <NewsAndStoriesSection />
         </section>
       )}
 
       {/* Music History - Always visible on mobile */}
       {isMobile && (
-        <section className="relative z-10">
+        <section className="relative z-10 bg-gradient-to-b from-christmas-red/10 to-christmas-cream dark:from-christmas-red/20 dark:to-christmas-burgundy/20">
           <MusicHistorySpotlight />
         </section>
       )}
 
       {/* Featured Photos from FanWall - Always visible */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-christmas-cream dark:bg-christmas-burgundy/20">
         <FeaturedPhotos />
       </section>
 
       {/* T-shirts Spotlight - Always visible */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-gradient-to-br from-christmas-green/10 via-christmas-cream to-christmas-gold/10 dark:from-christmas-pine/30 dark:via-christmas-burgundy/20 dark:to-christmas-gold/10">
         <TshirtSpotlight />
       </section>
 
       {/* Podcast Spotlight - Always visible */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-christmas-cream/90 dark:bg-christmas-pine/20">
         <PodcastSpotlight />
       </section>
 
       {/* YouTube Discoveries Section */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-christmas-cream dark:bg-christmas-burgundy/20">
         <YouTubeDiscoveriesSection />
       </section>
 
       {/* Shop Categories - Christmas themed */}
-      <section className={`relative z-10 ${isMobile ? "py-8" : "py-16"} bg-gradient-to-br from-christmas-red/10 via-christmas-gold/10 to-christmas-green/10`}>
+      <section className={`relative z-10 ${isMobile ? "py-8" : "py-16"} bg-gradient-to-br from-christmas-red/20 via-christmas-gold/20 to-christmas-green/20 dark:from-christmas-red/30 dark:via-christmas-gold/15 dark:to-christmas-pine/30`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-6">
-            <h2 className={isMobile ? "text-2xl font-bold mb-2" : "text-4xl font-bold mb-4"}>
+            <h2 className={`${isMobile ? "text-2xl font-bold mb-2" : "text-4xl font-bold mb-4"} text-christmas-burgundy dark:text-christmas-cream`}>
               🎁 Kerst Cadeaus
             </h2>
             {!isMobile && (
-              <p className="text-xl text-muted-foreground">
+              <p className="text-xl text-christmas-burgundy/70 dark:text-christmas-cream/70">
                 Unieke muziekcadeaus voor onder de kerstboom
               </p>
             )}
@@ -139,14 +139,14 @@ const Home = () => {
       </section>
 
       {/* Featured Products - Christmas themed */}
-      <section className={`relative z-10 ${isMobile ? "py-8" : "py-16"} bg-christmas-cream/30 dark:bg-christmas-burgundy/10`}>
+      <section className={`relative z-10 ${isMobile ? "py-8" : "py-16"} bg-christmas-cream dark:bg-christmas-burgundy/30`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-6">
-            <h2 className={isMobile ? "text-2xl font-bold mb-2" : "text-4xl font-bold mb-4"}>
+            <h2 className={`${isMobile ? "text-2xl font-bold mb-2" : "text-4xl font-bold mb-4"} text-christmas-burgundy dark:text-christmas-cream`}>
               ⭐ Uitgelichte Cadeaus
             </h2>
             {!isMobile && (
-              <p className="text-xl text-muted-foreground">
+              <p className="text-xl text-christmas-burgundy/70 dark:text-christmas-cream/70">
                 Handpicked items voor muziekliefhebbers
               </p>
             )}
@@ -157,23 +157,23 @@ const Home = () => {
 
 
       {/* Album Reviews Spotlight */}
-      <section className="relative z-10">
+      <section className="relative z-10 bg-gradient-to-b from-christmas-cream to-christmas-gold/10 dark:from-christmas-burgundy/20 dark:to-christmas-gold/10">
         <ReviewsSpotlight />
       </section>
 
       {/* More Features - Collapsible on mobile */}
       {isMobile && !showMoreFeatures ? (
-        <div className="py-8 text-center relative z-10">
+        <div className="py-8 text-center relative z-10 bg-christmas-cream dark:bg-christmas-burgundy/20">
           <button
             onClick={() => setShowMoreFeatures(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-christmas-red text-white rounded-lg hover:bg-christmas-red/90 transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-christmas-red text-christmas-cream rounded-lg hover:bg-christmas-burgundy transition-all shadow-lg"
           >
             Bekijk Meer Content
             <ChevronDown className="w-4 h-4" />
           </button>
         </div>
       ) : (
-        <div className="relative z-10">
+        <div className="relative z-10 bg-christmas-cream dark:bg-christmas-burgundy/20">
           {/* News & Stories Section with Tabs - Desktop only here */}
           {!isMobile && <NewsAndStoriesSection />}
 
@@ -192,33 +192,33 @@ const Home = () => {
       )}
 
       {/* Final CTA - Christmas themed */}
-      <section className={`relative z-10 ${isMobile ? "py-8" : "py-16"} bg-gradient-to-br from-christmas-red/30 via-christmas-gold/20 to-christmas-green/30`}>
+      <section className={`relative z-10 ${isMobile ? "py-8" : "py-16"} bg-gradient-to-br from-christmas-red via-christmas-burgundy to-christmas-pine`}>
         <div className="container mx-auto px-4">
           <div className="text-center space-y-6 max-w-3xl mx-auto">
-            <h2 className={isMobile ? "text-2xl md:text-3xl font-bold" : "text-4xl md:text-5xl font-bold"}>
+            <h2 className={`${isMobile ? "text-2xl md:text-3xl font-bold" : "text-4xl md:text-5xl font-bold"} text-christmas-cream`}>
               🎄 Fijne Feestdagen!
             </h2>
             {!isMobile && (
-              <p className="text-xl text-muted-foreground">
+              <p className="text-xl text-christmas-cream/80">
                 Ontdek de magie van muziek deze kerst
               </p>
             )}
             <div className={isMobile ? "grid grid-cols-2 gap-2" : "flex gap-4 justify-center flex-wrap"}>
               <a
                 href="/kerst"
-                className={isMobile ? "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-christmas-red to-christmas-burgundy px-3 py-2.5 text-sm font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all" : "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-christmas-red to-christmas-burgundy px-8 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"}
+                className={`${isMobile ? "px-3 py-2.5 text-sm" : "px-8 py-4 text-lg"} inline-flex items-center justify-center rounded-lg bg-christmas-gold text-christmas-burgundy font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all`}
               >
                 🎵 Kerstverhalen
               </a>
               <a
                 href="/shop"
-                className={isMobile ? "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-christmas-gold to-amber-500 px-3 py-2.5 text-sm font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all" : "inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-christmas-gold to-amber-500 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"}
+                className={`${isMobile ? "px-3 py-2.5 text-sm" : "px-8 py-4 text-lg"} inline-flex items-center justify-center rounded-lg bg-christmas-cream text-christmas-burgundy font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all`}
               >
                 🎁 Cadeaus
               </a>
               <a
                 href="/quizzen"
-                className={isMobile ? "inline-flex items-center justify-center rounded-lg border-2 border-christmas-green bg-christmas-green/10 px-3 py-2.5 text-sm font-semibold text-christmas-green hover:bg-christmas-green/20 transition-all col-span-2" : "inline-flex items-center justify-center rounded-lg border-2 border-christmas-green bg-christmas-green/10 px-8 py-4 text-lg font-semibold text-christmas-green hover:bg-christmas-green/20 transition-all"}
+                className={`${isMobile ? "px-3 py-2.5 text-sm col-span-2" : "px-8 py-4 text-lg"} inline-flex items-center justify-center rounded-lg border-2 border-christmas-gold bg-christmas-gold/20 text-christmas-cream font-semibold hover:bg-christmas-gold/30 transition-all`}
               >
                 🎄 Kerstquiz
               </a>

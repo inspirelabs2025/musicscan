@@ -67,14 +67,15 @@ export const usePlatformProducts = (filters?: UsePlatformProductsFilters) => {
   return useQuery({
     queryKey: ['platform-products', filters],
     queryFn: async () => {
-      // Performance: select only fields needed for shop grids to avoid timeouts
+      // Performance: select only essential fields for shop grids
       let query = supabase
         .from('platform_products')
-        .select('id,title,artist,description,price,images,primary_image,slug,categories,tags,genre,year,is_featured,is_on_sale,is_new,view_count,stock_quantity,allow_backorder,created_at,updated_at,published_at,media_type,status')
+        .select('id,title,artist,price,primary_image,slug,categories,is_featured,is_on_sale,is_new,stock_quantity,allow_backorder,media_type,status')
         .eq('status', 'active')
         .not('published_at', 'is', null)
         .lte('published_at', new Date().toISOString())
-        .or('stock_quantity.gt.0,allow_backorder.eq.true');
+        .or('stock_quantity.gt.0,allow_backorder.eq.true')
+        .not('primary_image', 'like', 'data:%');
       
       if (filters?.mediaType) {
         query = query.eq('media_type', filters.mediaType);
@@ -120,5 +121,7 @@ export const usePlatformProducts = (filters?: UsePlatformProductsFilters) => {
       if (error) throw error;
       return (data || []) as unknown as PlatformProduct[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
   });
 };

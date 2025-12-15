@@ -14,6 +14,7 @@ import { ChristmasProducts } from '@/components/christmas/ChristmasProducts';
 import { ChristmasShopProducts } from '@/components/christmas/ChristmasShopProducts';
 import { ChristmasSocks } from '@/components/christmas/ChristmasSocks';
 import { ChristmasPosters } from '@/components/christmas/ChristmasPosters';
+import { ChristmasFeaturedStory } from '@/components/christmas/ChristmasFeaturedStory';
 import { Link } from 'react-router-dom';
 import { Music, Sparkles, ArrowRight } from 'lucide-react';
 import { Footer } from '@/components/Footer';
@@ -155,6 +156,9 @@ export default function Christmas() {
           <div id="kerst-quiz">
             <ChristmasQuiz />
           </div>
+
+          {/* Featured Story of the Day */}
+          <ChristmasFeaturedStory />
 
           {/* Christmas Music Stories (filtered by tags) */}
           <ChristmasProducts />

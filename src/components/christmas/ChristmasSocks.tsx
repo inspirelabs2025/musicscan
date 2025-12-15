@@ -25,7 +25,7 @@ export const ChristmasSocks = () => {
     queryFn: async () => {
       const { data: albumSocks, error: albumError } = await supabase
         .from('album_socks')
-        .select('product_id, album_cover_url')
+        .select('product_id, base_design_url')
         .eq('pattern_type', 'christmas')
         .not('product_id', 'is', null)
         .limit(50);
@@ -34,7 +34,7 @@ export const ChristmasSocks = () => {
 
       const sockMeta = new Map<string, string>();
       for (const s of albumSocks || []) {
-        if (s.product_id && s.album_cover_url) sockMeta.set(s.product_id, s.album_cover_url);
+        if (s.product_id && s.base_design_url) sockMeta.set(s.product_id, s.base_design_url);
       }
 
       const productIds = Array.from(sockMeta.keys());

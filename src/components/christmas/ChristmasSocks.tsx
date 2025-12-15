@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -137,11 +137,18 @@ export const ChristmasSocks = () => {
         });
       }
 
-      return all.slice(0, 8);
+      return all;
     },
   });
 
-  const hasSocks = (socks?.length ?? 0) > 0;
+  // Shuffle socks randomly on each render
+  const shuffledSocks = useMemo(() => {
+    if (!socks || socks.length === 0) return [];
+    const shuffled = [...socks].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 8);
+  }, [socks]);
+
+  const hasSocks = shuffledSocks.length > 0;
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -211,7 +218,7 @@ export const ChristmasSocks = () => {
                 </Button>
               </>
             )}
-            <Badge className="bg-green-500/10 text-green-600 border-green-500/30">🎁 {socks.length} ontwerpen</Badge>
+            <Badge className="bg-green-500/10 text-green-600 border-green-500/30">🎁 {shuffledSocks.length} ontwerpen</Badge>
           </div>
         </div>
 
@@ -223,7 +230,7 @@ export const ChristmasSocks = () => {
 
       <CardContent className="relative">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {socks.map((sock, index) => (
+          {shuffledSocks.map((sock, index) => (
             <motion.div
               key={sock.id}
               initial={{ opacity: 0, y: 20 }}

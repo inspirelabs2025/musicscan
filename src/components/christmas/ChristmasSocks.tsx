@@ -1,9 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ArrowRight, Eye, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -20,6 +23,41 @@ interface ChristmasSockProduct {
 }
 
 export const ChristmasSocks = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: isAdmin } = useQuery({
+    queryKey: ['is-admin', user?.id],
+    enabled: Boolean(user?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('is_admin', { _user_id: user!.id });
+      if (error) throw error;
+      return Boolean(data);
+    },
+  });
+
+  const regenerate = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('regenerate-christmas-sock-designs', {
+        body: { limit: 5 },
+      });
+      if (error) throw error;
+      return data as any;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['christmas-sock-products'] });
+    },
+    onError: (error: any) => {
+      console.error('Regenerate christmas socks error:', error);
+      toast({
+        title: 'Kerst sokken bijwerken mislukt',
+        description: error?.message || 'Er ging iets mis tijdens het bijwerken van de sok-ontwerpen.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const { data: socks, isLoading } = useQuery({
     queryKey: ['christmas-sock-products'],
     queryFn: async () => {
@@ -92,12 +130,20 @@ export const ChristmasSocks = () => {
     return null;
   }
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    const key = 'christmas_socks_regen_once';
+    if (sessionStorage.getItem(key) === 'true') return;
+    sessionStorage.setItem(key, 'true');
+    regenerate.mutate();
+  }, [isAdmin]);
+
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-green-500/5 pointer-events-none" />
 
       <CardHeader className="relative">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-3">
             <span className="text-2xl">🧦</span>
             <span className="bg-gradient-to-r from-red-500 to-green-500 bg-clip-text text-transparent">
@@ -105,8 +151,22 @@ export const ChristmasSocks = () => {
             </span>
             <span className="text-xl">🎄</span>
           </CardTitle>
-          <Badge className="bg-green-500/10 text-green-600 border-green-500/30">🎁 {socks.length} ontwerpen</Badge>
+
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => regenerate.mutate()}
+                disabled={regenerate.isPending}
+              >
+                {regenerate.isPending ? 'Bijwerken…' : 'Sokken bijwerken'}
+              </Button>
+            )}
+            <Badge className="bg-green-500/10 text-green-600 border-green-500/30">🎁 {socks.length} ontwerpen</Badge>
+          </div>
         </div>
+
         <p className="text-base text-muted-foreground mt-2">
           <span className="font-semibold text-foreground">Feestelijke kerst sokken</span> — het perfecte cadeau voor
           muziekliefhebbers

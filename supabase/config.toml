@@ -500,3 +500,12 @@ verify_jwt = false
 
 [[functions.repair-christmas-sock-images.schedule]]
 cron = "*/3 * * * *"
+
+[functions.generate-artist-christmas-sock]
+verify_jwt = false
+
+[functions.cleanup-base64-product-images]
+verify_jwt = false
+
+[functions.regenerate-christmas-sock-designs]
+verify_jwt = false

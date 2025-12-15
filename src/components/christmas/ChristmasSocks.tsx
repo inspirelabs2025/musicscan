@@ -64,6 +64,32 @@ export const ChristmasSocks = () => {
     },
   });
 
+  // Mutation to delete and regenerate with artist portraits
+  const regenerateWithArtists = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('regenerate-christmas-sock-designs', {
+        body: { deleteExisting: true },
+      });
+      if (error) throw error;
+      return data as any;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['christmas-sock-products'] });
+      toast({
+        title: '🎄 Artiest sokken worden gegenereerd!',
+        description: `${data?.deleted?.socks || 0} oude sokken verwijderd. Nieuwe artiest portretten worden nu aangemaakt.`,
+      });
+    },
+    onError: (error: any) => {
+      console.error('Regenerate artist socks error:', error);
+      toast({
+        title: 'Artiest sokken regenereren mislukt',
+        description: error?.message || 'Er ging iets mis.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const { data: socks, isLoading } = useQuery({
     queryKey: ['christmas-sock-products'],
     queryFn: async () => {
@@ -165,14 +191,25 @@ export const ChristmasSocks = () => {
 
           <div className="flex items-center gap-2">
             {isAdmin && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => regenerate.mutate()}
-                disabled={regenerate.isPending}
-              >
-                {regenerate.isPending ? 'Bijwerken…' : 'Sokken bijwerken'}
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700"
+                  onClick={() => regenerateWithArtists.mutate()}
+                  disabled={regenerateWithArtists.isPending || regenerate.isPending}
+                >
+                  {regenerateWithArtists.isPending ? '🎄 Genereren…' : '🎨 Artiest Sokken'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => regenerate.mutate()}
+                  disabled={regenerate.isPending || regenerateWithArtists.isPending}
+                >
+                  {regenerate.isPending ? 'Bijwerken…' : 'Bijwerken'}
+                </Button>
+              </>
             )}
             <Badge className="bg-green-500/10 text-green-600 border-green-500/30">🎁 {socks.length} ontwerpen</Badge>
           </div>

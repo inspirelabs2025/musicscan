@@ -154,10 +154,10 @@ export const ChristmasPosters = () => {
 
         {/* CTA Section */}
         <div className="mt-8 flex justify-center pt-6 border-t border-border/50">
-          <Link to="/shop">
+          <Link to="/kerst-posters">
             <Button className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 group">
               <Image className="h-4 w-4 mr-2" />
-              Bekijk alle kerst art
+              Bekijk alle kerst posters
               <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
             </Button>
           </Link>

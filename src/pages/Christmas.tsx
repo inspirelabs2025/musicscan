@@ -98,9 +98,20 @@ export default function Christmas() {
               </p>
 
               <div className="flex flex-wrap justify-center gap-4 mb-12">
-                <Link to="/quizzen">
+                <Link to="/kerst-singles">
                   <Button size="lg" className="bg-gradient-to-r from-red-600 to-red-700">
-                    <Music className="h-5 w-5 mr-2" /> Kerst Quiz
+                    <Music className="h-5 w-5 mr-2" /> Kerst Singles
+                  </Button>
+                </Link>
+                <Link to="/kerst-posters">
+                  <Button size="lg" variant="outline" className="border-green-500 text-green-600 hover:bg-green-500/10">
+                    🖼️ Kerst Posters
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+                <Link to="/quizzen">
+                  <Button size="lg" variant="outline" className="border-red-500 text-red-600 hover:bg-red-500/10">
+                    <Sparkles className="h-5 w-5 mr-2" /> Kerst Quiz
                   </Button>
                 </Link>
               </div>

@@ -752,3 +752,6 @@ verify_jwt = false
 
 [[functions.schedule-weekly-podcast-posts.schedule]]
 cron = "0 6 * * 1"
+
+[functions.reset-christmas-artwork-attempts]
+verify_jwt = false

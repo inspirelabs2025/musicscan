@@ -77,7 +77,7 @@ export default function AnecdoteDetail() {
         title={anecdote.anecdote_title}
         description={anecdote.meta_description}
         publishDate={anecdote.anecdote_date}
-        author="MusicScan AI"
+        author="MusicScan Redactie"
       />
 
       <div className="min-h-screen bg-background">

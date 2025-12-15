@@ -53,7 +53,7 @@ const CollectionItemCard = ({
 
   const getSourceBadge = () => {
     if (isAIScan) {
-      return <Badge variant="secondary" className="text-xs"><Scan className="w-3 h-3 mr-1" />AI Scan</Badge>;
+      return <Badge variant="secondary" className="text-xs"><Scan className="w-3 h-3 mr-1" />Scan</Badge>;
     }
     return <Badge variant="outline" className="text-xs">Collectie Item</Badge>;
   };

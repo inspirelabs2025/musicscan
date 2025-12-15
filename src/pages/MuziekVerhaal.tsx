@@ -281,7 +281,7 @@ export const MuziekVerhaal: React.FC = () => {
         title={story.title}
         description={storyDescription}
         publishDate={story.created_at}
-        author="MusicScan AI"
+        author="MusicScan Redactie"
         image={story.artwork_url}
         artist={story.artist}
         album={story.album}

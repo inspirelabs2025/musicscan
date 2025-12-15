@@ -335,7 +335,7 @@ export const PlaatVerhaal: React.FC = () => {
         title={title}
         description={frontmatter.meta_description || `Het verhaal achter ${artist} - ${album}`}
         publishDate={blog.published_at || blog.created_at}
-        author="MusicScan AI"
+        author="MusicScan Redactie"
         image={blog?.album_cover_url || frontmatter.og_image}
         artist={artist}
         album={album}

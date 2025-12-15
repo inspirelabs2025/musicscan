@@ -36,7 +36,7 @@ export const PosterStructuredData = ({ product, slug }: PosterStructuredDataProp
     "keywords": `${product.artist}, ${product.title}, poster, ${style || 'kunst'}, kunstposter, muziek poster, wanddecoratie`,
     "creator": {
       "@type": "Organization",
-      "name": "MusicScan AI Studio",
+      "name": "MusicScan Studio",
       "url": "https://musicscan.app"
     },
     "offers": {

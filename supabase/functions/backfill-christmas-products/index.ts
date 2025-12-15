@@ -79,82 +79,52 @@ serve(async (req) => {
         console.log(`🛍️ Creating products for: ${story.artist} - ${story.single_name}`);
         const productIds: string[] = [];
 
-        // Create Poster Product
+        // Create Poster Product (uses stylizedImageBase64 field which accepts URLs)
         try {
-          const { data: posterResult } = await supabase.functions.invoke('create-poster-product', {
+          const { data: posterResult, error: posterError } = await supabase.functions.invoke('create-poster-product', {
             body: {
+              stylizedImageBase64: story.artwork_url, // Function accepts URLs too
               artist: story.artist,
               title: story.single_name,
-              imageUrl: story.artwork_url,
-              tags: ['christmas', 'kerst', 'poster'],
-              category: 'POSTER'
+              style: 'Christmas',
+              price: 49.95
             }
           });
-          if (posterResult?.productId) {
-            productIds.push(posterResult.productId);
-            console.log(`✅ Poster created: ${posterResult.productId}`);
+          if (posterError) {
+            console.error('Poster error response:', posterError);
+          }
+          if (posterResult?.product_id) {
+            productIds.push(posterResult.product_id);
+            console.log(`✅ Poster created: ${posterResult.product_id}`);
           }
         } catch (e) {
           console.error('Poster creation failed:', e);
         }
 
-        // Create Canvas Product
+        // Create Canvas Product (uses stylizedImageBase64 field which accepts URLs)
         try {
-          const { data: canvasResult } = await supabase.functions.invoke('create-canvas-product', {
+          const { data: canvasResult, error: canvasError } = await supabase.functions.invoke('create-canvas-product', {
             body: {
+              stylizedImageBase64: story.artwork_url, // Function accepts URLs too
               artist: story.artist,
               title: story.single_name,
-              imageUrl: story.artwork_url,
-              tags: ['christmas', 'kerst', 'canvas'],
-              category: 'CANVAS'
+              style: 'warmGrayscale',
+              price: 79.95
             }
           });
-          if (canvasResult?.productId) {
-            productIds.push(canvasResult.productId);
-            console.log(`✅ Canvas created: ${canvasResult.productId}`);
+          if (canvasError) {
+            console.error('Canvas error response:', canvasError);
+          }
+          if (canvasResult?.product_id) {
+            productIds.push(canvasResult.product_id);
+            console.log(`✅ Canvas created: ${canvasResult.product_id}`);
           }
         } catch (e) {
           console.error('Canvas creation failed:', e);
         }
 
-        // Create T-shirt Products
-        try {
-          const { data: tshirtResult } = await supabase.functions.invoke('create-tshirt-products', {
-            body: {
-              artist: story.artist,
-              title: story.single_name,
-              imageUrl: story.artwork_url,
-              tags: ['christmas', 'kerst', 'tshirt'],
-              category: 'tshirts'
-            }
-          });
-          if (tshirtResult?.productIds) {
-            productIds.push(...tshirtResult.productIds);
-            console.log(`✅ T-shirts created: ${tshirtResult.productIds.length}`);
-          }
-        } catch (e) {
-          console.error('T-shirt creation failed:', e);
-        }
-
-        // Create Sock Products
-        try {
-          const { data: sockResult } = await supabase.functions.invoke('create-sock-products', {
-            body: {
-              artist: story.artist,
-              title: story.single_name,
-              imageUrl: story.artwork_url,
-              tags: ['christmas', 'kerst', 'socks'],
-              category: 'socks'
-            }
-          });
-          if (sockResult?.productIds) {
-            productIds.push(...sockResult.productIds);
-            console.log(`✅ Socks created: ${sockResult.productIds.length}`);
-          }
-        } catch (e) {
-          console.error('Sock creation failed:', e);
-        }
-
+        // Note: T-shirt and Sock products require first creating records in album_tshirts/album_socks tables
+        // For Christmas singles, we focus on art products (posters and canvas) which can be created directly
         // Update christmas_import_queue with product IDs
         if (productIds.length > 0 && queueItem) {
           await supabase

@@ -103,6 +103,7 @@ const MonthOverview = lazy(() => import("./pages/MonthOverview"));
 // Christmas pages
 const Christmas = lazy(() => import("./pages/Christmas"));
 const ChristmasSinglesPage = lazy(() => import("./pages/ChristmasSingles"));
+const ChristmasPostersPage = lazy(() => import("./pages/ChristmasPostersPage"));
 const ChristmasAnecdotesPage = lazy(() => import("./pages/ChristmasAnecdotesPage"));
 const ChristmasImporter = lazy(() => import("./pages/admin/ChristmasImporter"));
 const ChristmasImportLogs = lazy(() => import("./pages/admin/ChristmasImportLogs"));
@@ -398,6 +399,7 @@ const AppContent = () => {
         {/* Christmas */}
         <Route path="/kerst" element={<LazyRoute><Christmas /></LazyRoute>} />
         <Route path="/kerst-singles" element={<LazyRoute><ChristmasSinglesPage /></LazyRoute>} />
+        <Route path="/kerst-posters" element={<LazyRoute><ChristmasPostersPage /></LazyRoute>} />
         <Route path="/kerst/anekdotes" element={<LazyRoute><ChristmasAnecdotesPage /></LazyRoute>} />
         <Route path="/maand-overzicht/:year/:month" element={<LazyRoute><MonthOverview /></LazyRoute>} />
         

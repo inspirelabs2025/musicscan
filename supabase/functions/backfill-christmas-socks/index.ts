@@ -40,67 +40,87 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('🧦 Starting Christmas socks backfill for 20 iconic songs...');
-
-    // Find music_stories that match our iconic songs and have artwork
-    const { data: allStories, error: storiesError } = await supabase
-      .from('music_stories')
-      .select('id, artist, single_name, artwork_url, yaml_frontmatter')
-      .not('artwork_url', 'is', null);
-
-    if (storiesError) throw storiesError;
-
-    // Filter to find matching iconic songs
-    const matchingStories = allStories?.filter(story => {
-      const isChristmas = story.yaml_frontmatter?.is_christmas === true;
-      if (!isChristmas) return false;
-      
-      return ICONIC_CHRISTMAS_SONGS.some(iconic => 
-        story.artist?.toLowerCase().includes(iconic.artist.toLowerCase()) ||
-        iconic.artist.toLowerCase().includes(story.artist?.toLowerCase() || '')
-      );
-    }) || [];
-
-    console.log(`📋 Found ${matchingStories.length} matching iconic Christmas songs`);
+    console.log('🧦🎄 ===== BACKFILL CHRISTMAS SOCKS START =====');
+    console.log(`📋 Processing ${ICONIC_CHRISTMAS_SONGS.length} iconic Christmas songs`);
 
     // Check which songs already have socks
-    const { data: existingSocks } = await supabase
+    const { data: existingSocks, error: socksFetchError } = await supabase
       .from('album_socks')
-      .select('artist_name, album_title');
+      .select('artist_name, album_title, pattern_type');
 
+    if (socksFetchError) {
+      console.error('❌ Error fetching existing socks:', socksFetchError);
+      throw socksFetchError;
+    }
+
+    console.log(`📊 Found ${existingSocks?.length || 0} existing socks in database`);
+
+    // Create a set of existing socks for quick lookup
     const existingSocksSet = new Set(
-      existingSocks?.map(s => `${s.artist_name?.toLowerCase()}-${s.album_title?.toLowerCase()}`) || []
+      existingSocks?.map(s => `${s.artist_name?.toLowerCase().trim()}-${s.album_title?.toLowerCase().trim()}`) || []
     );
 
-    // Filter out songs that already have socks
-    const songsNeedingSocks = matchingStories.filter(story => {
-      const key = `${story.artist?.toLowerCase()}-${story.single_name?.toLowerCase()}`;
-      return !existingSocksSet.has(key);
+    // Find which iconic songs still need socks
+    const songsNeedingSocks = ICONIC_CHRISTMAS_SONGS.filter(song => {
+      const key = `${song.artist.toLowerCase().trim()}-${song.title.toLowerCase().trim()}`;
+      const exists = existingSocksSet.has(key);
+      if (exists) {
+        console.log(`⏭️ Already exists: ${song.artist} - ${song.title}`);
+      }
+      return !exists;
     });
 
-    console.log(`🎯 ${songsNeedingSocks.length} songs need socks creation`);
+    console.log(`🎯 ${songsNeedingSocks.length} iconic songs still need socks`);
 
     if (songsNeedingSocks.length === 0) {
+      console.log('✅ All 20 iconic Christmas socks already exist!');
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'All iconic Christmas socks already exist',
-          processed: 0 
+          message: 'All 20 iconic Christmas socks already exist',
+          processed: 0,
+          total: ICONIC_CHRISTMAS_SONGS.length
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Process one song at a time (cron will call this repeatedly)
+    // Process ONE song per cron run (to avoid timeouts)
     const song = songsNeedingSocks[0];
-    console.log(`🧦 Creating socks for: ${song.artist} - ${song.single_name}`);
+    console.log(`\n🎵 Processing: ${song.artist} - ${song.title}`);
 
-    // Step 1: Apply Pop Art Posterize style to the artwork
-    console.log('🎨 Applying Pop Art Posterize style...');
+    // Step 1: Fetch artwork via fetch-album-artwork edge function
+    console.log('🎨 Step 1: Fetching artwork...');
+    
+    const artworkResponse = await supabase.functions.invoke('fetch-album-artwork', {
+      body: {
+        artist: song.artist,
+        title: song.title,
+        media_type: 'single'
+      }
+    });
+
+    if (artworkResponse.error) {
+      console.error('❌ Artwork fetch error:', artworkResponse.error);
+      throw new Error(`Failed to fetch artwork: ${artworkResponse.error.message}`);
+    }
+
+    const artworkUrl = artworkResponse.data?.artwork_url;
+    const artworkSource = artworkResponse.data?.source;
+    
+    if (!artworkUrl) {
+      console.error('❌ No artwork found for:', song.artist, '-', song.title);
+      throw new Error(`No artwork found for: ${song.artist} - ${song.title}`);
+    }
+    
+    console.log(`✅ Artwork found from ${artworkSource}: ${artworkUrl}`);
+
+    // Step 2: Apply Pop Art Posterize style to the artwork
+    console.log('🎨 Step 2: Applying Pop Art Posterize style...');
     
     const stylizeResponse = await supabase.functions.invoke('stylize-photo', {
       body: {
-        imageUrl: song.artwork_url,
+        imageUrl: artworkUrl,
         style: 'posterize',
         outputPath: `socks/christmas-${Date.now()}.png`
       }
@@ -111,11 +131,21 @@ serve(async (req) => {
       throw new Error(`Failed to stylize image: ${stylizeResponse.error.message}`);
     }
 
-    const styledImageUrl = stylizeResponse.data?.url || stylizeResponse.data?.styledUrl;
+    // stylize-photo returns { stylizedImageUrl: ... }
+    const styledImageUrl = stylizeResponse.data?.stylizedImageUrl;
+    console.log('🖼️ Stylize response data:', JSON.stringify(stylizeResponse.data));
+    
+    if (!styledImageUrl) {
+      console.error('❌ No styled image URL returned. Response:', JSON.stringify(stylizeResponse.data));
+      throw new Error('Stylize function did not return an image URL');
+    }
+    
     console.log('✅ Styled image created:', styledImageUrl);
 
-    // Step 2: Create album_socks record
-    const sockSlug = `${song.artist}-${song.single_name}-socks`
+    // Step 3: Create album_socks record with pattern_type: 'christmas'
+    console.log('🧦 Step 3: Creating album_socks record...');
+    
+    const sockSlug = `${song.artist}-${song.title}-kerst-sokken`
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
@@ -125,50 +155,64 @@ serve(async (req) => {
       .from('album_socks')
       .insert({
         artist_name: song.artist,
-        album_title: song.single_name,
-        album_cover_url: song.artwork_url,
+        album_title: song.title,
+        album_cover_url: artworkUrl,
         base_design_url: styledImageUrl,
-        primary_color: '#FF0000', // Christmas red
-        secondary_color: '#00FF00', // Christmas green
+        primary_color: '#C41E3A', // Christmas red
+        secondary_color: '#228B22', // Christmas green
         accent_color: '#FFD700', // Gold
-        design_theme: 'Pop Art Christmas',
-        pattern_type: 'posterize',
+        design_theme: 'Iconic Christmas',
+        pattern_type: 'christmas', // ✅ CRITICAL: Set to 'christmas' not 'posterize'
         genre: 'Christmas',
         slug: sockSlug,
-        is_published: false
+        is_published: false // Will be published after product creation
       })
       .select()
       .single();
 
     if (sockError) {
-      console.error('❌ Sock record error:', sockError);
+      console.error('❌ Sock record creation error:', sockError);
       throw sockError;
     }
 
-    console.log('✅ Album sock record created:', sockRecord.id);
+    console.log(`✅ Album sock record created with ID: ${sockRecord.id}`);
+    console.log(`   Pattern type: ${sockRecord.pattern_type}`); // Verify it's 'christmas'
 
-    // Step 3: Create sock product
+    // Step 4: Create sock product via create-sock-products
+    console.log('🛍️ Step 4: Creating sock product...');
+    
     const { data: productResult, error: productError } = await supabase.functions.invoke('create-sock-products', {
       body: {
         sockId: sockRecord.id,
-        styleVariants: [{ url: styledImageUrl, style: 'posterize', label: 'Pop Art' }]
+        styleVariants: [{ url: styledImageUrl, style: 'posterize', label: 'Pop Art Christmas' }]
       }
     });
 
     if (productError) {
       console.error('❌ Product creation error:', productError);
-      throw productError;
+      // Don't fail completely - sock record exists, product can be created later
+      console.log('⚠️ Sock record created but product creation failed. Can be retried.');
+    } else {
+      console.log('✅ Sock product created successfully!');
+      console.log('   Product ID:', productResult?.product_id);
     }
 
-    console.log('🎉 Christmas sock product created successfully!');
+    // Final summary
+    console.log('\n🎉 ===== BACKFILL CHRISTMAS SOCKS COMPLETE =====');
+    console.log(`✅ Successfully created: ${song.artist} - ${song.title}`);
+    console.log(`📊 Remaining: ${songsNeedingSocks.length - 1} of ${ICONIC_CHRISTMAS_SONGS.length}`);
+    console.log(`🔄 Next run will process the next song in ~2 minutes`);
 
     return new Response(
       JSON.stringify({
         success: true,
         processed: 1,
         remaining: songsNeedingSocks.length - 1,
-        song: `${song.artist} - ${song.single_name}`,
-        product_id: productResult?.product_id
+        total: ICONIC_CHRISTMAS_SONGS.length,
+        song: `${song.artist} - ${song.title}`,
+        sock_id: sockRecord.id,
+        product_id: productResult?.product_id || null,
+        pattern_type: sockRecord.pattern_type // Should be 'christmas'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

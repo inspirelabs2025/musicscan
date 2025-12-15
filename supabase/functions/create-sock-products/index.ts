@@ -46,9 +46,46 @@ serve(async (req) => {
       throw new Error('Sock not found');
     }
 
-    const images = styleVariants?.length > 0 
+    const images = styleVariants?.length > 0
       ? styleVariants.map((v: any) => v.url)
       : [sockData.base_design_url];
+
+    // Upload base64 images (data URLs) to Storage so we never store huge base64 in products
+    const uploadedImages: string[] = [];
+    for (const img of images) {
+      if (typeof img === 'string' && img.startsWith('data:image/')) {
+        const [meta, base64] = img.split(',');
+        const mimeMatch = meta.match(/data:(image\/[^;]+);base64/i);
+        const contentType = mimeMatch?.[1] || 'image/png';
+        const ext = contentType.includes('jpeg') ? 'jpg' : contentType.includes('webp') ? 'webp' : 'png';
+
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+        const digest = await crypto.subtle.digest('SHA-256', bytes);
+        const hashArray = Array.from(new Uint8Array(digest));
+        const hash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+
+        const path = `socks/${productSlug}/${hash}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('socks')
+          .upload(path, bytes, { contentType, upsert: true });
+
+        if (uploadError) {
+          console.error('Failed to upload sock image to storage:', uploadError);
+          throw new Error(`Failed to upload image: ${uploadError.message}`);
+        }
+
+        const { data: publicUrlData } = supabase.storage.from('socks').getPublicUrl(path);
+        uploadedImages.push(publicUrlData.publicUrl);
+      } else if (typeof img === 'string') {
+        uploadedImages.push(img);
+      }
+    }
+
+    const finalImages = uploadedImages.length > 0 ? uploadedImages : images;
 
     // Create Premium Merino Wool Socks
     const productSlug = generateProductSlug(sockData.artist_name, sockData.album_title);
@@ -85,8 +122,8 @@ Perfect voor muziekliefhebbers. Extreem comfortabel en duurzaam.`;
         price: 24.95,
         stock_quantity: 999,
         slug: productSlug,
-        images: images,
-        primary_image: images[0],
+        images: finalImages,
+        primary_image: finalImages[0],
         status: 'active',
         published_at: new Date().toISOString(),
         is_featured: true,

@@ -101,23 +101,46 @@ serve(async (req) => {
           console.error('Poster creation failed:', e);
         }
 
-        // Create Canvas Product (uses stylizedImageBase64 field which accepts URLs)
+        // Create Canvas Product - FIRST stylize with warmGrayscale, then create product
         try {
+          console.log(`🎨 Stylizing image for canvas with warmGrayscale...`);
+          
+          // Step 1: Apply warmGrayscale style to the artwork
+          const { data: stylizeResult, error: stylizeError } = await supabase.functions.invoke('stylize-photo', {
+            body: {
+              imageUrl: story.artwork_url,
+              style: 'warmGrayscale'
+            }
+          });
+          
+          if (stylizeError) {
+            console.error('Stylize error:', stylizeError);
+            throw new Error(`Stylize failed: ${stylizeError.message}`);
+          }
+          
+          if (!stylizeResult?.stylizedImageUrl) {
+            throw new Error('No stylized image URL returned');
+          }
+          
+          console.log(`✅ Image stylized with warmGrayscale`);
+          
+          // Step 2: Create canvas product with the stylized image
           const { data: canvasResult, error: canvasError } = await supabase.functions.invoke('create-canvas-product', {
             body: {
-              stylizedImageBase64: story.artwork_url, // Function accepts URLs too
+              stylizedImageBase64: stylizeResult.stylizedImageUrl,
               artist: story.artist,
               title: story.single_name,
               style: 'warmGrayscale',
               price: 79.95
             }
           });
+          
           if (canvasError) {
             console.error('Canvas error response:', canvasError);
           }
           if (canvasResult?.product_id) {
             productIds.push(canvasResult.product_id);
-            console.log(`✅ Canvas created: ${canvasResult.product_id}`);
+            console.log(`✅ Canvas created with warmGrayscale: ${canvasResult.product_id}`);
           }
         } catch (e) {
           console.error('Canvas creation failed:', e);

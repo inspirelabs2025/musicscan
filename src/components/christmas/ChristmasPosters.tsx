@@ -22,32 +22,16 @@ export const ChristmasPosters = () => {
   const { data: products, isLoading } = useQuery({
     queryKey: ['christmas-posters'],
     queryFn: async () => {
-      // Fetch products with christmas/kerst tags
       const { data, error } = await supabase
         .from('platform_products')
         .select('id, title, artist, slug, primary_image, price, media_type, tags')
         .eq('status', 'active')
-        .or('media_type.eq.poster,media_type.eq.canvas,media_type.eq.metal-print')
         .contains('tags', ['christmas'])
         .order('created_at', { ascending: false })
         .limit(8);
 
-      if (error) {
-        // Fallback: try with 'kerst' tag
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('platform_products')
-          .select('id, title, artist, slug, primary_image, price, media_type, tags')
-          .eq('status', 'active')
-          .or('media_type.eq.poster,media_type.eq.canvas,media_type.eq.metal-print')
-          .contains('tags', ['kerst'])
-          .order('created_at', { ascending: false })
-          .limit(8);
-        
-        if (fallbackError) throw fallbackError;
-        return fallbackData as Product[];
-      }
-      
-      return data as Product[];
+      if (error) throw error;
+      return (data || []) as Product[];
     },
   });
 

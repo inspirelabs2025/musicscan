@@ -31,40 +31,18 @@ const CHRISTMAS_ARTISTS = [
 
 export const ChristmasSocks = () => {
   const { data: socks, isLoading } = useQuery({
-    queryKey: ['christmas-socks-filtered'],
+    queryKey: ['christmas-socks'],
     queryFn: async () => {
-      // Fetch socks where pattern_type is 'christmas' OR genre contains christmas terms
       const { data, error } = await supabase
         .from('album_socks')
-        .select('id, artist_name, album_title, slug, album_cover_url, mockup_url, product_id, genre, pattern_type')
+        .select('id, artist_name, album_title, slug, album_cover_url, mockup_url, product_id')
         .eq('is_published', true)
+        .eq('pattern_type', 'christmas')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(8);
 
       if (error) throw error;
-      
-      // Filter for Christmas-related socks
-      const christmasSocks = (data || []).filter(sock => {
-        const artistLower = sock.artist_name?.toLowerCase() || '';
-        const titleLower = sock.album_title?.toLowerCase() || '';
-        const genreLower = sock.genre?.toLowerCase() || '';
-        const patternType = sock.pattern_type?.toLowerCase() || '';
-        
-        // Check pattern type
-        if (patternType === 'christmas') return true;
-        
-        // Check if artist is a known Christmas artist
-        if (CHRISTMAS_ARTISTS.some(artist => artistLower.includes(artist))) return true;
-        
-        // Check for Christmas keywords in title or genre
-        if (CHRISTMAS_KEYWORDS.some(keyword => 
-          titleLower.includes(keyword) || genreLower.includes(keyword)
-        )) return true;
-        
-        return false;
-      });
-      
-      return christmasSocks.slice(0, 8) as Sock[];
+      return (data || []) as Sock[];
     },
   });
 

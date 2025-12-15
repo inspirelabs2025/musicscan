@@ -86,7 +86,7 @@ export default function Christmas() {
               </motion.div>
               
               <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-red-500 via-green-500 to-red-500 bg-clip-text text-transparent">
-                MusicScan Kerst Special 2024
+                MusicScan Kerst Special 2025
               </h1>
               
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">

@@ -19,7 +19,7 @@ interface ChristmasSong {
 
 export const ChristmasProducts = () => {
   const { data: songs, isLoading } = useQuery({
-    queryKey: ['christmas-songs-with-artwork'],
+    queryKey: ['christmas-songs-by-tags'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('music_stories')
@@ -29,12 +29,13 @@ export const ChristmasProducts = () => {
           artist,
           artwork_url,
           slug,
-          single_name
+          single_name,
+          tags
         `)
-        .not('artwork_url', 'is', null)
-        .or('title.ilike.%christmas%,title.ilike.%kerst%,title.ilike.%xmas%,single_name.ilike.%christmas%,single_name.ilike.%kerst%')
+        .contains('tags', ['christmas'])
+        .order('artwork_url', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false })
-        .limit(12);
+        .limit(24);
 
       if (error) throw error;
       return data as ChristmasSong[];

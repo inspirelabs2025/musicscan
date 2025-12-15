@@ -25,36 +25,42 @@ export const ChristmasSocks = () => {
     queryFn: async () => {
       const { data: albumSocks, error: albumError } = await supabase
         .from('album_socks')
-        .select('product_id, mockup_url, base_design_url')
+        .select('product_id')
         .eq('pattern_type', 'christmas')
         .not('product_id', 'is', null)
         .limit(50);
 
       if (albumError) throw albumError;
 
-      const sockImageByProductId = new Map<string, string>();
-      for (const s of albumSocks || []) {
-        const imageUrl = s.mockup_url || s.base_design_url;
-        if (s.product_id && imageUrl) sockImageByProductId.set(s.product_id, imageUrl);
-      }
+      const productIds = (albumSocks || [])
+        .map((s) => s.product_id)
+        .filter((id): id is string => Boolean(id));
 
-      const productIds = Array.from(sockImageByProductId.keys());
       if (productIds.length === 0) return [];
 
       const { data, error } = await supabase
         .from('platform_products')
-        .select('id, slug, title, artist, price, view_count, is_featured')
+        .select('id, slug, title, artist, price, view_count, is_featured, primary_image')
         .in('id', productIds)
         .eq('status', 'active')
+        .not('primary_image', 'ilike', 'data:%')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       const all: ChristmasSockProduct[] = [];
-      for (const p of (data || []) as Omit<ChristmasSockProduct, 'image_url'>[]) {
-        const image_url = sockImageByProductId.get(p.id);
-        if (!image_url) continue;
-        all.push({ ...p, image_url });
+      for (const p of (data || []) as any[]) {
+        if (!p.primary_image) continue;
+        all.push({
+          id: p.id,
+          slug: p.slug,
+          title: p.title,
+          artist: p.artist,
+          price: p.price,
+          view_count: p.view_count,
+          is_featured: p.is_featured,
+          image_url: p.primary_image,
+        });
       }
 
       return all.slice(0, 8);

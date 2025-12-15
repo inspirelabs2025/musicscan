@@ -42,7 +42,7 @@ export const ChristmasSocks = () => {
         .from('platform_products')
         .select('id, slug, title, artist, price, primary_image, view_count, is_featured')
         .in('id', productIds)
-        .eq('is_published', true)
+        .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(8);
 

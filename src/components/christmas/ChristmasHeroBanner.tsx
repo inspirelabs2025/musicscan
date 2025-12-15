@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 export const ChristmasHeroBanner = () => {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-christmas-burgundy via-christmas-red to-christmas-burgundy py-16 md:py-24">
+    <section className="relative overflow-hidden bg-gradient-to-br from-christmas-burgundy via-christmas-red to-christmas-burgundy py-16 md:py-24 w-full">
       {/* Decorative elements */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-10 left-10 text-6xl animate-twinkle" style={{ animationDelay: '0s' }}>✨</div>

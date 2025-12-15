@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SockMaskedImage } from "@/components/shop/SockMaskedImage";
 import { Search, Sparkles, Eye, Shirt } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
+
 
 export default function SocksShop() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -218,12 +218,20 @@ export default function SocksShop() {
                       <Card className="overflow-hidden hover:shadow-xl hover:scale-105 transition-all cursor-pointer border-2 hover:border-primary">
                         <div className="relative aspect-square">
                           <div className="absolute inset-0 p-4">
-                            <div className="w-full h-full rounded-xl bg-gradient-to-br from-orange-100/30 to-red-100/30 dark:from-orange-950/20 dark:to-red-950/20">
-                              <SockMaskedImage
-                                src={product.primary_image}
-                                alt={`${product.artist || 'Various Artists'} - ${product.title} sokken`}
-                                imgClassName="group-hover:scale-110 transition-transform duration-300"
-                              />
+                            <div className="w-full h-full rounded-xl bg-gradient-to-br from-orange-100/30 to-red-100/30 dark:from-orange-950/20 dark:to-red-950/20 overflow-hidden">
+                              {product.primary_image ? (
+                                <img
+                                  src={product.primary_image}
+                                  alt={`${product.artist || 'Various Artists'} - ${product.title} sokken`}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                  loading="lazy"
+                                  decoding="async"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-4xl">🧦</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                           {/* Badges Overlay */}

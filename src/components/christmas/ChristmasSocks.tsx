@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SockMaskedImage } from '@/components/shop/SockMaskedImage';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ArrowRight, Eye, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -126,15 +125,23 @@ export const ChristmasSocks = () => {
               <Link to={`/product/${sock.slug}`} className="group block">
                 <Card className="overflow-hidden hover:shadow-xl hover:scale-105 transition-all cursor-pointer border-2 hover:border-green-500">
                   <div className="relative aspect-square">
-                    <div className="absolute inset-0 p-4">
-                      <div className="w-full h-full rounded-xl bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20">
-                        <SockMaskedImage
-                          src={sock.image_url}
-                          alt={`${sock.artist} - ${sock.title} kerstsokken`}
-                          imgClassName="group-hover:scale-110 transition-transform duration-300"
-                        />
+                      <div className="absolute inset-0 p-4">
+                        <div className="w-full h-full rounded-xl bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20 overflow-hidden">
+                          {sock.image_url ? (
+                            <img
+                              src={sock.image_url}
+                              alt={`${sock.artist} - ${sock.title} kerstsokken`}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <span className="text-4xl">🧦</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
                     <div className="absolute top-3 left-3 flex flex-col gap-2">
                       <Badge className="bg-red-600 text-white font-bold">🎄 Kerst Editie</Badge>

@@ -137,23 +137,28 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const sockMockupPrompt = `Create a premium BLACK crew sock product mockup.
+    const sockMockupPrompt = `Create a photorealistic premium BLACK crew sock product mockup.
 
-**CRITICAL REQUIREMENTS:**
-- Show 2 premium BLACK crew socks side by side, standing upright
-- On the front of each sock, display the provided stylized pop art image as the main design panel
-- The image should be printed/integrated onto the sock fabric naturally
-- 3D perspective showing natural sock form with subtle fabric texture
-- Professional product photography with clean studio lighting
-- Natural shadows and depth for realism
-- Clean WHITE background
-- Ultra high resolution
+**SOCK DESIGN - CRITICAL:**
+- Show 2 premium BLACK crew socks side by side at a natural angle
+- RED and GREEN striped band at the cuff (top of sock) - Christmas colors
+- The provided pop art image should fill a LARGE panel on the sock leg area
+- Image panel should cover most of the sock from below the cuff to above the heel
+- The pop art image must be LARGE, visible and prominent - NOT a small thumbnail
+- Make the artwork wrap naturally around the sock shape
+- Realistic ribbed sock texture with natural fabric creases
+
+**PRODUCT PHOTOGRAPHY:**
+- Professional studio lighting, clean white/light gray background
+- Natural 3D perspective showing sock depth and form
+- Subtle shadows for realism
+- Ultra high resolution product photo quality
 
 **IMPORTANT:**
-- DO NOT add any text, artist names, or labels to the socks
-- The sock design should ONLY feature the pop art styled image
-- Make it look like a real product photo you'd see in an online shop
-- Premium streetwear aesthetic with Christmas festive feel (subtle red/green trim optional)`;
+- NO text, NO artist names, NO labels anywhere on the socks
+- Only the pop art styled image as the design
+- Make it look like a real e-commerce product photo
+- The artwork should be the hero - large and prominent on the sock`;
 
     console.log('🧦 Generating sock mockup with stylized photo...');
 

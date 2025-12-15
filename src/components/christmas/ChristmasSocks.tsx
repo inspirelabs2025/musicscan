@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SockMaskedImage } from '@/components/shop/SockMaskedImage';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ArrowRight, Eye, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -25,12 +26,17 @@ export const ChristmasSocks = () => {
     queryFn: async () => {
       const { data: albumSocks, error: albumError } = await supabase
         .from('album_socks')
-        .select('product_id')
+        .select('product_id, base_design_url')
         .eq('pattern_type', 'christmas')
         .not('product_id', 'is', null)
         .limit(50);
 
       if (albumError) throw albumError;
+
+      const baseDesignByProductId = new Map<string, string>();
+      for (const s of albumSocks || []) {
+        if (s.product_id && s.base_design_url) baseDesignByProductId.set(s.product_id, s.base_design_url);
+      }
 
       const productIds = (albumSocks || [])
         .map((s) => s.product_id)
@@ -43,14 +49,13 @@ export const ChristmasSocks = () => {
         .select('id, slug, title, artist, price, view_count, is_featured, primary_image')
         .in('id', productIds)
         .eq('status', 'active')
-        .not('primary_image', 'ilike', 'data:%')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       const all: ChristmasSockProduct[] = [];
       for (const p of (data || []) as any[]) {
-        if (!p.primary_image) continue;
+        const image_url = baseDesignByProductId.get(p.id) || p.primary_image || '';
         all.push({
           id: p.id,
           slug: p.slug,
@@ -59,7 +64,7 @@ export const ChristmasSocks = () => {
           price: p.price,
           view_count: p.view_count,
           is_featured: p.is_featured,
-          image_url: p.primary_image,
+          image_url,
         });
       }
 
@@ -101,7 +106,7 @@ export const ChristmasSocks = () => {
             </span>
             <span className="text-xl">🎄</span>
           </CardTitle>
-          <Badge className="bg-green-500/10 text-green-600 border-green-500/30">🎁 {socks.length} designs</Badge>
+          <Badge className="bg-green-500/10 text-green-600 border-green-500/30">🎁 {socks.length} ontwerpen</Badge>
         </div>
         <p className="text-base text-muted-foreground mt-2">
           <span className="font-semibold text-foreground">Feestelijke kerst sokken</span> — het perfecte cadeau voor
@@ -121,24 +126,22 @@ export const ChristmasSocks = () => {
               <Link to={`/product/${sock.slug}`} className="group block">
                 <Card className="overflow-hidden hover:shadow-xl hover:scale-105 transition-all cursor-pointer border-2 hover:border-green-500">
                   <div className="relative aspect-square">
-                    {sock.image_url ? (
-                      <img 
-                        src={sock.image_url} 
-                        alt={`${sock.artist} - ${sock.title} kerst sokken`}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20">
-                        <span className="text-4xl">🧦</span>
+                    <div className="absolute inset-0 p-4">
+                      <div className="w-full h-full rounded-xl bg-gradient-to-br from-red-100/30 to-green-100/30 dark:from-red-950/20 dark:to-green-950/20">
+                        <SockMaskedImage
+                          src={sock.image_url}
+                          alt={`${sock.artist} - ${sock.title} kerstsokken`}
+                          imgClassName="group-hover:scale-110 transition-transform duration-300"
+                        />
                       </div>
-                    )}
+                    </div>
 
                     <div className="absolute top-3 left-3 flex flex-col gap-2">
                       <Badge className="bg-red-600 text-white font-bold">🎄 Kerst Editie</Badge>
                       {sock.is_featured && (
                         <Badge className="bg-vinyl-gold text-black font-bold">
                           <Sparkles className="h-3 w-3 mr-1" />
-                          Featured
+                          Uitgelicht
                         </Badge>
                       )}
                     </div>

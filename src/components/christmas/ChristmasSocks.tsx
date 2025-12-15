@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ArrowRight, Eye, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { SocksMockup } from '@/components/shop/SocksMockup';
 
 interface ChristmasSockProduct {
   id: string;
@@ -25,7 +26,7 @@ export const ChristmasSocks = () => {
     queryFn: async () => {
       const { data: albumSocks, error: albumError } = await supabase
         .from('album_socks')
-        .select('product_id, base_design_url')
+        .select('product_id, album_cover_url')
         .eq('pattern_type', 'christmas')
         .not('product_id', 'is', null)
         .limit(50);
@@ -34,42 +35,29 @@ export const ChristmasSocks = () => {
 
       const sockMeta = new Map<string, string>();
       for (const s of albumSocks || []) {
-        if (s.product_id && s.base_design_url) sockMeta.set(s.product_id, s.base_design_url);
+        if (s.product_id && s.album_cover_url) sockMeta.set(s.product_id, s.album_cover_url);
       }
 
       const productIds = Array.from(sockMeta.keys());
       if (productIds.length === 0) return [];
 
-      // Chunked ophalen om timeouts te vermijden
-      const chunkSize = 10;
-      const chunks: string[][] = [];
-      for (let i = 0; i < productIds.length; i += chunkSize) {
-        chunks.push(productIds.slice(i, i + chunkSize));
-      }
+      const { data, error } = await supabase
+        .from('platform_products')
+        .select('id, slug, title, artist, price, view_count, is_featured')
+        .in('id', productIds)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
 
       const all: ChristmasSockProduct[] = [];
-      for (const ids of chunks) {
-        const { data, error } = await supabase
-          .from('platform_products')
-          .select('id, slug, title, artist, price, view_count, is_featured')
-          .in('id', ids)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        for (const p of (data || []) as Omit<ChristmasSockProduct, 'image_url'>[]) {
-          const image_url = sockMeta.get(p.id);
-          if (!image_url) continue;
-          all.push({ ...p, image_url });
-        }
+      for (const p of (data || []) as Omit<ChristmasSockProduct, 'image_url'>[]) {
+        const image_url = sockMeta.get(p.id);
+        if (!image_url) continue;
+        all.push({ ...p, image_url });
       }
 
-      // Dedup
-      const byId = new Map<string, ChristmasSockProduct>();
-      for (const p of all) byId.set(p.id, p);
-
-      return Array.from(byId.values()).slice(0, 8);
+      return all.slice(0, 8);
     },
   });
 
@@ -127,11 +115,10 @@ export const ChristmasSocks = () => {
               <Link to={`/product/${sock.slug}`}>
                 <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-green-500 h-full">
                   <div className="relative aspect-square overflow-hidden bg-muted">
-                    <img
-                      src={sock.image_url}
+                    <SocksMockup
+                      imageUrl={sock.image_url}
                       alt={`${sock.artist} - ${sock.title} kerst sokken`}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      loading="lazy"
+                      className="h-full w-full"
                     />
 
                     <div className="absolute top-3 left-3 flex flex-col gap-2">

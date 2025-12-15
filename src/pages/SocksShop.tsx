@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Sparkles, Eye, Shirt } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
-import { useSocksProducts } from "@/hooks/useSocksProducts";
+import { SocksMockup } from "@/components/shop/SocksMockup";
 
 export default function SocksShop() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -19,9 +20,15 @@ export default function SocksShop() {
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc" | "popular">("newest");
   const [showFeatured, setShowFeatured] = useState(false);
 
-  const { data: sockProducts, isLoading } = useSocksProducts({
+  const { data: allProducts, isLoading } = usePlatformProducts({
+    mediaType: 'merchandise',
     featured: showFeatured || undefined,
   });
+
+  // Filter only SOCK products
+  const sockProducts = allProducts?.filter(product => 
+    product.categories?.includes('socks')
+  );
 
   // Filter and sort products
   const filteredProducts = sockProducts
@@ -211,10 +218,10 @@ export default function SocksShop() {
                     <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-primary h-full">
                       {/* Image */}
                       <div className="relative aspect-square overflow-hidden bg-muted">
-                        <img
-                          src={product.image_url || '/placeholder.svg'}
-                          alt={`${product.artist} - ${product.title} sokken`}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        <SocksMockup
+                          imageUrl={product.primary_image || '/placeholder.svg'}
+                          alt={`${product.artist || 'Various Artists'} - ${product.title} sokken`}
+                          className="h-full w-full"
                         />
                         
                         {/* Badges Overlay */}

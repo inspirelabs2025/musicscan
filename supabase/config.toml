@@ -509,3 +509,9 @@ verify_jwt = false
 
 [functions.regenerate-christmas-sock-designs]
 verify_jwt = false
+
+[functions.backfill-christmas-socks]
+verify_jwt = false
+
+[[functions.backfill-christmas-socks.schedule]]
+cron = "*/2 * * * *"

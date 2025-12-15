@@ -23,33 +23,40 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Require logged-in admin (prevents anyone from burning credits by calling this endpoint)
-    const token = getBearerToken(req);
-    if (!token) {
-      return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !userData?.user?.id) {
-      return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userId = userData.user.id;
-    const { data: isAdmin, error: adminError } = await supabase.rpc("is_admin", { _user_id: userId });
-    if (adminError || !isAdmin) {
-      return new Response(JSON.stringify({ success: false, error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const body = await req.json().catch(() => ({}));
+    
+    // Allow admin key bypass for automated triggers
+    const adminKey = req.headers.get("x-admin-key");
+    const expectedAdminKey = Deno.env.get("ADMIN_SECRET");
+    const isAdminKeyValid = adminKey && expectedAdminKey && adminKey === expectedAdminKey;
+
+    if (!isAdminKeyValid) {
+      // Fallback to user authentication
+      const token = getBearerToken(req);
+      if (!token) {
+        return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: userData, error: userError } = await supabase.auth.getUser(token);
+      if (userError || !userData?.user?.id) {
+        return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const userId = userData.user.id;
+      const { data: isAdmin, error: adminError } = await supabase.rpc("is_admin", { _user_id: userId });
+      if (adminError || !isAdmin) {
+        return new Response(JSON.stringify({ success: false, error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     const limit = Math.min(Math.max(Number(body?.limit ?? 5), 1), 10);
     const deleteExisting = body?.deleteExisting === true;
 

@@ -433,16 +433,33 @@ export const ChristmasBehindTheClip = () => {
 
   const displayedClips = showAll ? CHRISTMAS_CLIPS : CHRISTMAS_CLIPS.slice(0, 8);
 
-  // Robust thumbnail handler with fallback chain
+  // Fallback placeholder URL (Christmas-themed solid color)
+  const PLACEHOLDER_URL = 'data:image/svg+xml,' + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#7f1d1d"/>
+          <stop offset="50%" style="stop-color:#14532d"/>
+          <stop offset="100%" style="stop-color:#7f1d1d"/>
+        </linearGradient>
+      </defs>
+      <rect fill="url(#bg)" width="480" height="360"/>
+      <text x="240" y="180" text-anchor="middle" font-size="80">🎄</text>
+    </svg>
+  `);
+
+  // Robust thumbnail handler with fallback chain + placeholder
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, youtubeId: string) => {
     const img = e.currentTarget;
     const currentSrc = img.src;
     
-    // Try fallback chain: hq -> mq -> default
+    // Try fallback chain: hq -> mq -> default -> placeholder
     if (currentSrc.includes('hqdefault')) {
       img.src = getThumbnailUrl(youtubeId, 'mq');
     } else if (currentSrc.includes('mqdefault')) {
       img.src = getThumbnailUrl(youtubeId, 'default');
+    } else if (!currentSrc.startsWith('data:')) {
+      img.src = PLACEHOLDER_URL;
     }
   };
 

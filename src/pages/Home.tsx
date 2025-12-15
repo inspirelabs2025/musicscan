@@ -27,6 +27,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 
+import { SnowfallOverlay } from '@/components/christmas/SnowfallOverlay';
+import { ChristmasHeroBanner } from '@/components/christmas/ChristmasHeroBanner';
+
 const Home = () => {
   const isMobile = useIsMobile();
   const [showMoreFeatures, setShowMoreFeatures] = useState(false);
@@ -37,8 +40,14 @@ const Home = () => {
   });
 
   return (
-    <div className="min-h-screen">
-      {/* Artist Search Hero - EERSTE ELEMENT */}
+    <div className="min-h-screen relative">
+      {/* Snowfall overlay */}
+      <SnowfallOverlay />
+
+      {/* Christmas Hero Banner - TOP */}
+      <ChristmasHeroBanner />
+
+      {/* Artist Search Hero */}
       <ArtistSearchHero />
 
       {/* Public Scanner - Scan je collectie */}
@@ -49,7 +58,6 @@ const Home = () => {
 
       {/* Echo Spotlight - AI Music Guide */}
       <EchoSpotlight />
-
       {/* Metal Print Spotlight - Prominent ART Section */}
       <MetalPrintSpotlight />
 

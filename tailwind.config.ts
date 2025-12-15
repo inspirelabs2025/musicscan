@@ -77,6 +77,14 @@ export default {
 					lavender: 'hsl(var(--echo-lavender))',
 					gold: 'hsl(var(--echo-gold))',
 					cream: 'hsl(var(--echo-cream))'
+				},
+				christmas: {
+					red: 'hsl(var(--christmas-red))',
+					green: 'hsl(var(--christmas-green))',
+					gold: 'hsl(var(--christmas-gold))',
+					cream: 'hsl(var(--christmas-cream))',
+					burgundy: 'hsl(var(--christmas-burgundy))',
+					pine: 'hsl(var(--christmas-pine))'
 				}
 			},
 			backgroundImage: {

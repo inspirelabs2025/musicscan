@@ -10,6 +10,10 @@ import { DailyChallengeQuiz } from '@/components/quiz/DailyChallengeQuiz';
 import { useAuth } from '@/contexts/AuthContext';
 
 const CATEGORY_META: Record<string, { title: string; description: string }> = {
+  kerst: {
+    title: 'Kerst Quiz',
+    description: 'Test je kerstmuziek kennis!',
+  },
   artiesten: {
     title: 'Artiesten Quiz',
     description: 'Test je kennis over muziekartiesten, genres en biografieën.',
@@ -57,6 +61,11 @@ export default function CategoryQuiz() {
   }
 
   const meta = CATEGORY_META[category];
+
+  // Redirect to kerst page for Christmas quiz
+  if (category === 'kerst') {
+    return <Navigate to="/kerst#kerst-quiz" replace />;
+  }
 
   // Redirect to auth for collection quiz if not logged in
   if (category === 'collectie' && !user) {

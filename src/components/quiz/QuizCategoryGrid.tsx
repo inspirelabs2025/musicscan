@@ -1,12 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Disc3, Users, Album, Flag, Headphones, Calendar, Zap, Target, Music
+  Disc3, Users, Album, Flag, Headphones, Calendar, Zap, Target, Music, Gift
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 const QUIZ_CATEGORIES = [
+  {
+    slug: 'kerst',
+    name: 'Kerst Quiz',
+    description: 'Test je kerstmuziek kennis!',
+    icon: Gift,
+    color: 'from-red-500 to-green-500',
+    badge: '🎄',
+    requiresAuth: false,
+    isNew: true,
+  },
   {
     slug: 'collectie',
     name: 'Mijn Collectie',
@@ -102,9 +112,10 @@ export function QuizCategoryGrid() {
 
 function QuizCategoryCard({ category }: { category: typeof QUIZ_CATEGORIES[0] }) {
   const Icon = category.icon;
+  const linkTo = category.slug === 'kerst' ? '/kerst#kerst-quiz' : `/quizzen/${category.slug}`;
   
   return (
-    <Link to={`/quizzen/${category.slug}`}>
+    <Link to={linkTo}>
       <Card className="group relative overflow-hidden border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer h-full">
         <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-10 group-hover:opacity-20 transition-opacity`}></div>
         
@@ -113,11 +124,18 @@ function QuizCategoryCard({ category }: { category: typeof QUIZ_CATEGORIES[0] })
             <div className={`p-3 rounded-xl bg-gradient-to-br ${category.color} shadow-lg`}>
               <Icon className="w-6 h-6 text-white" />
             </div>
-            {category.badge && (
-              <Badge variant="secondary" className="text-xs">
-                {category.badge}
-              </Badge>
-            )}
+            <div className="flex gap-1">
+              {category.isNew && (
+                <Badge className="text-xs bg-gradient-to-r from-red-500 to-green-500 text-white border-0">
+                  Nieuw!
+                </Badge>
+              )}
+              {category.badge && (
+                <Badge variant="secondary" className="text-xs">
+                  {category.badge}
+                </Badge>
+              )}
+            </div>
           </div>
           
           <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">

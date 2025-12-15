@@ -98,7 +98,7 @@ export const ChristmasFeaturedStory = () => {
   const displayTitle = featuredStory.single_name || featuredStory.title;
 
   return (
-    <section id="verhaal-van-de-dag" className="py-12">
+    <section id="verhaal-van-de-dag" className="py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -106,11 +106,21 @@ export const ChristmasFeaturedStory = () => {
         transition={{ duration: 0.6 }}
       >
         <Card className="overflow-hidden bg-gradient-to-br from-red-950/50 via-green-950/40 to-red-950/50 border-red-800/30 backdrop-blur-sm">
-          <CardContent className="p-0">
-            <div className="flex flex-col lg:flex-row">
-              {/* Artwork Section */}
-              <div className="relative lg:w-80 flex-shrink-0">
-                <div className="aspect-square lg:aspect-auto lg:h-full relative overflow-hidden">
+          <CardContent className="p-6 md:p-8">
+            {/* Badge Header */}
+            <div className="flex items-center gap-2 mb-6">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-sm font-medium border border-amber-500/30">
+                <Star className="w-4 h-4 fill-amber-400" />
+                Verhaal van de Dag
+              </span>
+              <span className="text-2xl">🎄</span>
+            </div>
+
+            {/* Horizontal Layout */}
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              {/* Artwork - Left */}
+              <div className="w-full md:w-48 lg:w-56 flex-shrink-0">
+                <div className="aspect-square rounded-xl overflow-hidden shadow-lg shadow-black/30">
                   {featuredStory.artwork_url ? (
                     <img
                       src={featuredStory.artwork_url}
@@ -119,58 +129,35 @@ export const ChristmasFeaturedStory = () => {
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-red-900/50 to-green-900/50 flex items-center justify-center">
-                      <span className="text-8xl">🎄</span>
+                      <span className="text-6xl">🎄</span>
                     </div>
                   )}
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background/80 hidden lg:block" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent lg:hidden" />
                 </div>
               </div>
 
-              {/* Content Section */}
-              <div className="flex-1 p-6 lg:p-8 flex flex-col justify-center">
-                {/* Badge */}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-sm font-medium border border-amber-500/30">
-                    <Star className="w-4 h-4 fill-amber-400" />
-                    Verhaal van de Dag
-                  </span>
-                  <span className="text-2xl">🎄</span>
-                </div>
-
-                {/* Title */}
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+              {/* Content - Right */}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
                   {featuredStory.artist}
                 </h2>
-                <h3 className="text-xl md:text-2xl text-red-400 font-semibold mb-4 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5" />
-                  {displayTitle}
+                <h3 className="text-lg md:text-xl text-red-400 font-semibold mb-4 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{displayTitle}</span>
                 </h3>
 
-                {/* Summary */}
-                <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-6 line-clamp-4">
+                <p className="text-muted-foreground text-sm md:text-base leading-relaxed mb-5 line-clamp-3">
                   "{summary}"
                 </p>
 
-                {/* CTA Button */}
-                <div className="flex flex-wrap gap-3">
-                  <Button 
-                    asChild 
-                    size="lg"
-                    className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-900/30"
-                  >
-                    <Link to={`/singles/${featuredStory.slug}`}>
-                      <BookOpen className="w-5 h-5 mr-2" />
-                      Lees het volledige verhaal
-                    </Link>
-                  </Button>
-                </div>
-
-                {/* Decorative elements */}
-                <div className="absolute top-4 right-4 text-4xl opacity-20 hidden lg:block">
-                  ❄️
-                </div>
+                <Button 
+                  asChild 
+                  className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-900/30"
+                >
+                  <Link to={`/singles/${featuredStory.slug}`}>
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Lees het volledige verhaal
+                  </Link>
+                </Button>
               </div>
             </div>
           </CardContent>

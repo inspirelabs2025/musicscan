@@ -6,28 +6,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// 20 Iconic Christmas songs for socks
-const ICONIC_CHRISTMAS_SONGS = [
-  { artist: 'Wham!', title: 'Last Christmas' },
-  { artist: 'Mariah Carey', title: "All I Want for Christmas Is You" },
-  { artist: 'Michael Bublé', title: "It's Beginning to Look a Lot like Christmas" },
-  { artist: 'Band Aid', title: 'Do They Know It\'s Christmas?' },
-  { artist: 'Bing Crosby', title: 'White Christmas' },
-  { artist: 'Bobby Helms', title: 'Jingle Bell Rock' },
-  { artist: 'Brenda Lee', title: "Rockin' Around the Christmas Tree" },
-  { artist: 'Frank Sinatra', title: 'Have Yourself a Merry Little Christmas' },
-  { artist: 'Dean Martin', title: 'Let It Snow! Let It Snow! Let It Snow!' },
-  { artist: 'Nat King Cole', title: 'The Christmas Song' },
-  { artist: 'Elvis Presley', title: 'Blue Christmas' },
-  { artist: 'Andy Williams', title: 'It\'s the Most Wonderful Time of the Year' },
-  { artist: 'José Feliciano', title: 'Feliz Navidad' },
-  { artist: 'Chris Rea', title: 'Driving Home for Christmas' },
-  { artist: 'Shakin\' Stevens', title: 'Merry Christmas Everyone' },
-  { artist: 'Slade', title: 'Merry Xmas Everybody' },
-  { artist: 'The Pogues', title: 'Fairytale of New York' },
-  { artist: 'Ariana Grande', title: 'Santa Tell Me' },
-  { artist: 'Kelly Clarkson', title: 'Underneath the Tree' },
-  { artist: 'John Lennon', title: 'Happy Xmas (War Is Over)' },
+// 20 Iconic Christmas artists with their signature songs
+const ICONIC_CHRISTMAS_ARTISTS = [
+  { artist: 'Mariah Carey', song: "All I Want for Christmas Is You" },
+  { artist: 'Wham!', song: 'Last Christmas' },
+  { artist: 'Michael Bublé', song: "It's Beginning to Look a Lot like Christmas" },
+  { artist: 'Elvis Presley', song: 'Blue Christmas' },
+  { artist: 'John Lennon', song: 'Happy Xmas (War Is Over)' },
+  { artist: 'Bing Crosby', song: 'White Christmas' },
+  { artist: 'Nat King Cole', song: 'The Christmas Song' },
+  { artist: 'Frank Sinatra', song: 'Have Yourself a Merry Little Christmas' },
+  { artist: 'Dean Martin', song: 'Let It Snow! Let It Snow! Let It Snow!' },
+  { artist: 'Ariana Grande', song: 'Santa Tell Me' },
+  { artist: 'Brenda Lee', song: "Rockin' Around the Christmas Tree" },
+  { artist: 'Bobby Helms', song: 'Jingle Bell Rock' },
+  { artist: 'Band Aid', song: "Do They Know It's Christmas?" },
+  { artist: 'Chris Rea', song: 'Driving Home for Christmas' },
+  { artist: "Shakin' Stevens", song: 'Merry Christmas Everyone' },
+  { artist: 'Slade', song: 'Merry Xmas Everybody' },
+  { artist: 'Wizzard', song: 'I Wish It Could Be Christmas Everyday' },
+  { artist: 'Paul McCartney', song: 'Wonderful Christmastime' },
+  { artist: 'Andy Williams', song: "It's the Most Wonderful Time of the Year" },
+  { artist: 'José Feliciano', song: 'Feliz Navidad' },
 ];
 
 serve(async (req) => {
@@ -40,130 +40,96 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('🧦🎄 ===== BACKFILL CHRISTMAS SOCKS START =====');
-    console.log(`📋 Processing ${ICONIC_CHRISTMAS_SONGS.length} iconic Christmas songs`);
+    console.log('🧦🎄 ===== BACKFILL CHRISTMAS ARTIST SOCKS START =====');
+    console.log(`📋 Processing ${ICONIC_CHRISTMAS_ARTISTS.length} iconic Christmas artists`);
 
-    // Check which songs already have socks
+    // Check which artists already have Christmas socks
     const { data: existingSocks, error: socksFetchError } = await supabase
       .from('album_socks')
-      .select('artist_name, album_title, pattern_type');
+      .select('artist_name, album_title, pattern_type')
+      .eq('pattern_type', 'christmas');
 
     if (socksFetchError) {
       console.error('❌ Error fetching existing socks:', socksFetchError);
       throw socksFetchError;
     }
 
-    console.log(`📊 Found ${existingSocks?.length || 0} existing socks in database`);
+    console.log(`📊 Found ${existingSocks?.length || 0} existing Christmas socks in database`);
 
     // Create a set of existing socks for quick lookup
     const existingSocksSet = new Set(
       existingSocks?.map(s => `${s.artist_name?.toLowerCase().trim()}-${s.album_title?.toLowerCase().trim()}`) || []
     );
 
-    // Find which iconic songs still need socks
-    const songsNeedingSocks = ICONIC_CHRISTMAS_SONGS.filter(song => {
-      const key = `${song.artist.toLowerCase().trim()}-${song.title.toLowerCase().trim()}`;
+    // Find which artists still need socks
+    const artistsNeedingSocks = ICONIC_CHRISTMAS_ARTISTS.filter(item => {
+      const key = `${item.artist.toLowerCase().trim()}-${item.song.toLowerCase().trim()}`;
       const exists = existingSocksSet.has(key);
       if (exists) {
-        console.log(`⏭️ Already exists: ${song.artist} - ${song.title}`);
+        console.log(`⏭️ Already exists: ${item.artist} - ${item.song}`);
       }
       return !exists;
     });
 
-    console.log(`🎯 ${songsNeedingSocks.length} iconic songs still need socks`);
+    console.log(`🎯 ${artistsNeedingSocks.length} artists still need Christmas socks`);
 
-    if (songsNeedingSocks.length === 0) {
-      console.log('✅ All 20 iconic Christmas socks already exist!');
+    if (artistsNeedingSocks.length === 0) {
+      console.log('✅ All 20 iconic Christmas artist socks already exist!');
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'All 20 iconic Christmas socks already exist',
+          message: 'All 20 iconic Christmas artist socks already exist',
           processed: 0,
-          total: ICONIC_CHRISTMAS_SONGS.length
+          total: ICONIC_CHRISTMAS_ARTISTS.length
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Process ONE song per cron run (to avoid timeouts)
-    const song = songsNeedingSocks[0];
-    console.log(`\n🎵 Processing: ${song.artist} - ${song.title}`);
+    // Process ONE artist per cron run (to avoid timeouts)
+    const item = artistsNeedingSocks[0];
+    console.log(`\n🎵 Processing: ${item.artist} - ${item.song}`);
 
-    // Step 1: Fetch artwork via fetch-album-artwork edge function
-    console.log('🎨 Step 1: Fetching artwork...');
+    // Step 1: Fetch artist artwork via fetch-artist-artwork edge function
+    console.log('🎨 Step 1: Fetching artist artwork...');
     
-    const artworkResponse = await supabase.functions.invoke('fetch-album-artwork', {
-      body: {
-        artist: song.artist,
-        title: song.title,
-        media_type: 'single'
-      }
+    let artistImageUrl: string | null = null;
+    
+    const artworkResponse = await supabase.functions.invoke('fetch-artist-artwork', {
+      body: { artistName: item.artist }
     });
 
     if (artworkResponse.error) {
-      console.error('❌ Artwork fetch error:', artworkResponse.error);
-      throw new Error(`Failed to fetch artwork: ${artworkResponse.error.message}`);
+      console.warn('⚠️ Artist artwork fetch error (continuing without image):', artworkResponse.error);
+    } else {
+      artistImageUrl = artworkResponse.data?.artwork_url;
+      console.log(`✅ Artist artwork found: ${artistImageUrl?.substring(0, 60)}...`);
     }
 
-    const artworkUrl = artworkResponse.data?.artwork_url;
-    const artworkSource = artworkResponse.data?.source;
+    // Step 2: Generate artist Christmas sock via new edge function
+    console.log('🧦 Step 2: Generating artist Christmas sock design...');
     
-    if (!artworkUrl) {
-      console.error('❌ No artwork found for:', song.artist, '-', song.title);
-      throw new Error(`No artwork found for: ${song.artist} - ${song.title}`);
-    }
-    
-    console.log(`✅ Artwork found from ${artworkSource}: ${artworkUrl}`);
-
-    // Step 2: Use generate-sock-design to create REAL sock mockup (not stylize-photo!)
-    console.log('🧦 Step 2: Generating real sock mockup via generate-sock-design...');
-    
-    const christmasPalette = {
-      primary_color: '#C41E3A',
-      secondary_color: '#228B22',
-      accent_color: '#FFD700',
-      color_palette: ['#C41E3A', '#228B22', '#FFD700'],
-      design_theme: 'posterize',
-      pattern_type: 'christmas',
-    };
-
-    const { data: sockData, error: sockGenError } = await supabase.functions.invoke('generate-sock-design', {
+    const { data: sockData, error: sockGenError } = await supabase.functions.invoke('generate-artist-christmas-sock', {
       body: {
-        artistName: song.artist,
-        albumTitle: song.title,
-        albumCoverUrl: artworkUrl,
-        colorPalette: christmasPalette,
-        genre: 'Christmas',
+        artistName: item.artist,
+        songTitle: item.song,
+        artistImageUrl: artistImageUrl
       }
     });
 
-    if (sockGenError || !sockData?.base_design_url) {
-      console.error('❌ Sock generation error:', sockGenError || 'No base_design_url returned');
-      throw new Error(`Failed to generate sock: ${sockGenError?.message || 'No base_design_url'}`);
+    if (sockGenError || !sockData?.sock_id) {
+      console.error('❌ Sock generation error:', sockGenError || 'No sock_id returned');
+      throw new Error(`Failed to generate sock: ${sockGenError?.message || 'No sock_id'}`);
     }
 
     const sockId = sockData.sock_id;
     const baseDesignUrl = sockData.base_design_url;
     
-    console.log(`✅ Sock generated with ID: ${sockId}`);
-    console.log(`   base_design_url: ${baseDesignUrl.substring(0, 80)}...`);
+    console.log(`✅ Artist sock generated with ID: ${sockId}`);
+    console.log(`   base_design_url: ${baseDesignUrl?.substring(0, 80)}...`);
 
-    // Step 3: Update album_socks record with pattern_type: 'christmas'
-    console.log('🎄 Step 3: Updating pattern_type to christmas...');
-    
-    const { error: updateError } = await supabase
-      .from('album_socks')
-      .update({ pattern_type: 'christmas' })
-      .eq('id', sockId);
-
-    if (updateError) {
-      console.error('❌ Pattern type update error:', updateError);
-    } else {
-      console.log('✅ Pattern type set to christmas');
-    }
-
-    // Step 4: Create sock product via create-sock-products
-    console.log('🛍️ Step 4: Creating sock product...');
+    // Step 3: Create sock product via create-sock-products
+    console.log('🛍️ Step 3: Creating sock product...');
     
     const { data: productResult, error: productError } = await supabase.functions.invoke('create-sock-products', {
       body: {
@@ -181,18 +147,19 @@ serve(async (req) => {
     }
 
     // Final summary
-    console.log('\n🎉 ===== BACKFILL CHRISTMAS SOCKS COMPLETE =====');
-    console.log(`✅ Successfully created: ${song.artist} - ${song.title}`);
-    console.log(`📊 Remaining: ${songsNeedingSocks.length - 1} of ${ICONIC_CHRISTMAS_SONGS.length}`);
-    console.log(`🔄 Next run will process the next song in ~2 minutes`);
+    console.log('\n🎉 ===== BACKFILL CHRISTMAS ARTIST SOCKS COMPLETE =====');
+    console.log(`✅ Successfully created: ${item.artist} - ${item.song}`);
+    console.log(`📊 Remaining: ${artistsNeedingSocks.length - 1} of ${ICONIC_CHRISTMAS_ARTISTS.length}`);
+    console.log(`🔄 Next run will process the next artist in ~2 minutes`);
 
     return new Response(
       JSON.stringify({
         success: true,
         processed: 1,
-        remaining: songsNeedingSocks.length - 1,
-        total: ICONIC_CHRISTMAS_SONGS.length,
-        song: `${song.artist} - ${song.title}`,
+        remaining: artistsNeedingSocks.length - 1,
+        total: ICONIC_CHRISTMAS_ARTISTS.length,
+        artist: item.artist,
+        song: item.song,
         sock_id: sockId,
         product_id: productResult?.product_id || null,
         pattern_type: 'christmas'
@@ -201,7 +168,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('❌ Error in Christmas socks backfill:', error);
+    console.error('❌ Error in Christmas artist socks backfill:', error);
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Unknown error',

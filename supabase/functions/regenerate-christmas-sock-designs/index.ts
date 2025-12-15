@@ -51,8 +51,71 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const limit = Math.min(Math.max(Number(body?.limit ?? 5), 1), 10);
+    const deleteExisting = body?.deleteExisting === true;
 
-    console.log(`🔄🎄 regenerate-christmas-sock-designs: start (limit=${limit})`);
+    console.log(`🔄🎄 regenerate-christmas-sock-designs: start (limit=${limit}, deleteExisting=${deleteExisting})`);
+
+    // If deleteExisting is true, delete all existing Christmas socks and their products first
+    if (deleteExisting) {
+      console.log("🗑️ Deleting existing Christmas socks and products...");
+      
+      // Get product IDs from Christmas socks
+      const { data: christmasSocks } = await supabase
+        .from("album_socks")
+        .select("id, product_id")
+        .eq("pattern_type", "christmas");
+
+      const productIds = christmasSocks?.filter(s => s.product_id).map(s => s.product_id) || [];
+      const sockIds = christmasSocks?.map(s => s.id) || [];
+
+      // Delete products
+      if (productIds.length > 0) {
+        const { error: deleteProductsError } = await supabase
+          .from("platform_products")
+          .delete()
+          .in("id", productIds);
+        
+        if (deleteProductsError) {
+          console.error("❌ Error deleting products:", deleteProductsError);
+        } else {
+          console.log(`✅ Deleted ${productIds.length} Christmas sock products`);
+        }
+      }
+
+      // Delete socks
+      if (sockIds.length > 0) {
+        const { error: deleteSocksError } = await supabase
+          .from("album_socks")
+          .delete()
+          .in("id", sockIds);
+        
+        if (deleteSocksError) {
+          console.error("❌ Error deleting socks:", deleteSocksError);
+        } else {
+          console.log(`✅ Deleted ${sockIds.length} Christmas socks`);
+        }
+      }
+
+      // Now trigger backfill to regenerate with artist portraits
+      console.log("🔄 Triggering backfill-christmas-socks for artist portraits...");
+      const { data: backfillData, error: backfillError } = await supabase.functions.invoke("backfill-christmas-socks", {});
+      
+      if (backfillError) {
+        console.error("❌ Backfill error:", backfillError);
+      } else {
+        console.log("✅ Backfill triggered:", backfillData);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          deleted: { products: productIds.length, socks: sockIds.length },
+          backfillTriggered: !backfillError,
+          message: `Deleted ${sockIds.length} Christmas socks and ${productIds.length} products. Backfill triggered for artist portraits.`
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const { data: socks, error: fetchError } = await supabase
       .from("album_socks")

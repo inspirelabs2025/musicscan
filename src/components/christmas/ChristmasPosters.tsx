@@ -27,6 +27,8 @@ export const ChristmasPosters = () => {
         .select('id, title, artist, slug, primary_image, price, media_type, tags')
         .eq('status', 'active')
         .contains('tags', ['christmas'])
+        // Base64 images veroorzaken timeouts/overload → altijd uitsluiten in de query
+        .not('primary_image', 'like', 'data:%')
         .order('created_at', { ascending: false })
         .limit(8);
 

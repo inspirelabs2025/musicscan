@@ -156,16 +156,17 @@ const menuItems = [
   {
     title: "Testing",
     defaultOpen: false,
-    items: [
-      { title: "Music News", url: "/admin/test/music-news", icon: Newspaper },
-      { title: "News Update", url: "/admin/test/news-update", icon: RefreshCw },
-      { title: "Blog Regeneration", url: "/admin/test/blog-regeneration", icon: FileText },
-      { title: "Discogs Flow", url: "/admin/test/discogs-flow", icon: Disc },
-      { title: "Discogs Blog Gen", url: "/admin/test/discogs-blog-generation", icon: FileText },
-      { title: "Discogs ID Finder", url: "/admin/test/discogs-id", icon: Database },
-      { title: "Album Cover Backfill", url: "/admin/test/album-cover-backfill", icon: Image },
-      { title: "Anekdote Generatie", url: "/admin/test/anecdote-generation", icon: BookOpen },
-    ]
+      items: [
+        { title: "Music News", url: "/admin/test/music-news", icon: Newspaper },
+        { title: "News Update", url: "/admin/test/news-update", icon: RefreshCw },
+        { title: "Blog Regeneration", url: "/admin/test/blog-regeneration", icon: FileText },
+        { title: "Discogs Flow", url: "/admin/test/discogs-flow", icon: Disc },
+        { title: "Discogs Blog Gen", url: "/admin/test/discogs-blog-generation", icon: FileText },
+        { title: "Discogs ID Finder", url: "/admin/test/discogs-id", icon: Database },
+        { title: "Album Cover Backfill", url: "/admin/test/album-cover-backfill", icon: Image },
+        { title: "Base64 Image Cleanup", url: "/admin/test/base64-image-cleanup", icon: Image },
+        { title: "Anekdote Generatie", url: "/admin/test/anecdote-generation", icon: BookOpen },
+      ]
   }
 ];
 

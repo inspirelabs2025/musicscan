@@ -29,6 +29,8 @@ export const ChristmasShopProducts = () => {
         .select('id, title, artist, price, primary_image, slug, media_type, categories')
         .eq('status', 'active')
         .not('primary_image', 'is', null)
+        // Base64 images veroorzaken timeouts/overload → altijd uitsluiten in de query
+        .not('primary_image', 'like', 'data:%')
         .order('created_at', { ascending: false })
         .limit(100);
 

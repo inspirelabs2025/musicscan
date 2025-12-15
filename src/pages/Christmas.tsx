@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChristmasCountdown } from '@/components/christmas/ChristmasCountdown';
 import { ChristmasRoyaltiesCalculator } from '@/components/christmas/ChristmasRoyaltiesCalculator';
-import { ChristmasCardGenerator } from '@/components/christmas/ChristmasCardGenerator';
+
 import { ChristmasRadioStream } from '@/components/christmas/ChristmasRadioStream';
 import { ChristmasDecades } from '@/components/christmas/ChristmasDecades';
 import { ChristmasPoll } from '@/components/christmas/ChristmasPoll';
@@ -178,11 +178,8 @@ export default function Christmas() {
             <ChristmasPoll />
           </div>
 
-          {/* Royalties Calculator & Card Generator */}
-          <div className="grid lg:grid-cols-2 gap-8">
-            <ChristmasRoyaltiesCalculator />
-            <ChristmasCardGenerator />
-          </div>
+          {/* Royalties Calculator */}
+          <ChristmasRoyaltiesCalculator />
         </section>
 
         <Footer />

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
-import { Gift, ShoppingBag, Sparkles, ArrowRight } from 'lucide-react';
+import { Gift, ShoppingBag, Sparkles, ArrowRight, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface ChristmasSong {
@@ -106,16 +106,20 @@ export const ChristmasProducts = () => {
                     loading="lazy"
                   />
                   
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {/* Permanent overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                   
                   {/* Christmas badge */}
                   <div className="absolute top-2 right-2">
                     <span className="text-lg">🎄</span>
                   </div>
                   
-                  {/* Info overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                  {/* "Lees verhaal" indicator - always visible */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <div className="flex items-center gap-1.5 text-white/90 mb-1">
+                      <BookOpen className="h-3.5 w-3.5" />
+                      <span className="text-xs font-medium">Lees verhaal</span>
+                    </div>
                     <p className="text-white font-medium text-sm truncate">
                       {song.single_name || song.title.split(' - ')[1] || song.title}
                     </p>

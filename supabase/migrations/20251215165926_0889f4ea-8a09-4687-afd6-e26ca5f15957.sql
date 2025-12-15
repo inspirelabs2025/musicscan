@@ -1,0 +1,1 @@
+DELETE FROM album_socks WHERE pattern_type = 'christmas';

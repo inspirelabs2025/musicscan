@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChristmasCountdown } from '@/components/christmas/ChristmasCountdown';
 import { ChristmasRoyaltiesCalculator } from '@/components/christmas/ChristmasRoyaltiesCalculator';
-
+import { ChristmasQuiz } from '@/components/christmas/ChristmasQuiz';
 import { ChristmasRadioStream } from '@/components/christmas/ChristmasRadioStream';
 import { ChristmasDecades } from '@/components/christmas/ChristmasDecades';
 import { ChristmasPoll } from '@/components/christmas/ChristmasPoll';
@@ -109,11 +109,11 @@ export default function Christmas() {
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </Link>
-                <Link to="/quizzen">
+                <a href="#kerst-quiz">
                   <Button size="lg" variant="outline" className="border-red-500 text-red-600 hover:bg-red-500/10">
                     <Sparkles className="h-5 w-5 mr-2" /> Kerst Quiz
                   </Button>
-                </Link>
+                </a>
               </div>
 
               {/* Countdown Widget */}
@@ -150,6 +150,11 @@ export default function Christmas() {
               </Link>
             </CardContent>
           </Card>
+
+          {/* Christmas Quiz - Prominent */}
+          <div id="kerst-quiz">
+            <ChristmasQuiz />
+          </div>
 
           {/* Christmas Music Stories (filtered by tags) */}
           <ChristmasProducts />

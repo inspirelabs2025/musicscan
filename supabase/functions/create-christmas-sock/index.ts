@@ -6,14 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function generateSlug(artist: string, title: string): string {
-  const base = `${artist}-${title}-socks`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return base.substring(0, 80);
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -24,7 +16,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { artist, title, imageUrl, tags = [] } = await req.json();
+    const { artist, title, imageUrl } = await req.json();
 
     if (!artist || !title || !imageUrl) {
       return new Response(
@@ -33,43 +25,43 @@ serve(async (req) => {
       );
     }
 
-    console.log(`🧦 Creating Christmas sock for: ${artist} - ${title}`);
+    console.log(`🧦🎄 Creating Christmas sock via generate-sock-design: ${artist} - ${title}`);
 
-    const slug = generateSlug(artist, title);
+    const christmasPalette = {
+      primary_color: '#C41E3A',
+      secondary_color: '#228B22',
+      accent_color: '#FFD700',
+      color_palette: ['#C41E3A', '#228B22', '#FFD700'],
+      design_theme: 'posterize',
+      pattern_type: 'christmas'
+    };
 
-    // Step 1: Create album_socks record
-    const { data: sockRecord, error: sockInsertError } = await supabase
-      .from('album_socks')
-      .insert({
-        artist_name: artist,
-        album_title: title,
-        album_cover_url: imageUrl,
-        base_design_url: imageUrl,
-        slug: slug,
-        primary_color: '#C41E3A', // Christmas red
-        secondary_color: '#228B22', // Christmas green
-        accent_color: '#FFD700', // Gold
-        design_theme: 'pop-art-posterize',
-        pattern_type: 'christmas',
-        genre: 'Christmas',
-        is_published: true,
-        description: `🎄 Kerst sokken geïnspireerd op "${title}" van ${artist}. Premium merino wol met feestelijk design.`
-      })
-      .select()
-      .single();
+    // Step 1: Generate the SAME sock mockup output as /socks (generate-sock-design)
+    const { data: sockResult, error: sockError } = await supabase.functions.invoke('generate-sock-design', {
+      body: {
+        artistName: artist,
+        albumTitle: title,
+        albumCoverUrl: imageUrl,
+        colorPalette: christmasPalette,
+        genre: 'Christmas'
+      }
+    });
 
-    if (sockInsertError) {
-      console.error('❌ Failed to create album_socks record:', sockInsertError);
-      throw new Error(`Failed to create sock record: ${sockInsertError.message}`);
+    if (sockError) {
+      console.error('❌ generate-sock-design failed:', sockError);
+      throw new Error(`Sock generation failed: ${sockError.message}`);
     }
 
-    console.log(`✅ Created album_socks record: ${sockRecord.id}`);
+    const sockId = sockResult?.sock_id as string | undefined;
+    if (!sockId) {
+      throw new Error('Sock generation failed: missing sock_id');
+    }
 
-    // Step 2: Call create-sock-products with the sockId
+    // Step 2: Create shop product(s) for the sock
     const { data: productResult, error: productError } = await supabase.functions.invoke('create-sock-products', {
-      body: { 
-        sockId: sockRecord.id,
-        styleVariants: null // Use base design
+      body: {
+        sockId,
+        styleVariants: null
       }
     });
 
@@ -79,9 +71,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
-          sockId: sockRecord.id,
+          sockId,
           productIds: [],
-          message: 'Sock record created but product creation failed'
+          slug: sockResult?.slug,
+          message: 'Sock design generated but product creation failed'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -92,10 +85,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        sockId: sockRecord.id,
+        sockId,
         productId: productResult?.product_id,
         productIds: productResult?.product_id ? [productResult.product_id] : [],
-        slug: slug
+        slug: sockResult?.slug
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -103,9 +96,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Error creating Christmas sock:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error instanceof Error ? error.message : 'Unknown error',
-        success: false 
+        success: false
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -114,3 +107,4 @@ serve(async (req) => {
     );
   }
 });
+

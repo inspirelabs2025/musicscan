@@ -48,7 +48,8 @@ serve(async (req) => {
       discogsId,
       releaseYear,
       genre,
-      userId
+      userId,
+      existingSockId
     } = await req.json();
 
     if (!artistName || !albumTitle || !colorPalette) {
@@ -168,37 +169,72 @@ The result should feel like custom designer socks, not just "album cover printed
       .from('time-machine-posters')
       .getPublicUrl(`socks/${filename}`);
 
-    console.log('📦 Creating album_socks record...');
+    console.log(existingSockId ? '📦 Updating album_socks record...' : '📦 Creating album_socks record...');
 
-    // Create album_socks record
-    const { data: sockData, error: sockError } = await supabase
-      .from('album_socks')
-      .insert({
-        user_id: userId,
-        artist_name: artistName,
-        album_title: albumTitle,
-        album_cover_url: albumCoverUrl,
-        discogs_id: discogsId,
-        release_year: releaseYear,
-        genre: genre,
-        primary_color: colorPalette.primary_color,
-        secondary_color: colorPalette.secondary_color,
-        accent_color: colorPalette.accent_color,
-        color_palette: colorPalette.color_palette,
-        design_theme: colorPalette.design_theme,
-        pattern_type: colorPalette.pattern_type,
-        base_design_url: publicUrl,
-        slug: slug,
-        generation_time_ms: Date.now() - startTime,
-        description: `Stylish socks featuring the iconic album artwork of "${albumTitle}" by ${artistName}. The original album cover is prominently displayed on these premium crew socks.`,
-        story_text: `These unique socks showcase the complete album artwork from ${artistName}'s ${releaseYear || 'classic'} album "${albumTitle}". Wear a piece of music history with the full album cover design on these comfortable crew socks.`
-      })
-      .select()
-      .single();
+    let sockData: any;
 
-    if (sockError) {
-      console.error('Database error:', sockError);
-      throw new Error(`Failed to save sock: ${sockError.message}`);
+    if (existingSockId) {
+      const { data: updatedSock, error: updateError } = await supabase
+        .from('album_socks')
+        .update({
+          artist_name: artistName,
+          album_title: albumTitle,
+          album_cover_url: albumCoverUrl,
+          discogs_id: discogsId,
+          release_year: releaseYear,
+          genre: genre,
+          primary_color: colorPalette.primary_color,
+          secondary_color: colorPalette.secondary_color,
+          accent_color: colorPalette.accent_color,
+          color_palette: colorPalette.color_palette,
+          design_theme: colorPalette.design_theme,
+          pattern_type: colorPalette.pattern_type,
+          base_design_url: publicUrl,
+          generation_time_ms: Date.now() - startTime,
+        })
+        .eq('id', existingSockId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Database error:', updateError);
+        throw new Error(`Failed to update sock: ${updateError.message}`);
+      }
+
+      sockData = updatedSock;
+    } else {
+      // Create album_socks record
+      const { data: createdSock, error: sockError } = await supabase
+        .from('album_socks')
+        .insert({
+          user_id: userId,
+          artist_name: artistName,
+          album_title: albumTitle,
+          album_cover_url: albumCoverUrl,
+          discogs_id: discogsId,
+          release_year: releaseYear,
+          genre: genre,
+          primary_color: colorPalette.primary_color,
+          secondary_color: colorPalette.secondary_color,
+          accent_color: colorPalette.accent_color,
+          color_palette: colorPalette.color_palette,
+          design_theme: colorPalette.design_theme,
+          pattern_type: colorPalette.pattern_type,
+          base_design_url: publicUrl,
+          slug: slug,
+          generation_time_ms: Date.now() - startTime,
+          description: `Stylish socks featuring the iconic album artwork of "${albumTitle}" by ${artistName}. The original album cover is prominently displayed on these premium crew socks.`,
+          story_text: `These unique socks showcase the complete album artwork from ${artistName}'s ${releaseYear || 'classic'} album "${albumTitle}". Wear a piece of music history with the full album cover design on these comfortable crew socks.`
+        })
+        .select()
+        .single();
+
+      if (sockError) {
+        console.error('Database error:', sockError);
+        throw new Error(`Failed to save sock: ${sockError.message}`);
+      }
+
+      sockData = createdSock;
     }
 
     const generationTime = Date.now() - startTime;

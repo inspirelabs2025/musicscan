@@ -35,7 +35,7 @@ export const ChristmasProducts = () => {
         .contains('tags', ['christmas'])
         .order('artwork_url', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false })
-        .limit(24);
+        .limit(8);
 
       if (error) throw error;
       return data as ChristmasSong[];
@@ -89,7 +89,7 @@ export const ChristmasProducts = () => {
       </CardHeader>
       
       <CardContent className="relative">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {songs.map((song, index) => (
             <motion.div
               key={song.id}
@@ -98,32 +98,32 @@ export const ChristmasProducts = () => {
               transition={{ delay: index * 0.05 }}
             >
               <Link to={`/singles/${song.slug}`}>
-                <div className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer">
+                <div className="group relative aspect-square rounded-xl overflow-hidden bg-muted cursor-pointer shadow-lg hover:shadow-xl transition-shadow duration-300">
                   <img
                     src={song.artwork_url}
                     alt={song.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     loading="lazy"
                   />
                   
-                  {/* Permanent overlay gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                  {/* Stronger gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                   
                   {/* Christmas badge */}
-                  <div className="absolute top-2 right-2">
-                    <span className="text-lg">🎄</span>
+                  <div className="absolute top-3 right-3">
+                    <span className="text-xl">🎄</span>
                   </div>
                   
-                  {/* "Lees verhaal" indicator - always visible */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <div className="flex items-center gap-1.5 text-white/90 mb-1">
-                      <BookOpen className="h-3.5 w-3.5" />
-                      <span className="text-xs font-medium">Lees verhaal</span>
+                  {/* Prominent "Lees het verhaal" badge */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 mb-3">
+                      <BookOpen className="h-4 w-4 text-white" />
+                      <span className="text-sm font-medium text-white">Lees het verhaal</span>
                     </div>
-                    <p className="text-white font-medium text-sm truncate">
+                    <p className="text-white font-semibold text-base truncate">
                       {song.single_name || song.title.split(' - ')[1] || song.title}
                     </p>
-                    <p className="text-white/70 text-xs truncate">
+                    <p className="text-white/80 text-sm truncate">
                       {song.artist}
                     </p>
                   </div>

@@ -139,6 +139,7 @@ export const ChristmasSocks = () => {
 
       return all;
     },
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 
   // Shuffle socks randomly on each render
@@ -197,27 +198,6 @@ export const ChristmasSocks = () => {
           </CardTitle>
 
           <div className="flex items-center gap-2">
-            {isAdmin && (
-              <>
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700"
-                  onClick={() => regenerateWithArtists.mutate()}
-                  disabled={regenerateWithArtists.isPending || regenerate.isPending}
-                >
-                  {regenerateWithArtists.isPending ? '🎄 Genereren…' : '🎨 Artiest Sokken'}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => regenerate.mutate()}
-                  disabled={regenerate.isPending || regenerateWithArtists.isPending}
-                >
-                  {regenerate.isPending ? 'Bijwerken…' : 'Bijwerken'}
-                </Button>
-              </>
-            )}
             <Badge className="bg-green-500/10 text-green-600 border-green-500/30">🎁 {shuffledSocks.length} ontwerpen</Badge>
           </div>
         </div>

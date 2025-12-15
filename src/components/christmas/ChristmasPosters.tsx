@@ -30,7 +30,7 @@ export const ChristmasPosters = () => {
         // Base64 images veroorzaken timeouts/overload → altijd uitsluiten in de query
         .not('primary_image', 'like', 'data:%')
         .order('created_at', { ascending: false })
-        .limit(8);
+        .limit(2);
 
       if (error) throw error;
       return (data || []) as Product[];

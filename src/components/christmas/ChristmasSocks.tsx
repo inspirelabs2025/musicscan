@@ -14,12 +14,10 @@ interface ChristmasSockProduct {
   title: string;
   artist: string;
   price: number;
-  primary_image: string | null;
+  image_url: string;
   view_count: number;
   is_featured: boolean;
 }
-
-const isDataImage = (url?: string | null) => !!url && url.startsWith('data:image/');
 
 export const ChristmasSocks = () => {
   const { data: socks, isLoading } = useQuery({
@@ -27,21 +25,23 @@ export const ChristmasSocks = () => {
     queryFn: async () => {
       const { data: albumSocks, error: albumError } = await supabase
         .from('album_socks')
-        .select('product_id')
+        .select('product_id, album_cover_url')
         .eq('pattern_type', 'christmas')
         .not('product_id', 'is', null)
         .limit(50);
 
       if (albumError) throw albumError;
 
-      const productIds = (albumSocks || [])
-        .map((s) => s.product_id)
-        .filter(Boolean) as string[];
+      const sockMeta = new Map<string, string>();
+      for (const s of albumSocks || []) {
+        if (s.product_id && s.album_cover_url) sockMeta.set(s.product_id, s.album_cover_url);
+      }
 
+      const productIds = Array.from(sockMeta.keys());
       if (productIds.length === 0) return [];
 
       // Chunked ophalen om timeouts te vermijden
-      const chunkSize = 5;
+      const chunkSize = 10;
       const chunks: string[][] = [];
       for (let i = 0; i < productIds.length; i += chunkSize) {
         chunks.push(productIds.slice(i, i + chunkSize));
@@ -51,23 +51,23 @@ export const ChristmasSocks = () => {
       for (const ids of chunks) {
         const { data, error } = await supabase
           .from('platform_products')
-          .select('id, slug, title, artist, price, primary_image, view_count, is_featured')
+          .select('id, slug, title, artist, price, view_count, is_featured')
           .in('id', ids)
           .eq('status', 'active')
-          // Base64 images veroorzaken timeouts/overload → altijd uitsluiten in de query
-          .not('primary_image', 'like', 'data:%')
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        all.push(...((data || []) as ChristmasSockProduct[]));
+
+        for (const p of (data || []) as Omit<ChristmasSockProduct, 'image_url'>[]) {
+          const image_url = sockMeta.get(p.id);
+          if (!image_url) continue;
+          all.push({ ...p, image_url });
+        }
       }
 
-      // Dedup + filter: base64 primary_image is te zwaar → skip
+      // Dedup
       const byId = new Map<string, ChristmasSockProduct>();
-      for (const p of all) {
-        if (!p.primary_image || isDataImage(p.primary_image)) continue;
-        byId.set(p.id, p);
-      }
+      for (const p of all) byId.set(p.id, p);
 
       return Array.from(byId.values()).slice(0, 8);
     },
@@ -128,7 +128,7 @@ export const ChristmasSocks = () => {
                 <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-green-500 h-full">
                   <div className="relative aspect-square overflow-hidden bg-muted">
                     <img
-                      src={sock.primary_image}
+                      src={sock.image_url}
                       alt={`${sock.artist} - ${sock.title} kerst sokken`}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       loading="lazy"

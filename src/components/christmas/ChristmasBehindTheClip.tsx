@@ -85,7 +85,7 @@ const CHRISTMAS_CLIPS: VideoClip[] = [
     title: 'Driving Home For Christmas',
     artist: 'Chris Rea',
     year: 1986,
-    youtubeId: '6vVU9PskV9A',
+    youtubeId: 'uSjq7x67kzM',
     duration: '4:00',
     behindTheScenes: 'Chris Rea schreef dit nummer terwijl hij daadwerkelijk in een file stond op weg naar huis voor kerst. De videoclip toont authentieke beelden van sneeuwlandschappen en autorijden, wat perfect aansluit bij het nostalgische gevoel van het nummer.',
     funFacts: [

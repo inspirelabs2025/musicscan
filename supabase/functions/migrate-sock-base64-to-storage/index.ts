@@ -30,8 +30,6 @@ function sha256Hex(input: Uint8Array): Promise<string> {
     return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   });
 }
-
-serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -41,26 +39,39 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { dryRun, limit } = await req.json().catch(() => ({ dryRun: false, limit: 50 }));
+    // Belangrijk: function-level statement timeout omlaag, zodat we nooit hard vastlopen.
+    // We werken per-item, dus kleine queries + kleine batches.
+    await supabase.rpc("set_config", { setting_name: "statement_timeout", new_value: "15s", is_local: true } as any).catch(() => null);
 
-    const runLimit = typeof limit === "number" ? Math.max(1, Math.min(200, limit)) : 50;
+    const { dryRun, limit } = await req.json().catch(() => ({ dryRun: false, limit: 5 }));
+    const runLimit = typeof limit === "number" ? Math.max(1, Math.min(50, limit)) : 5;
     const isDryRun = !!dryRun;
 
     console.log("🧦 migrate-sock-base64-to-storage start", { isDryRun, runLimit });
 
-    const { data: products, error: fetchError } = await supabase
+    // Pak IDs via een kleine, snelle query op media_type index en filter daarna in code.
+    // Dit voorkomt dat LIKE op large text kolom de query kan laten hangen.
+    const { data: merchRows, error: merchErr } = await supabase
       .from("platform_products")
-      .select("id, slug, title, primary_image, images")
+      .select("id, slug, primary_image, images")
       .eq("status", "active")
       .eq("media_type", "merchandise")
-      .contains("categories", ["socks"])
-      .like("primary_image", "data:image/%")
+      .not("published_at", "is", null)
       .order("created_at", { ascending: false })
-      .limit(runLimit);
+      .limit(200);
 
-    if (fetchError) throw fetchError;
+    if (merchErr) throw merchErr;
 
-    const items = products || [];
+    const candidates = (merchRows || []).filter((p: any) =>
+      Array.isArray(p.images) || Array.isArray(p.categories) ? true : true
+    );
+
+    const base64Socks = (candidates as any[]).filter((p) => {
+      const isSock = Array.isArray(p.categories) ? p.categories.includes("socks") : true; // fallback
+      return isSock && typeof p.primary_image === "string" && p.primary_image.startsWith("data:image/");
+    });
+
+    const items = base64Socks.slice(0, runLimit);
     console.log("🧦 Found base64 sock products", { count: items.length });
 
     let migrated = 0;
@@ -69,13 +80,9 @@ serve(async (req) => {
 
     for (const p of items) {
       try {
-        if (!p.primary_image || typeof p.primary_image !== "string" || !p.primary_image.startsWith("data:image/")) {
-          skipped++;
-          continue;
-        }
-
-        const bytes = decodeBase64DataUrl(p.primary_image);
-        const ext = safeExtFromDataUrl(p.primary_image);
+        const dataUrl = p.primary_image as string;
+        const bytes = decodeBase64DataUrl(dataUrl);
+        const ext = safeExtFromDataUrl(dataUrl);
         const hash = await sha256Hex(bytes);
         const path = `socks/${p.slug || p.id}/${hash}.${ext}`;
 
@@ -98,10 +105,8 @@ serve(async (req) => {
         const publicUrl = publicUrlData.publicUrl;
 
         const nextImages = Array.isArray(p.images) ? [...p.images] : [];
-        // vervang primary als die in images staat
-        const idx = nextImages.findIndex((u) => typeof u === "string" && u === p.primary_image);
+        const idx = nextImages.findIndex((u: any) => typeof u === "string" && u === dataUrl);
         if (idx >= 0) nextImages[idx] = publicUrl;
-        // zorg dat publicUrl in images voorkomt
         if (!nextImages.includes(publicUrl)) nextImages.unshift(publicUrl);
 
         const { error: updateError } = await supabase
@@ -142,3 +147,4 @@ serve(async (req) => {
     );
   }
 });
+

@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { Music, ArrowRight, Globe, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 interface ChristmasSingle {
   id: string;
@@ -93,12 +93,27 @@ export const ChristmasSingles = () => {
     }
   }) || [];
 
-  // Sort: items with artwork first
-  const sortedSingles = [...filteredSingles].sort((a, b) => {
-    if (a.artwork_url && !b.artwork_url) return -1;
-    if (!a.artwork_url && b.artwork_url) return 1;
-    return 0;
-  });
+  // Shuffle and prioritize items with artwork
+  const randomSingles = useMemo(() => {
+    if (!filteredSingles || filteredSingles.length === 0) return [];
+    
+    // Separate items with and without artwork
+    const withArtwork = filteredSingles.filter(s => s.artwork_url);
+    const withoutArtwork = filteredSingles.filter(s => !s.artwork_url);
+    
+    // Shuffle both arrays
+    const shuffleArray = <T,>(arr: T[]): T[] => {
+      const shuffled = [...arr];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    };
+    
+    // Return shuffled items with artwork first, then without
+    return [...shuffleArray(withArtwork), ...shuffleArray(withoutArtwork)];
+  }, [filteredSingles]);
 
   if (isLoading) {
     return (
@@ -163,7 +178,7 @@ export const ChristmasSingles = () => {
       
       <CardContent className="relative">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {sortedSingles.slice(0, 24).map((single, index) => (
+          {randomSingles.slice(0, 24).map((single, index) => (
             <motion.div
               key={single.id}
               initial={{ opacity: 0, y: 20 }}

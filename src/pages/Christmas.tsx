@@ -11,6 +11,7 @@ import { ChristmasPoll } from '@/components/christmas/ChristmasPoll';
 import { ChristmasBehindTheClip } from '@/components/christmas/ChristmasBehindTheClip';
 import ChristmasAnecdote from '@/components/christmas/ChristmasAnecdote';
 import { ChristmasProducts } from '@/components/christmas/ChristmasProducts';
+import { ChristmasSingles } from '@/components/christmas/ChristmasSingles';
 import { ChristmasShopProducts } from '@/components/christmas/ChristmasShopProducts';
 import { Link } from 'react-router-dom';
 import { Music, Sparkles } from 'lucide-react';
@@ -112,7 +113,10 @@ export default function Christmas() {
 
         {/* Main Content */}
         <section className="container mx-auto px-4 pb-20 space-y-12 relative z-10">
-          {/* Christmas Singles/Stories */}
+          {/* Christmas Singles Collection - Full International */}
+          <ChristmasSingles />
+
+          {/* Christmas Music Stories (filtered by tags) */}
           <ChristmasProducts />
 
           {/* Christmas Shop Products (Posters & Canvas) */}

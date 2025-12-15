@@ -59,6 +59,7 @@ verify_jwt = false
 
 [functions.queue-dance-house-content]
 verify_jwt = false
+
 [[functions.queue-dance-house-content.schedule]]
 cron = "0 7 * * *"
 
@@ -88,11 +89,13 @@ cron = "*/5 * * * *"
 
 [functions.discogs-lp-crawler]
 verify_jwt = false
+
 [[functions.discogs-lp-crawler.schedule]]
 cron = "0 * * * *"
 
 [functions.process-discogs-queue]
 verify_jwt = false
+
 [[functions.process-discogs-queue.schedule]]
 cron = "*/2 * * * *"
 
@@ -268,18 +271,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.indexnow-cron]
-verify_jwt = false
-
-[functions.create-bot-users]
-verify_jwt = false
-
-[functions.fix-bot-user-names]
-verify_jwt = false
-
-[functions.generate-ai-comment]
-verify_jwt = false
-
-[functions.backfill-blog-comments]
 verify_jwt = false
 
 [[functions.indexnow-cron.schedule]]
@@ -489,278 +480,17 @@ cron = "0 2 * * *"
 [functions.daily-artist-stories-generator]
 verify_jwt = false
 
+[[functions.daily-artist-stories-generator.schedule]]
+cron = "0 1 * * *"
+
 [functions.rss-news-rewriter]
 verify_jwt = false
 
 [functions.ai-recognize-artist]
 verify_jwt = false
 
-[[functions.daily-artist-stories-generator.schedule]]
-cron = "0 1 * * *"
-
-[[functions.rss-news-rewriter.schedule]]
-cron = "0 8,14,20 * * *"
-
-[functions.youtube-discoveries]
+[functions.backfill-blog-comments]
 verify_jwt = false
 
-[[functions.youtube-discoveries.schedule]]
-cron = "0 10 * * *"
-
-[[functions.youtube-discoveries.schedule]]
-cron = "0 18 * * *"
-
-[functions.process-spotify-new-releases]
-verify_jwt = false
-
-[[functions.process-spotify-new-releases.schedule]]
-cron = "0 9 * * *"
-
-[functions.singles-monitor]
-verify_jwt = false
-
-[[functions.singles-monitor.schedule]]
-cron = "*/5 * * * *"
-
-[functions.daily-status-report]
-verify_jwt = false
-
-[[functions.daily-status-report.schedule]]
-cron = "0 8 * * *"
-
-[functions.send-order-email]
-verify_jwt = false
-
-[functions.seed-dutch-artist-stories]
-verify_jwt = false
-
-[functions.fetch-artist-artwork]
-verify_jwt = false
-
-[functions.queue-nl-muziek-artists]
-verify_jwt = false
-
-[functions.generate-quiz-share-image]
-verify_jwt = false
-
-[functions.send-quiz-registration-email]
-verify_jwt = false
-
-[functions.generate-artist-quiz]
-verify_jwt = false
-
-[functions.generate-album-quiz]
-verify_jwt = false
-
-[functions.schedule-youtube-posts]
-verify_jwt = false
-
-[[functions.schedule-youtube-posts.schedule]]
-cron = "10 6 * * *"
-
-[functions.post-scheduled-youtube]
-verify_jwt = false
-
-[[functions.post-scheduled-youtube.schedule]]
-cron = "0 9-21 * * *"
-
-[functions.singles-facebook-queue]
-verify_jwt = false
-
-[functions.post-scheduled-singles]
-verify_jwt = false
-
-[[functions.post-scheduled-singles.schedule]]
-cron = "30 9-21/2 * * *"
-
-[functions.post-to-threads]
-verify_jwt = false
-
-[functions.queue-french-artists]
-verify_jwt = false
-
-[functions.schedule-daily-quiz-posts]
-verify_jwt = false
-
-[[functions.schedule-daily-quiz-posts.schedule]]
-cron = "15 6 * * *"
-
-[functions.post-scheduled-daily-quiz]
-verify_jwt = false
-
-[[functions.post-scheduled-daily-quiz.schedule]]
-cron = "0 10,18 * * *"
-
-[functions.generate-podcast-rss]
-verify_jwt = false
-
-[functions.generate-daily-challenge]
-verify_jwt = false
-
-[[functions.generate-daily-challenge.schedule]]
-cron = "0 5 * * *"
-
-[functions.generate-month-overview]
-verify_jwt = false
-
-[functions.tiktok-auth]
-verify_jwt = false
-
-[functions.tiktok-token-refresh]
-verify_jwt = false
-
-[[functions.tiktok-token-refresh.schedule]]
-cron = "0 */6 * * *"
-
-[functions.post-to-tiktok]
-verify_jwt = false
-
-[functions.schedule-tiktok-posts]
-verify_jwt = false
-
-[[functions.schedule-tiktok-posts.schedule]]
-cron = "20 6 * * *"
-
-[functions.post-scheduled-tiktok]
-verify_jwt = false
-
-[[functions.post-scheduled-tiktok.schedule]]
-cron = "0 10,14,17,20 * * *"
-
-[functions.tiktok-queue-manager]
-verify_jwt = false
-
-[functions.post-to-metricool]
-verify_jwt = false
-
-[functions.schedule-metricool-posts]
-verify_jwt = false
-
-[[functions.schedule-metricool-posts.schedule]]
-cron = "0 6 * * *"
-
-[functions.post-scheduled-metricool]
-verify_jwt = false
-
-[[functions.post-scheduled-metricool.schedule]]
-cron = "0 10,13,16,19 * * *"
-
-[functions.image-to-video]
-verify_jwt = false
-
-[functions.image-to-video-status]
-verify_jwt = false
-
-[functions.process-video-queue]
-verify_jwt = false
-
-[[functions.process-video-queue.schedule]]
-cron = "*/5 * * * *"
-
-[functions.fetch-album-artwork]
-verify_jwt = false
-
-[functions.mark-videos-ready]
-verify_jwt = false
-
-[functions.image-proxy]
-verify_jwt = false
-
-[functions.process-tiktok-video-queue]
-verify_jwt = false
-
-[[functions.process-tiktok-video-queue.schedule]]
-cron = "*/2 * * * *"
-
-[functions.generate-tiktok-video]
-verify_jwt = false
-
-[functions.generate-mp4-video]
-verify_jwt = false
-
-[functions.create-render-job]
-verify_jwt = false
-
-[functions.get-next-job]
-verify_jwt = false
-
-[functions.update-render-job]
-verify_jwt = false
-
-[functions.worker-poll]
-verify_jwt = false
-
-[functions.worker-update]
-verify_jwt = false
-
-[functions.claim_next_render_job]
-verify_jwt = false
-
-[functions.update_render_job_status]
-verify_jwt = false
-
-[functions.reset-stuck-render-jobs]
-verify_jwt = false
-
-[functions.generate-christmas-story]
-verify_jwt = false
-
-[functions.christmas-batch-processor]
-verify_jwt = false
-
-[[functions.christmas-batch-processor.schedule]]
-cron = "* * * * *"
-
-[functions.import-christmas-batch]
-verify_jwt = false
-
-[functions.backfill-christmas-artwork]
-verify_jwt = false
-
-[[functions.backfill-christmas-artwork.schedule]]
-cron = "*/5 * * * *"
-
-[functions.backfill-christmas-facebook]
-verify_jwt = false
-
-[functions.backfill-christmas-products]
-verify_jwt = false
-
-[[functions.backfill-christmas-products.schedule]]
-cron = "*/3 * * * *"
-
-[functions.podcast-rss]
-verify_jwt = false
-
-[functions.feeds-podcast]
-verify_jwt = false
-
-[functions.generate-podcast-sitemap]
-verify_jwt = false
-
-[functions.post-podcast-to-facebook]
-verify_jwt = false
-
-[functions.process-podcast-facebook-queue]
-verify_jwt = false
-
-[[functions.process-podcast-facebook-queue.schedule]]
-cron = "0 8-22 * * *"
-
-[functions.schedule-weekly-podcast-posts]
-verify_jwt = false
-
-[[functions.schedule-weekly-podcast-posts.schedule]]
-cron = "0 6 * * 1"
-
-[functions.reset-christmas-artwork-attempts]
-verify_jwt = false
-
-[functions.backfill-christmas-socks]
-verify_jwt = false
-
-[[functions.backfill-christmas-socks.schedule]]
-cron = "*/2 * * * *"
-
-[functions.create-christmas-sock]
+[functions.migrate-sock-base64-to-storage]
 verify_jwt = false

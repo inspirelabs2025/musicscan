@@ -213,81 +213,62 @@ export default function SocksShop() {
               {filteredProducts.map((product) => {
                 const isPremium = product.categories?.includes('premium');
                 
-                return (
-                  <Link key={product.id} to={`/product/${product.slug}`}>
-                    <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-primary h-full">
-                      {/* Image */}
-                      <div className="relative aspect-square overflow-hidden bg-muted">
-                        <SocksMockup
-                          imageUrl={product.primary_image || '/placeholder.svg'}
-                          alt={`${product.artist || 'Various Artists'} - ${product.title} sokken`}
-                          className="h-full w-full"
-                        />
-                        
-                        {/* Badges Overlay */}
-                        <div className="absolute top-3 left-3 flex flex-col gap-2">
-                          <Badge className="bg-purple-600 text-white font-bold">
-                            ✨ Premium Merino
-                          </Badge>
-                          {product.is_featured && (
-                            <Badge className="bg-vinyl-gold text-black font-bold">
-                              <Sparkles className="h-3 w-3 mr-1" />
-                              Featured
-                            </Badge>
-                          )}
-                        </div>
+                  return (
+                    <Link key={product.id} to={`/product/${product.slug}`} className="group block">
+                      <article className="h-full">
+                        <div className="relative">
+                          {/* Sock visual (geen card) */}
+                          <div className="relative aspect-[2/3]">
+                            <SocksMockup
+                              imageUrl={product.primary_image || '/placeholder.svg'}
+                              alt={`${product.artist || 'Various Artists'} - ${product.title} sokken`}
+                              className="h-full w-full"
+                            />
 
-                        {/* Size Badge */}
-                        <div className="absolute top-3 right-3">
-                          <Badge variant="secondary" className="bg-black/60 text-white border-0">
-                            One Size (EU 38-46)
-                          </Badge>
-                        </div>
+                            {/* Badges Overlay */}
+                            <div className="absolute top-3 left-3 flex flex-col gap-2">
+                              <Badge className="bg-purple-600 text-white font-bold">
+                                ✨ Premium Merino
+                              </Badge>
+                              {product.is_featured && (
+                                <Badge className="bg-vinyl-gold text-black font-bold">
+                                  <Sparkles className="h-3 w-3 mr-1" />
+                                  Featured
+                                </Badge>
+                              )}
+                            </div>
 
-                        {/* View Count */}
-                        <div className="absolute bottom-3 right-3">
-                          <Badge variant="secondary" className="bg-black/60 text-white border-0">
-                            <Eye className="h-3 w-3 mr-1" />
-                            {product.view_count}
-                          </Badge>
-                        </div>
-                      </div>
+                            {/* View Count */}
+                            <div className="absolute bottom-3 right-3">
+                              <Badge variant="secondary" className="bg-black/60 text-white border-0">
+                                <Eye className="h-3 w-3 mr-1" />
+                                {product.view_count}
+                              </Badge>
+                            </div>
+                          </div>
 
-                      {/* Content */}
-                      <CardContent className="p-4 space-y-2">
-                        <div className="space-y-1">
-                          <p className="text-sm text-muted-foreground font-medium">
-                            {product.artist || 'Various Artists'}
-                          </p>
-                          <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                            {product.title}
-                          </h3>
-                        </div>
+                          {/* Info */}
+                          <div className="pt-3 space-y-2">
+                            <div className="space-y-1">
+                              <p className="text-sm text-muted-foreground font-medium line-clamp-1">
+                                {product.artist || 'Various Artists'}
+                              </p>
+                              <h3 className="font-bold text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                                {product.title}
+                              </h3>
+                            </div>
 
-                        {product.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {product.description.split('\n')[0]}
-                          </p>
-                        )}
-                      </CardContent>
-
-                      {/* Footer */}
-                      <CardFooter className="p-4 pt-0 flex items-center justify-between">
-                        <div className="space-y-1">
-                          <p className="text-2xl font-bold text-primary">
-                            €{product.price.toFixed(2)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Premium Merino Wool
-                          </p>
+                            <div className="flex items-center justify-between">
+                              <p className="text-lg font-bold text-primary">€{product.price.toFixed(2)}</p>
+                              <Button variant="outline" size="sm">
+                                Bekijk
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                        <Button variant="outline" size="sm">
-                          Bekijk
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  </Link>
-                );
+                      </article>
+                    </Link>
+                  );
               })}
             </div>
           ) : (

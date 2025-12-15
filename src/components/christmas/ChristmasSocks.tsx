@@ -112,51 +112,53 @@ export const ChristmasSocks = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Link to={`/product/${sock.slug}`}>
-                <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-green-500 h-full">
-                  <div className="relative aspect-square overflow-hidden bg-muted">
-                    <SocksMockup
-                      imageUrl={sock.image_url}
-                      alt={`${sock.artist} - ${sock.title} kerst sokken`}
-                      className="h-full w-full"
-                    />
+              <Link to={`/product/${sock.slug}`} className="group block">
+                <article className="h-full">
+                  <div className="relative">
+                    <div className="relative aspect-[2/3]">
+                      <SocksMockup
+                        imageUrl={sock.image_url}
+                        alt={`${sock.artist} - ${sock.title} kerst sokken`}
+                        className="h-full w-full"
+                      />
 
-                    <div className="absolute top-3 left-3 flex flex-col gap-2">
-                      <Badge className="bg-red-600 text-white font-bold">🎄 Kerst Editie</Badge>
-                      {sock.is_featured && (
-                        <Badge className="bg-vinyl-gold text-black font-bold">
-                          <Sparkles className="h-3 w-3 mr-1" />
-                          Featured
+                      <div className="absolute top-3 left-3 flex flex-col gap-2">
+                        <Badge className="bg-red-600 text-white font-bold">🎄 Kerst Editie</Badge>
+                        {sock.is_featured && (
+                          <Badge className="bg-vinyl-gold text-black font-bold">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Featured
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="absolute bottom-3 right-3">
+                        <Badge variant="secondary" className="bg-black/60 text-white border-0">
+                          <Eye className="h-3 w-3 mr-1" />
+                          {sock.view_count || 0}
                         </Badge>
-                      )}
+                      </div>
                     </div>
 
-                    <div className="absolute bottom-3 right-3">
-                      <Badge variant="secondary" className="bg-black/60 text-white border-0">
-                        <Eye className="h-3 w-3 mr-1" />
-                        {sock.view_count || 0}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="p-4 space-y-2">
-                    <div className="flex items-center gap-2 text-green-600">
-                      <ShoppingBag className="h-4 w-4" />
-                      <span className="text-xs font-bold uppercase tracking-wide">Premium Merino</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground font-medium line-clamp-1">{sock.artist}</p>
-                    <h3 className="font-bold text-foreground line-clamp-1 group-hover:text-green-600 transition-colors">
-                      {sock.title}
-                    </h3>
-                    <div className="flex items-center justify-between pt-2">
-                      <p className="text-lg font-bold text-primary">€{sock.price.toFixed(2)}</p>
-                      <div className="flex items-center gap-1 text-sm text-green-600 group-hover:text-green-700">
-                        <span>Bekijk</span>
-                        <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                    <div className="pt-3 space-y-2">
+                      <div className="flex items-center gap-2 text-green-600">
+                        <ShoppingBag className="h-4 w-4" />
+                        <span className="text-xs font-bold uppercase tracking-wide">Premium Merino</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground font-medium line-clamp-1">{sock.artist}</p>
+                      <h3 className="font-bold text-foreground line-clamp-2 group-hover:text-green-600 transition-colors">
+                        {sock.title}
+                      </h3>
+                      <div className="flex items-center justify-between pt-1">
+                        <p className="text-lg font-bold text-primary">€{sock.price.toFixed(2)}</p>
+                        <div className="flex items-center gap-1 text-sm text-green-600 group-hover:text-green-700">
+                          <span>Bekijk</span>
+                          <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </Card>
+                </article>
               </Link>
             </motion.div>
           ))}

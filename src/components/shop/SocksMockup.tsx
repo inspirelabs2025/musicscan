@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 interface SocksMockupProps {
   imageUrl: string;
   alt: string;
@@ -5,41 +7,56 @@ interface SocksMockupProps {
 }
 
 /**
- * Sok-preview met artwork als achtergrond in een sok-silhouet.
- * Simpele CSS clip-path oplossing.
+ * Sok mockup (één sok) met artwork als patroon in een SVG clipPath.
+ * Doel: in listings presenteren als echte sok i.p.v. een card-afbeelding.
  */
 export function SocksMockup({ imageUrl, alt, className }: SocksMockupProps) {
+  const id = useId();
+  const clipId = `sock-clip-${id}`;
+
   return (
-    <div className={`relative ${className || ''}`} aria-label={alt}>
-      {/* Achterste sok (links, iets gedraaid) */}
-      <div 
-        className="absolute left-[5%] top-[8%] w-[55%] h-[85%] rotate-[-8deg] shadow-lg"
-        style={{
-          clipPath: 'polygon(20% 0%, 80% 0%, 80% 45%, 100% 55%, 100% 100%, 60% 100%, 60% 55%, 40% 55%, 40% 100%, 0% 100%, 0% 55%, 20% 45%)',
-        }}
+    <div className={className} aria-label={alt}>
+      <svg
+        viewBox="0 0 240 360"
+        role="img"
+        aria-label={alt}
+        className="h-full w-full"
+        preserveAspectRatio="xMidYMid meet"
       >
-        <img 
-          src={imageUrl} 
-          alt="" 
-          className="w-full h-full object-cover"
-          loading="lazy"
+        <defs>
+          {/* Sock silhouette */}
+          <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+            <path d="M78 24c0-8 6-14 14-14h56c8 0 14 6 14 14v130c0 28-10 52-30 72l-26 26c-12 12-18 26-18 42v28c0 12-10 22-22 22H62c-12 0-22-10-22-22v-36c0-28 10-52 30-72l30-30c10-10 14-22 14-38V24z" />
+          </clipPath>
+        </defs>
+
+        {/* Artwork fill */}
+        <image
+          href={imageUrl}
+          x="0"
+          y="0"
+          width="240"
+          height="360"
+          preserveAspectRatio="xMidYMid slice"
+          clipPath={`url(#${clipId})`}
         />
-      </div>
-      
-      {/* Voorste sok (rechts, iets gedraaid) */}
-      <div 
-        className="absolute right-[5%] top-[5%] w-[55%] h-[85%] rotate-[8deg] shadow-xl"
-        style={{
-          clipPath: 'polygon(20% 0%, 80% 0%, 80% 45%, 100% 55%, 100% 100%, 60% 100%, 60% 55%, 40% 55%, 40% 100%, 0% 100%, 0% 55%, 20% 45%)',
-        }}
-      >
-        <img 
-          src={imageUrl} 
-          alt={alt} 
-          className="w-full h-full object-cover"
-          loading="lazy"
+
+        {/* Sock outline + cuff */}
+        <path
+          d="M78 24c0-8 6-14 14-14h56c8 0 14 6 14 14v130c0 28-10 52-30 72l-26 26c-12 12-18 26-18 42v28c0 12-10 22-22 22H62c-12 0-22-10-22-22v-36c0-28 10-52 30-72l30-30c10-10 14-22 14-38V24z"
+          fill="none"
+          stroke="hsl(var(--border))"
+          strokeWidth="3"
         />
-      </div>
+        <path
+          d="M78 40h84"
+          stroke="hsl(var(--border))"
+          strokeWidth="8"
+          strokeLinecap="round"
+          opacity="0.65"
+        />
+      </svg>
     </div>
   );
 }
+

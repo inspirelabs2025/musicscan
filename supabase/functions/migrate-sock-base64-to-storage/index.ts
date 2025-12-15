@@ -30,6 +30,8 @@ function sha256Hex(input: Uint8Array): Promise<string> {
     return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   });
 }
+
+serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -39,39 +41,52 @@ function sha256Hex(input: Uint8Array): Promise<string> {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Belangrijk: function-level statement timeout omlaag, zodat we nooit hard vastlopen.
-    // We werken per-item, dus kleine queries + kleine batches.
-    await supabase.rpc("set_config", { setting_name: "statement_timeout", new_value: "15s", is_local: true } as any).catch(() => null);
-
     const { dryRun, limit } = await req.json().catch(() => ({ dryRun: false, limit: 5 }));
     const runLimit = typeof limit === "number" ? Math.max(1, Math.min(50, limit)) : 5;
     const isDryRun = !!dryRun;
 
     console.log("🧦 migrate-sock-base64-to-storage start", { isDryRun, runLimit });
 
-    // Pak IDs via een kleine, snelle query op media_type index en filter daarna in code.
-    // Dit voorkomt dat LIKE op large text kolom de query kan laten hangen.
-    const { data: merchRows, error: merchErr } = await supabase
-      .from("platform_products")
-      .select("id, slug, primary_image, images")
-      .eq("status", "active")
-      .eq("media_type", "merchandise")
-      .not("published_at", "is", null)
-      .order("created_at", { ascending: false })
+    // 1) Haal alleen sock product_ids op via album_socks (kleine snelle query)
+    const { data: sockLinks, error: sockErr } = await supabase
+      .from("album_socks")
+      .select("product_id, slug")
+      .not("product_id", "is", null)
       .limit(200);
 
-    if (merchErr) throw merchErr;
+    if (sockErr) throw sockErr;
 
-    const candidates = (merchRows || []).filter((p: any) =>
-      Array.isArray(p.images) || Array.isArray(p.categories) ? true : true
-    );
+    const productIds = (sockLinks || []).map((r: any) => r.product_id).filter(Boolean) as string[];
+    if (productIds.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, dryRun: isDryRun, found: 0, migrated: 0, skipped: 0, errors: [] }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    const base64Socks = (candidates as any[]).filter((p) => {
-      const isSock = Array.isArray(p.categories) ? p.categories.includes("socks") : true; // fallback
-      return isSock && typeof p.primary_image === "string" && p.primary_image.startsWith("data:image/");
-    });
+    // 2) Haal platform_products op in kleine chunks en filter base64 in code
+    const chunkSize = 5;
+    const chunks: string[][] = [];
+    for (let i = 0; i < productIds.length; i += chunkSize) chunks.push(productIds.slice(i, i + chunkSize));
 
+    const candidates: any[] = [];
+    for (const ids of chunks) {
+      const { data, error } = await supabase
+        .from("platform_products")
+        .select("id, slug, primary_image, images")
+        .in("id", ids)
+        .eq("status", "active");
+
+      if (error) throw error;
+      candidates.push(...(data || []));
+
+      // Stop vroeg zodra we genoeg base64 candidates hebben verzameld
+      if (candidates.length >= 200) break;
+    }
+
+    const base64Socks = candidates.filter((p) => typeof p.primary_image === "string" && p.primary_image.startsWith("data:image/"));
     const items = base64Socks.slice(0, runLimit);
+
     console.log("🧦 Found base64 sock products", { count: items.length });
 
     let migrated = 0;
@@ -92,12 +107,10 @@ function sha256Hex(input: Uint8Array): Promise<string> {
           continue;
         }
 
-        const { error: uploadError } = await supabase.storage
-          .from("socks")
-          .upload(path, bytes, {
-            contentType: ext === "jpg" ? "image/jpeg" : `image/${ext}`,
-            upsert: true,
-          });
+        const { error: uploadError } = await supabase.storage.from("socks").upload(path, bytes, {
+          contentType: ext === "jpg" ? "image/jpeg" : `image/${ext}`,
+          upsert: true,
+        });
 
         if (uploadError) throw uploadError;
 
@@ -147,4 +160,5 @@ function sha256Hex(input: Uint8Array): Promise<string> {
     );
   }
 });
+
 

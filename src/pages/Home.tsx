@@ -40,7 +40,7 @@ const Home = () => {
   });
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-b from-green-50 to-red-50/30 dark:from-green-950/30 dark:to-red-950/20">
+    <div className="min-h-screen relative bg-gradient-to-b from-green-50/70 to-green-100/40 dark:from-green-950/20 dark:to-green-900/10">
       {/* Subtle Snowfall */}
       <SnowfallOverlay />
 

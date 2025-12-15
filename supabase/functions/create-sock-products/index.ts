@@ -46,6 +46,9 @@ serve(async (req) => {
       throw new Error('Sock not found');
     }
 
+    // Generate slug FIRST before using it
+    const productSlug = generateProductSlug(sockData.artist_name, sockData.album_title);
+
     const images = styleVariants?.length > 0
       ? styleVariants.map((v: any) => v.url)
       : [sockData.base_design_url];
@@ -86,9 +89,6 @@ serve(async (req) => {
     }
 
     const finalImages = uploadedImages.length > 0 ? uploadedImages : images;
-
-    // Create Premium Merino Wool Socks
-    const productSlug = generateProductSlug(sockData.artist_name, sockData.album_title);
     const description = `Premium merino wol sokken geïnspireerd op "${sockData.album_title}" van ${sockData.artist_name}.
 
 ✨ 70% merino wool, 25% polyamide, 5% elastaan

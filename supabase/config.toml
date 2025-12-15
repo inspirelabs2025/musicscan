@@ -494,3 +494,9 @@ verify_jwt = false
 
 [functions.migrate-sock-base64-to-storage]
 verify_jwt = false
+
+[functions.repair-christmas-sock-images]
+verify_jwt = false
+
+[[functions.repair-christmas-sock-images.schedule]]
+cron = "*/3 * * * *"

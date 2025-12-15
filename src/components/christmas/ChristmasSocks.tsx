@@ -25,19 +25,20 @@ export const ChristmasSocks = () => {
     queryFn: async () => {
       const { data: albumSocks, error: albumError } = await supabase
         .from('album_socks')
-        .select('product_id, album_cover_url')
+        .select('product_id, mockup_url, base_design_url')
         .eq('pattern_type', 'christmas')
         .not('product_id', 'is', null)
         .limit(50);
 
       if (albumError) throw albumError;
 
-      const sockMeta = new Map<string, string>();
+      const sockImageByProductId = new Map<string, string>();
       for (const s of albumSocks || []) {
-        if (s.product_id && s.album_cover_url) sockMeta.set(s.product_id, s.album_cover_url);
+        const imageUrl = s.mockup_url || s.base_design_url;
+        if (s.product_id && imageUrl) sockImageByProductId.set(s.product_id, imageUrl);
       }
 
-      const productIds = Array.from(sockMeta.keys());
+      const productIds = Array.from(sockImageByProductId.keys());
       if (productIds.length === 0) return [];
 
       const { data, error } = await supabase
@@ -51,7 +52,7 @@ export const ChristmasSocks = () => {
 
       const all: ChristmasSockProduct[] = [];
       for (const p of (data || []) as Omit<ChristmasSockProduct, 'image_url'>[]) {
-        const image_url = sockMeta.get(p.id);
+        const image_url = sockImageByProductId.get(p.id);
         if (!image_url) continue;
         all.push({ ...p, image_url });
       }

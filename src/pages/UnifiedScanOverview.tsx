@@ -185,7 +185,7 @@ const UnifiedScanOverview = () => {
 
   const getSourceLabel = (sourceTable: string) => {
     switch (sourceTable) {
-      case "ai_scan_results": return "AI Scan";
+      case "ai_scan_results": return "Smart Scan";
       case "cd_scan": return "Collection (CD)";
       case "vinyl2_scan": return "Collection (Vinyl)";
       default: return "Unknown";
@@ -401,7 +401,7 @@ const UnifiedScanOverview = () => {
               icon={Database}
             />
             <StatCard
-              title="AI Scans (V2)"
+              title="Smart Scans (V2)"
               value={stats?.v2Scans || 0}
               icon={Scan}
             />

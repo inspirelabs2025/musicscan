@@ -155,7 +155,7 @@ const Scanner = () => {
       autoStartTriggered.current = true;
       
       toast({
-        title: "AI-scan herkend",
+        title: "Smart scan herkend",
         description: `${urlArtist} - ${urlTitle} wordt automatisch gezocht${urlCondition ? ' met conditie ingevuld' : ''}...`,
         variant: "default"
       });
@@ -578,7 +578,7 @@ const Scanner = () => {
   const steps = [
     { id: 0, title: "Media Type", description: "Wat ga je scannen?", active: !state.mediaType && !state.discogsIdMode },
     { id: 1, title: "Foto's", description: "Upload je foto's", active: state.mediaType && !state.discogsIdMode && state.uploadedFiles.length === 0 },
-    { id: 2, title: "Analyseren", description: "AI analyseert", active: isAnalyzing },
+    { id: 2, title: "Analyseren", description: "Slim analyseren", active: isAnalyzing },
     { id: 3, title: "Zoeken", description: "Discogs zoeken", active: isSearching },
     { id: 4, title: "Prijzen", description: "Prijzen berekenen", active: searchResults.length > 0 && !state.selectedCondition },
     { id: 5, title: "Voltooid", description: "Scan opslaan", active: state.selectedCondition && (state.calculatedAdvicePrice || state.manualAdvicePrice) }

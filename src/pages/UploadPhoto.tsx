@@ -96,7 +96,7 @@ export default function UploadPhoto() {
       }
       
       toast({
-        title: "AI Verrijking Compleet",
+        title: "Verrijking Compleet",
         description: `${result.tags.length} tags gegenereerd`,
       });
       
@@ -104,7 +104,7 @@ export default function UploadPhoto() {
     } catch (error: any) {
       setUploadProgress(0);
       toast({
-        title: "AI Verrijking Mislukt",
+        title: "Verrijking Mislukt",
         description: error.message,
         variant: "destructive",
       });
@@ -411,7 +411,7 @@ export default function UploadPhoto() {
                     className="flex-1 gap-2"
                   >
                     <Sparkles className="h-4 w-4" />
-                    {enrichMutation.isPending ? "AI Verrijken..." : "Verrijk met AI"}
+                    {enrichMutation.isPending ? "Verrijken..." : "Automatisch Verrijken"}
                   </Button>
                 </div>
               </Card>

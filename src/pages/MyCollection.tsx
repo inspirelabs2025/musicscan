@@ -503,14 +503,14 @@ export default function MyCollection() {
                Mijn Collectie
              </h1>
              <p className="text-muted-foreground max-w-2xl mx-auto">
-               Overzicht van alle scans en collectie-items. Inclusief AI scans zonder waarde en voltooide items met prijzen.
+               Overzicht van alle scans en collectie-items. Inclusief slimme scans zonder waarde en voltooide items met prijzen.
              </p>
              
              <div className="flex flex-wrap justify-center gap-3">
                <Button asChild variant="default">
                  <Link to="/ai-scan-v2" className="flex items-center gap-2">
                    <Scan className="w-4 h-4" />
-                   Nieuwe AI Scan
+                   Nieuwe Slimme Scan
                  </Link>
                </Button>
                

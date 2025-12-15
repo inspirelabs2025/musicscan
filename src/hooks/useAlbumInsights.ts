@@ -83,7 +83,7 @@ export const useAlbumInsights = (albumId?: string, albumType?: 'cd' | 'vinyl', a
       setInsights(data);
       
       toast({
-        title: "AI Insights Gegenereerd! 🎵",
+        title: "Inzichten Gegenereerd! 🎵",
         description: "Uitgebreide informatie over dit album is nu beschikbaar",
         variant: "default"
       });

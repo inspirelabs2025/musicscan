@@ -87,8 +87,8 @@ export const useCDAnalysis = () => {
       let errorTitle = "Analyse Mislukt";
       
       if (error.message?.includes('AI image analysis service unavailable')) {
-        errorTitle = "AI Service Tijdelijk Niet Beschikbaar";
-        errorMessage = "De AI beeldanalyse service is tijdelijk niet beschikbaar. Probeer het later opnieuw.";
+        errorTitle = "Service Tijdelijk Niet Beschikbaar";
+        errorMessage = "De beeldanalyse service is tijdelijk niet beschikbaar. Probeer het later opnieuw.";
       } else if (error.message?.includes('Image processing failed')) {
         errorTitle = "Beeldverwerking Mislukt";
         errorMessage = "De uploaded afbeeldingen konden niet worden verwerkt. Controleer of de afbeeldingen geldig zijn en probeer opnieuw.";

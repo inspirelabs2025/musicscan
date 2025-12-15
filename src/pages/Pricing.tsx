@@ -163,9 +163,9 @@ const Pricing = () => {
         <title>Prijzen & Abonnementen - MusicScan</title>
         <meta 
           name="description" 
-          content="Kies het perfecte abonnement voor jouw muziekcollectie. Van gratis starter tot professionele tools voor handelaars. AI scanning vanaf €3,95 per maand." 
+          content="Kies het perfecte abonnement voor jouw muziekcollectie. Van gratis starter tot professionele tools voor handelaars. Smart scanning vanaf €3,95 per maand." 
         />
-        <meta name="keywords" content="muziek abonnement, vinyl scanner prijzen, cd collectie management, AI muziek analyse" />
+        <meta name="keywords" content="muziek abonnement, vinyl scanner prijzen, cd collectie management, slimme muziek analyse" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background to-muted">
@@ -260,9 +260,9 @@ const Pricing = () => {
               </div>
               
               <div>
-                <h3 className="text-lg font-semibold mb-3">Wat gebeurt er met mijn data bij opzeggen?</h3>
+              <h3 className="text-lg font-semibold mb-3">Wat gebeurt er met mijn data bij opzeggen?</h3>
                 <p className="text-muted-foreground">
-                  Je behoudt toegang tot al je gescande data. Alleen nieuwe AI scans zijn beperkt tot het gratis plan limiet.
+                  Je behoudt toegang tot al je gescande data. Alleen nieuwe scans zijn beperkt tot het gratis plan limiet.
                 </p>
               </div>
               

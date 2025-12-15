@@ -95,11 +95,11 @@ export default function AIScanV2Overview() {
             <h1 className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
               <Brain className="h-8 w-8" />
               <Sparkles className="h-6 w-6 text-yellow-500" />
-              AI Scan V2 Overzicht
+              Smart Scan V2 Overzicht
               <Badge variant="secondary" className="ml-2">BETA</Badge>
             </h1>
             <p className="text-muted-foreground">
-              Verbeterde AI-analyse resultaten met GPT-4.1 en multi-pass analyse
+              Verbeterde slimme analyse resultaten met GPT-4.1 en multi-pass analyse
             </p>
           </div>
 
@@ -159,7 +159,7 @@ export default function AIScanV2Overview() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Recente V2 AI Scans
+                Recente V2 Smart Scans
                 <Badge variant="outline">{v2Scans.length}</Badge>
               </CardTitle>
             </CardHeader>
@@ -167,7 +167,7 @@ export default function AIScanV2Overview() {
               {v2Scans.length === 0 ? (
                 <div className="text-center py-8">
                   <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Nog geen V2 AI scans uitgevoerd.</p>
+                  <p className="text-muted-foreground">Nog geen V2 Smart scans uitgevoerd.</p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Start je eerste V2 analyse om de verbeterde resultaten te zien.
                   </p>

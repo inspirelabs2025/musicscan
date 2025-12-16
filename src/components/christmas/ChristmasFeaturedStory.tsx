@@ -40,12 +40,14 @@ const extractSummary = (content: string, maxLength: number = 280): string => {
   return truncated.slice(0, lastSpace) + '...';
 };
 
-const getDayOfYear = (): number => {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  const diff = now.getTime() - start.getTime();
-  const oneDay = 1000 * 60 * 60 * 24;
-  return Math.floor(diff / oneDay);
+// Shuffle array randomly
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 };
 
 export const ChristmasFeaturedStory = () => {
@@ -86,10 +88,9 @@ export const ChristmasFeaturedStory = () => {
 
   if (!stories || stories.length === 0) return null;
 
-  // Select story based on day of year for daily rotation
-  const dayOfYear = getDayOfYear();
-  const storyIndex = dayOfYear % stories.length;
-  const featuredStory = stories[storyIndex];
+  // Select random story on each render
+  const shuffled = shuffleArray(stories);
+  const featuredStory = shuffled[0];
 
   const summary = featuredStory.story_content 
     ? extractSummary(featuredStory.story_content, 300) 

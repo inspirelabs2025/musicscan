@@ -17,9 +17,19 @@ interface ChristmasSong {
   single_name: string | null;
 }
 
+// Shuffle array randomly
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 export const ChristmasProducts = () => {
   const { data: songs, isLoading } = useQuery({
-    queryKey: ['christmas-songs-by-tags'],
+    queryKey: ['christmas-songs-by-tags', Date.now()], // Force refetch on each mount
     queryFn: async () => {
       const { data, error } = await supabase
         .from('music_stories')
@@ -33,13 +43,13 @@ export const ChristmasProducts = () => {
           tags
         `)
         .contains('tags', ['christmas'])
-        .order('artwork_url', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false })
-        .limit(8);
+        .not('artwork_url', 'is', null);
 
       if (error) throw error;
-      return data as ChristmasSong[];
+      // Shuffle and take 8
+      return shuffleArray(data as ChristmasSong[]).slice(0, 8);
     },
+    staleTime: 0, // Always refetch
   });
 
   if (isLoading) {

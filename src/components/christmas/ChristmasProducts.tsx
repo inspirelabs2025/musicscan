@@ -28,9 +28,10 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 };
 
 export const ChristmasProducts = () => {
-  const { data: songs, isLoading } = useQuery({
-    queryKey: ['christmas-songs-by-tags', Date.now()], // Force refetch on each mount
+  const { data: songs, isLoading, error } = useQuery({
+    queryKey: ['christmas-songs-by-tags'],
     queryFn: async () => {
+      console.log('Fetching christmas songs...');
       const { data, error } = await supabase
         .from('music_stories')
         .select(`
@@ -43,14 +44,23 @@ export const ChristmasProducts = () => {
           tags
         `)
         .contains('tags', ['christmas'])
-        .not('artwork_url', 'is', null);
+        .not('artwork_url', 'is', null)
+        .limit(20);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching christmas songs:', error);
+        throw error;
+      }
+      console.log('Fetched christmas songs:', data?.length);
       // Shuffle and take 8
       return shuffleArray(data as ChristmasSong[]).slice(0, 8);
     },
-    staleTime: 0, // Always refetch
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  if (error) {
+    console.error('Query error:', error);
+  }
 
   if (isLoading) {
     return (

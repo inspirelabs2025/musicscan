@@ -37,7 +37,7 @@ export const ALL_SCHEDULED_CRONJOBS = [
   { name: 'composer-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt componist verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, expectedPerDay: 1440, outputTable: 'music_stories' },
   { name: 'soundtrack-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt soundtrack verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, expectedPerDay: 1440, outputTable: 'music_stories' },
   { name: 'generate-daily-challenge', schedule: '0 5 * * *', time: '05:00 UTC', description: 'Genereert dagelijkse quiz challenge', category: 'Content Generatie', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'daily_challenges' },
-  { name: 'daily-youtube-discoveries', schedule: '0 4 * * *', time: '04:00 UTC', description: 'Ontdekt nieuwe YouTube muziekvideo\'s', category: 'Content Generatie', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'youtube_music_videos' },
+  { name: 'daily-youtube-discoveries', schedule: '0 4 * * *', time: '04:00 UTC', description: 'Ontdekt nieuwe YouTube muziekvideo\'s', category: 'Content Generatie', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'youtube_discoveries' },
 
   // Data Import & Crawling
   { name: 'discogs-lp-crawler', schedule: '0 * * * *', time: 'Elk uur :00', description: 'Haalt nieuwe vinyl releases op van Discogs', category: 'Data Import', expectedIntervalMinutes: 60, expectedPerDay: 24, outputTable: 'discogs_import_log' },

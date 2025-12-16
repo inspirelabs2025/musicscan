@@ -1,62 +1,79 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, subWeeks } from "date-fns";
 
-// Complete list of all scheduled cronjobs from config.toml with categories
+// Complete list of all scheduled cronjobs from config.toml with categories and exact times
 export const ALL_SCHEDULED_CRONJOBS = [
   // Content Generatie
-  { name: 'daily-anecdote-generator', schedule: '5 6 * * *', description: 'Genereert dagelijkse muziek anekdotes met AI', category: 'Content Generatie', expectedIntervalMinutes: 1440 },
-  { name: 'generate-daily-music-history', schedule: '0 6 * * *', description: 'Schrijft "Vandaag in de Muziekgeschiedenis" artikelen', category: 'Content Generatie', expectedIntervalMinutes: 1440 },
-  { name: 'daily-artist-stories-generator', schedule: '0 1 * * *', description: 'Selecteert artiesten voor story generatie', category: 'Content Generatie', expectedIntervalMinutes: 1440 },
-  { name: 'artist-stories-batch-processor', schedule: '* * * * *', description: 'Genereert artist stories (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1 },
-  { name: 'singles-batch-processor', schedule: '* * * * *', description: 'Verwerkt singles queue (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1 },
-  { name: 'batch-blog-processor', schedule: '*/10 * * * *', description: 'Genereert blog posts voor albums', category: 'Content Generatie', expectedIntervalMinutes: 10 },
-  { name: 'latest-discogs-news', schedule: '0 3 * * *', description: 'Genereert nieuws over Discogs releases', category: 'Content Generatie', expectedIntervalMinutes: 1440 },
-  { name: 'composer-batch-processor', schedule: '* * * * *', description: 'Verwerkt componist verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1 },
-  { name: 'soundtrack-batch-processor', schedule: '* * * * *', description: 'Verwerkt soundtrack verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1 },
+  { name: 'daily-anecdote-generator', schedule: '5 6 * * *', time: '06:05 UTC', description: 'Genereert dagelijkse muziek anekdotes met AI', category: 'Content Generatie', expectedIntervalMinutes: 1440, outputTable: 'music_anecdotes' },
+  { name: 'generate-daily-music-history', schedule: '0 6 * * *', time: '06:00 UTC', description: 'Schrijft "Vandaag in de Muziekgeschiedenis" artikelen', category: 'Content Generatie', expectedIntervalMinutes: 1440, outputTable: 'music_history_events' },
+  { name: 'daily-artist-stories-generator', schedule: '0 1 * * *', time: '01:00 UTC', description: 'Selecteert artiesten voor story generatie', category: 'Content Generatie', expectedIntervalMinutes: 1440, outputTable: 'batch_queue_items' },
+  { name: 'artist-stories-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Genereert artist stories (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, outputTable: 'artist_stories' },
+  { name: 'singles-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt singles queue (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, outputTable: 'music_stories' },
+  { name: 'batch-blog-processor', schedule: '*/10 * * * *', time: 'Elke 10 min', description: 'Genereert blog posts voor albums', category: 'Content Generatie', expectedIntervalMinutes: 10, outputTable: 'blog_posts' },
+  { name: 'latest-discogs-news', schedule: '0 3 * * *', time: '03:00 UTC', description: 'Genereert nieuws over Discogs releases', category: 'Content Generatie', expectedIntervalMinutes: 1440, outputTable: 'news_blog_posts' },
+  { name: 'composer-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt componist verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, outputTable: 'music_stories' },
+  { name: 'soundtrack-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt soundtrack verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, outputTable: 'music_stories' },
   
   // Data Import & Crawling
-  { name: 'discogs-lp-crawler', schedule: '0 * * * *', description: 'Haalt nieuwe vinyl releases op van Discogs', category: 'Data Import', expectedIntervalMinutes: 60 },
-  { name: 'process-discogs-queue', schedule: '*/2 * * * *', description: 'Verwerkt Discogs import queue', category: 'Data Import', expectedIntervalMinutes: 2 },
-  { name: 'generate-curated-artists', schedule: '0 2 * * *', description: 'Ontdekt nieuwe interessante artiesten', category: 'Data Import', expectedIntervalMinutes: 1440 },
-  { name: 'process-spotify-new-releases', schedule: '0 9 * * *', description: 'Haalt nieuwe Spotify releases op en verwerkt ze', category: 'Data Import', expectedIntervalMinutes: 1440 },
-  { name: 'queue-dance-house-content', schedule: '0 7 * * *', description: 'Queue Dance/House content voor generatie', category: 'Data Import', expectedIntervalMinutes: 1440 },
-  { name: 'top2000-auto-processor', schedule: '* * * * *', description: 'Verwerkt Top 2000 enrichment en analyse', category: 'Data Import', expectedIntervalMinutes: 1 },
+  { name: 'discogs-lp-crawler', schedule: '0 * * * *', time: 'Elk uur :00', description: 'Haalt nieuwe vinyl releases op van Discogs', category: 'Data Import', expectedIntervalMinutes: 60, outputTable: 'discogs_import_log' },
+  { name: 'process-discogs-queue', schedule: '*/2 * * * *', time: 'Elke 2 min', description: 'Verwerkt Discogs import queue', category: 'Data Import', expectedIntervalMinutes: 2, outputTable: 'discogs_import_log' },
+  { name: 'generate-curated-artists', schedule: '0 2 * * *', time: '02:00 UTC', description: 'Ontdekt nieuwe interessante artiesten', category: 'Data Import', expectedIntervalMinutes: 1440, outputTable: 'curated_artists' },
+  { name: 'process-spotify-new-releases', schedule: '0 9 * * *', time: '09:00 UTC', description: 'Haalt nieuwe Spotify releases op en verwerkt ze', category: 'Data Import', expectedIntervalMinutes: 1440, outputTable: 'spotify_new_releases_processed' },
+  { name: 'queue-dance-house-content', schedule: '0 7 * * *', time: '07:00 UTC', description: 'Queue Dance/House content voor generatie', category: 'Data Import', expectedIntervalMinutes: 1440, outputTable: 'batch_queue_items' },
+  { name: 'top2000-auto-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt Top 2000 enrichment en analyse', category: 'Data Import', expectedIntervalMinutes: 1, outputTable: 'top2000_entries' },
   
   // Social Media Posting
-  { name: 'schedule-music-history-posts', schedule: '5 6 * * *', description: 'Plant muziekgeschiedenis posts voor de dag', category: 'Social Media', expectedIntervalMinutes: 1440 },
-  { name: 'post-scheduled-music-history', schedule: '0 8-22 * * *', description: 'Post muziekgeschiedenis naar Facebook (elk uur 8-22)', category: 'Social Media', expectedIntervalMinutes: 60 },
-  { name: 'post-scheduled-singles', schedule: '30 9-21/2 * * *', description: 'Post singles naar Facebook (elke 2 uur)', category: 'Social Media', expectedIntervalMinutes: 120 },
-  { name: 'post-scheduled-youtube', schedule: '0 9-21 * * *', description: 'Post YouTube discoveries naar Facebook', category: 'Social Media', expectedIntervalMinutes: 60 },
+  { name: 'schedule-music-history-posts', schedule: '5 6 * * *', time: '06:05 UTC', description: 'Plant muziekgeschiedenis posts voor de dag', category: 'Social Media', expectedIntervalMinutes: 1440, outputTable: 'music_history_facebook_queue' },
+  { name: 'post-scheduled-music-history', schedule: '0 8-22 * * *', time: '08:00-22:00 UTC (elk uur)', description: 'Post muziekgeschiedenis naar Facebook', category: 'Social Media', expectedIntervalMinutes: 60, outputTable: 'music_history_facebook_queue' },
+  { name: 'post-scheduled-singles', schedule: '30 9-21/2 * * *', time: '09:30-21:30 UTC (elke 2u)', description: 'Post singles naar Facebook', category: 'Social Media', expectedIntervalMinutes: 120, outputTable: 'singles_facebook_queue' },
+  { name: 'post-scheduled-youtube', schedule: '0 9-21 * * *', time: '09:00-21:00 UTC (elk uur)', description: 'Post YouTube discoveries naar Facebook', category: 'Social Media', expectedIntervalMinutes: 60, outputTable: 'youtube_facebook_queue' },
   
   // SEO & Indexing
-  { name: 'indexnow-processor', schedule: '*/5 * * * *', description: 'Verwerkt URLs voor IndexNow submission', category: 'SEO', expectedIntervalMinutes: 5 },
-  { name: 'indexnow-cron', schedule: '*/15 * * * *', description: 'Batch verzending naar IndexNow API', category: 'SEO', expectedIntervalMinutes: 15 },
-  { name: 'sitemap-queue-processor', schedule: '*/3 * * * *', description: 'Regenereert sitemaps bij wijzigingen', category: 'SEO', expectedIntervalMinutes: 3 },
-  { name: 'generate-static-sitemaps', schedule: '0 3 * * *', description: 'Genereert statische XML sitemaps', category: 'SEO', expectedIntervalMinutes: 1440 },
-  { name: 'generate-llm-sitemap', schedule: '0 4 * * *', description: 'Maakt sitemap voor AI crawlers', category: 'SEO', expectedIntervalMinutes: 1440 },
-  { name: 'auto-generate-keywords', schedule: '0 3 * * *', description: 'Genereert SEO keywords met AI', category: 'SEO', expectedIntervalMinutes: 1440 },
+  { name: 'indexnow-processor', schedule: '*/5 * * * *', time: 'Elke 5 min', description: 'Verwerkt URLs voor IndexNow submission', category: 'SEO', expectedIntervalMinutes: 5, outputTable: 'indexnow_queue' },
+  { name: 'indexnow-cron', schedule: '*/15 * * * *', time: 'Elke 15 min', description: 'Batch verzending naar IndexNow API', category: 'SEO', expectedIntervalMinutes: 15, outputTable: 'indexnow_submissions' },
+  { name: 'sitemap-queue-processor', schedule: '*/3 * * * *', time: 'Elke 3 min', description: 'Regenereert sitemaps bij wijzigingen', category: 'SEO', expectedIntervalMinutes: 3, outputTable: 'sitemap_logs' },
+  { name: 'generate-static-sitemaps', schedule: '0 3 * * *', time: '03:00 UTC', description: 'Genereert statische XML sitemaps', category: 'SEO', expectedIntervalMinutes: 1440, outputTable: 'sitemap_logs' },
+  { name: 'generate-llm-sitemap', schedule: '0 4 * * *', time: '04:00 UTC', description: 'Maakt sitemap voor AI crawlers', category: 'SEO', expectedIntervalMinutes: 1440, outputTable: 'sitemap_logs' },
+  { name: 'auto-generate-keywords', schedule: '0 3 * * *', time: '03:00 UTC', description: 'Genereert SEO keywords met AI', category: 'SEO', expectedIntervalMinutes: 1440, outputTable: null },
   
   // Product Generatie
-  { name: 'bulk-poster-processor', schedule: '*/5 * * * *', description: 'Genereert poster designs voor webshop', category: 'Products', expectedIntervalMinutes: 5 },
-  { name: 'backfill-christmas-socks', schedule: '*/2 * * * *', description: 'Genereert kerst sokken designs', category: 'Products', expectedIntervalMinutes: 2 },
-  { name: 'repair-christmas-sock-images', schedule: '*/3 * * * *', description: 'Repareert kerst sok afbeeldingen', category: 'Products', expectedIntervalMinutes: 3 },
+  { name: 'bulk-poster-processor', schedule: '*/5 * * * *', time: 'Elke 5 min', description: 'Genereert poster designs voor webshop', category: 'Products', expectedIntervalMinutes: 5, outputTable: 'platform_products' },
+  { name: 'backfill-christmas-socks', schedule: '*/2 * * * *', time: 'Elke 2 min', description: 'Genereert kerst sokken designs', category: 'Products', expectedIntervalMinutes: 2, outputTable: 'album_socks' },
+  { name: 'repair-christmas-sock-images', schedule: '*/3 * * * *', time: 'Elke 3 min', description: 'Repareert kerst sok afbeeldingen', category: 'Products', expectedIntervalMinutes: 3, outputTable: 'album_socks' },
   
   // Maintenance & Community
-  { name: 'refresh-featured-photos', schedule: '0 */6 * * *', description: 'Ververst uitgelichte community fotos', category: 'Community', expectedIntervalMinutes: 360 },
+  { name: 'refresh-featured-photos', schedule: '0 */6 * * *', time: 'Elke 6 uur :00', description: 'Ververst uitgelichte community fotos', category: 'Community', expectedIntervalMinutes: 360, outputTable: 'photos' },
 ] as const;
 
 export type CronjobCategory = 'Content Generatie' | 'Data Import' | 'Social Media' | 'SEO' | 'Products' | 'Community';
 
-export interface QueueHealth {
+export type DateRangePreset = 'today' | 'yesterday' | 'this_week' | 'last_week' | 'custom';
+
+export interface DateRange {
+  start: Date;
+  end: Date;
+  preset: DateRangePreset;
+}
+
+export interface OutputStat {
+  content_type: string;
+  label: string;
+  total_created: number;
+  total_posted: number;
+  total_failed: number;
+}
+
+export interface QueueStat {
   queue_name: string;
   pending: number;
   processing: number;
   completed: number;
   failed: number;
-  total: number;
+  oldest_pending_at: string | null;
   last_activity: string | null;
-  oldest_pending: string | null;
+  items_per_hour: number | null;
 }
 
 export interface CronjobHealth {
@@ -82,21 +99,80 @@ export interface RecentExecution {
   error_message: string | null;
 }
 
-export const useCronjobCommandCenter = () => {
+// Helper to get date range from preset
+export const getDateRangeFromPreset = (preset: DateRangePreset): DateRange => {
+  const now = new Date();
+  switch (preset) {
+    case 'today':
+      return { start: startOfDay(now), end: endOfDay(now), preset };
+    case 'yesterday':
+      const yesterday = subDays(now, 1);
+      return { start: startOfDay(yesterday), end: endOfDay(yesterday), preset };
+    case 'this_week':
+      return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfDay(now), preset };
+    case 'last_week':
+      const lastWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+      const lastWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+      return { start: lastWeekStart, end: lastWeekEnd, preset };
+    default:
+      return { start: startOfDay(now), end: endOfDay(now), preset: 'today' };
+  }
+};
+
+// Get comparison date range (previous period)
+export const getComparisonDateRange = (current: DateRange): DateRange => {
+  const daysDiff = Math.ceil((current.end.getTime() - current.start.getTime()) / (1000 * 60 * 60 * 24));
+  return {
+    start: subDays(current.start, daysDiff),
+    end: subDays(current.end, daysDiff),
+    preset: 'custom',
+  };
+};
+
+export const useCronjobCommandCenter = (dateRange: DateRange) => {
   const queryClient = useQueryClient();
 
-  // Fetch queue health from RPC
-  const { data: queueHealth, isLoading: isLoadingQueues } = useQuery({
-    queryKey: ['cronjob-queue-health'],
+  // Fetch output statistics from result tables
+  const { data: outputStats, isLoading: isLoadingOutput } = useQuery({
+    queryKey: ['cronjob-output-stats', format(dateRange.start, 'yyyy-MM-dd'), format(dateRange.end, 'yyyy-MM-dd')],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_queue_health_overview');
+      const { data, error } = await supabase.rpc('get_output_totals', {
+        p_start_date: format(dateRange.start, 'yyyy-MM-dd'),
+        p_end_date: format(dateRange.end, 'yyyy-MM-dd'),
+      });
       if (error) throw error;
-      return (data || []) as QueueHealth[];
+      return (data || []) as OutputStat[];
+    },
+    refetchInterval: 60000,
+  });
+
+  // Fetch comparison output statistics (previous period)
+  const comparisonRange = getComparisonDateRange(dateRange);
+  const { data: comparisonStats } = useQuery({
+    queryKey: ['cronjob-output-stats-comparison', format(comparisonRange.start, 'yyyy-MM-dd'), format(comparisonRange.end, 'yyyy-MM-dd')],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_output_totals', {
+        p_start_date: format(comparisonRange.start, 'yyyy-MM-dd'),
+        p_end_date: format(comparisonRange.end, 'yyyy-MM-dd'),
+      });
+      if (error) throw error;
+      return (data || []) as OutputStat[];
+    },
+    refetchInterval: 60000,
+  });
+
+  // Fetch queue health
+  const { data: queueStats, isLoading: isLoadingQueues } = useQuery({
+    queryKey: ['cronjob-queue-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_all_queue_stats');
+      if (error) throw error;
+      return (data || []) as QueueStat[];
     },
     refetchInterval: 30000,
   });
 
-  // Fetch cronjob health stats from RPC
+  // Fetch cronjob health stats from execution log
   const { data: cronjobHealth, isLoading: isLoadingHealth } = useQuery({
     queryKey: ['cronjob-health-stats'],
     queryFn: async () => {
@@ -128,7 +204,8 @@ export const useCronjobCommandCenter = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cronjob-queue-health'] });
+      queryClient.invalidateQueries({ queryKey: ['cronjob-output-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['cronjob-queue-stats'] });
       queryClient.invalidateQueries({ queryKey: ['cronjob-health-stats'] });
       queryClient.invalidateQueries({ queryKey: ['cronjob-recent-executions'] });
     }
@@ -143,7 +220,7 @@ export const useCronjobCommandCenter = () => {
         queryClient.invalidateQueries({ queryKey: ['cronjob-recent-executions'] });
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'batch_queue_items' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['cronjob-queue-health'] });
+        queryClient.invalidateQueries({ queryKey: ['cronjob-queue-stats'] });
       })
       .subscribe();
 
@@ -151,6 +228,28 @@ export const useCronjobCommandCenter = () => {
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
+
+  // Combine output stats with comparison data
+  const outputStatsWithComparison = useMemo(() => {
+    if (!outputStats) return [];
+    
+    return outputStats.map(stat => {
+      const previous = comparisonStats?.find(c => c.content_type === stat.content_type);
+      const previousCreated = previous?.total_created || 0;
+      const diff = stat.total_created - previousCreated;
+      const percentChange = previousCreated > 0 
+        ? Math.round(((stat.total_created - previousCreated) / previousCreated) * 100)
+        : stat.total_created > 0 ? 100 : 0;
+      
+      return {
+        ...stat,
+        previous_created: previousCreated,
+        diff,
+        percentChange,
+        trend: diff > 0 ? 'up' : diff < 0 ? 'down' : 'stable',
+      };
+    });
+  }, [outputStats, comparisonStats]);
 
   // Combine scheduled jobs with their health stats
   const cronjobsWithHealth = ALL_SCHEDULED_CRONJOBS.map(job => {
@@ -185,12 +284,21 @@ export const useCronjobCommandCenter = () => {
     neverRan: cronjobsWithHealth.filter(j => !j.health).length,
   };
 
-  // Queue stats
-  const queueStats = {
-    totalPending: queueHealth?.reduce((sum, q) => sum + (q.pending || 0), 0) || 0,
-    totalFailed: queueHealth?.reduce((sum, q) => sum + (q.failed || 0), 0) || 0,
-    totalProcessing: queueHealth?.reduce((sum, q) => sum + (q.processing || 0), 0) || 0,
-  };
+  // Queue summary stats
+  const queueSummary = useMemo(() => ({
+    totalPending: queueStats?.reduce((sum, q) => sum + (q.pending || 0), 0) || 0,
+    totalFailed: queueStats?.reduce((sum, q) => sum + (q.failed || 0), 0) || 0,
+    totalProcessing: queueStats?.reduce((sum, q) => sum + (q.processing || 0), 0) || 0,
+    totalCompleted: queueStats?.reduce((sum, q) => sum + (q.completed || 0), 0) || 0,
+  }), [queueStats]);
+
+  // Calculate total output for the period
+  const totalOutput = useMemo(() => ({
+    created: outputStats?.reduce((sum, s) => sum + s.total_created, 0) || 0,
+    posted: outputStats?.reduce((sum, s) => sum + s.total_posted, 0) || 0,
+    failed: outputStats?.reduce((sum, s) => sum + s.total_failed, 0) || 0,
+    previousCreated: comparisonStats?.reduce((sum, s) => sum + s.total_created, 0) || 0,
+  }), [outputStats, comparisonStats]);
 
   // Alerts
   const alerts = [
@@ -206,7 +314,7 @@ export const useCronjobCommandCenter = () => {
       message: `Overdue - verwacht elke ${j.expectedIntervalMinutes} min`,
       timestamp: j.health?.last_run_at,
     })),
-    ...(queueHealth?.filter(q => q.failed > 10) || []).map(q => ({
+    ...(queueStats?.filter(q => q.failed > 10) || []).map(q => ({
       type: 'error' as const,
       job: q.queue_name,
       message: `${q.failed} failed items in queue`,
@@ -215,14 +323,32 @@ export const useCronjobCommandCenter = () => {
   ];
 
   return {
+    // Date range info
+    dateRange,
+    comparisonRange,
+    
+    // Output statistics
+    outputStats: outputStatsWithComparison,
+    totalOutput,
+    
+    // Queue statistics
+    queueStats,
+    queueSummary,
+    
+    // Cronjob health
     cronjobsWithHealth,
     cronjobsByCategory,
-    queueHealth,
+    cronjobHealth,
     recentExecutions,
+    
+    // Overview stats
     stats,
-    queueStats,
     alerts,
-    isLoading: isLoadingQueues || isLoadingHealth || isLoadingRecent,
+    
+    // Loading states
+    isLoading: isLoadingOutput || isLoadingQueues || isLoadingHealth || isLoadingRecent,
+    
+    // Actions
     triggerCronjob,
   };
 };

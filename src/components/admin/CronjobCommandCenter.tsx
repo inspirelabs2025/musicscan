@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -22,28 +23,48 @@ import {
   Activity,
   AlertCircle,
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  Calendar,
   CheckCircle,
   ChevronDown,
   Clock,
   Database,
+  FileText,
   Loader2,
+  Minus,
+  Package,
   Play,
   RefreshCw,
-  XCircle,
-  Zap,
-  Timer,
-  TrendingUp,
-  FileText,
   Search,
   Share2,
-  Package,
+  Timer,
+  TrendingDown,
+  TrendingUp,
   Users,
-  Inbox,
+  XCircle,
+  Zap,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { toast } from "sonner";
-import { useCronjobCommandCenter, CronjobCategory, ALL_SCHEDULED_CRONJOBS } from "@/hooks/useCronjobCommandCenter";
+import { 
+  useCronjobCommandCenter, 
+  CronjobCategory, 
+  ALL_SCHEDULED_CRONJOBS,
+  DateRangePreset,
+  getDateRangeFromPreset,
+} from "@/hooks/useCronjobCommandCenter";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 const categoryIcons: Record<CronjobCategory, React.ReactNode> = {
   'Content Generatie': <FileText className="h-4 w-4" />,
@@ -64,17 +85,23 @@ const categoryColors: Record<CronjobCategory, string> = {
 };
 
 export const CronjobCommandCenter = () => {
+  const [datePreset, setDatePreset] = useState<DateRangePreset>('today');
+  const dateRange = getDateRangeFromPreset(datePreset);
+  
   const {
+    outputStats,
+    totalOutput,
+    queueStats,
+    queueSummary,
     cronjobsWithHealth,
     cronjobsByCategory,
-    queueHealth,
     recentExecutions,
     stats,
-    queueStats,
     alerts,
     isLoading,
     triggerCronjob,
-  } = useCronjobCommandCenter();
+    comparisonRange,
+  } = useCronjobCommandCenter(dateRange);
 
   const [expandedCategory, setExpandedCategory] = useState<string | null>('Content Generatie');
 
@@ -102,16 +129,52 @@ export const CronjobCommandCenter = () => {
     }
   };
 
-  const parseCronSchedule = (cron: string) => {
-    const parts = cron.split(' ');
-    if (parts[0] === '*' && parts[1] === '*') return 'Elke minuut';
-    if (parts[0].startsWith('*/')) return `Elke ${parts[0].replace('*/', '')} min`;
-    if (parts[1].startsWith('*/')) return `Elke ${parts[1].replace('*/', '')} uur`;
-    if (parts[1].includes('-')) return `${parts[1]} UTC (elk uur)`;
-    if (parts[1].includes(',')) return `${parts[1].split(',').length}x per dag`;
-    if (parts[0] !== '*' && parts[1] !== '*') return `${parts[1].padStart(2, '0')}:${parts[0].padStart(2, '0')} UTC`;
-    return cron;
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'up': return <TrendingUp className="h-4 w-4 text-green-500" />;
+      case 'down': return <TrendingDown className="h-4 w-4 text-destructive" />;
+      default: return <Minus className="h-4 w-4 text-muted-foreground" />;
+    }
   };
+
+  const getPresetLabel = (preset: DateRangePreset) => {
+    switch (preset) {
+      case 'today': return 'Vandaag';
+      case 'yesterday': return 'Gisteren';
+      case 'this_week': return 'Deze week';
+      case 'last_week': return 'Vorige week';
+      default: return 'Aangepast';
+    }
+  };
+
+  const getComparisonLabel = (preset: DateRangePreset) => {
+    switch (preset) {
+      case 'today': return 'vs gisteren';
+      case 'yesterday': return 'vs eergisteren';
+      case 'this_week': return 'vs vorige week';
+      case 'last_week': return 'vs 2 weken geleden';
+      default: return 'vs vorige periode';
+    }
+  };
+
+  // Calculate ETA for clearing queue
+  const calculateETA = (pending: number, itemsPerHour: number | null) => {
+    if (!itemsPerHour || itemsPerHour === 0 || pending === 0) return null;
+    const hours = pending / itemsPerHour;
+    if (hours < 1) return `${Math.round(hours * 60)} min`;
+    if (hours < 24) return `${Math.round(hours)} uur`;
+    return `${Math.round(hours / 24)} dagen`;
+  };
+
+  // Prepare chart data for output comparison
+  const chartData = outputStats
+    .filter(s => s.total_created > 0 || s.previous_created > 0)
+    .slice(0, 8)
+    .map(s => ({
+      name: s.label.length > 12 ? s.label.substring(0, 12) + '...' : s.label,
+      'Huidig': s.total_created,
+      'Vorig': s.previous_created,
+    }));
 
   const overallHealth = stats.errorJobs > 2 ? 'critical' : 
                         stats.errorJobs > 0 || stats.overdueJobs > 3 ? 'warning' : 'healthy';
@@ -128,60 +191,88 @@ export const CronjobCommandCenter = () => {
 
   return (
     <div className="space-y-6">
-      {/* Overview Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      {/* Date Selector Header */}
+      <Card>
+        <CardContent className="py-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+              <Select value={datePreset} onValueChange={(v) => setDatePreset(v as DateRangePreset)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Selecteer periode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">Vandaag</SelectItem>
+                  <SelectItem value="yesterday">Gisteren</SelectItem>
+                  <SelectItem value="this_week">Deze week</SelectItem>
+                  <SelectItem value="last_week">Vorige week</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-sm text-muted-foreground">
+                {format(dateRange.start, 'd MMM', { locale: nl })} - {format(dateRange.end, 'd MMM yyyy', { locale: nl })}
+              </span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Vergelijk met: {format(comparisonRange.start, 'd MMM', { locale: nl })} - {format(comparisonRange.end, 'd MMM', { locale: nl })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Output Overview Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4 pb-3">
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" />
-              <span className="text-2xl font-bold">{stats.totalJobs}</span>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold">{totalOutput.created}</p>
+                <p className="text-xs text-muted-foreground">Items Aangemaakt</p>
+              </div>
+              <div className="flex flex-col items-end">
+                {totalOutput.previousCreated > 0 && (
+                  <>
+                    <div className="flex items-center gap-1">
+                      {totalOutput.created >= totalOutput.previousCreated ? (
+                        <ArrowUp className="h-3 w-3 text-green-500" />
+                      ) : (
+                        <ArrowDown className="h-3 w-3 text-destructive" />
+                      )}
+                      <span className={`text-xs ${totalOutput.created >= totalOutput.previousCreated ? 'text-green-500' : 'text-destructive'}`}>
+                        {Math.abs(totalOutput.created - totalOutput.previousCreated)}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">was {totalOutput.previousCreated}</span>
+                  </>
+                )}
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">Totaal Jobs</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-3">
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-blue-500" />
-              <span className="text-2xl font-bold">{stats.activeJobs}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">Actief Nu</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <span className="text-2xl font-bold">{stats.healthyJobs}</span>
+              <span className="text-2xl font-bold">{totalOutput.posted}</span>
             </div>
-            <p className="text-xs text-muted-foreground">Gezond</p>
+            <p className="text-xs text-muted-foreground">Gepubliceerd</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-2">
+              <Database className="h-4 w-4 text-orange-500" />
+              <span className="text-2xl font-bold">{queueSummary.totalPending}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">In Queue</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center gap-2">
               <XCircle className="h-4 w-4 text-destructive" />
-              <span className="text-2xl font-bold">{stats.errorJobs}</span>
+              <span className="text-2xl font-bold">{queueSummary.totalFailed}</span>
             </div>
-            <p className="text-xs text-muted-foreground">Errors</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-3">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              <span className="text-2xl font-bold">{stats.overdueJobs}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">Overdue</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-3">
-            <div className="flex items-center gap-2">
-              <Inbox className="h-4 w-4 text-orange-500" />
-              <span className="text-2xl font-bold">{queueStats.totalPending}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">Queue Backlog</p>
+            <p className="text-xs text-muted-foreground">Failed Items</p>
           </CardContent>
         </Card>
       </div>
@@ -205,22 +296,25 @@ export const CronjobCommandCenter = () => {
                    'Alle systemen operationeel'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {stats.errorJobs > 0 && `${stats.errorJobs} errors`}
-                  {stats.errorJobs > 0 && stats.overdueJobs > 0 && ' • '}
-                  {stats.overdueJobs > 0 && `${stats.overdueJobs} overdue`}
-                  {queueStats.totalFailed > 0 && ` • ${queueStats.totalFailed} failed queue items`}
+                  {stats.healthyJobs}/{stats.totalJobs} jobs gezond
+                  {stats.errorJobs > 0 && ` • ${stats.errorJobs} errors`}
+                  {queueSummary.totalFailed > 0 && ` • ${queueSummary.totalFailed} queue failures`}
                 </p>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">{stats.totalJobs} Jobs</Badge>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="categories" className="space-y-4">
+      <Tabs defaultValue="output" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="categories">Per Categorie</TabsTrigger>
+          <TabsTrigger value="output">Output Statistieken</TabsTrigger>
+          <TabsTrigger value="schedules">Schedules</TabsTrigger>
           <TabsTrigger value="queues">Queue Health</TabsTrigger>
-          <TabsTrigger value="timeline">Activiteit</TabsTrigger>
+          <TabsTrigger value="categories">Per Categorie</TabsTrigger>
           <TabsTrigger value="alerts">
             Alerts
             {alerts.length > 0 && (
@@ -230,6 +324,213 @@ export const CronjobCommandCenter = () => {
             )}
           </TabsTrigger>
         </TabsList>
+
+        {/* Output Statistics Tab */}
+        <TabsContent value="output" className="space-y-4">
+          {/* Comparison Chart */}
+          {chartData.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Output Vergelijking</CardTitle>
+                <CardDescription>{getPresetLabel(datePreset)} {getComparisonLabel(datePreset)}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 30 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis type="number" className="text-xs" />
+                    <YAxis dataKey="name" type="category" width={100} className="text-xs" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }} 
+                    />
+                    <Legend />
+                    <Bar dataKey="Vorig" fill="hsl(var(--muted-foreground))" opacity={0.5} />
+                    <Bar dataKey="Huidig" fill="hsl(var(--primary))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Output Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {outputStats.map((stat) => (
+              <Card key={stat.content_type}>
+                <CardContent className="pt-4 pb-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-lg font-bold">{stat.total_created}</span>
+                    {stat.trend && getTrendIcon(stat.trend)}
+                  </div>
+                  <p className="text-xs font-medium truncate">{stat.label}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`text-[10px] ${stat.diff >= 0 ? 'text-green-500' : 'text-destructive'}`}>
+                      {stat.diff >= 0 ? '+' : ''}{stat.diff} {getComparisonLabel(datePreset)}
+                    </span>
+                  </div>
+                  {stat.total_posted !== stat.total_created && (
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      {stat.total_posted} gepubliceerd
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* Schedules Tab */}
+        <TabsContent value="schedules">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Cronjob Schedules
+              </CardTitle>
+              <CardDescription>Alle geplande tijdstippen voor automatische taken</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Functie</TableHead>
+                    <TableHead>Schedule</TableHead>
+                    <TableHead>Tijdstip</TableHead>
+                    <TableHead>Categorie</TableHead>
+                    <TableHead>Output Tabel</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ALL_SCHEDULED_CRONJOBS.map((job) => {
+                    const jobWithHealth = cronjobsWithHealth.find(j => j.name === job.name);
+                    return (
+                      <TableRow key={job.name}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(jobWithHealth?.health?.last_status, jobWithHealth?.isOverdue)}
+                            <span className="font-medium text-sm">{job.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{job.schedule}</code>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-mono text-xs">
+                            🕐 {job.time}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={categoryColors[job.category]}>
+                            {job.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {job.outputTable || '-'}
+                        </TableCell>
+                        <TableCell>
+                          {jobWithHealth?.health?.last_run_at ? (
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(jobWithHealth.health.last_run_at), { addSuffix: true, locale: nl })}
+                            </span>
+                          ) : (
+                            <Badge variant="outline">Niet gedraaid</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Queue Health Tab */}
+        <TabsContent value="queues">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Queue Health Overview
+              </CardTitle>
+              <CardDescription>Real-time status van alle verwerkingsqueues</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Queue</TableHead>
+                    <TableHead className="text-right">Pending</TableHead>
+                    <TableHead className="text-right">Processing</TableHead>
+                    <TableHead className="text-right">Completed</TableHead>
+                    <TableHead className="text-right">Failed</TableHead>
+                    <TableHead>Throughput</TableHead>
+                    <TableHead>ETA Leeg</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {queueStats?.map((queue) => {
+                    const eta = calculateETA(queue.pending, queue.items_per_hour);
+                    return (
+                      <TableRow key={queue.queue_name}>
+                        <TableCell className="font-medium">{queue.queue_name}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={queue.pending > 100 ? 'destructive' : queue.pending > 50 ? 'secondary' : 'outline'}>
+                            {queue.pending}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {queue.processing > 0 ? (
+                            <Badge className="bg-blue-500/10 text-blue-500">{queue.processing}</Badge>
+                          ) : <span className="text-muted-foreground">0</span>}
+                        </TableCell>
+                        <TableCell className="text-right text-green-500">{queue.completed.toLocaleString()}</TableCell>
+                        <TableCell className="text-right">
+                          {queue.failed > 0 ? (
+                            <Badge variant="destructive">{queue.failed.toLocaleString()}</Badge>
+                          ) : <span className="text-muted-foreground">0</span>}
+                        </TableCell>
+                        <TableCell>
+                          {queue.items_per_hour ? (
+                            <span className="text-sm">{queue.items_per_hour}/uur</span>
+                          ) : <span className="text-muted-foreground">-</span>}
+                        </TableCell>
+                        <TableCell>
+                          {eta ? (
+                            <Badge variant="outline" className="font-mono">
+                              <Timer className="h-3 w-3 mr-1" />
+                              {eta}
+                            </Badge>
+                          ) : queue.pending === 0 ? (
+                            <span className="text-green-500 text-sm">✓ Leeg</span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {queue.failed > 100 ? (
+                            <Badge variant="destructive">Kritiek</Badge>
+                          ) : queue.pending > 500 ? (
+                            <Badge className="bg-yellow-500/10 text-yellow-500">Backlog</Badge>
+                          ) : queue.processing > 0 ? (
+                            <Badge className="bg-blue-500/10 text-blue-500">Actief</Badge>
+                          ) : (
+                            <Badge className="bg-green-500/10 text-green-500">OK</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Categories View */}
         <TabsContent value="categories" className="space-y-4">
@@ -269,8 +570,8 @@ export const CronjobCommandCenter = () => {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Function</TableHead>
-                            <TableHead>Schedule</TableHead>
+                            <TableHead>Functie</TableHead>
+                            <TableHead>Tijdstip</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Laatste Run</TableHead>
                             <TableHead>Success Rate</TableHead>
@@ -296,7 +597,7 @@ export const CronjobCommandCenter = () => {
                                 </TableCell>
                                 <TableCell>
                                   <Badge variant="outline" className="font-mono text-[10px]">
-                                    {parseCronSchedule(job.schedule)}
+                                    {job.time}
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
@@ -348,169 +649,51 @@ export const CronjobCommandCenter = () => {
           })}
         </TabsContent>
 
-        {/* Queue Health */}
-        <TabsContent value="queues">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Queue Health Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Queue</TableHead>
-                    <TableHead>Pending</TableHead>
-                    <TableHead>Processing</TableHead>
-                    <TableHead>Completed</TableHead>
-                    <TableHead>Failed</TableHead>
-                    <TableHead>Laatste Activiteit</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {queueHealth?.map((queue) => (
-                    <TableRow key={queue.queue_name}>
-                      <TableCell className="font-medium">{queue.queue_name}</TableCell>
-                      <TableCell>
-                        <Badge variant={queue.pending > 100 ? 'destructive' : queue.pending > 50 ? 'secondary' : 'outline'}>
-                          {queue.pending}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {queue.processing > 0 ? (
-                          <Badge className="bg-blue-500/10 text-blue-500">{queue.processing}</Badge>
-                        ) : '0'}
-                      </TableCell>
-                      <TableCell className="text-green-500">{queue.completed}</TableCell>
-                      <TableCell>
-                        {queue.failed > 0 ? (
-                          <Badge variant="destructive">{queue.failed}</Badge>
-                        ) : '0'}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {queue.last_activity ? formatDistanceToNow(new Date(queue.last_activity), { addSuffix: true, locale: nl }) : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {queue.failed > 10 ? (
-                          <Badge variant="destructive">Kritiek</Badge>
-                        ) : queue.pending > 100 ? (
-                          <Badge className="bg-yellow-500/10 text-yellow-500">Backlog</Badge>
-                        ) : (
-                          <Badge className="bg-green-500/10 text-green-500">OK</Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Activity Timeline */}
-        <TabsContent value="timeline">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Timer className="h-5 w-5" />
-                Recente Activiteit
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[500px]">
-                <div className="space-y-2">
-                  {recentExecutions?.map((exec) => (
-                    <div 
-                      key={exec.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border"
-                    >
-                      <div className="flex items-center gap-3">
-                        {getStatusIcon(exec.status)}
-                        <div>
-                          <p className="font-medium text-sm">{exec.function_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(new Date(exec.started_at), 'dd MMM HH:mm:ss', { locale: nl })}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm">
-                        {exec.execution_time_ms && (
-                          <span className="text-muted-foreground font-mono">
-                            {exec.execution_time_ms > 1000 
-                              ? `${(exec.execution_time_ms / 1000).toFixed(1)}s`
-                              : `${exec.execution_time_ms}ms`}
-                          </span>
-                        )}
-                        {exec.items_processed !== null && exec.items_processed > 0 && (
-                          <Badge variant="secondary">{exec.items_processed} items</Badge>
-                        )}
-                        {exec.error_message && (
-                          <span className="text-xs text-destructive max-w-xs truncate">{exec.error_message}</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {(!recentExecutions || recentExecutions.length === 0) && (
-                    <p className="text-center text-muted-foreground py-8">Geen recente activiteit</p>
-                  )}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Alerts */}
+        {/* Alerts Tab */}
         <TabsContent value="alerts">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5" />
-                Alerts & Waarschuwingen ({alerts.length})
+                Alerts & Waarschuwingen
               </CardTitle>
             </CardHeader>
             <CardContent>
               {alerts.length === 0 ? (
-                <div className="text-center py-8">
-                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
-                  <p className="text-muted-foreground">Geen actieve alerts</p>
+                <div className="text-center py-8 text-muted-foreground">
+                  <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
+                  <p>Geen actieve alerts</p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {alerts.map((alert, idx) => (
-                    <div 
-                      key={idx}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${
-                        alert.type === 'error' ? 'bg-destructive/5 border-destructive/20' : 'bg-yellow-500/5 border-yellow-500/20'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        {alert.type === 'error' ? (
-                          <XCircle className="h-5 w-5 text-destructive" />
-                        ) : (
-                          <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                        )}
-                        <div>
-                          <p className="font-medium text-sm">{alert.job}</p>
-                          <p className="text-xs text-muted-foreground">{alert.message}</p>
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-2">
+                    {alerts.map((alert, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-3 rounded-lg flex items-center justify-between ${
+                          alert.type === 'error' ? 'bg-destructive/10' : 'bg-yellow-500/10'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {alert.type === 'error' ? (
+                            <XCircle className="h-4 w-4 text-destructive" />
+                          ) : (
+                            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                          )}
+                          <div>
+                            <p className="font-medium text-sm">{alert.job}</p>
+                            <p className="text-xs text-muted-foreground">{alert.message}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
                         {alert.timestamp && (
                           <span className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true, locale: nl })}
                           </span>
                         )}
-                        <Button variant="outline" size="sm" onClick={() => handleTrigger(alert.job)}>
-                          <RefreshCw className="h-3 w-3 mr-1" />
-                          Retry
-                        </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </ScrollArea>
               )}
             </CardContent>
           </Card>

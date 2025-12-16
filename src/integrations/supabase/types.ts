@@ -8807,6 +8807,19 @@ export type Database = {
         Args: { album_name: string; artist_name: string }
         Returns: string
       }
+      get_all_queue_stats: {
+        Args: never
+        Returns: {
+          completed: number
+          failed: number
+          items_per_hour: number
+          last_activity: string
+          oldest_pending_at: string
+          pending: number
+          processing: number
+          queue_name: string
+        }[]
+      }
       get_analytics_overview: {
         Args: { p_days?: number }
         Returns: {
@@ -8896,6 +8909,16 @@ export type Database = {
           total_runs: number
         }[]
       }
+      get_cronjob_output_stats: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          content_type: string
+          date_bucket: string
+          items_created: number
+          items_failed: number
+          items_posted: number
+        }[]
+      }
       get_current_usage: {
         Args: { p_user_id: string }
         Returns: {
@@ -8951,6 +8974,16 @@ export type Database = {
         }[]
       }
       get_monthly_trends_by_year: { Args: { p_year?: number }; Returns: Json }
+      get_output_totals: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          content_type: string
+          label: string
+          total_created: number
+          total_failed: number
+          total_posted: number
+        }[]
+      }
       get_pageview_stats: {
         Args: { p_days?: number }
         Returns: {

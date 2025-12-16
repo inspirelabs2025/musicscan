@@ -39,7 +39,7 @@ export const ALL_SCHEDULED_CRONJOBS = [
 
   // Data Import & Crawling
   { name: 'discogs-lp-crawler', schedule: '0 * * * *', time: 'Elk uur :00', description: 'Haalt nieuwe vinyl releases op van Discogs', category: 'Data Import', expectedIntervalMinutes: 60, expectedPerDay: 24, outputTable: 'discogs_import_log' },
-  { name: 'process-discogs-queue', schedule: '*/2 * * * *', time: 'Elke 2 min', description: 'Verwerkt Discogs import queue', category: 'Data Import', expectedIntervalMinutes: 2, expectedPerDay: 720, outputTable: 'discogs_import_log' },
+  { name: 'process-discogs-queue', schedule: '*/2 * * * *', time: 'Elke 2 min', description: 'Maakt art products + blog posts van Discogs releases', category: 'Data Import', expectedIntervalMinutes: 2, expectedPerDay: 720, outputTable: 'platform_products' },
   { name: 'generate-curated-artists', schedule: '0 2 * * *', time: '02:00 UTC', description: 'Ontdekt nieuwe interessante artiesten', category: 'Data Import', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'curated_artists' },
   { name: 'process-spotify-new-releases', schedule: '0 9 * * *', time: '09:00 UTC', description: 'Haalt nieuwe Spotify releases op en verwerkt ze', category: 'Data Import', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'spotify_new_releases_processed' },
   { name: 'queue-dance-house-content', schedule: '0 7 * * *', time: '07:00 UTC', description: 'Queue Dance/House content voor generatie', category: 'Data Import', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'batch_queue_items' },

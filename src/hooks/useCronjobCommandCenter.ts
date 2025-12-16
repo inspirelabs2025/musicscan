@@ -22,6 +22,7 @@ export const CRONJOB_QUEUE_MAPPING: Record<string, { table: string; statusColumn
   'composer-batch-processor': { table: 'batch_queue_items', statusColumn: 'status', pendingStatus: 'pending' },
   'soundtrack-batch-processor': { table: 'batch_queue_items', statusColumn: 'status', pendingStatus: 'pending' },
   'queue-dance-house-content': { table: 'singles_import_queue', statusColumn: 'status', pendingStatus: 'pending' },
+  'process-spotify-new-releases': { table: 'spotify_new_releases_processed', statusColumn: 'status', pendingStatus: 'pending' },
 };
 
 export const ALL_SCHEDULED_CRONJOBS = [

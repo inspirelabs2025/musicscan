@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -90,66 +90,40 @@ export const ChristmasSocks = () => {
     },
   });
 
+  // Alleen Elvis Presley en Mariah Carey sokken tonen
   const { data: socks, isLoading } = useQuery({
-    queryKey: ['christmas-sock-products'],
+    queryKey: ['christmas-sock-products-elvis-mariah'],
     queryFn: async () => {
       const { data: albumSocks, error: albumError } = await supabase
         .from('album_socks')
-        .select('product_id, base_design_url')
+        .select('id, artist_name, album_title, base_design_url, slug, view_count')
         .eq('pattern_type', 'christmas')
-        .not('product_id', 'is', null)
-        .limit(50);
+        .or('artist_name.ilike.%Elvis Presley%,artist_name.ilike.%Mariah Carey%');
 
       if (albumError) throw albumError;
 
-      const baseDesignByProductId = new Map<string, string>();
-      for (const s of albumSocks || []) {
-        if (s.product_id && s.base_design_url) baseDesignByProductId.set(s.product_id, s.base_design_url);
-      }
-
-      const productIds = (albumSocks || [])
-        .map((s) => s.product_id)
-        .filter((id): id is string => Boolean(id));
-
-      if (productIds.length === 0) return [];
-
-      const { data, error } = await supabase
-        .from('platform_products')
-        .select('id, slug, title, artist, price, view_count, is_featured, primary_image')
-        .in('id', productIds)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
       const all: ChristmasSockProduct[] = [];
-      for (const p of (data || []) as any[]) {
-        const image_url = baseDesignByProductId.get(p.id) || p.primary_image || '';
+      for (const s of (albumSocks || []) as any[]) {
         all.push({
-          id: p.id,
-          slug: p.slug,
-          title: p.title,
-          artist: p.artist,
-          price: p.price,
-          view_count: p.view_count,
-          is_featured: p.is_featured,
-          image_url,
+          id: s.id,
+          slug: s.slug || `sock-${s.id}`,
+          title: s.album_title,
+          artist: s.artist_name,
+          price: 24.95,
+          view_count: s.view_count || 0,
+          is_featured: true,
+          image_url: s.base_design_url || '',
         });
       }
 
       return all;
     },
-    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Shuffle socks randomly on each render
-  const shuffledSocks = useMemo(() => {
-    if (!socks || socks.length === 0) return [];
-    const shuffled = [...socks].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 2);
-  }, [socks]);
-
-  const hasSocks = shuffledSocks.length > 0;
+  // Toon beide sokken (Elvis en Mariah)
+  const displaySocks = socks || [];
+  const hasSocks = displaySocks.length > 0;
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -198,7 +172,7 @@ export const ChristmasSocks = () => {
           </CardTitle>
 
           <div className="flex items-center gap-2">
-            <Badge className="bg-green-500/10 text-green-600 border-green-500/30">🎁 {shuffledSocks.length} ontwerpen</Badge>
+            <Badge className="bg-green-500/10 text-green-600 border-green-500/30">🎁 {displaySocks.length} ontwerpen</Badge>
           </div>
         </div>
 
@@ -209,8 +183,8 @@ export const ChristmasSocks = () => {
       </CardHeader>
 
       <CardContent className="relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {shuffledSocks.map((sock, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+          {displaySocks.map((sock, index) => (
             <motion.div
               key={sock.id}
               initial={{ opacity: 0, y: 20 }}

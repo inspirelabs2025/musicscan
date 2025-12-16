@@ -185,9 +185,13 @@ export const useCleanAnalyticsByCountry = (dateRange: DateRangeParams) => {
   });
 };
 
-export const useCleanAnalyticsOverview = (dateRange: DateRangeParams) => {
+export const useCleanAnalyticsOverview = (
+  dateRange: DateRangeParams, 
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: ['clean-analytics-overview', dateRange.startDate.toISOString(), dateRange.endDate.toISOString()],
+    enabled: options?.enabled !== false,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clean_analytics')

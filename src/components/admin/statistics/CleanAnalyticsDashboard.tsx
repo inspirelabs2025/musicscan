@@ -23,7 +23,8 @@ import {
   Clock,
   Search,
   Share2,
-  Link2
+  Link2,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { 
   useCleanAnalyticsOverview, 
@@ -125,7 +126,8 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
   
   // Same day last week data (only for single day)
   const { data: lastWeekOverview } = useCleanAnalyticsOverview(
-    sameDayLastWeek || { startDate: new Date(), endDate: new Date() }
+    sameDayLastWeek || { startDate: new Date(), endDate: new Date() },
+    { enabled: !!sameDayLastWeek }
   );
 
   if (loadingOverview) {
@@ -213,6 +215,81 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
 
   return (
     <div className="space-y-6">
+      {/* Date Indicator Header */}
+      <Card className="bg-muted/50 border-dashed">
+        <CardContent className="py-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">
+                {format(dateRange.startDate, 'd MMMM yyyy', { locale: nl })}
+                {daysDiff > 1 && (
+                  <>
+                    {' '}-{' '}
+                    {format(dateRange.endDate, 'd MMMM yyyy', { locale: nl })}
+                  </>
+                )}
+              </span>
+              <Badge variant="outline">{daysDiff} {daysDiff === 1 ? 'dag' : 'dagen'}</Badge>
+            </div>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>Vergelijking: {format(previousPeriod.startDate, 'd MMM', { locale: nl })} - {format(previousPeriod.endDate, 'd MMM', { locale: nl })}</span>
+              {isToday && sameDayLastWeek && (
+                <span className="border-l pl-4">+ {format(sameDayLastWeek.startDate, 'd MMM', { locale: nl })} (vorige week)</span>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Comparison Summary Row */}
+      {prevOverview && (
+        <Card className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <p className="text-sm font-medium">Vergelijking met {compLabel}</p>
+                <p className="text-xs text-muted-foreground">
+                  {format(previousPeriod.startDate, 'd MMM', { locale: nl })} - {format(previousPeriod.endDate, 'd MMM', { locale: nl })}
+                </p>
+              </div>
+              <div className="flex gap-6 flex-wrap">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Sessies</p>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">{overview?.uniqueSessions || 0}</span>
+                    <ComparisonBadge current={overview?.uniqueSessions || 0} previous={prevOverview?.uniqueSessions || 0} />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Pageviews</p>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">{overview?.realUsers || 0}</span>
+                    <ComparisonBadge current={overview?.realUsers || 0} previous={prevOverview?.realUsers || 0} />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Datacenter</p>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">{overview?.datacenterHits || 0}</span>
+                    <ComparisonBadge current={overview?.datacenterHits || 0} previous={prevOverview?.datacenterHits || 0} />
+                  </div>
+                </div>
+                {isToday && lastWeekOverview && (
+                  <div className="text-center border-l pl-6">
+                    <p className="text-xs text-muted-foreground mb-1">vs Vorige Week</p>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold">{overview?.uniqueSessions || 0}</span>
+                      <ComparisonBadge current={overview?.uniqueSessions || 0} previous={lastWeekOverview?.uniqueSessions || 0} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Main KPI Cards with Comparisons */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>

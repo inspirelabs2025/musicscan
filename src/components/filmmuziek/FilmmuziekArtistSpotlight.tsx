@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
 export const FilmmuziekArtistSpotlight = () => {
-  // Featured composer: John Williams
+  // Featured composer: John Williams with real Wikipedia image
   const spotlight = {
     name: "John Williams",
     title: "De Meester van Hollywood",
@@ -16,7 +16,7 @@ export const FilmmuziekArtistSpotlight = () => {
       "25 Grammy Awards"
     ],
     notableWorks: ["Star Wars", "Jaws", "E.T.", "Jurassic Park", "Harry Potter", "Indiana Jones", "Schindler's List", "Superman"],
-    imageUrl: "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=800"
+    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/John_Williams_2023.jpg/440px-John_Williams_2023.jpg"
   };
 
   return (
@@ -32,14 +32,16 @@ export const FilmmuziekArtistSpotlight = () => {
         <div className="grid lg:grid-cols-2 gap-8 items-center max-w-6xl mx-auto">
           {/* Image */}
           <div className="relative aspect-square lg:aspect-[4/3] rounded-2xl overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-600/20 to-slate-900/60" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center p-8">
-                <Film className="w-24 h-24 text-amber-400/40 mx-auto mb-4" />
-                <div className="text-6xl font-bold text-white/20">JW</div>
-              </div>
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+            <img
+              src={spotlight.imageUrl}
+              alt={spotlight.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="flex flex-wrap gap-2">
                 {spotlight.notableWorks.slice(0, 4).map((work) => (
                   <span key={work} className="px-3 py-1 bg-white/10 backdrop-blur rounded-full text-white text-sm">

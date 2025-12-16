@@ -63,10 +63,10 @@ export const FilmmuziekReleases = () => {
             >
               <Card className="overflow-hidden border-transparent hover:border-amber-500/30 transition-all bg-white/5 backdrop-blur">
                 <div className="aspect-square relative overflow-hidden">
-                  {release.artwork_url ? (
+                  {release.image_url ? (
                     <img
-                      src={release.artwork_url}
-                      alt={release.title}
+                      src={release.image_url}
+                      alt={release.album_name || release.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />
                   ) : (
@@ -82,9 +82,14 @@ export const FilmmuziekReleases = () => {
                 </div>
                 <CardContent className="p-3">
                   <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-amber-400 transition-colors">
-                    {release.title}
+                    {release.album_name || release.title}
                   </h3>
                   <p className="text-white/60 text-xs mt-1 line-clamp-1">{release.artist}</p>
+                  {release.release_date && (
+                    <p className="text-white/40 text-xs mt-1">
+                      {new Date(release.release_date).toLocaleDateString('nl-NL')}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </a>

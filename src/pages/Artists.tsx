@@ -258,7 +258,7 @@ const Artists = () => {
                           </h3>
 
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                            {story.biography || story.story_content.substring(0, 150)}...
+                            {story.biography || (story.story_content ? story.story_content.substring(0, 150) + '...' : 'Ontdek het verhaal van deze artiest.')}
                           </p>
 
                           {/* Genres */}

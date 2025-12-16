@@ -167,7 +167,7 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
     refetchInterval: 60000,
   });
 
-  // Fetch output totals
+  // Fetch output totals - FIX: extract from array
   const { data: outputTotals } = useQuery({
     queryKey: ['cronjob-output-totals', format(dateRange.start, 'yyyy-MM-dd'), format(dateRange.end, 'yyyy-MM-dd')],
     queryFn: async () => {
@@ -176,7 +176,9 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
         p_end_date: format(dateRange.end, 'yyyy-MM-dd'),
       });
       if (error) throw error;
-      return data as OutputTotals | null;
+      // RPC returns array, extract first element
+      const result = Array.isArray(data) && data.length > 0 ? data[0] : data;
+      return result as OutputTotals | null;
     },
     refetchInterval: 60000,
   });
@@ -196,7 +198,7 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
     refetchInterval: 60000,
   });
 
-  // Fetch comparison totals
+  // Fetch comparison totals - FIX: extract from array
   const { data: comparisonTotals } = useQuery({
     queryKey: ['cronjob-output-totals-comparison', format(comparisonRange.start, 'yyyy-MM-dd'), format(comparisonRange.end, 'yyyy-MM-dd')],
     queryFn: async () => {
@@ -205,7 +207,9 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
         p_end_date: format(comparisonRange.end, 'yyyy-MM-dd'),
       });
       if (error) throw error;
-      return data as OutputTotals | null;
+      // RPC returns array, extract first element
+      const result = Array.isArray(data) && data.length > 0 ? data[0] : data;
+      return result as OutputTotals | null;
     },
     refetchInterval: 60000,
   });
@@ -221,7 +225,18 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
     refetchInterval: 30000,
   });
 
-  // Fetch cronjob health stats from execution log
+  // Fetch cronjob last output from content tables (actual activity)
+  const { data: cronjobLastOutput } = useQuery({
+    queryKey: ['cronjob-last-output'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_cronjob_last_output');
+      if (error) throw error;
+      return (data || []) as { cronjob_name: string; output_table: string; last_output_at: string | null; items_today: number }[];
+    },
+    refetchInterval: 30000,
+  });
+
+  // Fetch cronjob health stats from execution log (may be empty)
   const { data: cronjobHealth, isLoading: isLoadingHealth } = useQuery({
     queryKey: ['cronjob-health-stats'],
     queryFn: async () => {
@@ -325,19 +340,34 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
     }).sort((a, b) => b.total_created - a.total_created);
   }, [outputStatsRaw, comparisonStatsRaw]);
 
-  // Combine scheduled jobs with their health stats
+  // Combine scheduled jobs with their health stats AND output activity
   const cronjobsWithHealth = ALL_SCHEDULED_CRONJOBS.map(job => {
     const health = cronjobHealth?.find(h => h.function_name === job.name);
-    const isOverdue = health?.last_run_at 
-      ? (Date.now() - new Date(health.last_run_at).getTime()) > (job.expectedIntervalMinutes * 60 * 1000 * 1.5)
+    const lastOutput = cronjobLastOutput?.find(o => o.cronjob_name === job.name);
+    
+    // Use last_output_at from content tables if available, fallback to execution log
+    const lastActivityTime = lastOutput?.last_output_at || health?.last_run_at;
+    const itemsToday = lastOutput?.items_today || 0;
+    
+    const isOverdue = lastActivityTime 
+      ? (Date.now() - new Date(lastActivityTime).getTime()) > (job.expectedIntervalMinutes * 60 * 1000 * 1.5)
+      : false;
+    
+    // Determine status based on actual output activity
+    const hasRecentOutput = lastActivityTime 
+      ? (Date.now() - new Date(lastActivityTime).getTime()) < (job.expectedIntervalMinutes * 60 * 1000 * 2)
       : false;
     
     return {
       ...job,
       health,
+      lastOutput,
+      lastActivityTime,
+      itemsToday,
       isOverdue,
       hasError: health?.last_status === 'error',
       isRunning: (health?.running_count || 0) > 0,
+      hasRecentOutput,
     };
   });
 

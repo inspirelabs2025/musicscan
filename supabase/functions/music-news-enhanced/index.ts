@@ -38,9 +38,37 @@ const FALLBACK_FEEDS: RSSFeed[] = [
   { feed_url: 'https://www.artiestennieuws.nl/feed/', feed_name: 'Artiesten Nieuws', category: 'Artiest nieuws' },
 ];
 
+// Helper function to decode HTML entities
+function decodeHtmlEntities(text: string): string {
+  if (!text) return '';
+  return text
+    // Numeric entities (decimal)
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
+    // Numeric entities (hex)
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    // Named entities
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&ndash;/g, '\u2013')
+    .replace(/&mdash;/g, '\u2014')
+    .replace(/&lsquo;/g, '\u2018')
+    .replace(/&rsquo;/g, '\u2019')
+    .replace(/&ldquo;/g, '\u201C')
+    .replace(/&rdquo;/g, '\u201D')
+    .replace(/&hellip;/g, '\u2026')
+    .replace(/&copy;/g, '\u00A9')
+    .replace(/&reg;/g, '\u00AE')
+    .replace(/&trade;/g, '\u2122')
+    .replace(/&euro;/g, '\u20AC');
+}
+
 // Helper function to create URL-safe slugs
 function createSlug(title: string): string {
-  return title
+  return decodeHtmlEntities(title)
     .toLowerCase()
     .replace(/[àáâäã]/g, 'a')
     .replace(/[èéêë]/g, 'e')
@@ -101,9 +129,9 @@ async function parseRSSFeed(feedUrl: string, source: string, category: string): 
           const descMatch = itemXml.match(/<description[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i);
           
           if (titleMatch && linkMatch && pubDateMatch) {
-            const title = (titleMatch[1] || '').replace(/<[^>]+>/g, '').trim();
+            const title = decodeHtmlEntities((titleMatch[1] || '').replace(/<[^>]+>/g, '').trim());
             const pubDate = pubDateMatch[1].trim();
-            const description = (descMatch?.[1] || '').replace(/<[^>]+>/g, '').trim();
+            const description = decodeHtmlEntities((descMatch?.[1] || '').replace(/<[^>]+>/g, '').trim());
             
             if (isRecentDate(pubDate)) {
               items.push({

@@ -236,12 +236,17 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
     };
   }).filter(d => d.sessions > 0);
 
-  // Hourly distribution chart
-  const hourlyData = (overview?.hourlyDistribution || []).map(h => ({
-    hour: `${h.hour}:00`,
-    'Echte Gebruikers': h.real_users,
-    'Datacenter': showDatacenter ? h.datacenter : 0,
-  }));
+  // Hourly distribution chart with comparison
+  const hourlyData = (overview?.hourlyDistribution || []).map(h => {
+    const prevHour = prevOverview?.hourlyDistribution?.find(ph => ph.hour === h.hour);
+    const prevRealUsers = prevHour?.real_users || 0;
+    return {
+      hour: `${h.hour}:00`,
+      'Echte Gebruikers': h.real_users,
+      'Vorige periode': prevRealUsers,
+      'Datacenter': showDatacenter ? h.datacenter : 0,
+    };
+  });
 
   // Get comparison label
   const daysDiff = differenceInDays(dateRange.endDate, dateRange.startDate) + 1;
@@ -546,7 +551,7 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
             <Clock className="h-5 w-5" />
             Uurverdeling (UTC)
           </CardTitle>
-          <CardDescription>Wanneer echte gebruikers actief zijn</CardDescription>
+          <CardDescription>Echte gebruikers: nu vs {compLabel}</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={200}>
@@ -554,6 +559,8 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
               <XAxis dataKey="hour" fontSize={10} interval={2} />
               <YAxis fontSize={12} />
               <Tooltip />
+              <Legend />
+              <Bar dataKey="Vorige periode" fill="hsl(var(--muted-foreground) / 0.3)" />
               <Bar dataKey="Echte Gebruikers" fill="hsl(var(--primary))" />
               {showDatacenter && (
                 <Bar dataKey="Datacenter" fill="hsl(var(--destructive))" />

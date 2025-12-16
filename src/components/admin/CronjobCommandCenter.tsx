@@ -166,9 +166,17 @@ export const CronjobCommandCenter = () => {
     return `${Math.round(hours / 24)} dagen`;
   };
 
-  // Calculate expected daily output from interval
-  const calculateExpectedOutput = (expectedIntervalMinutes: number): { label: string; perDay: number } => {
+  // Calculate expected daily output - uses expectedPerDay override if provided
+  const calculateExpectedOutput = (expectedIntervalMinutes: number, expectedPerDay?: number, isWeekly?: boolean): { label: string; perDay: number } => {
+    // Use direct expectedPerDay if provided
+    if (expectedPerDay !== undefined) {
+      if (isWeekly) return { label: '1/week', perDay: expectedPerDay };
+      if (expectedPerDay >= 100) return { label: `~${expectedPerDay}/dag`, perDay: expectedPerDay };
+      return { label: `${expectedPerDay}/dag`, perDay: expectedPerDay };
+    }
+    // Fallback to calculated value
     const perDay = Math.floor(1440 / expectedIntervalMinutes);
+    if (expectedIntervalMinutes >= 10080) return { label: '1/week', perDay: 0.14 };
     if (expectedIntervalMinutes >= 1440) return { label: '1/dag', perDay: 1 };
     if (expectedIntervalMinutes === 720) return { label: '2/dag', perDay: 2 };
     if (expectedIntervalMinutes === 360) return { label: '4/dag', perDay: 4 };
@@ -179,7 +187,7 @@ export const CronjobCommandCenter = () => {
     if (expectedIntervalMinutes === 10) return { label: '144/dag', perDay: 144 };
     if (expectedIntervalMinutes === 5) return { label: '288/dag', perDay: 288 };
     if (expectedIntervalMinutes === 2) return { label: '720/dag', perDay: 720 };
-    if (expectedIntervalMinutes === 1) return { label: '~1440/dag', perDay: 1440 };
+    if (expectedIntervalMinutes === 1) return { label: '~60/dag', perDay: 60 };
     return { label: `~${perDay}/dag`, perDay };
   };
 
@@ -437,7 +445,7 @@ export const CronjobCommandCenter = () => {
                     const jobWithHealth = cronjobsWithHealth.find(j => j.name === job.name);
                     const hasActivity = jobWithHealth?.lastActivityTime;
                     const itemsToday = jobWithHealth?.itemsToday || 0;
-                    const expected = calculateExpectedOutput(job.expectedIntervalMinutes);
+                    const expected = calculateExpectedOutput(job.expectedIntervalMinutes, (job as any).expectedPerDay, (job as any).isWeekly);
                     const outputColorClass = getOutputColorClass(itemsToday, expected.perDay);
                     
                     return (

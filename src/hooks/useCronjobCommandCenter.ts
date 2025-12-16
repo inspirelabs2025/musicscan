@@ -5,6 +5,24 @@ import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, subWeeks
 
 // Complete list of all scheduled cronjobs from config.toml with categories and exact times
 // expectedPerDay overrides calculated value for time-window and weekly crons
+// Mapping cronjob -> queue table (for pending items display)
+export const CRONJOB_QUEUE_MAPPING: Record<string, { table: string; statusColumn?: string; pendingStatus?: string }> = {
+  'artist-stories-batch-processor': { table: 'batch_queue_items', statusColumn: 'status', pendingStatus: 'pending' },
+  'singles-batch-processor': { table: 'singles_import_queue', statusColumn: 'status', pendingStatus: 'pending' },
+  'post-scheduled-singles': { table: 'singles_facebook_queue', statusColumn: 'status', pendingStatus: 'pending' },
+  'post-scheduled-music-history': { table: 'music_history_facebook_queue', statusColumn: 'status', pendingStatus: 'pending' },
+  'post-scheduled-youtube': { table: 'youtube_facebook_queue', statusColumn: 'status', pendingStatus: 'pending' },
+  'process-podcast-facebook-queue': { table: 'podcast_facebook_queue', statusColumn: 'status', pendingStatus: 'pending' },
+  'indexnow-processor': { table: 'indexnow_queue', statusColumn: 'processed', pendingStatus: 'false' },
+  'process-discogs-queue': { table: 'discogs_import_log', statusColumn: 'status', pendingStatus: 'pending' },
+  'bulk-poster-processor': { table: 'photo_batch_queue', statusColumn: 'status', pendingStatus: 'pending' },
+  'process-tiktok-video-queue': { table: 'render_jobs', statusColumn: 'status', pendingStatus: 'pending' },
+  'top2000-auto-processor': { table: 'top2000_songs', statusColumn: 'enriched_at', pendingStatus: 'null' },
+  'backfill-christmas-socks': { table: 'christmas_import_queue', statusColumn: 'status', pendingStatus: 'pending' },
+  'composer-batch-processor': { table: 'batch_queue_items', statusColumn: 'status', pendingStatus: 'pending' },
+  'soundtrack-batch-processor': { table: 'batch_queue_items', statusColumn: 'status', pendingStatus: 'pending' },
+};
+
 export const ALL_SCHEDULED_CRONJOBS = [
   // Content Generatie
   { name: 'daily-anecdote-generator', schedule: '5 6 * * *', time: '06:05 UTC', description: 'Genereert dagelijkse muziek anekdotes met AI', category: 'Content Generatie', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'music_anecdotes' },
@@ -244,6 +262,26 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
     refetchInterval: 30000,
   });
 
+  // Fetch queue pending counts per cronjob
+  const { data: queuePendingData } = useQuery({
+    queryKey: ['cronjob-queue-pending'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_cronjob_queue_pending');
+      if (error) throw error;
+      return (data || []) as { cronjob_name: string; queue_table: string; pending_count: number }[];
+    },
+    refetchInterval: 15000,
+  });
+
+  // Create lookup map for queue pending counts
+  const queuePendingMap = useMemo(() => {
+    const map: Record<string, { table: string; pending: number }> = {};
+    queuePendingData?.forEach(item => {
+      map[item.cronjob_name] = { table: item.queue_table, pending: item.pending_count };
+    });
+    return map;
+  }, [queuePendingData]);
+
   // Fetch cronjob health stats from execution log (may be empty)
   const { data: cronjobHealth, isLoading: isLoadingHealth } = useQuery({
     queryKey: ['cronjob-health-stats'],
@@ -447,6 +485,7 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
     // Queue statistics
     queueStats,
     queueSummary,
+    queuePendingMap,
     
     // Cronjob health
     cronjobsWithHealth,

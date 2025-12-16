@@ -47,7 +47,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { format, subDays, subWeeks, differenceInDays, startOfDay } from 'date-fns';
+import { format, subDays, subWeeks, differenceInDays, startOfDay, endOfDay } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
 interface CleanAnalyticsDashboardProps {
@@ -69,17 +69,22 @@ const getComparisonRanges = (dateRange: DateRangeParams) => {
   const isToday = daysDiff === 1;
   
   // Previous period (same length before current period)
-  const prevPeriodEnd = subDays(dateRange.startDate, 1);
-  const prevPeriodStart = subDays(prevPeriodEnd, daysDiff - 1);
+  // prevPeriodEnd = day before startDate, but at end of that day (23:59:59)
+  const prevPeriodEndDay = subDays(startOfDay(dateRange.startDate), 1);
+  const prevPeriodStartDay = subDays(prevPeriodEndDay, daysDiff - 1);
   
   // Same day last week (only relevant for single day)
+  // Use startOfDay and endOfDay to ensure full day coverage
   const sameDayLastWeek = isToday ? {
-    startDate: subWeeks(dateRange.startDate, 1),
-    endDate: subWeeks(dateRange.endDate, 1),
+    startDate: startOfDay(subWeeks(dateRange.startDate, 1)),
+    endDate: endOfDay(subWeeks(dateRange.startDate, 1)),
   } : null;
   
   return {
-    previousPeriod: { startDate: startOfDay(prevPeriodStart), endDate: prevPeriodEnd },
+    previousPeriod: { 
+      startDate: startOfDay(prevPeriodStartDay), 
+      endDate: endOfDay(prevPeriodEndDay) 
+    },
     sameDayLastWeek,
     isToday,
   };

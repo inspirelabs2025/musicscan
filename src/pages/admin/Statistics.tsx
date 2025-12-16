@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminGuard } from '@/components/admin/AdminGuard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon } from 'lucide-react';
-import { format, differenceInDays, startOfDay, subDays, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
+import { format, differenceInDays, startOfDay, endOfDay, subDays, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { TrafficOverview } from '@/components/admin/statistics/TrafficOverview';
 import { TrafficSourcesChart } from '@/components/admin/statistics/TrafficSourcesChart';
@@ -29,25 +29,36 @@ export default function Statistics() {
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const getDaysFromPeriod = (): number => {
+  // Calculate actual date range based on period selection
+  const dateRange = useMemo(() => {
     const today = startOfDay(new Date());
+    const endOfToday = endOfDay(new Date());
+    
     switch (period) {
-      case 'today': return 1;
-      case 'yesterday': return 2;
-      case 'week': return differenceInDays(today, startOfWeek(today, { locale: nl })) + 1;
-      case 'month': return differenceInDays(today, startOfMonth(today)) + 1;
-      case 'quarter': return 90;
-      case 'year': return differenceInDays(today, startOfYear(today)) + 1;
-      case 'custom': 
+      case 'today':
+        return { startDate: today, endDate: endOfToday };
+      case 'yesterday':
+        const yesterday = subDays(today, 1);
+        return { startDate: yesterday, endDate: endOfDay(yesterday) };
+      case 'week':
+        return { startDate: startOfWeek(today, { locale: nl }), endDate: endOfToday };
+      case 'month':
+        return { startDate: startOfMonth(today), endDate: endOfToday };
+      case 'quarter':
+        return { startDate: subDays(today, 90), endDate: endOfToday };
+      case 'year':
+        return { startDate: startOfYear(today), endDate: endOfToday };
+      case 'custom':
         if (customRange?.from && customRange?.to) {
-          return differenceInDays(customRange.to, customRange.from) + 1;
+          return { startDate: startOfDay(customRange.from), endDate: endOfDay(customRange.to) };
         }
-        return 7;
-      default: return parseInt(period);
+        return { startDate: subDays(today, 7), endDate: endOfToday };
+      default:
+        return { startDate: subDays(today, parseInt(period)), endDate: endOfToday };
     }
-  };
+  }, [period, customRange]);
 
-  const days = getDaysFromPeriod();
+  const days = differenceInDays(dateRange.endDate, dateRange.startDate) + 1;
 
   const getPeriodLabel = (): string => {
     switch (period) {
@@ -164,7 +175,7 @@ export default function Statistics() {
             </TabsList>
 
             <TabsContent value="clean" className="space-y-4">
-              <CleanAnalyticsDashboard days={days} />
+              <CleanAnalyticsDashboard dateRange={dateRange} />
             </TabsContent>
 
             <TabsContent value="sources" className="space-y-4">

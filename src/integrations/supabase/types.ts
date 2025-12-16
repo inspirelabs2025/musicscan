@@ -8882,6 +8882,20 @@ export type Database = {
         Args: { p_year?: number }
         Returns: Json
       }
+      get_cronjob_health_stats: {
+        Args: { p_hours?: number }
+        Returns: {
+          avg_execution_time_ms: number
+          failed_runs: number
+          function_name: string
+          last_run_at: string
+          last_status: string
+          running_count: number
+          success_rate: number
+          successful_runs: number
+          total_runs: number
+        }[]
+      }
       get_current_usage: {
         Args: { p_user_id: string }
         Returns: {
@@ -8965,7 +8979,33 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_queue_health_overview: {
+        Args: never
+        Returns: {
+          completed: number
+          failed: number
+          last_activity: string
+          oldest_pending: string
+          pending: number
+          processing: number
+          queue_name: string
+          total: number
+        }[]
+      }
       get_random_bot_user: { Args: never; Returns: string }
+      get_recent_cronjob_executions: {
+        Args: { p_limit?: number }
+        Returns: {
+          completed_at: string
+          error_message: string
+          execution_time_ms: number
+          function_name: string
+          id: string
+          items_processed: number
+          started_at: string
+          status: string
+        }[]
+      }
       get_top_artists_by_year: {
         Args: { p_limit?: number; p_year?: number }
         Returns: Json

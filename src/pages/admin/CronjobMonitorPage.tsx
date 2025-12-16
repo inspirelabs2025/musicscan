@@ -1,3 +1,4 @@
+import { CronjobCommandCenter } from "@/components/admin/CronjobCommandCenter";
 import { CronjobDashboard } from "@/components/admin/CronjobDashboard";
 import { CronjobMonitor } from "@/components/admin/CronjobMonitor";
 import { DiscogsQueueMonitor } from "@/components/admin/DiscogsQueueMonitor";
@@ -17,30 +18,35 @@ export default function CronjobMonitorPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Cronjob Monitor</BreadcrumbPage>
+            <BreadcrumbPage>Cronjob Command Center</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
 
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold">Cronjob Monitor</h1>
+        <h1 className="text-4xl font-bold">Cronjob Command Center</h1>
         <p className="text-muted-foreground">
-          Real-time monitoring van alle {17} scheduled functions en queue processen
+          Gecentraliseerd overzicht van alle {30} scheduled functions, queues en alerts
         </p>
       </div>
 
-      <Tabs defaultValue="dashboard" className="space-y-6">
+      <Tabs defaultValue="command-center" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="legacy">Legacy Monitor</TabsTrigger>
+          <TabsTrigger value="command-center">Command Center</TabsTrigger>
+          <TabsTrigger value="legacy-dashboard">Legacy Dashboard</TabsTrigger>
+          <TabsTrigger value="legacy-monitor">Legacy Monitor</TabsTrigger>
           <TabsTrigger value="discogs">Discogs Queue</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="dashboard">
+        <TabsContent value="command-center">
+          <CronjobCommandCenter />
+        </TabsContent>
+
+        <TabsContent value="legacy-dashboard">
           <CronjobDashboard />
         </TabsContent>
 
-        <TabsContent value="legacy">
+        <TabsContent value="legacy-monitor">
           <CronjobMonitor />
         </TabsContent>
 

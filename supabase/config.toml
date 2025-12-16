@@ -521,3 +521,9 @@ verify_jwt = false
 
 [functions.generate-soundtrack-story]
 verify_jwt = false
+
+[functions.composer-batch-processor]
+verify_jwt = false
+
+[[functions.composer-batch-processor.schedule]]
+cron = "* * * * *"

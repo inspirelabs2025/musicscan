@@ -96,6 +96,7 @@ const FranseMuziek = lazy(() => import("./pages/FranseMuziek"));
 const DanceHouseMuziek = lazy(() => import("./pages/DanceHouseMuziek"));
 const DanceHouseFeitDetail = lazy(() => import("./pages/DanceHouseFeitDetail"));
 const Filmmuziek = lazy(() => import("./pages/Filmmuziek"));
+const FilmmuziekFeitDetail = lazy(() => import("./pages/FilmmuziekFeitDetail"));
 
 // Year/Month overview
 const YearOverview = lazy(() => import("./pages/YearOverview"));
@@ -392,6 +393,7 @@ const AppContent = () => {
         <Route path="/dance-house" element={<LazyRoute><DanceHouseMuziek /></LazyRoute>} />
         <Route path="/dance-house/feit/:slug" element={<LazyRoute><DanceHouseFeitDetail /></LazyRoute>} />
         <Route path="/filmmuziek" element={<LazyRoute><Filmmuziek /></LazyRoute>} />
+        <Route path="/filmmuziek/feit/:slug" element={<LazyRoute><FilmmuziekFeitDetail /></LazyRoute>} />
         
         {/* Year/Month overview */}
         <Route path="/jaar-overzicht" element={<LazyRoute><YearOverview /></LazyRoute>} />

@@ -8813,7 +8813,7 @@ export type Database = {
           completed: number
           failed: number
           items_per_hour: number
-          last_activity: string
+          last_activity_at: string
           oldest_pending_at: string
           pending: number
           processing: number
@@ -8977,10 +8977,9 @@ export type Database = {
       get_output_totals: {
         Args: { p_end_date: string; p_start_date: string }
         Returns: {
-          content_type: string
-          label: string
           total_created: number
           total_failed: number
+          total_in_queue: number
           total_posted: number
         }[]
       }

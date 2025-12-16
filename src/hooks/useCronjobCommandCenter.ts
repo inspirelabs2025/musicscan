@@ -57,11 +57,18 @@ export interface DateRange {
   preset: DateRangePreset;
 }
 
-export interface OutputStat {
+export interface OutputStatRow {
   content_type: string;
-  label: string;
+  date_bucket: string;
+  items_created: number;
+  items_posted: number;
+  items_failed: number;
+}
+
+export interface OutputTotals {
   total_created: number;
   total_posted: number;
+  total_in_queue: number;
   total_failed: number;
 }
 
@@ -72,7 +79,7 @@ export interface QueueStat {
   completed: number;
   failed: number;
   oldest_pending_at: string | null;
-  last_activity: string | null;
+  last_activity_at: string | null;
   items_per_hour: number | null;
 }
 
@@ -98,6 +105,20 @@ export interface RecentExecution {
   items_processed: number | null;
   error_message: string | null;
 }
+
+// Content type label mapping
+const CONTENT_TYPE_LABELS: Record<string, string> = {
+  'artist_stories': 'Artist Stories',
+  'music_stories': 'Singles',
+  'music_anecdotes': 'Anekdotes',
+  'news_blog_posts': 'Nieuws',
+  'music_history_events': 'Muziekgeschiedenis',
+  'platform_products': 'Producten',
+  'indexnow_submissions': 'IndexNow URLs',
+  'fb_music_history': 'FB: Muziekgeschiedenis',
+  'fb_singles': 'FB: Singles',
+  'fb_youtube': 'FB: YouTube',
+};
 
 // Helper to get date range from preset
 export const getDateRangeFromPreset = (preset: DateRangePreset): DateRange => {
@@ -132,31 +153,59 @@ export const getComparisonDateRange = (current: DateRange): DateRange => {
 export const useCronjobCommandCenter = (dateRange: DateRange) => {
   const queryClient = useQueryClient();
 
-  // Fetch output statistics from result tables
-  const { data: outputStats, isLoading: isLoadingOutput } = useQuery({
+  // Fetch detailed output statistics from result tables
+  const { data: outputStatsRaw, isLoading: isLoadingOutput } = useQuery({
     queryKey: ['cronjob-output-stats', format(dateRange.start, 'yyyy-MM-dd'), format(dateRange.end, 'yyyy-MM-dd')],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_cronjob_output_stats', {
+        p_start_date: format(dateRange.start, 'yyyy-MM-dd'),
+        p_end_date: format(dateRange.end, 'yyyy-MM-dd'),
+      });
+      if (error) throw error;
+      return (data || []) as OutputStatRow[];
+    },
+    refetchInterval: 60000,
+  });
+
+  // Fetch output totals
+  const { data: outputTotals } = useQuery({
+    queryKey: ['cronjob-output-totals', format(dateRange.start, 'yyyy-MM-dd'), format(dateRange.end, 'yyyy-MM-dd')],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_output_totals', {
         p_start_date: format(dateRange.start, 'yyyy-MM-dd'),
         p_end_date: format(dateRange.end, 'yyyy-MM-dd'),
       });
       if (error) throw error;
-      return (data || []) as OutputStat[];
+      return data as OutputTotals | null;
     },
     refetchInterval: 60000,
   });
 
   // Fetch comparison output statistics (previous period)
   const comparisonRange = getComparisonDateRange(dateRange);
-  const { data: comparisonStats } = useQuery({
+  const { data: comparisonStatsRaw } = useQuery({
     queryKey: ['cronjob-output-stats-comparison', format(comparisonRange.start, 'yyyy-MM-dd'), format(comparisonRange.end, 'yyyy-MM-dd')],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_cronjob_output_stats', {
+        p_start_date: format(comparisonRange.start, 'yyyy-MM-dd'),
+        p_end_date: format(comparisonRange.end, 'yyyy-MM-dd'),
+      });
+      if (error) throw error;
+      return (data || []) as OutputStatRow[];
+    },
+    refetchInterval: 60000,
+  });
+
+  // Fetch comparison totals
+  const { data: comparisonTotals } = useQuery({
+    queryKey: ['cronjob-output-totals-comparison', format(comparisonRange.start, 'yyyy-MM-dd'), format(comparisonRange.end, 'yyyy-MM-dd')],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_output_totals', {
         p_start_date: format(comparisonRange.start, 'yyyy-MM-dd'),
         p_end_date: format(comparisonRange.end, 'yyyy-MM-dd'),
       });
       if (error) throw error;
-      return (data || []) as OutputStat[];
+      return data as OutputTotals | null;
     },
     refetchInterval: 60000,
   });
@@ -229,27 +278,52 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
     };
   }, [queryClient]);
 
-  // Combine output stats with comparison data
-  const outputStatsWithComparison = useMemo(() => {
-    if (!outputStats) return [];
+  // Aggregate output stats by content type
+  const outputStats = useMemo(() => {
+    if (!outputStatsRaw) return [];
     
-    return outputStats.map(stat => {
-      const previous = comparisonStats?.find(c => c.content_type === stat.content_type);
-      const previousCreated = previous?.total_created || 0;
-      const diff = stat.total_created - previousCreated;
-      const percentChange = previousCreated > 0 
-        ? Math.round(((stat.total_created - previousCreated) / previousCreated) * 100)
-        : stat.total_created > 0 ? 100 : 0;
-      
+    // Group by content_type and sum
+    const grouped = outputStatsRaw.reduce((acc, row) => {
+      if (!acc[row.content_type]) {
+        acc[row.content_type] = { created: 0, posted: 0, failed: 0 };
+      }
+      acc[row.content_type].created += row.items_created;
+      acc[row.content_type].posted += row.items_posted;
+      acc[row.content_type].failed += row.items_failed;
+      return acc;
+    }, {} as Record<string, { created: number; posted: number; failed: number }>);
+
+    // Same for comparison
+    const comparisonGrouped = (comparisonStatsRaw || []).reduce((acc, row) => {
+      if (!acc[row.content_type]) {
+        acc[row.content_type] = { created: 0, posted: 0, failed: 0 };
+      }
+      acc[row.content_type].created += row.items_created;
+      acc[row.content_type].posted += row.items_posted;
+      acc[row.content_type].failed += row.items_failed;
+      return acc;
+    }, {} as Record<string, { created: number; posted: number; failed: number }>);
+
+    return Object.entries(grouped).map(([content_type, totals]) => {
+      const previous = comparisonGrouped[content_type] || { created: 0, posted: 0, failed: 0 };
+      const diff = totals.created - previous.created;
+      const percentChange = previous.created > 0 
+        ? Math.round(((totals.created - previous.created) / previous.created) * 100)
+        : totals.created > 0 ? 100 : 0;
+
       return {
-        ...stat,
-        previous_created: previousCreated,
+        content_type,
+        label: CONTENT_TYPE_LABELS[content_type] || content_type,
+        total_created: totals.created,
+        total_posted: totals.posted,
+        total_failed: totals.failed,
+        previous_created: previous.created,
         diff,
         percentChange,
         trend: diff > 0 ? 'up' : diff < 0 ? 'down' : 'stable',
       };
-    });
-  }, [outputStats, comparisonStats]);
+    }).sort((a, b) => b.total_created - a.total_created);
+  }, [outputStatsRaw, comparisonStatsRaw]);
 
   // Combine scheduled jobs with their health stats
   const cronjobsWithHealth = ALL_SCHEDULED_CRONJOBS.map(job => {
@@ -292,13 +366,14 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
     totalCompleted: queueStats?.reduce((sum, q) => sum + (q.completed || 0), 0) || 0,
   }), [queueStats]);
 
-  // Calculate total output for the period
+  // Total output for the period (from get_output_totals)
   const totalOutput = useMemo(() => ({
-    created: outputStats?.reduce((sum, s) => sum + s.total_created, 0) || 0,
-    posted: outputStats?.reduce((sum, s) => sum + s.total_posted, 0) || 0,
-    failed: outputStats?.reduce((sum, s) => sum + s.total_failed, 0) || 0,
-    previousCreated: comparisonStats?.reduce((sum, s) => sum + s.total_created, 0) || 0,
-  }), [outputStats, comparisonStats]);
+    created: outputTotals?.total_created || 0,
+    posted: outputTotals?.total_posted || 0,
+    inQueue: outputTotals?.total_in_queue || 0,
+    failed: outputTotals?.total_failed || 0,
+    previousCreated: comparisonTotals?.total_created || 0,
+  }), [outputTotals, comparisonTotals]);
 
   // Alerts
   const alerts = [
@@ -318,7 +393,7 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
       type: 'error' as const,
       job: q.queue_name,
       message: `${q.failed} failed items in queue`,
-      timestamp: q.last_activity,
+      timestamp: q.last_activity_at,
     })),
   ];
 
@@ -328,7 +403,7 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
     comparisonRange,
     
     // Output statistics
-    outputStats: outputStatsWithComparison,
+    outputStats,
     totalOutput,
     
     // Queue statistics

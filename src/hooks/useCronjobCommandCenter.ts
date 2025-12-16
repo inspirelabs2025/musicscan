@@ -260,7 +260,7 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_cronjob_last_output');
       if (error) throw error;
-      return (data || []) as { function_name: string; source_table: string; last_output_at: string | null; items_today: number }[];
+      return (data || []) as { cronjob_name: string; output_table: string; last_output_at: string | null; items_today: number }[];
     },
     refetchInterval: 30000,
   });
@@ -392,7 +392,7 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
   // Combine scheduled jobs with their health stats AND output activity
   const cronjobsWithHealth = ALL_SCHEDULED_CRONJOBS.map(job => {
     const health = cronjobHealth?.find(h => h.function_name === job.name);
-    const lastOutput = cronjobLastOutput?.find(o => o.function_name === job.name);
+    const lastOutput = cronjobLastOutput?.find(o => o.cronjob_name === job.name);
     
     // Use last_output_at from content tables if available, fallback to execution log
     const lastActivityTime = lastOutput?.last_output_at || health?.last_run_at;

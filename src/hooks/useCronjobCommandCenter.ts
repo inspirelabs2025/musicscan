@@ -21,6 +21,7 @@ export const CRONJOB_QUEUE_MAPPING: Record<string, { table: string; statusColumn
   'backfill-christmas-socks': { table: 'christmas_import_queue', statusColumn: 'status', pendingStatus: 'pending' },
   'composer-batch-processor': { table: 'batch_queue_items', statusColumn: 'status', pendingStatus: 'pending' },
   'soundtrack-batch-processor': { table: 'batch_queue_items', statusColumn: 'status', pendingStatus: 'pending' },
+  'queue-dance-house-content': { table: 'singles_import_queue', statusColumn: 'status', pendingStatus: 'pending' },
 };
 
 export const ALL_SCHEDULED_CRONJOBS = [
@@ -42,7 +43,7 @@ export const ALL_SCHEDULED_CRONJOBS = [
   { name: 'process-discogs-queue', schedule: '*/2 * * * *', time: 'Elke 2 min', description: 'Maakt art products + blog posts van Discogs releases', category: 'Data Import', expectedIntervalMinutes: 2, expectedPerDay: 720, outputTable: 'platform_products' },
   { name: 'generate-curated-artists', schedule: '0 2 * * *', time: '02:00 UTC', description: 'Ontdekt nieuwe interessante artiesten', category: 'Data Import', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'curated_artists' },
   { name: 'process-spotify-new-releases', schedule: '0 9 * * *', time: '09:00 UTC', description: 'Haalt nieuwe Spotify releases op en verwerkt ze', category: 'Data Import', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'spotify_new_releases_processed' },
-  { name: 'queue-dance-house-content', schedule: '0 7 * * *', time: '07:00 UTC', description: 'Queue Dance/House content voor generatie', category: 'Data Import', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'batch_queue_items' },
+  { name: 'queue-dance-house-content', schedule: '0 7 * * *', time: '07:00 UTC', description: 'Queue Dance/House content voor generatie', category: 'Data Import', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'singles_import_queue' },
   { name: 'top2000-auto-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt Top 2000 enrichment en analyse', category: 'Data Import', expectedIntervalMinutes: 1, expectedPerDay: 1440, outputTable: 'top2000_songs' },
   
   // Social Media Posting

@@ -440,75 +440,84 @@ const AppContent = () => {
         <Route path="/spotify/profile" element={<ProtectedRoute><LazyRoute><SpotifyProfile /></LazyRoute></ProtectedRoute>} />
         <Route path="/spotify/callback" element={<LazyRoute><SpotifyCallback /></LazyRoute>} />
         
-        {/* Admin routes */}
+{/* Admin routes */}
         <Route path="/admin" element={<ProtectedRoute><LazyRoute><MainAdmin /></LazyRoute></ProtectedRoute>} />
-        <Route path="/superadmin" element={<ProtectedRoute><LazyRoute><SuperAdminDashboard /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/system-overview" element={<ProtectedRoute><LazyRoute><SystemOverview /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/dashboard" element={<ProtectedRoute><LazyRoute><SuperAdminDashboard /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/cronjob-monitor" element={<ProtectedRoute><LazyRoute><CronjobMonitorPage /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/products" element={<ProtectedRoute><LazyRoute><AllProducts /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/platform-products" element={<ProtectedRoute><LazyRoute><PlatformProducts /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/shop-products" element={<ProtectedRoute><LazyRoute><ShopProducts /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/orders" element={<ProtectedRoute><LazyRoute><ShopOrders /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/shop-orders" element={<ProtectedRoute><LazyRoute><ShopOrders /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/time-machine" element={<ProtectedRoute><LazyRoute><TimeMachineManager /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/media-library" element={<ProtectedRoute><LazyRoute><MediaLibrary /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/art-generator" element={<ProtectedRoute><LazyRoute><ArtGenerator /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/bulk-art-generator" element={<ProtectedRoute><LazyRoute><BulkArtGenerator /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/sketch-generator" element={<ProtectedRoute><LazyRoute><SketchArtGenerator /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/photo-stylizer" element={<ProtectedRoute><LazyRoute><PhotoStylizer /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/photo-moderation" element={<ProtectedRoute><LazyRoute><PhotoModeration /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/generate-seed" element={<ProtectedRoute><LazyRoute><GenerateSeed /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/bulk-poster-upload" element={<ProtectedRoute><LazyRoute><BulkPosterUpload /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/fix-product-titles" element={<ProtectedRoute><LazyRoute><FixProductTitles /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/bulk-cleanup" element={<ProtectedRoute><LazyRoute><BulkProductCleanup /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/auto-cleanup" element={<ProtectedRoute><LazyRoute><AutoCleanupToday /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/fix-blog-slugs" element={<ProtectedRoute><LazyRoute><FixBlogSlugs /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/cleanup-duplicate-blogs" element={<ProtectedRoute><LazyRoute><CleanupDuplicateBlogs /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/backfill-fanwalls" element={<ProtectedRoute><LazyRoute><BackfillArtistFanwalls /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/create-fanwall" element={<ProtectedRoute><LazyRoute><CreateArtistFanwall /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/price-history" element={<ProtectedRoute><LazyRoute><PriceHistoryAdmin /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/sitemaps" element={<ProtectedRoute><LazyRoute><SitemapManagement /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/seo" element={<ProtectedRoute><LazyRoute><SEOMonitoring /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/seo-keywords" element={<ProtectedRoute><LazyRoute><SEOKeywords /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/curated-artists" element={<ProtectedRoute><LazyRoute><CuratedArtists /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/cronjobs" element={<ProtectedRoute><LazyRoute><CronjobMonitorPage /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/email-notifications" element={<ProtectedRoute><LazyRoute><EmailNotificationsPage /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/time-machine" element={<ProtectedRoute><LazyRoute><TimeMachineManager /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/lyric-poster" element={<ProtectedRoute><LazyRoute><LyricPosterGenerator /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/sketch-art-generator" element={<ProtectedRoute><LazyRoute><SketchArtGenerator /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/lyric-poster-generator" element={<ProtectedRoute><LazyRoute><LyricPosterGenerator /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/sock-generator" element={<ProtectedRoute><LazyRoute><SockGenerator /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/tshirt-generator" element={<ProtectedRoute><LazyRoute><TshirtGenerator /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/button-generator" element={<ProtectedRoute><LazyRoute><ButtonGenerator /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/photo-stylizer" element={<ProtectedRoute><LazyRoute><PhotoStylizer /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/singles-importer" element={<ProtectedRoute><LazyRoute><SinglesImporterPage /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/artist-stories-generator" element={<ProtectedRoute><LazyRoute><ArtistStoriesGenerator /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/facebook-sync" element={<ProtectedRoute><LazyRoute><FacebookSync /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/facebook" element={<ProtectedRoute><LazyRoute><FacebookAdmin /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/facebook-test" element={<ProtectedRoute><LazyRoute><FacebookTestPost /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/instagram" element={<ProtectedRoute><LazyRoute><InstagramAdmin /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/metricool" element={<ProtectedRoute><LazyRoute><MetricoolAdmin /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/tiktok-videos" element={<ProtectedRoute><LazyRoute><TikTokVideoAdmin /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/render-queue" element={<ProtectedRoute><LazyRoute><RenderQueue /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/jobs" element={<ProtectedRoute><LazyRoute><RenderJobsPage /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/news-rss" element={<ProtectedRoute><LazyRoute><NewsRssManager /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/own-podcasts" element={<ProtectedRoute><LazyRoute><OwnPodcasts /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/users" element={<ProtectedRoute><LazyRoute><UserManagement /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/statistics" element={<ProtectedRoute><LazyRoute><Statistics /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/artist-spotlights" element={<ProtectedRoute><LazyRoute><ArtistSpotlightsAdmin /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/artist-spotlight/:id" element={<ProtectedRoute><LazyRoute><ArtistSpotlightEditor /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/reviews" element={<ProtectedRoute><LazyRoute><AdminAlbumReviews /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/system" element={<ProtectedRoute><LazyRoute><SystemOverview /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/status" element={<ProtectedRoute><LazyRoute><StatusDashboard /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/media-library" element={<ProtectedRoute><LazyRoute><MediaLibrary /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/popups" element={<ProtectedRoute><LazyRoute><PopupManager /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/year-overview" element={<ProtectedRoute><LazyRoute><AdminYearOverview /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/top2000-importer" element={<ProtectedRoute><LazyRoute><Top2000Importer /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/album-reviews" element={<ProtectedRoute><LazyRoute><AdminAlbumReviews /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/own-podcasts" element={<ProtectedRoute><LazyRoute><OwnPodcasts /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/news-rss-manager" element={<ProtectedRoute><LazyRoute><NewsRssManager /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/curated-artists" element={<ProtectedRoute><LazyRoute><CuratedArtists /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/discogs-lookup" element={<ProtectedRoute><LazyRoute><DiscogsLookup /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/photo-moderation" element={<ProtectedRoute><LazyRoute><PhotoModeration /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/auto-comments" element={<ProtectedRoute><LazyRoute><AutoComments /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/test/anecdote-generation" element={<ProtectedRoute><LazyRoute><TestAnecdoteGeneration /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/statistics" element={<ProtectedRoute><LazyRoute><Statistics /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/seo-monitoring" element={<ProtectedRoute><LazyRoute><SEOMonitoring /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/sitemap-management" element={<ProtectedRoute><LazyRoute><SitemapManagement /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/price-history" element={<ProtectedRoute><LazyRoute><PriceHistoryAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/fix-blog-slugs" element={<ProtectedRoute><LazyRoute><FixBlogSlugs /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/fix-product-titles" element={<ProtectedRoute><LazyRoute><FixProductTitles /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/bulk-cleanup" element={<ProtectedRoute><LazyRoute><BulkProductCleanup /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/auto-cleanup-today" element={<ProtectedRoute><LazyRoute><AutoCleanupToday /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/backfill-artist-fanwalls" element={<ProtectedRoute><LazyRoute><BackfillArtistFanwalls /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/create-artist-fanwall" element={<ProtectedRoute><LazyRoute><CreateArtistFanwall /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/generate-seed" element={<ProtectedRoute><LazyRoute><GenerateSeed /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/bulk-poster-upload" element={<ProtectedRoute><LazyRoute><BulkPosterUpload /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/popups" element={<ProtectedRoute><LazyRoute><PopupManager /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/render-queue" element={<ProtectedRoute><LazyRoute><RenderQueue /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/tiktok-videos" element={<ProtectedRoute><LazyRoute><TikTokVideoAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/metricool" element={<ProtectedRoute><LazyRoute><MetricoolAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/facebook-admin" element={<ProtectedRoute><LazyRoute><FacebookAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/facebook-sync" element={<ProtectedRoute><LazyRoute><FacebookSync /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/instagram-admin" element={<ProtectedRoute><LazyRoute><InstagramAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute><LazyRoute><UserManagement /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/email-notifications" element={<ProtectedRoute><LazyRoute><EmailNotificationsPage /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/seo-keywords" element={<ProtectedRoute><LazyRoute><SEOKeywords /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/status" element={<ProtectedRoute><LazyRoute><StatusDashboard /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/year-overview" element={<ProtectedRoute><LazyRoute><AdminYearOverview /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/christmas-importer" element={<ProtectedRoute><LazyRoute><ChristmasImporter /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/christmas-logs" element={<ProtectedRoute><LazyRoute><ChristmasImportLogs /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/top2000-importer" element={<ProtectedRoute><LazyRoute><Top2000Importer /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/music-news" element={<ProtectedRoute><LazyRoute><TestMusicNews /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/news-update" element={<ProtectedRoute><LazyRoute><TestNewsUpdate /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/news-generation" element={<ProtectedRoute><LazyRoute><TestNewsGeneration /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/blog-regeneration" element={<ProtectedRoute><LazyRoute><TestBlogRegeneration /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/test/album-cover-backfill" element={<ProtectedRoute><LazyRoute><TestAlbumCoverBackfill /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/discogs-flow" element={<ProtectedRoute><LazyRoute><TestDiscogsFlow /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/discogs-blog-generation" element={<ProtectedRoute><LazyRoute><TestDiscogsBlogGeneration /></LazyRoute></ProtectedRoute>} />
-        <Route path="/admin/test/discogs-id-finder" element={<ProtectedRoute><LazyRoute><TestDiscogsIdFinder /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/discogs-id" element={<ProtectedRoute><LazyRoute><TestDiscogsIdFinder /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/album-cover-backfill" element={<ProtectedRoute><LazyRoute><TestAlbumCoverBackfill /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/base64-image-cleanup" element={<ProtectedRoute><LazyRoute><TestBase64ImageCleanup /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/test/anecdote-generation" element={<ProtectedRoute><LazyRoute><TestAnecdoteGeneration /></LazyRoute></ProtectedRoute>} />
+        {/* Legacy routes for backward compatibility */}
+        <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/system" element={<Navigate to="/admin/system-overview" replace />} />
+        <Route path="/admin/cronjobs" element={<Navigate to="/admin/cronjob-monitor" replace />} />
+        <Route path="/admin/orders" element={<Navigate to="/admin/shop-orders" replace />} />
+        <Route path="/admin/facebook" element={<Navigate to="/admin/facebook-admin" replace />} />
+        <Route path="/admin/instagram" element={<Navigate to="/admin/instagram-admin" replace />} />
+        <Route path="/admin/seo" element={<Navigate to="/admin/seo-monitoring" replace />} />
+        <Route path="/admin/sitemaps" element={<Navigate to="/admin/sitemap-management" replace />} />
+        <Route path="/admin/news-rss" element={<Navigate to="/admin/news-rss-manager" replace />} />
+        <Route path="/admin/reviews" element={<Navigate to="/admin/album-reviews" replace />} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -340,21 +340,24 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
             <div className="text-2xl font-bold text-green-500">
               {(overview?.uniqueSessions || 0).toLocaleString()}
             </div>
+            <p className="text-sm text-muted-foreground">
+              {compLabel}: {(prevOverview?.uniqueSessions || 0).toLocaleString()}
+            </p>
             <ComparisonBadge 
               current={overview?.uniqueSessions || 0} 
               previous={prevOverview?.uniqueSessions || 0}
-              label={compLabel}
             />
             {isToday && sameDayLastWeek && lastWeekOverview && (
-              <ComparisonBadge 
-                current={overview?.uniqueSessions || 0} 
-                previous={lastWeekOverview?.uniqueSessions || 0}
-                label="vorige week"
-              />
+              <>
+                <p className="text-sm text-muted-foreground mt-1">
+                  vorige week: {(lastWeekOverview?.uniqueSessions || 0).toLocaleString()}
+                </p>
+                <ComparisonBadge 
+                  current={overview?.uniqueSessions || 0} 
+                  previous={lastWeekOverview?.uniqueSessions || 0}
+                />
+              </>
             )}
-            <p className="text-xs text-muted-foreground mt-1">
-              Alleen echte gebruikers
-            </p>
           </CardContent>
         </Card>
 
@@ -386,14 +389,13 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
             <div className="text-2xl font-bold">
               {overview?.pagesPerSession || 0}
             </div>
+            <p className="text-sm text-muted-foreground">
+              {compLabel}: {prevOverview?.pagesPerSession || 0}
+            </p>
             <ComparisonBadge 
               current={overview?.pagesPerSession || 0} 
               previous={prevOverview?.pagesPerSession || 0}
-              label={compLabel}
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Engagement metric
-            </p>
           </CardContent>
         </Card>
 
@@ -406,9 +408,13 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
             <div className="text-2xl font-bold text-destructive">
               {(overview?.datacenterHits || 0).toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {overview?.totalHits ? Math.round((overview.datacenterHits / overview.totalHits) * 100) : 0}% gefilterd
+            <p className="text-sm text-muted-foreground">
+              {compLabel}: {(prevOverview?.datacenterHits || 0).toLocaleString()}
             </p>
+            <ComparisonBadge 
+              current={overview?.datacenterHits || 0} 
+              previous={prevOverview?.datacenterHits || 0}
+            />
           </CardContent>
         </Card>
 

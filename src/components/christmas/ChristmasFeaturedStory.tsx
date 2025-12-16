@@ -105,12 +105,12 @@ export const ChristmasFeaturedStory = () => {
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >
-        <Card className="overflow-hidden bg-gradient-to-br from-red-950/50 via-green-950/40 to-red-950/50 border-red-800/30 backdrop-blur-sm">
+        <Card className="overflow-hidden bg-green-800 border-green-700">
           <CardContent className="p-6 md:p-8">
             {/* Badge Header */}
             <div className="flex items-center gap-2 mb-6">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-sm font-medium border border-amber-500/30">
-                <Star className="w-4 h-4 fill-amber-400" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white text-sm font-medium">
+                <Star className="w-4 h-4 fill-white" />
                 Verhaal van de Dag
               </span>
               <span className="text-2xl">🎄</span>
@@ -128,7 +128,7 @@ export const ChristmasFeaturedStory = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-red-900/50 to-green-900/50 flex items-center justify-center">
+                    <div className="w-full h-full bg-green-700 flex items-center justify-center">
                       <span className="text-6xl">🎄</span>
                     </div>
                   )}
@@ -137,21 +137,21 @@ export const ChristmasFeaturedStory = () => {
 
               {/* Content - Right */}
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
+                <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
                   {featuredStory.artist}
                 </h2>
-                <h3 className="text-lg md:text-xl text-red-400 font-semibold mb-4 flex items-center gap-2">
+                <h3 className="text-lg md:text-xl text-white/90 font-semibold mb-4 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">{displayTitle}</span>
                 </h3>
 
-                <p className="text-muted-foreground text-sm md:text-base leading-relaxed mb-5 line-clamp-3">
+                <p className="text-white/80 text-sm md:text-base leading-relaxed mb-5 line-clamp-3">
                   "{summary}"
                 </p>
 
                 <Button 
                   asChild 
-                  className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-900/30"
+                  className="bg-red-600 hover:bg-red-700 text-white"
                 >
                   <Link to={`/singles/${featuredStory.slug}`}>
                     <BookOpen className="w-4 h-4 mr-2" />

@@ -8928,6 +8928,14 @@ export type Database = {
           items_posted: number
         }[]
       }
+      get_cronjob_queue_pending: {
+        Args: never
+        Returns: {
+          cronjob_name: string
+          pending_count: number
+          queue_table: string
+        }[]
+      }
       get_current_usage: {
         Args: { p_user_id: string }
         Returns: {

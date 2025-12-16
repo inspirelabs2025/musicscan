@@ -93,6 +93,7 @@ export const CronjobCommandCenter = () => {
     totalOutput,
     queueStats,
     queueSummary,
+    queuePendingMap,
     cronjobsWithHealth,
     cronjobsByCategory,
     recentExecutions,
@@ -437,6 +438,7 @@ export const CronjobCommandCenter = () => {
                     <TableHead>Categorie</TableHead>
                     <TableHead className="text-center">Vandaag</TableHead>
                     <TableHead className="text-center">Verwacht</TableHead>
+                    <TableHead className="text-center">Queue</TableHead>
                     <TableHead>Laatst Actief</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -447,6 +449,7 @@ export const CronjobCommandCenter = () => {
                     const itemsToday = jobWithHealth?.itemsToday || 0;
                     const expected = calculateExpectedOutput(job.expectedIntervalMinutes, (job as any).expectedPerDay, (job as any).isWeekly);
                     const outputColorClass = getOutputColorClass(itemsToday, expected.perDay);
+                    const queueInfo = queuePendingMap[job.name];
                     
                     return (
                       <TableRow key={job.name}>
@@ -489,6 +492,24 @@ export const CronjobCommandCenter = () => {
                           <span className="font-mono text-sm text-muted-foreground">
                             {expected.label}
                           </span>
+                        </TableCell>
+                        {/* Queue - pending items */}
+                        <TableCell className="text-center">
+                          {queueInfo ? (
+                            <div className="flex flex-col items-center">
+                              <Badge 
+                                variant={queueInfo.pending > 100 ? 'destructive' : queueInfo.pending > 10 ? 'secondary' : 'outline'}
+                                className="font-mono"
+                              >
+                                {queueInfo.pending}
+                              </Badge>
+                              <span className="text-[10px] text-muted-foreground mt-0.5">
+                                {queueInfo.table}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground/50">-</span>
+                          )}
                         </TableCell>
                         {/* Laatst Actief */}
                         <TableCell>

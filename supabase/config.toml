@@ -66,6 +66,12 @@ cron = "0 7 * * *"
 [functions.spotify-new-releases]
 verify_jwt = false
 
+[functions.process-spotify-new-releases]
+verify_jwt = false
+
+[[functions.process-spotify-new-releases.schedule]]
+cron = "0 9 * * *"
+
 [functions.save-facebook-token]
 verify_jwt = false
 

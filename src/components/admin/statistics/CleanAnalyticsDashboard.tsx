@@ -111,6 +111,31 @@ const ComparisonBadge: React.FC<{ current: number; previous: number; label?: str
   );
 };
 
+// Find matching item in previous data by key
+function findPreviousValue<T>(
+  items: T[] | undefined,
+  current: T,
+  matchKey: keyof T,
+  valueKey: keyof T
+): number {
+  if (!items) return 0;
+  const match = items.find(item => item[matchKey] === current[matchKey]);
+  return match ? (match[valueKey] as number) : 0;
+}
+
+// Inline comparison indicator (compact)
+const InlineComparison: React.FC<{ current: number; previous: number }> = ({ current, previous }) => {
+  if (previous === 0) return <span className="text-xs text-blue-500 ml-1">🆕</span>;
+  const diff = current - previous;
+  const pct = ((diff / previous) * 100).toFixed(0);
+  const isUp = diff >= 0;
+  return (
+    <span className={`text-xs ml-1 ${isUp ? 'text-green-500' : 'text-red-500'}`}>
+      ({isUp ? '+' : ''}{pct}%)
+    </span>
+  );
+};
+
 export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = ({ dateRange }) => {
   const [showDatacenter, setShowDatacenter] = useState(false);
   
@@ -128,6 +153,7 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
   
   // Previous period data for comparison
   const { data: prevOverview } = useCleanAnalyticsOverview(previousPeriod);
+  const { data: prevByCountry } = useCleanAnalyticsByCountry(previousPeriod);
   
   // Same day last week data (only for single day)
   const { data: lastWeekOverview } = useCleanAnalyticsOverview(
@@ -534,25 +560,62 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
         </CardContent>
       </Card>
 
+      {/* Traffic Bronnen Vergelijking Overzicht */}
+      {prevOverview && (
+        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">📊 Traffic Bronnen Vergelijking</CardTitle>
+            <CardDescription>Huidige periode vs {compLabel}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {(['search', 'social', 'direct', 'referral'] as const).map(cat => {
+                const currentSessions = (overview?.referrerSources || [])
+                  .filter(s => s.category === cat)
+                  .reduce((a, b) => a + b.unique_sessions, 0);
+                const prevSessions = (prevOverview?.referrerSources || [])
+                  .filter(s => s.category === cat)
+                  .reduce((a, b) => a + b.unique_sessions, 0);
+                const label = cat === 'search' ? 'Zoekmachines' : cat === 'social' ? 'Social Media' : cat === 'direct' ? 'Direct' : 'Referrals';
+                return (
+                  <div key={cat} className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                    {categoryIconMap[cat]}
+                    <p className="text-xs text-muted-foreground mt-1">{label}</p>
+                    <p className="font-bold text-lg">{currentSessions}</p>
+                    <ComparisonBadge current={currentSessions} previous={prevSessions} />
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Details Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Device Breakdown */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Apparaten</CardTitle>
-            <CardDescription>Alleen echte gebruikers</CardDescription>
+            <CardDescription>vs {compLabel}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {overview?.deviceBreakdown.map((item) => (
-                <div key={item.device} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {deviceIconMap[item.device] || <Activity className="h-4 w-4" />}
-                    <span className="capitalize">{item.device}</span>
+              {overview?.deviceBreakdown.map((item) => {
+                const prevCount = findPreviousValue(prevOverview?.deviceBreakdown, item, 'device', 'count');
+                return (
+                  <div key={item.device} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {deviceIconMap[item.device] || <Activity className="h-4 w-4" />}
+                      <span className="capitalize">{item.device}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Badge variant="secondary">{item.count}</Badge>
+                      <InlineComparison current={item.count} previous={prevCount} />
+                    </div>
                   </div>
-                  <Badge variant="secondary">{item.count}</Badge>
-                </div>
-              ))}
+                );
+              })}
               {(!overview?.deviceBreakdown || overview.deviceBreakdown.length === 0) && (
                 <p className="text-muted-foreground text-sm">Geen data</p>
               )}
@@ -564,24 +627,27 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Top Bronnen</CardTitle>
-            <CardDescription>Echte gebruikers per bron</CardDescription>
+            <CardDescription>vs {compLabel}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {overview?.referrerSources.slice(0, 6).map((item) => (
-                <div key={item.source} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {categoryIconMap[item.category] || <Globe className="h-4 w-4" />}
-                    <span className="text-sm truncate max-w-[120px]" title={item.source}>
-                      {item.source}
-                    </span>
+              {overview?.referrerSources.slice(0, 6).map((item) => {
+                const prevSessions = findPreviousValue(prevOverview?.referrerSources, item, 'source', 'unique_sessions');
+                return (
+                  <div key={item.source} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {categoryIconMap[item.category] || <Globe className="h-4 w-4" />}
+                      <span className="text-sm truncate max-w-[100px]" title={item.source}>
+                        {item.source}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="secondary">{item.unique_sessions}</Badge>
+                      <InlineComparison current={item.unique_sessions} previous={prevSessions} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">{item.avg_score}%</Badge>
-                    <Badge variant="secondary">{item.unique_sessions}</Badge>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {(!overview?.referrerSources || overview.referrerSources.length === 0) && (
                 <p className="text-muted-foreground text-sm">Geen data</p>
               )}
@@ -596,18 +662,24 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
               <AlertTriangle className="h-4 w-4 text-destructive" />
               Gefilterde Traffic
             </CardTitle>
-            <CardDescription>Datacenter & bot herkenning</CardDescription>
+            <CardDescription>vs {compLabel}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {overview?.datacenterBreakdown.slice(0, 6).map((item) => (
-                <div key={item.name} className="flex items-center justify-between">
-                  <span className="text-sm truncate max-w-[150px]" title={item.name}>
-                    {item.name}
-                  </span>
-                  <Badge variant="destructive">{item.count}</Badge>
-                </div>
-              ))}
+              {overview?.datacenterBreakdown.slice(0, 6).map((item) => {
+                const prevCount = findPreviousValue(prevOverview?.datacenterBreakdown, item, 'name', 'count');
+                return (
+                  <div key={item.name} className="flex items-center justify-between">
+                    <span className="text-sm truncate max-w-[120px]" title={item.name}>
+                      {item.name}
+                    </span>
+                    <div className="flex items-center">
+                      <Badge variant="destructive">{item.count}</Badge>
+                      <InlineComparison current={item.count} previous={prevCount} />
+                    </div>
+                  </div>
+                );
+              })}
               {(!overview?.datacenterBreakdown || overview.datacenterBreakdown.length === 0) && (
                 <div className="flex items-center gap-2 text-green-500">
                   <CheckCircle className="h-4 w-4" />
@@ -626,7 +698,7 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
             <FileText className="h-5 w-5" />
             Top Pagina's (Echte Gebruikers)
           </CardTitle>
-          <CardDescription>Populairste content zonder datacenter traffic</CardDescription>
+          <CardDescription>vs {compLabel}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -635,25 +707,32 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
                 <tr className="border-b">
                   <th className="text-left py-2 px-2">Pagina</th>
                   <th className="text-right py-2 px-2">Sessies</th>
-                  <th className="text-right py-2 px-2">Pageviews</th>
+                  <th className="text-right py-2 px-2">Δ</th>
                   <th className="text-right py-2 px-2">Kwaliteit</th>
                 </tr>
               </thead>
               <tbody>
-                {overview?.topPages.slice(0, 10).map((page) => (
-                  <tr key={page.path} className="border-b hover:bg-muted/50">
-                    <td className="py-2 px-2 truncate max-w-[300px]" title={page.path}>
-                      {page.path}
-                    </td>
-                    <td className="py-2 px-2 text-right font-medium">{page.unique_sessions}</td>
-                    <td className="py-2 px-2 text-right text-muted-foreground">{page.hits}</td>
-                    <td className="py-2 px-2 text-right">
-                      <Badge variant={page.avg_score >= 80 ? 'default' : page.avg_score >= 60 ? 'secondary' : 'destructive'}>
-                        {page.avg_score}%
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
+                {overview?.topPages.slice(0, 10).map((page) => {
+                  const prevSessions = findPreviousValue(prevOverview?.topPages, page, 'path', 'unique_sessions');
+                  const diff = page.unique_sessions - prevSessions;
+                  const pct = prevSessions > 0 ? ((diff / prevSessions) * 100).toFixed(0) : null;
+                  return (
+                    <tr key={page.path} className="border-b hover:bg-muted/50">
+                      <td className="py-2 px-2 truncate max-w-[250px]" title={page.path}>
+                        {page.path}
+                      </td>
+                      <td className="py-2 px-2 text-right font-medium">{page.unique_sessions}</td>
+                      <td className={`py-2 px-2 text-right text-xs ${diff >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {pct !== null ? `${diff >= 0 ? '+' : ''}${pct}%` : <span className="text-blue-500">🆕</span>}
+                      </td>
+                      <td className="py-2 px-2 text-right">
+                        <Badge variant={page.avg_score >= 80 ? 'default' : page.avg_score >= 60 ? 'secondary' : 'destructive'}>
+                          {page.avg_score}%
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -667,20 +746,38 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
             <Globe className="h-5 w-5" />
             Landen (Alleen Echte Gebruikers)
           </CardTitle>
-          <CardDescription>Gesorteerd op unieke sessies</CardDescription>
+          <CardDescription>vs {compLabel}</CardDescription>
         </CardHeader>
         <CardContent>
           {loadingCountry ? (
             <Skeleton className="h-[200px] w-full" />
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={(byCountry || []).slice(0, 10)} layout="vertical">
-                <XAxis type="number" fontSize={12} />
-                <YAxis dataKey="display_country" type="category" width={100} fontSize={12} />
-                <Tooltip formatter={(value, name) => [value, name === 'unique_sessions' ? 'Sessies' : 'Hits']} />
-                <Bar dataKey="unique_sessions" fill="#10b981" name="Sessies" />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={(byCountry || []).slice(0, 10)} layout="vertical">
+                  <XAxis type="number" fontSize={12} />
+                  <YAxis dataKey="display_country" type="category" width={100} fontSize={12} />
+                  <Tooltip formatter={(value, name) => [value, name === 'unique_sessions' ? 'Sessies' : 'Hits']} />
+                  <Bar dataKey="unique_sessions" fill="#10b981" name="Sessies" />
+                </BarChart>
+              </ResponsiveContainer>
+              {/* Country Comparison Table */}
+              {prevByCountry && (
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2 pt-2 border-t">
+                  {(byCountry || []).slice(0, 5).map(country => {
+                    const prevCountry = prevByCountry?.find(p => p.display_country === country.display_country);
+                    const prevSessions = prevCountry?.unique_sessions || 0;
+                    return (
+                      <div key={country.display_country} className="text-center p-2 bg-muted/30 rounded">
+                        <p className="text-xs font-medium">{country.display_country}</p>
+                        <p className="font-bold">{country.unique_sessions}</p>
+                        <InlineComparison current={country.unique_sessions} previous={prevSessions} />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>

@@ -8819,6 +8819,57 @@ export type Database = {
           unique_sessions: number
         }[]
       }
+      get_clean_analytics_countries: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          country_name: string
+          hit_count: number
+          real_count: number
+        }[]
+      }
+      get_clean_analytics_datacenters: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          datacenter: string
+          hit_count: number
+        }[]
+      }
+      get_clean_analytics_devices: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          device_name: string
+          hit_count: number
+          real_count: number
+        }[]
+      }
+      get_clean_analytics_hourly: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          hit_count: number
+          hour_of_day: number
+          real_count: number
+        }[]
+      }
+      get_clean_analytics_sources: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          hit_count: number
+          real_count: number
+          source_name: string
+        }[]
+      }
+      get_clean_analytics_stats: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          datacenter_hits: number
+          pages_per_session: number
+          purity_score: number
+          quality_score: number
+          real_users: number
+          total_hits: number
+          unique_sessions: number
+        }[]
+      }
       get_content_category_stats: {
         Args: { p_days?: number }
         Returns: {

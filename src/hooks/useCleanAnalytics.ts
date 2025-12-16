@@ -131,7 +131,8 @@ export const useCleanAnalyticsSummary = (dateRange: DateRangeParams) => {
       
       return summary.sort((a, b) => b.date.localeCompare(a.date));
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 1000, // Reduced from 2 min to 30 sec
+    refetchOnMount: 'always',
   });
 };
 
@@ -139,49 +140,24 @@ export const useCleanAnalyticsByCountry = (dateRange: DateRangeParams) => {
   return useQuery({
     queryKey: ['clean-analytics-by-country', dateRange.startDate.toISOString(), dateRange.endDate.toISOString()],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clean_analytics')
-        .select('country, real_country, is_datacenter, real_user_score, session_id')
-        .eq('is_datacenter', false)
-        .gte('created_at', dateRange.startDate.toISOString())
-        .lte('created_at', dateRange.endDate.toISOString());
+      // Use server-side RPC to avoid 1000 row limit
+      const { data, error } = await supabase.rpc('get_clean_analytics_countries', {
+        p_start_date: dateRange.startDate.toISOString(),
+        p_end_date: dateRange.endDate.toISOString(),
+      });
       
       if (error) throw error;
       
-      // Group by country
-      const byCountry = new Map<string, {
-        hits: number;
-        scores: number[];
-        sessions: Set<string>;
-      }>();
-      
-      (data || []).forEach(record => {
-        const country = record.real_country || record.country || 'Unknown';
-        if (!byCountry.has(country)) {
-          byCountry.set(country, { hits: 0, scores: [], sessions: new Set() });
-        }
-        const entry = byCountry.get(country)!;
-        entry.hits++;
-        entry.scores.push(record.real_user_score);
-        if (record.session_id) entry.sessions.add(record.session_id);
-      });
-      
-      const result: CleanAnalyticsByCountry[] = [];
-      byCountry.forEach((value, country) => {
-        result.push({
-          display_country: country,
-          hit_count: value.hits,
-          avg_score: value.scores.length > 0 
-            ? Math.round(value.scores.reduce((a, b) => a + b, 0) / value.scores.length) 
-            : 0,
-          real_hits: value.hits,
-          unique_sessions: value.sessions.size,
-        });
-      });
-      
-      return result.sort((a, b) => b.unique_sessions - a.unique_sessions);
+      return (data || []).map((row: { country_name: string; hit_count: number; real_count: number }) => ({
+        display_country: row.country_name,
+        hit_count: Number(row.hit_count),
+        avg_score: 0, // Not available from RPC
+        real_hits: Number(row.real_count),
+        unique_sessions: Number(row.real_count), // Approximation
+      })) as CleanAnalyticsByCountry[];
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 };
 
@@ -193,201 +169,110 @@ export const useCleanAnalyticsOverview = (
     queryKey: ['clean-analytics-overview', dateRange.startDate.toISOString(), dateRange.endDate.toISOString()],
     enabled: options?.enabled !== false,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clean_analytics')
-        .select('is_datacenter, datacenter_name, real_user_score, device_type, browser, session_id, referrer, path, created_at')
-        .gte('created_at', dateRange.startDate.toISOString())
-        .lte('created_at', dateRange.endDate.toISOString());
-      
-      if (error) throw error;
-      
-      const records = data || [];
-      const totalHits = records.length;
-      const realUserRecords = records.filter(r => !r.is_datacenter);
-      const realUsers = realUserRecords.length;
-      const datacenterHits = records.filter(r => r.is_datacenter).length;
-      
-      // Unique sessions (real users only)
-      const uniqueSessions = new Set(realUserRecords.filter(r => r.session_id).map(r => r.session_id)).size;
-      
-      // Pages per session (engagement metric)
-      const sessionPageCounts = new Map<string, number>();
-      realUserRecords.forEach(r => {
-        if (r.session_id) {
-          sessionPageCounts.set(r.session_id, (sessionPageCounts.get(r.session_id) || 0) + 1);
-        }
-      });
-      const pagesPerSession = sessionPageCounts.size > 0
-        ? Math.round(Array.from(sessionPageCounts.values()).reduce((a, b) => a + b, 0) / sessionPageCounts.size * 10) / 10
-        : 0;
-      
-      // Calculate confidence-weighted purity score
-      let purityScore = 0;
-      let qualityScore = 0;
-      if (totalHits > 0) {
-        const avgConfidence = realUserRecords.length > 0
-          ? realUserRecords.reduce((a, b) => a + b.real_user_score, 0) / realUserRecords.length / 100
-          : 0;
-        
-        const basePurity = (realUsers / totalHits) * 100;
-        const uncertaintyFactor = 0.97;
-        purityScore = Math.min(
-          Math.round(basePurity * avgConfidence * uncertaintyFactor * 10) / 10,
-          97
-        );
-        
-        // Quality score = weighted avg of real_user_scores for real traffic
-        qualityScore = realUserRecords.length > 0
-          ? Math.round(realUserRecords.reduce((a, b) => a + b.real_user_score, 0) / realUserRecords.length)
-          : 0;
-        
-        if (totalHits < 10) {
-          purityScore = Math.round(purityScore * 0.8 * 10) / 10;
-        }
-      }
-      
-      // Datacenter breakdown
-      const datacenterBreakdown = new Map<string, number>();
-      records.filter(r => r.is_datacenter).forEach(r => {
-        const name = r.datacenter_name || 'Unknown';
-        datacenterBreakdown.set(name, (datacenterBreakdown.get(name) || 0) + 1);
-      });
-      
-      // Device breakdown (real users only)
-      const deviceBreakdown = new Map<string, number>();
-      realUserRecords.forEach(r => {
-        const device = r.device_type || 'unknown';
-        deviceBreakdown.set(device, (deviceBreakdown.get(device) || 0) + 1);
-      });
-      
-      // Browser breakdown (real users only)
-      const browserBreakdown = new Map<string, number>();
-      realUserRecords.forEach(r => {
-        const browser = r.browser || 'Unknown';
-        browserBreakdown.set(browser, (browserBreakdown.get(browser) || 0) + 1);
-      });
-      
-      // Referrer sources (real users only)
-      const referrerMap = new Map<string, { hits: number; sessions: Set<string>; scores: number[] }>();
-      realUserRecords.forEach(r => {
-        let source = 'Direct';
-        let category: 'search' | 'social' | 'direct' | 'referral' | 'other' = 'direct';
-        
-        if (r.referrer) {
-          const ref = r.referrer.toLowerCase();
-          if (ref.includes('google.') || ref.includes('bing.') || ref.includes('duckduckgo') || ref.includes('yahoo.') || ref.includes('ecosia')) {
-            source = ref.includes('google.') ? 'Google' : ref.includes('bing.') ? 'Bing' : ref.includes('duckduckgo') ? 'DuckDuckGo' : ref.includes('yahoo.') ? 'Yahoo' : 'Ecosia';
-            category = 'search';
-          } else if (ref.includes('facebook.') || ref.includes('instagram.') || ref.includes('twitter.') || ref.includes('linkedin.') || ref.includes('tiktok.') || ref.includes('pinterest.')) {
-            source = ref.includes('facebook.') ? 'Facebook' : ref.includes('instagram.') ? 'Instagram' : ref.includes('twitter.') || ref.includes('x.com') ? 'X/Twitter' : ref.includes('linkedin.') ? 'LinkedIn' : ref.includes('tiktok.') ? 'TikTok' : 'Pinterest';
-            category = 'social';
-          } else if (ref.includes('musicscan.')) {
-            source = 'Internal';
-            category = 'referral';
-          } else {
-            try {
-              source = new URL(r.referrer).hostname.replace('www.', '');
-            } catch {
-              source = 'Other';
-            }
-            category = 'referral';
-          }
-        }
-        
-        if (!referrerMap.has(source)) {
-          referrerMap.set(source, { hits: 0, sessions: new Set(), scores: [] });
-        }
-        const entry = referrerMap.get(source)!;
-        entry.hits++;
-        if (r.session_id) entry.sessions.add(r.session_id);
-        entry.scores.push(r.real_user_score);
-      });
-      
-      const referrerSources: ReferrerSource[] = [];
-      referrerMap.forEach((value, source) => {
-        let category: 'search' | 'social' | 'direct' | 'referral' | 'other' = 'other';
-        if (['Google', 'Bing', 'DuckDuckGo', 'Yahoo', 'Ecosia'].includes(source)) category = 'search';
-        else if (['Facebook', 'Instagram', 'X/Twitter', 'LinkedIn', 'TikTok', 'Pinterest'].includes(source)) category = 'social';
-        else if (source === 'Direct') category = 'direct';
-        else if (source === 'Internal') category = 'referral';
-        
-        referrerSources.push({
-          source,
-          category,
-          hits: value.hits,
-          unique_sessions: value.sessions.size,
-          avg_score: value.scores.length > 0 ? Math.round(value.scores.reduce((a, b) => a + b, 0) / value.scores.length) : 0,
-        });
-      });
-      
-      // Top pages (real users only)
-      const pageMap = new Map<string, { hits: number; sessions: Set<string>; scores: number[] }>();
-      realUserRecords.forEach(r => {
-        const path = r.path || '/';
-        if (!pageMap.has(path)) {
-          pageMap.set(path, { hits: 0, sessions: new Set(), scores: [] });
-        }
-        const entry = pageMap.get(path)!;
-        entry.hits++;
-        if (r.session_id) entry.sessions.add(r.session_id);
-        entry.scores.push(r.real_user_score);
-      });
-      
-      const topPages: TopPage[] = [];
-      pageMap.forEach((value, path) => {
-        topPages.push({
-          path,
-          hits: value.hits,
-          unique_sessions: value.sessions.size,
-          avg_score: value.scores.length > 0 ? Math.round(value.scores.reduce((a, b) => a + b, 0) / value.scores.length) : 0,
-        });
-      });
-      
-      // Hourly distribution
+      // Use server-side RPC functions to avoid 1000 row limit
+      const [statsResult, hourlyResult, sourcesResult, devicesResult, datacentersResult] = await Promise.all([
+        supabase.rpc('get_clean_analytics_stats', {
+          p_start_date: dateRange.startDate.toISOString(),
+          p_end_date: dateRange.endDate.toISOString(),
+        }),
+        supabase.rpc('get_clean_analytics_hourly', {
+          p_start_date: dateRange.startDate.toISOString(),
+          p_end_date: dateRange.endDate.toISOString(),
+        }),
+        supabase.rpc('get_clean_analytics_sources', {
+          p_start_date: dateRange.startDate.toISOString(),
+          p_end_date: dateRange.endDate.toISOString(),
+        }),
+        supabase.rpc('get_clean_analytics_devices', {
+          p_start_date: dateRange.startDate.toISOString(),
+          p_end_date: dateRange.endDate.toISOString(),
+        }),
+        supabase.rpc('get_clean_analytics_datacenters', {
+          p_start_date: dateRange.startDate.toISOString(),
+          p_end_date: dateRange.endDate.toISOString(),
+        }),
+      ]);
+
+      if (statsResult.error) throw statsResult.error;
+      if (hourlyResult.error) throw hourlyResult.error;
+      if (sourcesResult.error) throw sourcesResult.error;
+      if (devicesResult.error) throw devicesResult.error;
+      if (datacentersResult.error) throw datacentersResult.error;
+
+      const stats = statsResult.data?.[0] || {
+        total_hits: 0,
+        real_users: 0,
+        datacenter_hits: 0,
+        unique_sessions: 0,
+        purity_score: 0,
+        quality_score: 0,
+        pages_per_session: 0,
+      };
+
+      // Build hourly distribution
+      const hourlyDistribution: HourlyDistribution[] = [];
       const hourlyMap = new Map<number, { real: number; datacenter: number }>();
       for (let i = 0; i < 24; i++) hourlyMap.set(i, { real: 0, datacenter: 0 });
       
-      records.forEach(r => {
-        const hour = new Date(r.created_at).getHours();
-        const entry = hourlyMap.get(hour)!;
-        if (r.is_datacenter) {
-          entry.datacenter++;
-        } else {
-          entry.real++;
-        }
+      (hourlyResult.data || []).forEach((row: { hour_of_day: number; hit_count: number; real_count: number }) => {
+        hourlyMap.set(row.hour_of_day, {
+          real: Number(row.real_count),
+          datacenter: Number(row.hit_count) - Number(row.real_count),
+        });
       });
       
-      const hourlyDistribution: HourlyDistribution[] = [];
       hourlyMap.forEach((value, hour) => {
         hourlyDistribution.push({ hour, real_users: value.real, datacenter: value.datacenter });
       });
-      
+
+      // Build referrer sources
+      const referrerSources: ReferrerSource[] = (sourcesResult.data || []).map((row: { source_name: string; hit_count: number; real_count: number }) => {
+        let category: 'search' | 'social' | 'direct' | 'referral' | 'other' = 'other';
+        if (['Google', 'Bing'].includes(row.source_name)) category = 'search';
+        else if (['Facebook', 'Twitter', 'Instagram', 'LinkedIn'].includes(row.source_name)) category = 'social';
+        else if (row.source_name === 'Direct') category = 'direct';
+        
+        return {
+          source: row.source_name,
+          category,
+          hits: Number(row.real_count),
+          unique_sessions: Number(row.real_count), // Approximation from RPC
+          avg_score: 0,
+        };
+      });
+
+      // Build device breakdown
+      const deviceBreakdown = (devicesResult.data || []).map((row: { device_name: string; real_count: number }) => ({
+        device: row.device_name,
+        count: Number(row.real_count),
+      }));
+
+      // Build datacenter breakdown
+      const datacenterBreakdown = (datacentersResult.data || []).map((row: { datacenter: string; hit_count: number }) => ({
+        name: row.datacenter,
+        count: Number(row.hit_count),
+      }));
+
       return {
-        totalHits,
-        realUsers,
-        datacenterHits,
-        purityScore,
-        qualityScore,
-        uniqueSessions,
-        pagesPerSession,
-        avgRealScore: realUsers > 0 
-          ? Math.round(realUserRecords.reduce((a, b) => a + b.real_user_score, 0) / realUsers)
-          : 0,
-        datacenterBreakdown: Array.from(datacenterBreakdown.entries())
-          .map(([name, count]) => ({ name, count }))
-          .sort((a, b) => b.count - a.count),
-        deviceBreakdown: Array.from(deviceBreakdown.entries())
-          .map(([device, count]) => ({ device, count }))
-          .sort((a, b) => b.count - a.count),
-        browserBreakdown: Array.from(browserBreakdown.entries())
-          .map(([browser, count]) => ({ browser, count }))
-          .sort((a, b) => b.count - a.count),
-        referrerSources: referrerSources.sort((a, b) => b.unique_sessions - a.unique_sessions),
-        topPages: topPages.sort((a, b) => b.unique_sessions - a.unique_sessions).slice(0, 15),
+        totalHits: Number(stats.total_hits),
+        realUsers: Number(stats.real_users),
+        datacenterHits: Number(stats.datacenter_hits),
+        purityScore: Number(stats.purity_score),
+        qualityScore: Number(stats.quality_score),
+        uniqueSessions: Number(stats.unique_sessions),
+        pagesPerSession: Number(stats.pages_per_session),
+        avgRealScore: Number(stats.quality_score),
+        datacenterBreakdown,
+        deviceBreakdown,
+        browserBreakdown: [], // Not needed for main dashboard
+        referrerSources,
+        topPages: [], // Fetch separately if needed
         hourlyDistribution: hourlyDistribution.sort((a, b) => a.hour - b.hour),
       };
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 1000, // Reduced from 2 min to 30 sec for more real-time data
+    refetchOnMount: 'always',
+    refetchInterval: 60000, // Auto-refresh every minute
   });
 };
 

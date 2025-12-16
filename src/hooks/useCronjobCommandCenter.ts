@@ -6,8 +6,9 @@ import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, subWeeks
 // Complete list of all scheduled cronjobs from config.toml with categories and exact times
 // expectedPerDay overrides calculated value for time-window and weekly crons
 // Mapping cronjob -> queue table (for pending items display)
-export const CRONJOB_QUEUE_MAPPING: Record<string, { table: string; statusColumn?: string; pendingStatus?: string }> = {
-  'artist-stories-batch-processor': { table: 'batch_queue_items', statusColumn: 'status', pendingStatus: 'pending' },
+export const CRONJOB_QUEUE_MAPPING: Record<string, { table: string; statusColumn?: string; pendingStatus?: string; itemTypeFilter?: string }> = {
+  'daily-artist-stories-generator': { table: 'batch_queue_items', statusColumn: 'status', pendingStatus: 'pending', itemTypeFilter: 'artist_story' },
+  'artist-stories-batch-processor': { table: 'batch_queue_items', statusColumn: 'status', pendingStatus: 'pending', itemTypeFilter: 'artist_story' },
   'singles-batch-processor': { table: 'singles_import_queue', statusColumn: 'status', pendingStatus: 'pending' },
   'post-scheduled-singles': { table: 'singles_facebook_queue', statusColumn: 'status', pendingStatus: 'pending' },
   'post-scheduled-music-history': { table: 'music_history_facebook_queue', statusColumn: 'status', pendingStatus: 'pending' },

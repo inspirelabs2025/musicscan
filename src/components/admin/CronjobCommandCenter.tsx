@@ -166,6 +166,33 @@ export const CronjobCommandCenter = () => {
     return `${Math.round(hours / 24)} dagen`;
   };
 
+  // Calculate expected daily output from interval
+  const calculateExpectedOutput = (expectedIntervalMinutes: number): { label: string; perDay: number } => {
+    const perDay = Math.floor(1440 / expectedIntervalMinutes);
+    if (expectedIntervalMinutes >= 1440) return { label: '1/dag', perDay: 1 };
+    if (expectedIntervalMinutes === 720) return { label: '2/dag', perDay: 2 };
+    if (expectedIntervalMinutes === 360) return { label: '4/dag', perDay: 4 };
+    if (expectedIntervalMinutes === 120) return { label: '12/dag', perDay: 12 };
+    if (expectedIntervalMinutes === 60) return { label: '24/dag', perDay: 24 };
+    if (expectedIntervalMinutes === 30) return { label: '48/dag', perDay: 48 };
+    if (expectedIntervalMinutes === 15) return { label: '96/dag', perDay: 96 };
+    if (expectedIntervalMinutes === 10) return { label: '144/dag', perDay: 144 };
+    if (expectedIntervalMinutes === 5) return { label: '288/dag', perDay: 288 };
+    if (expectedIntervalMinutes === 2) return { label: '720/dag', perDay: 720 };
+    if (expectedIntervalMinutes === 1) return { label: '~1440/dag', perDay: 1440 };
+    return { label: `~${perDay}/dag`, perDay };
+  };
+
+  // Get color class for today's output vs expected
+  const getOutputColorClass = (actual: number, expected: number): string => {
+    if (expected === 0) return 'text-muted-foreground';
+    const ratio = actual / expected;
+    if (ratio >= 1) return 'text-green-500';
+    if (ratio >= 0.5) return 'text-yellow-500';
+    if (actual === 0) return 'text-muted-foreground';
+    return 'text-destructive';
+  };
+
   // Prepare chart data for output comparison
   const chartData = outputStats
     .filter(s => s.total_created > 0 || s.previous_created > 0)
@@ -396,12 +423,13 @@ export const CronjobCommandCenter = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[40px]"></TableHead>
                     <TableHead>Functie</TableHead>
-                    <TableHead>Schedule</TableHead>
                     <TableHead>Tijdstip</TableHead>
                     <TableHead>Categorie</TableHead>
-                    <TableHead>Output Tabel</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Vandaag</TableHead>
+                    <TableHead className="text-center">Verwacht</TableHead>
+                    <TableHead>Laatst Actief</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -409,56 +437,60 @@ export const CronjobCommandCenter = () => {
                     const jobWithHealth = cronjobsWithHealth.find(j => j.name === job.name);
                     const hasActivity = jobWithHealth?.lastActivityTime;
                     const itemsToday = jobWithHealth?.itemsToday || 0;
+                    const expected = calculateExpectedOutput(job.expectedIntervalMinutes);
+                    const outputColorClass = getOutputColorClass(itemsToday, expected.perDay);
                     
                     return (
                       <TableRow key={job.name}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {jobWithHealth?.hasRecentOutput ? (
-                              <CheckCircle className="h-4 w-4 text-green-500" />
-                            ) : jobWithHealth?.isOverdue ? (
-                              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                            ) : hasActivity ? (
-                              <Clock className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <XCircle className="h-4 w-4 text-muted-foreground" />
-                            )}
-                            <span className="font-medium text-sm">{job.name}</span>
-                          </div>
+                        {/* Status Icon */}
+                        <TableCell className="pr-0">
+                          {jobWithHealth?.hasRecentOutput ? (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          ) : jobWithHealth?.isOverdue ? (
+                            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                          ) : hasActivity ? (
+                            <Clock className="h-5 w-5 text-muted-foreground" />
+                          ) : (
+                            <XCircle className="h-5 w-5 text-muted-foreground/50" />
+                          )}
                         </TableCell>
+                        {/* Functie */}
                         <TableCell>
-                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{job.schedule}</code>
+                          <span className="font-medium text-sm">{job.name}</span>
                         </TableCell>
+                        {/* Tijdstip */}
                         <TableCell>
                           <Badge variant="outline" className="font-mono text-xs">
-                            🕐 {job.time}
+                            {job.time}
                           </Badge>
                         </TableCell>
+                        {/* Categorie */}
                         <TableCell>
                           <Badge className={categoryColors[job.category]}>
                             {job.category}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {job.outputTable || '-'}
+                        {/* Vandaag - grote duidelijke getallen */}
+                        <TableCell className="text-center">
+                          <span className={`font-mono text-xl font-bold ${outputColorClass}`}>
+                            {itemsToday}
+                          </span>
                         </TableCell>
+                        {/* Verwacht */}
+                        <TableCell className="text-center">
+                          <span className="font-mono text-sm text-muted-foreground">
+                            {expected.label}
+                          </span>
+                        </TableCell>
+                        {/* Laatst Actief */}
                         <TableCell>
-                          <div className="flex flex-col gap-0.5">
-                            {hasActivity ? (
-                              <>
-                                <span className="text-xs text-muted-foreground">
-                                  {formatDistanceToNow(new Date(jobWithHealth.lastActivityTime!), { addSuffix: true, locale: nl })}
-                                </span>
-                                {itemsToday > 0 && (
-                                  <Badge variant="secondary" className="text-[10px] w-fit">
-                                    {itemsToday} vandaag
-                                  </Badge>
-                                )}
-                              </>
-                            ) : (
-                              <Badge variant="outline" className="text-[10px]">Geen output</Badge>
-                            )}
-                          </div>
+                          {hasActivity ? (
+                            <span className="text-sm text-muted-foreground">
+                              {formatDistanceToNow(new Date(jobWithHealth.lastActivityTime!), { addSuffix: true, locale: nl })}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/50">-</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     );

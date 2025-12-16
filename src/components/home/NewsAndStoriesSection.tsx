@@ -12,6 +12,14 @@ import { Newspaper, FileText, ArrowRight, Music, ChevronRight } from 'lucide-rea
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
+// Decode HTML entities for clean display
+const decodeHtmlEntities = (text: string): string => {
+  if (!text) return '';
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+};
+
 export const NewsAndStoriesSection = () => {
   const isMobile = useIsMobile();
   
@@ -209,11 +217,11 @@ export const NewsAndStoriesSection = () => {
                   )}
                 </div>
                 <h3 className="font-bold text-lg line-clamp-2 group-hover:text-red-600 transition-colors">
-                  {news.title}
+                  {decodeHtmlEntities(news.title)}
                 </h3>
                 {news.summary && (
                   <p className="text-sm text-muted-foreground line-clamp-2">
-                    {news.summary}
+                    {decodeHtmlEntities(news.summary)}
                   </p>
                 )}
               </div>

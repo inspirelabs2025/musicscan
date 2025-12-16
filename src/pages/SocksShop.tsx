@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { usePlatformProducts } from "@/hooks/usePlatformProducts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Sparkles, Eye, Shirt } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/SEO/BreadcrumbNavigation";
@@ -20,15 +21,36 @@ export default function SocksShop() {
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc" | "popular">("newest");
   const [showFeatured, setShowFeatured] = useState(false);
 
-  const { data: allProducts, isLoading } = usePlatformProducts({
-    mediaType: 'merchandise',
-    featured: showFeatured || undefined,
+  // Alleen Elvis Presley en Mariah Carey sokken tonen
+  const { data: christmasSocks, isLoading } = useQuery({
+    queryKey: ['socks-elvis-mariah'],
+    queryFn: async () => {
+      const { data: albumSocks, error } = await supabase
+        .from('album_socks')
+        .select('id, artist_name, album_title, base_design_url, slug, view_count')
+        .eq('pattern_type', 'christmas')
+        .or('artist_name.ilike.%Elvis Presley%,artist_name.ilike.%Mariah Carey%');
+
+      if (error) throw error;
+
+      return (albumSocks || []).map((s: any) => ({
+        id: s.id,
+        slug: s.slug || `sock-${s.id}`,
+        title: s.album_title,
+        artist: s.artist_name,
+        price: 24.95,
+        view_count: s.view_count || 0,
+        is_featured: true,
+        primary_image: s.base_design_url || '',
+        categories: ['socks'],
+        tags: ['christmas', 'kerst'],
+        created_at: new Date().toISOString(),
+      }));
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Filter only SOCK products
-  const sockProducts = allProducts?.filter(product => 
-    product.categories?.includes('socks')
-  );
+  const sockProducts = christmasSocks;
 
   // Filter and sort products
   const filteredProducts = sockProducts

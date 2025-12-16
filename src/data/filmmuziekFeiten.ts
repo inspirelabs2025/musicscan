@@ -598,3 +598,18 @@ export const FILMMUZIEK_FEITEN: FilmmuziekFeit[] = [
     subgenre: "Minimalistische Score"
   }
 ];
+
+// Helper function to get feit by slug
+export const getFilmmuziekFeitBySlug = (slug: string): FilmmuziekFeit | undefined => {
+  return FILMMUZIEK_FEITEN.find(feit => feit.slug === slug);
+};
+
+// Helper function to get feiten by decade
+export const getFilmmuziekFeitenByDecade = (decade: string): FilmmuziekFeit[] => {
+  return FILMMUZIEK_FEITEN.filter(feit => feit.decade === decade);
+};
+
+// Helper function to get feiten by subgenre
+export const getFilmmuziekFeitenBySubgenre = (subgenre: string): FilmmuziekFeit[] => {
+  return FILMMUZIEK_FEITEN.filter(feit => feit.subgenre === subgenre);
+};

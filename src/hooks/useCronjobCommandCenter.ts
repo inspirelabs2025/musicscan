@@ -15,6 +15,8 @@ export const ALL_SCHEDULED_CRONJOBS = [
   { name: 'latest-discogs-news', schedule: '0 3 * * *', time: '03:00 UTC', description: 'Genereert nieuws over Discogs releases', category: 'Content Generatie', expectedIntervalMinutes: 1440, outputTable: 'news_blog_posts' },
   { name: 'composer-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt componist verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, outputTable: 'music_stories' },
   { name: 'soundtrack-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt soundtrack verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, outputTable: 'music_stories' },
+  { name: 'generate-daily-challenge', schedule: '0 5 * * *', time: '05:00 UTC', description: 'Genereert dagelijkse quiz challenge', category: 'Content Generatie', expectedIntervalMinutes: 1440, outputTable: 'daily_challenges' },
+  { name: 'daily-youtube-discoveries', schedule: '0 4 * * *', time: '04:00 UTC', description: 'Ontdekt nieuwe YouTube muziekvideo\'s', category: 'Content Generatie', expectedIntervalMinutes: 1440, outputTable: 'youtube_music_videos' },
   
   // Data Import & Crawling
   { name: 'discogs-lp-crawler', schedule: '0 * * * *', time: 'Elk uur :00', description: 'Haalt nieuwe vinyl releases op van Discogs', category: 'Data Import', expectedIntervalMinutes: 60, outputTable: 'discogs_import_log' },
@@ -22,13 +24,16 @@ export const ALL_SCHEDULED_CRONJOBS = [
   { name: 'generate-curated-artists', schedule: '0 2 * * *', time: '02:00 UTC', description: 'Ontdekt nieuwe interessante artiesten', category: 'Data Import', expectedIntervalMinutes: 1440, outputTable: 'curated_artists' },
   { name: 'process-spotify-new-releases', schedule: '0 9 * * *', time: '09:00 UTC', description: 'Haalt nieuwe Spotify releases op en verwerkt ze', category: 'Data Import', expectedIntervalMinutes: 1440, outputTable: 'spotify_new_releases_processed' },
   { name: 'queue-dance-house-content', schedule: '0 7 * * *', time: '07:00 UTC', description: 'Queue Dance/House content voor generatie', category: 'Data Import', expectedIntervalMinutes: 1440, outputTable: 'batch_queue_items' },
-  { name: 'top2000-auto-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt Top 2000 enrichment en analyse', category: 'Data Import', expectedIntervalMinutes: 1, outputTable: 'top2000_entries' },
+  { name: 'top2000-auto-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt Top 2000 enrichment en analyse', category: 'Data Import', expectedIntervalMinutes: 1, outputTable: 'top2000_songs' },
   
   // Social Media Posting
   { name: 'schedule-music-history-posts', schedule: '5 6 * * *', time: '06:05 UTC', description: 'Plant muziekgeschiedenis posts voor de dag', category: 'Social Media', expectedIntervalMinutes: 1440, outputTable: 'music_history_facebook_queue' },
   { name: 'post-scheduled-music-history', schedule: '0 8-22 * * *', time: '08:00-22:00 UTC (elk uur)', description: 'Post muziekgeschiedenis naar Facebook', category: 'Social Media', expectedIntervalMinutes: 60, outputTable: 'music_history_facebook_queue' },
   { name: 'post-scheduled-singles', schedule: '30 9-21/2 * * *', time: '09:30-21:30 UTC (elke 2u)', description: 'Post singles naar Facebook', category: 'Social Media', expectedIntervalMinutes: 120, outputTable: 'singles_facebook_queue' },
+  { name: 'schedule-youtube-posts', schedule: '10 6 * * *', time: '06:10 UTC', description: 'Plant YouTube FB posts voor de dag', category: 'Social Media', expectedIntervalMinutes: 1440, outputTable: 'youtube_facebook_queue' },
   { name: 'post-scheduled-youtube', schedule: '0 9-21 * * *', time: '09:00-21:00 UTC (elk uur)', description: 'Post YouTube discoveries naar Facebook', category: 'Social Media', expectedIntervalMinutes: 60, outputTable: 'youtube_facebook_queue' },
+  { name: 'process-podcast-facebook-queue', schedule: '0 8-22 * * *', time: '08:00-22:00 UTC (elk uur)', description: 'Post podcast episodes naar Facebook', category: 'Social Media', expectedIntervalMinutes: 60, outputTable: 'podcast_facebook_queue' },
+  { name: 'schedule-weekly-podcast-posts', schedule: '0 6 * * 1', time: 'Maandag 06:00 UTC', description: 'Plant wekelijkse podcast posts', category: 'Social Media', expectedIntervalMinutes: 10080, outputTable: 'podcast_facebook_queue' },
   
   // SEO & Indexing
   { name: 'indexnow-processor', schedule: '*/5 * * * *', time: 'Elke 5 min', description: 'Verwerkt URLs voor IndexNow submission', category: 'SEO', expectedIntervalMinutes: 5, outputTable: 'indexnow_queue' },
@@ -42,9 +47,11 @@ export const ALL_SCHEDULED_CRONJOBS = [
   { name: 'bulk-poster-processor', schedule: '*/5 * * * *', time: 'Elke 5 min', description: 'Genereert poster designs voor webshop', category: 'Products', expectedIntervalMinutes: 5, outputTable: 'platform_products' },
   { name: 'backfill-christmas-socks', schedule: '*/2 * * * *', time: 'Elke 2 min', description: 'Genereert kerst sokken designs', category: 'Products', expectedIntervalMinutes: 2, outputTable: 'album_socks' },
   { name: 'repair-christmas-sock-images', schedule: '*/3 * * * *', time: 'Elke 3 min', description: 'Repareert kerst sok afbeeldingen', category: 'Products', expectedIntervalMinutes: 3, outputTable: 'album_socks' },
+  { name: 'process-tiktok-video-queue', schedule: '*/5 * * * *', time: 'Elke 5 min', description: 'Verwerkt TikTok/GIF render queue', category: 'Products', expectedIntervalMinutes: 5, outputTable: 'render_jobs' },
   
   // Maintenance & Community
   { name: 'refresh-featured-photos', schedule: '0 */6 * * *', time: 'Elke 6 uur :00', description: 'Ververst uitgelichte community fotos', category: 'Community', expectedIntervalMinutes: 360, outputTable: 'photos' },
+  { name: 'weekly-forum-discussions', schedule: '0 10 * * 1', time: 'Maandag 10:00 UTC', description: 'Genereert wekelijkse forum discussies', category: 'Community', expectedIntervalMinutes: 10080, outputTable: 'forum_topics' },
 ] as const;
 
 export type CronjobCategory = 'Content Generatie' | 'Data Import' | 'Social Media' | 'SEO' | 'Products' | 'Community';

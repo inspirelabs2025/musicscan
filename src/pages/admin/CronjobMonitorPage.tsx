@@ -26,7 +26,7 @@ export default function CronjobMonitorPage() {
       <div className="space-y-2">
         <h1 className="text-4xl font-bold">Cronjob Command Center</h1>
         <p className="text-muted-foreground">
-          Gecentraliseerd overzicht van alle {30} scheduled functions, queues en alerts
+          Gecentraliseerd overzicht van alle {39} scheduled functions, queues en alerts
         </p>
       </div>
 

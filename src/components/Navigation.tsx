@@ -56,6 +56,7 @@ const landenGenresMenuItems = [
   { title: "🇳🇱 Nederland", url: "/nederland", icon: Flag, highlight: true },
   { title: "🇫🇷 Frankrijk", url: "/frankrijk", icon: Flag, highlight: true },
   { title: "🎧 Dance/House", url: "/dance-house", icon: Music, highlight: true },
+  { title: "🎬 Filmmuziek", url: "/filmmuziek", icon: Music, highlight: true },
   { title: "🎄 Kerst", url: "/kerst", icon: Music, highlight: true },
   { title: "Alle Artiesten", url: "/artists", icon: Users },
   { title: "Alle Releases", url: "/releases", icon: Music },

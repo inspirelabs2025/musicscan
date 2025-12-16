@@ -95,6 +95,7 @@ const NLMuziekFeitDetail = lazy(() => import("./pages/NLMuziekFeitDetail"));
 const FranseMuziek = lazy(() => import("./pages/FranseMuziek"));
 const DanceHouseMuziek = lazy(() => import("./pages/DanceHouseMuziek"));
 const DanceHouseFeitDetail = lazy(() => import("./pages/DanceHouseFeitDetail"));
+const Filmmuziek = lazy(() => import("./pages/Filmmuziek"));
 
 // Year/Month overview
 const YearOverview = lazy(() => import("./pages/YearOverview"));

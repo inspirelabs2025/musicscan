@@ -407,11 +407,22 @@ export const CronjobCommandCenter = () => {
                 <TableBody>
                   {ALL_SCHEDULED_CRONJOBS.map((job) => {
                     const jobWithHealth = cronjobsWithHealth.find(j => j.name === job.name);
+                    const hasActivity = jobWithHealth?.lastActivityTime;
+                    const itemsToday = jobWithHealth?.itemsToday || 0;
+                    
                     return (
                       <TableRow key={job.name}>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {getStatusIcon(jobWithHealth?.health?.last_status, jobWithHealth?.isOverdue)}
+                            {jobWithHealth?.hasRecentOutput ? (
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                            ) : jobWithHealth?.isOverdue ? (
+                              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                            ) : hasActivity ? (
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-muted-foreground" />
+                            )}
                             <span className="font-medium text-sm">{job.name}</span>
                           </div>
                         </TableCell>
@@ -432,13 +443,22 @@ export const CronjobCommandCenter = () => {
                           {job.outputTable || '-'}
                         </TableCell>
                         <TableCell>
-                          {jobWithHealth?.health?.last_run_at ? (
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(jobWithHealth.health.last_run_at), { addSuffix: true, locale: nl })}
-                            </span>
-                          ) : (
-                            <Badge variant="outline">Niet gedraaid</Badge>
-                          )}
+                          <div className="flex flex-col gap-0.5">
+                            {hasActivity ? (
+                              <>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatDistanceToNow(new Date(jobWithHealth.lastActivityTime!), { addSuffix: true, locale: nl })}
+                                </span>
+                                {itemsToday > 0 && (
+                                  <Badge variant="secondary" className="text-[10px] w-fit">
+                                    {itemsToday} vandaag
+                                  </Badge>
+                                )}
+                              </>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px]">Geen output</Badge>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );

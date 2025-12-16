@@ -8909,6 +8909,15 @@ export type Database = {
           total_runs: number
         }[]
       }
+      get_cronjob_last_output: {
+        Args: never
+        Returns: {
+          cronjob_name: string
+          items_today: number
+          last_output_at: string
+          output_table: string
+        }[]
+      }
       get_cronjob_output_stats: {
         Args: { p_end_date: string; p_start_date: string }
         Returns: {

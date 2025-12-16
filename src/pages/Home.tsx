@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { ArtistSearchHero } from '@/components/home/ArtistSearchHero';
 import { PublicScannerSpotlight } from '@/components/home/PublicScannerSpotlight';
 import { SimpleHero } from '@/components/home/SimpleHero';
+import { ChristmasBanner } from '@/components/christmas/ChristmasBanner';
 import { useSEO } from '@/hooks/useSEO';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ChevronDown } from 'lucide-react';
@@ -62,6 +63,9 @@ const Home = () => {
       <section className="relative z-10 bg-gradient-to-b from-red-800 via-red-700 to-green-800/80">
         <ArtistSearchHero />
       </section>
+
+      {/* Christmas Banner - Link to /kerst */}
+      <ChristmasBanner />
 
       {/* Public Scanner - Above fold, no lazy load */}
       <section className="relative z-10 bg-green-50/50 dark:bg-green-950/20">

@@ -733,7 +733,11 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
                       </td>
                       <td className="py-2 px-2 text-right font-medium">{page.unique_sessions}</td>
                       <td className={`py-2 px-2 text-right text-xs ${diff >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {pct !== null ? `${diff >= 0 ? '+' : ''}${pct}%` : <span className="text-blue-500">🆕</span>}
+                        {pct !== null ? (
+                          <span>was {prevSessions}, {diff >= 0 ? '+' : ''}{pct}%</span>
+                        ) : (
+                          <span className="text-blue-500">🆕</span>
+                        )}
                       </td>
                       <td className="py-2 px-2 text-right">
                         <Badge variant={page.avg_score >= 80 ? 'default' : page.avg_score >= 60 ? 'secondary' : 'destructive'}>

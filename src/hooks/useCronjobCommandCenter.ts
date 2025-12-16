@@ -395,7 +395,7 @@ export const useCronjobCommandCenter = (dateRange: DateRange) => {
     
     // Use last_output_at from content tables if available, fallback to execution log
     const lastActivityTime = lastOutput?.last_output_at || health?.last_run_at;
-    const itemsToday = lastOutput?.items_today || 0;
+    const itemsToday = Number((lastOutput as any)?.items_today ?? 0);
     
     const isOverdue = lastActivityTime 
       ? (Date.now() - new Date(lastActivityTime).getTime()) > (job.expectedIntervalMinutes * 60 * 1000 * 1.5)

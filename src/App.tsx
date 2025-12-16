@@ -391,6 +391,7 @@ const AppContent = () => {
         <Route path="/frankrijk" element={<LazyRoute><FranseMuziek /></LazyRoute>} />
         <Route path="/dance-house" element={<LazyRoute><DanceHouseMuziek /></LazyRoute>} />
         <Route path="/dance-house/feit/:slug" element={<LazyRoute><DanceHouseFeitDetail /></LazyRoute>} />
+        <Route path="/filmmuziek" element={<LazyRoute><Filmmuziek /></LazyRoute>} />
         
         {/* Year/Month overview */}
         <Route path="/jaar-overzicht" element={<LazyRoute><YearOverview /></LazyRoute>} />

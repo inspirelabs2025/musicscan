@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHourlyTraffic, useDailyTraffic } from '@/hooks/useDetailedAnalytics';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Area, AreaChart } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, Legend } from 'recharts';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -11,9 +11,11 @@ interface TimeAnalysisProps {
 
 export function TimeAnalysis({ days }: TimeAnalysisProps) {
   const { data: hourlyData, isLoading: hourlyLoading } = useHourlyTraffic(days);
+  // Fetch previous period for comparison (e.g., if days=1, compare to yesterday)
+  const { data: prevHourlyData, isLoading: prevHourlyLoading } = useHourlyTraffic(days * 2);
   const { data: dailyData, isLoading: dailyLoading } = useDailyTraffic(Math.min(days, 30));
 
-  if (hourlyLoading || dailyLoading) {
+  if (hourlyLoading || dailyLoading || prevHourlyLoading) {
     return (
       <div className="grid md:grid-cols-2 gap-4">
         <Card>
@@ -28,12 +30,27 @@ export function TimeAnalysis({ days }: TimeAnalysisProps) {
     );
   }
 
-  // Prepare hourly data with all 24 hours
+  // Calculate previous period hourly data (approximate by using difference)
+  const getPrevHourlyValue = (hour: number) => {
+    // prevHourlyData contains data for 2x the period, so we estimate previous period
+    // by taking the total and subtracting current period
+    const prevFound = prevHourlyData?.find(h => h.hour_of_day === hour);
+    const currFound = hourlyData?.find(h => h.hour_of_day === hour);
+    const prevTotal = prevFound ? Number(prevFound.view_count) : 0;
+    const currTotal = currFound ? Number(currFound.view_count) : 0;
+    return Math.max(0, prevTotal - currTotal);
+  };
+
+  // Prepare hourly data with all 24 hours + comparison
   const hourlyChartData = Array.from({ length: 24 }, (_, hour) => {
     const found = hourlyData?.find(h => h.hour_of_day === hour);
+    const currentViews = found ? Number(found.view_count) : 0;
+    const prevViews = getPrevHourlyValue(hour);
     return {
       hour: `${hour.toString().padStart(2, '0')}:00`,
-      views: found ? Number(found.view_count) : 0,
+      views: currentViews,
+      prevViews: prevViews,
+      change: prevViews > 0 ? Math.round(((currentViews - prevViews) / prevViews) * 100) : null,
     };
   });
 
@@ -62,67 +79,74 @@ export function TimeAnalysis({ days }: TimeAnalysisProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={hourlyChartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis 
-                    dataKey="hour" 
-                    tick={{ fontSize: 10 }}
-                    interval={2}
-                  />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip 
-                    formatter={(value: number) => [value.toLocaleString(), 'Views']}
-                    labelFormatter={(label) => `Tijd: ${label}`}
-                  />
-                  <Bar 
-                    dataKey="views" 
-                    fill="hsl(var(--primary))" 
-                    radius={[2, 2, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={hourlyChartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis 
+                  dataKey="hour" 
+                  tick={{ fontSize: 10 }}
+                  interval={2}
+                />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [
+                    value.toLocaleString(), 
+                    name === 'views' ? 'Nu' : 'Vorige periode'
+                  ]}
+                  labelFormatter={(label) => `Tijd: ${label}`}
+                />
+                <Legend />
+                <Bar 
+                  dataKey="prevViews" 
+                  name="Vorige periode"
+                  fill="hsl(var(--muted-foreground) / 0.3)" 
+                  radius={[2, 2, 0, 0]}
+                />
+                <Bar 
+                  dataKey="views" 
+                  name="Nu"
+                  fill="hsl(var(--primary))" 
+                  radius={[2, 2, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Traffic Heatmap per Uur</CardTitle>
+            <CardTitle>Vergelijking per Uur</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-6 gap-1">
               {hourlyChartData.map((hour, index) => {
-                const maxViews = Math.max(...hourlyChartData.map(h => h.views));
-                const intensity = maxViews > 0 ? hour.views / maxViews : 0;
+                const change = hour.change;
+                const isUp = change !== null && change >= 0;
+                const hasChange = change !== null;
                 return (
                   <div
                     key={index}
-                    className="aspect-square rounded flex items-center justify-center text-xs font-medium transition-colors"
-                    style={{
-                      backgroundColor: `hsl(var(--primary) / ${0.1 + intensity * 0.9})`,
-                      color: intensity > 0.5 ? 'white' : 'hsl(var(--foreground))',
-                    }}
-                    title={`${hour.hour}: ${hour.views} views`}
+                    className={`aspect-square rounded flex flex-col items-center justify-center text-xs font-medium transition-colors ${
+                      hasChange 
+                        ? isUp ? 'bg-green-500/20 text-green-700 dark:text-green-400' : 'bg-red-500/20 text-red-700 dark:text-red-400'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                    title={`${hour.hour}: ${hour.views} nu, ${hour.prevViews} vorige periode${hasChange ? ` (${isUp ? '+' : ''}${change}%)` : ''}`}
                   >
-                    {index}
+                    <span className="font-bold">{index}u</span>
+                    {hasChange && (
+                      <span className="text-[10px]">{isUp ? '+' : ''}{change}%</span>
+                    )}
                   </div>
                 );
               })}
             </div>
             <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
-              <span>Laag traffic</span>
-              <div className="flex gap-1">
-                {[0.1, 0.3, 0.5, 0.7, 0.9].map((opacity) => (
-                  <div
-                    key={opacity}
-                    className="w-4 h-4 rounded"
-                    style={{ backgroundColor: `hsl(var(--primary) / ${opacity})` }}
-                  />
-                ))}
-              </div>
-              <span>Hoog traffic</span>
+              <span className="text-red-500">↓ Daling</span>
+              <span>vs vorige periode</span>
+              <span className="text-green-500">↑ Stijging</span>
             </div>
           </CardContent>
         </Card>

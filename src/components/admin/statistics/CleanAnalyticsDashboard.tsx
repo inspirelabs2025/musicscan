@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -11,6 +11,7 @@ import {
   Globe, 
   Shield, 
   TrendingUp, 
+  TrendingDown,
   Monitor, 
   Smartphone, 
   Tablet,
@@ -28,7 +29,8 @@ import {
   useCleanAnalyticsOverview, 
   useCleanAnalyticsSummary, 
   useCleanAnalyticsByCountry,
-  useRecentCleanAnalytics 
+  useRecentCleanAnalytics,
+  DateRangeParams
 } from '@/hooks/useCleanAnalytics';
 import { 
   BarChart, 
@@ -40,17 +42,15 @@ import {
   PieChart, 
   Pie, 
   Cell,
-  LineChart,
-  Line,
   Legend,
   AreaChart,
   Area
 } from 'recharts';
-import { format } from 'date-fns';
+import { format, subDays, subWeeks, differenceInDays, startOfDay } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
 interface CleanAnalyticsDashboardProps {
-  days: number;
+  dateRange: DateRangeParams;
 }
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--destructive))', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
@@ -62,13 +62,71 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: 'hsl(var(--muted-foreground))',
 };
 
-export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = ({ days }) => {
+// Calculate comparison periods
+const getComparisonRanges = (dateRange: DateRangeParams) => {
+  const daysDiff = differenceInDays(dateRange.endDate, dateRange.startDate) + 1;
+  const isToday = daysDiff === 1;
+  
+  // Previous period (same length before current period)
+  const prevPeriodEnd = subDays(dateRange.startDate, 1);
+  const prevPeriodStart = subDays(prevPeriodEnd, daysDiff - 1);
+  
+  // Same day last week (only relevant for single day)
+  const sameDayLastWeek = isToday ? {
+    startDate: subWeeks(dateRange.startDate, 1),
+    endDate: subWeeks(dateRange.endDate, 1),
+  } : null;
+  
+  return {
+    previousPeriod: { startDate: startOfDay(prevPeriodStart), endDate: prevPeriodEnd },
+    sameDayLastWeek,
+    isToday,
+  };
+};
+
+// Comparison badge component
+const ComparisonBadge: React.FC<{ current: number; previous: number; label?: string }> = ({ 
+  current, 
+  previous,
+  label 
+}) => {
+  if (previous === 0) return null;
+  
+  const diff = current - previous;
+  const percentChange = ((diff / previous) * 100).toFixed(1);
+  const isPositive = diff >= 0;
+  
+  return (
+    <div className={`flex items-center gap-1 text-xs ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+      {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+      <span>{isPositive ? '+' : ''}{percentChange}%</span>
+      {label && <span className="text-muted-foreground">vs {label}</span>}
+    </div>
+  );
+};
+
+export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = ({ dateRange }) => {
   const [showDatacenter, setShowDatacenter] = useState(false);
   
-  const { data: overview, isLoading: loadingOverview } = useCleanAnalyticsOverview(days);
-  const { data: summary, isLoading: loadingSummary } = useCleanAnalyticsSummary(days);
-  const { data: byCountry, isLoading: loadingCountry } = useCleanAnalyticsByCountry(days);
+  // Calculate comparison ranges
+  const { previousPeriod, sameDayLastWeek, isToday } = useMemo(
+    () => getComparisonRanges(dateRange), 
+    [dateRange]
+  );
+  
+  // Current period data
+  const { data: overview, isLoading: loadingOverview } = useCleanAnalyticsOverview(dateRange);
+  const { data: summary, isLoading: loadingSummary } = useCleanAnalyticsSummary(dateRange);
+  const { data: byCountry, isLoading: loadingCountry } = useCleanAnalyticsByCountry(dateRange);
   const { data: recentRecords, isLoading: loadingRecent } = useRecentCleanAnalytics(100);
+  
+  // Previous period data for comparison
+  const { data: prevOverview } = useCleanAnalyticsOverview(previousPeriod);
+  
+  // Same day last week data (only for single day)
+  const { data: lastWeekOverview } = useCleanAnalyticsOverview(
+    sameDayLastWeek || { startDate: new Date(), endDate: new Date() }
+  );
 
   if (loadingOverview) {
     return (
@@ -149,9 +207,13 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
     'Datacenter': showDatacenter ? h.datacenter : 0,
   }));
 
+  // Get comparison label
+  const daysDiff = differenceInDays(dateRange.endDate, dateRange.startDate) + 1;
+  const compLabel = daysDiff === 1 ? 'gisteren' : `vorige ${daysDiff} dagen`;
+
   return (
     <div className="space-y-6">
-      {/* Main KPI Cards */}
+      {/* Main KPI Cards with Comparisons */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -162,7 +224,19 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
             <div className="text-2xl font-bold text-green-500">
               {(overview?.uniqueSessions || 0).toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <ComparisonBadge 
+              current={overview?.uniqueSessions || 0} 
+              previous={prevOverview?.uniqueSessions || 0}
+              label={compLabel}
+            />
+            {isToday && sameDayLastWeek && lastWeekOverview && (
+              <ComparisonBadge 
+                current={overview?.uniqueSessions || 0} 
+                previous={lastWeekOverview?.uniqueSessions || 0}
+                label="vorige week"
+              />
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
               Alleen echte gebruikers
             </p>
           </CardContent>
@@ -196,7 +270,12 @@ export const CleanAnalyticsDashboard: React.FC<CleanAnalyticsDashboardProps> = (
             <div className="text-2xl font-bold">
               {overview?.pagesPerSession || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <ComparisonBadge 
+              current={overview?.pagesPerSession || 0} 
+              previous={prevOverview?.pagesPerSession || 0}
+              label={compLabel}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
               Engagement metric
             </p>
           </CardContent>

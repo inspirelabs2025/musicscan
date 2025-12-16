@@ -59,17 +59,20 @@ export interface HourlyDistribution {
   datacenter: number;
 }
 
-export const useCleanAnalyticsSummary = (days: number = 7) => {
+export interface DateRangeParams {
+  startDate: Date;
+  endDate: Date;
+}
+
+export const useCleanAnalyticsSummary = (dateRange: DateRangeParams) => {
   return useQuery({
-    queryKey: ['clean-analytics-summary', days],
+    queryKey: ['clean-analytics-summary', dateRange.startDate.toISOString(), dateRange.endDate.toISOString()],
     queryFn: async () => {
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-      
       const { data, error } = await supabase
         .from('clean_analytics')
         .select('created_at, is_datacenter, real_user_score, session_id')
-        .gte('created_at', startDate.toISOString());
+        .gte('created_at', dateRange.startDate.toISOString())
+        .lte('created_at', dateRange.endDate.toISOString());
       
       if (error) throw error;
       
@@ -132,18 +135,16 @@ export const useCleanAnalyticsSummary = (days: number = 7) => {
   });
 };
 
-export const useCleanAnalyticsByCountry = (days: number = 7) => {
+export const useCleanAnalyticsByCountry = (dateRange: DateRangeParams) => {
   return useQuery({
-    queryKey: ['clean-analytics-by-country', days],
+    queryKey: ['clean-analytics-by-country', dateRange.startDate.toISOString(), dateRange.endDate.toISOString()],
     queryFn: async () => {
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-      
       const { data, error } = await supabase
         .from('clean_analytics')
         .select('country, real_country, is_datacenter, real_user_score, session_id')
         .eq('is_datacenter', false)
-        .gte('created_at', startDate.toISOString());
+        .gte('created_at', dateRange.startDate.toISOString())
+        .lte('created_at', dateRange.endDate.toISOString());
       
       if (error) throw error;
       
@@ -184,17 +185,15 @@ export const useCleanAnalyticsByCountry = (days: number = 7) => {
   });
 };
 
-export const useCleanAnalyticsOverview = (days: number = 7) => {
+export const useCleanAnalyticsOverview = (dateRange: DateRangeParams) => {
   return useQuery({
-    queryKey: ['clean-analytics-overview', days],
+    queryKey: ['clean-analytics-overview', dateRange.startDate.toISOString(), dateRange.endDate.toISOString()],
     queryFn: async () => {
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-      
       const { data, error } = await supabase
         .from('clean_analytics')
         .select('is_datacenter, datacenter_name, real_user_score, device_type, browser, session_id, referrer, path, created_at')
-        .gte('created_at', startDate.toISOString());
+        .gte('created_at', dateRange.startDate.toISOString())
+        .lte('created_at', dateRange.endDate.toISOString());
       
       if (error) throw error;
       

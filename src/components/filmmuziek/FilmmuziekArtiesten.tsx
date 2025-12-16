@@ -5,16 +5,16 @@ import { Link } from 'react-router-dom';
 import { useFilmmuziekArtiesten } from '@/hooks/useFilmmuziek';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Featured composers met Discogs CDN images (betrouwbaar)
+// Featured composers met Wikipedia images (betrouwbaar)
 const FEATURED_FILM_COMPOSERS = [
-  { name: 'John Williams', image: 'https://i.discogs.com/JdUz6z3qH8wQ0RzEXM9vw-q4n08=/fit-in/600x600/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/A-253821-1616971570-5650.jpeg.jpg', slug: 'john-williams' },
-  { name: 'Hans Zimmer', image: 'https://i.discogs.com/qFe8TmHZz-hBcqLLPHGGGsH0Rw8=/fit-in/600x600/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/A-354021-1445894839-1556.jpeg.jpg', slug: 'hans-zimmer' },
-  { name: 'Ennio Morricone', image: 'https://i.discogs.com/kf_vFz4ZO0z6h_gOt6eDQQJVxZY=/fit-in/600x600/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/A-160257-1394548211-4561.jpeg.jpg', slug: 'ennio-morricone' },
-  { name: 'Danny Elfman', image: 'https://i.discogs.com/L9mCLQQu0mZkB3l9jJxnvf4nGGw=/fit-in/600x600/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/A-89418-1322497393.jpeg.jpg', slug: 'danny-elfman' },
-  { name: 'Howard Shore', image: 'https://i.discogs.com/Y0oFsAVrZn3G-Bg9r3YL4H3gIqI=/fit-in/600x600/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/A-251596-1381770437-4153.jpeg.jpg', slug: 'howard-shore' },
-  { name: 'Alan Silvestri', image: 'https://i.discogs.com/CuG1IYR_qPZJgmkl6tHl8gTqj5A=/fit-in/600x600/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/A-254037-1315923594.jpeg.jpg', slug: 'alan-silvestri' },
-  { name: 'James Horner', image: 'https://i.discogs.com/G_u5gGKjKdXWz3rTuqKJPG0Y6zE=/fit-in/600x600/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/A-251595-1392051679-5459.jpeg.jpg', slug: 'james-horner' },
-  { name: 'Thomas Newman', image: 'https://i.discogs.com/lkz0J3bq5M3HUEBBXv4wGO_V6Ks=/fit-in/600x600/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/A-266889-1379508012-5587.jpeg.jpg', slug: 'thomas-newman' },
+  { name: 'John Williams', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/John_Williams_2022.jpg/440px-John_Williams_2022.jpg', slug: 'john-williams' },
+  { name: 'Hans Zimmer', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Hans_Zimmer_2010.jpg/440px-Hans_Zimmer_2010.jpg', slug: 'hans-zimmer' },
+  { name: 'Ennio Morricone', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Ennio_Morricone_%282012%29.jpg/440px-Ennio_Morricone_%282012%29.jpg', slug: 'ennio-morricone' },
+  { name: 'Danny Elfman', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Danny_Elfman_2022.jpg/440px-Danny_Elfman_2022.jpg', slug: 'danny-elfman' },
+  { name: 'Howard Shore', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Howard_Shore_2018.jpg/440px-Howard_Shore_2018.jpg', slug: 'howard-shore' },
+  { name: 'Alan Silvestri', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Alan_Silvestri_by_Gage_Skidmore.jpg/440px-Alan_Silvestri_by_Gage_Skidmore.jpg', slug: 'alan-silvestri' },
+  { name: 'James Horner', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/James_Horner_at_Goldene_Kamera_2012.jpg/440px-James_Horner_at_Goldene_Kamera_2012.jpg', slug: 'james-horner' },
+  { name: 'Thomas Newman', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Thomas_Newman_2012.jpg/440px-Thomas_Newman_2012.jpg', slug: 'thomas-newman' },
 ];
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=400&h=400&fit=crop';

@@ -105,11 +105,11 @@ const ComparisonBadge: React.FC<{ current: number; previous: number; label?: str
   return (
     <div className={`flex items-center gap-1 text-xs ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
       {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-      <span className="text-muted-foreground">{previous}</span>
+      <span className="text-muted-foreground">was {previous}</span>
       <span>→</span>
       <span className="font-medium">{current}</span>
       <span>({isPositive ? '+' : ''}{percentChange}%)</span>
-      {label && <span className="text-muted-foreground">vs {label}</span>}
+      {label && <span className="text-muted-foreground ml-1">vs {label}</span>}
     </div>
   );
 };

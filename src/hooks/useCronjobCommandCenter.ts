@@ -8,24 +8,24 @@ import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, subWeeks
 export const ALL_SCHEDULED_CRONJOBS = [
   // Content Generatie
   { name: 'daily-anecdote-generator', schedule: '5 6 * * *', time: '06:05 UTC', description: 'Genereert dagelijkse muziek anekdotes met AI', category: 'Content Generatie', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'music_anecdotes' },
-  { name: 'generate-daily-music-history', schedule: '0 6 * * *', time: '06:00 UTC', description: 'Schrijft "Vandaag in de Muziekgeschiedenis" artikelen', category: 'Content Generatie', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'music_history_events' },
+  { name: 'generate-daily-music-history', schedule: '0 6 * * *', time: '06:00 UTC', description: 'Schrijft "Vandaag in de de Muziekgeschiedenis" artikelen', category: 'Content Generatie', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'music_history_events' },
   { name: 'daily-artist-stories-generator', schedule: '0 1 * * *', time: '01:00 UTC', description: 'Selecteert artiesten voor story generatie', category: 'Content Generatie', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'batch_queue_items' },
-  { name: 'artist-stories-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Genereert artist stories (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, expectedPerDay: 60, outputTable: 'artist_stories' },
-  { name: 'singles-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt singles queue (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, expectedPerDay: 60, outputTable: 'music_stories' },
+  { name: 'artist-stories-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Genereert artist stories (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, expectedPerDay: 1440, outputTable: 'artist_stories' },
+  { name: 'singles-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt singles queue (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, expectedPerDay: 1440, outputTable: 'music_stories' },
   { name: 'batch-blog-processor', schedule: '*/10 * * * *', time: 'Elke 10 min', description: 'Genereert blog posts voor albums', category: 'Content Generatie', expectedIntervalMinutes: 10, expectedPerDay: 144, outputTable: 'blog_posts' },
   { name: 'latest-discogs-news', schedule: '0 3 * * *', time: '03:00 UTC', description: 'Genereert nieuws over Discogs releases', category: 'Content Generatie', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'news_blog_posts' },
-  { name: 'composer-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt componist verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, expectedPerDay: 60, outputTable: 'music_stories' },
-  { name: 'soundtrack-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt soundtrack verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, expectedPerDay: 60, outputTable: 'music_stories' },
+  { name: 'composer-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt componist verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, expectedPerDay: 1440, outputTable: 'music_stories' },
+  { name: 'soundtrack-batch-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt soundtrack verhalen (1/min)', category: 'Content Generatie', expectedIntervalMinutes: 1, expectedPerDay: 1440, outputTable: 'music_stories' },
   { name: 'generate-daily-challenge', schedule: '0 5 * * *', time: '05:00 UTC', description: 'Genereert dagelijkse quiz challenge', category: 'Content Generatie', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'daily_challenges' },
   { name: 'daily-youtube-discoveries', schedule: '0 4 * * *', time: '04:00 UTC', description: 'Ontdekt nieuwe YouTube muziekvideo\'s', category: 'Content Generatie', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'youtube_music_videos' },
-  
+
   // Data Import & Crawling
   { name: 'discogs-lp-crawler', schedule: '0 * * * *', time: 'Elk uur :00', description: 'Haalt nieuwe vinyl releases op van Discogs', category: 'Data Import', expectedIntervalMinutes: 60, expectedPerDay: 24, outputTable: 'discogs_import_log' },
   { name: 'process-discogs-queue', schedule: '*/2 * * * *', time: 'Elke 2 min', description: 'Verwerkt Discogs import queue', category: 'Data Import', expectedIntervalMinutes: 2, expectedPerDay: 720, outputTable: 'discogs_import_log' },
   { name: 'generate-curated-artists', schedule: '0 2 * * *', time: '02:00 UTC', description: 'Ontdekt nieuwe interessante artiesten', category: 'Data Import', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'curated_artists' },
   { name: 'process-spotify-new-releases', schedule: '0 9 * * *', time: '09:00 UTC', description: 'Haalt nieuwe Spotify releases op en verwerkt ze', category: 'Data Import', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'spotify_new_releases_processed' },
   { name: 'queue-dance-house-content', schedule: '0 7 * * *', time: '07:00 UTC', description: 'Queue Dance/House content voor generatie', category: 'Data Import', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'batch_queue_items' },
-  { name: 'top2000-auto-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt Top 2000 enrichment en analyse', category: 'Data Import', expectedIntervalMinutes: 1, expectedPerDay: 50, outputTable: 'top2000_songs' },
+  { name: 'top2000-auto-processor', schedule: '* * * * *', time: 'Elke minuut', description: 'Verwerkt Top 2000 enrichment en analyse', category: 'Data Import', expectedIntervalMinutes: 1, expectedPerDay: 1440, outputTable: 'top2000_songs' },
   
   // Social Media Posting
   { name: 'schedule-music-history-posts', schedule: '5 6 * * *', time: '06:05 UTC', description: 'Plant muziekgeschiedenis posts voor de dag', category: 'Social Media', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'music_history_facebook_queue' },

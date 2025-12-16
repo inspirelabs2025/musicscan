@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 type TimePeriod = 'today' | 'yesterday' | 'week' | 'month' | 'quarter' | 'year' | '7' | '14' | '30' | '90' | 'custom';
 
 export default function Statistics() {
-  const [period, setPeriod] = useState<TimePeriod>('7');
+  const [period, setPeriod] = useState<TimePeriod>('today');
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 

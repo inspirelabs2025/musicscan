@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
     // Fetch all published photos
     const { data: photos, error: photosError } = await supabase
       .from('photos')
-      .select('seo_slug, published_at, updated_at, display_url, seo_title, artist')
+      .select('seo_slug, published_at, display_url, seo_title, artist')
       .eq('status', 'published')
       .not('seo_slug', 'is', null)
       .order('published_at', { ascending: false });
@@ -223,7 +223,7 @@ Deno.serve(async (req) => {
     const photosSitemapXml = generateSitemapXml(
       (photos || []).map(p => ({
         slug: p.seo_slug,
-        updated_at: p.updated_at || p.published_at
+        updated_at: p.published_at
       })),
       'https://www.musicscan.app/photo'
     );
@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
     const photosImageSitemapXml = generateImageSitemapXml(
       (photos || []).map(p => ({
         slug: p.seo_slug,
-        updated_at: p.updated_at || p.published_at,
+        updated_at: p.published_at,
         display_url: p.display_url,
         title: p.seo_title || 'Fan Photo',
         artist: p.artist
@@ -643,21 +643,53 @@ function generateStaticSitemapXml(): string {
   const currentDate = new Date().toISOString().split('T')[0];
   
   const staticPages = [
+    // Homepage
     { url: baseUrl, priority: 1.0, changefreq: 'daily' },
-    { url: `${baseUrl}/scanner`, priority: 0.9, changefreq: 'weekly' },
+    
+    // Shop pages
+    { url: `${baseUrl}/shop`, priority: 0.9, changefreq: 'daily' },
     { url: `${baseUrl}/posters`, priority: 0.9, changefreq: 'daily' },
     { url: `${baseUrl}/art-shop`, priority: 0.8, changefreq: 'weekly' },
+    { url: `${baseUrl}/canvas`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/socks`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/shirts`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/tshirts`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/buttons`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/merchandise`, priority: 0.8, changefreq: 'daily' },
     { url: `${baseUrl}/public-catalog`, priority: 0.8, changefreq: 'daily' },
     { url: `${baseUrl}/public-shops-overview`, priority: 0.8, changefreq: 'daily' },
+    
+    // Content pages
     { url: `${baseUrl}/nieuws`, priority: 0.8, changefreq: 'hourly' },
     { url: `${baseUrl}/plaat-verhaal`, priority: 0.8, changefreq: 'daily' },
     { url: `${baseUrl}/muziek-verhaal`, priority: 0.8, changefreq: 'daily' },
-    { url: `${baseUrl}/podcasts`, priority: 0.7, changefreq: 'weekly' },
-    { url: `${baseUrl}/nederland`, priority: 0.8, changefreq: 'weekly' },
-    { url: `${baseUrl}/frankrijk`, priority: 0.8, changefreq: 'weekly' },
     { url: `${baseUrl}/artists`, priority: 0.8, changefreq: 'daily' },
     { url: `${baseUrl}/singles`, priority: 0.8, changefreq: 'daily' },
-    { url: `${baseUrl}/auth`, priority: 0.6, changefreq: 'monthly' }
+    { url: `${baseUrl}/anekdotes`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/new-releases`, priority: 0.8, changefreq: 'daily' },
+    
+    // Feature pages
+    { url: `${baseUrl}/scanner`, priority: 0.9, changefreq: 'weekly' },
+    { url: `${baseUrl}/quizzen`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/vandaag-in-de-muziekgeschiedenis`, priority: 0.8, changefreq: 'daily' },
+    { url: `${baseUrl}/top-2000-analyse`, priority: 0.7, changefreq: 'weekly' },
+    
+    // Country & Genre hubs
+    { url: `${baseUrl}/nederland`, priority: 0.8, changefreq: 'weekly' },
+    { url: `${baseUrl}/frankrijk`, priority: 0.8, changefreq: 'weekly' },
+    { url: `${baseUrl}/dance-house`, priority: 0.8, changefreq: 'weekly' },
+    
+    // Seasonal
+    { url: `${baseUrl}/kerst`, priority: 0.7, changefreq: 'weekly' },
+    
+    // Podcasts
+    { url: `${baseUrl}/podcasts`, priority: 0.7, changefreq: 'weekly' },
+    { url: `${baseUrl}/onze-podcasts`, priority: 0.7, changefreq: 'weekly' },
+    { url: `${baseUrl}/de-plaat-en-het-verhaal`, priority: 0.7, changefreq: 'weekly' },
+    
+    // Utility pages
+    { url: `${baseUrl}/auth`, priority: 0.5, changefreq: 'monthly' },
+    { url: `${baseUrl}/privacy`, priority: 0.4, changefreq: 'yearly' },
   ];
   
   const urls = staticPages.map(page => `  <url>

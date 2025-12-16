@@ -3,96 +3,96 @@ import { Users, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { useFilmmuziekArtiesten } from '@/hooks/useFilmmuziek';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Featured composers met Wikipedia/Wikimedia images (stabiele URLs)
+const FEATURED_FILM_COMPOSERS = [
+  { name: 'John Williams', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/John_Williams_2023.jpg/440px-John_Williams_2023.jpg', slug: 'john-williams' },
+  { name: 'Hans Zimmer', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Hans_Zimmer_2010.jpg/440px-Hans_Zimmer_2010.jpg', slug: 'hans-zimmer' },
+  { name: 'Ennio Morricone', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Ennio_Morricone_%282012%29.jpg/440px-Ennio_Morricone_%282012%29.jpg', slug: 'ennio-morricone' },
+  { name: 'Danny Elfman', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Danny_Elfman_by_Gage_Skidmore.jpg/440px-Danny_Elfman_by_Gage_Skidmore.jpg', slug: 'danny-elfman' },
+  { name: 'Howard Shore', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Howard_Shore_2023_crop.jpg/440px-Howard_Shore_2023_crop.jpg', slug: 'howard-shore' },
+  { name: 'Alan Silvestri', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Alan_Silvestri_%282019%29.jpg/440px-Alan_Silvestri_%282019%29.jpg', slug: 'alan-silvestri' },
+  { name: 'James Horner', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/James_Horner.jpg/440px-James_Horner.jpg', slug: 'james-horner' },
+  { name: 'Thomas Newman', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Thomas_Newman_by_Gage_Skidmore.jpg/440px-Thomas_Newman_by_Gage_Skidmore.jpg', slug: 'thomas-newman' },
+];
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=400&h=400&fit=crop';
 
 export const FilmmuziekArtiesten = () => {
-  const { data: artiesten, isLoading } = useFilmmuziekArtiesten(8);
+  const { data: artistStories, isLoading } = useFilmmuziekArtiesten(8);
 
-  if (isLoading) {
-    return (
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold">Iconische Componisten</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-48 bg-muted animate-pulse rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </section>
+  // Merge artist stories with featured artists
+  const displayArtists = FEATURED_FILM_COMPOSERS.map(featured => {
+    const story = artistStories?.find(s => 
+      s.artist_name.toLowerCase().includes(featured.name.toLowerCase()) ||
+      featured.name.toLowerCase().includes(s.artist_name.toLowerCase())
     );
-  }
-
-  // Featured composers with default info if no database entries
-  const featuredComposers = [
-    { name: 'John Williams', description: 'Star Wars, Jaws, E.T.', image: '/placeholder.svg' },
-    { name: 'Hans Zimmer', description: 'Inception, The Dark Knight', image: '/placeholder.svg' },
-    { name: 'Ennio Morricone', description: 'The Good, the Bad and the Ugly', image: '/placeholder.svg' },
-    { name: 'Danny Elfman', description: 'Batman, Edward Scissorhands', image: '/placeholder.svg' },
-    { name: 'James Horner', description: 'Titanic, Braveheart', image: '/placeholder.svg' },
-    { name: 'Howard Shore', description: 'Lord of the Rings', image: '/placeholder.svg' },
-    { name: 'Alan Silvestri', description: 'Back to the Future, Avengers', image: '/placeholder.svg' },
-    { name: 'Ludwig Göransson', description: 'Black Panther, Oppenheimer', image: '/placeholder.svg' }
-  ];
-
-  const displayItems = artiesten && artiesten.length > 0 ? artiesten : featuredComposers;
+    return {
+      ...featured,
+      hasStory: !!story,
+      storySlug: story?.slug || featured.slug
+    };
+  });
 
   return (
-    <section className="py-16 bg-muted/30">
+    <section className="py-16 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/20 rounded-full mb-4">
             <Users className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-400 text-sm">Legendarische Componisten</span>
+            <span className="text-amber-400 text-sm">Legendes</span>
           </div>
-          <h2 className="text-3xl font-bold">Iconische Film Componisten</h2>
-          <p className="text-muted-foreground mt-2">De meesters achter de meest memorabele filmscores</p>
+          <h2 className="text-3xl font-bold">Iconische Filmcomponisten</h2>
+          <p className="text-muted-foreground mt-2">De meesters achter de grootste soundtracks</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {displayItems.map((item: any, index) => (
-            <Link
-              key={item.id || item.name || index}
-              to={item.slug ? `/artists/${item.slug}` : `/artists?search=${encodeURIComponent(item.artist_name || item.name)}`}
-              className="group"
-            >
-              <Card className="overflow-hidden border-transparent hover:border-amber-500/30 transition-all h-full">
-                <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-amber-900/50 to-slate-900/80">
-                  {item.artwork_url || item.image ? (
-                    <img
-                      src={item.artwork_url || item.image}
-                      alt={item.artist_name || item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Users className="w-16 h-16 text-amber-400/30" />
+          {isLoading
+            ? [...Array(8)].map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <Skeleton className="aspect-square" />
+                  <CardContent className="p-3">
+                    <Skeleton className="h-5 w-24" />
+                  </CardContent>
+                </Card>
+              ))
+            : displayArtists.map((artist) => (
+                <Link
+                  key={artist.name}
+                  to={artist.hasStory ? `/artists/${artist.storySlug}` : `/artists?search=${encodeURIComponent(artist.name)}`}
+                  className="group"
+                >
+                  <Card className="overflow-hidden bg-background/50 hover:bg-background transition-colors border-transparent hover:border-amber-500/50">
+                    <div className="aspect-square relative overflow-hidden">
+                      <img
+                        src={artist.image}
+                        alt={artist.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
+                        <ExternalLink className="w-5 h-5 text-white" />
+                      </div>
                     </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <h3 className="text-white font-semibold text-lg group-hover:text-amber-300 transition-colors">
-                      {item.artist_name || item.name}
-                    </h3>
-                    {(item.biography || item.description) && (
-                      <p className="text-white/60 text-xs mt-1 line-clamp-2">
-                        {item.description || (item.biography?.substring(0, 60) + '...')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
+                    <CardContent className="p-3 text-center">
+                      <h3 className="font-semibold text-sm group-hover:text-amber-400 transition-colors">
+                        {artist.name}
+                      </h3>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
         </div>
 
         <div className="text-center mt-8">
           <Link
             to="/artists?genre=soundtrack"
-            className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors"
+            className="text-amber-400 hover:text-amber-300 text-sm font-medium inline-flex items-center gap-2"
           >
-            Bekijk alle film componisten
+            Bekijk alle filmcomponisten
             <ExternalLink className="w-4 h-4" />
           </Link>
         </div>

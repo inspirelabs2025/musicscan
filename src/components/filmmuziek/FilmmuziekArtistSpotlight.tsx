@@ -17,8 +17,8 @@ export const FilmmuziekArtistSpotlight = () => {
       "Golden Globe winnaar"
     ],
     notableWorks: ["Inception", "Interstellar", "The Dark Knight", "Gladiator", "Dune", "The Lion King", "Pirates of the Caribbean"],
-    // Wikipedia image (reliable)
-    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Hans_Zimmer_2010.jpg/440px-Hans_Zimmer_2010.jpg"
+    // Wikipedia image (geverifieerd werkend)
+    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Hans-Zimmer-profile.jpg/250px-Hans-Zimmer-profile.jpg"
   };
 
   return (

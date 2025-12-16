@@ -527,3 +527,9 @@ verify_jwt = false
 
 [[functions.composer-batch-processor.schedule]]
 cron = "* * * * *"
+
+[functions.soundtrack-batch-processor]
+verify_jwt = false
+
+[[functions.soundtrack-batch-processor.schedule]]
+cron = "* * * * *"

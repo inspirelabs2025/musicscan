@@ -145,8 +145,9 @@ serve(async (req) => {
         const { error: insertError } = await supabase
           .from('music_stories')
           .insert({
-            artist_name: artistName,
-            album_title: albumTitle,
+            artist: artistName,
+            album: albumTitle,
+            title: `${filmTitle} - Soundtrack Verhaal`,
             slug,
             story_content: storyContent,
             genre: 'Soundtrack',

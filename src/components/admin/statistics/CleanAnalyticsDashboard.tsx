@@ -90,22 +90,25 @@ const getComparisonRanges = (dateRange: DateRangeParams) => {
   };
 };
 
-// Comparison badge component
+// Comparison badge component - shows previous value + percentage change
 const ComparisonBadge: React.FC<{ current: number; previous: number; label?: string }> = ({ 
   current, 
   previous,
   label 
 }) => {
-  if (previous === 0) return null;
+  if (previous === 0) return <span className="text-xs text-muted-foreground">—</span>;
   
   const diff = current - previous;
-  const percentChange = ((diff / previous) * 100).toFixed(1);
+  const percentChange = ((diff / previous) * 100).toFixed(0);
   const isPositive = diff >= 0;
   
   return (
     <div className={`flex items-center gap-1 text-xs ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
       {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-      <span>{isPositive ? '+' : ''}{percentChange}%</span>
+      <span className="text-muted-foreground">{previous}</span>
+      <span>→</span>
+      <span className="font-medium">{current}</span>
+      <span>({isPositive ? '+' : ''}{percentChange}%)</span>
       {label && <span className="text-muted-foreground">vs {label}</span>}
     </div>
   );
@@ -123,7 +126,7 @@ function findPreviousValue<T>(
   return match ? (match[valueKey] as number) : 0;
 }
 
-// Inline comparison indicator (compact)
+// Inline comparison indicator - shows previous value + percentage
 const InlineComparison: React.FC<{ current: number; previous: number }> = ({ current, previous }) => {
   if (previous === 0) return <span className="text-xs text-blue-500 ml-1">🆕</span>;
   const diff = current - previous;
@@ -131,7 +134,7 @@ const InlineComparison: React.FC<{ current: number; previous: number }> = ({ cur
   const isUp = diff >= 0;
   return (
     <span className={`text-xs ml-1 ${isUp ? 'text-green-500' : 'text-red-500'}`}>
-      ({isUp ? '+' : ''}{pct}%)
+      (was {previous}, {isUp ? '+' : ''}{pct}%)
     </span>
   );
 };

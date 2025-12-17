@@ -49,17 +49,21 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', queueItem.id);
 
-    // Get the full story content for better summary
+    // Get the full story content AND artwork for better summary
     const { data: story } = await supabase
       .from('music_stories')
-      .select('story_content, year')
+      .select('story_content, year, artwork_url')
       .eq('id', queueItem.music_story_id)
       .maybeSingle();
 
     const storyContent = story?.story_content || '';
     const year = story?.year;
+    // Use artwork from music_stories (primary) or queue (fallback)
+    const artworkUrl = story?.artwork_url || queueItem.artwork_url;
     const summary = storyContent.substring(0, 280).replace(/\n/g, ' ').trim() + '...';
     const singleUrl = `https://musicscan.nl/singles/${queueItem.slug}`;
+
+    console.log(`🖼️ Artwork URL: ${artworkUrl ? 'found' : 'missing'}`);
 
     // Post to Facebook
     try {
@@ -74,7 +78,7 @@ serve(async (req) => {
           title: `🎵 ${queueItem.artist} - ${queueItem.single_name}`,
           content: summary,
           url: singleUrl,
-          image_url: queueItem.artwork_url,
+          image_url: artworkUrl,
           artist: queueItem.artist,
           year: year
         })
@@ -101,7 +105,7 @@ serve(async (req) => {
             title: `🎵 ${queueItem.artist} - ${queueItem.single_name}`,
             content: summary,
             url: singleUrl,
-            image_url: queueItem.artwork_url,
+            image_url: artworkUrl,
             artist: queueItem.artist,
             content_type: 'blog'
           });

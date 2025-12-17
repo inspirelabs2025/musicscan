@@ -135,11 +135,11 @@ async function generateArtistPortrait(artistName: string, slug: string, supabase
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-image-1',
+        model: 'gpt-image-1.5',
         prompt: imagePrompt,
         n: 1,
         size: '1024x1024',
-        quality: 'standard',
+        quality: 'high',
         output_format: 'png'
       }),
     });

@@ -77,7 +77,7 @@ serve(async (req) => {
           'Authorization': `Bearer ${supabaseKey}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ editionYear: yearToAnalyze })
+        body: JSON.stringify({ edition_year: yearToAnalyze })
       });
 
       const analyzeResult = await analyzeResponse.json();

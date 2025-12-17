@@ -15,6 +15,7 @@ export const CRONJOB_QUEUE_MAPPING: Record<string, { table: string; statusColumn
   'post-scheduled-youtube': { table: 'youtube_facebook_queue', statusColumn: 'status', pendingStatus: 'pending' },
   'process-podcast-facebook-queue': { table: 'podcast_facebook_queue', statusColumn: 'status', pendingStatus: 'pending' },
   'indexnow-processor': { table: 'indexnow_queue', statusColumn: 'processed', pendingStatus: 'false' },
+  'indexnow-cron': { table: 'indexnow_queue', statusColumn: 'processed', pendingStatus: 'false' },
   'process-discogs-queue': { table: 'discogs_import_log', statusColumn: 'status', pendingStatus: 'pending' },
   'bulk-poster-processor': { table: 'photo_batch_queue', statusColumn: 'status', pendingStatus: 'pending' },
   'process-tiktok-video-queue': { table: 'render_jobs', statusColumn: 'status', pendingStatus: 'pending' },

@@ -77,7 +77,7 @@ serve(async (req) => {
           { role: 'system', content: STORY_GENERATION_PROMPT },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 2000,
+        max_tokens: 3000,
         temperature: 0.8,
       }),
     });

@@ -25,6 +25,7 @@ export const CRONJOB_QUEUE_MAPPING: Record<string, { table: string; statusColumn
   'soundtrack-batch-processor': { table: 'batch_queue_items', statusColumn: 'status', pendingStatus: 'pending' },
   'queue-dance-house-content': { table: 'singles_import_queue', statusColumn: 'status', pendingStatus: 'pending' },
   'process-spotify-new-releases': { table: 'spotify_new_releases_processed', statusColumn: 'status', pendingStatus: 'pending' },
+  'sitemap-queue-processor': { table: 'sitemap_regeneration_queue', statusColumn: 'status', pendingStatus: 'pending' },
 };
 
 export const ALL_SCHEDULED_CRONJOBS = [
@@ -61,7 +62,7 @@ export const ALL_SCHEDULED_CRONJOBS = [
   // SEO & Indexing
   { name: 'indexnow-processor', schedule: '*/5 * * * *', time: 'Elke 5 min', description: 'Verwerkt URLs voor IndexNow submission', category: 'SEO', expectedIntervalMinutes: 5, expectedPerDay: 288, outputTable: 'indexnow_queue' },
   { name: 'indexnow-cron', schedule: '*/15 * * * *', time: 'Elke 15 min', description: 'Batch verzending naar IndexNow API', category: 'SEO', expectedIntervalMinutes: 15, expectedPerDay: 96, outputTable: 'indexnow_submissions' },
-  { name: 'sitemap-queue-processor', schedule: '*/3 * * * *', time: 'Elke 3 min', description: 'Regenereert sitemaps bij wijzigingen', category: 'SEO', expectedIntervalMinutes: 3, expectedPerDay: 480, outputTable: 'sitemap_logs' },
+  { name: 'sitemap-queue-processor', schedule: '*/3 * * * *', time: 'Elke 3 min', description: 'Regenereert sitemaps bij wijzigingen', category: 'SEO', expectedIntervalMinutes: 3, expectedPerDay: 480, outputTable: 'sitemap_regeneration_log' },
   { name: 'generate-static-sitemaps', schedule: '0 3 * * *', time: '03:00 UTC', description: 'Genereert statische XML sitemaps', category: 'SEO', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'sitemap_logs' },
   { name: 'generate-llm-sitemap', schedule: '0 4 * * *', time: '04:00 UTC', description: 'Maakt sitemap voor AI crawlers', category: 'SEO', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: 'sitemap_logs' },
   { name: 'auto-generate-keywords', schedule: '0 3 * * *', time: '03:00 UTC', description: 'Genereert SEO keywords met AI', category: 'SEO', expectedIntervalMinutes: 1440, expectedPerDay: 1, outputTable: null },

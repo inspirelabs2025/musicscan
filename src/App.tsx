@@ -375,7 +375,9 @@ const AppContent = () => {
         <Route path="/reviews" element={<LazyRoute><Reviews /></LazyRoute>} />
         <Route path="/reviews/:slug" element={<LazyRoute><ReviewDetail /></LazyRoute>} />
         <Route path="/spotlights" element={<LazyRoute><ArtistSpotlights /></LazyRoute>} />
+        <Route path="/artist-spotlights" element={<LazyRoute><ArtistSpotlights /></LazyRoute>} />
         <Route path="/spotlights/:slug" element={<LazyRoute><ArtistSpotlight /></LazyRoute>} />
+        <Route path="/artist-spotlights/:slug" element={<LazyRoute><ArtistSpotlight /></LazyRoute>} />
         
         {/* Quiz routes */}
         <Route path="/echo" element={<LazyRoute><Echo /></LazyRoute>} />

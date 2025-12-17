@@ -50,12 +50,36 @@ serve(async (req) => {
     }
 
     // Step 2: Check for years that need analysis
+    // Use RPC or raw query to get distinct years (avoid 1000-row limit)
     const { data: allYears } = await supabase
-      .from('top2000_entries')
-      .select('year')
-      .order('year');
+      .rpc('get_distinct_top2000_years');
 
-    const uniqueYears = [...new Set(allYears?.map(e => e.year) || [])];
+    // Fallback if RPC doesn't exist
+    let uniqueYears: number[] = [];
+    if (allYears && Array.isArray(allYears)) {
+      uniqueYears = allYears.map((e: any) => e.year);
+    } else {
+      // Manual approach: query with limit per year
+      const { data: entries2016 } = await supabase.from('top2000_entries').select('year').eq('year', 2016).limit(1);
+      const { data: entries2017 } = await supabase.from('top2000_entries').select('year').eq('year', 2017).limit(1);
+      const { data: entries2018 } = await supabase.from('top2000_entries').select('year').eq('year', 2018).limit(1);
+      const { data: entries2019 } = await supabase.from('top2000_entries').select('year').eq('year', 2019).limit(1);
+      const { data: entries2020 } = await supabase.from('top2000_entries').select('year').eq('year', 2020).limit(1);
+      const { data: entries2021 } = await supabase.from('top2000_entries').select('year').eq('year', 2021).limit(1);
+      const { data: entries2022 } = await supabase.from('top2000_entries').select('year').eq('year', 2022).limit(1);
+      const { data: entries2023 } = await supabase.from('top2000_entries').select('year').eq('year', 2023).limit(1);
+      const { data: entries2024 } = await supabase.from('top2000_entries').select('year').eq('year', 2024).limit(1);
+      const { data: entries2025 } = await supabase.from('top2000_entries').select('year').eq('year', 2025).limit(1);
+      
+      [entries2016, entries2017, entries2018, entries2019, entries2020, entries2021, entries2022, entries2023, entries2024, entries2025]
+        .forEach(entries => {
+          if (entries && entries.length > 0) {
+            uniqueYears.push(entries[0].year);
+          }
+        });
+    }
+    
+    console.log(`📊 Found years in data: ${uniqueYears.join(', ')}`);
     
     const { data: analyzedYears } = await supabase
       .from('top2000_year_analyses')

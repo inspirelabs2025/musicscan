@@ -8977,6 +8977,12 @@ export type Database = {
           view_count: number
         }[]
       }
+      get_distinct_top2000_years: {
+        Args: never
+        Returns: {
+          year: number
+        }[]
+      }
       get_filtered_pageview_stats: {
         Args: { p_days?: number }
         Returns: {

@@ -18,13 +18,14 @@ serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { artist, single_name, album, year, label, catalog, genre, styles, discogs_id } = await req.json();
+    const { artist, single_name, album, year, label, catalog, genre, styles, discogs_id, regenerate, existingId } = await req.json();
 
     if (!artist || !single_name) {
       throw new Error('Missing required fields: artist and single_name');
     }
 
-    console.log(`📝 Generating story for: ${artist} - ${single_name}`);
+    const isRegeneration = regenerate === true && existingId;
+    console.log(`📝 ${isRegeneration ? 'REGENERATING' : 'Generating'} story for: ${artist} - ${single_name}`);
 
     // Generate slug
     const slug = `${artist.toLowerCase()}-${single_name.toLowerCase()}`
@@ -32,22 +33,24 @@ serve(async (req) => {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
 
-    // Check if story already exists
-    const { data: existingStory } = await supabase
-      .from('music_stories')
-      .select('id')
-      .eq('slug', slug)
-      .maybeSingle();
+    // Check if story already exists (skip for regeneration)
+    if (!isRegeneration) {
+      const { data: existingStory } = await supabase
+        .from('music_stories')
+        .select('id')
+        .eq('slug', slug)
+        .maybeSingle();
 
-    if (existingStory) {
-      console.log('✅ Story already exists, returning existing ID');
-      return new Response(JSON.stringify({
-        success: true,
-        music_story_id: existingStory.id,
-        message: 'Story already exists'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      if (existingStory) {
+        console.log('✅ Story already exists, returning existing ID');
+        return new Response(JSON.stringify({
+          success: true,
+          music_story_id: existingStory.id,
+          message: 'Story already exists'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // Prepare AI prompt with deep storytelling focus
@@ -183,37 +186,66 @@ Geef ALTIJD specifieke details wanneer je iets beweert.`;
       discogs_id: discogs_id || null,
     };
 
-    // Insert into music_stories
-    const { data: newStory, error: insertError } = await supabase
-      .from('music_stories')
-      .insert({
-        query: `${artist} ${single_name}`,
-        title,
-        slug,
-        story_content: storyContent,
-        yaml_frontmatter: yamlFrontmatter,
-        reading_time: readingTime,
-        word_count: wordCount,
-        meta_title: `${title} - Muziekverhaal`,
-        meta_description: storyContent.substring(0, 155) + '...',
-        artist,
-        single_name,
-        year,
-        label,
-        genre,
-        styles,
-        is_published: true,
-        user_id: '00000000-0000-0000-0000-000000000000', // System user
-      })
-      .select()
-      .single();
+    // Insert or Update based on regeneration mode
+    let newStory;
+    
+    if (isRegeneration) {
+      // UPDATE existing story
+      const { data: updatedStory, error: updateError } = await supabase
+        .from('music_stories')
+        .update({
+          story_content: storyContent,
+          yaml_frontmatter: yamlFrontmatter,
+          reading_time: readingTime,
+          word_count: wordCount,
+          meta_description: storyContent.substring(0, 155) + '...',
+          regenerate_pending: null, // Clear the flag
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingId)
+        .select()
+        .single();
 
-    if (insertError) {
-      console.error('Insert error:', insertError);
-      throw new Error(`Failed to insert story: ${insertError.message}`);
+      if (updateError) {
+        console.error('Update error:', updateError);
+        throw new Error(`Failed to update story: ${updateError.message}`);
+      }
+      newStory = updatedStory;
+      console.log(`✅ Story REGENERATED with ID: ${newStory.id}`);
+    } else {
+      // INSERT new story
+      const { data: insertedStory, error: insertError } = await supabase
+        .from('music_stories')
+        .insert({
+          query: `${artist} ${single_name}`,
+          title,
+          slug,
+          story_content: storyContent,
+          yaml_frontmatter: yamlFrontmatter,
+          reading_time: readingTime,
+          word_count: wordCount,
+          meta_title: `${title} - Muziekverhaal`,
+          meta_description: storyContent.substring(0, 155) + '...',
+          artist,
+          single_name,
+          year,
+          label,
+          genre,
+          styles,
+          is_published: true,
+          user_id: '00000000-0000-0000-0000-000000000000', // System user
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw new Error(`Failed to insert story: ${insertError.message}`);
+      }
+      newStory = insertedStory;
+      console.log(`✅ Story created with ID: ${newStory.id}`);
     }
 
-    console.log(`✅ Story created with ID: ${newStory.id}`);
 
     // Fetch artwork for the single
     let artworkUrl = null;

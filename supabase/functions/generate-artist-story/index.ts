@@ -117,11 +117,13 @@ serve(async (req) => {
   }
 
   try {
-    const { artistName, userId: providedUserId } = await req.json();
+    const { artistName, userId: providedUserId, regenerate, existingId } = await req.json();
     
     if (!artistName) {
       throw new Error("Artist name is required");
     }
+
+    const isRegeneration = regenerate === true && existingId;
 
     // Get user ID from JWT header OR from request body (for batch processing)
     let userId = providedUserId;
@@ -143,7 +145,7 @@ serve(async (req) => {
       console.log('⚙️ Geen userId beschikbaar; verhaal wordt opgeslagen zonder gekoppelde user');
     }
 
-    console.log('🎸 Generating artist story with Lovable AI for:', artistName);
+    console.log(`🎸 ${isRegeneration ? 'REGENERATING' : 'Generating'} artist story for:`, artistName);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -225,38 +227,67 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-    // Prepare insert payload (omit user_id if not available)
-    const insertPayload: Record<string, unknown> = {
-      artist_name: artistName,
-      slug,
-      story_content: story,
-      biography,
-      music_style: extractedData.music_style,
-      notable_albums: extractedData.notable_albums,
-      artwork_url: artworkUrl,
-      is_published: true,
-      published_at: new Date().toISOString(),
-      reading_time: readingTime,
-      word_count: wordCount,
-      meta_title: `${title} | MusicScan`,
-      meta_description: biography.substring(0, 160),
-    };
-    if (userId) {
-      (insertPayload as any).user_id = userId;
+    let artistStory;
+
+    if (isRegeneration) {
+      // UPDATE existing story
+      const { data: updatedStory, error: updateError } = await supabase
+        .from('artist_stories')
+        .update({
+          story_content: story,
+          biography,
+          music_style: extractedData.music_style,
+          notable_albums: extractedData.notable_albums,
+          reading_time: readingTime,
+          word_count: wordCount,
+          meta_description: biography.substring(0, 160),
+          regenerate_pending: null, // Clear the flag
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        throw new Error(`Failed to update artist story: ${updateError.message}`);
+      }
+      artistStory = updatedStory;
+      console.log('✅ Successfully REGENERATED artist story');
+    } else {
+      // INSERT new story
+      const insertPayload: Record<string, unknown> = {
+        artist_name: artistName,
+        slug,
+        story_content: story,
+        biography,
+        music_style: extractedData.music_style,
+        notable_albums: extractedData.notable_albums,
+        artwork_url: artworkUrl,
+        is_published: true,
+        published_at: new Date().toISOString(),
+        reading_time: readingTime,
+        word_count: wordCount,
+        meta_title: `${title} | MusicScan`,
+        meta_description: biography.substring(0, 160),
+      };
+      if (userId) {
+        (insertPayload as any).user_id = userId;
+      }
+
+      const { data: insertedStory, error: saveError } = await supabase
+        .from('artist_stories')
+        .insert(insertPayload)
+        .select()
+        .single();
+
+      if (saveError) {
+        console.error('Database save error:', saveError);
+        throw new Error(`Failed to save artist story: ${saveError.message}`);
+      }
+      artistStory = insertedStory;
+      console.log('✅ Successfully generated and saved artist story');
     }
-
-    const { data: artistStory, error: saveError } = await supabase
-      .from('artist_stories')
-      .insert(insertPayload)
-      .select()
-      .single();
-
-    if (saveError) {
-      console.error('Database save error:', saveError);
-      throw new Error(`Failed to save artist story: ${saveError.message}`);
-    }
-
-    console.log('✅ Successfully generated and saved artist story');
 
     return new Response(
       JSON.stringify({ 

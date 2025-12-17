@@ -182,7 +182,7 @@ Maak het interessant en informatief! Kies zelf een interessante periode of album
           { role: 'user', content: prompt }
         ],
         temperature: 0.8,
-        max_tokens: 1000,
+        max_tokens: 2500,
       }),
     });
 

@@ -160,6 +160,7 @@ serve(async (req) => {
             content: `Schrijf een feitelijk, goed onderbouwd biografisch artikel over de artiest: "${artistName}". Gebruik ALLEEN verificeerbare informatie. Bij elke bewering: zorg dat deze onderbouwd kan worden met officiële bronnen. Gebruik de structuur met 7 secties voor een professioneel artikel van 800-1000 woorden. Voeg de verplichte disclaimer toe over bronverificatie.` 
           }
         ],
+        max_tokens: 3000,
       }),
     });
 

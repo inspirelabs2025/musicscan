@@ -11,9 +11,6 @@ import { ChristmasPoll } from '@/components/christmas/ChristmasPoll';
 import { ChristmasBehindTheClip } from '@/components/christmas/ChristmasBehindTheClip';
 import ChristmasAnecdote from '@/components/christmas/ChristmasAnecdote';
 import { ChristmasProducts } from '@/components/christmas/ChristmasProducts';
-import { ChristmasShopProducts } from '@/components/christmas/ChristmasShopProducts';
-import { ChristmasSocks } from '@/components/christmas/ChristmasSocks';
-import { ChristmasPosters } from '@/components/christmas/ChristmasPosters';
 import { ChristmasFeaturedStory } from '@/components/christmas/ChristmasFeaturedStory';
 import { Link } from 'react-router-dom';
 import { Music, Sparkles, ArrowRight } from 'lucide-react';
@@ -104,12 +101,6 @@ export default function Christmas() {
                     <Music className="h-5 w-5 mr-2" /> Kerst Singles
                   </Button>
                 </Link>
-                <Link to="/kerst-posters">
-                  <Button size="lg" variant="outline" className="border-green-500 text-green-600 hover:bg-green-500/10">
-                    🖼️ Kerst Posters
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </Link>
                 <a href="#kerst-quiz">
                   <Button size="lg" variant="outline" className="border-red-500 text-red-600 hover:bg-red-500/10">
                     <Sparkles className="h-5 w-5 mr-2" /> Kerst Quiz
@@ -162,15 +153,6 @@ export default function Christmas() {
 
           {/* Christmas Music Stories (filtered by tags) */}
           <ChristmasProducts />
-
-          {/* Christmas Posters & Art Prints */}
-          <ChristmasPosters />
-
-          {/* Christmas Socks */}
-          <ChristmasSocks />
-
-          {/* Other Christmas Shop Products */}
-          <ChristmasShopProducts />
 
           {/* Radio Stream */}
           <ChristmasRadioStream />

@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     // Schedule settings
     const startHour = 9;  // Start posting at 9:00
     const endHour = 21;   // End at 21:00
-    const maxPosts = 4;   // Post up to 4 videos per day
+    const maxPosts = 12;  // Post up to 12 videos per day (roughly 1 per hour)
 
     const videosToSchedule = unpostedVideos.slice(0, maxPosts);
     

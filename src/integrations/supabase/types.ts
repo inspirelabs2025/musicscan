@@ -530,6 +530,7 @@ export type Database = {
           notable_albums: string[] | null
           published_at: string | null
           reading_time: number | null
+          regenerate_pending: boolean | null
           slug: string
           spotlight_description: string | null
           spotlight_images: Json | null
@@ -557,6 +558,7 @@ export type Database = {
           notable_albums?: string[] | null
           published_at?: string | null
           reading_time?: number | null
+          regenerate_pending?: boolean | null
           slug: string
           spotlight_description?: string | null
           spotlight_images?: Json | null
@@ -584,6 +586,7 @@ export type Database = {
           notable_albums?: string[] | null
           published_at?: string | null
           reading_time?: number | null
+          regenerate_pending?: boolean | null
           slug?: string
           spotlight_description?: string | null
           spotlight_images?: Json | null
@@ -3686,6 +3689,7 @@ export type Database = {
           meta_description: string | null
           meta_title: string | null
           reading_time: number | null
+          regenerate_pending: boolean | null
           slug: string | null
           source_reference: string | null
           subject_details: Json | null
@@ -3704,6 +3708,7 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           reading_time?: number | null
+          regenerate_pending?: boolean | null
           slug?: string | null
           source_reference?: string | null
           subject_details?: Json | null
@@ -3722,6 +3727,7 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           reading_time?: number | null
+          regenerate_pending?: boolean | null
           slug?: string | null
           source_reference?: string | null
           subject_details?: Json | null
@@ -3819,6 +3825,7 @@ export type Database = {
           meta_title: string | null
           query: string
           reading_time: number | null
+          regenerate_pending: boolean | null
           single_name: string | null
           slug: string
           social_post: string | null
@@ -3849,6 +3856,7 @@ export type Database = {
           meta_title?: string | null
           query: string
           reading_time?: number | null
+          regenerate_pending?: boolean | null
           single_name?: string | null
           slug: string
           social_post?: string | null
@@ -3879,6 +3887,7 @@ export type Database = {
           meta_title?: string | null
           query?: string
           reading_time?: number | null
+          regenerate_pending?: boolean | null
           single_name?: string | null
           slug?: string
           social_post?: string | null

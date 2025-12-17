@@ -545,3 +545,9 @@ verify_jwt = false
 
 [[functions.admin-daily-stats-email.schedule]]
 cron = "0 7 * * *"
+
+[functions.backfill-truncated-stories]
+verify_jwt = false
+
+[[functions.backfill-truncated-stories.schedule]]
+cron = "* * * * *"

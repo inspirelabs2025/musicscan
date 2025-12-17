@@ -539,3 +539,9 @@ verify_jwt = false
 
 [[functions.soundtrack-batch-processor.schedule]]
 cron = "* * * * *"
+
+[functions.admin-daily-stats-email]
+verify_jwt = false
+
+[[functions.admin-daily-stats-email.schedule]]
+cron = "0 7 * * *"

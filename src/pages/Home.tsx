@@ -35,17 +35,36 @@ const Home = () => {
   const allGridItems = useMemo(() => {
     if (!newsItems) return [];
 
-    // Helper: get 1 random item from a pool of recent items
+    const excludedId = heroItem?.id;
+
+    // Helper: get 1 random item from a pool of recent items (en nooit de hero dupliceren)
     const getRandomFromType = (type: string, poolSize: number = 5) => {
-      const pool = newsItems.filter(i => i.type === type).slice(0, poolSize);
+      const pool = newsItems
+        .filter(i => i.type === type && i.id !== excludedId)
+        .slice(0, poolSize);
       return shuffleArray(pool).slice(0, 1);
     };
 
     // NIEUWS: Pak alle 3 laatste nieuwsberichten
     const latestNews = newsItems.filter(i => i.type === 'news').slice(0, 3);
 
-    // MUZIEKGESCHIEDENIS: Pak 1 random uit de laatste 5
-    const randomHistory = getRandomFromType('history', 5);
+    // MUZIEKGESCHIEDENIS: altijd 1 item in de grid (fallback naar vaste kaart)
+    const historyItem = (() => {
+      const pick = getRandomFromType('history', 8);
+      if (pick.length) return pick;
+      return [
+        {
+          id: 'history-promo',
+          type: 'history' as const,
+          title: 'Wat gebeurde er vandaag in de muziekgeschiedenis?',
+          subtitle: 'Bekijk alle gebeurtenissen van vandaag',
+          image_url: undefined,
+          category_label: 'MUZIEKGESCHIEDENIS',
+          link: '/vandaag-in-de-muziekgeschiedenis',
+          date: new Date().toISOString(),
+        },
+      ];
+    })();
 
     // Random keuze tussen poster of canvas voor ART
     const artType = Math.random() > 0.5 ? 'poster' : 'canvas';
@@ -57,7 +76,7 @@ const Home = () => {
       ...getRandomFromType('album'),
       ...getRandomFromType('release'),
       ...getRandomFromType('youtube'),
-      ...randomHistory,
+      ...historyItem,
       ...getRandomFromType('product'),
       ...getRandomFromType('podcast'),
       ...getRandomFromType('concert'),

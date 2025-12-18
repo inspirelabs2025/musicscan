@@ -7031,6 +7031,7 @@ export type Database = {
           max_attempts: number | null
           notes: string | null
           processed_at: string | null
+          special_notes: string | null
           status: string
           story_id: string | null
           studio_name: string
@@ -7047,6 +7048,7 @@ export type Database = {
           max_attempts?: number | null
           notes?: string | null
           processed_at?: string | null
+          special_notes?: string | null
           status?: string
           story_id?: string | null
           studio_name: string
@@ -7063,6 +7065,7 @@ export type Database = {
           max_attempts?: number | null
           notes?: string | null
           processed_at?: string | null
+          special_notes?: string | null
           status?: string
           story_id?: string | null
           studio_name?: string

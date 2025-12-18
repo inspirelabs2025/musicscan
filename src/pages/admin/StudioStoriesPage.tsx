@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Building2, Plus, Loader2, CheckCircle, XCircle, Clock, ExternalLink } from "lucide-react";
+import { Building2, Plus, Loader2, CheckCircle, XCircle, Clock, ExternalLink, RefreshCw, Music } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,12 +16,28 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface StudioInput {
   name: string;
   location: string;
   foundedYear: string;
   notes: string;
+  specialNotes: string;
+}
+
+interface RegenerateDialogState {
+  open: boolean;
+  story: any | null;
+  specialNotes: string;
 }
 
 export default function StudioStoriesPage() {
@@ -31,8 +47,14 @@ export default function StudioStoriesPage() {
     location: "",
     foundedYear: "",
     notes: "",
+    specialNotes: "",
   });
   const [bulkInput, setBulkInput] = useState("");
+  const [regenerateDialog, setRegenerateDialog] = useState<RegenerateDialogState>({
+    open: false,
+    story: null,
+    specialNotes: "",
+  });
 
   // Fetch queue items
   const { data: queueItems, isLoading: queueLoading } = useQuery({
@@ -57,7 +79,7 @@ export default function StudioStoriesPage() {
         .from('studio_stories')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
       if (error) throw error;
       return data;
     },
@@ -73,13 +95,14 @@ export default function StudioStoriesPage() {
           location: studio.location || null,
           founded_year: studio.foundedYear ? parseInt(studio.foundedYear) : null,
           notes: studio.notes || null,
+          special_notes: studio.specialNotes || null,
           status: 'pending',
         });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success('Studio toegevoegd aan queue');
-      setStudioInput({ name: "", location: "", foundedYear: "", notes: "" });
+      setStudioInput({ name: "", location: "", foundedYear: "", notes: "", specialNotes: "" });
       queryClient.invalidateQueries({ queryKey: ['studio-queue'] });
     },
     onError: (error) => {
@@ -119,6 +142,7 @@ export default function StudioStoriesPage() {
           location: queueItem.location,
           foundedYear: queueItem.founded_year,
           notes: queueItem.notes,
+          specialNotes: queueItem.special_notes,
           queueItemId: queueItem.id,
         },
       });
@@ -128,6 +152,39 @@ export default function StudioStoriesPage() {
     onSuccess: (data) => {
       toast.success(`Story gegenereerd: ${data.wordCount} woorden`);
       queryClient.invalidateQueries({ queryKey: ['studio-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['studio-stories'] });
+    },
+    onError: (error) => {
+      toast.error(`Fout: ${error.message}`);
+    },
+  });
+
+  // Regenerate story for existing story
+  const regenerateStory = useMutation({
+    mutationFn: async ({ story, specialNotes }: { story: any; specialNotes: string }) => {
+      // First delete the old story
+      const { error: deleteError } = await supabase
+        .from('studio_stories')
+        .delete()
+        .eq('id', story.id);
+      
+      if (deleteError) throw deleteError;
+
+      // Generate new story
+      const { data, error } = await supabase.functions.invoke('generate-studio-story', {
+        body: {
+          studioName: story.studio_name,
+          location: story.location,
+          foundedYear: story.founded_year,
+          specialNotes: specialNotes,
+        },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(`Story opnieuw gegenereerd: ${data.wordCount} woorden`);
+      setRegenerateDialog({ open: false, story: null, specialNotes: "" });
       queryClient.invalidateQueries({ queryKey: ['studio-stories'] });
     },
     onError: (error) => {
@@ -160,6 +217,14 @@ export default function StudioStoriesPage() {
       default:
         return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Wachtend</Badge>;
     }
+  };
+
+  const openRegenerateDialog = (story: any) => {
+    setRegenerateDialog({
+      open: true,
+      story,
+      specialNotes: "",
+    });
   };
 
   return (
@@ -217,6 +282,22 @@ export default function StudioStoriesPage() {
               onChange={(e) => setStudioInput({ ...studioInput, notes: e.target.value })}
               rows={2}
             />
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 text-sm font-medium">
+                <Music className="w-4 h-4 text-primary" />
+                Bijzondere instrumenten & apparatuur
+              </Label>
+              <Textarea
+                placeholder="Bijv: 100 jaar oude Bechstein vleugel waarop Elton John speelde, vintage Neve 1073 preamps, originele Fairchild 670 compressor..."
+                value={studioInput.specialNotes}
+                onChange={(e) => setStudioInput({ ...studioInput, specialNotes: e.target.value })}
+                rows={3}
+                className="border-primary/30"
+              />
+              <p className="text-xs text-muted-foreground">
+                Deze details worden prominent opgenomen in het verhaal onder "Iconische Instrumenten & Apparatuur"
+              </p>
+            </div>
             <Button 
               onClick={() => addToQueue.mutate(studioInput)}
               disabled={!studioInput.name || addToQueue.isPending}
@@ -273,9 +354,15 @@ export default function StudioStoriesPage() {
             <div className="space-y-2">
               {queueItems?.map((item) => (
                 <div key={item.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div>
+                  <div className="flex-1">
                     <span className="font-medium">{item.studio_name}</span>
                     {item.location && <span className="text-muted-foreground ml-2">({item.location})</span>}
+                    {item.special_notes && (
+                      <p className="text-xs text-primary mt-1 flex items-center gap-1">
+                        <Music className="w-3 h-3" />
+                        {item.special_notes.length > 60 ? item.special_notes.substring(0, 60) + '...' : item.special_notes}
+                      </p>
+                    )}
                     {item.error_message && (
                       <p className="text-sm text-destructive">{item.error_message}</p>
                     )}
@@ -323,18 +410,88 @@ export default function StudioStoriesPage() {
                       {story.word_count} woorden • {story.reading_time} min
                     </span>
                   </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={`/studios/${story.slug}`} target="_blank">
-                      <ExternalLink className="w-4 h-4 mr-1" />
-                      Bekijk
-                    </a>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => openRegenerateDialog(story)}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Regenereer
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`/studio/${story.slug}`} target="_blank">
+                        <ExternalLink className="w-4 h-4 mr-1" />
+                        Bekijk
+                      </a>
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Regenerate Dialog */}
+      <Dialog open={regenerateDialog.open} onOpenChange={(open) => setRegenerateDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RefreshCw className="w-5 h-5" />
+              Verhaal Regenereren: {regenerateDialog.story?.studio_name}
+            </DialogTitle>
+            <DialogDescription>
+              Voeg specifieke details toe die je in het nieuwe verhaal wilt zien. Het huidige verhaal wordt vervangen.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Music className="w-4 h-4 text-primary" />
+                Bijzondere instrumenten & apparatuur
+              </Label>
+              <Textarea
+                placeholder="Bijv: 100 jaar oude Bechstein vleugel waarop Elton John 'Your Song' speelde, vintage Neve 1073 preamps uit 1972, EMI TG12345 console..."
+                value={regenerateDialog.specialNotes}
+                onChange={(e) => setRegenerateDialog(prev => ({ ...prev, specialNotes: e.target.value }))}
+                rows={5}
+                className="border-primary/30"
+              />
+              <p className="text-xs text-muted-foreground">
+                Voeg hier iconische piano's, versterkers, mengpanelen of andere legendarische apparatuur toe. Deze worden uitgebreid beschreven in het nieuwe verhaal.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setRegenerateDialog({ open: false, story: null, specialNotes: "" })}
+            >
+              Annuleren
+            </Button>
+            <Button 
+              onClick={() => regenerateDialog.story && regenerateStory.mutate({
+                story: regenerateDialog.story,
+                specialNotes: regenerateDialog.specialNotes,
+              })}
+              disabled={regenerateStory.isPending}
+            >
+              {regenerateStory.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Bezig...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Regenereer Verhaal
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { lazy, Suspense } from 'react';
 import { useSEO } from '@/hooks/useSEO';
 import { useUnifiedNewsFeed } from '@/hooks/useUnifiedNewsFeed';
 import { HeroFeature } from '@/components/home/HeroFeature';
@@ -7,9 +6,6 @@ import { ContentGrid } from '@/components/home/ContentGrid';
 import { ProductBanner } from '@/components/home/ProductBanner';
 import { ShopCategoriesFooter } from '@/components/home/ShopCategoriesFooter';
 import { Skeleton } from '@/components/ui/skeleton';
-
-const SpotifyNewReleasesSection = lazy(() => import('@/components/home/SpotifyNewReleasesSection').then(m => ({ default: m.SpotifyNewReleasesSection })));
-const MusicHistorySpotlight = lazy(() => import('@/components/home/MusicHistorySpotlight').then(m => ({ default: m.MusicHistorySpotlight })));
 
 const SectionSkeleton = () => (
   <div className="py-10 bg-background">
@@ -25,6 +21,16 @@ const SectionSkeleton = () => (
   </div>
 );
 
+// Shuffle array helper
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 const Home = () => {
   const { data: newsItems, isLoading } = useUnifiedNewsFeed(50);
 
@@ -36,17 +42,29 @@ const Home = () => {
   // Get exactly 1 item per type
   const getFirst = (type: string) => newsItems?.find(i => i.type === type);
   
-  const albumItem = getFirst('album');
-  const singleItem = getFirst('single');
-  const artistItem = getFirst('artist');
-  const youtubeItem = getFirst('youtube');
-  const anecdoteItem = getFirst('anecdote');
-  const reviewItem = getFirst('review');
-  const historyItem = getFirst('history');
-  const releaseItem = getFirst('release');
+  // All content types as equal news items
+  const allItems = [
+    { title: 'Single', item: getFirst('single'), viewAllLink: '/singles' },
+    { title: 'Artiest', item: getFirst('artist'), viewAllLink: '/artists' },
+    { title: 'Anekdote', item: getFirst('anecdote'), viewAllLink: '/anekdotes' },
+    { title: 'Nieuwe Release', item: getFirst('release'), viewAllLink: '/new-releases' },
+    { title: 'YouTube', item: getFirst('youtube'), viewAllLink: '/youtube' },
+    { title: 'Review', item: getFirst('review'), viewAllLink: '/reviews' },
+    { title: 'Muziekgeschiedenis', item: getFirst('history'), viewAllLink: '/vandaag-in-de-muziekgeschiedenis' },
+    { title: 'Album Verhaal', item: getFirst('album'), viewAllLink: '/verhalen' },
+  ];
 
   // Hero = most recent item overall
   const heroItem = newsItems?.[0];
+
+  // Filter valid items and shuffle
+  const validItems = allItems.filter(i => i.item);
+  const shuffled = shuffleArray(validItems);
+  
+  // Distribute over sections
+  const firstGrid = shuffled.slice(0, 4);
+  const secondGrid = shuffled.slice(4, 7);
+  const thirdGrid = shuffled.slice(7);
 
   if (isLoading) {
     return (
@@ -69,48 +87,26 @@ const Home = () => {
       {/* Quick Navigation */}
       <QuickLinks />
 
-      {/* Content Grid - 1 item per category */}
-      <ContentGrid 
-        columns={4}
-        items={[
-          { title: 'Single', item: singleItem, viewAllLink: '/singles' },
-          { title: 'Artiest', item: artistItem, viewAllLink: '/artists' },
-          { title: 'Anekdote', item: anecdoteItem, viewAllLink: '/anekdotes' },
-          { title: 'Nieuwe Release', item: releaseItem, viewAllLink: '/new-releases' },
-        ]}
-      />
+      {/* First Random Content Grid - 4 columns */}
+      {firstGrid.length > 0 && (
+        <ContentGrid columns={4} items={firstGrid} />
+      )}
 
       {/* Product Banner */}
       <ProductBanner />
 
-      {/* More Content - 1 item per category */}
-      <ContentGrid 
-        columns={3}
-        items={[
-          { title: 'YouTube', item: youtubeItem, viewAllLink: '/youtube' },
-          { title: 'Review', item: reviewItem, viewAllLink: '/reviews' },
-          { title: 'Muziekgeschiedenis', item: historyItem, viewAllLink: '/vandaag-in-de-muziekgeschiedenis' },
-        ]}
-      />
+      {/* Second Random Content Grid - 3 columns */}
+      {secondGrid.length > 0 && (
+        <ContentGrid columns={3} items={secondGrid} />
+      )}
 
-      {/* Spotify Releases Carousel */}
-      <Suspense fallback={<SectionSkeleton />}>
-        <section className="bg-zinc-950 py-10 md:py-14">
-          <div className="container mx-auto px-4 mb-6">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-primary border-b border-primary/30 pb-2 inline-block">
-              Nieuwe Spotify Releases
-            </h2>
-          </div>
-          <SpotifyNewReleasesSection />
-        </section>
-      </Suspense>
-
-      {/* Music History */}
-      <Suspense fallback={<SectionSkeleton />}>
-        <section className="bg-background py-10 md:py-14">
-          <MusicHistorySpotlight />
-        </section>
-      </Suspense>
+      {/* Third Grid if there are remaining items */}
+      {thirdGrid.length > 0 && (
+        <ContentGrid 
+          columns={thirdGrid.length as 2 | 3 | 4} 
+          items={thirdGrid} 
+        />
+      )}
 
       {/* Shop Footer */}
       <ShopCategoriesFooter />

@@ -203,7 +203,7 @@ serve(async (req) => {
         .eq('id', queueItemId);
     }
 
-    console.log(`📝 Saved studio story: ${studioData.id}`);
+    console.log(`📝 Saved studio story: ${storyData.id}`);
 
     return new Response(
       JSON.stringify({ 

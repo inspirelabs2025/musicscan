@@ -28,39 +28,45 @@ const Home = () => {
     description: "MusicScan is hét complete muziekplatform. Ontdek muzieknieuws, lees verhalen over albums & artiesten, shop unieke muziekproducten, doe de quiz, en scan je vinyl & CD collectie met waardebepaling.",
   });
 
-  // Helper function to get items by type
-  const getItemsByType = useMemo(() => {
-    return (type: string, count: number) => 
-      newsItems?.filter(i => i.type === type).slice(0, count) || [];
-  }, [newsItems]);
-
   // Hero = most recent item overall
   const heroItem = newsItems?.[0];
 
-  // Build ONE large masonry grid with ALL content types mixed
+  // Build ONE large masonry grid with ALL content types mixed - RANDOM selection
   const allGridItems = useMemo(() => {
     if (!newsItems) return [];
 
-    // Mix all content types: 1-2 items each, shuffle
+    // Helper: get 1 random item from a pool of recent items
+    const getRandomFromType = (type: string, poolSize: number = 5) => {
+      const pool = newsItems.filter(i => i.type === type).slice(0, poolSize);
+      return shuffleArray(pool).slice(0, 1);
+    };
+
+    // NIEUWS: Pak alle 3 laatste nieuwsberichten
+    const latestNews = newsItems.filter(i => i.type === 'news').slice(0, 3);
+
+    // MUZIEKGESCHIEDENIS: Pak 1 random uit de laatste 5
+    const randomHistory = getRandomFromType('history', 5);
+
+    // Andere types: random 1 uit pool van 5
     const items = shuffleArray([
-      ...getItemsByType('single', 2),
-      ...getItemsByType('artist', 2),
-      ...getItemsByType('album', 2),
-      ...getItemsByType('release', 1),
-      ...getItemsByType('youtube', 1),
-      ...getItemsByType('history', 1),
-      ...getItemsByType('product', 1),
-      ...getItemsByType('podcast', 1),
-      ...getItemsByType('concert', 1),
-      ...getItemsByType('metal_print', 1),
-      ...getItemsByType('tshirt', 1),
-      ...getItemsByType('news', 1),
-      ...getItemsByType('anecdote', 1),
-      ...getItemsByType('review', 1),
+      ...getRandomFromType('single'),
+      ...getRandomFromType('artist'),
+      ...getRandomFromType('album'),
+      ...getRandomFromType('release'),
+      ...getRandomFromType('youtube'),
+      ...randomHistory,
+      ...getRandomFromType('product'),
+      ...getRandomFromType('podcast'),
+      ...getRandomFromType('concert'),
+      ...getRandomFromType('metal_print'),
+      ...getRandomFromType('tshirt'),
+      ...latestNews, // 3 nieuwsitems
+      ...getRandomFromType('anecdote'),
+      ...getRandomFromType('review'),
     ]).filter(item => item?.id !== heroItem?.id);
 
     return items;
-  }, [newsItems, heroItem, getItemsByType]);
+  }, [newsItems, heroItem]);
 
   if (isLoading) {
     return (

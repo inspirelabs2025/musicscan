@@ -106,6 +106,7 @@ const menuItems = [
     title: "Content Management",
     items: [
       { title: "Verhalen", url: "/admin/album-reviews", icon: BookOpen },
+      { title: "Studio Stories", url: "/admin/studio-stories", icon: Mic },
       { title: "Eigen Podcasts", url: "/admin/own-podcasts", icon: Mic },
       { title: "RSS News Manager", url: "/admin/news-rss-manager", icon: Newspaper },
       { title: "Curated Artists", url: "/admin/curated-artists", icon: Music },

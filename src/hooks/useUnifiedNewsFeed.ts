@@ -86,11 +86,12 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         }));
       }
 
-      // Fetch artist stories
+      // Fetch artist stories (only non-spotlights - spotlights have their own page)
       const { data: artists } = await supabase
         .from('artist_stories')
-        .select('id,artist_name,slug,artwork_url,published_at,spotlight_description')
+        .select('id,artist_name,slug,artwork_url,published_at,biography')
         .eq('is_published', true)
+        .or('is_spotlight.is.null,is_spotlight.eq.false')
         .order('published_at', { ascending: false })
         .limit(8);
 
@@ -104,7 +105,7 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
           category_label: CATEGORY_LABELS.artist,
           link: `/artists/${a.slug}`,
           date: a.published_at || new Date().toISOString(),
-          description: a.spotlight_description || undefined,
+          description: a.biography || undefined,
         }));
       }
 

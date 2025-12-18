@@ -76,11 +76,13 @@ export const useArtistStories = (options: UseArtistStoriesOptions = {}) => {
     queryKey: ['artist-stories', search, genre, country, sortBy, limit],
     queryFn: async () => {
       // Performance: select only fields needed for listings
+      // Filter out spotlights - those belong on /artist-spotlights page
       let query = supabase
         .from('artist_stories')
         .select('id,artist_name,slug,artwork_url,biography,music_style,views_count,reading_time,published_at,is_spotlight,spotlight_description')
         .eq('is_published', true)
-        .neq('is_deep_dive', true);
+        .neq('is_deep_dive', true)
+        .or('is_spotlight.is.null,is_spotlight.eq.false');
 
       // Apply search filter
       if (search) {

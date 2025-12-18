@@ -240,7 +240,7 @@ const ArtistSpotlight = () => {
                           },
                         }}
                       >
-                        {spotlight.story_content}
+                        {storyContent}
                       </ReactMarkdown>
                     );
                   })()}

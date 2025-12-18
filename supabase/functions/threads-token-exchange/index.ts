@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       client_id: appId,
       client_secret: appSecret,
       grant_type: 'authorization_code',
-      redirect_uri: redirect_uri || 'https://www.musicscan.nl/',
+      redirect_uri: redirect_uri || 'https://www.musicscan.app/',
       code: code,
     });
 

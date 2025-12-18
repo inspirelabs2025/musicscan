@@ -25,16 +25,22 @@ export default function NLMuziekDecennium() {
 
   if (!decadeInfo || facts.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <main className="flex-1 container mx-auto px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold mb-4">Decennium niet gevonden</h1>
-          <Button asChild>
-            <Link to="/nederland">Terug naar Nederlandse muziek</Link>
-          </Button>
-        </main>
-        <ConditionalFooter />
-      </div>
+      <>
+        <Helmet>
+          <title>Decennium niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen flex flex-col">
+          <Navigation />
+          <main className="flex-1 container mx-auto px-4 py-16 text-center">
+            <h1 className="text-2xl font-bold mb-4">Decennium niet gevonden</h1>
+            <Button asChild>
+              <Link to="/nederland">Terug naar Nederlandse muziek</Link>
+            </Button>
+          </main>
+          <ConditionalFooter />
+        </div>
+      </>
     );
   }
 

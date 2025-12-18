@@ -20,6 +20,15 @@ Een inleiding over wat deze studio zo bijzonder maakt in de muziekwereld.
 ## Het Ontstaan
 Beschrijf hoe en wanneer de studio is opgericht, de oprichters, hun visie en de eerste jaren.
 
+## Iconische Instrumenten & Apparatuur
+Dit is een CRUCIALE sectie! Beschrijf uitgebreid:
+- Beroemde piano's: merk, model, leeftijd, geschiedenis, op welke opnames te horen
+- Unieke versterkers, synthesizers of drumkits met een verhaal
+- Speciale microfoons of vintage mengpanelen (SSL, Neve, API etc.)
+- Bijzondere akoestische instrumenten
+- Het VERHAAL achter elk instrument: wie speelde erop, welke hits werden ermee opgenomen
+- Voorbeeld: "De legendarische Bechstein vleugel uit 1905 waarop Elton John 'Your Song' componeerde"
+
 ## Artiesten & Albums
 Welke iconische artiesten werkten hier? Noem specifieke albums die hier zijn opgenomen met jaren.
 
@@ -45,7 +54,8 @@ REGELS:
 - Voeg concrete details toe: namen, jaren, albumnamen
 - Geen AI-termen gebruiken
 - Maak het persoonlijk en levendig
-- Focus op verhalen en anekdotes die de studio tot leven brengen`;
+- Focus op verhalen en anekdotes die de studio tot leven brengen
+- BELANGRIJK: Instrumenten en apparatuur verdienen uitgebreide aandacht - dit maakt een studio uniek!`;
 
 // YouTube search prompt for finding relevant videos
 const YOUTUBE_SEARCH_PROMPT = `Geef een JSON array met 5-10 YouTube video IDs van iconische songs opgenomen in deze studio.
@@ -68,7 +78,7 @@ serve(async (req) => {
   }
 
   try {
-    const { studioName, location, foundedYear, notes, queueItemId } = await req.json();
+    const { studioName, location, foundedYear, notes, specialNotes, queueItemId } = await req.json();
 
     if (!studioName) {
       throw new Error('Studio naam is verplicht');
@@ -81,6 +91,9 @@ serve(async (req) => {
     if (location) contextPrompt += `\nLocatie: ${location}`;
     if (foundedYear) contextPrompt += `\nOpgericht: ${foundedYear}`;
     if (notes) contextPrompt += `\nExtra context: ${notes}`;
+    if (specialNotes) {
+      contextPrompt += `\n\n⚠️ BELANGRIJKE DETAILS DIE JE MOET OPNEMEN:\n${specialNotes}\nDeze informatie is CRUCIAAL en moet uitgebreid beschreven worden in het verhaal, met name in de sectie "Iconische Instrumenten & Apparatuur".`;
+    }
 
     // Call AI API for story
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {

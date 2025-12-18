@@ -43,19 +43,25 @@ const ArtistDetail = () => {
 
   if (!story) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Music className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-bold mb-2">Artiest niet gevonden</h2>
-          <p className="text-muted-foreground mb-6">De artiest die je zoekt bestaat niet of is niet gepubliceerd.</p>
-          <button 
-            onClick={() => navigate('/artists')}
-            className="text-primary hover:underline"
-          >
-            Terug naar artiesten
-          </button>
+      <>
+        <Helmet>
+          <title>Artiest niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <Music className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-2xl font-bold mb-2">Artiest niet gevonden</h2>
+            <p className="text-muted-foreground mb-6">De artiest die je zoekt bestaat niet of is niet gepubliceerd.</p>
+            <button 
+              onClick={() => navigate('/artists')}
+              className="text-primary hover:underline"
+            >
+              Terug naar artiesten
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,19 +63,25 @@ export default function PublicCollection() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
-        <div className="container mx-auto px-4 py-8">
-          <Card className="p-8 text-center">
-            <h1 className="text-2xl font-bold mb-2">Profiel niet gevonden</h1>
-            <p className="text-muted-foreground mb-4">
-              Het profiel dat je zoekt bestaat niet of is privé.
-            </p>
-            <Button asChild>
-              <Link to="/community">Terug naar Community</Link>
-            </Button>
-          </Card>
+      <>
+        <Helmet>
+          <title>Profiel niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+          <div className="container mx-auto px-4 py-8">
+            <Card className="p-8 text-center">
+              <h1 className="text-2xl font-bold mb-2">Profiel niet gevonden</h1>
+              <p className="text-muted-foreground mb-4">
+                Het profiel dat je zoekt bestaat niet of is privé.
+              </p>
+              <Button asChild>
+                <Link to="/community">Terug naar Community</Link>
+              </Button>
+            </Card>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

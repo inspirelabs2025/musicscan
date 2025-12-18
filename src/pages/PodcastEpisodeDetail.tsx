@@ -72,6 +72,10 @@ export default function PodcastEpisodeDetail() {
   if (!data) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
+        <Helmet>
+          <title>Aflevering niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <Navigation />
         <main className="flex-1 container py-8 text-center">
           <h1 className="text-2xl font-bold mb-4">Aflevering niet gevonden</h1>

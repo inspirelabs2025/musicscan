@@ -40,15 +40,21 @@ export default function ReviewDetail() {
 
   if (!review) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Music className="h-16 w-16 text-muted-foreground mx-auto" />
-          <h2 className="text-2xl font-bold">Review niet gevonden</h2>
-          <Link to="/reviews">
-            <Button>Terug naar overzicht</Button>
-          </Link>
+      <>
+        <Helmet>
+          <title>Review niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Music className="h-16 w-16 text-muted-foreground mx-auto" />
+            <h2 className="text-2xl font-bold">Review niet gevonden</h2>
+            <Link to="/reviews">
+              <Button>Terug naar overzicht</Button>
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

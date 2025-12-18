@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import { ArrowLeft, ExternalLink, Users, Calendar, Eye } from "lucide-react";
 import { useReleaseDetail } from "@/hooks/useReleaseDetail";
 import { useAlbumInsights } from "@/hooks/useAlbumInsights";
@@ -52,19 +53,25 @@ export default function ReleaseDetail() {
 
   if (error || !release) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <Link to="/my-collection" className="inline-flex items-center gap-2 mb-6 text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" />
-            Terug naar collectie
-          </Link>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <p className="text-muted-foreground">Release niet gevonden</p>
-            </CardContent>
-          </Card>
+      <>
+        <Helmet>
+          <title>Release niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto">
+            <Link to="/my-collection" className="inline-flex items-center gap-2 mb-6 text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" />
+              Terug naar collectie
+            </Link>
+            <Card>
+              <CardContent className="p-6 text-center">
+                <p className="text-muted-foreground">Release niet gevonden</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

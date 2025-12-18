@@ -170,7 +170,15 @@ export default function PhotoDetail() {
   }
 
   if (!photo) {
-    return <div className="min-h-screen flex items-center justify-center">Foto niet gevonden</div>;
+    return (
+      <>
+        <Helmet>
+          <title>Foto niet gevonden | MusicScan FanWall</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen flex items-center justify-center">Foto niet gevonden</div>
+      </>
+    );
   }
 
   const canonicalUrl = photo.canonical_url || `https://www.musicscan.app/photo/${photo.seo_slug}`;

@@ -237,23 +237,29 @@ export const PlaatVerhaal: React.FC = () => {
 
   if (notFound || !blog) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        
-        <div className="relative text-center max-w-md mx-auto px-4">
-          <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-8 border border-border/50">
-            <Disc3 className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-spin [animation-duration:8s]" />
-            <h1 className="text-2xl font-bold mb-4">Artikel niet gevonden</h1>
-            <p className="text-muted-foreground mb-6">
-              Het artikel dat je zoekt bestaat niet of is niet meer beschikbaar.
-            </p>
-            <Button onClick={() => navigate('/')} size="lg" className="group">
-              <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-              Terug naar home
-            </Button>
+      <>
+        <Helmet>
+          <title>Artikel niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
+          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+          
+          <div className="relative text-center max-w-md mx-auto px-4">
+            <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-8 border border-border/50">
+              <Disc3 className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-spin [animation-duration:8s]" />
+              <h1 className="text-2xl font-bold mb-4">Artikel niet gevonden</h1>
+              <p className="text-muted-foreground mb-6">
+                Het artikel dat je zoekt bestaat niet of is niet meer beschikbaar.
+              </p>
+              <Button onClick={() => navigate('/')} size="lg" className="group">
+                <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                Terug naar home
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 

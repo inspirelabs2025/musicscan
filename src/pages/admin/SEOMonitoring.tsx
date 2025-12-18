@@ -1,4 +1,3 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SitemapStatus } from "@/components/admin/SEOSitemapStatus";
 import { IndexNowQueueMonitor } from "@/components/admin/IndexNowQueueMonitor";
@@ -14,7 +13,6 @@ import { Home } from "lucide-react";
 import { AutoIndexNowSubmitter } from "@/components/admin/AutoIndexNowSubmitter";
 import { ImportAuditWidget } from "@/components/admin/ImportAuditWidget";
 import { CanonicalChecker } from "@/components/admin/CanonicalChecker";
-import { CrawledNotIndexedAnalyzer } from "@/components/admin/CrawledNotIndexedAnalyzer";
 
 export default function SEOMonitoring() {
   // Initialize web vitals tracking
@@ -45,9 +43,8 @@ export default function SEOMonitoring() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="flex-wrap">
+        <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="crawled-not-indexed">Crawled Not Indexed</TabsTrigger>
           <TabsTrigger value="google">Google Index</TabsTrigger>
           <TabsTrigger value="sitemaps">Sitemaps</TabsTrigger>
           <TabsTrigger value="indexnow">IndexNow</TabsTrigger>
@@ -59,10 +56,6 @@ export default function SEOMonitoring() {
 
         <TabsContent value="overview" className="space-y-4">
           <SEOHealthCheck />
-        </TabsContent>
-
-        <TabsContent value="crawled-not-indexed" className="space-y-4">
-          <CrawledNotIndexedAnalyzer />
         </TabsContent>
 
         <TabsContent value="google" className="space-y-4">

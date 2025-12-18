@@ -5970,6 +5970,51 @@ export type Database = {
           },
         ]
       }
+      seo_quality_issues: {
+        Row: {
+          content_length: number | null
+          content_type: string
+          created_at: string | null
+          has_image: boolean | null
+          has_meta: boolean | null
+          id: string
+          is_resolved: boolean | null
+          issues: string[]
+          item_id: string
+          resolved_at: string | null
+          scanned_at: string | null
+          url: string
+        }
+        Insert: {
+          content_length?: number | null
+          content_type: string
+          created_at?: string | null
+          has_image?: boolean | null
+          has_meta?: boolean | null
+          id?: string
+          is_resolved?: boolean | null
+          issues?: string[]
+          item_id: string
+          resolved_at?: string | null
+          scanned_at?: string | null
+          url: string
+        }
+        Update: {
+          content_length?: number | null
+          content_type?: string
+          created_at?: string | null
+          has_image?: boolean | null
+          has_meta?: boolean | null
+          id?: string
+          is_resolved?: boolean | null
+          issues?: string[]
+          item_id?: string
+          resolved_at?: string | null
+          scanned_at?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       shop_order_items: {
         Row: {
           created_at: string

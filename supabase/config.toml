@@ -1,5 +1,11 @@
 project_id = "ssxbpyqnjfiyubsuonar"
 
+[functions.auto-seo-quality-scanner]
+verify_jwt = false
+
+[[functions.auto-seo-quality-scanner.schedule]]
+cron = "0 5 * * *"
+
 [functions.top2000-auto-processor]
 verify_jwt = false
 

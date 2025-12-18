@@ -16,6 +16,8 @@ const getTypeGradient = (type: string): string => {
     case 'podcast': return 'from-rose-500 via-pink-600 to-rose-800';
     case 'metal_print': return 'from-amber-400 via-yellow-500 to-amber-700';
     case 'tshirt': return 'from-cyan-400 via-blue-500 to-cyan-700';
+    case 'poster': return 'from-violet-500 via-fuchsia-600 to-purple-800';
+    case 'canvas': return 'from-amber-500 via-orange-600 to-red-700';
     case 'artist': return 'from-blue-500 via-indigo-600 to-blue-800';
     case 'album': return 'from-green-500 via-emerald-600 to-green-800';
     case 'single': return 'from-pink-500 via-rose-600 to-pink-800';
@@ -46,6 +48,8 @@ const TypeIcon = ({ type, size }: { type: string; size: 'large' | 'small' }) => 
     case 'podcast': return <Mic className={sizeClass} />;
     case 'metal_print': return <ShoppingBag className={sizeClass} />;
     case 'tshirt': return <Shirt className={sizeClass} />;
+    case 'poster': return <ShoppingBag className={sizeClass} />;
+    case 'canvas': return <ShoppingBag className={sizeClass} />;
     case 'artist': return <User className={sizeClass} />;
     case 'album': return <Disc className={sizeClass} />;
     case 'single': return <Radio className={sizeClass} />;
@@ -172,6 +176,8 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
             item.type === 'metal_print' ? 'text-amber-400' :
             item.type === 'tshirt' ? 'text-cyan-400' :
             item.type === 'socks' ? 'text-pink-400' :
+            item.type === 'poster' ? 'text-violet-400' :
+            item.type === 'canvas' ? 'text-amber-400' :
             item.type === 'news' ? 'text-emerald-400' :
             item.type === 'history' ? 'text-orange-400' :
             item.type === 'concert' ? 'text-purple-400' :
@@ -181,6 +187,8 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
             {item.type === 'metal_print' && '🖼️ '}
             {item.type === 'tshirt' && '👕 '}
             {item.type === 'socks' && '🧦 '}
+            {item.type === 'poster' && '🎨 '}
+            {item.type === 'canvas' && '🎨 '}
             {item.type === 'news' && '📰 '}
             {item.type === 'history' && '📅 '}
             {item.type === 'concert' && '🎸 '}

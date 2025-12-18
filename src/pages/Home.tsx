@@ -47,6 +47,9 @@ const Home = () => {
     // MUZIEKGESCHIEDENIS: Pak 1 random uit de laatste 5
     const randomHistory = getRandomFromType('history', 5);
 
+    // Random keuze tussen poster of canvas voor ART
+    const artType = Math.random() > 0.5 ? 'poster' : 'canvas';
+
     // Andere types: random 1 uit pool van 5
     const items = shuffleArray([
       ...getRandomFromType('single'),
@@ -59,7 +62,7 @@ const Home = () => {
       ...getRandomFromType('podcast'),
       ...getRandomFromType('concert'),
       ...getRandomFromType('metal_print'),
-      ...getRandomFromType('tshirt'),
+      ...getRandomFromType(artType), // Random poster OF canvas met ART label
       ...latestNews, // 3 nieuwsitems
       ...getRandomFromType('anecdote'),
       ...getRandomFromType('review'),

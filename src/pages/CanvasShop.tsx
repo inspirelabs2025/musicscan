@@ -80,7 +80,7 @@ export default function CanvasShop() {
             "@type": "CollectionPage",
             "name": "Premium Canvas Doeken",
             "description": "Unieke canvas doeken met warm grayscale stijl",
-            "url": "https://musicscan.app/canvas",
+            "url": "https://www.musicscan.app/canvas",
             "numberOfItems": canvasProducts?.length || 0,
             "about": {
               "@type": "Thing",

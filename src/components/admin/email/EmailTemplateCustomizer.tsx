@@ -48,7 +48,7 @@ const defaultConfig: Record<string, any> = {
       introText: 'Welkom bij je dagelijkse MusicScan update! Ontdek de nieuwste releases, blogs en community highlights.',
       outroText: 'Bedankt voor het lezen! Blijf ontdekken en deel je muziekmomenten.',
       ctaButtonText: 'Bezoek MusicScan',
-      ctaButtonUrl: 'https://musicscan.app',
+      ctaButtonUrl: 'https://www.musicscan.app',
     },
     footer: {
       footerText: 'Je ontvangt deze email omdat je geabonneerd bent op MusicScan updates.',
@@ -77,7 +77,7 @@ const defaultConfig: Record<string, any> = {
       },
       headerText: 'Nieuwe Wekelijkse Discussie op MusicScan Forum!',
       ctaButtonText: 'Doe Mee aan Discussie',
-      ctaButtonUrl: 'https://musicscan.app/forum',
+      ctaButtonUrl: 'https://www.musicscan.app/forum',
     },
     footer: {
       footerText: 'Je ontvangt deze email omdat je geabonneerd bent op forum notificaties.',

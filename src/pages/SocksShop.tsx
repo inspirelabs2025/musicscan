@@ -98,7 +98,7 @@ export default function SocksShop() {
             "@type": "CollectionPage",
             "name": "Muziek Sokken",
             "description": "Sokken geïnspireerd op iconische albums",
-            "url": "https://musicscan.app/socks",
+            "url": "https://www.musicscan.app/socks",
             "numberOfItems": sockProducts?.length || 0,
             "about": {
               "@type": "Thing",

@@ -64,7 +64,7 @@ serve(async (req) => {
                   <h2>Singles Queue is Leeg</h2>
                   <p>De singles import queue bevat geen nieuwe items meer om te verwerken.</p>
                   <p>Voeg nieuwe singles toe via de admin interface:</p>
-                  <p><a href="https://musicscan.nl/admin/singles-importer">Singles Importer</a></p>
+                  <p><a href="https://www.musicscan.app/admin/singles-importer">Singles Importer</a></p>
                   <hr>
                   <p><small>Dit is een automatische melding van MusicScan</small></p>
                 `

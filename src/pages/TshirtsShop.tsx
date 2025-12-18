@@ -75,7 +75,7 @@ export default function TshirtsShop() {
             "@type": "CollectionPage",
             "name": "Muziek T-Shirts",
             "description": "T-shirts met iconische album artwork",
-            "url": "https://musicscan.app/shirts",
+            "url": "https://www.musicscan.app/shirts",
             "numberOfItems": tshirtProducts?.length || 0,
             "about": {
               "@type": "Thing",

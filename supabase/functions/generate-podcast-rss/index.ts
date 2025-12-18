@@ -100,7 +100,7 @@ function generateRSSFeed(podcast: Podcast, episodes: Episode[], baseUrl: string)
   <channel>
     <title>${escapeXml(podcast.name)}</title>
     <description><![CDATA[${podcast.description || ''}]]></description>
-    <link>${escapeXml(podcast.website_url || 'https://musicscan.nl')}</link>
+    <link>${escapeXml(podcast.website_url || 'https://www.musicscan.app')}</link>
     <language>${podcast.language || 'nl'}</language>
     <lastBuildDate>${lastBuildDate}</lastBuildDate>
     <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml"/>

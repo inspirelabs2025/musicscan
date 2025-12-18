@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
       availability: 'in stock',
       condition: 'new',
       price: `${(product.price * 100).toFixed(0)} EUR`,
-      url: `https://musicscan.app/product/${product.slug}`,
+      url: `https://www.musicscan.app/product/${product.slug}`,
       image_url: product.primary_image || '',
       brand: 'MusicScan',
       google_product_category: getGoogleProductCategory(product),

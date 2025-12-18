@@ -17,11 +17,11 @@ const Filmmuziek = () => {
         <title>Filmmuziek | Soundtracks & Scores - MusicScan</title>
         <meta name="description" content="Ontdek de wereld van filmmuziek: van John Williams tot Hans Zimmer. Leer over iconische scores, componisten en de geschiedenis van film soundtracks." />
         <meta name="keywords" content="filmmuziek, soundtracks, film scores, John Williams, Hans Zimmer, Ennio Morricone, filmcomponisten, orkestrale muziek" />
-        <link rel="canonical" href="https://www.musicscan.nl/filmmuziek" />
+        <link rel="canonical" href="https://www.musicscan.app/filmmuziek" />
         <meta property="og:title" content="Filmmuziek | Soundtracks & Scores - MusicScan" />
         <meta property="og:description" content="Ontdek de wereld van filmmuziek: van John Williams tot Hans Zimmer." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.musicscan.nl/filmmuziek" />
+        <meta property="og:url" content="https://www.musicscan.app/filmmuziek" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Filmmuziek | Soundtracks & Scores - MusicScan" />
         <script type="application/ld+json">
@@ -30,7 +30,7 @@ const Filmmuziek = () => {
             "@type": "CollectionPage",
             "name": "Filmmuziek",
             "description": "Complete gids over filmmuziek, soundtracks en componisten",
-            "url": "https://www.musicscan.nl/filmmuziek"
+            "url": "https://www.musicscan.app/filmmuziek"
           })}
         </script>
       </Helmet>

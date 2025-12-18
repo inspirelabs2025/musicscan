@@ -48,7 +48,7 @@ serve(async (req) => {
     }
 
     // Generate RSS XML
-    const siteUrl = "https://musicscan.nl";
+    const siteUrl = "https://www.musicscan.app";
     const feedUrl = `${siteUrl}/feeds/podcast/${podcastSlug}.xml`;
 
     const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -70,7 +70,7 @@ serve(async (req) => {
     <itunes:type>episodic</itunes:type>
     <itunes:owner>
       <itunes:name>${escapeXml(podcast.owner_name || "MusicScan")}</itunes:name>
-      <itunes:email>${podcast.owner_email || "podcast@musicscan.nl"}</itunes:email>
+      <itunes:email>${podcast.owner_email || "podcast@musicscan.app"}</itunes:email>
     </itunes:owner>
     <itunes:explicit>${podcast.explicit ? "yes" : "no"}</itunes:explicit>
     <itunes:category text="${escapeXml(podcast.category || "Music")}"/>

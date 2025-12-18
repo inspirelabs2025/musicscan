@@ -238,7 +238,7 @@ function generateEmailHtml(
           <!-- Footer -->
           <tr>
             <td style="background: #f9f9f9; padding: 20px; text-align: center; border-top: 1px solid #eee;">
-              <a href="https://musicscan.nl/admin/statistics" style="display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #F59E0B 100%); color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 14px;">
+              <a href="https://www.musicscan.app/admin/statistics" style="display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #F59E0B 100%); color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 14px;">
                 Bekijk Volledig Dashboard →
               </a>
               <p style="margin: 15px 0 0 0; font-size: 11px; color: #999;">

@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
       ? `S${episode.season_number}E${episode.episode_number}: ` 
       : '';
 
-    const podcastUrl = `https://musicscan.nl/de-plaat-en-het-verhaal`;
+    const podcastUrl = `https://www.musicscan.app/de-plaat-en-het-verhaal`;
     
     const message = `${randomIntro}
 

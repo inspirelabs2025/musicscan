@@ -93,13 +93,13 @@ export function SitemapStatus() {
   };
 
   const sitemapUrls = [
-    { name: "Hoofd Sitemap", url: "https://musicscan.app/sitemap.xml" },
-    { name: "Blog Posts", url: "https://musicscan.app/sitemaps/sitemap-blog.xml" },
-    { name: "Music Stories", url: "https://musicscan.app/sitemaps/sitemap-music-stories.xml" },
-    { name: "Products", url: "https://musicscan.app/sitemaps/sitemap-products.xml" },
-    { name: "Blog Images", url: "https://musicscan.app/sitemaps/sitemap-images-blogs.xml" },
-    { name: "Story Images", url: "https://musicscan.app/sitemaps/sitemap-images-stories.xml" },
-    { name: "Product Images", url: "https://musicscan.app/sitemaps/sitemap-images-products.xml" },
+    { name: "Hoofd Sitemap", url: "https://www.musicscan.app/sitemap.xml" },
+    { name: "Blog Posts", url: "https://www.musicscan.app/sitemaps/sitemap-blog.xml" },
+    { name: "Music Stories", url: "https://www.musicscan.app/sitemaps/sitemap-music-stories.xml" },
+    { name: "Products", url: "https://www.musicscan.app/sitemaps/sitemap-products.xml" },
+    { name: "Blog Images", url: "https://www.musicscan.app/sitemaps/sitemap-images-blogs.xml" },
+    { name: "Story Images", url: "https://www.musicscan.app/sitemaps/sitemap-images-stories.xml" },
+    { name: "Product Images", url: "https://www.musicscan.app/sitemaps/sitemap-images-products.xml" },
   ];
 
   return (

@@ -557,3 +557,9 @@ verify_jwt = false
 
 [[functions.backfill-truncated-stories.schedule]]
 cron = "* * * * *"
+
+[functions.deduplicate-products]
+verify_jwt = false
+
+[[functions.deduplicate-products.schedule]]
+cron = "0 4 * * *"

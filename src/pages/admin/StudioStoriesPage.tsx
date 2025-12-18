@@ -37,7 +37,6 @@ interface StudioInput {
 interface RegenerateDialogState {
   open: boolean;
   story: any | null;
-  specialNotes: string;
 }
 
 export default function StudioStoriesPage() {
@@ -53,7 +52,6 @@ export default function StudioStoriesPage() {
   const [regenerateDialog, setRegenerateDialog] = useState<RegenerateDialogState>({
     open: false,
     story: null,
-    specialNotes: "",
   });
 
   // Fetch queue items
@@ -161,7 +159,7 @@ export default function StudioStoriesPage() {
 
   // Regenerate story for existing story
   const regenerateStory = useMutation({
-    mutationFn: async ({ story, specialNotes }: { story: any; specialNotes: string }) => {
+    mutationFn: async (story: any) => {
       // First delete the old story
       const { error: deleteError } = await supabase
         .from('studio_stories')
@@ -176,7 +174,6 @@ export default function StudioStoriesPage() {
           studioName: story.studio_name,
           location: story.location,
           foundedYear: story.founded_year,
-          specialNotes: specialNotes,
         },
       });
       if (error) throw error;
@@ -184,7 +181,7 @@ export default function StudioStoriesPage() {
     },
     onSuccess: (data) => {
       toast.success(`Story opnieuw gegenereerd: ${data.wordCount} woorden`);
-      setRegenerateDialog({ open: false, story: null, specialNotes: "" });
+      setRegenerateDialog({ open: false, story: null });
       queryClient.invalidateQueries({ queryKey: ['studio-stories'] });
     },
     onError: (error) => {
@@ -223,7 +220,6 @@ export default function StudioStoriesPage() {
     setRegenerateDialog({
       open: true,
       story,
-      specialNotes: "",
     });
   };
 
@@ -435,46 +431,25 @@ export default function StudioStoriesPage() {
 
       {/* Regenerate Dialog */}
       <Dialog open={regenerateDialog.open} onOpenChange={(open) => setRegenerateDialog(prev => ({ ...prev, open }))}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RefreshCw className="w-5 h-5" />
-              Verhaal Regenereren: {regenerateDialog.story?.studio_name}
+              Verhaal Regenereren
             </DialogTitle>
             <DialogDescription>
-              Voeg specifieke details toe die je in het nieuwe verhaal wilt zien. Het huidige verhaal wordt vervangen.
+              Weet je zeker dat je het verhaal van <strong>{regenerateDialog.story?.studio_name}</strong> opnieuw wilt genereren? Het huidige verhaal wordt vervangen.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Music className="w-4 h-4 text-primary" />
-                Bijzondere instrumenten & apparatuur
-              </Label>
-              <Textarea
-                placeholder="Bijv: 100 jaar oude Bechstein vleugel waarop Elton John 'Your Song' speelde, vintage Neve 1073 preamps uit 1972, EMI TG12345 console..."
-                value={regenerateDialog.specialNotes}
-                onChange={(e) => setRegenerateDialog(prev => ({ ...prev, specialNotes: e.target.value }))}
-                rows={5}
-                className="border-primary/30"
-              />
-              <p className="text-xs text-muted-foreground">
-                Voeg hier iconische piano's, versterkers, mengpanelen of andere legendarische apparatuur toe. Deze worden uitgebreid beschreven in het nieuwe verhaal.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button 
               variant="outline" 
-              onClick={() => setRegenerateDialog({ open: false, story: null, specialNotes: "" })}
+              onClick={() => setRegenerateDialog({ open: false, story: null })}
             >
               Annuleren
             </Button>
             <Button 
-              onClick={() => regenerateDialog.story && regenerateStory.mutate({
-                story: regenerateDialog.story,
-                specialNotes: regenerateDialog.specialNotes,
-              })}
+              onClick={() => regenerateDialog.story && regenerateStory.mutate(regenerateDialog.story)}
               disabled={regenerateStory.isPending}
             >
               {regenerateStory.isPending ? (
@@ -485,7 +460,7 @@ export default function StudioStoriesPage() {
               ) : (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Regenereer Verhaal
+                  Regenereer
                 </>
               )}
             </Button>

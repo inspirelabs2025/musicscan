@@ -148,24 +148,35 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         }));
       }
 
-      // Fetch music history events
+      // Fetch music history events - parse JSONB events array
       const { data: history } = await supabase
         .from('music_history_events')
-        .select('id,title,artist_name,image_url,created_at,event_date')
-        .order('created_at', { ascending: false })
-        .limit(6);
+        .select('id,event_date,day_of_month,month_of_year,events,created_at')
+        .order('event_date', { ascending: false })
+        .limit(8);
 
       if (history) {
-        history.forEach(h => items.push({
-          id: h.id,
-          type: 'history',
-          title: h.title,
-          subtitle: h.artist_name || undefined,
-          image_url: h.image_url || undefined,
-          category_label: CATEGORY_LABELS.history,
-          link: '/vandaag-in-de-muziekgeschiedenis',
-          date: h.created_at,
-        }));
+        const monthNames = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+        history.forEach(h => {
+          const eventsArray = h.events as any[];
+          const firstEvent = eventsArray?.[0];
+          const dateLabel = `${h.day_of_month} ${monthNames[(h.month_of_year || 1) - 1]}`;
+          const eventPreview = firstEvent 
+            ? `${firstEvent.title || firstEvent.artist || 'Muziekgeschiedenis'}${firstEvent.year ? ` (${firstEvent.year})` : ''}`
+            : 'Bekijk alle gebeurtenissen';
+          
+          items.push({
+            id: h.id,
+            type: 'history',
+            title: `📅 ${dateLabel}`,
+            subtitle: eventPreview,
+            image_url: firstEvent?.image_url || undefined,
+            category_label: CATEGORY_LABELS.history,
+            link: '/vandaag-in-de-muziekgeschiedenis',
+            date: h.created_at,
+            description: firstEvent?.description || undefined,
+          });
+        });
       }
 
       // Fetch YouTube discoveries

@@ -38,9 +38,10 @@ const Home = () => {
     const excludedId = heroItem?.id;
 
     // Helper: get 1 random item from a pool of recent items (en nooit de hero dupliceren)
-    const getRandomFromType = (type: string, poolSize: number = 5) => {
+    // requireImage: filter alleen items met afbeelding
+    const getRandomFromType = (type: string, poolSize: number = 5, requireImage = false) => {
       const pool = newsItems
-        .filter(i => i.type === type && i.id !== excludedId)
+        .filter(i => i.type === type && i.id !== excludedId && (!requireImage || i.image_url))
         .slice(0, poolSize);
       return shuffleArray(pool).slice(0, 1);
     };
@@ -52,12 +53,15 @@ const Home = () => {
     const historyItem = (() => {
       const pick = getRandomFromType('history', 8);
       if (pick.length) return pick;
+      // Fallback met datum van vandaag
+      const today = new Date();
+      const monthNames = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
       return [
         {
           id: 'history-promo',
           type: 'history' as const,
-          title: 'Wat gebeurde er vandaag in de muziekgeschiedenis?',
-          subtitle: 'Bekijk alle gebeurtenissen van vandaag',
+          title: `📅 ${today.getDate()} ${monthNames[today.getMonth()]}`,
+          subtitle: 'Ontdek wat er vandaag in de muziekgeschiedenis gebeurde',
           image_url: undefined,
           category_label: 'MUZIEKGESCHIEDENIS',
           link: '/vandaag-in-de-muziekgeschiedenis',
@@ -70,8 +74,9 @@ const Home = () => {
     const artType = Math.random() > 0.5 ? 'poster' : 'canvas';
 
     // Andere types: random 1 uit pool van 5
+    // Singles: ALLEEN met artwork (requireImage=true)
     const items = shuffleArray([
-      ...getRandomFromType('single'),
+      ...getRandomFromType('single', 5, true), // Singles alleen met artwork
       ...getRandomFromType('artist'),
       ...getRandomFromType('album'),
       ...getRandomFromType('release'),
@@ -85,7 +90,7 @@ const Home = () => {
       ...latestNews, // 3 nieuwsitems
       ...getRandomFromType('anecdote'),
       ...getRandomFromType('review'),
-      ...getRandomFromType('fanwall'), // Random fanwall foto
+      ...getRandomFromType('fanwall', 5, true), // Fanwall alleen met afbeelding
       ...getRandomFromType('quiz'), // Quiz van de dag met vraag
     ]).filter(item => item?.id !== heroItem?.id);
 

@@ -46,6 +46,10 @@ const ArtistSpotlight = () => {
   }
 
   const canonicalUrl = `https://www.musicscan.app/artist-spotlight/${spotlight.slug}`;
+  
+  // Hero image: artwork_url of eerste spotlight_image als fallback
+  const heroImage = spotlight.artwork_url || 
+    (spotlight.spotlight_images as any[])?.[0]?.url;
 
   return (
     <>
@@ -59,20 +63,20 @@ const ArtistSpotlight = () => {
         <meta property="og:description" content={spotlight.spotlight_description || ""} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={canonicalUrl} />
-        {spotlight.artwork_url && <meta property="og:image" content={spotlight.artwork_url} />}
+        {heroImage && <meta property="og:image" content={heroImage} />}
         
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={spotlight.artist_name} />
         <meta name="twitter:description" content={spotlight.spotlight_description || ""} />
-        {spotlight.artwork_url && <meta name="twitter:image" content={spotlight.artwork_url} />}
+        {heroImage && <meta name="twitter:image" content={heroImage} />}
       </Helmet>
 
       {spotlight.music_style && (
         <MusicGroupStructuredData
           name={spotlight.artist_name}
           description={spotlight.spotlight_description || spotlight.story_content.substring(0, 200)}
-          image={spotlight.artwork_url}
+          image={heroImage}
           url={canonicalUrl}
           genre={spotlight.music_style}
           albums={spotlight.notable_albums}
@@ -93,10 +97,10 @@ const ArtistSpotlight = () => {
             <div className="grid gap-8 lg:grid-cols-3">
               {/* Main Content - Takes 2/3 width */}
               <div className="lg:col-span-2">
-                {spotlight.artwork_url && (
+                {heroImage && (
                   <div className="aspect-video w-full overflow-hidden rounded-lg mb-6 shadow-lg">
                     <img
-                      src={spotlight.artwork_url}
+                      src={heroImage}
                       alt={spotlight.artist_name}
                       className="object-cover w-full h-full"
                     />
@@ -141,10 +145,11 @@ const ArtistSpotlight = () => {
                 {spotlight.spotlight_images && spotlight.spotlight_images.length > 0 && (
                   <div className="mb-8">
                     <ImageGallery 
-                      images={spotlight.spotlight_images.filter((img: any) => 
+                      images={(spotlight.spotlight_images as any[]).filter((img: any) => 
                         img.url && 
                         img.url.startsWith('http') && 
-                        img.url.length < 1000
+                        img.url.length < 1000 &&
+                        img.url !== heroImage // Filter de hero image uit de gallery
                       )} 
                       artistName={spotlight.artist_name}
                     />

@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface NewsItem {
   id: string;
-  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall' | 'product';
+  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall' | 'product' | 'concert';
   title: string;
   subtitle?: string;
   image_url?: string;
@@ -26,6 +26,7 @@ const CATEGORY_LABELS: Record<NewsItem['type'], string> = {
   history: 'MUZIEKGESCHIEDENIS',
   fanwall: 'COMMUNITY',
   product: 'SHOP',
+  concert: 'LEGENDARISCH CONCERT',
 };
 
 export const useUnifiedNewsFeed = (limit: number = 20) => {
@@ -218,6 +219,49 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
           category_label: CATEGORY_LABELS.product,
           link: `/product/${p.slug}`,
           date: p.created_at,
+        }));
+      }
+
+      // Fetch podcasts (curated episodes)
+      const { data: podcasts } = await supabase
+        .from('own_podcast_episodes')
+        .select('id,title,description,podcast_id,audio_url,created_at,own_podcasts(name,artwork_url)')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (podcasts) {
+        podcasts.forEach(p => items.push({
+          id: p.id,
+          type: 'podcast',
+          title: p.title,
+          subtitle: (p.own_podcasts as any)?.name || undefined,
+          image_url: (p.own_podcasts as any)?.artwork_url || undefined,
+          category_label: CATEGORY_LABELS.podcast,
+          link: '/de-plaat-en-het-verhaal',
+          date: p.created_at,
+        }));
+      }
+
+      // Fetch time machine events (concerts)
+      const { data: concerts } = await supabase
+        .from('time_machine_events')
+        .select('id,event_title,venue_name,poster_image_url,slug,concert_date,created_at')
+        .eq('is_published', true)
+        .eq('is_featured', true)
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (concerts) {
+        concerts.forEach(c => items.push({
+          id: c.id,
+          type: 'concert',
+          title: c.event_title,
+          subtitle: c.venue_name || undefined,
+          image_url: c.poster_image_url || undefined,
+          category_label: CATEGORY_LABELS.concert,
+          link: `/time-machine/${c.slug}`,
+          date: c.created_at,
         }));
       }
 

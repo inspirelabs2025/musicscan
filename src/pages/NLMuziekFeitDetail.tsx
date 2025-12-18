@@ -27,15 +27,21 @@ export default function NLMuziekFeitDetail() {
 
   if (!fact) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <main className="flex-1 container mx-auto px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold mb-4">Muziekfeit niet gevonden</h1>
-          <Button asChild>
-            <Link to="/nederland">Terug naar Nederlandse muziek</Link>
-          </Button>
-        </main>
-        <ConditionalFooter />
-      </div>
+      <>
+        <Helmet>
+          <title>Muziekfeit niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen flex flex-col">
+          <main className="flex-1 container mx-auto px-4 py-16 text-center">
+            <h1 className="text-2xl font-bold mb-4">Muziekfeit niet gevonden</h1>
+            <Button asChild>
+              <Link to="/nederland">Terug naar Nederlandse muziek</Link>
+            </Button>
+          </main>
+          <ConditionalFooter />
+        </div>
+      </>
     );
   }
 

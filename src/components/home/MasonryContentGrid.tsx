@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Play, ExternalLink, MessageCircle, Calendar, Newspaper, Music, Mic, Radio, User, Disc, ShoppingBag, Shirt } from 'lucide-react';
+import { Play, ExternalLink, MessageCircle, Calendar, Newspaper, Music, Mic, Radio, User, Disc, ShoppingBag, Shirt, Gamepad2, Camera, Bot, Snowflake, Flag, Headphones, Film } from 'lucide-react';
 import { NewsItem } from '@/hooks/useUnifiedNewsFeed';
+
+// Extended type for promo blocks
+type PromoType = 'quiz' | 'scan' | 'echo' | 'nederland' | 'frankrijk' | 'dance' | 'filmmuziek' | 'kerst';
 
 // Type-specific gradient backgrounds for cards without images
 const getTypeGradient = (type: string): string => {
@@ -17,6 +20,15 @@ const getTypeGradient = (type: string): string => {
     case 'single': return 'from-pink-500 via-rose-600 to-pink-800';
     case 'youtube': return 'from-red-500 via-red-600 to-red-800';
     case 'review': return 'from-sky-500 via-blue-600 to-sky-800';
+    // Promo types
+    case 'quiz': return 'from-yellow-400 via-orange-500 to-red-600';
+    case 'scan': return 'from-indigo-500 via-purple-600 to-pink-600';
+    case 'echo': return 'from-teal-400 via-cyan-500 to-blue-600';
+    case 'nederland': return 'from-orange-500 via-orange-600 to-red-600';
+    case 'frankrijk': return 'from-blue-600 via-blue-200 to-red-500';
+    case 'dance': return 'from-fuchsia-500 via-purple-600 to-indigo-700';
+    case 'filmmuziek': return 'from-slate-600 via-zinc-700 to-slate-900';
+    case 'kerst': return 'from-red-600 via-green-600 to-red-700';
     default: return 'from-primary via-primary/70 to-zinc-900';
   }
 };
@@ -38,9 +50,37 @@ const TypeIcon = ({ type, size }: { type: string; size: 'large' | 'small' }) => 
     case 'single': return <Radio className={sizeClass} />;
     case 'youtube': return <Play className={sizeClass} />;
     case 'review': return <MessageCircle className={sizeClass} />;
+    // Promo types
+    case 'quiz': return <Gamepad2 className={sizeClass} />;
+    case 'scan': return <Camera className={sizeClass} />;
+    case 'echo': return <Bot className={sizeClass} />;
+    case 'nederland': return <Flag className={sizeClass} />;
+    case 'frankrijk': return <Flag className={sizeClass} />;
+    case 'dance': return <Headphones className={sizeClass} />;
+    case 'filmmuziek': return <Film className={sizeClass} />;
+    case 'kerst': return <Snowflake className={sizeClass} />;
     default: return <Music className={sizeClass} />;
   }
 };
+
+// Fixed promotional blocks
+const PROMO_BLOCKS: Array<{
+  id: string;
+  type: PromoType;
+  title: string;
+  subtitle: string;
+  link: string;
+  emoji: string;
+}> = [
+  { id: 'promo-quiz', type: 'quiz', title: 'Speel Muziek Quiz', subtitle: 'Test je kennis!', link: '/quizzen', emoji: '🎯' },
+  { id: 'promo-scan', type: 'scan', title: 'Scan Je Albums', subtitle: 'Digitaliseer je collectie', link: '/scan', emoji: '📷' },
+  { id: 'promo-echo', type: 'echo', title: 'Chat met Echo', subtitle: 'Onze muziekexpert', link: '/echo', emoji: '🤖' },
+  { id: 'promo-nederland', type: 'nederland', title: 'Nederlandse Muziek', subtitle: 'Ontdek NL hits', link: '/nederland', emoji: '🇳🇱' },
+  { id: 'promo-frankrijk', type: 'frankrijk', title: 'Franse Muziek', subtitle: 'Vive la musique!', link: '/frankrijk', emoji: '🇫🇷' },
+  { id: 'promo-dance', type: 'dance', title: 'Dance & House', subtitle: 'Feel the beat', link: '/dance-house', emoji: '🎧' },
+  { id: 'promo-film', type: 'filmmuziek', title: 'Filmmuziek', subtitle: 'Soundtracks & scores', link: '/filmmuziek', emoji: '🎬' },
+  { id: 'promo-kerst', type: 'kerst', title: 'Kerstmuziek', subtitle: 'Feestelijke hits', link: '/kerst', emoji: '🎄' },
+];
 
 interface MasonryContentGridProps {
   items: NewsItem[];
@@ -167,8 +207,82 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
   );
 };
 
+// Promo Card for fixed blocks
+const PromoCard = ({ promo, size }: { promo: typeof PROMO_BLOCKS[0]; size: CardSize }) => {
+  const sizeClasses = {
+    large: 'col-span-2 row-span-2',
+    wide: 'col-span-2 row-span-1',
+    tall: 'col-span-1 row-span-2',
+    small: 'col-span-1 row-span-1',
+  };
+
+  const aspectClasses = {
+    large: 'aspect-square',
+    wide: 'aspect-[2/1]',
+    tall: 'aspect-[1/2]',
+    small: 'aspect-square',
+  };
+
+  return (
+    <Link
+      to={promo.link}
+      className={`group relative overflow-hidden ${sizeClasses[size]} block`}
+    >
+      <div className={`relative w-full h-full ${aspectClasses[size]}`}>
+        {/* Gradient Background */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${getTypeGradient(promo.type)}`} />
+        
+        {/* Decorative icon */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+          <TypeIcon type={promo.type} size={size === 'large' || size === 'tall' ? 'large' : 'small'} />
+        </div>
+        
+        {/* Subtle overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        
+        {/* Content */}
+        <div className="absolute inset-0 p-4 flex flex-col justify-end items-start">
+          <span className="text-3xl md:text-4xl mb-2">{promo.emoji}</span>
+          <h3 className={`font-bold text-white leading-tight mb-1 ${
+            size === 'large' ? 'text-2xl md:text-3xl' : 
+            size === 'wide' ? 'text-xl md:text-2xl' :
+            size === 'tall' ? 'text-lg md:text-xl' : 
+            'text-sm md:text-base'
+          }`}>
+            {promo.title}
+          </h3>
+          {(size === 'large' || size === 'wide' || size === 'tall') && (
+            <p className="text-sm text-white/80">{promo.subtitle}</p>
+          )}
+        </div>
+        
+        {/* Hover Effect */}
+        <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/50 transition-colors" />
+      </div>
+    </Link>
+  );
+};
+
 export const MasonryContentGrid = ({ items, title = "Ontdek Meer" }: MasonryContentGridProps) => {
   if (!items.length) return null;
+
+  // Interleave promo blocks with regular items
+  // Place promo blocks at strategic positions: 0, 4, 9, 14, 19, 24, 29, 34
+  const promoPositions = [0, 4, 9, 14, 19, 24, 29, 34];
+  
+  const combinedItems: Array<{ type: 'content' | 'promo'; data: NewsItem | typeof PROMO_BLOCKS[0] }> = [];
+  let itemIndex = 0;
+  let promoIndex = 0;
+  
+  for (let i = 0; i < items.length + Math.min(PROMO_BLOCKS.length, promoPositions.length); i++) {
+    if (promoPositions.includes(i) && promoIndex < PROMO_BLOCKS.length) {
+      combinedItems.push({ type: 'promo', data: PROMO_BLOCKS[promoIndex] });
+      promoIndex++;
+    } else if (itemIndex < items.length) {
+      combinedItems.push({ type: 'content', data: items[itemIndex] });
+      itemIndex++;
+    }
+  }
 
   return (
     <section className="bg-zinc-950 py-10 md:py-14">
@@ -182,13 +296,23 @@ export const MasonryContentGrid = ({ items, title = "Ontdek Meer" }: MasonryCont
         
         {/* Masonry Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3 auto-rows-[minmax(120px,1fr)] md:auto-rows-[minmax(150px,1fr)]">
-          {items.map((item, index) => (
-            <MasonryCard 
-              key={`${item.type}-${item.id}`} 
-              item={item} 
-              size={getSizeForIndex(index)} 
-            />
-          ))}
+          {combinedItems.map((item, index) => {
+            const size = getSizeForIndex(index);
+            
+            if (item.type === 'promo') {
+              const promo = item.data as typeof PROMO_BLOCKS[0];
+              return <PromoCard key={promo.id} promo={promo} size={size} />;
+            }
+            
+            const newsItem = item.data as NewsItem;
+            return (
+              <MasonryCard 
+                key={`${newsItem.type}-${newsItem.id}`} 
+                item={newsItem} 
+                size={size} 
+              />
+            );
+          })}
         </div>
       </div>
     </section>

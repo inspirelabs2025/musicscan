@@ -84,7 +84,7 @@ export default function DePlaatEnHetVerhaal() {
   const totalDuration = episodes?.reduce((sum, ep) => sum + (ep.audio_duration_seconds || 0), 0) || 0;
   const totalViews = episodes?.reduce((sum, ep) => sum + (ep.views_count || 0), 0) || 0;
 
-  const rssUrl = `https://musicscan.nl/feeds/podcast/${PODCAST_SLUG}.xml`;
+  const rssUrl = `https://www.musicscan.app/feeds/podcast/${PODCAST_SLUG}.xml`;
 
   // Schema.org structured data
   const structuredData = {
@@ -118,9 +118,9 @@ export default function DePlaatEnHetVerhaal() {
         <meta property="og:title" content="De Plaat en het Verhaal | MusicScan Podcast" />
         <meta property="og:description" content="De podcast over iconische albums en hun verhalen. Gepresenteerd door Rogier Visser en Ingmar Loman." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://musicscan.nl/de-plaat-en-het-verhaal" />
+        <meta property="og:url" content="https://www.musicscan.app/de-plaat-en-het-verhaal" />
         {podcast?.artwork_url && <meta property="og:image" content={podcast.artwork_url} />}
-        <link rel="canonical" href="https://musicscan.nl/de-plaat-en-het-verhaal" />
+        <link rel="canonical" href="https://www.musicscan.app/de-plaat-en-het-verhaal" />
         <link rel="alternate" type="application/rss+xml" title="De Plaat en het Verhaal RSS Feed" href={rssUrl} />
         <script type="application/ld+json">
           {JSON.stringify(structuredData)}

@@ -1,3 +1,6 @@
+# Force www and remove trailing slashes (canonical URL normalization)
+# These run BEFORE other rules
+
 # Podcast RSS Feed redirects for SEO-friendly URLs
 /feeds/podcast/:slug.xml https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/feeds-podcast?slug=:slug 200
 

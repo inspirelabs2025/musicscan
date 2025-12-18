@@ -22,7 +22,7 @@ ${entries.map(entry => `  <url>
 
 // Static routes for sitemap
 export const getStaticRoutes = (): SitemapEntry[] => {
-  const baseUrl = 'https://musicscan.nl';
+  const baseUrl = 'https://www.musicscan.app';
   const currentDate = new Date().toISOString().split('T')[0];
   
   const staticRoutes: SitemapEntry[] = [
@@ -311,7 +311,7 @@ export const getPodcastRoutes = async (): Promise<SitemapEntry[]> => {
   const { supabase } = await import('@/integrations/supabase/client');
   
   try {
-    const baseUrl = 'https://musicscan.nl';
+    const baseUrl = 'https://www.musicscan.app';
     const entries: SitemapEntry[] = [];
     
     // Get published podcasts

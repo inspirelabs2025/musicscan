@@ -16,7 +16,7 @@ const FranseMuziek = () => {
     "@type": "CollectionPage",
     "name": "Franse Muziek - MusicScan",
     "description": "Ontdek de rijke Franse muziekgeschiedenis: van Édith Piaf tot Daft Punk, van chanson tot French house.",
-    "url": "https://musicscan.nl/frankrijk",
+    "url": "https://www.musicscan.app/frankrijk",
     "mainEntity": {
       "@type": "ItemList",
       "name": "Franse Muziek Collectie",
@@ -61,13 +61,13 @@ const FranseMuziek = () => {
           name="keywords" 
           content="Franse muziek, Daft Punk, Édith Piaf, French House, chanson, Air, Phoenix, David Guetta, French Touch, Serge Gainsbourg" 
         />
-        <link rel="canonical" href="https://musicscan.nl/frankrijk" />
+        <link rel="canonical" href="https://www.musicscan.app/frankrijk" />
         
         {/* Open Graph */}
         <meta property="og:title" content="Franse Muziek - Van Édith Piaf tot Daft Punk | MusicScan" />
         <meta property="og:description" content="Ontdek de rijke Franse muziekgeschiedenis: van chanson tot French house." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://musicscan.nl/frankrijk" />
+        <meta property="og:url" content="https://www.musicscan.app/frankrijk" />
         <meta property="og:locale" content="nl_NL" />
         
         {/* Twitter Card */}

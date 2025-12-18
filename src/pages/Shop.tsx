@@ -193,7 +193,7 @@ const Shop = () => {
     "@type": "CollectionPage",
     name: "MusicScan Shop - Muziek Art & Merchandise",
     description: "Ontdek unieke muziek merchandise, posters, canvas en meer. Shop bij MusicScan voor muziekliefhebbers.",
-    url: "https://musicscan.nl/shop",
+    url: "https://www.musicscan.app/shop",
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: totalProducts,
@@ -322,11 +322,11 @@ const Shop = () => {
           content="Ontdek unieke muziek merchandise, posters, canvas, metal prints, t-shirts en meer. De beste shop voor muziekliefhebbers." 
         />
         <meta name="keywords" content="muziek merchandise, band shirts, muziek posters, canvas art, metal prints, muziek shop" />
-        <link rel="canonical" href="https://musicscan.nl/shop" />
+        <link rel="canonical" href="https://www.musicscan.app/shop" />
         <meta property="og:title" content="MusicScan Shop - Muziek Art & Merchandise" />
         <meta property="og:description" content="Ontdek unieke muziek merchandise, posters, canvas, metal prints en meer bij MusicScan." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://musicscan.nl/shop" />
+        <meta property="og:url" content="https://www.musicscan.app/shop" />
         <script type="application/ld+json">
           {JSON.stringify(structuredData)}
         </script>

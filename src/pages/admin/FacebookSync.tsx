@@ -456,7 +456,7 @@ export default function FacebookSync() {
       const { data, error } = await supabase.functions.invoke('threads-token-exchange', {
         body: { 
           code: threadsAuthCode.trim(),
-          redirect_uri: 'https://www.musicscan.nl/'
+          redirect_uri: 'https://www.musicscan.app/'
         }
       });
 
@@ -1132,7 +1132,7 @@ export default function FacebookSync() {
                 </p>
                 
                 <a 
-                  href={`https://threads.net/oauth/authorize?client_id=${threadsAppId || '1484849229994956'}&redirect_uri=https://www.musicscan.nl/&scope=threads_basic,threads_content_publish&response_type=code`}
+                  href={`https://threads.net/oauth/authorize?client_id=${threadsAppId || '1484849229994956'}&redirect_uri=https://www.musicscan.app/&scope=threads_basic,threads_content_publish&response_type=code`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block p-2 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700 transition-colors text-sm"

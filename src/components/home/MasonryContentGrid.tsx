@@ -1,6 +1,46 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, Play, ExternalLink } from 'lucide-react';
+import { Play, ExternalLink, MessageCircle, Calendar, Newspaper, Music, Mic, Radio, User, Disc, ShoppingBag, Shirt } from 'lucide-react';
 import { NewsItem } from '@/hooks/useUnifiedNewsFeed';
+
+// Type-specific gradient backgrounds for cards without images
+const getTypeGradient = (type: string): string => {
+  switch(type) {
+    case 'anecdote': return 'from-purple-600 via-fuchsia-700 to-purple-900';
+    case 'history': return 'from-orange-500 via-amber-600 to-orange-800';
+    case 'news': return 'from-emerald-500 via-teal-600 to-emerald-800';
+    case 'concert': return 'from-violet-500 via-purple-600 to-indigo-800';
+    case 'podcast': return 'from-rose-500 via-pink-600 to-rose-800';
+    case 'metal_print': return 'from-amber-400 via-yellow-500 to-amber-700';
+    case 'tshirt': return 'from-cyan-400 via-blue-500 to-cyan-700';
+    case 'artist': return 'from-blue-500 via-indigo-600 to-blue-800';
+    case 'album': return 'from-green-500 via-emerald-600 to-green-800';
+    case 'single': return 'from-pink-500 via-rose-600 to-pink-800';
+    case 'youtube': return 'from-red-500 via-red-600 to-red-800';
+    case 'review': return 'from-sky-500 via-blue-600 to-sky-800';
+    default: return 'from-primary via-primary/70 to-zinc-900';
+  }
+};
+
+// Decorative icon per type
+const TypeIcon = ({ type, size }: { type: string; size: 'large' | 'small' }) => {
+  const sizeClass = size === 'large' ? 'w-24 h-24' : 'w-16 h-16';
+  
+  switch(type) {
+    case 'anecdote': return <MessageCircle className={sizeClass} />;
+    case 'history': return <Calendar className={sizeClass} />;
+    case 'news': return <Newspaper className={sizeClass} />;
+    case 'concert': return <Music className={sizeClass} />;
+    case 'podcast': return <Mic className={sizeClass} />;
+    case 'metal_print': return <ShoppingBag className={sizeClass} />;
+    case 'tshirt': return <Shirt className={sizeClass} />;
+    case 'artist': return <User className={sizeClass} />;
+    case 'album': return <Disc className={sizeClass} />;
+    case 'single': return <Radio className={sizeClass} />;
+    case 'youtube': return <Play className={sizeClass} />;
+    case 'review': return <MessageCircle className={sizeClass} />;
+    default: return <Music className={sizeClass} />;
+  }
+};
 
 interface MasonryContentGridProps {
   items: NewsItem[];
@@ -53,7 +93,13 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-zinc-900" />
+          <>
+            <div className={`absolute inset-0 bg-gradient-to-br ${getTypeGradient(item.type)}`} />
+            {/* Decorative icon */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-15">
+              <TypeIcon type={item.type} size={size === 'large' || size === 'tall' ? 'large' : 'small'} />
+            </div>
+          </>
         )}
         
         {/* Gradient Overlay */}

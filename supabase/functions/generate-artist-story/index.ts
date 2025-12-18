@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { detectArtistCountry } from "../_shared/country-detection.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -255,6 +256,11 @@ serve(async (req) => {
       artistStory = updatedStory;
       console.log('✅ Successfully REGENERATED artist story');
     } else {
+      // Detect country code before inserting
+      console.log('🌍 Detecting country code for artist...');
+      const countryCode = await detectArtistCountry(artistName, lovableApiKey!);
+      console.log(`🌍 Country code detected: ${countryCode || 'unknown'}`);
+
       // INSERT new story
       const insertPayload: Record<string, unknown> = {
         artist_name: artistName,
@@ -270,6 +276,7 @@ serve(async (req) => {
         word_count: wordCount,
         meta_title: `${title} | MusicScan`,
         meta_description: biography.substring(0, 160),
+        country_code: countryCode, // AI-detected country
       };
       if (userId) {
         (insertPayload as any).user_id = userId;
@@ -286,7 +293,7 @@ serve(async (req) => {
         throw new Error(`Failed to save artist story: ${saveError.message}`);
       }
       artistStory = insertedStory;
-      console.log('✅ Successfully generated and saved artist story');
+      console.log(`✅ Successfully generated and saved artist story, country: ${countryCode || 'unknown'}`);
     }
 
     return new Response(

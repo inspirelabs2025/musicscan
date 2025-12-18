@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { detectArtistCountry } from "../_shared/country-detection.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -213,6 +214,11 @@ Geef ALTIJD specifieke details wanneer je iets beweert.`;
       newStory = updatedStory;
       console.log(`✅ Story REGENERATED with ID: ${newStory.id}`);
     } else {
+      // Detect country code before inserting
+      console.log('🌍 Detecting country code for artist...');
+      const countryCode = await detectArtistCountry(artist, LOVABLE_API_KEY);
+      console.log(`🌍 Country code detected: ${countryCode || 'unknown'}`);
+
       // INSERT new story
       const { data: insertedStory, error: insertError } = await supabase
         .from('music_stories')
@@ -234,6 +240,7 @@ Geef ALTIJD specifieke details wanneer je iets beweert.`;
           styles,
           is_published: true,
           user_id: '00000000-0000-0000-0000-000000000000', // System user
+          country_code: countryCode, // AI-detected country
         })
         .select()
         .single();
@@ -243,7 +250,7 @@ Geef ALTIJD specifieke details wanneer je iets beweert.`;
         throw new Error(`Failed to insert story: ${insertError.message}`);
       }
       newStory = insertedStory;
-      console.log(`✅ Story created with ID: ${newStory.id}`);
+      console.log(`✅ Story created with ID: ${newStory.id}, country: ${countryCode || 'unknown'}`);
     }
 
 

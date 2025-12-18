@@ -563,3 +563,9 @@ verify_jwt = false
 
 [[functions.deduplicate-products.schedule]]
 cron = "0 4 * * *"
+
+[functions.backfill-country-codes]
+verify_jwt = false
+
+[[functions.backfill-country-codes.schedule]]
+cron = "0 * * * *"

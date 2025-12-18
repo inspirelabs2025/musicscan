@@ -516,6 +516,7 @@ export type Database = {
           artist_name: string
           artwork_url: string | null
           biography: string | null
+          country_code: string | null
           created_at: string
           cultural_impact: string | null
           discogs_artist_id: number | null
@@ -544,6 +545,7 @@ export type Database = {
           artist_name: string
           artwork_url?: string | null
           biography?: string | null
+          country_code?: string | null
           created_at?: string
           cultural_impact?: string | null
           discogs_artist_id?: number | null
@@ -572,6 +574,7 @@ export type Database = {
           artist_name?: string
           artwork_url?: string | null
           biography?: string | null
+          country_code?: string | null
           created_at?: string
           cultural_impact?: string | null
           discogs_artist_id?: number | null
@@ -879,6 +882,7 @@ export type Database = {
           album_cover_url: string | null
           album_id: string
           album_type: string
+          country_code: string | null
           created_at: string
           id: string
           is_published: boolean | null
@@ -897,6 +901,7 @@ export type Database = {
           album_cover_url?: string | null
           album_id: string
           album_type: string
+          country_code?: string | null
           created_at?: string
           id?: string
           is_published?: boolean | null
@@ -915,6 +920,7 @@ export type Database = {
           album_cover_url?: string | null
           album_id?: string
           album_type?: string
+          country_code?: string | null
           created_at?: string
           id?: string
           is_published?: boolean | null
@@ -1834,6 +1840,7 @@ export type Database = {
         Row: {
           added_at: string | null
           artist_name: string
+          country_code: string | null
           created_at: string | null
           id: string
           is_active: boolean | null
@@ -1846,6 +1853,7 @@ export type Database = {
         Insert: {
           added_at?: string | null
           artist_name: string
+          country_code?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -1858,6 +1866,7 @@ export type Database = {
         Update: {
           added_at?: string | null
           artist_name?: string
+          country_code?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -3816,6 +3825,7 @@ export type Database = {
           artwork_fetch_attempted: boolean | null
           artwork_url: string | null
           catalog: string | null
+          country_code: string | null
           created_at: string
           genre: string | null
           id: string
@@ -3847,6 +3857,7 @@ export type Database = {
           artwork_fetch_attempted?: boolean | null
           artwork_url?: string | null
           catalog?: string | null
+          country_code?: string | null
           created_at?: string
           genre?: string | null
           id?: string
@@ -3878,6 +3889,7 @@ export type Database = {
           artwork_fetch_attempted?: boolean | null
           artwork_url?: string | null
           catalog?: string | null
+          country_code?: string | null
           created_at?: string
           genre?: string | null
           id?: string

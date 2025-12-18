@@ -42,26 +42,30 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
     queryFn: async () => {
       const items: NewsItem[] = [];
 
-      // Fetch album stories (where single_name is null)
+      // Fetch album stories from blog_posts (the actual album stories table)
       const { data: albums } = await supabase
-        .from('music_stories')
-        .select('id,title,artist,slug,artwork_url,created_at')
+        .from('blog_posts')
+        .select('id,slug,yaml_frontmatter,album_cover_url,created_at')
         .eq('is_published', true)
-        .is('single_name', null)
         .order('created_at', { ascending: false })
         .limit(8);
 
       if (albums) {
-        albums.forEach(a => items.push({
-          id: a.id,
-          type: 'album',
-          title: a.title || 'Untitled',
-          subtitle: a.artist || undefined,
-          image_url: a.artwork_url || undefined,
-          category_label: CATEGORY_LABELS.album,
-          link: `/muziek-verhaal/${a.slug}`,
-          date: a.created_at,
-        }));
+        albums.forEach(a => {
+          const frontmatter = a.yaml_frontmatter as any;
+          const artist = frontmatter?.artist || 'Onbekend';
+          const title = frontmatter?.title || frontmatter?.album || 'Untitled';
+          items.push({
+            id: a.id,
+            type: 'album',
+            title: title,
+            subtitle: artist,
+            image_url: a.album_cover_url || undefined,
+            category_label: CATEGORY_LABELS.album,
+            link: `/muziek-verhaal/${a.slug}`,
+            date: a.created_at,
+          });
+        });
       }
 
       // Fetch singles

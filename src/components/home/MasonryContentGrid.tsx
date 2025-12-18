@@ -64,6 +64,15 @@ const TypeIcon = ({ type, size }: { type: string; size: 'large' | 'small' }) => 
   }
 };
 
+// Country promo options (randomly pick one)
+const COUNTRY_PROMOS = [
+  { id: 'promo-nederland', type: 'nederland' as PromoType, title: 'Nederlandse Muziek', subtitle: 'Ontdek NL hits', link: '/nederland', emoji: '🇳🇱' },
+  { id: 'promo-frankrijk', type: 'frankrijk' as PromoType, title: 'Franse Muziek', subtitle: 'Vive la musique!', link: '/frankrijk', emoji: '🇫🇷' },
+];
+
+// Pick one country randomly (seeded by day so it's consistent within a session)
+const selectedCountry = COUNTRY_PROMOS[Math.floor(Math.random() * COUNTRY_PROMOS.length)];
+
 // Fixed promotional blocks
 const PROMO_BLOCKS: Array<{
   id: string;
@@ -78,8 +87,7 @@ const PROMO_BLOCKS: Array<{
   { id: 'promo-quiz', type: 'quiz', title: 'Speel Muziek Quiz', subtitle: 'Test je kennis!', link: '/quizzen', emoji: '🎯', forceSmall: true },
   { id: 'promo-scan', type: 'scan', title: 'Scan Je Albums', subtitle: 'Digitaliseer je collectie', link: '/scan', emoji: '📷', image: promoScanBg },
   { id: 'promo-echo', type: 'echo', title: 'Chat met Echo', subtitle: 'Onze muziekexpert', link: '/echo', emoji: '🤖' },
-  { id: 'promo-nederland', type: 'nederland', title: 'Nederlandse Muziek', subtitle: 'Ontdek NL hits', link: '/nederland', emoji: '🇳🇱' },
-  { id: 'promo-frankrijk', type: 'frankrijk', title: 'Franse Muziek', subtitle: 'Vive la musique!', link: '/frankrijk', emoji: '🇫🇷' },
+  selectedCountry,
   { id: 'promo-dance', type: 'dance', title: 'Dance & House', subtitle: 'Feel the beat', link: '/dance-house', emoji: '🎧' },
   { id: 'promo-film', type: 'filmmuziek', title: 'Filmmuziek', subtitle: 'Soundtracks & scores', link: '/filmmuziek', emoji: '🎬' },
   { id: 'promo-kerst', type: 'kerst', title: 'Kerstmuziek', subtitle: 'Feestelijke hits', link: '/kerst', emoji: '🎄' },

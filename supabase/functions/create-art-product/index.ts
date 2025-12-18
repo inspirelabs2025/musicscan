@@ -276,22 +276,55 @@ Keep it engaging, focus on the art and design, and make it SEO-friendly. Use pro
       console.warn('⚠️ PERPLEXITY_API_KEY missing, using fallback description');
     }
 
-    // Step 5: Check for existing product
-    const { data: existingProducts } = await supabase
+    // Step 5: Check for existing product - by discogs_id OR by artist+title
+    // First check exact discogs_id match
+    const { data: existingByDiscogs } = await supabase
       .from('platform_products')
-      .select('id')
+      .select('id, slug')
       .eq('discogs_id', releaseData.discogs_id)
       .eq('media_type', 'art')
       .maybeSingle();
 
-    if (existingProducts) {
-      console.log('⚠️ Product already exists:', existingProducts.id);
+    if (existingByDiscogs) {
+      console.log('⚠️ Product already exists (discogs_id match):', existingByDiscogs.id);
       return new Response(
         JSON.stringify({ 
           success: true,
           already_exists: true,
-          product_id: existingProducts.id,
-          message: 'Product already exists, skipped'
+          product_id: existingByDiscogs.id,
+          product_slug: existingByDiscogs.slug,
+          message: 'Product already exists (same release), skipped'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
+
+    // Also check for existing product with same artist+album title (different release of same album)
+    const normalizedTitle = albumTitle.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normalizedArtist = artistValue.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    const { data: existingByTitle } = await supabase
+      .from('platform_products')
+      .select('id, slug, title')
+      .eq('media_type', 'art')
+      .ilike('artist', artistValue)
+      .limit(100);
+
+    // Find if any existing product matches our album title
+    const matchingProduct = existingByTitle?.find(p => {
+      const existingTitle = (p.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      return existingTitle.includes(normalizedTitle) || normalizedTitle.includes(existingTitle.replace('albumcovermetaalprint', ''));
+    });
+
+    if (matchingProduct) {
+      console.log('⚠️ Product already exists (artist+title match):', matchingProduct.slug);
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          already_exists: true,
+          product_id: matchingProduct.id,
+          product_slug: matchingProduct.slug,
+          message: 'Product already exists (same album, different release), skipped'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );

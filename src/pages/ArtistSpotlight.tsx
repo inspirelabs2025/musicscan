@@ -48,8 +48,17 @@ const ArtistSpotlight = () => {
   const canonicalUrl = `https://www.musicscan.app/artist-spotlight/${spotlight.slug}`;
   
   // Hero image: artwork_url of eerste spotlight_image als fallback
-  const heroImage = spotlight.artwork_url || 
-    (spotlight.spotlight_images as any[])?.[0]?.url;
+  const heroImage = spotlight.artwork_url || (spotlight.spotlight_images as any[])?.[0]?.url;
+
+  const normalizeUrl = (url?: string | null) => {
+    if (!url) return "";
+    try {
+      const u = new URL(url);
+      return `${u.origin}${u.pathname}`;
+    } catch {
+      return url;
+    }
+  };
 
   return (
     <>
@@ -143,16 +152,6 @@ const ArtistSpotlight = () => {
 
                 {/* Image Gallery - toon geen dubbele set (dedupe op URL zonder query) */}
                 {(() => {
-                  const normalizeUrl = (url?: string | null) => {
-                    if (!url) return "";
-                    try {
-                      const u = new URL(url);
-                      return `${u.origin}${u.pathname}`;
-                    } catch {
-                      return url;
-                    }
-                  };
-
                   const seen = new Set<string>();
                   if (heroImage) {
                     seen.add(heroImage);
@@ -190,7 +189,26 @@ const ArtistSpotlight = () => {
                   prose-a:text-primary prose-a:no-underline hover:prose-a:underline
                   prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4
                   prose-li:text-foreground prose-li:my-2">
-                  <ReactMarkdown>{spotlight.story_content}</ReactMarkdown>
+                  <ReactMarkdown
+                    components={{
+                      img: ({ src, alt }) => {
+                        const normalized = normalizeUrl(src);
+                        const heroNormalized = normalizeUrl(heroImage);
+                        if (normalized && heroNormalized && normalized === heroNormalized) return null;
+
+                        return (
+                          <img
+                            src={src || ""}
+                            alt={alt || `Foto van ${spotlight.artist_name}`}
+                            loading="lazy"
+                            className="rounded-lg"
+                          />
+                        );
+                      },
+                    }}
+                  >
+                    {spotlight.story_content}
+                  </ReactMarkdown>
                 </div>
               </div>
 

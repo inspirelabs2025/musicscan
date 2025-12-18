@@ -153,34 +153,43 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         }));
       }
 
-      // Fetch music history events - parse JSONB events array
+      // Fetch music history events - ONLY today's date with 1 random event
+      const now = new Date();
+      const todayDay = now.getDate();
+      const todayMonth = now.getMonth() + 1; // 1-indexed
+      
       const { data: history } = await supabase
         .from('music_history_events')
         .select('id,event_date,day_of_month,month_of_year,events,created_at')
-        .order('event_date', { ascending: false })
-        .limit(8);
+        .eq('day_of_month', todayDay)
+        .eq('month_of_year', todayMonth)
+        .limit(1);
 
-      if (history) {
+      if (history && history.length > 0) {
         const monthNames = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
-        history.forEach(h => {
-          const eventsArray = h.events as any[];
-          const firstEvent = eventsArray?.[0];
-          const dateLabel = `${h.day_of_month} ${monthNames[(h.month_of_year || 1) - 1]}`;
-          const eventPreview = firstEvent 
-            ? `${firstEvent.title || firstEvent.artist || 'Muziekgeschiedenis'}${firstEvent.year ? ` (${firstEvent.year})` : ''}`
-            : 'Bekijk alle gebeurtenissen';
-          
-          items.push({
-            id: h.id,
-            type: 'history',
-            title: `📅 ${dateLabel}`,
-            subtitle: eventPreview,
-            image_url: firstEvent?.image_url || undefined,
-            category_label: CATEGORY_LABELS.history,
-            link: '/vandaag-in-de-muziekgeschiedenis',
-            date: h.created_at,
-            description: firstEvent?.description || undefined,
-          });
+        const h = history[0];
+        const eventsArray = h.events as any[];
+        
+        // Pick 1 random event from today
+        const randomEvent = eventsArray?.length > 0 
+          ? eventsArray[Math.floor(Math.random() * eventsArray.length)]
+          : null;
+        
+        const dateLabel = `${h.day_of_month} ${monthNames[(h.month_of_year || 1) - 1]}`;
+        const eventPreview = randomEvent 
+          ? `${randomEvent.title || randomEvent.artist || 'Muziekgeschiedenis'}${randomEvent.year ? ` (${randomEvent.year})` : ''}`
+          : 'Bekijk alle gebeurtenissen';
+        
+        items.push({
+          id: h.id,
+          type: 'history',
+          title: `📅 ${dateLabel}`,
+          subtitle: eventPreview,
+          image_url: randomEvent?.image_url || undefined,
+          category_label: CATEGORY_LABELS.history,
+          link: '/vandaag-in-de-muziekgeschiedenis',
+          date: h.created_at,
+          description: randomEvent?.description || undefined,
         });
       }
 

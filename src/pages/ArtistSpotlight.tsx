@@ -141,14 +141,18 @@ const ArtistSpotlight = () => {
 
                 <Separator className="mb-8" />
 
-                {/* Image Gallery - filter hero image uit om duplicaten te voorkomen */}
+                {/* Image Gallery - filter hero image en duplicaten */}
                 {(() => {
-                  const galleryImages = (spotlight.spotlight_images as any[] || []).filter((img: any) => 
-                    img.url && 
-                    img.url.startsWith('http') && 
-                    img.url.length < 1000 &&
-                    img.url !== heroImage
-                  );
+                  const seenUrls = new Set<string>();
+                  if (heroImage) seenUrls.add(heroImage);
+                  
+                  const galleryImages = (spotlight.spotlight_images as any[] || []).filter((img: any) => {
+                    if (!img.url || !img.url.startsWith('http') || img.url.length >= 1000) return false;
+                    if (seenUrls.has(img.url)) return false;
+                    seenUrls.add(img.url);
+                    return true;
+                  });
+                  
                   return galleryImages.length > 0 ? (
                     <div className="mb-8">
                       <ImageGallery 

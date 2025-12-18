@@ -98,11 +98,13 @@ export const useArtistSpotlight = (slug: string, options?: { enabled?: boolean }
   return useQuery({
     queryKey: ['artist-spotlight', slug],
     queryFn: async () => {
+      // Alleen spotlight stories die gepubliceerd zijn
       const { data, error } = await supabase
         .from('artist_stories')
         .select('*')
         .eq('slug', slug)
         .eq('is_spotlight', true)
+        .eq('is_published', true)
         .single();
 
       if (error) {

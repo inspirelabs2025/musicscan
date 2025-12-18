@@ -1,54 +1,56 @@
 import { lazy, Suspense } from 'react';
 import { useSEO } from '@/hooks/useSEO';
 import { useUnifiedNewsFeed } from '@/hooks/useUnifiedNewsFeed';
-import { NewsHeroGrid } from '@/components/home/NewsHeroGrid';
-import { NewsCategorySection } from '@/components/home/NewsCategorySection';
-import { MediaGridSection } from '@/components/home/MediaGridSection';
-import { CompactNewsList } from '@/components/home/CompactNewsList';
+import { HeroFeature } from '@/components/home/HeroFeature';
+import { QuickLinks } from '@/components/home/QuickLinks';
+import { ContentGrid } from '@/components/home/ContentGrid';
 import { ProductBanner } from '@/components/home/ProductBanner';
 import { ShopCategoriesFooter } from '@/components/home/ShopCategoriesFooter';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Lazy load heavy components
 const SpotifyNewReleasesSection = lazy(() => import('@/components/home/SpotifyNewReleasesSection').then(m => ({ default: m.SpotifyNewReleasesSection })));
 const MusicHistorySpotlight = lazy(() => import('@/components/home/MusicHistorySpotlight').then(m => ({ default: m.MusicHistorySpotlight })));
 
 const SectionSkeleton = () => (
-  <div className="py-10 bg-zinc-900">
+  <div className="py-10 bg-background">
     <div className="container mx-auto px-4">
-      <Skeleton className="h-8 w-48 mb-6 bg-zinc-800" />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Skeleton className="h-48 bg-zinc-800" />
-        <Skeleton className="h-48 bg-zinc-800" />
-        <Skeleton className="h-48 bg-zinc-800" />
+      <Skeleton className="h-8 w-48 mb-6" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Skeleton className="aspect-[4/3]" />
+        <Skeleton className="aspect-[4/3]" />
+        <Skeleton className="aspect-[4/3]" />
+        <Skeleton className="aspect-[4/3]" />
       </div>
     </div>
   </div>
 );
 
 const Home = () => {
-  const { data: newsItems, isLoading } = useUnifiedNewsFeed(60);
+  const { data: newsItems, isLoading } = useUnifiedNewsFeed(50);
 
   useSEO({
     title: "MusicScan - Hét Muziekplatform | Nieuws, Verhalen, Shop, Quiz & Smart Scanner",
     description: "MusicScan is hét complete muziekplatform. Ontdek muzieknieuws, lees verhalen over albums & artiesten, shop unieke muziekproducten, doe de quiz, en scan je vinyl & CD collectie met waardebepaling.",
   });
 
-  // Filter items by type
-  const albumItems = newsItems?.filter(i => i.type === 'album') || [];
-  const singleItems = newsItems?.filter(i => i.type === 'single') || [];
-  const artistItems = newsItems?.filter(i => i.type === 'artist') || [];
-  const anecdoteItems = newsItems?.filter(i => i.type === 'anecdote') || [];
-  const youtubeItems = newsItems?.filter(i => i.type === 'youtube') || [];
-  const reviewItems = newsItems?.filter(i => i.type === 'review') || [];
-  const historyItems = newsItems?.filter(i => i.type === 'history') || [];
+  // Get exactly 1 item per type
+  const getFirst = (type: string) => newsItems?.find(i => i.type === type);
+  
+  const albumItem = getFirst('album');
+  const singleItem = getFirst('single');
+  const artistItem = getFirst('artist');
+  const youtubeItem = getFirst('youtube');
+  const anecdoteItem = getFirst('anecdote');
+  const reviewItem = getFirst('review');
+  const historyItem = getFirst('history');
+  const releaseItem = getFirst('release');
 
-  // Hero gets a diverse mix
-  const heroItems = newsItems?.slice(0, 5) || [];
+  // Hero = most recent item overall
+  const heroItem = newsItems?.[0];
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <SectionSkeleton />
         <SectionSkeleton />
       </div>
@@ -56,97 +58,61 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950">
-      {/* 1. Hero Grid - Dramatic dark section */}
-      <NewsHeroGrid items={heroItems} />
-
-      {/* 2. Album Verhalen - Light section */}
-      {albumItems.length > 0 && (
-        <NewsCategorySection
-          title="Album Verhalen"
-          items={albumItems.slice(0, 5)}
-          viewAllLink="/verhalen"
-          variant="default"
-        />
+    <div className="min-h-screen bg-background">
+      {/* Hero - 1 Featured Item */}
+      {heroItem && (
+        <section className="bg-black">
+          <HeroFeature item={heroItem} />
+        </section>
       )}
 
-      {/* 3. Product Banner - Purple accent */}
+      {/* Quick Navigation */}
+      <QuickLinks />
+
+      {/* Content Grid - 1 item per category */}
+      <ContentGrid 
+        columns={4}
+        items={[
+          { title: 'Single', item: singleItem, viewAllLink: '/singles' },
+          { title: 'Artiest', item: artistItem, viewAllLink: '/artists' },
+          { title: 'Anekdote', item: anecdoteItem, viewAllLink: '/anekdotes' },
+          { title: 'Nieuwe Release', item: releaseItem, viewAllLink: '/new-releases' },
+        ]}
+      />
+
+      {/* Product Banner */}
       <ProductBanner />
 
-      {/* 4. Artiest Spotlights - Dark section */}
-      {artistItems.length > 0 && (
-        <NewsCategorySection
-          title="Artiest Spotlights"
-          items={artistItems.slice(0, 5)}
-          viewAllLink="/artists"
-          variant="dark"
-        />
-      )}
+      {/* More Content - 1 item per category */}
+      <ContentGrid 
+        columns={3}
+        items={[
+          { title: 'YouTube', item: youtubeItem, viewAllLink: '/youtube' },
+          { title: 'Review', item: reviewItem, viewAllLink: '/reviews' },
+          { title: 'Muziekgeschiedenis', item: historyItem, viewAllLink: '/vandaag-in-de-muziekgeschiedenis' },
+        ]}
+      />
 
-      {/* 5. Nieuwe Releases */}
+      {/* Spotify Releases Carousel */}
       <Suspense fallback={<SectionSkeleton />}>
-        <section className="bg-white py-10 md:py-14">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-primary">
-              <h2 className="text-2xl md:text-3xl font-black text-zinc-900 uppercase tracking-tight">
-                Nieuwe Releases
-              </h2>
-            </div>
+        <section className="bg-zinc-950 py-10 md:py-14">
+          <div className="container mx-auto px-4 mb-6">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-primary border-b border-primary/30 pb-2 inline-block">
+              Nieuwe Spotify Releases
+            </h2>
           </div>
           <SpotifyNewReleasesSection />
         </section>
       </Suspense>
 
-      {/* 6. Singles Section - Light */}
-      {singleItems.length > 0 && (
-        <NewsCategorySection
-          title="Singles"
-          items={singleItems.slice(0, 5)}
-          viewAllLink="/singles"
-          variant="default"
-        />
-      )}
-
-      {/* 7. YouTube Videos - Dark Grid */}
-      {youtubeItems.length > 0 && (
-        <MediaGridSection
-          title="Video Ontdekkingen"
-          items={youtubeItems}
-          viewAllLink="/youtube"
-        />
-      )}
-
-      {/* 8. Music History */}
+      {/* Music History */}
       <Suspense fallback={<SectionSkeleton />}>
-        <section className="bg-white py-10 md:py-14">
+        <section className="bg-background py-10 md:py-14">
           <MusicHistorySpotlight />
         </section>
       </Suspense>
 
-      {/* 9. Sidebar-style sections */}
-      <section className="bg-zinc-900 py-10 md:py-14">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <CompactNewsList
-              title="Anekdotes"
-              items={anecdoteItems}
-              viewAllLink="/anekdotes"
-            />
-            <CompactNewsList
-              title="Reviews"
-              items={reviewItems}
-              viewAllLink="/reviews"
-            />
-            <CompactNewsList
-              title="Muziekgeschiedenis"
-              items={historyItems}
-              viewAllLink="/vandaag-in-de-muziekgeschiedenis"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* 10. Shop Footer */}
+      {/* Shop Footer */}
       <ShopCategoriesFooter />
     </div>
   );

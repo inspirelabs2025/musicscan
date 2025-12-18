@@ -122,8 +122,7 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
       // Fetch anecdotes
       const { data: anecdotes } = await supabase
         .from('music_anecdotes')
-        .select('id,title,artist_name,slug,artwork_url,created_at')
-        .eq('is_published', true)
+        .select('id,anecdote_title,subject_name,slug,created_at')
         .order('created_at', { ascending: false })
         .limit(6);
 
@@ -131,9 +130,9 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         anecdotes.forEach(a => items.push({
           id: a.id,
           type: 'anecdote',
-          title: a.title,
-          subtitle: a.artist_name || undefined,
-          image_url: a.artwork_url || undefined,
+          title: a.anecdote_title || 'Anekdote',
+          subtitle: a.subject_name || undefined,
+          image_url: undefined,
           category_label: CATEGORY_LABELS.anecdote,
           link: `/anekdotes/${a.slug}`,
           date: a.created_at,

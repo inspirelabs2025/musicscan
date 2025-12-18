@@ -228,6 +228,7 @@ const AdminYearOverview = lazy(() => import("./pages/admin/AdminYearOverview"));
 const DiscogsLookup = lazy(() => import("./pages/admin/DiscogsLookup"));
 const AutoComments = lazy(() => import("./pages/admin/AutoComments"));
 const TestAnecdoteGeneration = lazy(() => import("./pages/admin/TestAnecdoteGeneration"));
+const StudioStoriesPage = lazy(() => import("./pages/admin/StudioStoriesPage"));
 const TestMusicNews = lazy(() => import("./pages/TestMusicNews"));
 const TestNewsUpdate = lazy(() => import("./pages/TestNewsUpdate"));
 const TestNewsGeneration = lazy(() => import("./pages/TestNewsGeneration"));
@@ -515,6 +516,7 @@ const AppContent = () => {
         <Route path="/admin/test/album-cover-backfill" element={<ProtectedRoute><LazyRoute><TestAlbumCoverBackfill /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/base64-image-cleanup" element={<ProtectedRoute><LazyRoute><TestBase64ImageCleanup /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/test/anecdote-generation" element={<ProtectedRoute><LazyRoute><TestAnecdoteGeneration /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/studio-stories" element={<ProtectedRoute><LazyRoute><StudioStoriesPage /></LazyRoute></ProtectedRoute>} />
         {/* Legacy routes for backward compatibility */}
         <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/admin/system" element={<Navigate to="/admin/system-overview" replace />} />

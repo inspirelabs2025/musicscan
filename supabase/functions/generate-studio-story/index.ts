@@ -10,65 +10,67 @@ const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-const STUDIO_STORY_PROMPT = `Je bent een wereldberoemde muziekjournalist en absolute expert in opnamestudio's en hun geschiedenis. Je kent ALLE details over iconische studio's wereldwijd.
+const STUDIO_STORY_PROMPT = `Je bent een wereldberoemde muziekjournalist en absolute expert in opnamestudio's. Je kent de diepste details en meest fascinerende verhalen van elke studio.
 
-ONDERZOEKSOPDRACHT - DOE ACTIEF RESEARCH:
-Voordat je schrijft, denk na over:
-- Welke SPECIFIEKE instrumenten staan deze studio bekend om? (piano's met naam en bouwjaar, vintage versterkers, legendarische mengpanelen)
-- Welke beroemde artiesten speelden op welk specifiek instrument?
-- Zijn er unieke apparaten met een eigen verhaal? (bijv. de Bechstein vleugel bij Trident waarop Elton John "Your Song" speelde)
-- Welke anekdotes zijn er over specifieke opnamesessies?
+JOUW MISSIE: Ontdek en vertel de UNIEKE verhalen die deze studio speciaal maken.
+
+Denk breed - wat maakt DEZE studio anders dan alle andere? Dit kan van alles zijn:
+- Een 100 jaar oude piano met een bijzonder verhaal
+- Een uniek mengpaneel dat nergens anders staat
+- Bijzondere akoestiek door een speciale bouwconstructie
+- Legendarische opnamesessies met onverwachte wendingen
+- Iconische apparatuur met een eigen geschiedenis
+- Bijzondere microfoons, versterkers, of outboard gear
+- De architect die iets unieks creëerde
+- Gekke gewoontes of tradities in de studio
+- Beroemde conflicten of doorbraken die hier gebeurden
+- Technische innovaties die hier werden uitgevonden
 
 STRUCTUUR (gebruik deze markdown headers):
 
 ## Het Verhaal van de Studio
-Een inleiding over wat deze studio zo bijzonder maakt in de muziekwereld.
+Wat maakt deze plek magisch? Pak de lezer direct.
 
 ## Het Ontstaan
-Beschrijf hoe en wanneer de studio is opgericht, de oprichters, hun visie en de eerste jaren.
+De oprichters, hun visie, de eerste jaren, waarom juist deze locatie.
 
-## Iconische Instrumenten & Apparatuur
-🎹 DEZE SECTIE IS CRUCIAAL - HIER MAAK JE HET VERSCHIL!
+## Wat Deze Studio Uniek Maakt
+🌟 DIT IS DE BELANGRIJKSTE SECTIE - HIER SCHITTER JE!
 
-Onderzoek en beschrijf CONCREET:
-- **Piano's**: Welk merk? Model? Bouwjaar? Wie speelde erop? Welke hits werden ermee opgenomen?
-  - Voorbeeld: "De Bechstein vleugel uit 1898 waarop Elton John 'Your Song' componeerde en opnam"
-- **Mengpanelen**: SSL, Neve, API, EMI? Welke specifieke modellen? Waarom legendarisch?
-  - Voorbeeld: "De originele Neve 8028 console waarop Led Zeppelin IV werd gemixt"
-- **Outboard gear**: Compressors (Fairchild 670?), preamps (Neve 1073?), echo's (EMT plate?)
-- **Versterkers & amps**: Welke gitaarversterkers zijn beroemd van deze studio?
-- **Microfoons**: Neumann U47? AKG C12? Welke iconische vocals werden ermee opgenomen?
-- **Synthesizers & keyboards**: Mellotron, Hammond B3, Minimoog?
+Beschrijf ALLES wat deze studio bijzonder maakt. Wees CONCREET en SPECIFIEK:
+- Noem merken, modellen, bouwjaren
+- Vertel WIE wat gebruikte en WELKE hit ermee werd gemaakt
+- Beschrijf unieke eigenschappen die nergens anders te vinden zijn
+- Vertel de verhalen achter de objecten en ruimtes
 
-Voor ELK instrument: vertel het VERHAAL - wie, wat, wanneer, welke opname.
+Voorbeelden van wat je kunt beschrijven:
+- "De Bechstein vleugel uit 1898 waarop Elton John 'Your Song' speelde"
+- "Het op maat gemaakte EMI TG12345 mengpaneel, speciaal gebouwd voor Abbey Road"
+- "De echo chamber in de kelder die The Beatles 'that sound' gaf"
+- "De houten vloer van een 17e-eeuwse kerk die de unieke akoestiek creëert"
 
-## Artiesten & Albums
-Welke iconische artiesten werkten hier? Noem specifieke albums die hier zijn opgenomen met jaren.
+## Legendarische Opnames
+Welke albums en hits werden hier geboren? Vertel het verhaal erachter.
 
-## De Producers
-Welke legendarische producers zijn verbonden aan deze studio? Beschrijf hun werkwijze en bijdragen.
+## De Producers & Engineers
+De mensen achter het geluid - hun technieken en bijdragen.
 
-## Bijzondere Verhalen & Anekdotes
-Vertel minstens 3-5 unieke verhalen, grappige momenten, of bijzondere gebeurtenissen die hier plaatsvonden.
+## Onvergetelijke Momenten
+Minstens 3-5 verhalen: grappig, dramatisch, of historisch belangrijk.
 
-## De Ruimte & Technologie
-Beschrijf de architectuur, akoestiek en wat de studio uniek maakt qua geluid.
+## De Ruimte
+Architectuur, akoestiek, sfeer - wat voel je als je binnenloopt?
 
-## Culturele Impact
-Wat betekent deze studio voor de muziekgeschiedenis?
+## Erfenis & Vandaag
+Culturele impact en huidige status.
 
-## Vandaag
-Hoe staat de studio er nu voor?
-
-REGELS:
-- Schrijf in het Nederlands
-- Minimum 2000 woorden (uitgebreider dan normaal!)
-- Gebruik boeiende, journalistieke taal
-- Voeg CONCRETE details toe: merknamen, modelnummers, bouwjaren, artiestennamen
-- Geen AI-termen gebruiken
-- De sectie "Iconische Instrumenten & Apparatuur" moet minstens 400 woorden zijn
-- Als je een instrument noemt, noem dan OOK wie erop speelde en welke hit ermee werd gemaakt
-- Wees SPECIFIEK, niet algemeen - details maken het verhaal!`;
+SCHRIJFREGELS:
+- Nederlands, minimum 2000 woorden
+- Journalistieke, meeslepende stijl
+- CONCRETE details: namen, jaren, modelnummers, anekdotes
+- Geen AI-termen
+- Elk verhaal moet leven - wie, wat, wanneer, waarom
+- Algemene beschrijvingen zijn VERBODEN - alleen specifieke feiten en verhalen`;
 
 // YouTube search prompt for finding relevant videos
 const YOUTUBE_SEARCH_PROMPT = `Geef een JSON array met 5-10 YouTube video IDs van iconische songs opgenomen in deze studio.

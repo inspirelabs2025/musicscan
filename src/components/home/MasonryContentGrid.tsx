@@ -4,6 +4,7 @@ import { NewsItem } from '@/hooks/useUnifiedNewsFeed';
 
 interface MasonryContentGridProps {
   items: NewsItem[];
+  title?: string;
 }
 
 // Different card sizes for variety
@@ -104,7 +105,7 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
   );
 };
 
-export const MasonryContentGrid = ({ items }: MasonryContentGridProps) => {
+export const MasonryContentGrid = ({ items, title = "Ontdek Meer" }: MasonryContentGridProps) => {
   if (!items.length) return null;
 
   return (
@@ -113,7 +114,7 @@ export const MasonryContentGrid = ({ items }: MasonryContentGridProps) => {
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xs font-bold uppercase tracking-widest text-primary border-b-2 border-primary pb-2">
-            Ontdek Meer
+            {title}
           </h2>
         </div>
         

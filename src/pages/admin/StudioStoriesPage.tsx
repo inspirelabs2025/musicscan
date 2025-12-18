@@ -1,0 +1,340 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { Building2, Plus, Loader2, CheckCircle, XCircle, Clock, ExternalLink } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+
+interface StudioInput {
+  name: string;
+  location: string;
+  foundedYear: string;
+  notes: string;
+}
+
+export default function StudioStoriesPage() {
+  const queryClient = useQueryClient();
+  const [studioInput, setStudioInput] = useState<StudioInput>({
+    name: "",
+    location: "",
+    foundedYear: "",
+    notes: "",
+  });
+  const [bulkInput, setBulkInput] = useState("");
+
+  // Fetch queue items
+  const { data: queueItems, isLoading: queueLoading } = useQuery({
+    queryKey: ['studio-queue'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('studio_import_queue')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 5000,
+  });
+
+  // Fetch published stories
+  const { data: stories, isLoading: storiesLoading } = useQuery({
+    queryKey: ['studio-stories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('studio_stories')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Add single studio to queue
+  const addToQueue = useMutation({
+    mutationFn: async (studio: StudioInput) => {
+      const { error } = await supabase
+        .from('studio_import_queue')
+        .insert({
+          studio_name: studio.name,
+          location: studio.location || null,
+          founded_year: studio.foundedYear ? parseInt(studio.foundedYear) : null,
+          notes: studio.notes || null,
+          status: 'pending',
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Studio toegevoegd aan queue');
+      setStudioInput({ name: "", location: "", foundedYear: "", notes: "" });
+      queryClient.invalidateQueries({ queryKey: ['studio-queue'] });
+    },
+    onError: (error) => {
+      toast.error(`Fout: ${error.message}`);
+    },
+  });
+
+  // Bulk add studios
+  const bulkAddToQueue = useMutation({
+    mutationFn: async (studios: string[]) => {
+      const insertData = studios.map(name => ({
+        studio_name: name.trim(),
+        status: 'pending',
+      }));
+      const { error } = await supabase
+        .from('studio_import_queue')
+        .insert(insertData);
+      if (error) throw error;
+      return studios.length;
+    },
+    onSuccess: (count) => {
+      toast.success(`${count} studio's toegevoegd aan queue`);
+      setBulkInput("");
+      queryClient.invalidateQueries({ queryKey: ['studio-queue'] });
+    },
+    onError: (error) => {
+      toast.error(`Fout: ${error.message}`);
+    },
+  });
+
+  // Generate story for single studio (test)
+  const generateStory = useMutation({
+    mutationFn: async (queueItem: any) => {
+      const { data, error } = await supabase.functions.invoke('generate-studio-story', {
+        body: {
+          studioName: queueItem.studio_name,
+          location: queueItem.location,
+          foundedYear: queueItem.founded_year,
+          notes: queueItem.notes,
+          queueItemId: queueItem.id,
+        },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(`Story gegenereerd: ${data.wordCount} woorden`);
+      queryClient.invalidateQueries({ queryKey: ['studio-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['studio-stories'] });
+    },
+    onError: (error) => {
+      toast.error(`Fout: ${error.message}`);
+    },
+  });
+
+  const handleBulkAdd = () => {
+    const studios = bulkInput
+      .split('\n')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    
+    if (studios.length === 0) {
+      toast.error('Voer minimaal 1 studio in');
+      return;
+    }
+    
+    bulkAddToQueue.mutate(studios);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Klaar</Badge>;
+      case 'failed':
+        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Mislukt</Badge>;
+      case 'processing':
+        return <Badge className="bg-blue-500"><Loader2 className="w-3 h-3 mr-1 animate-spin" />Bezig</Badge>;
+      default:
+        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Wachtend</Badge>;
+    }
+  };
+
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin">Admin</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Studio Verhalen</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <div className="flex items-center gap-3 mb-8">
+        <Building2 className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-bold">Studio Verhalen</h1>
+          <p className="text-muted-foreground">Beheer opnamestudio verhalen</p>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        {/* Single Studio Input */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Studio Toevoegen
+            </CardTitle>
+            <CardDescription>Voeg een enkele studio toe met details</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input
+              placeholder="Studio naam (bijv. Abbey Road)"
+              value={studioInput.name}
+              onChange={(e) => setStudioInput({ ...studioInput, name: e.target.value })}
+            />
+            <Input
+              placeholder="Locatie (bijv. London, UK)"
+              value={studioInput.location}
+              onChange={(e) => setStudioInput({ ...studioInput, location: e.target.value })}
+            />
+            <Input
+              placeholder="Opgericht (jaar)"
+              type="number"
+              value={studioInput.foundedYear}
+              onChange={(e) => setStudioInput({ ...studioInput, foundedYear: e.target.value })}
+            />
+            <Textarea
+              placeholder="Extra notities (optioneel)"
+              value={studioInput.notes}
+              onChange={(e) => setStudioInput({ ...studioInput, notes: e.target.value })}
+              rows={2}
+            />
+            <Button 
+              onClick={() => addToQueue.mutate(studioInput)}
+              disabled={!studioInput.name || addToQueue.isPending}
+              className="w-full"
+            >
+              {addToQueue.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Toevoegen aan Queue
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Bulk Input */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Bulk Import</CardTitle>
+            <CardDescription>Voeg meerdere studio's toe (1 per regel)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Textarea
+              placeholder="Abbey Road Studios&#10;Wisseloord Studios&#10;Electric Lady Studios&#10;Sunset Sound&#10;..."
+              value={bulkInput}
+              onChange={(e) => setBulkInput(e.target.value)}
+              rows={8}
+            />
+            <Button 
+              onClick={handleBulkAdd}
+              disabled={!bulkInput.trim() || bulkAddToQueue.isPending}
+              className="w-full"
+            >
+              {bulkAddToQueue.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Bulk Toevoegen
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Queue */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Import Queue</CardTitle>
+          <CardDescription>
+            {queueItems?.filter(q => q.status === 'pending').length || 0} wachtend, {' '}
+            {queueItems?.filter(q => q.status === 'completed').length || 0} klaar
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {queueLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin" />
+            </div>
+          ) : queueItems?.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">Geen items in queue</p>
+          ) : (
+            <div className="space-y-2">
+              {queueItems?.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div>
+                    <span className="font-medium">{item.studio_name}</span>
+                    {item.location && <span className="text-muted-foreground ml-2">({item.location})</span>}
+                    {item.error_message && (
+                      <p className="text-sm text-destructive">{item.error_message}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(item.status)}
+                    {item.status === 'pending' && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => generateStory.mutate(item)}
+                        disabled={generateStory.isPending}
+                      >
+                        {generateStory.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Test Generate'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Published Stories */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Gepubliceerde Verhalen</CardTitle>
+          <CardDescription>{stories?.length || 0} studio verhalen</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {storiesLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin" />
+            </div>
+          ) : stories?.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">Nog geen verhalen gepubliceerd</p>
+          ) : (
+            <div className="grid gap-3">
+              {stories?.map((story) => (
+                <div key={story.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div>
+                    <span className="font-medium">{story.studio_name}</span>
+                    <span className="text-muted-foreground ml-2">
+                      {story.word_count} woorden • {story.reading_time} min
+                    </span>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`/studios/${story.slug}`} target="_blank">
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                      Bekijk
+                    </a>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

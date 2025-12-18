@@ -569,3 +569,12 @@ verify_jwt = false
 
 [[functions.backfill-country-codes.schedule]]
 cron = "0 * * * *"
+
+[functions.generate-studio-story]
+verify_jwt = false
+
+[functions.studio-batch-processor]
+verify_jwt = false
+
+[[functions.studio-batch-processor.schedule]]
+cron = "* * * * *"

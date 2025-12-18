@@ -7019,6 +7019,140 @@ export type Database = {
           },
         ]
       }
+      studio_import_queue: {
+        Row: {
+          attempts: number | null
+          country_code: string | null
+          created_at: string
+          error_message: string | null
+          founded_year: number | null
+          id: string
+          location: string | null
+          max_attempts: number | null
+          notes: string | null
+          processed_at: string | null
+          status: string
+          story_id: string | null
+          studio_name: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number | null
+          country_code?: string | null
+          created_at?: string
+          error_message?: string | null
+          founded_year?: number | null
+          id?: string
+          location?: string | null
+          max_attempts?: number | null
+          notes?: string | null
+          processed_at?: string | null
+          status?: string
+          story_id?: string | null
+          studio_name: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number | null
+          country_code?: string | null
+          created_at?: string
+          error_message?: string | null
+          founded_year?: number | null
+          id?: string
+          location?: string | null
+          max_attempts?: number | null
+          notes?: string | null
+          processed_at?: string | null
+          status?: string
+          story_id?: string | null
+          studio_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_import_queue_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "studio_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studio_stories: {
+        Row: {
+          architectural_features: string | null
+          artwork_url: string | null
+          country_code: string | null
+          created_at: string
+          cultural_impact: string | null
+          equipment_highlights: string[] | null
+          famous_recordings: string[] | null
+          founded_year: number | null
+          id: string
+          is_published: boolean | null
+          location: string | null
+          meta_description: string | null
+          meta_title: string | null
+          notable_artists: string[] | null
+          published_at: string | null
+          reading_time: number | null
+          slug: string
+          story_content: string
+          studio_name: string
+          updated_at: string
+          views_count: number | null
+          word_count: number | null
+        }
+        Insert: {
+          architectural_features?: string | null
+          artwork_url?: string | null
+          country_code?: string | null
+          created_at?: string
+          cultural_impact?: string | null
+          equipment_highlights?: string[] | null
+          famous_recordings?: string[] | null
+          founded_year?: number | null
+          id?: string
+          is_published?: boolean | null
+          location?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          notable_artists?: string[] | null
+          published_at?: string | null
+          reading_time?: number | null
+          slug: string
+          story_content: string
+          studio_name: string
+          updated_at?: string
+          views_count?: number | null
+          word_count?: number | null
+        }
+        Update: {
+          architectural_features?: string | null
+          artwork_url?: string | null
+          country_code?: string | null
+          created_at?: string
+          cultural_impact?: string | null
+          equipment_highlights?: string[] | null
+          famous_recordings?: string[] | null
+          founded_year?: number | null
+          id?: string
+          is_published?: boolean | null
+          location?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          notable_artists?: string[] | null
+          published_at?: string | null
+          reading_time?: number | null
+          slug?: string
+          story_content?: string
+          studio_name?: string
+          updated_at?: string
+          views_count?: number | null
+          word_count?: number | null
+        }
+        Relationships: []
+      }
       subscription_events: {
         Row: {
           created_at: string

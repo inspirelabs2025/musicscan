@@ -243,9 +243,9 @@ export default function DePlaatEnHetVerhaal() {
                       >
                         {/* Episode Number/Artwork */}
                         <div className="w-16 h-16 rounded-lg overflow-hidden bg-primary/10 flex-shrink-0">
-                          {episode.episode_artwork_url || podcast?.artwork_url ? (
+                          {episode.artwork_url || podcast?.artwork_url ? (
                             <img 
-                              src={episode.episode_artwork_url || podcast?.artwork_url} 
+                              src={episode.artwork_url || podcast?.artwork_url} 
                               alt={episode.title}
                               className="w-full h-full object-cover"
                             />

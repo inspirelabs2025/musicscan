@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.52.0';
+import { detectArtistCountry } from "../_shared/country-detection.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -701,6 +702,11 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
       master_id: enforcedMasterId || 'none'
     });
 
+    // Detect country code for the artist
+    console.log('🌍 Detecting country code for artist...');
+    const countryCode = await detectArtistCountry(effectiveArtist, LOVABLE_API_KEY!);
+    console.log(`🌍 Country code detected: ${countryCode || 'unknown'}`);
+
     // Save to database
     const { data: blogPost, error: insertError } = await supabase
       .from('blog_posts')
@@ -714,7 +720,8 @@ Het verhaal gaat NIET over deze specifieke persing of conditie.
         slug: slug,
         album_cover_url: albumCoverUrl,
         is_published: autoPublish,
-        published_at: autoPublish ? new Date().toISOString() : null
+        published_at: autoPublish ? new Date().toISOString() : null,
+        country_code: countryCode, // AI-detected country
       })
       .select()
       .single();

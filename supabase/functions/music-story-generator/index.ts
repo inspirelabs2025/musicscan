@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { detectArtistCountry } from "../_shared/country-detection.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -241,6 +242,11 @@ ${story.substring(0, 150)}...
 
 Lees meer op MusicScan! #muziek #verhaal #${extractedData.artist?.toLowerCase().replace(/\s+/g, '')} #musicscan`;
 
+    // Detect country code for the artist
+    console.log('🌍 Detecting country code for artist...');
+    const countryCode = extractedData.artist ? await detectArtistCountry(extractedData.artist, lovableApiKey!) : null;
+    console.log(`🌍 Country code detected: ${countryCode || 'unknown'}`);
+
     // Save to database using direct HTTP request
     const saveResponse = await fetch(`${supabaseUrl}/rest/v1/music_stories`, {
       method: 'POST',
@@ -271,7 +277,8 @@ Lees meer op MusicScan! #muziek #verhaal #${extractedData.artist?.toLowerCase().
         album: extractedData.album,
         genre: extractedData.genre,
         styles: extractedData.styles,
-        tags: extractedData.tags
+        tags: extractedData.tags,
+        country_code: countryCode, // AI-detected country
       })
     });
 

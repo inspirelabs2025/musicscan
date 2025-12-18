@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface NewsItem {
   id: string;
-  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall' | 'product' | 'concert';
+  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall' | 'product' | 'concert' | 'metal_print' | 'tshirt' | 'socks';
   title: string;
   subtitle?: string;
   image_url?: string;
@@ -27,6 +27,9 @@ const CATEGORY_LABELS: Record<NewsItem['type'], string> = {
   fanwall: 'COMMUNITY',
   product: 'SHOP',
   concert: 'LEGENDARISCH CONCERT',
+  metal_print: 'METAAL ART',
+  tshirt: 'T-SHIRT',
+  socks: 'SOKKEN',
 };
 
 export const useUnifiedNewsFeed = (limit: number = 20) => {
@@ -202,10 +205,11 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         }));
       }
 
-      // Fetch products (metal prints, posters, etc.)
+      // Fetch products (posters, etc.)
       const { data: products } = await supabase
         .from('platform_products')
-        .select('id,artist_name,album_title,slug,image_url,created_at,media_type')
+        .select('id,artist_name,album_title,slug,image_url,created_at,media_type,categories')
+        .not('categories', 'cs', '{"METAL"}')
         .order('created_at', { ascending: false })
         .limit(6);
 
@@ -219,6 +223,89 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
           category_label: CATEGORY_LABELS.product,
           link: `/product/${p.slug}`,
           date: p.created_at,
+        }));
+      }
+
+      // Fetch metal prints specifically
+      const { data: metalPrints } = await supabase
+        .from('platform_products')
+        .select('id,artist_name,album_title,slug,image_url,created_at')
+        .contains('categories', ['METAL'])
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (metalPrints) {
+        metalPrints.forEach(p => items.push({
+          id: p.id,
+          type: 'metal_print',
+          title: `${p.artist_name} - ${p.album_title}`,
+          subtitle: 'Metal Print',
+          image_url: p.image_url || undefined,
+          category_label: CATEGORY_LABELS.metal_print,
+          link: `/product/${p.slug}`,
+          date: p.created_at,
+        }));
+      }
+
+      // Fetch T-shirts
+      const { data: tshirts } = await supabase
+        .from('album_tshirts')
+        .select('id,artist_name,album_title,slug,album_cover_url,mockup_url,created_at')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (tshirts) {
+        tshirts.forEach(t => items.push({
+          id: t.id,
+          type: 'tshirt',
+          title: `${t.artist_name} - ${t.album_title}`,
+          subtitle: 'T-Shirt Design',
+          image_url: t.mockup_url || t.album_cover_url || undefined,
+          category_label: CATEGORY_LABELS.tshirt,
+          link: `/tshirts/${t.slug}`,
+          date: t.created_at,
+        }));
+      }
+
+      // Fetch Socks
+      const { data: socks } = await supabase
+        .from('album_socks')
+        .select('id,artist_name,album_title,slug,album_cover_url,mockup_url,created_at')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (socks) {
+        socks.forEach(s => items.push({
+          id: s.id,
+          type: 'socks',
+          title: `${s.artist_name} - ${s.album_title}`,
+          subtitle: 'Sokken Design',
+          image_url: s.mockup_url || s.album_cover_url || undefined,
+          category_label: CATEGORY_LABELS.socks,
+          link: `/socks/${s.slug}`,
+          date: s.created_at,
+        }));
+      }
+
+      // Fetch News
+      const { data: newsArticles } = await supabase
+        .from('news_blog_posts')
+        .select('id,title,slug,image_url,category,created_at')
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (newsArticles) {
+        newsArticles.forEach(n => items.push({
+          id: n.id,
+          type: 'news',
+          title: n.title,
+          subtitle: n.category || undefined,
+          image_url: n.image_url || undefined,
+          category_label: CATEGORY_LABELS.news,
+          link: `/nieuws/${n.slug}`,
+          date: n.created_at || new Date().toISOString(),
         }));
       }
 

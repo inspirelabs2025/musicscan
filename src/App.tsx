@@ -378,7 +378,7 @@ const AppContent = () => {
         <Route path="/artist-spotlights" element={<LazyRoute><ArtistSpotlights /></LazyRoute>} />
         <Route path="/spotlights/:slug" element={<LazyRoute><ArtistSpotlight /></LazyRoute>} />
         <Route path="/artist-spotlights/:slug" element={<LazyRoute><ArtistSpotlight /></LazyRoute>} />
-        
+        <Route path="/artist-spotlight/:slug" element={<LazyRoute><ArtistSpotlight /></LazyRoute>} />
         {/* Quiz routes */}
         <Route path="/echo" element={<LazyRoute><Echo /></LazyRoute>} />
         <Route path="/quiz" element={<ProtectedRoute><LazyRoute><Quiz /></LazyRoute></ProtectedRoute>} />
@@ -468,6 +468,8 @@ const AppContent = () => {
         <Route path="/admin/singles-importer" element={<ProtectedRoute><LazyRoute><SinglesImporterPage /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/artist-stories-generator" element={<ProtectedRoute><LazyRoute><ArtistStoriesGenerator /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/artist-spotlights" element={<ProtectedRoute><LazyRoute><ArtistSpotlightsAdmin /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/artist-spotlight/new" element={<ProtectedRoute><LazyRoute><ArtistSpotlightEditor /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/artist-spotlight/edit/:id" element={<ProtectedRoute><LazyRoute><ArtistSpotlightEditor /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/artist-spotlight/:id" element={<ProtectedRoute><LazyRoute><ArtistSpotlightEditor /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/top2000-importer" element={<ProtectedRoute><LazyRoute><Top2000Importer /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/album-reviews" element={<ProtectedRoute><LazyRoute><AdminAlbumReviews /></LazyRoute></ProtectedRoute>} />

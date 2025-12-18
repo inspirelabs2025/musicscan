@@ -70,8 +70,24 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
         
         {/* Content */}
         <div className="absolute inset-0 p-4 flex flex-col justify-end">
-          {/* Category Label */}
-          <span className="text-[10px] font-bold uppercase tracking-wider text-primary mb-2">
+          {/* Category Label with type-specific styling */}
+          <span className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${
+            item.type === 'metal_print' ? 'text-amber-400' :
+            item.type === 'tshirt' ? 'text-cyan-400' :
+            item.type === 'socks' ? 'text-pink-400' :
+            item.type === 'news' ? 'text-emerald-400' :
+            item.type === 'history' ? 'text-orange-400' :
+            item.type === 'concert' ? 'text-purple-400' :
+            item.type === 'podcast' ? 'text-rose-400' :
+            'text-primary'
+          }`}>
+            {item.type === 'metal_print' && '🖼️ '}
+            {item.type === 'tshirt' && '👕 '}
+            {item.type === 'socks' && '🧦 '}
+            {item.type === 'news' && '📰 '}
+            {item.type === 'history' && '📅 '}
+            {item.type === 'concert' && '🎸 '}
+            {item.type === 'podcast' && '🎙️ '}
             {item.category_label}
           </span>
           

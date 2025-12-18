@@ -41,7 +41,7 @@ const Home = () => {
   const allGridItems = useMemo(() => {
     if (!newsItems) return [];
 
-    // Mix all types: 1-2 items each, shuffle
+    // Mix all 15 content types: 1-2 items each, shuffle
     const items = shuffleArray([
       ...getItemsByType('single', 2),
       ...getItemsByType('artist', 2),
@@ -52,6 +52,12 @@ const Home = () => {
       ...getItemsByType('product', 1),
       ...getItemsByType('podcast', 1),
       ...getItemsByType('concert', 1),
+      ...getItemsByType('metal_print', 1),
+      ...getItemsByType('tshirt', 1),
+      ...getItemsByType('socks', 1),
+      ...getItemsByType('news', 1),
+      ...getItemsByType('anecdote', 1),
+      ...getItemsByType('review', 1),
     ]).filter(item => item?.id !== heroItem?.id);
 
     return items;

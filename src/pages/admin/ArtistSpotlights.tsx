@@ -19,6 +19,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+const getCardImageUrl = (story: any): string | null => {
+  if (story?.artwork_url) return story.artwork_url;
+
+  const imgs = story?.spotlight_images;
+  const url = Array.isArray(imgs) ? imgs?.[0]?.url : null;
+  if (typeof url === 'string' && url.startsWith('http') && url.length < 1000) return url;
+
+  return null;
+};
+
 const ArtistSpotlights = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -125,70 +135,75 @@ const ArtistSpotlights = () => {
               </Card>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredSpotlights.map((story) => (
-                  <Card key={story.id} className="overflow-hidden">
-                    {story.artwork_url && (
-                      <div className="aspect-video w-full overflow-hidden bg-muted">
-                        <img
-                          src={story.artwork_url}
-                          alt={story.artist_name}
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                    )}
-                    <CardHeader>
-                      <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="line-clamp-1">
-                          {story.artist_name}
-                        </CardTitle>
-                        <Badge variant={story.is_published ? "default" : "secondary"}>
-                          {story.is_published ? "Live" : "Concept"}
-                        </Badge>
-                      </div>
-                      <CardDescription className="line-clamp-2">
-                        {story.spotlight_description || "Geen beschrijving"}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                        <span>{story.views_count} views</span>
-                        <span>•</span>
-                        <span>{story.reading_time} min lezen</span>
-                        <span>•</span>
-                        <span>{story.word_count} woorden</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => navigate(`/admin/artist-spotlight/edit/${story.id}`)}
-                          className="flex-1"
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Bewerken
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => togglePublish(story.id, story.is_published)}
-                        >
-                          {story.is_published ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setDeleteId(story.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                {filteredSpotlights.map((story) => {
+                  const cardImageUrl = getCardImageUrl(story);
+
+                  return (
+                    <Card key={story.id} className="overflow-hidden">
+                      {cardImageUrl && (
+                        <div className="aspect-video w-full overflow-hidden bg-muted">
+                          <img
+                            src={cardImageUrl}
+                            alt={story.artist_name}
+                            className="object-cover w-full h-full"
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
+                      <CardHeader>
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="line-clamp-1">
+                            {story.artist_name}
+                          </CardTitle>
+                          <Badge variant={story.is_published ? "default" : "secondary"}>
+                            {story.is_published ? "Live" : "Concept"}
+                          </Badge>
+                        </div>
+                        <CardDescription className="line-clamp-2">
+                          {story.spotlight_description || "Geen beschrijving"}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                          <span>{story.views_count} views</span>
+                          <span>•</span>
+                          <span>{story.reading_time} min lezen</span>
+                          <span>•</span>
+                          <span>{story.word_count} woorden</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/admin/artist-spotlight/edit/${story.id}`)}
+                            className="flex-1"
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Bewerken
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => togglePublish(story.id, story.is_published)}
+                          >
+                            {story.is_published ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setDeleteId(story.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </TabsContent>

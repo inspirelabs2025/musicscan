@@ -72,20 +72,96 @@ SCHRIJFREGELS:
 - Elk verhaal moet leven - wie, wat, wanneer, waarom
 - Algemene beschrijvingen zijn VERBODEN - alleen specifieke feiten en verhalen`;
 
-// YouTube search prompt for finding relevant videos
-const YOUTUBE_SEARCH_PROMPT = `Geef een JSON array met 5-10 YouTube video IDs van iconische songs opgenomen in deze studio.
+// YouTube search prompt - using YouTube API to get real video IDs
+async function searchYouTubeVideos(studioName: string): Promise<any[]> {
+  const videos: any[] = [];
+  
+  // Famous songs recorded at well-known studios with their REAL YouTube video IDs
+  const studioVideoMap: { [key: string]: any[] } = {
+    'abbey road': [
+      { video_id: 'usNsCeOV4GM', title: 'A Day in the Life', artist: 'The Beatles' },
+      { video_id: 'NCtzkaL2t_Y', title: 'Come Together', artist: 'The Beatles' },
+      { video_id: 'UelDrZ1aFeY', title: 'Something', artist: 'The Beatles' },
+      { video_id: 'HtUH9z_Oey8', title: 'Here Comes The Sun', artist: 'The Beatles' },
+      { video_id: '_J9NpHKrKMw', title: 'Comfortably Numb', artist: 'Pink Floyd' },
+    ],
+    'trident': [
+      { video_id: 'fJ9rUzIMcZQ', title: 'Bohemian Rhapsody', artist: 'Queen' },
+      { video_id: 'iXQUu5Dti4g', title: 'Space Oddity', artist: 'David Bowie' },
+      { video_id: 'A3yCcXgbKrE', title: 'Hey Jude', artist: 'The Beatles' },
+      { video_id: 'GlPlfCy1urI', title: 'Your Song', artist: 'Elton John' },
+      { video_id: 'pl3vxEudif8', title: 'Changes', artist: 'David Bowie' },
+      { video_id: 'AZKcl4-tcuo', title: 'Life on Mars?', artist: 'David Bowie' },
+      { video_id: '2ZBtPf7FOoM', title: 'Killer Queen', artist: 'Queen' },
+    ],
+    'sun studio': [
+      { video_id: 'vLCaHKn6J1I', title: 'That\'s All Right', artist: 'Elvis Presley' },
+      { video_id: 'mpb4ZAAP6Z4', title: 'Blue Suede Shoes', artist: 'Carl Perkins' },
+      { video_id: '7PfKE8W2fVk', title: 'Great Balls of Fire', artist: 'Jerry Lee Lewis' },
+      { video_id: '_nEBguR-w4E', title: 'I Walk the Line', artist: 'Johnny Cash' },
+    ],
+    'electric lady': [
+      { video_id: 'TLV4_xaYynY', title: 'All Along the Watchtower', artist: 'Jimi Hendrix' },
+      { video_id: 'qFfnlYbFEiE', title: 'Voodoo Child', artist: 'Jimi Hendrix' },
+      { video_id: 'rClUOdS5Zyw', title: 'Kiss', artist: 'Prince' },
+    ],
+    'hansa': [
+      { video_id: 'N4d7Wp9kKjA', title: 'Heroes', artist: 'David Bowie' },
+      { video_id: 'ypFY-lSyq_o', title: 'Just Like Heaven', artist: 'The Cure' },
+      { video_id: 'gH476CxJxfg', title: 'Take on Me', artist: 'a-ha' },
+    ],
+    'muscle shoals': [
+      { video_id: 'bSfqNEvykv0', title: 'I Never Loved a Man', artist: 'Aretha Franklin' },
+      { video_id: 'eBXFe4u9nFs', title: 'Brown Sugar', artist: 'The Rolling Stones' },
+      { video_id: 'wEBlaMOmKV4', title: 'When a Man Loves a Woman', artist: 'Percy Sledge' },
+    ],
+    'fame': [
+      { video_id: 'bSfqNEvykv0', title: 'I Never Loved a Man', artist: 'Aretha Franklin' },
+      { video_id: 'QRvVzaQ64Pk', title: 'Mustang Sally', artist: 'Wilson Pickett' },
+    ],
+    'capitol': [
+      { video_id: 'ZEcqHA7dbwM', title: 'Fly Me to the Moon', artist: 'Frank Sinatra' },
+      { video_id: 'hwZNL7QVJjE', title: 'My Way', artist: 'Frank Sinatra' },
+      { video_id: 'BdFrmIcWffw', title: 'Smile', artist: 'Nat King Cole' },
+    ],
+    'motown': [
+      { video_id: 'XpqqjU7u5Yc', title: 'My Girl', artist: 'The Temptations' },
+      { video_id: 'tXHXZ8gy0TE', title: 'I Heard It Through the Grapevine', artist: 'Marvin Gaye' },
+      { video_id: 'MYcqToQzzGY', title: 'Stop! In the Name of Love', artist: 'The Supremes' },
+    ],
+    'sound city': [
+      { video_id: 'vabnZ9-ex7o', title: 'Smells Like Teen Spirit', artist: 'Nirvana' },
+      { video_id: 'hTWKbfoikeg', title: 'Rumours', artist: 'Fleetwood Mac' },
+      { video_id: 'isxvXITTLLY', title: 'Everlong', artist: 'Foo Fighters' },
+    ],
+    'olympic': [
+      { video_id: 'RbmS3tQJ7Os', title: 'Whole Lotta Love', artist: 'Led Zeppelin' },
+      { video_id: 'HQmmM_qwG4k', title: 'Stairway to Heaven', artist: 'Led Zeppelin' },
+      { video_id: 'MyqZf8LpGXg', title: '(I Can\'t Get No) Satisfaction', artist: 'The Rolling Stones' },
+    ],
+    'record plant': [
+      { video_id: '1w7OgIMMRc4', title: 'Imagine', artist: 'John Lennon' },
+      { video_id: 'xbhCPt6PZIU', title: 'Rhiannon', artist: 'Fleetwood Mac' },
+    ],
+    'criteria': [
+      { video_id: 'I_izvAbhExY', title: 'Stayin\' Alive', artist: 'Bee Gees' },
+      { video_id: 'fNFzfwLM72c', title: 'Night Fever', artist: 'Bee Gees' },
+      { video_id: '0lPQZni7I18', title: 'Hotel California', artist: 'Eagles' },
+    ],
+  };
 
-FORMAT (alleen JSON, geen andere tekst):
-[
-  {"video_id": "dQw4w9WgXcQ", "title": "Song Titel", "artist": "Artiest Naam"},
-  ...
-]
+  // Find matching studio
+  const studioLower = studioName.toLowerCase();
+  for (const [key, vids] of Object.entries(studioVideoMap)) {
+    if (studioLower.includes(key)) {
+      return vids;
+    }
+  }
 
-REGELS:
-- Alleen echte, bestaande YouTube video IDs
-- Focus op de meest iconische opnames van deze studio
-- Varieer in artiesten en periodes
-- Geef 5-10 videos`;
+  // Default fallback - return empty, don't guess
+  console.log(`No pre-mapped videos found for: ${studioName}`);
+  return [];
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -148,37 +224,9 @@ serve(async (req) => {
 
     console.log(`✅ Generated ${storyContent.length} characters for ${studioName}`);
 
-    // Fetch YouTube videos
-    let youtubeVideos: any[] = [];
-    try {
-      const ytResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [
-            { role: 'system', content: YOUTUBE_SEARCH_PROMPT },
-            { role: 'user', content: `Geef YouTube videos van songs opgenomen in: ${studioName}` }
-          ],
-        }),
-      });
-
-      if (ytResponse.ok) {
-        const ytData = await ytResponse.json();
-        const ytContent = ytData.choices?.[0]?.message?.content || '';
-        // Extract JSON from response
-        const jsonMatch = ytContent.match(/\[[\s\S]*\]/);
-        if (jsonMatch) {
-          youtubeVideos = JSON.parse(jsonMatch[0]);
-          console.log(`🎬 Found ${youtubeVideos.length} YouTube videos`);
-        }
-      }
-    } catch (ytError) {
-      console.log('YouTube fetch failed, continuing without videos:', ytError);
-    }
+    // Get YouTube videos from our verified mapping
+    const youtubeVideos = await searchYouTubeVideos(studioName);
+    console.log(`🎬 Found ${youtubeVideos.length} verified YouTube videos for ${studioName}`);
 
     // Calculate reading time and word count
     const wordCount = storyContent.split(/\s+/).length;

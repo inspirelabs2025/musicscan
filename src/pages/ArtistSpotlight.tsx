@@ -60,6 +60,31 @@ const ArtistSpotlight = () => {
     }
   };
 
+  // Verwijder alleen *opeenvolgende* dubbele afbeeldingen in de tekst (exact hetzelfde plaatje onder elkaar)
+  const dedupeConsecutiveMarkdownImages = (markdown: string) => {
+    const lines = markdown.split("\n");
+    const out: string[] = [];
+    let lastImageKey = "";
+
+    for (const line of lines) {
+      const match = line.match(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/);
+      if (match?.[1]) {
+        const key = normalizeUrl(match[1]);
+        if (key && key === lastImageKey) {
+          continue; // skip duplicaat direct onder elkaar
+        }
+        lastImageKey = key;
+      } else {
+        lastImageKey = "";
+      }
+      out.push(line);
+    }
+
+    return out.join("\n");
+  };
+
+  const storyContent = dedupeConsecutiveMarkdownImages(spotlight.story_content);
+
   return (
     <>
       <Helmet>
@@ -191,7 +216,6 @@ const ArtistSpotlight = () => {
                   prose-li:text-foreground prose-li:my-2">
                   {(() => {
                     const markdownSeen = new Set<string>();
-                    const heroNormalized = normalizeUrl(heroImage);
 
                     return (
                       <ReactMarkdown
@@ -201,7 +225,6 @@ const ArtistSpotlight = () => {
                             const key = normalized || src || "";
 
                             if (!key) return null;
-                            if (heroNormalized && normalized === heroNormalized) return null;
                             if (markdownSeen.has(key)) return null;
 
                             markdownSeen.add(key);

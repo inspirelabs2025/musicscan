@@ -131,11 +131,13 @@ export const useArtistStory = (slug: string) => {
   return useQuery({
     queryKey: ['artist-story', slug],
     queryFn: async () => {
+      // Alleen normale artist stories (geen spotlights)
       const { data, error } = await supabase
         .from('artist_stories')
         .select('*')
         .eq('slug', slug)
         .eq('is_published', true)
+        .or('is_spotlight.is.null,is_spotlight.eq.false')
         .maybeSingle();
 
       if (error) {

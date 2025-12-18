@@ -141,20 +141,23 @@ const ArtistSpotlight = () => {
 
                 <Separator className="mb-8" />
 
-                {/* Image Gallery */}
-                {spotlight.spotlight_images && spotlight.spotlight_images.length > 0 && (
-                  <div className="mb-8">
-                    <ImageGallery 
-                      images={(spotlight.spotlight_images as any[]).filter((img: any) => 
-                        img.url && 
-                        img.url.startsWith('http') && 
-                        img.url.length < 1000 &&
-                        img.url !== heroImage // Filter de hero image uit de gallery
-                      )} 
-                      artistName={spotlight.artist_name}
-                    />
-                  </div>
-                )}
+                {/* Image Gallery - filter hero image uit om duplicaten te voorkomen */}
+                {(() => {
+                  const galleryImages = (spotlight.spotlight_images as any[] || []).filter((img: any) => 
+                    img.url && 
+                    img.url.startsWith('http') && 
+                    img.url.length < 1000 &&
+                    img.url !== heroImage
+                  );
+                  return galleryImages.length > 0 ? (
+                    <div className="mb-8">
+                      <ImageGallery 
+                        images={galleryImages} 
+                        artistName={spotlight.artist_name}
+                      />
+                    </div>
+                  ) : null;
+                })()}
 
                 {/* Story Content with Enhanced Typography */}
                 <div className="prose prose-lg dark:prose-invert max-w-none

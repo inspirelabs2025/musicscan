@@ -48,7 +48,7 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         .select('id,slug,yaml_frontmatter,album_cover_url,created_at')
         .eq('is_published', true)
         .order('created_at', { ascending: false })
-        .limit(8);
+        .limit(30);
 
       if (albums) {
         albums.forEach(a => {
@@ -75,7 +75,7 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         .eq('is_published', true)
         .not('single_name', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(8);
+        .limit(30);
 
       if (singles) {
         singles.forEach(s => items.push({
@@ -97,7 +97,7 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         .eq('is_published', true)
         .or('is_spotlight.is.null,is_spotlight.eq.false')
         .order('published_at', { ascending: false })
-        .limit(8);
+        .limit(30);
 
       if (artists) {
         artists.forEach(a => items.push({

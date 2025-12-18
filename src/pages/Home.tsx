@@ -39,7 +39,7 @@ const Home = () => {
 
     // Helper: get 1 random item from a pool of recent items (en nooit de hero dupliceren)
     // requireImage: filter alleen items met afbeelding
-    const getRandomFromType = (type: string, poolSize: number = 5, requireImage = false) => {
+    const getRandomFromType = (type: string, poolSize: number = 20, requireImage = false) => {
       const pool = newsItems
         .filter(i => i.type === type && i.id !== excludedId && (!requireImage || i.image_url))
         .slice(0, poolSize);
@@ -73,12 +73,12 @@ const Home = () => {
     // Random keuze tussen poster of canvas voor ART
     const artType = Math.random() > 0.5 ? 'poster' : 'canvas';
 
-    // Andere types: random 1 uit pool van 5
+    // Andere types: random 1 uit pool van 20
     // Singles: ALLEEN met artwork (requireImage=true)
     const items = shuffleArray([
-      ...getRandomFromType('single', 5, true), // Singles alleen met artwork
-      ...getRandomFromType('artist'),
-      ...getRandomFromType('album'),
+      ...getRandomFromType('single', 20, true), // Singles alleen met artwork
+      ...getRandomFromType('artist', 20),
+      ...getRandomFromType('album', 20),
       ...getRandomFromType('release'),
       ...getRandomFromType('youtube'),
       ...historyItem,

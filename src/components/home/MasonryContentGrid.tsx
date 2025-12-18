@@ -81,8 +81,8 @@ const COUNTRY_PROMOS = [
 // Pick one country randomly (seeded by day so it's consistent within a session)
 const selectedCountry = COUNTRY_PROMOS[Math.floor(Math.random() * COUNTRY_PROMOS.length)];
 
-// Fixed promotional blocks
-const PROMO_BLOCKS: Array<{
+// Fixed promotional blocks (will be shuffled)
+const BASE_PROMO_BLOCKS: Array<{
   id: string;
   type: PromoType;
   title: string;
@@ -90,7 +90,7 @@ const PROMO_BLOCKS: Array<{
   link: string;
   emoji: string;
   image?: string;
-  forceSmall?: boolean; // Force this block to always be small
+  forceSmall?: boolean;
 }> = [
   { id: 'promo-quiz', type: 'quiz', title: 'Speel Muziek Quiz', subtitle: 'Test je kennis!', link: '/quizzen', emoji: '🎯', forceSmall: true },
   { id: 'promo-scan', type: 'scan', title: 'Scan Je Albums', subtitle: 'Digitaliseer je collectie', link: '/scan', emoji: '📷', image: promoScanBg },
@@ -100,6 +100,19 @@ const PROMO_BLOCKS: Array<{
   { id: 'promo-film', type: 'filmmuziek', title: 'Filmmuziek', subtitle: 'Soundtracks & scores', link: '/filmmuziek', emoji: '🎬' },
   { id: 'promo-kerst', type: 'kerst', title: 'Kerstmuziek', subtitle: 'Feestelijke hits', link: '/kerst', emoji: '🎄' },
 ];
+
+// Shuffle helper
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+// Shuffle promo blocks on module load (random order each page load)
+const PROMO_BLOCKS = shuffleArray(BASE_PROMO_BLOCKS);
 
 interface MasonryContentGridProps {
   items: NewsItem[];
@@ -307,24 +320,16 @@ const PromoCard = ({ promo, size }: { promo: typeof PROMO_BLOCKS[0]; size: CardS
 export const MasonryContentGrid = ({ items, title = "Ontdek Meer" }: MasonryContentGridProps) => {
   if (!items.length) return null;
 
-  // Interleave promo blocks with regular items
-  // Quiz starts at position 3 (not 0), other promos at: 0, 7, 12, 17, 22, 27, 32
-  const promoPositions = [0, 3, 7, 12, 17, 22, 27, 32];
-  
-  // Reorder promo blocks so quiz is NOT first (move it to position 1 in array)
-  const orderedPromos = [
-    PROMO_BLOCKS[1], // scan (position 0 - prominent)
-    PROMO_BLOCKS[0], // quiz (position 3 - small due to pattern)
-    ...PROMO_BLOCKS.slice(2)
-  ];
+  // Interleave promo blocks with regular items at random positions
+  const promoPositions = [0, 4, 9, 14, 19, 24, 29, 34];
   
   const combinedItems: Array<{ type: 'content' | 'promo'; data: NewsItem | typeof PROMO_BLOCKS[0] }> = [];
   let itemIndex = 0;
   let promoIndex = 0;
   
-  for (let i = 0; i < items.length + Math.min(orderedPromos.length, promoPositions.length); i++) {
-    if (promoPositions.includes(i) && promoIndex < orderedPromos.length) {
-      combinedItems.push({ type: 'promo', data: orderedPromos[promoIndex] });
+  for (let i = 0; i < items.length + Math.min(PROMO_BLOCKS.length, promoPositions.length); i++) {
+    if (promoPositions.includes(i) && promoIndex < PROMO_BLOCKS.length) {
+      combinedItems.push({ type: 'promo', data: PROMO_BLOCKS[promoIndex] });
       promoIndex++;
     } else if (itemIndex < items.length) {
       combinedItems.push({ type: 'content', data: items[itemIndex] });

@@ -10,7 +10,14 @@ const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-const STUDIO_STORY_PROMPT = `Je bent een muziekjournalist en expert in opnamestudio's. Schrijf een uitgebreid, boeiend verhaal over de opgegeven studio.
+const STUDIO_STORY_PROMPT = `Je bent een wereldberoemde muziekjournalist en absolute expert in opnamestudio's en hun geschiedenis. Je kent ALLE details over iconische studio's wereldwijd.
+
+ONDERZOEKSOPDRACHT - DOE ACTIEF RESEARCH:
+Voordat je schrijft, denk na over:
+- Welke SPECIFIEKE instrumenten staan deze studio bekend om? (piano's met naam en bouwjaar, vintage versterkers, legendarische mengpanelen)
+- Welke beroemde artiesten speelden op welk specifiek instrument?
+- Zijn er unieke apparaten met een eigen verhaal? (bijv. de Bechstein vleugel bij Trident waarop Elton John "Your Song" speelde)
+- Welke anekdotes zijn er over specifieke opnamesessies?
 
 STRUCTUUR (gebruik deze markdown headers):
 
@@ -21,13 +28,19 @@ Een inleiding over wat deze studio zo bijzonder maakt in de muziekwereld.
 Beschrijf hoe en wanneer de studio is opgericht, de oprichters, hun visie en de eerste jaren.
 
 ## Iconische Instrumenten & Apparatuur
-Dit is een CRUCIALE sectie! Beschrijf uitgebreid:
-- Beroemde piano's: merk, model, leeftijd, geschiedenis, op welke opnames te horen
-- Unieke versterkers, synthesizers of drumkits met een verhaal
-- Speciale microfoons of vintage mengpanelen (SSL, Neve, API etc.)
-- Bijzondere akoestische instrumenten
-- Het VERHAAL achter elk instrument: wie speelde erop, welke hits werden ermee opgenomen
-- Voorbeeld: "De legendarische Bechstein vleugel uit 1905 waarop Elton John 'Your Song' componeerde"
+🎹 DEZE SECTIE IS CRUCIAAL - HIER MAAK JE HET VERSCHIL!
+
+Onderzoek en beschrijf CONCREET:
+- **Piano's**: Welk merk? Model? Bouwjaar? Wie speelde erop? Welke hits werden ermee opgenomen?
+  - Voorbeeld: "De Bechstein vleugel uit 1898 waarop Elton John 'Your Song' componeerde en opnam"
+- **Mengpanelen**: SSL, Neve, API, EMI? Welke specifieke modellen? Waarom legendarisch?
+  - Voorbeeld: "De originele Neve 8028 console waarop Led Zeppelin IV werd gemixt"
+- **Outboard gear**: Compressors (Fairchild 670?), preamps (Neve 1073?), echo's (EMT plate?)
+- **Versterkers & amps**: Welke gitaarversterkers zijn beroemd van deze studio?
+- **Microfoons**: Neumann U47? AKG C12? Welke iconische vocals werden ermee opgenomen?
+- **Synthesizers & keyboards**: Mellotron, Hammond B3, Minimoog?
+
+Voor ELK instrument: vertel het VERHAAL - wie, wat, wanneer, welke opname.
 
 ## Artiesten & Albums
 Welke iconische artiesten werkten hier? Noem specifieke albums die hier zijn opgenomen met jaren.
@@ -39,7 +52,7 @@ Welke legendarische producers zijn verbonden aan deze studio? Beschrijf hun werk
 Vertel minstens 3-5 unieke verhalen, grappige momenten, of bijzondere gebeurtenissen die hier plaatsvonden.
 
 ## De Ruimte & Technologie
-Beschrijf de architectuur, akoestiek, kenmerkende apparatuur en wat de studio uniek maakt qua geluid.
+Beschrijf de architectuur, akoestiek en wat de studio uniek maakt qua geluid.
 
 ## Culturele Impact
 Wat betekent deze studio voor de muziekgeschiedenis?
@@ -49,13 +62,13 @@ Hoe staat de studio er nu voor?
 
 REGELS:
 - Schrijf in het Nederlands
-- Minimum 1500 woorden
+- Minimum 2000 woorden (uitgebreider dan normaal!)
 - Gebruik boeiende, journalistieke taal
-- Voeg concrete details toe: namen, jaren, albumnamen
+- Voeg CONCRETE details toe: merknamen, modelnummers, bouwjaren, artiestennamen
 - Geen AI-termen gebruiken
-- Maak het persoonlijk en levendig
-- Focus op verhalen en anekdotes die de studio tot leven brengen
-- BELANGRIJK: Instrumenten en apparatuur verdienen uitgebreide aandacht - dit maakt een studio uniek!`;
+- De sectie "Iconische Instrumenten & Apparatuur" moet minstens 400 woorden zijn
+- Als je een instrument noemt, noem dan OOK wie erop speelde en welke hit ermee werd gemaakt
+- Wees SPECIFIEK, niet algemeen - details maken het verhaal!`;
 
 // YouTube search prompt for finding relevant videos
 const YOUTUBE_SEARCH_PROMPT = `Geef een JSON array met 5-10 YouTube video IDs van iconische songs opgenomen in deze studio.

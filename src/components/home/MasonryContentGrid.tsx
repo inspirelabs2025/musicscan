@@ -73,8 +73,9 @@ const PROMO_BLOCKS: Array<{
   link: string;
   emoji: string;
   image?: string;
+  forceSmall?: boolean; // Force this block to always be small
 }> = [
-  { id: 'promo-quiz', type: 'quiz', title: 'Speel Muziek Quiz', subtitle: 'Test je kennis!', link: '/quizzen', emoji: '🎯' },
+  { id: 'promo-quiz', type: 'quiz', title: 'Speel Muziek Quiz', subtitle: 'Test je kennis!', link: '/quizzen', emoji: '🎯', forceSmall: true },
   { id: 'promo-scan', type: 'scan', title: 'Scan Je Albums', subtitle: 'Digitaliseer je collectie', link: '/scan', emoji: '📷', image: promoScanBg },
   { id: 'promo-echo', type: 'echo', title: 'Chat met Echo', subtitle: 'Onze muziekexpert', link: '/echo', emoji: '🤖' },
   { id: 'promo-nederland', type: 'nederland', title: 'Nederlandse Muziek', subtitle: 'Ontdek NL hits', link: '/nederland', emoji: '🇳🇱' },
@@ -278,16 +279,23 @@ export const MasonryContentGrid = ({ items, title = "Ontdek Meer" }: MasonryCont
   if (!items.length) return null;
 
   // Interleave promo blocks with regular items
-  // Place promo blocks at strategic positions: 0, 4, 9, 14, 19, 24, 29, 34
-  const promoPositions = [0, 4, 9, 14, 19, 24, 29, 34];
+  // Quiz starts at position 3 (not 0), other promos at: 0, 7, 12, 17, 22, 27, 32
+  const promoPositions = [0, 3, 7, 12, 17, 22, 27, 32];
+  
+  // Reorder promo blocks so quiz is NOT first (move it to position 1 in array)
+  const orderedPromos = [
+    PROMO_BLOCKS[1], // scan (position 0 - prominent)
+    PROMO_BLOCKS[0], // quiz (position 3 - small due to pattern)
+    ...PROMO_BLOCKS.slice(2)
+  ];
   
   const combinedItems: Array<{ type: 'content' | 'promo'; data: NewsItem | typeof PROMO_BLOCKS[0] }> = [];
   let itemIndex = 0;
   let promoIndex = 0;
   
-  for (let i = 0; i < items.length + Math.min(PROMO_BLOCKS.length, promoPositions.length); i++) {
-    if (promoPositions.includes(i) && promoIndex < PROMO_BLOCKS.length) {
-      combinedItems.push({ type: 'promo', data: PROMO_BLOCKS[promoIndex] });
+  for (let i = 0; i < items.length + Math.min(orderedPromos.length, promoPositions.length); i++) {
+    if (promoPositions.includes(i) && promoIndex < orderedPromos.length) {
+      combinedItems.push({ type: 'promo', data: orderedPromos[promoIndex] });
       promoIndex++;
     } else if (itemIndex < items.length) {
       combinedItems.push({ type: 'content', data: items[itemIndex] });
@@ -308,10 +316,12 @@ export const MasonryContentGrid = ({ items, title = "Ontdek Meer" }: MasonryCont
         {/* Masonry Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3 auto-rows-[minmax(120px,1fr)] md:auto-rows-[minmax(150px,1fr)]">
           {combinedItems.map((item, index) => {
-            const size = getSizeForIndex(index);
+            let size = getSizeForIndex(index);
             
             if (item.type === 'promo') {
               const promo = item.data as typeof PROMO_BLOCKS[0];
+              // Force small size if promo has forceSmall flag
+              if (promo.forceSmall) size = 'small';
               return <PromoCard key={promo.id} promo={promo} size={size} />;
             }
             

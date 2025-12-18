@@ -6,7 +6,6 @@ import { DecenniumSlider } from "@/components/nederland/DecenniumSlider";
 import { DutchArtistSpotlight } from "@/components/nederland/DutchArtistSpotlight";
 import { NederlandseArtiesten } from "@/components/nederland/NederlandseArtiesten";
 import { NederlandseVerhalen } from "@/components/nederland/NederlandseVerhalen";
-import { NederlandseReleases } from "@/components/nederland/NederlandseReleases";
 import { DualViewNLTijdlijn } from "@/components/nederland/DualViewNLTijdlijn";
 import { NederlandseGenres } from "@/components/nederland/NederlandseGenres";
 
@@ -153,8 +152,6 @@ const NederlandseMuziek = () => {
         <NederlandseArtiesten />
 
         <NederlandseVerhalen />
-
-        <NederlandseReleases />
 
         <DualViewNLTijdlijn />
 

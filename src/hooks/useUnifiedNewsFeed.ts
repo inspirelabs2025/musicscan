@@ -312,7 +312,7 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
       // Fetch podcasts (curated episodes)
       const { data: podcasts } = await supabase
         .from('own_podcast_episodes')
-        .select('id,title,description,podcast_id,audio_url,created_at,own_podcasts(name,artwork_url)')
+        .select('id,title,description,podcast_id,audio_url,artwork_url,created_at,own_podcasts(name,artwork_url)')
         .eq('is_published', true)
         .order('created_at', { ascending: false })
         .limit(4);
@@ -323,7 +323,7 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
           type: 'podcast',
           title: p.title,
           subtitle: (p.own_podcasts as any)?.name || undefined,
-          image_url: (p.own_podcasts as any)?.artwork_url || undefined,
+          image_url: p.artwork_url || (p.own_podcasts as any)?.artwork_url || undefined,
           category_label: CATEGORY_LABELS.podcast,
           link: '/de-plaat-en-het-verhaal',
           date: p.created_at,

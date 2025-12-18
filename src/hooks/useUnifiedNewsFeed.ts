@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface NewsItem {
   id: string;
-  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall';
+  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall' | 'product';
   title: string;
   subtitle?: string;
   image_url?: string;
@@ -25,6 +25,7 @@ const CATEGORY_LABELS: Record<NewsItem['type'], string> = {
   anecdote: 'ANEKDOTE',
   history: 'MUZIEKGESCHIEDENIS',
   fanwall: 'COMMUNITY',
+  product: 'SHOP',
 };
 
 export const useUnifiedNewsFeed = (limit: number = 20) => {
@@ -197,6 +198,26 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
           category_label: CATEGORY_LABELS.review,
           link: `/reviews/${r.slug}`,
           date: r.created_at || new Date().toISOString(),
+        }));
+      }
+
+      // Fetch products (metal prints, posters, etc.)
+      const { data: products } = await supabase
+        .from('platform_products')
+        .select('id,artist_name,album_title,slug,image_url,created_at,media_type')
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (products) {
+        products.forEach(p => items.push({
+          id: p.id,
+          type: 'product',
+          title: `${p.artist_name} - ${p.album_title}`,
+          subtitle: p.media_type || undefined,
+          image_url: p.image_url || undefined,
+          category_label: CATEGORY_LABELS.product,
+          link: `/product/${p.slug}`,
+          date: p.created_at,
         }));
       }
 

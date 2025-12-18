@@ -1,6 +1,25 @@
 # Force www and remove trailing slashes (canonical URL normalization)
 # These run BEFORE other rules
 
+# Block direct access to SSR proxy URLs - redirect to clean URL
+/universal-ssr-proxy/plaat-verhaal/:slug /plaat-verhaal/:slug 301
+/universal-ssr-proxy/muziek-verhaal/:slug /muziek-verhaal/:slug 301
+/universal-ssr-proxy/product/:slug /product/:slug 301
+/universal-ssr-proxy/* / 301
+
+# Remove trailing slashes from all URLs (except root)
+/plaat-verhaal/:slug/ /plaat-verhaal/:slug 301
+/muziek-verhaal/:slug/ /muziek-verhaal/:slug 301
+/product/:slug/ /product/:slug 301
+/artists/:slug/ /artists/:slug 301
+/singles/:slug/ /singles/:slug 301
+/anekdotes/:slug/ /anekdotes/:slug 301
+/nieuws/:slug/ /nieuws/:slug 301
+/new-release/:slug/ /new-release/:slug 301
+
+# Search params pages - redirect to base URL (handled by noindex in components)
+# Note: Netlify doesn't support query param redirects, so we handle this in robots.txt
+
 # Podcast RSS Feed redirects for SEO-friendly URLs
 /feeds/podcast/:slug.xml https://ssxbpyqnjfiyubsuonar.supabase.co/functions/v1/feeds-podcast?slug=:slug 200
 

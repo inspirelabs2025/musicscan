@@ -129,3 +129,15 @@ Sitemap: https://www.musicscan.app/sitemap-podcasts.xml
 Disallow: /admin/
 Disallow: /_next/
 Disallow: /private/
+
+# Disallow SSR proxy URLs (duplicates)
+Disallow: /universal-ssr-proxy/
+Disallow: /functions/v1/universal-ssr-proxy/
+
+# Disallow search/filter URLs (duplicates)
+Disallow: /*?search=
+Disallow: /*?filter=
+Disallow: /*?page=
+Disallow: /art-shop?*
+Disallow: /public-shops-overview
+Disallow: /public-catalog

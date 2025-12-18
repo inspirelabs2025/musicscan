@@ -615,12 +615,13 @@ Voor een complete lijst van alle content in machine-readable formaat:
         throw new Error(`Unknown content type: ${contentType}`);
     }
 
-    // Return SEO-friendly HTML
+    // Return SEO-friendly HTML with noindex for proxy URL (canonical in HTML points to real URL)
     return new Response(html, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600, s-maxage=7200, stale-while-revalidate=86400'
+        'Cache-Control': 'public, max-age=3600, s-maxage=7200, stale-while-revalidate=86400',
+        'X-Robots-Tag': 'noindex, follow'
       }
     });
 

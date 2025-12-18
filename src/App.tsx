@@ -65,6 +65,8 @@ const AnecdoteDetail = lazy(() => import("./pages/AnecdoteDetail"));
 const MusicHistory = lazy(() => import("./pages/MusicHistory"));
 const Releases = lazy(() => import("./pages/Releases"));
 const NewReleaseDetail = lazy(() => import("./pages/NewReleaseDetail"));
+const StudioStories = lazy(() => import("./pages/StudioStories"));
+const StudioStoryDetail = lazy(() => import("./pages/StudioStoryDetail"));
 
 // Quiz pages
 const Quiz = lazy(() => import("./pages/Quiz"));
@@ -371,6 +373,8 @@ const AppContent = () => {
         <Route path="/anekdotes" element={<LazyRoute><AnecdotesOverview /></LazyRoute>} />
         <Route path="/anekdotes/:slug" element={<LazyRoute><AnecdoteDetail /></LazyRoute>} />
         <Route path="/vandaag-in-de-muziekgeschiedenis" element={<LazyRoute><MusicHistory /></LazyRoute>} />
+        <Route path="/studio-stories" element={<LazyRoute><StudioStories /></LazyRoute>} />
+        <Route path="/studio/:slug" element={<LazyRoute><StudioStoryDetail /></LazyRoute>} />
         <Route path="/music-news" element={<LazyRoute><MusicNews /></LazyRoute>} />
         <Route path="/youtube-discoveries" element={<LazyRoute><YouTubeDiscoveries /></LazyRoute>} />
         <Route path="/reviews" element={<LazyRoute><Reviews /></LazyRoute>} />

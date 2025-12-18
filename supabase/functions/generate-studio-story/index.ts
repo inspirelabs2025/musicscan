@@ -83,16 +83,19 @@ async function searchYouTubeVideos(studioName: string): Promise<any[]> {
       { video_id: 'NCtzkaL2t_Y', title: 'Come Together', artist: 'The Beatles' },
       { video_id: 'UelDrZ1aFeY', title: 'Something', artist: 'The Beatles' },
       { video_id: 'HtUH9z_Oey8', title: 'Here Comes The Sun', artist: 'The Beatles' },
-      { video_id: '_J9NpHKrKMw', title: 'Comfortably Numb', artist: 'Pink Floyd' },
     ],
     'trident': [
-      { video_id: 'fJ9rUzIMcZQ', title: 'Bohemian Rhapsody', artist: 'Queen' },
       { video_id: 'iXQUu5Dti4g', title: 'Space Oddity', artist: 'David Bowie' },
-      { video_id: 'A3yCcXgbKrE', title: 'Hey Jude', artist: 'The Beatles' },
       { video_id: 'GlPlfCy1urI', title: 'Your Song', artist: 'Elton John' },
-      { video_id: 'pl3vxEudif8', title: 'Changes', artist: 'David Bowie' },
       { video_id: 'AZKcl4-tcuo', title: 'Life on Mars?', artist: 'David Bowie' },
+      { video_id: 'pl3vxEudif8', title: 'Changes', artist: 'David Bowie' },
+      { video_id: 'A3yCcXgbKrE', title: 'Hey Jude', artist: 'The Beatles' },
+      { video_id: 'aBKEt3MhNMM', title: 'Starman', artist: 'David Bowie' },
+    ],
+    'rockfield': [
+      { video_id: 'fJ9rUzIMcZQ', title: 'Bohemian Rhapsody', artist: 'Queen' },
       { video_id: '2ZBtPf7FOoM', title: 'Killer Queen', artist: 'Queen' },
+      { video_id: 'kijpcUv-b8M', title: 'Somebody to Love', artist: 'Queen' },
     ],
     'sun studio': [
       { video_id: 'vLCaHKn6J1I', title: 'That\'s All Right', artist: 'Elvis Presley' },
@@ -103,26 +106,22 @@ async function searchYouTubeVideos(studioName: string): Promise<any[]> {
     'electric lady': [
       { video_id: 'TLV4_xaYynY', title: 'All Along the Watchtower', artist: 'Jimi Hendrix' },
       { video_id: 'qFfnlYbFEiE', title: 'Voodoo Child', artist: 'Jimi Hendrix' },
-      { video_id: 'rClUOdS5Zyw', title: 'Kiss', artist: 'Prince' },
     ],
     'hansa': [
       { video_id: 'N4d7Wp9kKjA', title: 'Heroes', artist: 'David Bowie' },
-      { video_id: 'ypFY-lSyq_o', title: 'Just Like Heaven', artist: 'The Cure' },
-      { video_id: 'gH476CxJxfg', title: 'Take on Me', artist: 'a-ha' },
+      { video_id: 'YYjBQKIOb-w', title: 'Sense of Doubt', artist: 'David Bowie' },
     ],
     'muscle shoals': [
       { video_id: 'bSfqNEvykv0', title: 'I Never Loved a Man', artist: 'Aretha Franklin' },
-      { video_id: 'eBXFe4u9nFs', title: 'Brown Sugar', artist: 'The Rolling Stones' },
       { video_id: 'wEBlaMOmKV4', title: 'When a Man Loves a Woman', artist: 'Percy Sledge' },
     ],
     'fame': [
-      { video_id: 'bSfqNEvykv0', title: 'I Never Loved a Man', artist: 'Aretha Franklin' },
       { video_id: 'QRvVzaQ64Pk', title: 'Mustang Sally', artist: 'Wilson Pickett' },
+      { video_id: 'XfR9iY5y94s', title: 'Tell Mama', artist: 'Etta James' },
     ],
     'capitol': [
       { video_id: 'ZEcqHA7dbwM', title: 'Fly Me to the Moon', artist: 'Frank Sinatra' },
       { video_id: 'hwZNL7QVJjE', title: 'My Way', artist: 'Frank Sinatra' },
-      { video_id: 'BdFrmIcWffw', title: 'Smile', artist: 'Nat King Cole' },
     ],
     'motown': [
       { video_id: 'XpqqjU7u5Yc', title: 'My Girl', artist: 'The Temptations' },
@@ -131,22 +130,18 @@ async function searchYouTubeVideos(studioName: string): Promise<any[]> {
     ],
     'sound city': [
       { video_id: 'vabnZ9-ex7o', title: 'Smells Like Teen Spirit', artist: 'Nirvana' },
-      { video_id: 'hTWKbfoikeg', title: 'Rumours', artist: 'Fleetwood Mac' },
       { video_id: 'isxvXITTLLY', title: 'Everlong', artist: 'Foo Fighters' },
     ],
     'olympic': [
-      { video_id: 'RbmS3tQJ7Os', title: 'Whole Lotta Love', artist: 'Led Zeppelin' },
       { video_id: 'HQmmM_qwG4k', title: 'Stairway to Heaven', artist: 'Led Zeppelin' },
-      { video_id: 'MyqZf8LpGXg', title: '(I Can\'t Get No) Satisfaction', artist: 'The Rolling Stones' },
+      { video_id: 'RbmS3tQJ7Os', title: 'Whole Lotta Love', artist: 'Led Zeppelin' },
     ],
     'record plant': [
       { video_id: '1w7OgIMMRc4', title: 'Imagine', artist: 'John Lennon' },
-      { video_id: 'xbhCPt6PZIU', title: 'Rhiannon', artist: 'Fleetwood Mac' },
     ],
     'criteria': [
       { video_id: 'I_izvAbhExY', title: 'Stayin\' Alive', artist: 'Bee Gees' },
       { video_id: 'fNFzfwLM72c', title: 'Night Fever', artist: 'Bee Gees' },
-      { video_id: '0lPQZni7I18', title: 'Hotel California', artist: 'Eagles' },
     ],
   };
 

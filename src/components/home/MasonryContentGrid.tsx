@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Play, ExternalLink, MessageCircle, Calendar, Newspaper, Music, Mic, Radio, User, Disc, ShoppingBag, Shirt, Gamepad2, Camera, Bot, Snowflake, Flag, Headphones, Film } from 'lucide-react';
 import { NewsItem } from '@/hooks/useUnifiedNewsFeed';
+import promoScanBg from '@/assets/promo-scan-bg.jpg';
 
 // Extended type for promo blocks
 type PromoType = 'quiz' | 'scan' | 'echo' | 'nederland' | 'frankrijk' | 'dance' | 'filmmuziek' | 'kerst';
@@ -71,9 +72,10 @@ const PROMO_BLOCKS: Array<{
   subtitle: string;
   link: string;
   emoji: string;
+  image?: string;
 }> = [
   { id: 'promo-quiz', type: 'quiz', title: 'Speel Muziek Quiz', subtitle: 'Test je kennis!', link: '/quizzen', emoji: '🎯' },
-  { id: 'promo-scan', type: 'scan', title: 'Scan Je Albums', subtitle: 'Digitaliseer je collectie', link: '/scan', emoji: '📷' },
+  { id: 'promo-scan', type: 'scan', title: 'Scan Je Albums', subtitle: 'Digitaliseer je collectie', link: '/scan', emoji: '📷', image: promoScanBg },
   { id: 'promo-echo', type: 'echo', title: 'Chat met Echo', subtitle: 'Onze muziekexpert', link: '/echo', emoji: '🤖' },
   { id: 'promo-nederland', type: 'nederland', title: 'Nederlandse Muziek', subtitle: 'Ontdek NL hits', link: '/nederland', emoji: '🇳🇱' },
   { id: 'promo-frankrijk', type: 'frankrijk', title: 'Franse Muziek', subtitle: 'Vive la musique!', link: '/frankrijk', emoji: '🇫🇷' },
@@ -229,16 +231,25 @@ const PromoCard = ({ promo, size }: { promo: typeof PROMO_BLOCKS[0]; size: CardS
       className={`group relative overflow-hidden ${sizeClasses[size]} block`}
     >
       <div className={`relative w-full h-full ${aspectClasses[size]}`}>
-        {/* Gradient Background */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${getTypeGradient(promo.type)}`} />
+        {/* Background - Image or Gradient */}
+        {promo.image ? (
+          <img
+            src={promo.image}
+            alt={promo.title}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <>
+            <div className={`absolute inset-0 bg-gradient-to-br ${getTypeGradient(promo.type)}`} />
+            {/* Decorative icon */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-20">
+              <TypeIcon type={promo.type} size={size === 'large' || size === 'tall' ? 'large' : 'small'} />
+            </div>
+          </>
+        )}
         
-        {/* Decorative icon */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-20">
-          <TypeIcon type={promo.type} size={size === 'large' || size === 'tall' ? 'large' : 'small'} />
-        </div>
-        
-        {/* Subtle overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        {/* Overlay for text readability */}
+        <div className={`absolute inset-0 ${promo.image ? 'bg-gradient-to-t from-black/80 via-black/40 to-transparent' : 'bg-gradient-to-t from-black/60 via-transparent to-transparent'}`} />
         
         {/* Content */}
         <div className="absolute inset-0 p-4 flex flex-col justify-end items-start">

@@ -7080,6 +7080,7 @@ export type Database = {
       }
       studio_stories: {
         Row: {
+          anecdotes: string | null
           architectural_features: string | null
           artwork_url: string | null
           country_code: string | null
@@ -7094,6 +7095,7 @@ export type Database = {
           meta_description: string | null
           meta_title: string | null
           notable_artists: string[] | null
+          producers: string[] | null
           published_at: string | null
           reading_time: number | null
           slug: string
@@ -7102,8 +7104,10 @@ export type Database = {
           updated_at: string
           views_count: number | null
           word_count: number | null
+          youtube_videos: Json | null
         }
         Insert: {
+          anecdotes?: string | null
           architectural_features?: string | null
           artwork_url?: string | null
           country_code?: string | null
@@ -7118,6 +7122,7 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           notable_artists?: string[] | null
+          producers?: string[] | null
           published_at?: string | null
           reading_time?: number | null
           slug: string
@@ -7126,8 +7131,10 @@ export type Database = {
           updated_at?: string
           views_count?: number | null
           word_count?: number | null
+          youtube_videos?: Json | null
         }
         Update: {
+          anecdotes?: string | null
           architectural_features?: string | null
           artwork_url?: string | null
           country_code?: string | null
@@ -7142,6 +7149,7 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           notable_artists?: string[] | null
+          producers?: string[] | null
           published_at?: string | null
           reading_time?: number | null
           slug?: string
@@ -7150,6 +7158,7 @@ export type Database = {
           updated_at?: string
           views_count?: number | null
           word_count?: number | null
+          youtube_videos?: Json | null
         }
         Relationships: []
       }

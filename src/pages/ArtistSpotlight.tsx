@@ -189,26 +189,38 @@ const ArtistSpotlight = () => {
                   prose-a:text-primary prose-a:no-underline hover:prose-a:underline
                   prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4
                   prose-li:text-foreground prose-li:my-2">
-                  <ReactMarkdown
-                    components={{
-                      img: ({ src, alt }) => {
-                        const normalized = normalizeUrl(src);
-                        const heroNormalized = normalizeUrl(heroImage);
-                        if (normalized && heroNormalized && normalized === heroNormalized) return null;
+                  {(() => {
+                    const markdownSeen = new Set<string>();
+                    const heroNormalized = normalizeUrl(heroImage);
 
-                        return (
-                          <img
-                            src={src || ""}
-                            alt={alt || `Foto van ${spotlight.artist_name}`}
-                            loading="lazy"
-                            className="rounded-lg"
-                          />
-                        );
-                      },
-                    }}
-                  >
-                    {spotlight.story_content}
-                  </ReactMarkdown>
+                    return (
+                      <ReactMarkdown
+                        components={{
+                          img: ({ src, alt }) => {
+                            const normalized = normalizeUrl(src);
+                            const key = normalized || src || "";
+
+                            if (!key) return null;
+                            if (heroNormalized && normalized === heroNormalized) return null;
+                            if (markdownSeen.has(key)) return null;
+
+                            markdownSeen.add(key);
+
+                            return (
+                              <img
+                                src={src || ""}
+                                alt={alt || `Foto van ${spotlight.artist_name}`}
+                                loading="lazy"
+                                className="rounded-lg"
+                              />
+                            );
+                          },
+                        }}
+                      >
+                        {spotlight.story_content}
+                      </ReactMarkdown>
+                    );
+                  })()}
                 </div>
               </div>
 

@@ -95,7 +95,7 @@ export function QuizResultShareCard({
         </motion.div>
         
         <p className="text-center text-muted-foreground mt-4 text-sm">
-          Kun jij dit verslaan? Doe de quiz op musicscan.nl/quiz
+          Kun jij dit verslaan? Doe de quiz op www.musicscan.app/quiz
         </p>
       </CardContent>
     </Card>

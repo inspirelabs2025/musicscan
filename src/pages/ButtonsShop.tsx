@@ -68,7 +68,7 @@ export default function ButtonsShop() {
         <meta property="og:title" content="Artist Buttons - Muziek Speldjes" />
         <meta property="og:description" content="Unieke artist buttons vanaf €4,50. Speld je favoriete muziek!" />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://musicscan.app/buttons" />
+        <link rel="canonical" href="https://www.musicscan.app/buttons" />
         
         <script type="application/ld+json">
           {JSON.stringify({
@@ -76,7 +76,7 @@ export default function ButtonsShop() {
             "@type": "CollectionPage",
             "name": "Artist Buttons Collectie",
             "description": "Buttons en badges met iconische muziekartisten",
-            "url": "https://musicscan.app/buttons",
+            "url": "https://www.musicscan.app/buttons",
             "numberOfItems": buttonProducts?.length || 0,
             "offers": {
               "@type": "AggregateOffer",

@@ -103,7 +103,7 @@ async function collectDailyData(): Promise<DailyDigestData> {
 
 function generateEmailHTML(firstName: string, data: DailyDigestData, userId: string): string {
   const unsubscribeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/daily-email-digest?action=unsubscribe&user_id=${userId}`;
-  const baseUrl = "https://musicscan.app";
+  const baseUrl = "https://www.musicscan.app";
   
   return `
 <!DOCTYPE html>

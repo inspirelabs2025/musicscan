@@ -82,7 +82,7 @@ export default function PosterShop() {
             "@type": "CollectionPage",
             "name": "Premium Art Posters",
             "description": "Unieke posters van muziek artiesten",
-            "url": "https://musicscan.app/posters",
+            "url": "https://www.musicscan.app/posters",
             "numberOfItems": posterProducts?.length || 0,
             "about": {
               "@type": "Thing",

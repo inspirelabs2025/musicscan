@@ -16,7 +16,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const baseUrl = "https://musicscan.nl";
+    const baseUrl = "https://www.musicscan.app";
     const currentDate = new Date().toISOString().split("T")[0];
 
     const entries: string[] = [];

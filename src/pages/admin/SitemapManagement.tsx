@@ -18,14 +18,14 @@ export default function SitemapManagement() {
   const { toast } = useToast();
 
   const sitemaps = [
-    { name: 'Main Index', url: 'https://musicscan.app/sitemap.xml', type: 'index' },
-    { name: 'Static Pages', url: 'https://musicscan.app/sitemaps/sitemap-static.xml', type: 'static' },
-    { name: 'Blog Posts', url: 'https://musicscan.app/sitemaps/sitemap-blog.xml', type: 'content', count: stats?.blogs },
-    { name: 'Music Stories', url: 'https://musicscan.app/sitemaps/sitemap-music-stories.xml', type: 'content', count: stats?.stories },
-    { name: 'Products', url: 'https://musicscan.app/sitemaps/sitemap-products.xml', type: 'content', count: stats?.products },
-    { name: 'Blog Images', url: 'https://musicscan.app/sitemaps/sitemap-images-blogs.xml', type: 'images' },
-    { name: 'Story Images', url: 'https://musicscan.app/sitemaps/sitemap-images-stories.xml', type: 'images' },
-    { name: 'Product Images', url: 'https://musicscan.app/sitemaps/sitemap-images-products.xml', type: 'images' },
+    { name: 'Main Index', url: 'https://www.musicscan.app/sitemap.xml', type: 'index' },
+    { name: 'Static Pages', url: 'https://www.musicscan.app/sitemaps/sitemap-static.xml', type: 'static' },
+    { name: 'Blog Posts', url: 'https://www.musicscan.app/sitemaps/sitemap-blog.xml', type: 'content', count: stats?.blogs },
+    { name: 'Music Stories', url: 'https://www.musicscan.app/sitemaps/sitemap-music-stories.xml', type: 'content', count: stats?.stories },
+    { name: 'Products', url: 'https://www.musicscan.app/sitemaps/sitemap-products.xml', type: 'content', count: stats?.products },
+    { name: 'Blog Images', url: 'https://www.musicscan.app/sitemaps/sitemap-images-blogs.xml', type: 'images' },
+    { name: 'Story Images', url: 'https://www.musicscan.app/sitemaps/sitemap-images-stories.xml', type: 'images' },
+    { name: 'Product Images', url: 'https://www.musicscan.app/sitemaps/sitemap-images-products.xml', type: 'images' },
   ];
 
   const fetchStats = async () => {
@@ -150,7 +150,7 @@ export default function SitemapManagement() {
           <div className="mt-2">
             <strong>Google Search Console:</strong> Submit alleen de hoofdsitemap:
             <ul className="list-disc ml-6 mt-2">
-              <li><code>https://musicscan.app/sitemap.xml</code></li>
+              <li><code>https://www.musicscan.app/sitemap.xml</code></li>
             </ul>
           </div>
         </AlertDescription>

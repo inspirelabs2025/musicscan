@@ -269,7 +269,7 @@ METAL PRINT VARIANT ADJUSTMENTS:
     }
 
     // Generate QR code URL
-    const qrCodeStoryUrl = `https://musicscan.app/time-machine/${event.slug}`;
+    const qrCodeStoryUrl = `https://www.musicscan.app/time-machine/${event.slug}`;
     const qrCodeImageUrl = await generateQRCode(qrCodeStoryUrl);
 
     console.log('Posters generated successfully');

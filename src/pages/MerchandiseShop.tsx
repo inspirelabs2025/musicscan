@@ -86,7 +86,7 @@ export default function MerchandiseShop() {
             "@type": "CollectionPage",
             "name": "Merchandise Collectie",
             "description": "T-Shirts en sokken geïnspireerd op iconische albums",
-            "url": "https://musicscan.app/merchandise",
+            "url": "https://www.musicscan.app/merchandise",
             "numberOfItems": allProducts?.length || 0,
             "about": {
               "@type": "Thing",

@@ -53,9 +53,15 @@ export default function ArtistFanWall() {
 
   if (!artist) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>Artiest niet gevonden</div>
-      </div>
+      <>
+        <Helmet>
+          <title>Artiest niet gevonden | MusicScan FanWall</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen flex items-center justify-center">
+          <div>Artiest niet gevonden</div>
+        </div>
+      </>
     );
   }
 

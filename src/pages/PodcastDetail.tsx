@@ -43,14 +43,20 @@ export default function PodcastDetail() {
 
   if (!podcast) {
     return (
-      <div className="min-h-screen bg-background">
-        <main className="container py-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Podcast niet gevonden</h1>
-          <Link to="/podcasts">
-            <Button>Terug naar podcasts</Button>
-          </Link>
-        </main>
-      </div>
+      <>
+        <Helmet>
+          <title>Podcast niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen bg-background">
+          <main className="container py-8 text-center">
+            <h1 className="text-2xl font-bold mb-4">Podcast niet gevonden</h1>
+            <Link to="/podcasts">
+              <Button>Terug naar podcasts</Button>
+            </Link>
+          </main>
+        </div>
+      </>
     );
   }
 

@@ -129,12 +129,18 @@ export default function PlatformProductDetail() {
 
   if (!product) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Product niet gevonden</h1>
-        <Link to="/">
-          <Button>Terug naar home</Button>
-        </Link>
-      </div>
+      <>
+        <Helmet>
+          <title>Product niet gevonden | MusicScan Shop</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="container mx-auto px-4 py-8 text-center">
+          <h1 className="text-2xl font-bold mb-4">Product niet gevonden</h1>
+          <Link to="/">
+            <Button>Terug naar home</Button>
+          </Link>
+        </div>
+      </>
     );
   }
 

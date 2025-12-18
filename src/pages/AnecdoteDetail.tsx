@@ -32,17 +32,23 @@ export default function AnecdoteDetail() {
 
   if (!anecdote) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <BookOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-lg text-muted-foreground">Anekdote niet gevonden</p>
-            <Button onClick={() => navigate('/anekdotes')} className="mt-4">
-              Terug naar overzicht
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <Helmet>
+          <title>Anekdote niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen flex items-center justify-center">
+          <Card>
+            <CardContent className="py-12 text-center">
+              <BookOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-lg text-muted-foreground">Anekdote niet gevonden</p>
+              <Button onClick={() => navigate('/anekdotes')} className="mt-4">
+                Terug naar overzicht
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 

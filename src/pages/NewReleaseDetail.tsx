@@ -34,19 +34,25 @@ export default function NewReleaseDetail() {
 
   if (error || !release) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Disc3 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <h1 className="text-2xl font-bold mb-2">Release niet gevonden</h1>
-          <p className="text-muted-foreground mb-4">Deze release bestaat niet of is verwijderd.</p>
-          <Button asChild>
-            <Link to="/releases">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Terug naar releases
-            </Link>
-          </Button>
+      <>
+        <Helmet>
+          <title>Release niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <Disc3 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <h1 className="text-2xl font-bold mb-2">Release niet gevonden</h1>
+            <p className="text-muted-foreground mb-4">Deze release bestaat niet of is verwijderd.</p>
+            <Button asChild>
+              <Link to="/releases">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Terug naar releases
+              </Link>
+            </Button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

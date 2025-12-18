@@ -178,22 +178,28 @@ export default function SingleDetail() {
 
   if (notFound || !single) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        <div className="relative text-center max-w-md mx-auto px-4">
-          <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-8 border border-border/50">
-            <Music className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" />
-            <h1 className="text-2xl font-bold mb-4">Single niet gevonden</h1>
-            <p className="text-muted-foreground mb-6">
-              De single die je zoekt bestaat niet of is niet meer beschikbaar.
-            </p>
-            <Button onClick={() => navigate('/singles')} size="lg" className="group">
-              <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-              Terug naar singles
-            </Button>
+      <>
+        <Helmet>
+          <title>Single niet gevonden | MusicScan</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 flex items-center justify-center">
+          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+          <div className="relative text-center max-w-md mx-auto px-4">
+            <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-8 border border-border/50">
+              <Music className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" />
+              <h1 className="text-2xl font-bold mb-4">Single niet gevonden</h1>
+              <p className="text-muted-foreground mb-6">
+                De single die je zoekt bestaat niet of is niet meer beschikbaar.
+              </p>
+              <Button onClick={() => navigate('/singles')} size="lg" className="group">
+                <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                Terug naar singles
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 

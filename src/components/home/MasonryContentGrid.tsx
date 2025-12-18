@@ -23,6 +23,8 @@ const getTypeGradient = (type: string): string => {
     case 'single': return 'from-pink-500 via-rose-600 to-pink-800';
     case 'youtube': return 'from-red-500 via-red-600 to-red-800';
     case 'review': return 'from-sky-500 via-blue-600 to-sky-800';
+    case 'fanwall': return 'from-pink-500 via-purple-600 to-indigo-700';
+    case 'daily_quiz': return 'from-yellow-400 via-orange-500 to-red-600';
     // Promo types
     case 'quiz': return 'from-yellow-400 via-orange-500 to-red-600';
     case 'scan': return 'from-indigo-500 via-purple-600 to-pink-600';
@@ -55,6 +57,8 @@ const TypeIcon = ({ type, size }: { type: string; size: 'large' | 'small' }) => 
     case 'single': return <Radio className={sizeClass} />;
     case 'youtube': return <Play className={sizeClass} />;
     case 'review': return <MessageCircle className={sizeClass} />;
+    case 'fanwall': return <Camera className={sizeClass} />;
+    case 'daily_quiz': return <Gamepad2 className={sizeClass} />;
     // Promo types
     case 'quiz': return <Gamepad2 className={sizeClass} />;
     case 'scan': return <Camera className={sizeClass} />;
@@ -182,6 +186,8 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
             item.type === 'history' ? 'text-orange-400' :
             item.type === 'concert' ? 'text-purple-400' :
             item.type === 'podcast' ? 'text-rose-400' :
+            item.type === 'fanwall' ? 'text-pink-400' :
+            item.type === 'quiz' ? 'text-yellow-400' :
             'text-primary'
           }`}>
             {item.type === 'metal_print' && '🖼️ '}
@@ -193,6 +199,8 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
             {item.type === 'history' && '📅 '}
             {item.type === 'concert' && '🎸 '}
             {item.type === 'podcast' && '🎙️ '}
+            {item.type === 'fanwall' && '📸 '}
+            {item.type === 'quiz' && '🎯 '}
             {item.category_label}
           </span>
           
@@ -213,7 +221,12 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
             </p>
           )}
           
-          {/* External Link Icon */}
+          {/* Quiz Question Preview */}
+          {item.type === 'quiz' && item.quiz_question && (
+            <p className="text-xs text-yellow-200/90 mt-1 line-clamp-2 italic">
+              "{item.quiz_question}"
+            </p>
+          )}
           {isExternal && (
             <ExternalLink className="absolute top-4 right-4 w-4 h-4 text-white/60" />
           )}

@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface NewsItem {
   id: string;
-  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall' | 'product' | 'concert' | 'metal_print' | 'tshirt' | 'socks' | 'poster' | 'canvas';
+  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall' | 'product' | 'concert' | 'metal_print' | 'tshirt' | 'socks' | 'poster' | 'canvas' | 'quiz';
   title: string;
   subtitle?: string;
   image_url?: string;
@@ -11,6 +11,7 @@ export interface NewsItem {
   link: string;
   date: string;
   description?: string;
+  quiz_question?: string;
 }
 
 const CATEGORY_LABELS: Record<NewsItem['type'], string> = {
@@ -24,7 +25,7 @@ const CATEGORY_LABELS: Record<NewsItem['type'], string> = {
   review: 'REVIEW',
   anecdote: 'ANEKDOTE',
   history: 'MUZIEKGESCHIEDENIS',
-  fanwall: 'COMMUNITY',
+  fanwall: '📸 FANWALL',
   product: 'SHOP',
   concert: 'LEGENDARISCH CONCERT',
   metal_print: 'METAAL ART',
@@ -32,6 +33,7 @@ const CATEGORY_LABELS: Record<NewsItem['type'], string> = {
   socks: 'SOKKEN',
   poster: '🎨 ART POSTER',
   canvas: '🎨 ART CANVAS',
+  quiz: '🎯 QUIZ VAN DE DAG',
 };
 
 export const useUnifiedNewsFeed = (limit: number = 20) => {
@@ -394,6 +396,53 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
           link: `/time-machine/${c.slug}`,
           date: c.created_at,
         }));
+      }
+
+      // Fetch FanWall photos
+      const { data: fanwallPhotos } = await supabase
+        .from('photos')
+        .select('id,artist,album,display_url,seo_slug,created_at')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (fanwallPhotos) {
+        fanwallPhotos.forEach(f => items.push({
+          id: f.id,
+          type: 'fanwall',
+          title: f.artist || 'Fan Foto',
+          subtitle: f.album || undefined,
+          image_url: f.display_url || undefined,
+          category_label: CATEGORY_LABELS.fanwall,
+          link: f.seo_slug ? `/fanwall/photo/${f.seo_slug}` : '/fanwall',
+          date: f.created_at,
+        }));
+      }
+
+      // Fetch Daily Quiz with question
+      const today = new Date().toISOString().split('T')[0];
+      const { data: dailyQuiz } = await supabase
+        .from('daily_challenges')
+        .select('id,quiz_data,challenge_date,created_at')
+        .lte('challenge_date', today)
+        .order('challenge_date', { ascending: false })
+        .limit(1);
+
+      if (dailyQuiz && dailyQuiz.length > 0) {
+        const quiz = dailyQuiz[0];
+        const quizData = quiz.quiz_data as any;
+        const firstQuestion = quizData?.questions?.[0]?.question || 'Test je muziekkennis!';
+        items.push({
+          id: quiz.id,
+          type: 'quiz',
+          title: 'Quiz van de Dag',
+          subtitle: quiz.challenge_date,
+          image_url: undefined,
+          category_label: CATEGORY_LABELS.quiz,
+          link: '/quizzen/daily',
+          date: quiz.created_at || new Date().toISOString(),
+          quiz_question: firstQuestion,
+        });
       }
 
       // Sort all items by date (newest first)

@@ -141,24 +141,41 @@ const ArtistSpotlight = () => {
 
                 <Separator className="mb-8" />
 
-                {/* Image Gallery - filter hero image en duplicaten */}
+                {/* Image Gallery - toon geen dubbele set (dedupe op URL zonder query) */}
                 {(() => {
-                  const seenUrls = new Set<string>();
-                  if (heroImage) seenUrls.add(heroImage);
-                  
+                  const normalizeUrl = (url?: string | null) => {
+                    if (!url) return "";
+                    try {
+                      const u = new URL(url);
+                      return `${u.origin}${u.pathname}`;
+                    } catch {
+                      return url;
+                    }
+                  };
+
+                  const seen = new Set<string>();
+                  if (heroImage) {
+                    seen.add(heroImage);
+                    seen.add(normalizeUrl(heroImage));
+                  }
+
                   const galleryImages = (spotlight.spotlight_images as any[] || []).filter((img: any) => {
-                    if (!img.url || !img.url.startsWith('http') || img.url.length >= 1000) return false;
-                    if (seenUrls.has(img.url)) return false;
-                    seenUrls.add(img.url);
+                    const url = img?.url;
+                    if (!url || !url.startsWith("http") || url.length >= 1000) return false;
+
+                    const normalized = normalizeUrl(url);
+                    if (seen.has(url) || seen.has(normalized)) return false;
+
+                    seen.add(url);
+                    seen.add(normalized);
                     return true;
                   });
-                  
-                  return galleryImages.length > 0 ? (
+
+                  // Als er maar 1 afbeelding overblijft, is dit praktisch altijd de "dubbele set".
+                  // Toon de gallery pas bij 2+ unieke afbeeldingen.
+                  return galleryImages.length > 1 ? (
                     <div className="mb-8">
-                      <ImageGallery 
-                        images={galleryImages} 
-                        artistName={spotlight.artist_name}
-                      />
+                      <ImageGallery images={galleryImages} artistName={spotlight.artist_name} />
                     </div>
                   ) : null;
                 })()}

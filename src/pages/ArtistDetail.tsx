@@ -69,6 +69,42 @@ const ArtistDetail = () => {
   const storyImage = story.artwork_url || 'https://www.musicscan.app/placeholder.svg';
   const storyDescription = story.biography || story.story_content.substring(0, 160);
 
+  // Normaliseer URL (zonder query params) voor vergelijking
+  const normalizeUrl = (url?: string | null) => {
+    if (!url) return "";
+    try {
+      const u = new URL(url);
+      return `${u.origin}${u.pathname}`;
+    } catch {
+      return url;
+    }
+  };
+
+  // Verwijder opeenvolgende dubbele afbeeldingen in markdown (ook met lege regels ertussen)
+  const dedupeConsecutiveImages = (markdown: string) => {
+    const lines = markdown.split("\n");
+    const out: string[] = [];
+    let lastImageKey = "";
+
+    for (const line of lines) {
+      const match = line.match(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/);
+      if (match?.[1]) {
+        const key = normalizeUrl(match[1]);
+        if (key && key === lastImageKey) continue; // skip duplicaat
+        lastImageKey = key;
+      } else if (line.trim().length > 0) {
+        // Reset alleen bij niet-lege regels (tekst)
+        lastImageKey = "";
+      }
+      // Lege regels resetten NIET, zodat dubbele images met witruimte ertussen ook gefilterd worden
+      out.push(line);
+    }
+    return out.join("\n");
+  };
+
+  const cleanedStoryContent = dedupeConsecutiveImages(story.story_content);
+  const heroImageNormalized = normalizeUrl(story.artwork_url);
+
   const breadcrumbs = [
     { name: 'Home', url: '/' },
     { name: 'Artiesten', url: '/artists' },
@@ -252,9 +288,23 @@ const ArtistDetail = () => {
                         {children}
                       </strong>
                     ),
+                    img: ({src, alt}) => {
+                      // Skip hero image als die in de markdown staat
+                      if (heroImageNormalized && normalizeUrl(src) === heroImageNormalized) {
+                        return null;
+                      }
+                      return (
+                        <img
+                          src={src || ""}
+                          alt={alt || story.artist_name}
+                          loading="lazy"
+                          className="rounded-lg my-6"
+                        />
+                      );
+                    },
                   }}
                 >
-                  {story.story_content}
+                  {cleanedStoryContent}
                 </ReactMarkdown>
               </article>
             </div>

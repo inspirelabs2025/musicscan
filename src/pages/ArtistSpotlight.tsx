@@ -60,7 +60,7 @@ const ArtistSpotlight = () => {
     }
   };
 
-  // Verwijder alleen *opeenvolgende* dubbele afbeeldingen in de tekst (exact hetzelfde plaatje onder elkaar)
+  // Verwijder opeenvolgende dubbele afbeeldingen (ook met lege regels ertussen)
   const dedupeConsecutiveMarkdownImages = (markdown: string) => {
     const lines = markdown.split("\n");
     const out: string[] = [];
@@ -70,12 +70,10 @@ const ArtistSpotlight = () => {
       const match = line.match(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/);
       if (match?.[1]) {
         const key = normalizeUrl(match[1]);
-        if (key && key === lastImageKey) {
-          continue; // skip duplicaat direct onder elkaar
-        }
+        if (key && key === lastImageKey) continue; // skip duplicaat
         lastImageKey = key;
-      } else {
-        lastImageKey = "";
+      } else if (line.trim().length > 0) {
+        lastImageKey = ""; // reset alleen bij niet-lege regels
       }
       out.push(line);
     }

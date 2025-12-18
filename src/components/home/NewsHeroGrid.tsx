@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { NewsItem } from '@/hooks/useUnifiedNewsFeed';
+import { formatDistanceToNow } from 'date-fns';
+import { nl } from 'date-fns/locale';
 
 interface NewsHeroGridProps {
   items: NewsItem[];
@@ -9,62 +11,68 @@ export const NewsHeroGrid = ({ items }: NewsHeroGridProps) => {
   if (!items || items.length === 0) return null;
 
   const [featured, ...sideItems] = items;
-  const displaySideItems = sideItems.slice(0, 3);
+  const displaySideItems = sideItems.slice(0, 4);
 
   return (
-    <section className="py-8 md:py-12">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
-          {/* Featured Large Card - 60% */}
-          <div className="lg:col-span-3">
-            <Link to={featured.link} className="block group relative h-[300px] md:h-[450px] rounded-xl overflow-hidden">
+    <section className="bg-black">
+      <div className="container mx-auto px-4 py-6 md:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+          {/* Featured Large Card - Takes 7 columns */}
+          <div className="lg:col-span-7">
+            <Link 
+              to={featured.link} 
+              className="block group relative h-[350px] md:h-[500px] rounded-none overflow-hidden"
+            >
               <img
                 src={featured.image_url || '/placeholder.svg'}
                 alt={featured.title}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
-              {/* Gradient Overlay - Purple tint */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-primary/10" />
+              {/* Dark gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
               
               {/* Content */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                <span className="inline-block px-3 py-1 mb-3 text-xs font-semibold uppercase tracking-wider bg-primary text-primary-foreground rounded">
+              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
+                <span className="inline-block px-3 py-1.5 mb-4 text-xs font-bold uppercase tracking-widest bg-primary text-white">
                   {featured.category_label}
                 </span>
-                <h2 className="text-2xl md:text-4xl font-bold text-white mb-2 line-clamp-2 group-hover:text-primary-foreground/90 transition-colors">
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-3 leading-tight">
                   {featured.title}
-                </h2>
+                </h1>
                 {featured.subtitle && (
-                  <p className="text-lg text-white/80">{featured.subtitle}</p>
+                  <p className="text-xl md:text-2xl text-white/80 font-light">{featured.subtitle}</p>
                 )}
+                <p className="text-sm text-white/50 mt-4">
+                  {formatDistanceToNow(new Date(featured.date), { addSuffix: true, locale: nl })}
+                </p>
               </div>
             </Link>
           </div>
 
-          {/* Side Cards - 40% */}
-          <div className="lg:col-span-2 flex flex-col gap-4">
-            {displaySideItems.map((item) => (
+          {/* Side Cards - Takes 5 columns, stacked */}
+          <div className="lg:col-span-5 grid grid-cols-1 gap-4">
+            {displaySideItems.map((item, index) => (
               <Link
                 key={item.id}
                 to={item.link}
-                className="group flex gap-4 p-3 rounded-lg bg-card hover:bg-accent/50 transition-colors"
+                className={`group relative overflow-hidden ${index === 0 ? 'h-[200px] md:h-[240px]' : 'h-[120px] md:h-[130px]'}`}
               >
-                <div className="w-24 h-24 md:w-28 md:h-28 flex-shrink-0 rounded-lg overflow-hidden">
-                  <img
-                    src={item.image_url || '/placeholder.svg'}
-                    alt={item.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <div className="flex-1 flex flex-col justify-center min-w-0">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">
+                <img
+                  src={item.image_url || '/placeholder.svg'}
+                  alt={item.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                
+                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                  <span className="inline-block px-2 py-1 mb-2 text-[10px] font-bold uppercase tracking-widest bg-primary text-white">
                     {item.category_label}
                   </span>
-                  <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                  <h3 className={`font-bold text-white leading-tight ${index === 0 ? 'text-xl md:text-2xl' : 'text-base md:text-lg'}`}>
                     {item.title}
                   </h3>
-                  {item.subtitle && (
-                    <p className="text-sm text-muted-foreground mt-1 truncate">{item.subtitle}</p>
+                  {index === 0 && item.subtitle && (
+                    <p className="text-sm text-white/70 mt-1">{item.subtitle}</p>
                   )}
                 </div>
               </Link>

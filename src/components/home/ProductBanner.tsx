@@ -1,88 +1,44 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Image, Shirt, Frame } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-const PRODUCT_CATEGORIES = [
-  { 
-    icon: Image, 
-    label: 'Posters', 
-    href: '/posters',
-    mediaType: 'art'
-  },
-  { 
-    icon: Frame, 
-    label: 'Canvas', 
-    href: '/canvas',
-    mediaType: 'canvas'
-  },
-  { 
-    icon: Shirt, 
-    label: 'T-shirts', 
-    href: '/shirts',
-    mediaType: 'tshirts'
-  },
-];
-
 export const ProductBanner = () => {
-  // Fetch a few featured products for preview
   const { data: products } = useQuery({
     queryKey: ['product-banner-preview'],
     queryFn: async () => {
       const { data } = await supabase
         .from('platform_products')
-        .select('id,title,image_url')
+        .select('id,title,image_url,artist,price')
         .eq('is_active', true)
-        .limit(3);
+        .order('created_at', { ascending: false })
+        .limit(4);
       return data || [];
     },
     staleTime: 10 * 60 * 1000,
   });
 
   return (
-    <section className="py-8 md:py-10 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
+    <section className="bg-primary py-6 md:py-8">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Left: Text + CTA */}
-          <div className="text-center md:text-left">
-            <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">
+          <div className="text-center md:text-left flex-shrink-0">
+            <span className="text-xs font-bold uppercase tracking-widest text-white/70 mb-1 block">
+              MusicScan Shop
+            </span>
+            <h3 className="text-xl md:text-2xl font-black text-white">
               Unieke Muziekproducten
             </h3>
-            <p className="text-muted-foreground mb-4">
-              Van albumart geïnspireerde posters, canvas en meer
-            </p>
-            <Link
-              to="/shop"
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-            >
-              Bekijk Shop
-              <ArrowRight className="w-4 h-4" />
-            </Link>
           </div>
 
-          {/* Center: Category Quick Links */}
-          <div className="flex gap-4">
-            {PRODUCT_CATEGORIES.map((cat) => (
-              <Link
-                key={cat.href}
-                to={cat.href}
-                className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-primary/10 transition-colors group"
-              >
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <cat.icon className="w-6 h-6 text-primary" />
-                </div>
-                <span className="text-sm font-medium text-foreground">{cat.label}</span>
-              </Link>
-            ))}
-          </div>
-
-          {/* Right: Product Previews */}
-          <div className="hidden lg:flex gap-2">
-            {products?.slice(0, 3).map((product) => (
+          {/* Center: Product Previews */}
+          <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0">
+            {products?.slice(0, 4).map((product) => (
               <Link
                 key={product.id}
                 to={`/product/${product.id}`}
-                className="w-16 h-16 rounded-lg overflow-hidden hover:ring-2 ring-primary transition-all"
+                className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded overflow-hidden ring-2 ring-white/20 hover:ring-white/60 transition-all hover:scale-105"
               >
                 <img
                   src={product.image_url || '/placeholder.svg'}
@@ -92,6 +48,15 @@ export const ProductBanner = () => {
               </Link>
             ))}
           </div>
+
+          {/* Right: CTA Button */}
+          <Link
+            to="/shop"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary font-bold uppercase tracking-wide text-sm hover:bg-white/90 transition-colors"
+          >
+            Bekijk Shop
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
     </section>

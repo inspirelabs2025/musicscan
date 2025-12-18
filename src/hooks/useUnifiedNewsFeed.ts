@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface NewsItem {
   id: string;
-  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall' | 'product' | 'concert' | 'metal_print' | 'tshirt' | 'socks';
+  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall' | 'product' | 'concert' | 'metal_print' | 'tshirt' | 'socks' | 'poster' | 'canvas';
   title: string;
   subtitle?: string;
   image_url?: string;
@@ -30,6 +30,8 @@ const CATEGORY_LABELS: Record<NewsItem['type'], string> = {
   metal_print: 'METAAL ART',
   tshirt: 'T-SHIRT',
   socks: 'SOKKEN',
+  poster: '🎨 ART POSTER',
+  canvas: '🎨 ART CANVAS',
 };
 
 export const useUnifiedNewsFeed = (limit: number = 20) => {
@@ -265,6 +267,48 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
           category_label: CATEGORY_LABELS.tshirt,
           link: `/tshirts/${t.slug}`,
           date: t.created_at,
+        }));
+      }
+
+      // Fetch Posters (ART)
+      const { data: posters } = await supabase
+        .from('platform_products')
+        .select('id,artist_name,album_title,slug,image_url,created_at')
+        .contains('categories', ['POSTER'])
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (posters) {
+        posters.forEach(p => items.push({
+          id: p.id,
+          type: 'poster',
+          title: `${p.artist_name} - ${p.album_title}`,
+          subtitle: 'Art Poster',
+          image_url: p.image_url || undefined,
+          category_label: CATEGORY_LABELS.poster,
+          link: `/product/${p.slug}`,
+          date: p.created_at,
+        }));
+      }
+
+      // Fetch Canvas (ART)
+      const { data: canvasProducts } = await supabase
+        .from('platform_products')
+        .select('id,artist_name,album_title,slug,image_url,created_at')
+        .contains('categories', ['CANVAS'])
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (canvasProducts) {
+        canvasProducts.forEach(c => items.push({
+          id: c.id,
+          type: 'canvas',
+          title: `${c.artist_name} - ${c.album_title}`,
+          subtitle: 'Canvas Doek',
+          image_url: c.image_url || undefined,
+          category_label: CATEGORY_LABELS.canvas,
+          link: `/product/${c.slug}`,
+          date: c.created_at,
         }));
       }
 

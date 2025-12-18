@@ -160,7 +160,13 @@ export default function StudioStoriesPage() {
   // Regenerate story for existing story
   const regenerateStory = useMutation({
     mutationFn: async (story: any) => {
-      // First delete the old story
+      // First clear the story_id reference in the queue to avoid FK constraint
+      await supabase
+        .from('studio_import_queue')
+        .update({ story_id: null })
+        .eq('story_id', story.id);
+
+      // Delete the old story
       const { error: deleteError } = await supabase
         .from('studio_stories')
         .delete()

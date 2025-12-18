@@ -85,6 +85,8 @@ const Home = () => {
       ...latestNews, // 3 nieuwsitems
       ...getRandomFromType('anecdote'),
       ...getRandomFromType('review'),
+      ...getRandomFromType('fanwall'), // Random fanwall foto
+      ...getRandomFromType('quiz'), // Quiz van de dag met vraag
     ]).filter(item => item?.id !== heroItem?.id);
 
     return items;

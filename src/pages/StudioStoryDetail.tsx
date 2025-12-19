@@ -104,43 +104,69 @@ export default function StudioStoryDetail() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        {/* Hero */}
-        <div className="relative bg-gradient-to-br from-primary/20 via-background to-secondary/20 py-12 md:py-20">
-          <div className="container mx-auto px-4">
-            <Button variant="ghost" size="sm" asChild className="mb-6">
+        {/* Hero with artwork */}
+        <div className="relative overflow-hidden">
+          {/* Background Image */}
+          {story.artwork_url && (
+            <div className="absolute inset-0">
+              <img 
+                src={story.artwork_url} 
+                alt={story.studio_name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
+            </div>
+          )}
+          {!story.artwork_url && (
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/20" />
+          )}
+          
+          <div className="relative container mx-auto px-4 py-12 md:py-20">
+            <Button variant="ghost" size="sm" asChild className="mb-6 bg-background/50 backdrop-blur-sm hover:bg-background/70">
               <Link to="/studio-stories">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Alle Studio's
               </Link>
             </Button>
 
-            <div className="flex items-start gap-4">
-              <div className="hidden md:flex h-20 w-20 rounded-xl bg-primary/20 items-center justify-center shrink-0">
-                <Building2 className="h-10 w-10 text-primary" />
+            <div className="flex items-start gap-6">
+              {/* Studio Image Thumbnail */}
+              <div className="hidden md:block h-32 w-32 rounded-xl overflow-hidden shadow-xl shrink-0 border-2 border-white/20">
+                {story.artwork_url ? (
+                  <img 
+                    src={story.artwork_url} 
+                    alt={story.studio_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                    <Building2 className="h-12 w-12 text-primary" />
+                  </div>
+                )}
               </div>
               <div>
-                <h1 className="text-3xl md:text-5xl font-bold mb-3">{story.studio_name}</h1>
+                <h1 className="text-3xl md:text-5xl font-bold mb-3 drop-shadow-lg">{story.studio_name}</h1>
                 <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                   {story.location && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 bg-background/50 backdrop-blur-sm px-2 py-1 rounded">
                       <MapPin className="h-4 w-4" />
                       {story.location}
                     </div>
                   )}
                   {story.founded_year && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 bg-background/50 backdrop-blur-sm px-2 py-1 rounded">
                       <Calendar className="h-4 w-4" />
                       Opgericht {story.founded_year}
                     </div>
                   )}
                   {story.reading_time && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 bg-background/50 backdrop-blur-sm px-2 py-1 rounded">
                       <Clock className="h-4 w-4" />
                       {story.reading_time} min leestijd
                     </div>
                   )}
                   {story.views_count && story.views_count > 0 && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 bg-background/50 backdrop-blur-sm px-2 py-1 rounded">
                       <Eye className="h-4 w-4" />
                       {story.views_count} views
                     </div>

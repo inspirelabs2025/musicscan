@@ -312,29 +312,19 @@ export const PlaatVerhaal: React.FC = () => {
         <meta property="article:published_time" content={blog?.published_at || blog?.created_at} />
         {artist && <meta property="article:author" content={artist} />}
         {genre && <meta property="article:section" content={genre} />}
-        {tags
-          .filter((tag: unknown): tag is string => typeof tag === 'string')
-          .map((tag, index) => (
-            <meta key={`tag-${index}`} property="article:tag" content={tag} />
-          ))}
+        {tags[0] && <meta property="article:tag" content={tags[0]} />}
+        {tags[1] && <meta property="article:tag" content={tags[1]} />}
+        {tags[2] && <meta property="article:tag" content={tags[2]} />}
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={frontmatter.meta_title || `${artist} - ${album}`} />
         <meta name="twitter:description" content={seoDescription} />
         <meta name="twitter:image" content={blogImage} />
-        {readingTime && (
-          <>
-            <meta name="twitter:label1" content="Leestijd" />
-            <meta name="twitter:data1" content={`${readingTime} min`} />
-          </>
-        )}
-        {price > 0 && (
-          <>
-            <meta name="twitter:label2" content="Prijs" />
-            <meta name="twitter:data2" content={`€${price}`} />
-          </>
-        )}
+        {readingTime && <meta name="twitter:label1" content="Leestijd" />}
+        {readingTime && <meta name="twitter:data1" content={`${readingTime} min`} />}
+        {price > 0 && <meta name="twitter:label2" content="Prijs" />}
+        {price > 0 && <meta name="twitter:data2" content={`€${price}`} />}
       </Helmet>
       
       <ArticleStructuredData

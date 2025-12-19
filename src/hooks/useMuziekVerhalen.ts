@@ -34,13 +34,25 @@ interface MusicStory {
 interface MuziekVerhalenOptions {
   userId?: string;
   search?: string;
+  country?: string;
 }
 
+const countryCodeMap: Record<string, string> = {
+  'netherlands': 'NL',
+  'france': 'FR',
+  'germany': 'DE',
+  'uk': 'GB',
+  'usa': 'US',
+  'belgium': 'BE',
+  'spain': 'ES',
+  'italy': 'IT',
+};
+
 export const useMuziekVerhalen = (options: MuziekVerhalenOptions = {}) => {
-  const { userId, search } = options;
+  const { userId, search, country } = options;
   
   return useQuery({
-    queryKey: ['music-stories', userId, search],
+    queryKey: ['music-stories', userId, search, country],
     queryFn: async () => {
       let query = supabase
         .from('music_stories')
@@ -55,6 +67,12 @@ export const useMuziekVerhalen = (options: MuziekVerhalenOptions = {}) => {
 
       if (search && search.trim()) {
         query = query.or(`title.ilike.%${search}%,artist.ilike.%${search}%,single_name.ilike.%${search}%,story_content.ilike.%${search}%,genre.ilike.%${search}%`);
+      }
+
+      // Apply country filter
+      if (country && country !== 'all') {
+        const countryCode = countryCodeMap[country.toLowerCase()] || country.toUpperCase();
+        query = query.eq('country_code', countryCode);
       }
 
       const { data, error } = await query;

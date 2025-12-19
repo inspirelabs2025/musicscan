@@ -384,7 +384,7 @@ export const MasonryContentGrid = ({ items, title = "Ontdek Meer" }: MasonryCont
   }
 
   return (
-    <section className="bg-zinc-950 py-12 md:py-20">
+    <section className="bg-background py-12 md:py-20">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex items-center justify-between mb-10 md:mb-12">

@@ -6,6 +6,8 @@ import echoAvatar from '@/assets/echo-avatar.png';
 import blogPlaceholder1 from '@/assets/blog-placeholder-1.jpg';
 import blogPlaceholder2 from '@/assets/blog-placeholder-2.jpg';
 import blogPlaceholder3 from '@/assets/blog-placeholder-3.jpg';
+import promoNederlandBg from '@/assets/promo-nederland-bg.jpg';
+import promoFrankrijkBg from '@/assets/promo-frankrijk-bg.jpg';
 
 // News placeholder selection based on item ID for consistency
 const NEWS_PLACEHOLDERS = [blogPlaceholder1, blogPlaceholder2, blogPlaceholder3];
@@ -88,8 +90,8 @@ const TypeIcon = ({ type, size }: { type: string; size: 'large' | 'small' }) => 
 
 // Country promo options (randomly pick one)
 const COUNTRY_PROMOS = [
-  { id: 'promo-nederland', type: 'nederland' as PromoType, title: 'Nederlandse Muziek', subtitle: 'Ontdek NL hits', link: '/nederland', emoji: '🇳🇱' },
-  { id: 'promo-frankrijk', type: 'frankrijk' as PromoType, title: 'Franse Muziek', subtitle: 'Vive la musique!', link: '/frankrijk', emoji: '🇫🇷' },
+  { id: 'promo-nederland', type: 'nederland' as PromoType, title: 'Nederlandse Muziek', subtitle: 'Ontdek NL hits', link: '/nederland', emoji: '🇳🇱', image: promoNederlandBg },
+  { id: 'promo-frankrijk', type: 'frankrijk' as PromoType, title: 'Franse Muziek', subtitle: 'Vive la musique!', link: '/frankrijk', emoji: '🇫🇷', image: promoFrankrijkBg },
 ];
 
 // Pick one country randomly (seeded by day so it's consistent within a session)

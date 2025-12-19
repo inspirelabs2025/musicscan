@@ -8,6 +8,7 @@ import blogPlaceholder2 from '@/assets/blog-placeholder-2.jpg';
 import blogPlaceholder3 from '@/assets/blog-placeholder-3.jpg';
 import promoNederlandBg from '@/assets/promo-nederland-bg.jpg';
 import promoFrankrijkBg from '@/assets/promo-frankrijk-bg.jpg';
+import promoKerstBg from '@/assets/promo-kerst-bg.jpg';
 
 // News placeholder selection based on item ID for consistency
 const NEWS_PLACEHOLDERS = [blogPlaceholder1, blogPlaceholder2, blogPlaceholder3];
@@ -114,7 +115,7 @@ const BASE_PROMO_BLOCKS: Array<{
   selectedCountry,
   { id: 'promo-dance', type: 'dance', title: 'Dance & House', subtitle: 'Feel the beat', link: '/dance-house', emoji: '🎧' },
   { id: 'promo-film', type: 'filmmuziek', title: 'Filmmuziek', subtitle: 'Soundtracks & scores', link: '/filmmuziek', emoji: '🎬' },
-  { id: 'promo-kerst', type: 'kerst', title: 'Kerstmuziek', subtitle: 'Feestelijke hits', link: '/kerst', emoji: '🎄' },
+  { id: 'promo-kerst', type: 'kerst', title: 'Kerstmuziek', subtitle: 'Feestelijke hits', link: '/kerst', emoji: '🎄', image: promoKerstBg },
 ];
 
 // Shuffle helper

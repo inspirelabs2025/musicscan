@@ -43,6 +43,9 @@ interface SpotifySearchResponse {
   };
 }
 
+// Helper: delay for retry
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function getSpotifyAccessToken(): Promise<string> {
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
     throw new Error('Spotify credentials not configured');
@@ -50,21 +53,42 @@ async function getSpotifyAccessToken(): Promise<string> {
 
   const credentials = btoa(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`);
   
-  const response = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: 'grant_type=client_credentials'
-  });
+  // Retry up to 3 times for transient errors (503, 429, etc.)
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${credentials}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'grant_type=client_credentials'
+      });
 
-  if (!response.ok) {
-    throw new Error(`Failed to get Spotify token: ${response.status}`);
+      if (response.ok) {
+        const data: SpotifyTokenResponse = await response.json();
+        return data.access_token;
+      }
+
+      // Retry on transient errors
+      if ([429, 500, 502, 503, 504].includes(response.status) && attempt < 3) {
+        console.log(`Spotify token request failed with ${response.status}, retrying (attempt ${attempt}/3)...`);
+        await delay(1000 * attempt); // exponential backoff: 1s, 2s
+        continue;
+      }
+
+      throw new Error(`Failed to get Spotify token: ${response.status}`);
+    } catch (err) {
+      if (attempt < 3 && err.message?.includes('fetch')) {
+        console.log(`Network error getting Spotify token, retrying (attempt ${attempt}/3)...`);
+        await delay(1000 * attempt);
+        continue;
+      }
+      throw err;
+    }
   }
-
-  const data: SpotifyTokenResponse = await response.json();
-  return data.access_token;
+  
+  throw new Error('Failed to get Spotify token after 3 attempts');
 }
 
 async function searchSpotifyAlbum(artist: string, album: string, accessToken: string): Promise<SpotifyAlbum | null> {

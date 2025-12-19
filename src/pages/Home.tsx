@@ -37,13 +37,12 @@ const Home = () => {
 
     const excludedId = heroItem?.id;
 
-    // Helper: get random items from a pool of recent items (en nooit de hero dupliceren)
+    // Helper: get random items from ALL items of a type (geen pool limiet meer)
     // count: how many items to return, requireImage: filter alleen items met afbeelding
-    const getRandomFromType = (type: string, poolSize: number = 20, count: number = 1, requireImage = false) => {
-      const pool = newsItems
-        .filter(i => i.type === type && i.id !== excludedId && (!requireImage || i.image_url))
-        .slice(0, poolSize);
-      return shuffleArray(pool).slice(0, count);
+    const getRandomFromType = (type: string, count: number = 1, requireImage = false) => {
+      const allOfType = newsItems
+        .filter(i => i.type === type && i.id !== excludedId && (!requireImage || i.image_url));
+      return shuffleArray(allOfType).slice(0, count);
     };
 
     // NIEUWS: Pak de 2 laatste nieuwsberichten
@@ -51,7 +50,7 @@ const Home = () => {
 
     // MUZIEKGESCHIEDENIS: meerdere items van vandaag (als beschikbaar)
     const historyItems = (() => {
-      const picks = getRandomFromType('history', 8, 3);
+      const picks = getRandomFromType('history', 3);
       if (picks.length) return picks;
       // Fallback met datum van vandaag
       const today = new Date();
@@ -73,26 +72,26 @@ const Home = () => {
     // Random keuze tussen poster of canvas voor ART
     const artType = Math.random() > 0.5 ? 'poster' : 'canvas';
 
-    // Bouw de grid met de juiste aantallen per type
+    // Bouw de grid met echte random items uit ALLE beschikbare content
     const items = shuffleArray([
-      ...getRandomFromType('single', 100, 2, true),    // 2 Singles (met artwork) uit pool van 100
-      ...getRandomFromType('artist', 100, 2),          // 2 Artist verhalen uit pool van 100
-      ...getRandomFromType('album', 100, 2),           // 2 Album verhalen uit pool van 100
-      ...getRandomFromType('release', 20, 2),          // 2 Nieuwe releases
-      ...getRandomFromType('youtube', 20, 2),          // 2 Videos
-      ...historyItems,                                  // Muziekgeschiedenis (meerdere)
-      ...getRandomFromType('review', 20, 1),           // 1 Review
-      ...getRandomFromType('spotlight', 20, 1),        // 1 Artiest Spotlight (NIEUW)
-      ...getRandomFromType('studio', 20, 1),           // 1 Studio Story (NIEUW)
-      ...getRandomFromType('anecdote', 20, 1),         // 1 Anekdote
-      ...getRandomFromType('podcast', 20, 1),          // 1 Podcast
-      ...getRandomFromType('concert', 20, 1),          // 1 Concert/Event
-      ...getRandomFromType('fanwall', 10, 2, true),    // 2 Fanwall (met afbeelding)
-      ...latestNews,                                    // 2 Nieuwsitems
-      ...getRandomFromType('product', 20, 1),          // 1 Product
-      ...getRandomFromType('metal_print', 20, 1),      // 1 Metal Print
-      ...getRandomFromType(artType, 20, 1),            // 1 Poster OF Canvas
-      ...getRandomFromType('quiz', 20, 1),             // 1 Quiz van de dag
+      ...getRandomFromType('single', 2, true),     // 2 Singles (met artwork)
+      ...getRandomFromType('artist', 2),           // 2 Artist verhalen
+      ...getRandomFromType('album', 2),            // 2 Album verhalen
+      ...getRandomFromType('release', 2),          // 2 Nieuwe releases
+      ...getRandomFromType('youtube', 2),          // 2 Videos
+      ...historyItems,                              // Muziekgeschiedenis (meerdere)
+      ...getRandomFromType('review', 1),           // 1 Review
+      ...getRandomFromType('spotlight', 1),        // 1 Artiest Spotlight
+      ...getRandomFromType('studio', 1),           // 1 Studio Story
+      ...getRandomFromType('anecdote', 1),         // 1 Anekdote
+      ...getRandomFromType('podcast', 1),          // 1 Podcast
+      ...getRandomFromType('concert', 1),          // 1 Concert/Event
+      ...getRandomFromType('fanwall', 2, true),    // 2 Fanwall (met afbeelding)
+      ...latestNews,                                // 2 Nieuwsitems
+      ...getRandomFromType('product', 1),          // 1 Product
+      ...getRandomFromType('metal_print', 1),      // 1 Metal Print
+      ...getRandomFromType(artType, 1),            // 1 Poster OF Canvas
+      ...getRandomFromType('quiz', 1),             // 1 Quiz van de dag
     ]).filter(item => item?.id !== heroItem?.id);
 
     return items;

@@ -212,36 +212,29 @@ const ArtistSpotlight = () => {
                   prose-a:text-primary prose-a:no-underline hover:prose-a:underline
                   prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4
                   prose-li:text-foreground prose-li:my-2">
-                  {(() => {
-                    const markdownSeen = new Set<string>();
-
-                    return (
-                      <ReactMarkdown
-                        components={{
-                          img: ({ src, alt }) => {
-                            const normalized = normalizeUrl(src);
-                            const key = normalized || src || "";
-
-                            if (!key) return null;
-                            if (markdownSeen.has(key)) return null;
-
-                            markdownSeen.add(key);
-
-                            return (
-                              <img
-                                src={src || ""}
-                                alt={alt || `Foto van ${spotlight.artist_name}`}
-                                loading="lazy"
-                                className="rounded-lg"
-                              />
-                            );
-                          },
-                        }}
-                      >
-                        {storyContent}
-                      </ReactMarkdown>
-                    );
-                  })()}
+                  <ReactMarkdown
+                    components={{
+                      p: ({ children }) => {
+                        // Zorg dat losse afbeeldingen altijd als blok zichtbaar zijn
+                        const onlyChild = Array.isArray(children) && children.length === 1 ? children[0] : null;
+                        if ((onlyChild as any)?.type === 'img') {
+                          return <div className="my-6">{children}</div>;
+                        }
+                        return <p>{children}</p>;
+                      },
+                      img: ({ src, alt }) => (
+                        <img
+                          src={src || ""}
+                          alt={alt || `Foto van ${spotlight.artist_name}`}
+                          loading="lazy"
+                          decoding="async"
+                          className="block w-full max-w-full rounded-lg"
+                        />
+                      ),
+                    }}
+                  >
+                    {storyContent}
+                  </ReactMarkdown>
                 </div>
               </div>
 

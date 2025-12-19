@@ -44,11 +44,15 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
     queryFn: async () => {
       const items: NewsItem[] = [];
 
-      // Fetch album stories from blog_posts (the actual album stories table)
+      // Fetch album stories (blog_posts) - exclude news items
       const { data: albums } = await supabase
         .from('blog_posts')
-        .select('id,slug,yaml_frontmatter,album_cover_url,created_at')
+        .select('id,slug,yaml_frontmatter,album_cover_url,created_at,published_at,album_type')
         .eq('is_published', true)
+        // blog_posts bevat ook nieuws; die willen we niet als album verhaal tonen
+        .not('slug', 'ilike', 'nieuws-%')
+        .or('album_type.is.null,album_type.neq.news')
+        .order('published_at', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(30);
 
@@ -56,16 +60,16 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
         albums.forEach(a => {
           const frontmatter = a.yaml_frontmatter as any;
           const artist = frontmatter?.artist || 'Onbekend';
-          const title = frontmatter?.title || frontmatter?.album || 'Untitled';
+          const album = frontmatter?.album || frontmatter?.title || 'Album';
           items.push({
             id: a.id,
             type: 'album',
-            title: title,
+            title: album,
             subtitle: artist,
             image_url: a.album_cover_url || undefined,
             category_label: CATEGORY_LABELS.album,
-            link: `/muziek-verhaal/${a.slug}`,
-            date: a.created_at,
+            link: `/plaat-verhaal/${a.slug}`,
+            date: (a as any).published_at || a.created_at,
           });
         });
       }

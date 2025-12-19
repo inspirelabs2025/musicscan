@@ -22,60 +22,27 @@ export interface NederlandsBlogPost {
   published_at: string;
 }
 
+export interface NederlandseSingle {
+  id: string;
+  slug: string;
+  title: string;
+  artist: string;
+  single_name: string;
+  artwork_url?: string;
+  created_at: string;
+}
+
 export interface NederlandseArtiest {
+  id: string;
   name: string;
-  slug?: string;
+  slug: string;
   artwork_url?: string;
   music_style?: string[];
-  story_content?: string;
+  biography?: string;
   views_count?: number;
 }
 
-// Comprehensive list of known Dutch artists for filtering
-const DUTCH_ARTISTS = [
-  // Classic Dutch pop/rock
-  'Within Temptation', 'Golden Earring', 'André Hazes', 'Marco Borsato',
-  'Doe Maar', 'Boudewijn de Groot', 'Anouk', 'Herman Brood', 'BZN',
-  'Guus Meeuwis', 'Het Goede Doel', 'Frank Boeijen', 'Krezip',
-  'De Dijk', 'Volumia!', 'Nick & Simon', 'Jan Smit', 'Trijntje Oosterhuis',
-  'Ilse DeLange', 'Acda en de Munnik', 'Blof', 'Ramses Shaffy',
-  'Willeke Alberti', 'Gerard Joling', 'Lee Towers', 'Anita Meyer',
-  'Shocking Blue', 'Focus', 'Earth and Fire', 'Kayak', 'Ekseption',
-  'The Cats', 'George Baker Selection', 'Pussycat', 'Luv\'',
-  'Mouth & MacNeal', 'Rob de Nijs', 'Liesbeth List', 'Herman van Veen',
-  'André van Duin', 'André Rieu', 'Glennis Grace', 'Guys \'n Dolls',
-  'Grant & Forsyth', 'Grad Damen', 'Het Simplisties Verbond',
-  
-  // Dutch EDM/Electronic
-  'Tiësto', 'Armin van Buuren', 'Martin Garrix', 'Afrojack', 'Hardwell',
-  'Ferry Corsten', 'Fedde Le Grand', 'Nicky Romero', 'Oliver Heldens',
-  '16 Bit Lolita\'s', 'Buzz Fuzz', 'DJ Maestro', 'DJ Montana',
-  'Eric Prydz', 'Showtek', 'Headhunterz', 'Brennan Heart', 'Coone',
-  'Noisia', 'Yellow Claw', 'Don Diablo', 'R3hab', 'Sander van Doorn',
-  'Dash Berlin', 'W&W', 'Blasterjaxx', 'Bassjackers', 'Lucas & Steve',
-  
-  // Dutch metal/rock
-  'Epica', 'Epica (2)', 'Delain', 'The Gathering', 'Gorefest',
-  'Pestilence', 'Asphyx', 'Hail of Bullets', 'God Dethroned',
-  'Textures', 'Stream of Passion', 'After Forever', 'Ayreon',
-  'Star One', 'Guilt Machine',
-  
-  // Modern Dutch artists
-  'Candy Dulfer', 'Caro Emerald', 'Kovacs', 'Davina Michelle',
-  'Snelle', 'Lil Kleine', 'Boef', 'Ronnie Flex', 'Kraantje Pappen',
-  'S10', 'Froukje', 'Merol', 'BLØF', 'Chef\'Special', 'Racoon',
-  'Kensington', 'Danny Vera', 'Di-Rect', 'Rowwen Hèze', '3JS', '3Js',
-  'Suzan & Freek', 'Maan', 'Flemming', 'Eefje de Visser', 'Goldband',
-  'Spinvis', 'Blaudzun', 'Go Back to the Zoo', 'Voicst', 'Caesar',
-  
-  // Jazz/Classical Dutch
-  'Candy Dulfer', 'Hans Dulfer', 'Cees Slinger', 'Rita Reys',
-  
-  // Dutch hip-hop/rap
-  'Osdorp Posse', 'Opgezwoansen', 'De Jeugd van Tegenwoordig',
-  'Extince', 'Lange Frans', 'Ali B', 'Gers Pardoel', 'Bizzey',
-];
-
+// Dutch releases from user collections
 export const useNederlandseReleases = () => {
   return useQuery({
     queryKey: ["nederlandse-releases"],
@@ -93,92 +60,82 @@ export const useNederlandseReleases = () => {
   });
 };
 
+// Dutch album stories - using country_code = 'NL'
 export const useNederlandseVerhalen = () => {
   return useQuery({
     queryKey: ["nederlandse-verhalen"],
     queryFn: async (): Promise<NederlandsBlogPost[]> => {
-      // Fetch all published blog posts and filter for Dutch artists
       const { data, error } = await supabase
         .from("blog_posts")
         .select("id, slug, yaml_frontmatter, views_count, album_cover_url, published_at")
         .eq("is_published", true)
-        .order("published_at", { ascending: false });
+        .eq("country_code", "NL")
+        .or("album_type.is.null,album_type.neq.news")
+        .order("published_at", { ascending: false })
+        .limit(100);
 
       if (error) throw error;
-
-      // Filter for Dutch artists based on yaml_frontmatter.artist
-      const dutchPosts = (data || []).filter(post => {
-        const artist = post.yaml_frontmatter?.artist || '';
-        return DUTCH_ARTISTS.some(dutch => 
-          artist.toLowerCase().includes(dutch.toLowerCase())
-        );
-      });
-
-      return dutchPosts;
+      return data || [];
     },
   });
 };
 
+// Dutch singles - using country_code = 'NL'
+export const useNederlandseSingles = () => {
+  return useQuery({
+    queryKey: ["nederlandse-singles"],
+    queryFn: async (): Promise<NederlandseSingle[]> => {
+      const { data, error } = await supabase
+        .from("music_stories")
+        .select("id, slug, title, artist, single_name, artwork_url, created_at")
+        .eq("is_published", true)
+        .eq("country_code", "NL")
+        .not("single_name", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      return (data || []).map(s => ({
+        id: s.id,
+        slug: s.slug,
+        title: s.title || s.single_name,
+        artist: s.artist || 'Onbekend',
+        single_name: s.single_name,
+        artwork_url: s.artwork_url,
+        created_at: s.created_at,
+      }));
+    },
+  });
+};
+
+// Dutch artists - using country_code = 'NL'
 export const useNederlandseArtiesten = () => {
   return useQuery({
     queryKey: ["nederlandse-artiesten"],
     queryFn: async (): Promise<NederlandseArtiest[]> => {
-      // Fetch artist stories and filter for Dutch artists
       const { data, error } = await supabase
         .from("artist_stories")
-        .select("artist_name, slug, artwork_url, music_style, story_content, views_count")
+        .select("id, artist_name, slug, artwork_url, music_style, biography, views_count")
         .eq("is_published", true)
-        .order("views_count", { ascending: false });
+        .eq("country_code", "NL")
+        .order("views_count", { ascending: false, nullsFirst: false });
 
       if (error) throw error;
-
-      // Filter for Dutch artists
-      const dutchArtists = (data || []).filter(story => 
-        DUTCH_ARTISTS.some(dutch => 
-          story.artist_name.toLowerCase().includes(dutch.toLowerCase())
-        )
-      ).map(story => ({
+      
+      return (data || []).map(story => ({
+        id: story.id,
         name: story.artist_name,
         slug: story.slug,
         artwork_url: story.artwork_url,
         music_style: story.music_style,
-        story_content: story.story_content,
+        biography: story.biography,
         views_count: story.views_count,
       }));
-
-      // Add artists from releases that don't have stories
-      // BUT only if they are in our known Dutch artists list
-      const { data: releaseArtists } = await supabase
-        .from("releases")
-        .select("artist")
-        .eq("country", "Netherlands");
-
-      const uniqueReleaseArtists = [...new Set((releaseArtists || []).map(r => r.artist))];
-      
-      // Only add release artists that are actually Dutch (in our list)
-      uniqueReleaseArtists.forEach(artist => {
-        const isDutchArtist = DUTCH_ARTISTS.some(dutch => 
-          artist.toLowerCase().includes(dutch.toLowerCase()) ||
-          dutch.toLowerCase().includes(artist.toLowerCase())
-        );
-        
-        if (isDutchArtist && !dutchArtists.find(a => a.name.toLowerCase() === artist.toLowerCase())) {
-          dutchArtists.push({ 
-            name: artist,
-            slug: undefined,
-            artwork_url: undefined,
-            music_style: undefined,
-            story_content: undefined,
-            views_count: undefined
-          });
-        }
-      });
-
-      return dutchArtists;
     },
   });
 };
 
+// Dutch genres from releases
 export const useNederlandseGenres = () => {
   return useQuery({
     queryKey: ["nederlandse-genres"],
@@ -210,43 +167,49 @@ export const useNederlandseGenres = () => {
   });
 };
 
+// Comprehensive Dutch music stats - using country_code
 export const useNederlandseStats = () => {
   return useQuery({
     queryKey: ["nederlandse-stats"],
     queryFn: async () => {
-      const [releasesResult, verhalenResult] = await Promise.all([
+      const [
+        releasesResult, 
+        verhalenResult, 
+        singlesResult, 
+        artistenResult
+      ] = await Promise.all([
+        // User releases from Netherlands
         supabase
           .from("releases")
           .select("id", { count: "exact", head: true })
           .eq("country", "Netherlands"),
+        // Albums with country_code = 'NL'
         supabase
           .from("blog_posts")
-          .select("id, yaml_frontmatter")
-          .eq("is_published", true),
+          .select("id", { count: "exact", head: true })
+          .eq("is_published", true)
+          .eq("country_code", "NL")
+          .or("album_type.is.null,album_type.neq.news"),
+        // Singles with country_code = 'NL'
+        supabase
+          .from("music_stories")
+          .select("id", { count: "exact", head: true })
+          .eq("is_published", true)
+          .eq("country_code", "NL")
+          .not("single_name", "is", null),
+        // Artists with country_code = 'NL'
+        supabase
+          .from("artist_stories")
+          .select("id", { count: "exact", head: true })
+          .eq("is_published", true)
+          .eq("country_code", "NL"),
       ]);
 
-      const totalReleases = releasesResult.count || 0;
-      
-      // Count Dutch blog posts
-      const dutchVerhalen = (verhalenResult.data || []).filter(post => {
-        const artist = post.yaml_frontmatter?.artist || '';
-        return DUTCH_ARTISTS.some(dutch => 
-          artist.toLowerCase().includes(dutch.toLowerCase())
-        );
-      }).length;
-
-      // Get unique Dutch artists from releases
-      const { data: artistData } = await supabase
-        .from("releases")
-        .select("artist")
-        .eq("country", "Netherlands");
-
-      const uniqueArtists = new Set((artistData || []).map(r => r.artist)).size;
-
       return {
-        totalReleases,
-        totalVerhalen: dutchVerhalen,
-        totalArtiesten: uniqueArtists,
+        totalReleases: releasesResult.count || 0,
+        totalVerhalen: verhalenResult.count || 0,
+        totalSingles: singlesResult.count || 0,
+        totalArtiesten: artistenResult.count || 0,
       };
     },
   });

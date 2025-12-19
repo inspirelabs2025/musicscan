@@ -39,7 +39,7 @@ export const DutchArtistSpotlight = () => {
       artwork: a.artwork_url,
       genre: a.music_style?.[0],
       views: a.views_count,
-      bio: a.story_content ? a.story_content.substring(0, 150) + '...' : undefined
+      bio: a.biography ? a.biography.substring(0, 150) + '...' : undefined
     })) || []),
     ...FALLBACK_ARTISTS.filter(fa => !artists?.some(a => a.name === fa.name))
   ];

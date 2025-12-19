@@ -172,9 +172,9 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
         ) : (
           <>
             <div className={`absolute inset-0 bg-gradient-to-br ${getTypeGradient(item.type)}`} />
-            {/* Decorative icon */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-15">
-              <TypeIcon type={item.type} size={size === 'large' || size === 'tall' ? 'large' : 'small'} />
+            {/* Decorative icon - smaller and positioned in corner for text-heavy cards */}
+            <div className="absolute top-4 right-4 opacity-20">
+              <TypeIcon type={item.type} size="small" />
             </div>
           </>
         )}
@@ -191,8 +191,8 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
           </div>
         )}
         
-        {/* Content */}
-        <div className="absolute inset-0 p-4 flex flex-col justify-end">
+        {/* Content - centered for cards without image, bottom for cards with image */}
+        <div className={`absolute inset-0 p-4 flex flex-col ${item.image_url ? 'justify-end' : 'justify-center'}`}>
           {/* Category Label with type-specific styling */}
           <span className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${
             item.type === 'metal_print' ? 'text-amber-400' :
@@ -226,20 +226,34 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
             {item.category_label}
           </span>
           
-          {/* Title */}
+          {/* Title - larger for cards without image */}
           <h3 className={`font-bold text-white leading-tight mb-1 ${
-            size === 'large' ? 'text-2xl md:text-3xl' : 
-            size === 'wide' ? 'text-xl md:text-2xl' :
-            size === 'tall' ? 'text-lg md:text-xl' : 
-            'text-sm md:text-base'
+            !item.image_url ? (
+              size === 'large' ? 'text-3xl md:text-4xl' : 
+              size === 'wide' ? 'text-2xl md:text-3xl' :
+              size === 'tall' ? 'text-xl md:text-2xl' : 
+              'text-lg md:text-xl'
+            ) : (
+              size === 'large' ? 'text-2xl md:text-3xl' : 
+              size === 'wide' ? 'text-xl md:text-2xl' :
+              size === 'tall' ? 'text-lg md:text-xl' : 
+              'text-sm md:text-base'
+            )
           }`}>
             {item.title}
           </h3>
           
-          {/* Subtitle */}
-          {item.subtitle && (size === 'large' || size === 'wide' || size === 'tall') && (
-            <p className="text-sm text-zinc-300 line-clamp-1">
+          {/* Subtitle - always show for cards without image */}
+          {item.subtitle && (!item.image_url || size === 'large' || size === 'wide' || size === 'tall') && (
+            <p className={`text-zinc-300 ${!item.image_url ? 'text-base line-clamp-2' : 'text-sm line-clamp-1'}`}>
               {item.subtitle}
+            </p>
+          )}
+          
+          {/* Description for text-heavy cards */}
+          {!item.image_url && item.description && (size === 'large' || size === 'tall') && (
+            <p className="text-sm text-zinc-400 mt-2 line-clamp-3">
+              {item.description}
             </p>
           )}
           

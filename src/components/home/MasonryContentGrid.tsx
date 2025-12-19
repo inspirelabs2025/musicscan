@@ -10,7 +10,7 @@ import promoNederlandBg from '@/assets/promo-nederland-bg.jpg';
 import promoFrankrijkBg from '@/assets/promo-frankrijk-bg.jpg';
 import promoKerstBg from '@/assets/promo-kerst-bg.jpg';
 import promoFilmmuziekBg from '@/assets/promo-filmmuziek-bg.jpg';
-
+import promoDanceBg from '@/assets/promo-dance-bg.jpg';
 // News placeholder selection based on item ID for consistency
 const NEWS_PLACEHOLDERS = [blogPlaceholder1, blogPlaceholder2, blogPlaceholder3];
 const getNewsPlaceholder = (itemId: string): string => {
@@ -114,7 +114,7 @@ const BASE_PROMO_BLOCKS: Array<{
   { id: 'promo-scan', type: 'scan', title: 'Scan Je Albums', subtitle: 'Digitaliseer je collectie', link: '/scan', emoji: '📷', image: promoScanBg },
   { id: 'promo-echo', type: 'echo', title: 'Chat met Echo', subtitle: 'Onze muziekexpert', link: '/echo', emoji: '🤖', image: echoAvatar, forceSmall: true },
   selectedCountry,
-  { id: 'promo-dance', type: 'dance', title: 'Dance & House', subtitle: 'Feel the beat', link: '/dance-house', emoji: '🎧' },
+  { id: 'promo-dance', type: 'dance', title: 'Dance & House', subtitle: 'Feel the beat', link: '/dance-house', emoji: '🎧', image: promoDanceBg },
   { id: 'promo-film', type: 'filmmuziek', title: 'Filmmuziek', subtitle: 'Soundtracks & scores', link: '/filmmuziek', emoji: '🎬', image: promoFilmmuziekBg },
   { id: 'promo-kerst', type: 'kerst', title: 'Kerstmuziek', subtitle: 'Feestelijke hits', link: '/kerst', emoji: '🎄', image: promoKerstBg },
 ];

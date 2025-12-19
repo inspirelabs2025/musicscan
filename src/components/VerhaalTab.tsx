@@ -75,7 +75,8 @@ export const VerhaalTab: React.FC = () => {
     albumType: filters.albumType,
     dateRange: filters.dateRange as 'all' | 'week' | 'month' | 'year',
     sortBy: filters.sortBy as 'created_at' | 'views_count' | 'updated_at',
-    sortOrder: 'desc'
+    sortOrder: 'desc',
+    country: filters.country
   });
 
   // Single stories (music stories)
@@ -83,7 +84,7 @@ export const VerhaalTab: React.FC = () => {
     data: musicStories = [], 
     isLoading: isLoadingStories, 
     refetch: refetchStories 
-  } = useMuziekVerhalen({ search: debouncedSearch });
+  } = useMuziekVerhalen({ search: debouncedSearch, country: filters.country });
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -159,6 +160,20 @@ export const VerhaalTab: React.FC = () => {
     return <LoadingSkeleton />;
   }
 
+  const getCountryLabel = (country: string) => {
+    const labels: Record<string, { flag: string; name: string }> = {
+      'netherlands': { flag: '🇳🇱', name: 'Nederland' },
+      'france': { flag: '🇫🇷', name: 'Frankrijk' },
+      'germany': { flag: '🇩🇪', name: 'Duitsland' },
+      'uk': { flag: '🇬🇧', name: 'Verenigd Koninkrijk' },
+      'usa': { flag: '🇺🇸', name: 'Verenigde Staten' },
+      'belgium': { flag: '🇧🇪', name: 'België' },
+    };
+    return labels[country.toLowerCase()] || { flag: '🌍', name: country };
+  };
+
+  const countryFilter = filters.country && filters.country !== 'all' ? getCountryLabel(filters.country) : null;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -168,6 +183,17 @@ export const VerhaalTab: React.FC = () => {
           <p className="text-muted-foreground">
             Ontdek verhalen over albums en singles
           </p>
+          {countryFilter && (
+            <Badge variant="secondary" className="mt-2 text-sm">
+              {countryFilter.flag} {countryFilter.name}
+              <button 
+                onClick={() => updateFilter('country', 'all')} 
+                className="ml-2 hover:text-destructive"
+              >
+                ✕
+              </button>
+            </Badge>
+          )}
         </div>
         <Button 
           onClick={handleRefresh}

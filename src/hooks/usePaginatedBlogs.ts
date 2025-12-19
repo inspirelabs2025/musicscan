@@ -25,7 +25,19 @@ interface BlogFilters {
   dateRange?: 'week' | 'month' | 'year' | 'all';
   sortBy?: 'created_at' | 'views_count' | 'updated_at';
   sortOrder?: 'asc' | 'desc';
+  country?: string;
 }
+
+const countryCodeMap: Record<string, string> = {
+  'netherlands': 'NL',
+  'france': 'FR',
+  'germany': 'DE',
+  'uk': 'GB',
+  'usa': 'US',
+  'belgium': 'BE',
+  'spain': 'ES',
+  'italy': 'IT',
+};
 
 const ITEMS_PER_PAGE = 24;
 
@@ -114,6 +126,12 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
       query = query.or(buildOrSearch(filters.search));
     }
 
+    // Apply country filter
+    if (filters.country && filters.country !== 'all') {
+      const countryCode = countryCodeMap[filters.country.toLowerCase()] || filters.country.toUpperCase();
+      query = query.eq("country_code", countryCode);
+    }
+
     // Apply sorting
     const sortField = filters.sortBy || 'created_at';
     const sortOrder = filters.sortOrder || 'desc';
@@ -175,6 +193,12 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
 
     if (filters.search && filters.search.trim().length >= 2) {
       countQuery = countQuery.or(buildOrSearch(filters.search));
+    }
+
+    // Apply country filter to count query
+    if (filters.country && filters.country !== 'all') {
+      const countryCode = countryCodeMap[filters.country.toLowerCase()] || filters.country.toUpperCase();
+      countQuery = countQuery.eq("country_code", countryCode);
     }
 
     // Get total count for pagination

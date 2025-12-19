@@ -273,13 +273,16 @@ export const PlaatVerhaal: React.FC = () => {
   // Robuuste schoonmaak van markdown: verwijder YAML/frontmatter (ook in codeblokken) en SOCIAL_POST
   const cleanMarkdown = (raw: string): string => {
     if (!raw) return '';
-    let s = raw.trimStart();
+    // Normalize newlines + BOM so regex works across all generated content
+    let s = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').trimStart();
 
     // 1) Verwijder vooraan een codefence met YAML-frontmatter (```yaml ... ```)
-    s = s.replace(
-      /^```(?:yaml|yml)?\s*\n(?:---\s*\n)?[\s\S]*?\n---\s*\n```(?:\s*\n)?/i,
-      ''
-    );
+    //    (oude content kan frontmatter in een codeblock stoppen, soms zonder afsluitende ---)
+    s = s
+      // ```yaml\n--- ... ```
+      .replace(/^```(?:yaml|yml)\s*\n[\s\S]*?\n```(?:\s*\n)?/i, '')
+      // ```\n--- ... ``` (zonder language)
+      .replace(/^```\s*\n---\s*\n[\s\S]*?\n```(?:\s*\n)?/i, '');
 
     // 2) Verwijder normale YAML frontmatter aan het begin (--- ... ---)
     s = s.replace(/^---\s*\n[\s\S]*?\n---\s*\n?/, '');

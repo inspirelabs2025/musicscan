@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Play, ExternalLink, MessageCircle, Calendar, Newspaper, Music, Mic, Radio, User, Disc, ShoppingBag, Shirt, Gamepad2, Camera, Bot, Snowflake, Flag, Headphones, Film, Star, Building2 } from 'lucide-react';
 import { NewsItem } from '@/hooks/useUnifiedNewsFeed';
 import promoScanBg from '@/assets/promo-scan-bg.jpg';
+import echoAvatar from '@/assets/echo-avatar.png';
 
 // Extended type for promo blocks
 type PromoType = 'quiz' | 'scan' | 'echo' | 'nederland' | 'frankrijk' | 'dance' | 'filmmuziek' | 'kerst';
@@ -98,7 +99,7 @@ const BASE_PROMO_BLOCKS: Array<{
 }> = [
   { id: 'promo-quiz', type: 'quiz', title: 'Speel Muziek Quiz', subtitle: 'Test je kennis!', link: '/quizzen', emoji: '🎯', forceSmall: true },
   { id: 'promo-scan', type: 'scan', title: 'Scan Je Albums', subtitle: 'Digitaliseer je collectie', link: '/scan', emoji: '📷', image: promoScanBg },
-  { id: 'promo-echo', type: 'echo', title: 'Chat met Echo', subtitle: 'Onze muziekexpert', link: '/echo', emoji: '🤖' },
+  { id: 'promo-echo', type: 'echo', title: 'Chat met Echo', subtitle: 'Onze muziekexpert', link: '/echo', emoji: '🤖', image: echoAvatar, forceSmall: true },
   selectedCountry,
   { id: 'promo-dance', type: 'dance', title: 'Dance & House', subtitle: 'Feel the beat', link: '/dance-house', emoji: '🎧' },
   { id: 'promo-film', type: 'filmmuziek', title: 'Filmmuziek', subtitle: 'Soundtracks & scores', link: '/filmmuziek', emoji: '🎬' },

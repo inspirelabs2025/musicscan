@@ -570,6 +570,9 @@ verify_jwt = false
 [[functions.backfill-country-codes.schedule]]
 cron = "0 * * * *"
 
+[functions.fetch-studio-image]
+verify_jwt = false
+
 [functions.generate-studio-story]
 verify_jwt = false
 

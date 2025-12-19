@@ -235,6 +235,29 @@ serve(async (req) => {
       .replace(/-+/g, '-')
       .trim();
 
+    // Fetch studio image
+    let artworkUrl: string | null = null;
+    try {
+      const imageResponse = await fetch(`${SUPABASE_URL}/functions/v1/fetch-studio-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({ studioName }),
+      });
+
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json();
+        if (imageData.success && imageData.imageUrl) {
+          artworkUrl = imageData.imageUrl;
+          console.log(`🖼️ Got artwork for ${studioName}: ${imageData.source}`);
+        }
+      }
+    } catch (imageError) {
+      console.error('Error fetching studio image:', imageError);
+    }
+
     // Save to database
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
@@ -247,6 +270,7 @@ serve(async (req) => {
         founded_year: foundedYear,
         story_content: storyContent,
         youtube_videos: youtubeVideos,
+        artwork_url: artworkUrl,
         word_count: wordCount,
         reading_time: readingTime,
         meta_title: `${studioName} - Legendarische Opnamestudio | MusicScan`,

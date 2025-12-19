@@ -117,6 +117,24 @@ serve(async (req) => {
 
         if (!artistName) {
           console.log(`⚠️ Skipping record ${record.id}: no artist name`);
+          // Mark as processed with XX to avoid re-processing
+          await supabase.from(tableName).update({ country_code: 'XX' }).eq('id', record.id);
+          tableStats.skipped++;
+          continue;
+        }
+
+        // Skip "Various Artists" and multi-artist records - mark them as XX
+        const lowerArtist = artistName.toLowerCase();
+        if (lowerArtist.includes('various') || 
+            lowerArtist.includes('diverse') || 
+            lowerArtist.includes(' & ') ||
+            lowerArtist.includes(' feat') ||
+            lowerArtist.includes(' vs ') ||
+            lowerArtist.includes(' x ') ||
+            lowerArtist === 'v/a' ||
+            lowerArtist === 'va') {
+          console.log(`⚠️ Multi-artist or VA, marking as XX: ${artistName}`);
+          await supabase.from(tableName).update({ country_code: 'XX' }).eq('id', record.id);
           tableStats.skipped++;
           continue;
         }
@@ -139,7 +157,9 @@ serve(async (req) => {
             tableStats.successful++;
           }
         } else {
-          console.log(`⚠️ Could not detect country for ${artistName}`);
+          console.log(`⚠️ Could not detect country for ${artistName}, marking as XX`);
+          // Mark as XX to avoid infinite retries
+          await supabase.from(tableName).update({ country_code: 'XX' }).eq('id', record.id);
           tableStats.skipped++;
         }
 

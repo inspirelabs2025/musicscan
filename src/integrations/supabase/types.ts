@@ -7019,6 +7019,74 @@ export type Database = {
           },
         ]
       }
+      studio_facebook_queue: {
+        Row: {
+          artwork_url: string | null
+          created_at: string
+          error_message: string | null
+          facebook_post_id: string | null
+          founded_year: number | null
+          id: string
+          location: string | null
+          notable_artists: string[] | null
+          posted_at: string | null
+          posted_count: number | null
+          priority: number | null
+          scheduled_for: string
+          slug: string
+          status: string
+          studio_name: string
+          studio_story_id: string
+          updated_at: string
+        }
+        Insert: {
+          artwork_url?: string | null
+          created_at?: string
+          error_message?: string | null
+          facebook_post_id?: string | null
+          founded_year?: number | null
+          id?: string
+          location?: string | null
+          notable_artists?: string[] | null
+          posted_at?: string | null
+          posted_count?: number | null
+          priority?: number | null
+          scheduled_for: string
+          slug: string
+          status?: string
+          studio_name: string
+          studio_story_id: string
+          updated_at?: string
+        }
+        Update: {
+          artwork_url?: string | null
+          created_at?: string
+          error_message?: string | null
+          facebook_post_id?: string | null
+          founded_year?: number | null
+          id?: string
+          location?: string | null
+          notable_artists?: string[] | null
+          posted_at?: string | null
+          posted_count?: number | null
+          priority?: number | null
+          scheduled_for?: string
+          slug?: string
+          status?: string
+          studio_name?: string
+          studio_story_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_facebook_queue_studio_story_id_fkey"
+            columns: ["studio_story_id"]
+            isOneToOne: false
+            referencedRelation: "studio_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       studio_import_queue: {
         Row: {
           attempts: number | null
@@ -7090,6 +7158,7 @@ export type Database = {
           created_at: string
           cultural_impact: string | null
           equipment_highlights: string[] | null
+          facebook_posted_count: number | null
           famous_recordings: string[] | null
           founded_year: number | null
           id: string
@@ -7117,6 +7186,7 @@ export type Database = {
           created_at?: string
           cultural_impact?: string | null
           equipment_highlights?: string[] | null
+          facebook_posted_count?: number | null
           famous_recordings?: string[] | null
           founded_year?: number | null
           id?: string
@@ -7144,6 +7214,7 @@ export type Database = {
           created_at?: string
           cultural_impact?: string | null
           equipment_highlights?: string[] | null
+          facebook_posted_count?: number | null
           famous_recordings?: string[] | null
           founded_year?: number | null
           id?: string
@@ -9022,13 +9093,8 @@ export type Database = {
       get_all_queue_stats: {
         Args: never
         Returns: {
-          completed: number
-          failed: number
-          items_per_hour: number
-          last_activity_at: string
-          oldest_pending_at: string
+          function_name: string
           pending: number
-          processing: number
           queue_name: string
         }[]
       }

@@ -77,6 +77,17 @@ Deno.serve(async (req) => {
     .eq('is_published', true)
     .order('updated_at', { ascending: false });
 
+  // Fetch all published studio stories
+  const { data: studioStories, error: studioStoriesError } = await supabase
+    .from('studio_stories')
+    .select('slug, updated_at, artwork_url, studio_name, location')
+    .eq('is_published', true)
+    .order('updated_at', { ascending: false });
+
+  if (studioStoriesError) {
+    throw new Error(`Failed to fetch studio stories: ${studioStoriesError.message}`);
+  }
+
     if (singlesError) {
       throw new Error(`Failed to fetch singles: ${singlesError.message}`);
     }
@@ -182,7 +193,7 @@ Deno.serve(async (req) => {
     const posterProducts = (artProducts || []).filter(p => p.categories?.includes('POSTER'));
     const metalPrintProducts = (artProducts || []).filter(p => !p.categories?.includes('POSTER'));
 
-    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${newReleases?.length || 0} new releases, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos`);
+    console.log(`Found ${blogPosts?.length || 0} blog posts, ${anecdotes?.length || 0} anecdotes, ${musicStories?.length || 0} music stories, ${singles?.length || 0} singles, ${newReleases?.length || 0} new releases, ${posterProducts?.length || 0} posters, ${metalPrintProducts?.length || 0} metal prints, ${tshirtProducts?.length || 0} t-shirts, ${canvasProducts?.length || 0} canvas doeken, ${timeMachineEvents?.length || 0} time machine events, ${artistFanwalls?.length || 0} fanwall artists, ${photos?.length || 0} photos, ${studioStories?.length || 0} studio stories`);
 
     // Generate regular sitemaps (single files, no pagination)
     const staticSitemapXml = generateStaticSitemapXml();
@@ -226,6 +237,27 @@ Deno.serve(async (req) => {
         updated_at: p.published_at
       })),
       'https://www.musicscan.app/photo'
+    );
+    
+    // Studio Stories sitemaps
+    const studiosSitemapXml = generateSitemapXml(
+      (studioStories || []).map(s => ({
+        slug: s.slug,
+        updated_at: s.updated_at
+      })),
+      'https://www.musicscan.app/studio-stories'
+    );
+    
+    const studiosImageSitemapXml = generateImageSitemapXml(
+      (studioStories || []).map(s => ({
+        slug: s.slug,
+        updated_at: s.updated_at,
+        artwork_url: s.artwork_url,
+        title: s.studio_name,
+        artist: s.location || 'Recording Studio'
+      })),
+      'https://www.musicscan.app/studio-stories',
+      'artwork_url'
     );
 
     // Image sitemaps
@@ -358,6 +390,8 @@ Deno.serve(async (req) => {
       { name: 'sitemap-images-fanwall.xml', data: fanwallImageSitemapXml },
       { name: 'sitemap-images-photos.xml', data: photosImageSitemapXml },
       { name: 'sitemap-images-new-releases.xml', data: newReleasesImageSitemapXml },
+      { name: 'sitemap-studios.xml', data: studiosSitemapXml },
+      { name: 'sitemap-images-studios.xml', data: studiosImageSitemapXml },
     ];
 
     for (const upload of uploads) {

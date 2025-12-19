@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import SafeImage from "@/components/SafeImage";
+import { StudioStructuredData } from "@/components/SEO/StudioStructuredData";
 import {
   Building2, MapPin, Calendar, Clock, Eye, ArrowLeft,
   Users, Music, Wrench, Youtube
@@ -102,7 +103,19 @@ export default function StudioStoryDetail() {
       <Helmet>
         <title>{story.meta_title || `${story.studio_name} | MusicScan`}</title>
         <meta name="description" content={story.meta_description || `Ontdek het verhaal van ${story.studio_name}`} />
+        <link rel="canonical" href={`https://www.musicscan.app/studio-stories/${story.slug}`} />
       </Helmet>
+
+      <StudioStructuredData
+        name={story.studio_name}
+        description={story.meta_description || `Ontdek het verhaal van ${story.studio_name}`}
+        image={story.artwork_url || undefined}
+        url={`https://www.musicscan.app/studio-stories/${story.slug}`}
+        location={story.location || undefined}
+        foundingDate={story.founded_year?.toString()}
+        notableArtists={story.notable_artists || undefined}
+        famousRecordings={story.famous_recordings || undefined}
+      />
 
       <div className="min-h-screen bg-background">
         {/* Hero with artwork */}

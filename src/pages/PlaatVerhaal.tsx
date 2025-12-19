@@ -277,37 +277,52 @@ export const PlaatVerhaal: React.FC = () => {
     let s = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').trimStart();
 
     // 1) Verwijder vooraan een codefence met YAML-frontmatter (```yaml ... ```)
-    //    (oude content kan frontmatter in een codeblock stoppen, soms zonder afsluitende ---)
     s = s
-      // ```yaml\n--- ... ```
-      .replace(/^```(?:yaml|yml)\s*\n[\s\S]*?\n```(?:\s*\n)?/i, '')
-      // ```\n--- ... ``` (zonder language)
-      .replace(/^```\s*\n---\s*\n[\s\S]*?\n```(?:\s*\n)?/i, '');
+      .replace(/^```(?:yaml|yml)?\s*\n[\s\S]*?\n```(?:\s*\n)?/i, '')
+      .replace(/^```\s*\n---[\s\S]*?\n```(?:\s*\n)?/i, '');
 
-    // 2) Verwijder normale YAML frontmatter aan het begin (--- ... ---)
+    // 2) Verwijder normale YAML frontmatter met afsluitende ---
     s = s.replace(/^---\s*\n[\s\S]*?\n---\s*\n?/, '');
 
-    // 3) Als er nog steeds een --- aan het begin staat zonder sluitende ---, 
-    //    verwijder alles tot de eerste lege regel of dubbele newline
-    if (s.startsWith('---')) {
-      // Zoek naar eerste dubbele newline of einde van YAML-achtige content
-      const yamlEndMatch = s.match(/^---[\s\S]*?(\n\n|\n(?=[A-Z#*\-\d]))/);
-      if (yamlEndMatch) {
-        s = s.slice(yamlEndMatch[0].length);
-      } else {
-        // Fallback: verwijder alles tot en met een regel die begint met een YAML key pattern
-        s = s.replace(/^---\s*\n(?:[a-z_]+:.*\n)*/, '');
+    // 3) Als het nog steeds met --- begint, zoek naar het einde van YAML content
+    //    door te kijken naar: lege regel, heading (#), of niet-YAML content
+    if (s.trimStart().startsWith('---')) {
+      s = s.trimStart();
+      const lines = s.split('\n');
+      let endIndex = 1; // Start na de eerste ---
+      
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        // Einde van YAML: lege regel, heading, of afsluitende ---
+        if (line.trim() === '' || line.startsWith('#') || line.trim() === '---') {
+          if (line.trim() === '---') {
+            endIndex = i + 1; // Skip de afsluitende ---
+          } else {
+            endIndex = i;
+          }
+          break;
+        }
+        // Check of het een YAML key:value regel is
+        if (!/^[a-z_-]+\s*:/i.test(line)) {
+          // Niet een YAML regel, dit is het begin van content
+          endIndex = i;
+          break;
+        }
+        endIndex = i + 1;
       }
+      s = lines.slice(endIndex).join('\n').trimStart();
     }
 
-    // 4) Verwijder SOCIAL_POST blok en alles erna
+    // 4) Verwijder losse YAML-achtige regels aan het begin (key: "value" of key: value)
+    while (/^[a-z_-]+\s*:\s*(?:"[^"]*"|'[^']*'|\[[\s\S]*?\]|[^\n]*)\s*\n/i.test(s)) {
+      s = s.replace(/^[a-z_-]+\s*:\s*(?:"[^"]*"|'[^']*'|\[[\s\S]*?\]|[^\n]*)\s*\n/i, '');
+    }
+
+    // 5) Verwijder SOCIAL_POST blok en alles erna
     s = s.replace(/<!--\s*SOCIAL_POST\s*-->[\s\S]*$/i, '');
 
-    // 5) Haal evt. omvattende markdown-codefence weg
+    // 6) Haal evt. omvattende markdown-codefence weg
     s = s.replace(/^```(?:markdown)?\s*\n([\s\S]*?)\n```$/i, '$1');
-
-    // 6) Verwijder losse YAML-achtige regels aan het begin (key: value)
-    s = s.replace(/^(?:[a-z_]+:\s*(?:"[^"]*"|'[^']*'|\[.*?\]|[^\n]*)\n)+/i, '');
 
     return s.trim();
   };

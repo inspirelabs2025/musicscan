@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Play, ExternalLink, MessageCircle, Calendar, Newspaper, Music, Mic, Radio, User, Disc, ShoppingBag, Shirt, Gamepad2, Camera, Bot, Snowflake, Flag, Headphones, Film } from 'lucide-react';
+import { Play, ExternalLink, MessageCircle, Calendar, Newspaper, Music, Mic, Radio, User, Disc, ShoppingBag, Shirt, Gamepad2, Camera, Bot, Snowflake, Flag, Headphones, Film, Star, Building2 } from 'lucide-react';
 import { NewsItem } from '@/hooks/useUnifiedNewsFeed';
 import promoScanBg from '@/assets/promo-scan-bg.jpg';
 
@@ -24,6 +24,8 @@ const getTypeGradient = (type: string): string => {
     case 'youtube': return 'from-red-500 via-red-600 to-red-800';
     case 'review': return 'from-sky-500 via-blue-600 to-sky-800';
     case 'fanwall': return 'from-pink-500 via-purple-600 to-indigo-700';
+    case 'spotlight': return 'from-amber-400 via-yellow-500 to-orange-600';
+    case 'studio': return 'from-slate-500 via-zinc-600 to-slate-800';
     case 'daily_quiz': return 'from-yellow-400 via-orange-500 to-red-600';
     // Promo types
     case 'quiz': return 'from-yellow-400 via-orange-500 to-red-600';
@@ -59,6 +61,8 @@ const TypeIcon = ({ type, size }: { type: string; size: 'large' | 'small' }) => 
     case 'review': return <MessageCircle className={sizeClass} />;
     case 'fanwall': return <Camera className={sizeClass} />;
     case 'daily_quiz': return <Gamepad2 className={sizeClass} />;
+    case 'spotlight': return <Star className={sizeClass} />;
+    case 'studio': return <Building2 className={sizeClass} />;
     // Promo types
     case 'quiz': return <Gamepad2 className={sizeClass} />;
     case 'scan': return <Camera className={sizeClass} />;
@@ -201,6 +205,8 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
             item.type === 'podcast' ? 'text-rose-400' :
             item.type === 'fanwall' ? 'text-pink-400' :
             item.type === 'quiz' ? 'text-yellow-400' :
+            item.type === 'spotlight' ? 'text-amber-400' :
+            item.type === 'studio' ? 'text-slate-300' :
             'text-primary'
           }`}>
             {item.type === 'metal_print' && '🖼️ '}
@@ -214,6 +220,8 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
             {item.type === 'podcast' && '🎙️ '}
             {item.type === 'fanwall' && '📸 '}
             {item.type === 'quiz' && '🎯 '}
+            {item.type === 'spotlight' && '⭐ '}
+            {item.type === 'studio' && '🎛️ '}
             {item.category_label}
           </span>
           

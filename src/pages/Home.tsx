@@ -46,13 +46,13 @@ const Home = () => {
       return shuffleArray(pool).slice(0, count);
     };
 
-    // NIEUWS: Pak alle 3 laatste nieuwsberichten
-    const latestNews = newsItems.filter(i => i.type === 'news').slice(0, 3);
+    // NIEUWS: Pak de 2 laatste nieuwsberichten
+    const latestNews = newsItems.filter(i => i.type === 'news' && i.id !== excludedId).slice(0, 2);
 
-    // MUZIEKGESCHIEDENIS: altijd 1 item in de grid (fallback naar vaste kaart)
-    const historyItem = (() => {
-      const pick = getRandomFromType('history', 8);
-      if (pick.length) return pick;
+    // MUZIEKGESCHIEDENIS: meerdere items van vandaag (als beschikbaar)
+    const historyItems = (() => {
+      const picks = getRandomFromType('history', 8, 3);
+      if (picks.length) return picks;
       // Fallback met datum van vandaag
       const today = new Date();
       const monthNames = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -73,25 +73,26 @@ const Home = () => {
     // Random keuze tussen poster of canvas voor ART
     const artType = Math.random() > 0.5 ? 'poster' : 'canvas';
 
-    // Andere types: meerdere verhalen per type voor variatie
-    // Singles, Artists, Albums: elk 3 items voor duidelijke zichtbaarheid
+    // Bouw de grid met de juiste aantallen per type
     const items = shuffleArray([
-      ...getRandomFromType('single', 20, 3, true), // 3 Singles alleen met artwork
-      ...getRandomFromType('artist', 20, 3),       // 3 Artist verhalen
-      ...getRandomFromType('album', 20, 3),        // 3 Album verhalen
-      ...getRandomFromType('release', 20, 2),      // 2 Nieuwe releases
-      ...getRandomFromType('youtube', 20, 1),
-      ...historyItem,
-      ...getRandomFromType('product', 20, 1),
-      ...getRandomFromType('podcast', 20, 1),
-      ...getRandomFromType('concert', 20, 1),
-      ...getRandomFromType('metal_print', 20, 1),
-      ...getRandomFromType(artType, 20, 1),        // Random poster OF canvas met ART label
-      ...latestNews,                              // 3 nieuwsitems
-      ...getRandomFromType('anecdote', 20, 1),
-      ...getRandomFromType('review', 20, 1),
-      ...getRandomFromType('fanwall', 10, 2, true), // 2 Fanwall alleen met afbeelding
-      ...getRandomFromType('quiz', 20, 1),         // Quiz van de dag met vraag
+      ...getRandomFromType('single', 20, 2, true),     // 2 Singles (met artwork)
+      ...getRandomFromType('artist', 20, 2),           // 2 Artist verhalen
+      ...getRandomFromType('album', 20, 2),            // 2 Album verhalen
+      ...getRandomFromType('release', 20, 2),          // 2 Nieuwe releases
+      ...getRandomFromType('youtube', 20, 2),          // 2 Videos
+      ...historyItems,                                  // Muziekgeschiedenis (meerdere)
+      ...getRandomFromType('review', 20, 1),           // 1 Review
+      ...getRandomFromType('spotlight', 20, 1),        // 1 Artiest Spotlight (NIEUW)
+      ...getRandomFromType('studio', 20, 1),           // 1 Studio Story (NIEUW)
+      ...getRandomFromType('anecdote', 20, 1),         // 1 Anekdote
+      ...getRandomFromType('podcast', 20, 1),          // 1 Podcast
+      ...getRandomFromType('concert', 20, 1),          // 1 Concert/Event
+      ...getRandomFromType('fanwall', 10, 2, true),    // 2 Fanwall (met afbeelding)
+      ...latestNews,                                    // 2 Nieuwsitems
+      ...getRandomFromType('product', 20, 1),          // 1 Product
+      ...getRandomFromType('metal_print', 20, 1),      // 1 Metal Print
+      ...getRandomFromType(artType, 20, 1),            // 1 Poster OF Canvas
+      ...getRandomFromType('quiz', 20, 1),             // 1 Quiz van de dag
     ]).filter(item => item?.id !== heroItem?.id);
 
     return items;

@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface NewsItem {
   id: string;
-  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall' | 'product' | 'concert' | 'metal_print' | 'tshirt' | 'socks' | 'poster' | 'canvas' | 'quiz';
+  type: 'album' | 'single' | 'artist' | 'release' | 'news' | 'youtube' | 'podcast' | 'review' | 'anecdote' | 'history' | 'fanwall' | 'product' | 'concert' | 'metal_print' | 'tshirt' | 'socks' | 'poster' | 'canvas' | 'quiz' | 'spotlight' | 'studio';
   title: string;
   subtitle?: string;
   image_url?: string;
@@ -34,6 +34,8 @@ const CATEGORY_LABELS: Record<NewsItem['type'], string> = {
   poster: '🎨 ART POSTER',
   canvas: '🎨 ART CANVAS',
   quiz: '🎯 QUIZ VAN DE DAG',
+  spotlight: '⭐ ARTIEST SPOTLIGHT',
+  studio: '🎛️ STUDIO',
 };
 
 export const useUnifiedNewsFeed = (limit: number = 20) => {
@@ -110,6 +112,49 @@ export const useUnifiedNewsFeed = (limit: number = 20) => {
           link: `/artists/${a.slug}`,
           date: a.published_at || new Date().toISOString(),
           description: a.biography || undefined,
+        }));
+      }
+
+      // Fetch artist spotlights (separate from regular artists)
+      const { data: spotlights } = await supabase
+        .from('artist_stories')
+        .select('id,artist_name,slug,artwork_url,published_at,spotlight_description')
+        .eq('is_published', true)
+        .eq('is_spotlight', true)
+        .order('published_at', { ascending: false })
+        .limit(6);
+
+      if (spotlights) {
+        spotlights.forEach(s => items.push({
+          id: `spotlight-${s.id}`,
+          type: 'spotlight',
+          title: s.artist_name,
+          subtitle: s.spotlight_description?.slice(0, 60) || 'Artiest Spotlight',
+          image_url: s.artwork_url || undefined,
+          category_label: CATEGORY_LABELS.spotlight,
+          link: `/artist-spotlight/${s.slug}`,
+          date: s.published_at || new Date().toISOString(),
+        }));
+      }
+
+      // Fetch studio stories
+      const { data: studios } = await supabase
+        .from('studio_stories')
+        .select('id,studio_name,slug,artwork_url,location,created_at')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (studios) {
+        studios.forEach(st => items.push({
+          id: `studio-${st.id}`,
+          type: 'studio',
+          title: st.studio_name,
+          subtitle: st.location || 'Legendarische Studio',
+          image_url: st.artwork_url || undefined,
+          category_label: CATEGORY_LABELS.studio,
+          link: `/studio/${st.slug}`,
+          date: st.created_at,
         }));
       }
 

@@ -49,6 +49,34 @@ const studioImageMap: { [key: string]: string } = {
 // Fetch image from Wikipedia API for studios not in the hardcoded map
 async function fetchWikipediaImage(studioName: string): Promise<string | null> {
   try {
+    const userAgent = 'MusicScan/1.0 (https://musicscan.app; info@musicscan.app)';
+
+    const getLargerImage = (url: string) => {
+      // Common Wikimedia thumb URLs include: /thumb/.../800px-Filename.jpg
+      // If we can find a "{number}px-" segment, upgrade it.
+      if (/\/\d+px-/.test(url)) return url.replace(/\/\d+px-/, '/1280px-');
+      return url;
+    };
+
+    const fetchSummary = async (title: string) => {
+      const encodedTitle = encodeURIComponent(title);
+      const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodedTitle}`;
+      const res = await fetch(url, { headers: { 'User-Agent': userAgent } });
+      if (!res.ok) return null;
+      return await res.json();
+    };
+
+    const searchTitle = async (term: string) => {
+      const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
+        term
+      )}&format=json`;
+      const res = await fetch(url, { headers: { 'User-Agent': userAgent } });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const firstTitle = data?.query?.search?.[0]?.title;
+      return typeof firstTitle === 'string' ? firstTitle : null;
+    };
+
     // Try variations of the studio name
     const searchTerms = [
       `${studioName} recording studio`,
@@ -56,28 +84,26 @@ async function fetchWikipediaImage(studioName: string): Promise<string | null> {
       studioName,
     ];
 
-    for (const searchTerm of searchTerms) {
-      const encodedName = encodeURIComponent(searchTerm);
-      
-      // First, search for the Wikipedia page
-      const searchUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodedName}`;
-      
-      const response = await fetch(searchUrl, {
-        headers: {
-          'User-Agent': 'MusicScan/1.0 (https://musicscan.app; info@musicscan.app)',
-        },
-      });
+    for (const term of searchTerms) {
+      // 1) Try direct summary lookup (works when term matches page title)
+      const direct = await fetchSummary(term);
+      const directImg = direct?.originalimage?.source || direct?.thumbnail?.source;
+      if (directImg) {
+        const finalUrl = getLargerImage(direct?.originalimage?.source || directImg);
+        console.log(`✅ Found Wikipedia image for "${studioName}" (direct): ${finalUrl}`);
+        return finalUrl;
+      }
 
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Get the thumbnail or original image
-        if (data.thumbnail?.source) {
-          // Get larger version by modifying the URL
-          const largerImage = data.originalimage?.source || data.thumbnail.source.replace(/\/\d+px-/, '/1280px-');
-          console.log(`✅ Found Wikipedia image for "${studioName}": ${largerImage}`);
-          return largerImage;
-        }
+      // 2) Fallback: use Wikipedia search API to find the best-matching page
+      const title = await searchTitle(term);
+      if (!title) continue;
+
+      const summary = await fetchSummary(title);
+      const img = summary?.originalimage?.source || summary?.thumbnail?.source;
+      if (img) {
+        const finalUrl = getLargerImage(summary?.originalimage?.source || img);
+        console.log(`✅ Found Wikipedia image for "${studioName}" via search "${term}": ${finalUrl}`);
+        return finalUrl;
       }
     }
 

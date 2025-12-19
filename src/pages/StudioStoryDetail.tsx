@@ -109,10 +109,16 @@ export default function StudioStoryDetail() {
           {/* Background Image */}
           {story.artwork_url && (
             <div className="absolute inset-0">
-              <img 
-                src={story.artwork_url} 
-                alt={story.studio_name}
+              <img
+                src={story.artwork_url}
+                alt={`${story.studio_name} studio afbeelding`}
                 className="w-full h-full object-cover"
+                loading="eager"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.src =
+                    "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1280&q=80";
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
             </div>
@@ -131,12 +137,18 @@ export default function StudioStoryDetail() {
 
             <div className="flex items-start gap-6">
               {/* Studio Image Thumbnail */}
-              <div className="hidden md:block h-32 w-32 rounded-xl overflow-hidden shadow-xl shrink-0 border-2 border-white/20">
+              <div className="hidden md:block h-32 w-32 rounded-xl overflow-hidden shadow-xl shrink-0 border border-border/40 bg-background/20">
                 {story.artwork_url ? (
-                  <img 
-                    src={story.artwork_url} 
-                    alt={story.studio_name}
+                  <img
+                    src={story.artwork_url}
+                    alt={`${story.studio_name} studio thumbnail`}
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1280&q=80";
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full bg-primary/20 flex items-center justify-center">

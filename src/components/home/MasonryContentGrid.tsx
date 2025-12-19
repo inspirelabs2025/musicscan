@@ -3,7 +3,16 @@ import { Play, ExternalLink, MessageCircle, Calendar, Newspaper, Music, Mic, Rad
 import { NewsItem } from '@/hooks/useUnifiedNewsFeed';
 import promoScanBg from '@/assets/promo-scan-bg.jpg';
 import echoAvatar from '@/assets/echo-avatar.png';
+import blogPlaceholder1 from '@/assets/blog-placeholder-1.jpg';
+import blogPlaceholder2 from '@/assets/blog-placeholder-2.jpg';
+import blogPlaceholder3 from '@/assets/blog-placeholder-3.jpg';
 
+// News placeholder selection based on item ID for consistency
+const NEWS_PLACEHOLDERS = [blogPlaceholder1, blogPlaceholder2, blogPlaceholder3];
+const getNewsPlaceholder = (itemId: string): string => {
+  const hash = itemId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return NEWS_PLACEHOLDERS[hash % NEWS_PLACEHOLDERS.length];
+};
 // Extended type for promo blocks
 type PromoType = 'quiz' | 'scan' | 'echo' | 'nederland' | 'frankrijk' | 'dance' | 'filmmuziek' | 'kerst';
 
@@ -169,6 +178,16 @@ const MasonryCard = ({ item, size }: { item: NewsItem; size: CardSize }) => {
             alt={item.title}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
+        ) : item.type === 'news' ? (
+          <>
+            <img
+              src={getNewsPlaceholder(item.id)}
+              alt={item.title}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            {/* Groene tint overlay voor nieuws branding */}
+            <div className="absolute inset-0 bg-emerald-900/40" />
+          </>
         ) : (
           <>
             <div className={`absolute inset-0 bg-gradient-to-br ${getTypeGradient(item.type)}`} />

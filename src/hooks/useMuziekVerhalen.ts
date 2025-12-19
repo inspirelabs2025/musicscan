@@ -46,6 +46,7 @@ export const useMuziekVerhalen = (options: MuziekVerhalenOptions = {}) => {
         .from('music_stories')
         .select('*')
         .eq('is_published', true)
+        .not('single_name', 'is', null)
         .order('created_at', { ascending: false });
 
       if (userId) {

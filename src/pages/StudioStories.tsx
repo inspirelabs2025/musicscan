@@ -97,10 +97,15 @@ export default function StudioStories() {
                           src={studio.artwork_url} 
                           alt={studio.studio_name}
                           className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.parentElement?.classList.add('show-fallback');
+                          }}
                         />
-                      ) : (
-                        <Building2 className="h-20 w-20 text-primary/50" />
-                      )}
+                      ) : null}
+                      <Building2 className={`h-20 w-20 text-primary/50 absolute ${studio.artwork_url ? 'hidden group-[.show-fallback]:block' : ''}`} />
                       {studio.founded_year && (
                         <Badge 
                           variant="secondary" 

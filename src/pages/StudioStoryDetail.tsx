@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Building2, MapPin, Calendar, Clock, Eye, ArrowLeft, 
-  Users, Music, Wrench, Youtube 
+import SafeImage from "@/components/SafeImage";
+import {
+  Building2, MapPin, Calendar, Clock, Eye, ArrowLeft,
+  Users, Music, Wrench, Youtube
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -109,16 +110,13 @@ export default function StudioStoryDetail() {
           {/* Background Image */}
           {story.artwork_url && (
             <div className="absolute inset-0">
-              <img
+              <SafeImage
                 src={story.artwork_url}
+                fallbackSrc="/placeholder.svg"
                 alt={`${story.studio_name} studio afbeelding`}
                 className="w-full h-full object-cover"
                 loading="eager"
                 referrerPolicy="no-referrer"
-                onError={(e) => {
-                  e.currentTarget.src =
-                    "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1280&q=80";
-                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
             </div>
@@ -126,7 +124,7 @@ export default function StudioStoryDetail() {
           {!story.artwork_url && (
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/20" />
           )}
-          
+
           <div className="relative container mx-auto px-4 py-12 md:py-20">
             <Button variant="ghost" size="sm" asChild className="mb-6 bg-background/50 backdrop-blur-sm hover:bg-background/70">
               <Link to="/studio-stories">

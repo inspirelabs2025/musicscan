@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, MapPin, Calendar, Clock, Eye } from "lucide-react";
 import { Helmet } from "react-helmet";
+import SafeImage from "@/components/SafeImage";
 
 interface StudioStory {
   id: string;
@@ -90,25 +91,20 @@ export default function StudioStories() {
                   className="group"
                 >
                   <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border/50 hover:border-primary/50">
-                    {/* Studio Image or Placeholder */}
-                    <div className="relative h-48 bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
-                      {studio.artwork_url ? (
-                        <img 
-                          src={studio.artwork_url} 
-                          alt={studio.studio_name}
-                          className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            target.parentElement?.classList.add('show-fallback');
-                          }}
-                        />
-                      ) : null}
-                      <Building2 className={`h-20 w-20 text-primary/50 absolute ${studio.artwork_url ? 'hidden group-[.show-fallback]:block' : ''}`} />
+                    {/* Studio Image */}
+                    <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/30 to-secondary/30">
+                      <SafeImage
+                        src={studio.artwork_url}
+                        fallbackSrc="/placeholder.svg"
+                        alt={`${studio.studio_name} opnamestudio foto`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                      />
+
                       {studio.founded_year && (
-                        <Badge 
-                          variant="secondary" 
+                        <Badge
+                          variant="secondary"
                           className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm"
                         >
                           <Calendar className="h-3 w-3 mr-1" />

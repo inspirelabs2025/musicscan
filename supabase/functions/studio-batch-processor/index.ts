@@ -259,6 +259,30 @@ serve(async (req) => {
       .replace(/-+/g, '-')
       .trim();
 
+    // Fetch artwork for the studio
+    let artworkUrl = null;
+    try {
+      console.log(`🖼️ Fetching artwork for ${queueItem.studio_name}...`);
+      const artworkResponse = await fetch(`${SUPABASE_URL}/functions/v1/fetch-studio-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({ studioName: queueItem.studio_name }),
+      });
+      
+      if (artworkResponse.ok) {
+        const artworkData = await artworkResponse.json();
+        if (artworkData.success && artworkData.imageUrl) {
+          artworkUrl = artworkData.imageUrl;
+          console.log(`✅ Got artwork from ${artworkData.source}: ${artworkUrl.substring(0, 60)}...`);
+        }
+      }
+    } catch (artworkError) {
+      console.log('⚠️ Could not fetch artwork, continuing without:', artworkError.message);
+    }
+
     // Save story
     const { data: storyData, error: insertError } = await supabase
       .from('studio_stories')
@@ -269,6 +293,7 @@ serve(async (req) => {
         country_code: queueItem.country_code,
         founded_year: queueItem.founded_year,
         story_content: storyContent,
+        artwork_url: artworkUrl,
         youtube_videos: youtubeVideos,
         word_count: wordCount,
         reading_time: readingTime,
@@ -306,7 +331,7 @@ serve(async (req) => {
       })
       .eq('id', queueItem.id);
 
-    console.log(`📝 Saved studio story: ${storyData.id}`);
+    console.log(`📝 Saved studio story: ${storyData.id} with artwork: ${artworkUrl ? 'yes' : 'no'}`);
 
     return new Response(
       JSON.stringify({ 

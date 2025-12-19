@@ -135,10 +135,7 @@ const Home = () => {
       {/* 4. Echo Spotlight - AI Music Expert */}
       <EchoSpotlight />
 
-      {/* 5. Community Stats */}
-      <CommunityStats />
-
-      {/* 6. Product Banner */}
+      {/* 5. Product Banner */}
       <ProductBanner />
 
       {/* 7. Shop Categories Footer */}

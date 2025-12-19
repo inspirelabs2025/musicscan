@@ -75,9 +75,9 @@ const Home = () => {
 
     // Bouw de grid met de juiste aantallen per type
     const items = shuffleArray([
-      ...getRandomFromType('single', 20, 2, true),     // 2 Singles (met artwork)
-      ...getRandomFromType('artist', 20, 2),           // 2 Artist verhalen
-      ...getRandomFromType('album', 20, 2),            // 2 Album verhalen
+      ...getRandomFromType('single', 100, 2, true),    // 2 Singles (met artwork) uit pool van 100
+      ...getRandomFromType('artist', 100, 2),          // 2 Artist verhalen uit pool van 100
+      ...getRandomFromType('album', 100, 2),           // 2 Album verhalen uit pool van 100
       ...getRandomFromType('release', 20, 2),          // 2 Nieuwe releases
       ...getRandomFromType('youtube', 20, 2),          // 2 Videos
       ...historyItems,                                  // Muziekgeschiedenis (meerdere)

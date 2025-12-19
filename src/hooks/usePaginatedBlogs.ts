@@ -63,7 +63,9 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
         created_at,
         updated_at,
         album_cover_url
-      `);
+      `)
+      // Verhalen pagina: sluit nieuws-items uit (nieuws heeft eigen sectie/tabel)
+      .neq("album_type", "news");
 
     // Note: No user filter applied - show all published blogs to everyone
 
@@ -130,7 +132,8 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
     // Build count query with same filters
     let countQuery = supabase
       .from("blog_posts")
-      .select("*", { count: 'exact', head: true });
+      .select("*", { count: 'exact', head: true })
+      .neq("album_type", "news");
 
     // Apply same filters to count query - always show published by default
     if (filters.status === 'draft') {

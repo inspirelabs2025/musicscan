@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Disc, Music, Users, BookOpen, Flag } from "lucide-react";
+import { Disc, Music, Users, BookOpen, Flag, Mic2 } from "lucide-react";
 import { useNederlandseStats } from "@/hooks/useNederlandseMuziek";
 
 export function NederlandHero() {
@@ -75,34 +75,43 @@ export function NederlandHero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto"
+            className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-3xl mx-auto"
           >
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white shadow-lg">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 md:p-5 border border-white shadow-lg">
               <div className="flex justify-center mb-2">
-                <Disc className="w-6 h-6 md:w-8 md:h-8 text-[hsl(24,100%,45%)]" />
+                <BookOpen className="w-5 h-5 md:w-7 md:h-7 text-[hsl(24,100%,45%)]" />
               </div>
-              <div className="text-2xl md:text-4xl font-bold text-[hsl(24,100%,45%)]">
-                {stats?.totalReleases || 0}
-              </div>
-              <div className="text-sm md:text-base text-gray-600">Releases</div>
-            </div>
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white shadow-lg">
-              <div className="flex justify-center mb-2">
-                <Users className="w-6 h-6 md:w-8 md:h-8 text-[hsl(211,100%,40%)]" />
-              </div>
-              <div className="text-2xl md:text-4xl font-bold text-[hsl(211,100%,40%)]">
-                {stats?.totalArtiesten || 0}
-              </div>
-              <div className="text-sm md:text-base text-gray-600">Artiesten</div>
-            </div>
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white shadow-lg">
-              <div className="flex justify-center mb-2">
-                <BookOpen className="w-6 h-6 md:w-8 md:h-8 text-[hsl(45,100%,40%)]" />
-              </div>
-              <div className="text-2xl md:text-4xl font-bold text-[hsl(45,100%,40%)]">
+              <div className="text-xl md:text-3xl font-bold text-[hsl(24,100%,45%)]">
                 {stats?.totalVerhalen || 0}
               </div>
-              <div className="text-sm md:text-base text-gray-600">Verhalen</div>
+              <div className="text-xs md:text-sm text-gray-600">Albums</div>
+            </div>
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 md:p-5 border border-white shadow-lg">
+              <div className="flex justify-center mb-2">
+                <Mic2 className="w-5 h-5 md:w-7 md:h-7 text-[hsl(280,70%,50%)]" />
+              </div>
+              <div className="text-xl md:text-3xl font-bold text-[hsl(280,70%,50%)]">
+                {stats?.totalSingles || 0}
+              </div>
+              <div className="text-xs md:text-sm text-gray-600">Singles</div>
+            </div>
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 md:p-5 border border-white shadow-lg">
+              <div className="flex justify-center mb-2">
+                <Users className="w-5 h-5 md:w-7 md:h-7 text-[hsl(211,100%,40%)]" />
+              </div>
+              <div className="text-xl md:text-3xl font-bold text-[hsl(211,100%,40%)]">
+                {stats?.totalArtiesten || 0}
+              </div>
+              <div className="text-xs md:text-sm text-gray-600">Artiesten</div>
+            </div>
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 md:p-5 border border-white shadow-lg">
+              <div className="flex justify-center mb-2">
+                <Disc className="w-5 h-5 md:w-7 md:h-7 text-[hsl(45,100%,40%)]" />
+              </div>
+              <div className="text-xl md:text-3xl font-bold text-[hsl(45,100%,40%)]">
+                {stats?.totalReleases || 0}
+              </div>
+              <div className="text-xs md:text-sm text-gray-600">Collecties</div>
             </div>
           </motion.div>
         </motion.div>

@@ -214,7 +214,9 @@ export const usePaginatedBlogs = (filters: BlogFilters = {}) => {
     enabled: true, // Always enabled - show published blogs to everyone
   });
 
-  const blogs = data?.pages.flatMap(page => page.blogs) || [];
+  // Extra safeguard: ook client-side uitsluiten zodat cached data (React Query) direct correct is
+  const blogs = (data?.pages.flatMap(page => page.blogs) || [])
+    .filter(b => b?.album_type !== 'news' && !String(b?.slug || '').startsWith('nieuws-'));
   const totalCount = data?.pages[0]?.totalCount || 0;
 
   const refetchBlogs = useCallback(async () => {

@@ -275,20 +275,36 @@ export const PlaatVerhaal: React.FC = () => {
     if (!raw) return '';
     let s = raw.trimStart();
 
-    // 1) Verwijder vooraan een codefence met YAML-frontmatter
+    // 1) Verwijder vooraan een codefence met YAML-frontmatter (```yaml ... ```)
     s = s.replace(
       /^```(?:yaml|yml)?\s*\n(?:---\s*\n)?[\s\S]*?\n---\s*\n```(?:\s*\n)?/i,
       ''
     );
 
-    // 2) Verwijder normale YAML frontmatter aan het begin
+    // 2) Verwijder normale YAML frontmatter aan het begin (--- ... ---)
     s = s.replace(/^---\s*\n[\s\S]*?\n---\s*\n?/, '');
 
-    // 3) Verwijder SOCIAL_POST blok en alles erna
+    // 3) Als er nog steeds een --- aan het begin staat zonder sluitende ---, 
+    //    verwijder alles tot de eerste lege regel of dubbele newline
+    if (s.startsWith('---')) {
+      // Zoek naar eerste dubbele newline of einde van YAML-achtige content
+      const yamlEndMatch = s.match(/^---[\s\S]*?(\n\n|\n(?=[A-Z#*\-\d]))/);
+      if (yamlEndMatch) {
+        s = s.slice(yamlEndMatch[0].length);
+      } else {
+        // Fallback: verwijder alles tot en met een regel die begint met een YAML key pattern
+        s = s.replace(/^---\s*\n(?:[a-z_]+:.*\n)*/, '');
+      }
+    }
+
+    // 4) Verwijder SOCIAL_POST blok en alles erna
     s = s.replace(/<!--\s*SOCIAL_POST\s*-->[\s\S]*$/i, '');
 
-    // 4) Haal evt. omvattende markdown-codefence weg
+    // 5) Haal evt. omvattende markdown-codefence weg
     s = s.replace(/^```(?:markdown)?\s*\n([\s\S]*?)\n```$/i, '$1');
+
+    // 6) Verwijder losse YAML-achtige regels aan het begin (key: value)
+    s = s.replace(/^(?:[a-z_]+:\s*(?:"[^"]*"|'[^']*'|\[.*?\]|[^\n]*)\n)+/i, '');
 
     return s.trim();
   };

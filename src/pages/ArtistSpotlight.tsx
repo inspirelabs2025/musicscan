@@ -228,7 +228,7 @@ const ArtistSpotlight = () => {
                           alt={alt || `Foto van ${spotlight.artist_name}`}
                           loading="lazy"
                           decoding="async"
-                          className="block w-full max-w-full rounded-lg"
+                          className="block w-1/2 max-w-md rounded-lg"
                         />
                       ),
                     }}

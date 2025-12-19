@@ -361,17 +361,17 @@ export const MasonryContentGrid = ({ items, title = "Ontdek Meer" }: MasonryCont
   }
 
   return (
-    <section className="bg-zinc-950 py-10 md:py-14">
-      <div className="container mx-auto px-4">
+    <section className="bg-zinc-950 py-12 md:py-20">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-10 md:mb-12">
           <h2 className="text-xs font-bold uppercase tracking-widest text-primary border-b-2 border-primary pb-2">
             {title}
           </h2>
         </div>
         
         {/* Masonry Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3 auto-rows-[minmax(120px,1fr)] md:auto-rows-[minmax(150px,1fr)]">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 lg:gap-5 auto-rows-[minmax(140px,1fr)] md:auto-rows-[minmax(160px,1fr)] lg:auto-rows-[minmax(180px,1fr)]">
           {combinedItems.map((item, index) => {
             let size = getSizeForIndex(index);
             

@@ -25,6 +25,35 @@ interface BlogPost {
 }
 
 const fetchBlogPost = async (slug: string): Promise<BlogPost | null> => {
+  // First try to fetch from news_blog_posts table (primary news source)
+  const { data: newsData, error: newsError } = await supabase
+    .from('news_blog_posts')
+    .select('*')
+    .eq('slug', slug)
+    .maybeSingle();
+
+  if (newsData && !newsError) {
+    // Increment views count
+    await supabase
+      .from('news_blog_posts')
+      .update({ views_count: (newsData.views_count || 0) + 1 })
+      .eq('id', newsData.id);
+
+    return {
+      id: newsData.id,
+      title: newsData.title || '',
+      content: newsData.content || '',
+      summary: newsData.summary || '',
+      source: newsData.source || 'MusicScan',
+      published_at: newsData.published_at || newsData.created_at,
+      category: newsData.category || 'Nieuws',
+      author: newsData.author || 'MusicScan AI',
+      views_count: newsData.views_count || 0,
+      image_url: newsData.image_url
+    };
+  }
+
+  // Fallback: try blog_posts table with album_type='news'
   const { data, error } = await supabase
     .from('blog_posts')
     .select('*')

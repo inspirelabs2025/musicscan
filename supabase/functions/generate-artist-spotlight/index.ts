@@ -159,87 +159,115 @@ Focus op:
 
 Maak elk hoofdstuk rijk aan informatie en verhaal.`;
 
-    // Use tool calling for structured output
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        max_tokens: 32000,
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'create_spotlight_story',
-            description: 'Create a comprehensive structured spotlight story for an artist',
-            parameters: {
-              type: 'object',
-              properties: {
-                story_content: {
-                  type: 'string',
-                  description: 'Full markdown story content with detailed sections (3000-4000 words)'
-                },
-                spotlight_description: {
-                  type: 'string',
-                  description: 'Short 2-3 sentence teaser for the spotlight'
-                },
-                notable_albums: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  description: 'Array of 5-8 notable album names'
-                },
-                music_style: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  description: 'Array of music styles/genres (e.g., ["Jazz", "Bebop", "Cool Jazz"])'
-                }
-              },
-              required: ['story_content', 'spotlight_description', 'notable_albums', 'music_style'],
-              additionalProperties: false
-            }
+    // Generate story content with multiple attempts if needed
+    let storyData: any = null;
+    let attempts = 0;
+    const maxAttempts = 2;
+    
+    while (attempts < maxAttempts && !storyData) {
+      attempts++;
+      console.log(`Story generation attempt ${attempts}/${maxAttempts}`);
+      
+      // Use direct text generation instead of tool calling for more control
+      const directPrompt = `${systemPrompt}
+
+BELANGRIJK: Retourneer je antwoord PRECIES in dit JSON formaat (en NIETS anders):
+{
+  "story_content": "[Hier komt het volledige markdown verhaal van 3000-4500 woorden]",
+  "spotlight_description": "[Korte 2-3 zinnen teaser]",
+  "notable_albums": ["Album1", "Album2", "Album3", "Album4", "Album5"],
+  "music_style": ["Stijl1", "Stijl2", "Stijl3"]
+}
+
+${userPrompt}
+
+HERINNERING: Schrijf MINIMAAL 3000 woorden voor story_content. Dit is KRITIEK. Begin nu met het JSON object:`;
+
+      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'user', content: directPrompt }
+          ],
+          max_tokens: 32000,
+        }),
+      });
+
+      if (!aiResponse.ok) {
+        const errorText = await aiResponse.text();
+        console.error('AI API error:', aiResponse.status, errorText);
+        throw new Error(`AI generation failed: ${aiResponse.status}`);
+      }
+
+      const aiData = await aiResponse.json();
+      console.log('AI Response received, parsing...');
+      
+      const content = aiData.choices?.[0]?.message?.content;
+      
+      if (!content) {
+        console.error('No content in AI response');
+        continue;
+      }
+      
+      // Extract JSON from response (handle markdown code blocks)
+      let jsonStr = content;
+      
+      // Try to extract from markdown code block
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[1].trim();
+      } else {
+        // Try to find raw JSON
+        const firstBrace = content.indexOf('{');
+        const lastBrace = content.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          jsonStr = content.substring(firstBrace, lastBrace + 1);
+        }
+      }
+      
+      try {
+        storyData = JSON.parse(jsonStr);
+        console.log('Parsed story structure:', Object.keys(storyData));
+        
+        // Validate minimum word count
+        const wordCount = storyData.story_content?.split(/\s+/).length || 0;
+        console.log(`Story word count: ${wordCount}`);
+        
+        if (wordCount < 2000) {
+          console.warn(`Story too short (${wordCount} words), will retry if attempts remain`);
+          if (attempts < maxAttempts) {
+            storyData = null; // Reset to trigger retry
           }
-        }],
-        tool_choice: { type: 'function', function: { name: 'create_spotlight_story' } }
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
-      throw new Error(`AI generation failed: ${aiResponse.status}`);
+        }
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        console.error('Raw content (first 500 chars):', content.substring(0, 500));
+        if (attempts >= maxAttempts) {
+          throw new Error('Failed to parse AI response as JSON after multiple attempts');
+        }
+      }
+    }
+    
+    if (!storyData) {
+      throw new Error('Failed to generate valid story data');
     }
 
-    const aiData = await aiResponse.json();
-    console.log('AI Response:', JSON.stringify(aiData, null, 2));
-    
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    
-    if (!toolCall) {
-      console.error('No tool call found. AI response:', JSON.stringify(aiData));
-      throw new Error('AI did not return structured data. Please try again.');
-    }
-
-    const storyData = JSON.parse(toolCall.function.arguments);
-    console.log('Generated story structure:', Object.keys(storyData));
-
-    // Validate story completeness
+    // Final validation
     const storyWordCount = storyData.story_content?.split(/\s+/).length || 0;
     const lastChars = storyData.story_content?.slice(-100) || '';
     const endsWithPunctuation = /[.!?]\s*$/.test(lastChars.trim());
     const endsIncomplete = /[a-z,]\s*$/.test(lastChars.trim()) || lastChars.includes('...');
     
-    console.log(`Story validation - Words: ${storyWordCount}, Ends with punctuation: ${endsWithPunctuation}, Seems incomplete: ${endsIncomplete}`);
+    console.log(`Final validation - Words: ${storyWordCount}, Ends with punctuation: ${endsWithPunctuation}, Seems incomplete: ${endsIncomplete}`);
     console.log(`Last 100 chars: "${lastChars}"`);
     
-    if (endsIncomplete || storyWordCount < 2000) {
+    if (endsIncomplete || storyWordCount < 1500) {
       console.warn(`WARNING: Story may be incomplete! Word count: ${storyWordCount}, Last chars: "${lastChars.slice(-50)}"`);
-      // Continue anyway but log the warning - the story is better than nothing
     }
 
     // Fetch multiple album artworks from Discogs and generate AI artist portrait

@@ -581,3 +581,17 @@ verify_jwt = false
 
 [[functions.studio-batch-processor.schedule]]
 cron = "* * * * *"
+
+# NEW: Singles uit albums extraheren (elke 2 uur)
+[functions.extract-singles-from-albums]
+verify_jwt = false
+
+[[functions.extract-singles-from-albums.schedule]]
+cron = "0 */2 * * *"
+
+# NEW: Facebook queues recyclen (elk uur)
+[functions.recycle-facebook-queue]
+verify_jwt = false
+
+[[functions.recycle-facebook-queue.schedule]]
+cron = "30 * * * *"

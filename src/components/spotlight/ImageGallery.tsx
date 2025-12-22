@@ -24,14 +24,14 @@ export const ImageGallery = ({ images, artistName }: ImageGalleryProps) => {
   const albumCovers = images.filter(img => img.type === 'album' || !img.type);
 
   return (
-    <div className="space-y-8">
-      {/* Artist Photos - Full width, prominent display */}
+    <div className="space-y-6">
+      {/* Artist Photos - Smaller grid */}
       {artistPhotos.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {artistPhotos.map((image, index) => (
             <div
               key={index}
-              className="group relative overflow-hidden rounded-lg cursor-pointer aspect-square bg-muted"
+              className="group relative overflow-hidden rounded-md cursor-pointer aspect-square bg-muted max-w-[180px]"
               onClick={() => setSelectedImage(image)}
             >
               <img
@@ -41,8 +41,8 @@ export const ImageGallery = ({ images, artistName }: ImageGalleryProps) => {
                 loading="lazy"
               />
               {image.caption && (
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                  <p className="text-white text-sm font-medium">{image.caption}</p>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                  <p className="text-white text-xs font-medium line-clamp-1">{image.caption}</p>
                 </div>
               )}
             </div>
@@ -50,15 +50,15 @@ export const ImageGallery = ({ images, artistName }: ImageGalleryProps) => {
         </div>
       )}
 
-      {/* Album Covers - Grid layout */}
+      {/* Album Covers - Smaller grid */}
       {albumCovers.length > 0 && (
         <div>
-          <h3 className="text-xl font-semibold mb-4 text-foreground">Notable Albums</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <h3 className="text-lg font-semibold mb-3 text-foreground">Notable Albums</h3>
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {albumCovers.map((image, index) => (
               <div
                 key={index}
-                className="group relative overflow-hidden rounded-lg cursor-pointer aspect-square bg-muted shadow-md hover:shadow-xl transition-shadow"
+                className="group relative overflow-hidden rounded-md cursor-pointer aspect-square bg-muted shadow-sm hover:shadow-lg transition-shadow max-w-[150px]"
                 onClick={() => setSelectedImage(image)}
               >
                 <img
@@ -68,8 +68,8 @@ export const ImageGallery = ({ images, artistName }: ImageGalleryProps) => {
                   loading="lazy"
                 />
                 {image.caption && (
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-                    <p className="text-white text-xs font-medium line-clamp-2">{image.caption}</p>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                    <p className="text-white text-[10px] font-medium line-clamp-1">{image.caption}</p>
                   </div>
                 )}
               </div>

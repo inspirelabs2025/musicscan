@@ -76,10 +76,18 @@ serve(async (req) => {
     const systemPrompt = `Je bent een gepassioneerde muziekjournalist die uitgebreide spotlight verhalen schrijft over artiesten. 
     
 KRITIEKE INSTRUCTIE - LENGTE EN DIEPGANG:
-- Schrijf een UITGEBREID artikel van 3000-4000 woorden
+- Schrijf een UITGEBREID artikel van 3000-4500 woorden
 - Verdeel over minimaal 15-20 paragrafen
 - Elke sectie moet rijk zijn aan details en verhaal
 - Gebruik markdown voor structuur (## voor hoofdstukken, **bold** voor nadruk)
+
+KRITIEKE INSTRUCTIE - AFRONDING (ZEER BELANGRIJK):
+- ROND ALTIJD ELKE SECTIE EN HET HELE VERHAAL VOLLEDIG AF
+- Eindig NOOIT midden in een zin, paragraaf of gedachte
+- Schrijf ALTIJD een afsluitende conclusie/reflectie paragraaf
+- Controleer dat elk hoofdstuk een logisch einde heeft
+- Het verhaal MOET eindigen met een reflecterende conclusie over de artiest
+- Als je merkt dat je lang bezig bent, maak het dan KORTER maar WEL AF
 
 SCHRIJFSTIJL:
 - Persoonlijke, verhaalvertellende toon
@@ -118,7 +126,12 @@ STRUCTUUR (gebruik deze secties als ## headers met uitgebreide inhoud):
 - Collectible releases en zeldzame opnames
 - Live albums en speciale uitgaves
 
-Schrijf in het Nederlands. Gebruik een narratieve stijl met veel details, context en achtergrondverhalen. Maak elk hoofdstuk substantieel en informatief.`;
+## Conclusie en Nalatenschap
+- Samenvatting van de artistieke betekenis
+- Blijvende invloed op de muziekwereld
+- Wat de artiest bijzonder maakt
+
+Schrijf in het Nederlands. Gebruik een narratieve stijl met veel details, context en achtergrondverhalen. Maak elk hoofdstuk substantieel en informatief. EINDIG ALTIJD MET EEN VOLLEDIGE CONCLUSIE.`;
 
     const userPrompt = initialText 
       ? `Schrijf een UITGEBREID en GEDETAILLEERD spotlight verhaal van 3000-4000 woorden over ${artistName}. 
@@ -159,7 +172,7 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 16000,
+        max_tokens: 32000,
         tools: [{
           type: 'function',
           function: {
@@ -214,6 +227,20 @@ Maak elk hoofdstuk rijk aan informatie en verhaal.`;
 
     const storyData = JSON.parse(toolCall.function.arguments);
     console.log('Generated story structure:', Object.keys(storyData));
+
+    // Validate story completeness
+    const storyWordCount = storyData.story_content?.split(/\s+/).length || 0;
+    const lastChars = storyData.story_content?.slice(-100) || '';
+    const endsWithPunctuation = /[.!?]\s*$/.test(lastChars.trim());
+    const endsIncomplete = /[a-z,]\s*$/.test(lastChars.trim()) || lastChars.includes('...');
+    
+    console.log(`Story validation - Words: ${storyWordCount}, Ends with punctuation: ${endsWithPunctuation}, Seems incomplete: ${endsIncomplete}`);
+    console.log(`Last 100 chars: "${lastChars}"`);
+    
+    if (endsIncomplete || storyWordCount < 2000) {
+      console.warn(`WARNING: Story may be incomplete! Word count: ${storyWordCount}, Last chars: "${lastChars.slice(-50)}"`);
+      // Continue anyway but log the warning - the story is better than nothing
+    }
 
     // Fetch multiple album artworks from Discogs and generate AI artist portrait
     let artworkUrl = null;

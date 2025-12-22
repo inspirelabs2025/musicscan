@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from "react-markdown";
 import { MusicGroupStructuredData } from "@/components/SEO/MusicGroupStructuredData";
 import { ImageGallery } from "@/components/spotlight/ImageGallery";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const ArtistSpotlight = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -82,6 +83,134 @@ const ArtistSpotlight = () => {
   };
 
   const storyContent = dedupeConsecutiveMarkdownImages(spotlight.story_content);
+
+  const extractMarkdownImageUrls = (markdown: string) => {
+    const urls: string[] = [];
+    const re = /!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(markdown)) !== null) {
+      if (m[1]) urls.push(m[1]);
+    }
+    return urls;
+  };
+
+  const existingMarkdownImageUrls = new Set(
+    extractMarkdownImageUrls(storyContent).map((u) => normalizeUrl(u))
+  );
+
+  const rawSpotlightImages = Array.isArray(spotlight.spotlight_images)
+    ? (spotlight.spotlight_images as any[])
+    : [];
+
+  // We will render spotlight_images *inside* the article by splitting the markdown into sections.
+  // Exclude hero + any images already embedded in markdown to avoid duplicates.
+  const heroKeys = new Set<string>();
+  if (heroImage) {
+    heroKeys.add(heroImage);
+    heroKeys.add(normalizeUrl(heroImage));
+  }
+
+  const inlineInsertImages = rawSpotlightImages
+    .filter((img: any) => {
+      const url = img?.url;
+      if (!url || typeof url !== "string") return false;
+      if (!url.startsWith("http")) return false;
+      if (url.length >= 1000) return false;
+      return true;
+    })
+    .filter((img: any) => {
+      const url = img?.url as string;
+      const normalized = normalizeUrl(url);
+      if (heroKeys.has(url) || heroKeys.has(normalized)) return false;
+      if (existingMarkdownImageUrls.has(normalized)) return false;
+      return true;
+    });
+
+  type InlineBlock =
+    | { type: "markdown"; content: string }
+    | { type: "image"; url: string; alt: string; caption?: string };
+
+  const buildInlineBlocks = (markdown: string, images: any[]): InlineBlock[] => {
+    const splitIntoSections = (md: string) => {
+      const byHeadings = (md || "")
+        .split(/\n(?=##\s)/g)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (byHeadings.length >= 2) return byHeadings;
+
+      // Fallback: chunk by paragraphs so images can appear through the article
+      const paragraphs = (md || "")
+        .split(/\n{2,}/g)
+        .map((p) => p.trim())
+        .filter(Boolean);
+
+      if (paragraphs.length <= 1) return [md || ""];
+
+      const countWords = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+      const targetWordsPerChunk = 420;
+
+      const chunks: string[] = [];
+      let current: string[] = [];
+      let currentWords = 0;
+
+      for (const p of paragraphs) {
+        const w = countWords(p);
+        current.push(p);
+        currentWords += w;
+
+        if (currentWords >= targetWordsPerChunk && current.length > 0) {
+          chunks.push(current.join("\n\n"));
+          current = [];
+          currentWords = 0;
+        }
+      }
+
+      if (current.length > 0) chunks.push(current.join("\n\n"));
+
+      return chunks.length >= 2 ? chunks : [md || ""];
+    };
+
+    const sections = splitIntoSections(markdown);
+    const queue = [...images];
+
+    const blocks: InlineBlock[] = [];
+
+    for (let i = 0; i < sections.length; i++) {
+      blocks.push({ type: "markdown", content: sections[i] });
+
+      // Insert after each section (except the last) until we run out
+      if (i < sections.length - 1 && queue.length > 0) {
+        const img = queue.shift();
+        blocks.push({
+          type: "image",
+          url: img.url,
+          caption: img.caption || img.title,
+          alt:
+            img.alt_text ||
+            img.caption ||
+            img.title ||
+            `Foto van ${spotlight.artist_name}`,
+        });
+      }
+    }
+
+    // Any remaining images go at the end
+    while (queue.length > 0) {
+      const img = queue.shift();
+      blocks.push({
+        type: "image",
+        url: img.url,
+        caption: img.caption || img.title,
+        alt: img.alt_text || img.caption || img.title || `Foto van ${spotlight.artist_name}`,
+      });
+    }
+
+    return blocks;
+  };
+
+  const inlineBlocks = buildInlineBlocks(storyContent, inlineInsertImages);
+  const hasInlineImages = inlineBlocks.some((b) => b.type === "image");
 
   return (
     <>
@@ -173,37 +302,38 @@ const ArtistSpotlight = () => {
 
                 <Separator className="mb-8" />
 
-                {/* Image Gallery - toon geen dubbele set (dedupe op URL zonder query) */}
-                {(() => {
-                  const seen = new Set<string>();
-                  if (heroImage) {
-                    seen.add(heroImage);
-                    seen.add(normalizeUrl(heroImage));
-                  }
+                {/* Image Gallery (optional) - hide when we already render images inline */}
+                {!hasInlineImages &&
+                  (() => {
+                    const seen = new Set<string>();
+                    if (heroImage) {
+                      seen.add(heroImage);
+                      seen.add(normalizeUrl(heroImage));
+                    }
 
-                  const galleryImages = (spotlight.spotlight_images as any[] || []).filter((img: any) => {
-                    const url = img?.url;
-                    if (!url || !url.startsWith("http") || url.length >= 1000) return false;
+                    const galleryImages = (spotlight.spotlight_images as any[] || []).filter((img: any) => {
+                      const url = img?.url;
+                      if (!url || !url.startsWith("http") || url.length >= 1000) return false;
 
-                    const normalized = normalizeUrl(url);
-                    if (seen.has(url) || seen.has(normalized)) return false;
+                      const normalized = normalizeUrl(url);
+                      if (seen.has(url) || seen.has(normalized)) return false;
 
-                    seen.add(url);
-                    seen.add(normalized);
-                    return true;
-                  });
+                      seen.add(url);
+                      seen.add(normalized);
+                      return true;
+                    });
 
-                  // Als er maar 1 afbeelding overblijft, is dit praktisch altijd de "dubbele set".
-                  // Toon de gallery pas bij 2+ unieke afbeeldingen.
-                  return galleryImages.length > 1 ? (
-                    <div className="mb-8">
-                      <ImageGallery images={galleryImages} artistName={spotlight.artist_name} />
-                    </div>
-                  ) : null;
-                })()}
+                    // Toon de gallery pas bij 2+ unieke afbeeldingen.
+                    return galleryImages.length > 1 ? (
+                      <div className="mb-8">
+                        <ImageGallery images={galleryImages} artistName={spotlight.artist_name} />
+                      </div>
+                    ) : null;
+                  })()}
 
                 {/* Story Content with Enhanced Typography */}
-                <div className="prose prose-lg dark:prose-invert max-w-none
+                <div
+                  className="prose prose-lg dark:prose-invert max-w-none
                   prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-foreground
                   prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6
                   prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4
@@ -211,30 +341,55 @@ const ArtistSpotlight = () => {
                   prose-strong:font-semibold prose-strong:text-foreground
                   prose-a:text-primary prose-a:no-underline hover:prose-a:underline
                   prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4
-                  prose-li:text-foreground prose-li:my-2">
-                  <ReactMarkdown
-                    components={{
-                      p: ({ children }) => {
-                        // Zorg dat losse afbeeldingen altijd als blok zichtbaar zijn
-                        const onlyChild = Array.isArray(children) && children.length === 1 ? children[0] : null;
-                        if ((onlyChild as any)?.type === 'img') {
-                          return <div className="my-6">{children}</div>;
-                        }
-                        return <p>{children}</p>;
-                      },
-                      img: ({ src, alt }) => (
-                        <img
-                          src={src || ""}
-                          alt={alt || `Foto van ${spotlight.artist_name}`}
-                          loading="lazy"
-                          decoding="async"
-                          className="block w-1/2 max-w-md rounded-lg"
-                        />
-                      ),
-                    }}
-                  >
-                    {storyContent}
-                  </ReactMarkdown>
+                  prose-li:text-foreground prose-li:my-2"
+                >
+                  {inlineBlocks.map((block, idx) => {
+                    if (block.type === "image") {
+                      return (
+                        <figure key={`img-${idx}`} className="not-prose my-8">
+                          <div className="overflow-hidden rounded-xl border border-border bg-muted/30">
+                            <OptimizedImage
+                              src={block.url}
+                              alt={block.alt}
+                              className="w-full h-auto object-contain"
+                            />
+                          </div>
+                          {block.caption && (
+                            <figcaption className="mt-2 text-sm text-muted-foreground">
+                              {block.caption}
+                            </figcaption>
+                          )}
+                        </figure>
+                      );
+                    }
+
+                    return (
+                      <ReactMarkdown
+                        key={`md-${idx}`}
+                        components={{
+                          p: ({ children }) => {
+                            const onlyChild =
+                              Array.isArray(children) && children.length === 1 ? children[0] : null;
+                            if ((onlyChild as any)?.type === "img") {
+                              return <div className="my-6">{children}</div>;
+                            }
+                            return <p>{children}</p>;
+                          },
+                          img: ({ src, alt }) => (
+                            <img
+                              src={src || ""}
+                              alt={alt || `Foto van ${spotlight.artist_name}`}
+                              loading="lazy"
+                              decoding="async"
+                              className="block w-1/2 max-w-md rounded-lg"
+                            />
+                          ),
+                        }}
+                      >
+                        {block.content}
+                      </ReactMarkdown>
+                    );
+                  })}
                 </div>
               </div>
 

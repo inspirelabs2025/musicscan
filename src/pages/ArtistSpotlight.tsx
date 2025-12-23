@@ -346,8 +346,8 @@ const ArtistSpotlight = () => {
                   {inlineBlocks.map((block, idx) => {
                     if (block.type === "image") {
                       return (
-                        <figure key={`img-${idx}`} className="not-prose my-8">
-                          <div className="overflow-hidden rounded-xl border border-border bg-muted/30">
+                        <figure key={`img-${idx}`} className="not-prose my-8 flex flex-col items-center">
+                          <div className="overflow-hidden rounded-xl border border-border bg-muted/30 max-w-md w-full">
                             <OptimizedImage
                               src={block.url}
                               alt={block.alt}
@@ -355,7 +355,7 @@ const ArtistSpotlight = () => {
                             />
                           </div>
                           {block.caption && (
-                            <figcaption className="mt-2 text-sm text-muted-foreground">
+                            <figcaption className="mt-2 text-sm text-muted-foreground text-center">
                               {block.caption}
                             </figcaption>
                           )}

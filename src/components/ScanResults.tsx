@@ -248,17 +248,32 @@ export const ScanResults = React.memo(({
 
               <TabsContent value="search" className="space-y-4">
                 <div className="space-y-2">
-                  {searchStrategies.map((strategy, index) => (
-                    <div key={index} className="p-3 border rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{strategy.strategy}</span>
-                        <Badge variant={strategy.success ? "default" : "secondary"}>
-                          {strategy.success ? "Succes" : "Gefaald"}
-                        </Badge>
+                  {searchStrategies.length > 0 ? searchStrategies.map((strategy, index) => {
+                    // Handle both object format and string format
+                    const isObject = typeof strategy === 'object' && strategy !== null;
+                    const strategyName = isObject ? strategy.strategy : String(strategy);
+                    const success = isObject ? strategy.success : true;
+                    const searchTerm = isObject ? strategy.search_term : '';
+                    
+                    return (
+                      <div key={index} className="p-3 border rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{strategyName}</span>
+                          <Badge variant={success ? "default" : "secondary"}>
+                            {success ? "Succes" : "Gefaald"}
+                          </Badge>
+                        </div>
+                        {searchTerm && (
+                          <p className="text-sm text-muted-foreground mt-1">{searchTerm}</p>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">{strategy.search_term}</p>
+                    );
+                  }) : (
+                    <div className="p-3 border rounded-lg">
+                      <span className="font-medium">Direct Discogs ID</span>
+                      <Badge variant="default" className="ml-2">Succes</Badge>
                     </div>
-                  ))}
+                  )}
                 </div>
               </TabsContent>
             </Tabs>

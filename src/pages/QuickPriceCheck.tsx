@@ -34,18 +34,28 @@ export default function QuickPriceCheck() {
 
   useEffect(() => {
     const mediaTypeParam = searchParams.get('mediaType');
-    if (mediaTypeParam === 'vinyl' || mediaTypeParam === 'cd') {
-      dispatch({ type: 'SET_MEDIA_TYPE', payload: mediaTypeParam });
-      dispatch({ type: 'SET_CURRENT_STEP', payload: 1 });
-    }
-
     const discogsIdParam = searchParams.get('discogsId');
+
+    // Als we een discogsId hebben met mediaType, start direct de search
     if (discogsIdParam) {
       const discogsId = parseInt(discogsIdParam);
       if (!isNaN(discogsId)) {
-        dispatch({ type: 'SET_CURRENT_STEP', payload: 4 });
-        searchByDiscogsId(discogsIdParam);
+        if (mediaTypeParam === 'vinyl' || mediaTypeParam === 'cd') {
+          dispatch({ type: 'SET_MEDIA_TYPE', payload: mediaTypeParam });
+          dispatch({ type: 'SET_CURRENT_STEP', payload: 4 });
+          searchByDiscogsId(discogsIdParam);
+        } else {
+          // Geen mediaType param - ga naar DiscogsIdInput met prefilled ID
+          dispatch({ type: 'SET_CURRENT_STEP', payload: 5 });
+        }
+        return;
       }
+    }
+
+    // Alleen mediaType param (zonder discogsId)
+    if (mediaTypeParam === 'vinyl' || mediaTypeParam === 'cd') {
+      dispatch({ type: 'SET_MEDIA_TYPE', payload: mediaTypeParam });
+      dispatch({ type: 'SET_CURRENT_STEP', payload: 1 });
     }
   }, [searchParams, searchByDiscogsId]);
 
@@ -62,7 +72,8 @@ export default function QuickPriceCheck() {
     setUploadedFiles(prev => [...prev, file]);
   }, []);
 
-  const handleDiscogsIdSubmit = useCallback((discogsId: string) => {
+  const handleDiscogsIdSubmit = useCallback((discogsId: string, mediaType: 'vinyl' | 'cd') => {
+    dispatch({ type: 'SET_MEDIA_TYPE', payload: mediaType });
     dispatch({ type: 'SET_CURRENT_STEP', payload: 4 });
     searchByDiscogsId(discogsId);
   }, [searchByDiscogsId]);
@@ -140,6 +151,8 @@ export default function QuickPriceCheck() {
         {state.currentStep === 5 && (
           <DiscogsIdInput 
             onSubmit={handleDiscogsIdSubmit}
+            isSearching={isSearching}
+            prefilledDiscogsId={searchParams.get('discogsId') || undefined}
             onBack={() => dispatch({ type: 'SET_CURRENT_STEP', payload: 0 })}
           />
         )}

@@ -53,6 +53,24 @@ export const useDiscogsSearch = () => {
   const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
   const CACHE_PREFIX = 'discogs_search_';
 
+  const normalizePrice = (value: unknown): string | null => {
+    if (value === null || value === undefined) return null;
+    if (typeof value === 'number' && Number.isFinite(value)) return value.toFixed(2);
+    if (typeof value === 'string' && value.trim() !== '') return value;
+    return null;
+  };
+
+  const normalizePricingStats = (stats: any) => {
+    if (!stats) return undefined;
+
+    return {
+      ...stats,
+      lowest_price: normalizePrice(stats.lowest_price),
+      median_price: normalizePrice(stats.median_price),
+      highest_price: normalizePrice(stats.highest_price)
+    };
+  };
+
   const getCachedResult = useCallback((searchKey: string): CachedSearchResult | null => {
     try {
       const cached = localStorage.getItem(CACHE_PREFIX + searchKey);
@@ -187,18 +205,23 @@ export const useDiscogsSearch = () => {
       console.log('⚡ Quick search completed:', quickData);
       
       if (quickData?.results?.length > 0) {
+        const normalizedQuickResults: DiscogsSearchResult[] = quickData.results.map((r: any) => ({
+          ...r,
+          pricing_stats: normalizePricingStats(r.pricing_stats)
+        }));
+
         // Show results immediately without pricing
-        setSearchResults(quickData.results);
+        setSearchResults(normalizedQuickResults);
         setSearchStrategies(quickData.search_strategies || []);
         
         toast({
           title: "Gevonden!",
-          description: `${quickData.results.length} resultaat${quickData.results.length > 1 ? 'en' : ''} gevonden${includePricing ? ' - prijzen worden geladen...' : ''}`,
+          description: `${normalizedQuickResults.length} resultaat${normalizedQuickResults.length > 1 ? 'en' : ''} gevonden${includePricing ? ' - prijzen worden geladen...' : ''}`,
           variant: "default"
         });
         
         // Cache quick results
-        setCachedResult(searchKey, quickData.results, quickData.search_strategies || []);
+        setCachedResult(searchKey, normalizedQuickResults, quickData.search_strategies || []);
         
         // Phase 2: Load pricing asynchronously if requested
         if (includePricing && quickData.results[0]) {
@@ -215,20 +238,25 @@ export const useDiscogsSearch = () => {
               });
               
               if (!pricingError && pricingData?.results?.[0]?.pricing_stats) {
+                const normalizedStats = normalizePricingStats(pricingData.results[0].pricing_stats);
+
                 // Update results with pricing data
                 setSearchResults(prev => {
                   const updated = [...prev];
                   if (updated[0]) {
                     updated[0] = {
                       ...updated[0],
-                      pricing_stats: pricingData.results[0].pricing_stats
+                      pricing_stats: normalizedStats
                     };
                   }
                   return updated;
                 });
                 
                 // Update cache with pricing
-                const updatedResults = [{...quickData.results[0], pricing_stats: pricingData.results[0].pricing_stats}, ...quickData.results.slice(1)];
+                const updatedResults: DiscogsSearchResult[] = [
+                  { ...normalizedQuickResults[0], pricing_stats: normalizedStats },
+                  ...normalizedQuickResults.slice(1)
+                ];
                 setCachedResult(searchKey, updatedResults, quickData.search_strategies || []);
                 
                 console.log('✅ Pricing data loaded and applied');
@@ -285,9 +313,11 @@ export const useDiscogsSearch = () => {
       if (error) throw error;
 
       if (data.pricing_stats) {
+        const normalizedStats = normalizePricingStats(data.pricing_stats);
+
         setSearchResults(prev => prev.map(result => 
           result.id === discogsId 
-            ? { ...result, pricing_stats: data.pricing_stats }
+            ? { ...result, pricing_stats: normalizedStats }
             : result
         ));
         
@@ -355,7 +385,7 @@ export const useDiscogsSearch = () => {
           genre: result.genre || '',
           country: result.country || '',
           cover_image: coverImage,
-          pricing_stats: result.pricing_stats
+          pricing_stats: normalizePricingStats(result.pricing_stats)
         };
         
         // Show results immediately
@@ -381,17 +411,19 @@ export const useDiscogsSearch = () => {
               }
             });
             
-            if (!pricingError && pricingData?.results?.[0]?.pricing_stats) {
-              setSearchResults(prev => {
-                const updated = [...prev];
-                if (updated[0]) {
-                  updated[0] = {
-                    ...updated[0],
-                    pricing_stats: pricingData.results[0].pricing_stats
-                  };
-                }
-                return updated;
-              });
+             if (!pricingError && pricingData?.results?.[0]?.pricing_stats) {
+               const normalizedStats = normalizePricingStats(pricingData.results[0].pricing_stats);
+
+               setSearchResults(prev => {
+                 const updated = [...prev];
+                 if (updated[0]) {
+                   updated[0] = {
+                     ...updated[0],
+                     pricing_stats: normalizedStats
+                   };
+                 }
+                 return updated;
+               });
               
               console.log('✅ Pricing data loaded for Discogs ID');
             }

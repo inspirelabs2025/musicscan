@@ -19,6 +19,7 @@ export interface DiscogsSearchResult {
   api_url: string;
   similarity_score: number;
   search_strategy?: string;
+  cover_image?: string;
   pricing_stats?: {
     lowest_price: string | null;
     median_price: string | null;
@@ -333,6 +334,10 @@ export const useDiscogsSearch = () => {
       
       if (releaseData?.results?.length > 0) {
         const result = releaseData.results[0];
+        const coverImage = result.release_metadata?.thumb || 
+                          result.release_metadata?.images?.[0]?.uri150 ||
+                          result.release_metadata?.images?.[0]?.uri ||
+                          result.cover_image;
         const formattedResult: DiscogsSearchResult = {
           id: parseInt(result.discogs_id),
           discogs_id: parseInt(result.discogs_id),
@@ -345,6 +350,11 @@ export const useDiscogsSearch = () => {
           similarity_score: 1.0,
           search_strategy: 'Direct Discogs ID',
           catalog_number: result.catalog_number || '',
+          label: result.label || '',
+          format: result.format || '',
+          genre: result.genre || '',
+          country: result.country || '',
+          cover_image: coverImage,
           pricing_stats: result.pricing_stats
         };
         

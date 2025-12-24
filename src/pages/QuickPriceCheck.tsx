@@ -29,6 +29,7 @@ export default function QuickPriceCheck() {
     searchCatalog,
     searchByDiscogsId,
     retryPricing,
+    isPricingRetrying,
     isPricingLoading
   } = useDiscogsSearch();
 
@@ -223,7 +224,7 @@ export default function QuickPriceCheck() {
               mediaType={state.mediaType}
               onCopyToClipboard={handleCopyToClipboard}
               onRetryPricing={() => searchResults[0]?.discogs_id && retryPricing(searchResults[0].discogs_id)}
-              isPricingRetrying={isPricingLoading}
+              isPricingRetrying={isPricingRetrying}
               isPricingLoading={isPricingLoading}
             />
 

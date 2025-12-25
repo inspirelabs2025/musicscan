@@ -112,6 +112,33 @@ serve(async (req) => {
 
       console.log(`🎤 Processing: ${nextItem.metadata.artist_name}`);
 
+      // Helpers for better error visibility + retry behavior
+      const formatInvokeError = (err: any) => {
+        const status = err?.context?.status;
+        const body = err?.context?.body;
+        const bodyText = typeof body === 'string' ? body : body ? JSON.stringify(body) : '';
+        const base = err?.message || 'Unknown error';
+        const suffix = [status ? `status=${status}` : null, bodyText ? `body=${bodyText.substring(0, 500)}` : null]
+          .filter(Boolean)
+          .join(' ');
+        return suffix ? `${base} (${suffix})` : base;
+      };
+
+      const isRetryableError = (msg: string) => {
+        const m = msg.toLowerCase();
+        return (
+          m.includes('429') ||
+          m.includes('rate') ||
+          m.includes('too many') ||
+          m.includes('timeout') ||
+          m.includes('network') ||
+          m.includes('fetch') ||
+          m.includes('502') ||
+          m.includes('503') ||
+          m.includes('edge function returned a non-2xx')
+        );
+      };
+
       try {
         const { data: storyData, error: storyError } = await supabase.functions.invoke('generate-artist-story', {
           body: { artistName: nextItem.metadata.artist_name }
@@ -121,9 +148,9 @@ serve(async (req) => {
 
         await supabase
           .from('batch_queue_items')
-          .update({ 
+          .update({
             status: 'completed',
-            processed_at: new Date().toISOString()
+            processed_at: new Date().toISOString(),
           })
           .eq('id', nextItem.id);
 
@@ -132,29 +159,76 @@ serve(async (req) => {
           .update({
             processed_items: activeBatch.processed_items + 1,
             successful_items: activeBatch.successful_items + 1,
-            last_heartbeat: new Date().toISOString()
+            last_heartbeat: new Date().toISOString(),
           })
           .eq('id', activeBatch.id);
 
         console.log(`✅ Success: ${nextItem.metadata.artist_name}`);
 
-        return new Response(JSON.stringify({
-          success: true,
-          artist: nextItem.metadata.artist_name
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-
+        return new Response(
+          JSON.stringify({
+            success: true,
+            artist: nextItem.metadata.artist_name,
+            story_id: storyData?.id,
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
       } catch (error: any) {
-        console.error(`❌ Failed: ${nextItem.metadata.artist_name}`, error);
+        const nextAttempts = (nextItem.attempts || 0) + 1;
+        const maxAttempts = nextItem.max_attempts || 3;
+        const detailedMessage = formatInvokeError(error);
+        const shouldRetry = isRetryableError(detailedMessage) && nextAttempts < maxAttempts;
 
+        console.error(
+          `❌ Failed: ${nextItem.metadata.artist_name} (attempt ${nextAttempts}/${maxAttempts})`,
+          {
+            message: error?.message,
+            context: error?.context,
+            shouldRetry,
+          }
+        );
+
+        if (shouldRetry) {
+          // Retry later (next cron tick)
+          await supabase
+            .from('batch_queue_items')
+            .update({
+              status: 'pending',
+              error_message: detailedMessage.substring(0, 1000),
+              attempts: nextAttempts,
+              processed_at: null,
+            })
+            .eq('id', nextItem.id);
+
+          await supabase
+            .from('batch_processing_status')
+            .update({
+              last_heartbeat: new Date().toISOString(),
+            })
+            .eq('id', activeBatch.id);
+
+          return new Response(
+            JSON.stringify({
+              success: false,
+              retrying: true,
+              error: detailedMessage,
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        // Permanent failure
         await supabase
           .from('batch_queue_items')
-          .update({ 
+          .update({
             status: 'failed',
-            error_message: error.message,
+            error_message: detailedMessage.substring(0, 1000),
             processed_at: new Date().toISOString(),
-            attempts: (nextItem.attempts || 0) + 1
+            attempts: nextAttempts,
           })
           .eq('id', nextItem.id);
 
@@ -163,16 +237,20 @@ serve(async (req) => {
           .update({
             processed_items: activeBatch.processed_items + 1,
             failed_items: activeBatch.failed_items + 1,
-            last_heartbeat: new Date().toISOString()
+            last_heartbeat: new Date().toISOString(),
           })
           .eq('id', activeBatch.id);
 
-        return new Response(JSON.stringify({
-          success: false,
-          error: error.message
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return new Response(
+          JSON.stringify({
+            success: false,
+            retrying: false,
+            error: detailedMessage,
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
       }
     }
 

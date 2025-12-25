@@ -71,11 +71,34 @@ serve(async (req) => {
 
     console.log(`✅ Selected ${artistsToProcess.length} curated artists for processing`);
 
-    if (artistsToProcess.length === 0) {
+    // EXTRA DEDUPLICATION: Also check batch_queue_items for pending/processing items
+    const { data: pendingQueueItems } = await supabase
+      .from('batch_queue_items')
+      .select('metadata')
+      .eq('item_type', 'artist_story')
+      .in('status', ['pending', 'processing']);
+
+    const pendingArtistNames = new Set<string>();
+    for (const item of pendingQueueItems || []) {
+      const artistName = (item.metadata as any)?.artist_name;
+      if (artistName) {
+        pendingArtistNames.add(artistName);
+      }
+    }
+
+    // Final filter: exclude both existing stories AND pending queue items
+    const finalArtistsToProcess = artistsToProcess.filter(
+      name => !pendingArtistNames.has(name)
+    );
+
+    console.log(`✅ After queue dedup: ${finalArtistsToProcess.length} artists (${artistsToProcess.length - finalArtistsToProcess.length} already in queue)`);
+
+    if (finalArtistsToProcess.length === 0) {
       return new Response(JSON.stringify({
         success: true,
-        message: 'No new curated artists need stories',
+        message: 'No new curated artists need stories (all in queue or done)',
         existing_stories: existingArtistNames.size,
+        pending_in_queue: pendingArtistNames.size,
         total_curated: curatedArtists.length
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -107,7 +130,7 @@ serve(async (req) => {
       .insert({
         process_type: 'artist_story_generation',
         status: 'processing',
-        total_items: artistsToProcess.length,
+        total_items: finalArtistsToProcess.length,
         processed_items: 0,
         successful_items: 0,
         failed_items: 0,
@@ -123,7 +146,7 @@ serve(async (req) => {
     }
 
     // Create queue items for each artist
-    const queueItems = artistsToProcess.map(artist => ({
+    const queueItems = finalArtistsToProcess.map(artist => ({
       batch_id: batch.id,
       item_id: crypto.randomUUID(),
       item_type: 'artist_story',
@@ -141,14 +164,14 @@ serve(async (req) => {
       throw queueError;
     }
 
-    console.log(`✅ Created batch ${batch.id} with ${artistsToProcess.length} items`);
-    console.log(`🎤 Artists to process: ${artistsToProcess.slice(0, 5).join(', ')}...`);
+    console.log(`✅ Created batch ${batch.id} with ${finalArtistsToProcess.length} items`);
+    console.log(`🎤 Artists to process: ${finalArtistsToProcess.slice(0, 5).join(', ')}...`);
 
     return new Response(JSON.stringify({
       success: true,
       batch_id: batch.id,
-      total: artistsToProcess.length,
-      sample_artists: artistsToProcess.slice(0, 10)
+      total: finalArtistsToProcess.length,
+      sample_artists: finalArtistsToProcess.slice(0, 10)
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

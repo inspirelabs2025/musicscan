@@ -116,10 +116,11 @@ Deno.serve(async (req) => {
     let totalPages = 1;
     const perPage = 100;
 
-    console.log(`[discover-artist-albums] Fetching releases for artist ID: ${finalDiscogsId}`);
+    // Use type=master to fetch ONLY unique albums (not all pressings/versions)
+    console.log(`[discover-artist-albums] Fetching MASTER releases only for artist ID: ${finalDiscogsId}`);
 
     while (page <= totalPages) {
-      const releasesUrl = `https://api.discogs.com/artists/${finalDiscogsId}/releases?page=${page}&per_page=${perPage}&sort=year&sort_order=asc`;
+      const releasesUrl = `https://api.discogs.com/artists/${finalDiscogsId}/releases?type=master&page=${page}&per_page=${perPage}&sort=year&sort_order=asc`;
       
       const response = await fetch(releasesUrl, {
         headers: {
@@ -141,11 +142,11 @@ Deno.serve(async (req) => {
       
       if (page === 1) {
         totalPages = data.pagination.pages;
-        console.log(`[discover-artist-albums] Total pages: ${totalPages}, total items: ${data.pagination.items}`);
+        console.log(`[discover-artist-albums] Total MASTER albums: ${data.pagination.items} (${totalPages} pages)`);
       }
 
       allReleases = allReleases.concat(data.releases);
-      console.log(`[discover-artist-albums] Fetched page ${page}/${totalPages} (${data.releases.length} releases)`);
+      console.log(`[discover-artist-albums] Fetched page ${page}/${totalPages} (${data.releases.length} master albums)`);
 
       page++;
       
@@ -155,7 +156,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`[discover-artist-albums] Total releases fetched: ${allReleases.length}`);
+    console.log(`[discover-artist-albums] Total master albums fetched: ${allReleases.length}`);
 
     // Step 3: Filter to main albums only
     const mainAlbums = allReleases.filter(isMainAlbum);

@@ -214,69 +214,136 @@ export default function MasterArtists() {
   });
 
   // Bulk add artists mutation - supports formats:
-  // "Artist Name – 12345" (with en-dash from Discogs)
+  // "Artist Name – 12345" (en-dash)
+  // "Artist Name — 12345" (em-dash)
+  // "Artist Name - 12345" (hyphen)
   // "Artist Name|12345" (pipe separator)
   // "Artist Name" (without ID)
+  // Also supports pastes where a standalone "Discogs" line appears between entries.
   const bulkAddMutation = useMutation({
     mutationFn: async (lines: string[]) => {
       // Filter out empty lines and "Discogs" labels
-      const validLines = lines.filter(line => {
+      const validLines = lines.filter((line) => {
         const trimmed = line.trim();
-        return trimmed && trimmed.toLowerCase() !== 'discogs';
+        return trimmed && trimmed.toLowerCase() !== "discogs";
       });
 
-      const parsedArtists = validLines.map(line => {
-        // Split on en-dash (–) or pipe (|) with optional spaces
-        const parts = line.split(/\s*[–|]\s*/).map(p => p.trim());
+      const parsedArtistsRaw = validLines.map((line) => {
+        // Split on common separators with optional spaces
+        const parts = line.split(/\s*(?:\||–|—|-)\s*/).map((p) => p.trim());
         const artistName = parts[0];
         const discogsId = parts[1] ? parseInt(parts[1], 10) : null;
-        
+
         return {
           artist_name: artistName,
           is_active: true,
           priority: 50,
-          ...(discogsId && !isNaN(discogsId) ? { discogs_artist_id: discogsId } : {}),
+          discogs_artist_id: discogsId && !isNaN(discogsId) ? discogsId : null,
         };
       });
 
-      // Get existing artists to deduplicate
-      const artistNames = parsedArtists.map(a => a.artist_name.toLowerCase());
-      const { data: existingArtists } = await supabase
+      // Dedupe within the pasted input (case-insensitive); prefer entry that has a Discogs ID.
+      const byName = new Map<string, (typeof parsedArtistsRaw)[number]>();
+      for (const a of parsedArtistsRaw) {
+        const key = a.artist_name.trim().toLowerCase();
+        const existing = byName.get(key);
+        if (!existing) {
+          byName.set(key, a);
+          continue;
+        }
+        if (!existing.discogs_artist_id && a.discogs_artist_id) {
+          byName.set(key, a);
+        }
+      }
+      const parsedArtists = Array.from(byName.values());
+
+      // Fetch existing artists once (table is small) so we can:
+      // - skip true duplicates
+      // - but UPDATE missing discogs_artist_id when provided
+      const { data: existingRows, error: existingError } = await supabase
         .from("curated_artists")
-        .select("artist_name")
-        .in("artist_name", parsedArtists.map(a => a.artist_name));
+        .select("id, artist_name, discogs_artist_id");
 
-      const existingNames = new Set(
-        (existingArtists || []).map(a => a.artist_name.toLowerCase())
-      );
+      if (existingError) throw existingError;
 
-      // Filter out duplicates
-      const newArtists = parsedArtists.filter(
-        a => !existingNames.has(a.artist_name.toLowerCase())
-      );
-
-      if (newArtists.length === 0) {
-        return { inserted: [], skipped: parsedArtists.length };
+      const existingMap = new Map<string, { id: string; discogs_artist_id: number | null }>();
+      for (const row of existingRows || []) {
+        existingMap.set(row.artist_name.trim().toLowerCase(), {
+          id: row.id,
+          discogs_artist_id: row.discogs_artist_id,
+        });
       }
 
-      const { data, error } = await supabase
-        .from("curated_artists")
-        .insert(newArtists)
-        .select();
-      
-      if (error) throw error;
-      return { inserted: data, skipped: parsedArtists.length - newArtists.length };
+      const toInsert: Array<{ artist_name: string; is_active: true; priority: number; discogs_artist_id?: number }> = [];
+      const toUpdate: Array<{ id: string; discogs_artist_id: number }> = [];
+
+      let skipped = 0;
+      let updatedMissingId = 0;
+
+      for (const a of parsedArtists) {
+        const key = a.artist_name.trim().toLowerCase();
+        const existing = existingMap.get(key);
+
+        if (!existing) {
+          const insertRow: { artist_name: string; is_active: true; priority: number; discogs_artist_id?: number } = {
+            artist_name: a.artist_name.trim(),
+            is_active: true,
+            priority: 50,
+          };
+          if (a.discogs_artist_id) insertRow.discogs_artist_id = a.discogs_artist_id;
+          toInsert.push(insertRow);
+          continue;
+        }
+
+        // Artist exists: only update discogs ID if it's currently missing and we have a new one
+        if (!existing.discogs_artist_id && a.discogs_artist_id) {
+          toUpdate.push({ id: existing.id, discogs_artist_id: a.discogs_artist_id });
+          updatedMissingId++;
+        } else {
+          skipped++;
+        }
+      }
+
+      const inserted: any[] = [];
+      const updated: any[] = [];
+
+      if (toInsert.length > 0) {
+        const { data, error } = await supabase.from("curated_artists").insert(toInsert).select();
+        if (error) throw error;
+        inserted.push(...(data || []));
+      }
+
+      if (toUpdate.length > 0) {
+        const { data, error } = await supabase
+          .from("curated_artists")
+          .upsert(toUpdate, { onConflict: "id" })
+          .select();
+        if (error) throw error;
+        updated.push(...(data || []));
+      }
+
+      return {
+        inserted,
+        updated,
+        skipped,
+        updatedMissingId,
+      };
     },
     onSuccess: (result) => {
-      const { inserted, skipped } = result;
-      const withDiscogs = inserted?.filter(a => a.discogs_artist_id).length || 0;
-      const insertedCount = inserted?.length || 0;
-      
-      if (skipped > 0) {
-        toast.success(`${insertedCount} artiesten toegevoegd (${withDiscogs} met Discogs ID), ${skipped} overgeslagen (bestonden al)`);
-      } else {
-        toast.success(`${insertedCount} artiesten toegevoegd (${withDiscogs} met Discogs ID)`);
-      }
+      const insertedCount = result.inserted?.length || 0;
+      const updatedCount = result.updated?.length || 0;
+      const skipped = result.skipped || 0;
+
+      const withDiscogsInserted = result.inserted?.filter((a: any) => a.discogs_artist_id).length || 0;
+      const withDiscogsUpdated = result.updated?.filter((a: any) => a.discogs_artist_id).length || 0;
+
+      const parts: string[] = [];
+      if (insertedCount > 0) parts.push(`${insertedCount} toegevoegd (${withDiscogsInserted} met Discogs ID)`);
+      if (updatedCount > 0) parts.push(`${updatedCount} bijgewerkt (${withDiscogsUpdated} Discogs IDs ingevuld)`);
+      if (skipped > 0) parts.push(`${skipped} overgeslagen`);
+
+      toast.success(parts.join(", ") || "Geen wijzigingen");
+
       setBulkArtistsText("");
       queryClient.invalidateQueries({ queryKey: ["master-artists"] });
       queryClient.invalidateQueries({ queryKey: ["master-artists-stats"] });

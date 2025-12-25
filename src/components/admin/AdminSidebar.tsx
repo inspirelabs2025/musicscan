@@ -39,7 +39,8 @@ import {
   Send,
   Video,
   Cog,
-  ListMusic
+  ListMusic,
+  Crown
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -105,11 +106,12 @@ const menuItems = [
   {
     title: "Content Management",
     items: [
+      { title: "Master Artists", url: "/admin/master-artists", icon: Crown },
       { title: "Verhalen", url: "/admin/album-reviews", icon: BookOpen },
       { title: "Studio Stories", url: "/admin/studio-stories", icon: Mic },
       { title: "Eigen Podcasts", url: "/admin/own-podcasts", icon: Mic },
       { title: "RSS News Manager", url: "/admin/news-rss-manager", icon: Newspaper },
-      { title: "Curated Artists", url: "/admin/curated-artists", icon: Music },
+      { title: "Curated Artists (LP)", url: "/admin/curated-artists", icon: Music },
       { title: "Discogs Lookup", url: "/admin/discogs-lookup", icon: Database },
       { title: "Photo Moderation", url: "/admin/photo-moderation", icon: Image },
       { title: "Auto Comments", url: "/admin/auto-comments", icon: MessageSquare },

@@ -595,3 +595,6 @@ verify_jwt = false
 
 [[functions.recycle-facebook-queue.schedule]]
 cron = "30 * * * *"
+
+[functions.sync-artist-content-status]
+verify_jwt = false

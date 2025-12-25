@@ -456,11 +456,11 @@ export default function MasterArtists() {
                         <TableHead className="text-center">🎤 Story</TableHead>
                         <TableHead className="text-center">
                           <div className="text-xs">📀 Albums</div>
-                          <div className="text-[10px] text-muted-foreground">gevonden/verwerkt</div>
+                          <div className="text-[10px] text-muted-foreground">ontdekt / blogs</div>
                         </TableHead>
                         <TableHead className="text-center">
                           <div className="text-xs">🎵 Singles</div>
-                          <div className="text-[10px] text-muted-foreground">gevonden/verwerkt</div>
+                          <div className="text-[10px] text-muted-foreground">ontdekt / stories</div>
                         </TableHead>
                         <TableHead className="text-center">🛍️ Products</TableHead>
                         <TableHead className="text-center">Prioriteit</TableHead>

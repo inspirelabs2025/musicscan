@@ -39,7 +39,80 @@ Deno.serve(async (req) => {
       .eq('status', 'pending')
       .not('artwork_large', 'is', null)
       .order('discovered_at', { ascending: true })
-      .limit(batchSize);
+      .limit(batchSize * 3); // Fetch more to account for duplicates
+
+    if (fetchError) {
+      throw new Error(`Failed to fetch albums: ${fetchError.message}`);
+    }
+
+    if (!albums || albums.length === 0) {
+      console.log('[album-queue-processor] No pending albums to process');
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'No pending albums to process',
+          processed: 0,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // DEDUPLICATION: Check which albums already have blog_posts
+    const { data: existingBlogs } = await supabase
+      .from('blog_posts')
+      .select('yaml_frontmatter');
+
+    const existingAlbumKeys = new Set<string>();
+    for (const blog of existingBlogs || []) {
+      const fm = blog.yaml_frontmatter as Record<string, any>;
+      if (fm?.artist && fm?.title) {
+        existingAlbumKeys.add(`${fm.artist.toLowerCase()}|${fm.title.toLowerCase()}`);
+      }
+    }
+
+    // Also check photo_batch_queue to avoid double-queuing
+    const { data: existingQueue } = await supabase
+      .from('photo_batch_queue')
+      .select('artist, title')
+      .in('status', ['pending', 'processing']);
+
+    for (const item of existingQueue || []) {
+      if (item.artist && item.title) {
+        existingAlbumKeys.add(`${item.artist.toLowerCase()}|${item.title.toLowerCase()}`);
+      }
+    }
+
+    // Filter out duplicates
+    const albumsToProcess = albums.filter(album => {
+      const key = `${album.artist_name.toLowerCase()}|${album.title.toLowerCase()}`;
+      return !existingAlbumKeys.has(key);
+    }).slice(0, batchSize);
+
+    if (albumsToProcess.length === 0) {
+      // Mark checked albums as 'skipped' so they don't get re-checked
+      for (const album of albums.slice(0, batchSize)) {
+        const key = `${album.artist_name.toLowerCase()}|${album.title.toLowerCase()}`;
+        if (existingAlbumKeys.has(key)) {
+          await supabase
+            .from('master_albums')
+            .update({ status: 'skipped', updated_at: new Date().toISOString() })
+            .eq('id', album.id);
+        }
+      }
+      
+      console.log('[album-queue-processor] All fetched albums already exist in blog_posts or queue');
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'All albums already processed or in queue',
+          processed: 0,
+          skipped: albums.length,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`[album-queue-processor] Processing ${albumsToProcess.length} album(s) (${albums.length - albumsToProcess.length} duplicates skipped)...`);
 
     if (fetchError) {
       throw new Error(`Failed to fetch albums: ${fetchError.message}`);
@@ -66,7 +139,7 @@ Deno.serve(async (req) => {
       error?: string;
     }> = [];
 
-    for (const album of albums) {
+    for (const album of albumsToProcess) {
       console.log(`[album-queue-processor] Processing: ${album.artist_name} - ${album.title}`);
       
       // Mark as processing
@@ -160,7 +233,7 @@ Deno.serve(async (req) => {
       }
 
       // Small delay between albums
-      if (albums.indexOf(album) < albums.length - 1) {
+      if (albumsToProcess.indexOf(album) < albumsToProcess.length - 1) {
         await delay(1000);
       }
     }

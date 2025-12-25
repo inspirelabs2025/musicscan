@@ -620,3 +620,14 @@ verify_jwt = false
 
 [[functions.album-queue-processor.schedule]]
 cron = "*/15 * * * *"
+
+# Admin Queue Cleanup
+[functions.admin-queue-cleanup]
+verify_jwt = false
+
+# Singles Discovery Processor (elke 30 min om master_singles te vullen)
+[functions.singles-discovery-processor]
+verify_jwt = false
+
+[[functions.singles-discovery-processor.schedule]]
+cron = "*/30 * * * *"

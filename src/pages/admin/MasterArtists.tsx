@@ -233,26 +233,29 @@ export default function MasterArtists() {
 
       const parsedArtistsRaw = validLines
         .map((line) => {
-          // Split on common separators with optional spaces
-          const parts = line.split(/\s*(?:\||–|—|-)\s*/).map((p) => p.trim()).filter(Boolean);
-          
+          // Split on common separators:
+          // - Pipe: "Artist | 123"
+          // - Dashes WITH spaces: "Artist - 123" (avoid splitting names like AC-DC)
+          const parts = line
+            .split(/\s*(?:\||–|—)\s*|\s+-\s+/)
+            .map((p) => p.trim())
+            .filter(Boolean);
+
           if (parts.length === 0) return null;
-          
+
           let artistName: string | null = null;
           let discogsId: number | null = null;
-          
+
           // Handle both formats: "Artist Name | 123456" and "123456 | Artist Name"
           for (const part of parts) {
             const num = parseInt(part, 10);
             if (!isNaN(num) && String(num) === part) {
-              // This part is purely numeric → Discogs ID
               discogsId = num;
             } else if (!artistName && part.length > 0) {
-              // First non-numeric part → artist name
               artistName = part;
             }
           }
-          
+
           if (!artistName || artistName.trim().length === 0) return null;
 
           return {
@@ -263,6 +266,14 @@ export default function MasterArtists() {
           };
         })
         .filter((a): a is NonNullable<typeof a> => a !== null);
+
+      const invalidLineCount = Math.max(0, validLines.length - parsedArtistsRaw.length);
+
+      if (parsedArtistsRaw.length === 0) {
+        throw new Error(
+          `Geen geldige regels gevonden. Gebruik bijvoorbeeld: "Artist | 123456" of "123456 | Artist". Ongeldige regels: ${invalidLineCount}`
+        );
+      }
 
       // Dedupe within the pasted input (case-insensitive); prefer entry that has a Discogs ID.
       const byName = new Map<string, (typeof parsedArtistsRaw)[number]>();
@@ -349,12 +360,14 @@ export default function MasterArtists() {
         updated,
         skipped,
         updatedMissingId,
+        invalidLineCount,
       };
     },
     onSuccess: (result) => {
       const insertedCount = result.inserted?.length || 0;
       const updatedCount = result.updated?.length || 0;
       const skipped = result.skipped || 0;
+      const invalid = result.invalidLineCount || 0;
 
       const withDiscogsInserted = result.inserted?.filter((a: any) => a.discogs_artist_id).length || 0;
       const withDiscogsUpdated = result.updated?.filter((a: any) => a.discogs_artist_id).length || 0;
@@ -363,6 +376,7 @@ export default function MasterArtists() {
       if (insertedCount > 0) parts.push(`${insertedCount} toegevoegd (${withDiscogsInserted} met Discogs ID)`);
       if (updatedCount > 0) parts.push(`${updatedCount} bijgewerkt (${withDiscogsUpdated} Discogs IDs ingevuld)`);
       if (skipped > 0) parts.push(`${skipped} overgeslagen`);
+      if (invalid > 0) parts.push(`${invalid} ongeldig (genegeerd)`);
 
       toast.success(parts.join(", ") || "Geen wijzigingen");
 

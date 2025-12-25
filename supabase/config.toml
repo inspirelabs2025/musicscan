@@ -613,10 +613,10 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.batch-album-discovery.schedule]]
-cron = "0 */4 * * *"
+cron = "0 * * * *"
 
 [functions.album-queue-processor]
 verify_jwt = false
 
 [[functions.album-queue-processor.schedule]]
-cron = "*/30 * * * *"
+cron = "*/15 * * * *"

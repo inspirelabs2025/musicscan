@@ -140,6 +140,25 @@ serve(async (req) => {
         })
         .eq('id', single.id);
 
+      // Update the curated_artists singles_processed counter
+      if (single.artist) {
+        // First get the current value
+        const { data: artistData } = await supabase
+          .from('curated_artists')
+          .select('id, singles_processed')
+          .ilike('artist_name', single.artist)
+          .maybeSingle();
+        
+        if (artistData) {
+          const newCount = (artistData.singles_processed || 0) + 1;
+          await supabase
+            .from('curated_artists')
+            .update({ singles_processed: newCount })
+            .eq('id', artistData.id);
+          console.log(`📊 Updated singles_processed for ${single.artist}: ${newCount}`);
+        }
+      }
+
       return new Response(JSON.stringify({
         success: true,
         processed: single.id,

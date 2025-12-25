@@ -164,6 +164,19 @@ serve(async (req) => {
           })
           .eq('id', activeBatch.id);
 
+        // Update curated_artists with artist story info
+        const artistName = nextItem.metadata.artist_name;
+        if (artistName && storyData?.id) {
+          await supabase
+            .from('curated_artists')
+            .update({ 
+              has_artist_story: true,
+              artist_story_id: storyData.id
+            })
+            .ilike('artist_name', artistName);
+          console.log(`📊 Updated curated_artists for ${artistName}`);
+        }
+
         console.log(`✅ Success: ${nextItem.metadata.artist_name}`);
 
         return new Response(

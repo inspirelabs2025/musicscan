@@ -9677,6 +9677,12 @@ export type Database = {
         Args: { p_content_type?: string; p_url: string }
         Returns: undefined
       }
+      sync_artist_singles_counts: {
+        Args: never
+        Returns: {
+          updated_count: number
+        }[]
+      }
       update_cd_discogs_ids: { Args: never; Returns: number }
       update_release_aggregated_data: {
         Args: { release_uuid: string }

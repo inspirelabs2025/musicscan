@@ -18,9 +18,10 @@ serve(async (req) => {
 
     // Try to parse body for action, but default to 'tick' for cron jobs
     let action = 'tick';
+    let requestBody: Record<string, unknown> = {};
     try {
-      const body = await req.json();
-      action = body.action || 'tick';
+      requestBody = await req.json();
+      action = (requestBody.action as string) || 'tick';
     } catch {
       // No body = cron job, use 'tick'
       console.log('⏰ Cron job triggered - defaulting to tick action');
@@ -345,7 +346,7 @@ serve(async (req) => {
     if (action === 'retry_failed') {
       console.log('🔄 Retrying failed items...');
       
-      const { batchId } = await req.json();
+      const batchId = requestBody.batchId as string | undefined;
       
       // If no batchId provided, get the latest artist_story_generation batch
       let targetBatchId = batchId;

@@ -146,6 +146,32 @@ serve(async (req) => {
       console.log('⚙️ Geen userId beschikbaar; verhaal wordt opgeslagen zonder gekoppelde user');
     }
 
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+
+    // Check if artist story already exists (skip if regenerating)
+    if (!isRegeneration) {
+      const slug = generateSlug(artistName);
+      const { data: existingStory } = await supabase
+        .from('artist_stories')
+        .select('id, slug, artist_name')
+        .or(`slug.eq.${slug},artist_name.ilike.${artistName}`)
+        .maybeSingle();
+
+      if (existingStory) {
+        console.log(`⏭️ Artist story already exists for "${artistName}" (slug: ${existingStory.slug})`);
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            skipped: true,
+            message: `Artist story already exists for "${artistName}"`,
+            id: existingStory.id,
+            slug: existingStory.slug
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     console.log(`🎸 ${isRegeneration ? 'REGENERATING' : 'Generating'} artist story for:`, artistName);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -226,7 +252,7 @@ serve(async (req) => {
       // Don't fail the whole request for artwork errors
     }
 
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+    // supabase client already created earlier
 
     let artistStory;
 

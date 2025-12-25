@@ -63,6 +63,7 @@ export default function MasterArtists() {
   const [filterCountry, setFilterCountry] = useState<string>("all");
   const [filterGenre, setFilterGenre] = useState<string>("all");
   const [filterContentStatus, setFilterContentStatus] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<string>("priority");
   const [bulkArtistsText, setBulkArtistsText] = useState("");
   const [newArtistName, setNewArtistName] = useState("");
   const [newArtistCountry, setNewArtistCountry] = useState("");
@@ -72,13 +73,31 @@ export default function MasterArtists() {
 
   // Fetch artists
   const { data: artists, isLoading, refetch } = useQuery({
-    queryKey: ["master-artists", searchQuery, filterCountry, filterGenre, filterContentStatus],
+    queryKey: ["master-artists", searchQuery, filterCountry, filterGenre, filterContentStatus, sortOrder],
     queryFn: async () => {
       let query = supabase
         .from("curated_artists")
-        .select("*")
-        .order("priority", { ascending: false, nullsFirst: false })
-        .order("artist_name", { ascending: true });
+        .select("*");
+
+      // Apply sorting based on sortOrder
+      if (sortOrder === "a-z") {
+        query = query.order("artist_name", { ascending: true });
+      } else if (sortOrder === "z-a") {
+        query = query.order("artist_name", { ascending: false });
+      } else if (sortOrder === "most-albums") {
+        query = query.order("albums_count", { ascending: false, nullsFirst: false });
+      } else if (sortOrder === "least-albums") {
+        query = query.order("albums_count", { ascending: true, nullsFirst: false });
+      } else if (sortOrder === "most-singles") {
+        query = query.order("singles_count", { ascending: false, nullsFirst: false });
+      } else if (sortOrder === "least-singles") {
+        query = query.order("singles_count", { ascending: true, nullsFirst: false });
+      } else {
+        // Default: priority
+        query = query
+          .order("priority", { ascending: false, nullsFirst: false })
+          .order("artist_name", { ascending: true });
+      }
 
       if (searchQuery) {
         query = query.ilike("artist_name", `%${searchQuery}%`);
@@ -433,6 +452,21 @@ export default function MasterArtists() {
                     <SelectItem value="all">Alle artiesten</SelectItem>
                     <SelectItem value="with_story">Met Artist Story</SelectItem>
                     <SelectItem value="without_story">Zonder Artist Story</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                  <SelectTrigger className="w-[180px]">
+                    <ArrowUpDown className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Sorteren" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="priority">Prioriteit</SelectItem>
+                    <SelectItem value="a-z">A → Z</SelectItem>
+                    <SelectItem value="z-a">Z → A</SelectItem>
+                    <SelectItem value="most-albums">Meeste albums</SelectItem>
+                    <SelectItem value="least-albums">Minste albums</SelectItem>
+                    <SelectItem value="most-singles">Meeste singles</SelectItem>
+                    <SelectItem value="least-singles">Minste singles</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

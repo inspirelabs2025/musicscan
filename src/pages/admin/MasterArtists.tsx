@@ -213,25 +213,33 @@ export default function MasterArtists() {
     },
   });
 
-  // Bulk add artists mutation
+  // Bulk add artists mutation - supports format: "artist_name" or "artist_name|discogs_id"
   const bulkAddMutation = useMutation({
-    mutationFn: async (artistNames: string[]) => {
-      const artists = artistNames.map(name => ({
-        artist_name: name.trim(),
-        is_active: true,
-        priority: 50,
-      }));
+    mutationFn: async (lines: string[]) => {
+      const artists = lines.map(line => {
+        const parts = line.split("|").map(p => p.trim());
+        const artistName = parts[0];
+        const discogsId = parts[1] ? parseInt(parts[1], 10) : null;
+        
+        return {
+          artist_name: artistName,
+          is_active: true,
+          priority: 50,
+          ...(discogsId && !isNaN(discogsId) ? { discogs_artist_id: discogsId } : {}),
+        };
+      });
 
       const { data, error } = await supabase
         .from("curated_artists")
-        .upsert(artists, { onConflict: "artist_name", ignoreDuplicates: true })
+        .upsert(artists, { onConflict: "artist_name", ignoreDuplicates: false })
         .select();
       
       if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
-      toast.success(`${data?.length || 0} artiesten toegevoegd`);
+      const withDiscogs = data?.filter(a => a.discogs_artist_id).length || 0;
+      toast.success(`${data?.length || 0} artiesten toegevoegd (${withDiscogs} met Discogs ID)`);
       setBulkArtistsText("");
       queryClient.invalidateQueries({ queryKey: ["master-artists"] });
       queryClient.invalidateQueries({ queryKey: ["master-artists-stats"] });
@@ -684,29 +692,35 @@ export default function MasterArtists() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Upload className="h-5 w-5" />
-                Bulk Import
+                Bulk Import met Discogs ID
               </CardTitle>
               <CardDescription>
-                Voeg meerdere artiesten tegelijk toe (1 per regel). Duplicaten worden automatisch overgeslagen.
+                Voeg meerdere artiesten toe met optioneel Discogs ID. Formaat: <code className="bg-muted px-1 rounded">artiest|discogs_id</code> of alleen <code className="bg-muted px-1 rounded">artiest</code>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Textarea
-                placeholder={`Madonna
-Michael Jackson
-Prince
-Whitney Houston
-The Beatles
-Rolling Stones`}
+                placeholder={`Madonna|3945
+Michael Jackson|15885
+Prince|6575
+The Beatles|82730
+Coldplay|29735
+Adele|1424821
+Ed Sheeran|2766660
+Rolling Stones|166199`}
                 value={bulkArtistsText}
                 onChange={(e) => setBulkArtistsText(e.target.value)}
-                rows={10}
-                className="font-mono"
+                rows={12}
+                className="font-mono text-sm"
               />
               <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {bulkArtistsText.split("\n").filter(l => l.trim()).length} artiesten om te importeren
-                </p>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p>{bulkArtistsText.split("\n").filter(l => l.trim()).length} artiesten om te importeren</p>
+                  <p className="text-xs">
+                    {bulkArtistsText.split("\n").filter(l => l.includes("|")).length} met Discogs ID, {" "}
+                    {bulkArtistsText.split("\n").filter(l => l.trim() && !l.includes("|")).length} zonder
+                  </p>
+                </div>
                 <Button 
                   onClick={handleBulkAdd} 
                   disabled={bulkAddMutation.isPending || !bulkArtistsText.trim()}

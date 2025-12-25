@@ -98,7 +98,7 @@ export default function MasterArtists() {
     },
   });
 
-  // Stats query
+  // Stats query - use master_albums and master_singles for accurate counts
   const { data: stats } = useQuery({
     queryKey: ["master-artists-stats"],
     queryFn: async () => {
@@ -111,16 +111,23 @@ export default function MasterArtists() {
         .select("id", { count: "exact", head: true })
         .eq("has_artist_story", true);
       
-      const { count: totalAlbums } = await supabase
-        .from("blog_posts")
-        .select("id", { count: "exact", head: true })
-        .eq("is_published", true);
+      // Get albums from master_albums table
+      const { count: masterAlbums } = await supabase
+        .from("master_albums")
+        .select("id", { count: "exact", head: true });
       
-      const { count: totalSingles } = await supabase
-        .from("music_stories")
-        .select("id", { count: "exact", head: true })
-        .not("single_name", "is", null)
-        .eq("is_published", true);
+      // Get singles from master_singles table
+      const { count: masterSingles } = await supabase
+        .from("master_singles")
+        .select("id", { count: "exact", head: true });
+      
+      // Also get processed counts from curated_artists
+      const { data: artistStats } = await supabase
+        .from("curated_artists")
+        .select("albums_count, singles_count");
+      
+      const totalAlbumsCount = artistStats?.reduce((sum, a) => sum + (a.albums_count || 0), 0) || 0;
+      const totalSinglesCount = artistStats?.reduce((sum, a) => sum + (a.singles_count || 0), 0) || 0;
       
       const { count: totalProducts } = await supabase
         .from("platform_products")
@@ -131,8 +138,9 @@ export default function MasterArtists() {
         total: total || 0,
         withStory: withStory || 0,
         withoutStory: (total || 0) - (withStory || 0),
-        totalAlbums: totalAlbums || 0,
-        totalSingles: totalSingles || 0,
+        // Use master tables for discovered albums/singles, fallback to aggregated counts
+        totalAlbums: masterAlbums || totalAlbumsCount || 0,
+        totalSingles: masterSingles || totalSinglesCount || 0,
         totalProducts: totalProducts || 0,
       };
     },

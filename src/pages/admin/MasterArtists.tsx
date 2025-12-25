@@ -120,14 +120,15 @@ export default function MasterArtists() {
     },
   });
 
-  // Stats query - accurate counts from curated_artists aggregated data
+  // Stats query - accurate counts from actual content tables
   const { data: stats } = useQuery({
     queryKey: ["master-artists-stats"],
     queryFn: async () => {
-      // Get all aggregated stats in one query
+      // Get curated artists stats
       const { data: artistStats } = await supabase
         .from("curated_artists")
-        .select("has_artist_story, albums_processed, singles_processed, products_created, albums_count, singles_count");
+        .select("has_artist_story, albums_count, singles_count")
+        .eq("is_active", true);
       
       // Get count of artists with discogs_artist_id
       const { count: withDiscogsId } = await supabase
@@ -135,11 +136,30 @@ export default function MasterArtists() {
         .select("*", { count: "exact", head: true })
         .not("discogs_artist_id", "is", null);
 
+      // Get ACTUAL counts from content tables
+      const { count: actualArtistStories } = await supabase
+        .from("artist_stories")
+        .select("*", { count: "exact", head: true })
+        .eq("is_published", true);
+
+      const { count: actualSingles } = await supabase
+        .from("music_stories")
+        .select("*", { count: "exact", head: true })
+        .not("single_name", "is", null)
+        .eq("is_published", true);
+
+      const { count: actualAlbumBlogs } = await supabase
+        .from("blog_posts")
+        .select("*", { count: "exact", head: true })
+        .eq("is_published", true);
+
+      const { count: actualProducts } = await supabase
+        .from("platform_products")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active");
+
       const total = artistStats?.length || 0;
       const withStory = artistStats?.filter(a => a.has_artist_story).length || 0;
-      const albumsProcessed = artistStats?.reduce((sum, a) => sum + (a.albums_processed || 0), 0) || 0;
-      const singlesProcessed = artistStats?.reduce((sum, a) => sum + (a.singles_processed || 0), 0) || 0;
-      const productsCreated = artistStats?.reduce((sum, a) => sum + (a.products_created || 0), 0) || 0;
       const albumsDiscovered = artistStats?.reduce((sum, a) => sum + (a.albums_count || 0), 0) || 0;
       const singlesDiscovered = artistStats?.reduce((sum, a) => sum + (a.singles_count || 0), 0) || 0;
 
@@ -148,9 +168,10 @@ export default function MasterArtists() {
         withStory,
         withoutStory: total - withStory,
         withDiscogsId: withDiscogsId || 0,
-        albumsProcessed,      // Album stories created
-        singlesProcessed,     // Singles processed  
-        productsCreated,      // Products linked
+        albumsProcessed: actualAlbumBlogs || 0,   // Actual blog posts
+        singlesProcessed: actualSingles || 0,     // Actual singles
+        productsCreated: actualProducts || 0,     // Actual products
+        artistStories: actualArtistStories || 0,  // Actual artist stories
         albumsDiscovered,     // From master_albums
         singlesDiscovered,    // From master_singles
       };

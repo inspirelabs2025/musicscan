@@ -5,70 +5,154 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface DiscogsRelease {
-  id: number;
+interface AlbumFromAI {
   title: string;
-  year: number;
-  thumb: string;
-  role: string;
-  type: string;
-  main_release?: number;
-  resource_url: string;
-  artist: string;
-  format?: string;
-  label?: string;
+  year: number | null;
+  label: string | null;
 }
 
-interface DiscogsReleasesResponse {
-  releases: DiscogsRelease[];
-  pagination: {
-    page: number;
-    pages: number;
-    items: number;
-    per_page: number;
-  };
+interface DiscogsSearchResult {
+  id: number;
+  master_id?: number;
+  title: string;
+  year?: string;
+  thumb?: string;
+  cover_image?: string;
 }
 
-// Delay helper for rate limiting
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Filter function: only keep OFFICIAL STUDIO albums (strict filtering)
-function isMainAlbum(release: DiscogsRelease): boolean {
-  // Only "Main" role (not Appearance, Remix, etc.)
-  if (release.role !== 'Main') return false;
+// Ask AI for official studio albums
+async function getOfficialAlbumsFromAI(artistName: string, apiKey: string): Promise<AlbumFromAI[]> {
+  console.log(`[discover-artist-albums] Asking AI for official albums of "${artistName}"...`);
   
-  // Type should be "master" for unique albums
-  if (release.type !== 'master') return false;
+  const prompt = `List ALL official studio albums by "${artistName}" as a solo artist or band leader.
+
+IMPORTANT RULES:
+- Only OFFICIAL STUDIO ALBUMS (no live albums, compilations, greatest hits, bootlegs, EPs, singles)
+- Only albums where ${artistName} is the MAIN artist (not guest appearances, collaborations where they're not the leader)
+- Include the album title, release year, and record label
+- Order chronologically by release year
+
+Return ONLY a JSON array with this exact format, no other text:
+[
+  {"title": "Album Name", "year": 1970, "label": "Record Label"},
+  ...
+]
+
+If you're unsure about an album, don't include it. Quality over quantity.`;
+
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: 'You are a music expert with encyclopedic knowledge of discographies. Return only valid JSON arrays.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.1,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`[discover-artist-albums] AI error: ${response.status} - ${errorText}`);
+    throw new Error(`AI API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content || '';
   
-  const lowerTitle = release.title.toLowerCase();
-  
-  // SKIP patterns - compilations, live, bootlegs, etc.
-  const skipPatterns = [
-    'greatest hits', 'best of', 'compilation', 'collection', 'anthology',
-    'complete', 'essential', 'ultimate', 'singles', 'remixes', 'remix album',
-    'live at', 'live in', 'live from', 'live -', 'in concert', 'on stage',
-    'bootleg', 'unofficial', 'tribute', 'covers', 'sessions', 'outtakes',
-    'demos', 'rarities', 'b-sides', 'unreleased', 'alternate', 'bonus',
-    'deluxe edition', 'remastered', 'anniversary', 'expanded', 'special edition',
-    'box set', 'collected', 'retrospective', 'definitive', 'works',
-    'volume 1', 'volume 2', 'vol. 1', 'vol. 2', 'vol 1', 'vol 2',
-    'disc 1', 'disc 2', 'cd 1', 'cd 2', 'part 1', 'part 2',
-    'interview', 'spoken word', 'documentary', 'soundtrack', 'score',
-    'promo', 'sampler', 'preview', 'teaser', 'ep', 'mini album',
-    'split', 'various artists', 'v/a', 'v.a.',
-  ];
-  
-  if (skipPatterns.some(pattern => lowerTitle.includes(pattern))) {
-    return false;
+  // Extract JSON from response (handle markdown code blocks)
+  let jsonStr = content;
+  const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonMatch) {
+    jsonStr = jsonMatch[1].trim();
+  } else {
+    // Try to find array directly
+    const arrayMatch = content.match(/\[[\s\S]*\]/);
+    if (arrayMatch) {
+      jsonStr = arrayMatch[0];
+    }
   }
   
-  // Must have a valid year (between 1920 and current year)
-  const currentYear = new Date().getFullYear();
-  if (!release.year || release.year < 1920 || release.year > currentYear) {
-    return false;
+  try {
+    const albums = JSON.parse(jsonStr);
+    if (!Array.isArray(albums)) {
+      throw new Error('Response is not an array');
+    }
+    console.log(`[discover-artist-albums] AI returned ${albums.length} official albums`);
+    return albums;
+  } catch (e) {
+    console.error(`[discover-artist-albums] Failed to parse AI response: ${content}`);
+    throw new Error('Failed to parse AI album list');
   }
+}
+
+// Search Discogs for album artwork and master ID
+async function findAlbumOnDiscogs(
+  artistName: string, 
+  albumTitle: string, 
+  year: number | null,
+  discogsToken: string
+): Promise<{ masterId: number | null; thumb: string | null; large: string | null }> {
+  const query = encodeURIComponent(`${artistName} ${albumTitle}`);
+  const url = `https://api.discogs.com/database/search?q=${query}&type=master&per_page=5`;
   
-  return true;
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Discogs token=${discogsToken}`,
+        'User-Agent': 'MusicScan/1.0',
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        await delay(60000);
+        return { masterId: null, thumb: null, large: null };
+      }
+      return { masterId: null, thumb: null, large: null };
+    }
+
+    const data = await response.json();
+    const results: DiscogsSearchResult[] = data.results || [];
+    
+    // Find best match - prefer exact title match with year
+    for (const result of results) {
+      const resultTitle = result.title.toLowerCase();
+      const searchTitle = `${artistName} - ${albumTitle}`.toLowerCase();
+      
+      // Check if title matches
+      if (resultTitle.includes(albumTitle.toLowerCase()) || 
+          resultTitle.includes(artistName.toLowerCase())) {
+        const masterId = result.master_id || result.id;
+        const thumb = result.thumb || null;
+        const large = result.cover_image || thumb?.replace('/150x150/', '/500x500/') || null;
+        
+        return { masterId, thumb, large };
+      }
+    }
+    
+    // Return first result if no exact match
+    if (results.length > 0) {
+      const first = results[0];
+      return {
+        masterId: first.master_id || first.id,
+        thumb: first.thumb || null,
+        large: first.cover_image || null,
+      };
+    }
+    
+    return { masterId: null, thumb: null, large: null };
+  } catch (e) {
+    console.error(`[discover-artist-albums] Discogs search error for "${albumTitle}":`, e);
+    return { masterId: null, thumb: null, large: null };
+  }
 }
 
 Deno.serve(async (req) => {
@@ -89,126 +173,63 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
+    }
+    
     const discogsToken = Deno.env.get('DISCOGS_TOKEN');
     if (!discogsToken) {
       throw new Error('DISCOGS_TOKEN not configured');
     }
 
+    // Step 1: Get Discogs Artist ID if not provided (for updating curated_artists)
     let finalDiscogsId = discogsArtistId;
-
-    // Step 1: If no Discogs ID, look it up
     if (!finalDiscogsId) {
-      console.log(`[discover-artist-albums] No Discogs ID provided, looking up...`);
-      
+      console.log(`[discover-artist-albums] Looking up Discogs ID...`);
       const lookupResponse = await supabase.functions.invoke('lookup-artist-discogs-id', {
         body: { artistName, artistId },
       });
-
-      if (lookupResponse.error || !lookupResponse.data?.success) {
-        throw new Error(lookupResponse.data?.error || 'Failed to find artist on Discogs');
-      }
-
-      finalDiscogsId = lookupResponse.data.discogsId;
-      console.log(`[discover-artist-albums] Found Discogs ID: ${finalDiscogsId}`);
-    }
-
-    // Step 2: Fetch releases with pagination (MAX 3 pages = 300 releases to prevent timeout)
-    let allReleases: DiscogsRelease[] = [];
-    let page = 1;
-    let totalPages = 1;
-    const perPage = 100;
-    const MAX_PAGES = 3; // Limit to prevent timeout on artists with many releases
-
-    // Use type=master to fetch ONLY unique albums (not all pressings/versions)
-    console.log(`[discover-artist-albums] Fetching MASTER releases for artist ID: ${finalDiscogsId} (max ${MAX_PAGES} pages)`);
-
-    while (page <= totalPages && page <= MAX_PAGES) {
-      const releasesUrl = `https://api.discogs.com/artists/${finalDiscogsId}/releases?type=master&page=${page}&per_page=${perPage}&sort=year&sort_order=asc`;
-      
-      const response = await fetch(releasesUrl, {
-        headers: {
-          'Authorization': `Discogs token=${discogsToken}`,
-          'User-Agent': 'MusicScan/1.0',
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          console.log(`[discover-artist-albums] Rate limited, waiting 60 seconds...`);
-          await delay(60000);
-          continue;
-        }
-        throw new Error(`Discogs API error: ${response.status}`);
-      }
-
-      const data: DiscogsReleasesResponse = await response.json();
-      
-      if (page === 1) {
-        totalPages = Math.min(data.pagination.pages, MAX_PAGES);
-        console.log(`[discover-artist-albums] Total in Discogs: ${data.pagination.items}, fetching max ${MAX_PAGES} pages`);
-      }
-
-      allReleases = allReleases.concat(data.releases);
-      console.log(`[discover-artist-albums] Fetched page ${page}/${totalPages} (${data.releases.length} releases)`);
-
-      page++;
-      
-      // Rate limiting: 1 request per second
-      if (page <= totalPages) {
-        await delay(1000);
+      if (lookupResponse.data?.success) {
+        finalDiscogsId = lookupResponse.data.discogsId;
+        console.log(`[discover-artist-albums] Found Discogs ID: ${finalDiscogsId}`);
       }
     }
 
-    console.log(`[discover-artist-albums] Total master albums fetched: ${allReleases.length}`);
+    // Step 2: Ask AI for official studio albums
+    const officialAlbums = await getOfficialAlbumsFromAI(artistName, lovableApiKey);
+    
+    if (officialAlbums.length === 0) {
+      console.log(`[discover-artist-albums] No albums found by AI`);
+      return new Response(
+        JSON.stringify({ success: true, artistName, mainAlbums: 0, inserted: 0 }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // Step 3: Filter to main albums only
-    const mainAlbums = allReleases.filter(isMainAlbum);
-    console.log(`[discover-artist-albums] Main albums after filtering: ${mainAlbums.length}`);
-
-    // Step 4: Upsert albums into master_albums
+    // Step 3: For each album, find artwork on Discogs and insert
     let inserted = 0;
     let skipped = 0;
     let errors = 0;
 
-    for (const album of mainAlbums) {
+    for (const album of officialAlbums) {
       try {
-        // Fetch album artwork from master release
-        let artworkThumb = album.thumb;
-        let artworkLarge = album.thumb?.replace('/150x150/', '/500x500/') || null;
+        console.log(`[discover-artist-albums] Processing: "${album.title}" (${album.year || 'unknown year'})`);
         
-        // Try to get better artwork from master release
-        if (album.main_release || album.id) {
-          try {
-            const masterUrl = `https://api.discogs.com/masters/${album.id}`;
-            const masterResponse = await fetch(masterUrl, {
-              headers: {
-                'Authorization': `Discogs token=${discogsToken}`,
-                'User-Agent': 'MusicScan/1.0',
-              },
-            });
-            
-            if (masterResponse.ok) {
-              const masterData = await masterResponse.json();
-              if (masterData.images && masterData.images.length > 0) {
-                artworkThumb = masterData.images[0].uri150 || artworkThumb;
-                artworkLarge = masterData.images[0].uri || artworkLarge;
-              }
-            }
-            await delay(500); // Rate limiting
-          } catch (e) {
-            // Ignore artwork fetch errors
-          }
-        }
-
+        // Search Discogs for artwork
+        const discogs = await findAlbumOnDiscogs(artistName, album.title, album.year, discogsToken);
+        await delay(1000); // Rate limiting
+        
         const albumData = {
           artist_id: artistId || null,
           artist_name: artistName,
           title: album.title,
           year: album.year || null,
-          discogs_master_id: album.id,
-          discogs_url: `https://www.discogs.com/master/${album.id}`,
-          artwork_thumb: artworkThumb || null,
-          artwork_large: artworkLarge || null,
+          label: album.label || null,
+          discogs_master_id: discogs.masterId,
+          discogs_url: discogs.masterId ? `https://www.discogs.com/master/${discogs.masterId}` : null,
+          artwork_thumb: discogs.thumb,
+          artwork_large: discogs.large,
           format: 'LP',
           status: 'pending',
         };
@@ -216,53 +237,47 @@ Deno.serve(async (req) => {
         const { error: upsertError } = await supabase
           .from('master_albums')
           .upsert(albumData, {
-            onConflict: 'discogs_master_id',
+            onConflict: 'artist_name,title',
             ignoreDuplicates: true,
           });
 
         if (upsertError) {
-          // Check if it's a duplicate constraint error
           if (upsertError.code === '23505') {
             skipped++;
           } else {
-            console.error(`[discover-artist-albums] Error upserting album "${album.title}": ${upsertError.message}`);
+            console.error(`[discover-artist-albums] Upsert error: ${upsertError.message}`);
             errors++;
           }
         } else {
           inserted++;
         }
       } catch (albumError) {
-        console.error(`[discover-artist-albums] Error processing album "${album.title}":`, albumError);
+        console.error(`[discover-artist-albums] Error processing "${album.title}":`, albumError);
         errors++;
       }
     }
 
-    // Step 5: Update curated_artists with album count
+    // Step 4: Update curated_artists
     if (artistId) {
-      const { error: updateError } = await supabase
+      await supabase
         .from('curated_artists')
         .update({
-          albums_count: mainAlbums.length,
+          albums_count: officialAlbums.length,
           discogs_artist_id: finalDiscogsId,
           last_crawled_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
         .eq('id', artistId);
-
-      if (updateError) {
-        console.error(`[discover-artist-albums] Error updating artist: ${updateError.message}`);
-      }
     }
 
-    console.log(`[discover-artist-albums] Complete! Inserted: ${inserted}, Skipped: ${skipped}, Errors: ${errors}`);
+    console.log(`[discover-artist-albums] Complete! ${officialAlbums.length} albums, inserted: ${inserted}, skipped: ${skipped}, errors: ${errors}`);
 
     return new Response(
       JSON.stringify({
         success: true,
         artistName,
         discogsArtistId: finalDiscogsId,
-        totalReleases: allReleases.length,
-        mainAlbums: mainAlbums.length,
+        mainAlbums: officialAlbums.length,
         inserted,
         skipped,
         errors,
@@ -273,10 +288,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[discover-artist-albums] Error:', error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message,
-      }),
+      JSON.stringify({ success: false, error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

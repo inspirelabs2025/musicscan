@@ -231,19 +231,38 @@ export default function MasterArtists() {
         return trimmed && trimmed.toLowerCase() !== "discogs";
       });
 
-      const parsedArtistsRaw = validLines.map((line) => {
-        // Split on common separators with optional spaces
-        const parts = line.split(/\s*(?:\||–|—|-)\s*/).map((p) => p.trim());
-        const artistName = parts[0];
-        const discogsId = parts[1] ? parseInt(parts[1], 10) : null;
+      const parsedArtistsRaw = validLines
+        .map((line) => {
+          // Split on common separators with optional spaces
+          const parts = line.split(/\s*(?:\||–|—|-)\s*/).map((p) => p.trim()).filter(Boolean);
+          
+          if (parts.length === 0) return null;
+          
+          let artistName: string | null = null;
+          let discogsId: number | null = null;
+          
+          // Handle both formats: "Artist Name | 123456" and "123456 | Artist Name"
+          for (const part of parts) {
+            const num = parseInt(part, 10);
+            if (!isNaN(num) && String(num) === part) {
+              // This part is purely numeric → Discogs ID
+              discogsId = num;
+            } else if (!artistName && part.length > 0) {
+              // First non-numeric part → artist name
+              artistName = part;
+            }
+          }
+          
+          if (!artistName || artistName.trim().length === 0) return null;
 
-        return {
-          artist_name: artistName,
-          is_active: true,
-          priority: 50,
-          discogs_artist_id: discogsId && !isNaN(discogsId) ? discogsId : null,
-        };
-      });
+          return {
+            artist_name: artistName.trim(),
+            is_active: true,
+            priority: 50,
+            discogs_artist_id: discogsId,
+          };
+        })
+        .filter((a): a is NonNullable<typeof a> => a !== null);
 
       // Dedupe within the pasted input (case-insensitive); prefer entry that has a Discogs ID.
       const byName = new Map<string, (typeof parsedArtistsRaw)[number]>();

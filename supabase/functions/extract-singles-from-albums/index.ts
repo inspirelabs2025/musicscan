@@ -152,7 +152,23 @@ serve(async (req) => {
 
     let totalExtracted = 0;
     let processedAlbums = 0;
-    const batchId = `extract-${Date.now()}`;
+
+    // Use a bot user for cron-inserted queue items (singles_import_queue requires user_id)
+    const { data: botProfiles, error: botError } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('is_bot', true)
+      .order('created_at', { ascending: true })
+      .limit(1);
+
+    if (botError || !botProfiles?.[0]?.user_id) {
+      throw new Error(
+        `No bot user found for queue inserts: ${botError?.message ?? 'missing bot profile'}`
+      );
+    }
+
+    const botUserId = botProfiles[0].user_id as string;
+    const batchId = crypto.randomUUID();
 
     for (const album of albums || []) {
       try {
@@ -179,11 +195,16 @@ serve(async (req) => {
 
         for (const track of popularTracks) {
           // Check if single already exists in music_stories
-          const { count: existingCount } = await supabase
+          const { count: existingCount, error: existingError } = await supabase
             .from('music_stories')
             .select('*', { count: 'exact', head: true })
-            .eq('artist_name', artist)
+            .eq('artist', artist)
             .ilike('single_name', track.name);
+
+          if (existingError) {
+            console.error(`Error checking existing single: ${artist} - ${track.name}`, existingError);
+            continue;
+          }
 
           if (existingCount && existingCount > 0) {
             console.log(`Single already exists: ${artist} - ${track.name}`);
@@ -191,11 +212,16 @@ serve(async (req) => {
           }
 
           // Check if already in queue
-          const { count: queueCount } = await supabase
+          const { count: queueCount, error: queueError } = await supabase
             .from('singles_import_queue')
             .select('*', { count: 'exact', head: true })
             .eq('artist', artist)
             .ilike('single_name', track.name);
+
+          if (queueError) {
+            console.error(`Error checking singles queue: ${artist} - ${track.name}`, queueError);
+            continue;
+          }
 
           if (queueCount && queueCount > 0) {
             console.log(`Single already in queue: ${artist} - ${track.name}`);
@@ -206,19 +232,14 @@ serve(async (req) => {
           const { error: insertError } = await supabase
             .from('singles_import_queue')
             .insert({
-              artist: artist,
+              user_id: botUserId,
+              batch_id: batchId,
+              status: 'pending',
+              priority: 5,
+              artist,
               single_name: track.name,
               album: title,
               year: year || new Date().getFullYear(),
-              status: 'pending',
-              batch_id: batchId,
-              metadata: {
-                spotify_track_id: track.id,
-                spotify_popularity: track.popularity,
-                duration_ms: track.duration_ms,
-                extracted_from_album: album.id,
-                album_cover_url: album.album_cover_url,
-              }
             });
 
           if (insertError) {

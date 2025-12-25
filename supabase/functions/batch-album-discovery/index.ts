@@ -65,6 +65,7 @@ Deno.serve(async (req) => {
       artistName: string;
       success: boolean;
       albumsFound?: number;
+      singlesFound?: number;
       error?: string;
     }> = [];
 
@@ -72,8 +73,8 @@ Deno.serve(async (req) => {
       console.log(`[batch-album-discovery] Processing: ${artist.artist_name}`);
       
       try {
-        // Call discover-artist-albums for this artist
-        const { data, error } = await supabase.functions.invoke('discover-artist-albums', {
+        // Step 1: Discover albums
+        const { data: albumData, error: albumError } = await supabase.functions.invoke('discover-artist-albums', {
           body: {
             artistId: artist.id,
             artistName: artist.artist_name,
@@ -81,26 +82,51 @@ Deno.serve(async (req) => {
           },
         });
 
-        if (error) {
-          console.error(`[batch-album-discovery] Error for ${artist.artist_name}: ${error.message}`);
+        if (albumError) {
+          console.error(`[batch-album-discovery] Album error for ${artist.artist_name}: ${albumError.message}`);
           results.push({
             artistName: artist.artist_name,
             success: false,
-            error: error.message,
+            error: albumError.message,
           });
-        } else if (!data?.success) {
-          console.error(`[batch-album-discovery] Failed for ${artist.artist_name}: ${data?.error}`);
+        } else if (!albumData?.success) {
+          console.error(`[batch-album-discovery] Album failed for ${artist.artist_name}: ${albumData?.error}`);
           results.push({
             artistName: artist.artist_name,
             success: false,
-            error: data?.error || 'Unknown error',
+            error: albumData?.error || 'Unknown error',
           });
         } else {
-          console.log(`[batch-album-discovery] Success for ${artist.artist_name}: ${data.mainAlbums} albums`);
+          console.log(`[batch-album-discovery] Albums success for ${artist.artist_name}: ${albumData.mainAlbums} albums`);
+          
+          // Step 2: Discover singles (if we have discogs ID now)
+          const discogsId = albumData.discogsArtistId || artist.discogs_artist_id;
+          let singlesCount = 0;
+          
+          if (discogsId) {
+            await delay(2000); // Brief delay before singles
+            
+            const { data: singlesData, error: singlesError } = await supabase.functions.invoke('discover-artist-singles', {
+              body: {
+                artistId: artist.id,
+                artistName: artist.artist_name,
+                discogsArtistId: discogsId,
+              },
+            });
+
+            if (!singlesError && singlesData?.success) {
+              singlesCount = singlesData.totalSingles || 0;
+              console.log(`[batch-album-discovery] Singles success for ${artist.artist_name}: ${singlesCount} singles`);
+            } else {
+              console.error(`[batch-album-discovery] Singles error for ${artist.artist_name}:`, singlesError?.message || singlesData?.error);
+            }
+          }
+
           results.push({
             artistName: artist.artist_name,
             success: true,
-            albumsFound: data.mainAlbums,
+            albumsFound: albumData.mainAlbums,
+            singlesFound: singlesCount,
           });
         }
       } catch (invokeError) {
@@ -122,8 +148,9 @@ Deno.serve(async (req) => {
     const executionTime = Date.now() - startTime;
     const successCount = results.filter(r => r.success).length;
     const totalAlbums = results.reduce((sum, r) => sum + (r.albumsFound || 0), 0);
+    const totalSingles = results.reduce((sum, r) => sum + (r.singlesFound || 0), 0);
 
-    console.log(`[batch-album-discovery] Complete! ${successCount}/${results.length} successful, ${totalAlbums} albums found, took ${executionTime}ms`);
+    console.log(`[batch-album-discovery] Complete! ${successCount}/${results.length} successful, ${totalAlbums} albums, ${totalSingles} singles, took ${executionTime}ms`);
 
     // Log to cronjob_execution_log
     await supabase.from('cronjob_execution_log').insert({
@@ -136,6 +163,7 @@ Deno.serve(async (req) => {
       metadata: {
         successCount,
         totalAlbums,
+        totalSingles,
         results,
       },
     });
@@ -146,6 +174,7 @@ Deno.serve(async (req) => {
         processed: results.length,
         successful: successCount,
         totalAlbumsDiscovered: totalAlbums,
+        totalSinglesDiscovered: totalSingles,
         executionTimeMs: executionTime,
         results,
       }),

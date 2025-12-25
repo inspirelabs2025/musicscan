@@ -12,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { 
   Crown, Users, Music, Disc3, ShoppingBag, Search, Plus, RefreshCw, 
-  CheckCircle2, XCircle, Loader2, Upload, Trash2, Filter, ArrowUpDown
+  CheckCircle2, XCircle, Loader2, Upload, Trash2, Filter, ArrowUpDown, Database
 } from "lucide-react";
+import MasterAlbumsTab from "@/components/admin/MasterAlbumsTab";
 
 interface CuratedArtist {
   id: string;
@@ -364,6 +365,10 @@ export default function MasterArtists() {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Artiesten Overzicht</TabsTrigger>
+          <TabsTrigger value="albums" className="flex items-center gap-1">
+            <Database className="h-4 w-4" />
+            Albums Database
+          </TabsTrigger>
           <TabsTrigger value="add">Artiesten Toevoegen</TabsTrigger>
           <TabsTrigger value="bulk">Bulk Import</TabsTrigger>
         </TabsList>
@@ -519,6 +524,11 @@ export default function MasterArtists() {
           <p className="text-sm text-muted-foreground text-center">
             Toont {artists?.length || 0} artiesten (max 500)
           </p>
+        </TabsContent>
+
+        {/* Albums Database Tab */}
+        <TabsContent value="albums">
+          <MasterAlbumsTab />
         </TabsContent>
 
         {/* Add Single Artist Tab */}

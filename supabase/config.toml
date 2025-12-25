@@ -598,3 +598,22 @@ cron = "30 * * * *"
 
 [functions.sync-artist-content-status]
 verify_jwt = false
+
+# Album Discovery System
+[functions.lookup-artist-discogs-id]
+verify_jwt = false
+
+[functions.discover-artist-albums]
+verify_jwt = false
+
+[functions.batch-album-discovery]
+verify_jwt = false
+
+[[functions.batch-album-discovery.schedule]]
+cron = "0 */4 * * *"
+
+[functions.album-queue-processor]
+verify_jwt = false
+
+[[functions.album-queue-processor.schedule]]
+cron = "*/30 * * * *"

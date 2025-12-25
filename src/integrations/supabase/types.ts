@@ -1845,6 +1845,7 @@ export type Database = {
           artist_story_id: string | null
           country_code: string | null
           created_at: string | null
+          discogs_artist_id: number | null
           discogs_id: string | null
           genre: string | null
           has_artist_story: boolean | null
@@ -1869,6 +1870,7 @@ export type Database = {
           artist_story_id?: string | null
           country_code?: string | null
           created_at?: string | null
+          discogs_artist_id?: number | null
           discogs_id?: string | null
           genre?: string | null
           has_artist_story?: boolean | null
@@ -1893,6 +1895,7 @@ export type Database = {
           artist_story_id?: string | null
           country_code?: string | null
           created_at?: string | null
+          discogs_artist_id?: number | null
           discogs_id?: string | null
           genre?: string | null
           has_artist_story?: boolean | null
@@ -3405,6 +3408,98 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      master_albums: {
+        Row: {
+          artist_id: string | null
+          artist_name: string
+          artwork_large: string | null
+          artwork_thumb: string | null
+          attempts: number | null
+          blog_id: string | null
+          country: string | null
+          created_at: string
+          discogs_master_id: number | null
+          discogs_release_id: number | null
+          discogs_url: string | null
+          discovered_at: string
+          error_message: string | null
+          format: string | null
+          genre: string | null
+          has_blog: boolean | null
+          has_products: boolean | null
+          id: string
+          label: string | null
+          processed_at: string | null
+          products_count: number | null
+          status: string
+          title: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          artist_id?: string | null
+          artist_name: string
+          artwork_large?: string | null
+          artwork_thumb?: string | null
+          attempts?: number | null
+          blog_id?: string | null
+          country?: string | null
+          created_at?: string
+          discogs_master_id?: number | null
+          discogs_release_id?: number | null
+          discogs_url?: string | null
+          discovered_at?: string
+          error_message?: string | null
+          format?: string | null
+          genre?: string | null
+          has_blog?: boolean | null
+          has_products?: boolean | null
+          id?: string
+          label?: string | null
+          processed_at?: string | null
+          products_count?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          artist_id?: string | null
+          artist_name?: string
+          artwork_large?: string | null
+          artwork_thumb?: string | null
+          attempts?: number | null
+          blog_id?: string | null
+          country?: string | null
+          created_at?: string
+          discogs_master_id?: number | null
+          discogs_release_id?: number | null
+          discogs_url?: string | null
+          discovered_at?: string
+          error_message?: string | null
+          format?: string | null
+          genre?: string | null
+          has_blog?: boolean | null
+          has_products?: boolean | null
+          id?: string
+          label?: string | null
+          processed_at?: string | null
+          products_count?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_albums_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "curated_artists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       media_library: {
         Row: {

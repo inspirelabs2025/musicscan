@@ -128,6 +128,7 @@ serve(async (req) => {
       item_id: crypto.randomUUID(),
       item_type: 'artist_story',
       status: 'pending',
+      max_attempts: 3,
       metadata: { artist_name: artist }
     }));
 

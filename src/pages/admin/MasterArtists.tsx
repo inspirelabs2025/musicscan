@@ -314,12 +314,26 @@ export default function MasterArtists() {
       let updatedMissingId = 0;
 
       for (const a of parsedArtists) {
+        // Extra validation: skip if artist_name is empty/null
+        if (!a.artist_name || a.artist_name.trim().length === 0) {
+          console.warn("[BulkImport] Skipping entry with empty artist_name:", a);
+          skipped++;
+          continue;
+        }
+
         const key = a.artist_name.trim().toLowerCase();
         const existing = existingMap.get(key);
 
         if (!existing) {
+          const artistNameTrimmed = a.artist_name.trim();
+          // Final safety check before insert
+          if (!artistNameTrimmed) {
+            console.warn("[BulkImport] Skipping insert with empty name after trim:", a);
+            skipped++;
+            continue;
+          }
           const insertRow: { artist_name: string; is_active: true; priority: number; discogs_artist_id?: number } = {
-            artist_name: a.artist_name.trim(),
+            artist_name: artistNameTrimmed,
             is_active: true,
             priority: 50,
           };
@@ -337,11 +351,17 @@ export default function MasterArtists() {
         }
       }
 
+      // Final validation: ensure no empty artist_name in toInsert
+      const safeToInsert = toInsert.filter(row => row.artist_name && row.artist_name.length > 0);
+      if (safeToInsert.length !== toInsert.length) {
+        console.warn(`[BulkImport] Filtered out ${toInsert.length - safeToInsert.length} rows with empty names`);
+      }
+
       const inserted: any[] = [];
       const updated: any[] = [];
 
-      if (toInsert.length > 0) {
-        const { data, error } = await supabase.from("curated_artists").insert(toInsert).select();
+      if (safeToInsert.length > 0) {
+        const { data, error } = await supabase.from("curated_artists").insert(safeToInsert).select();
         if (error) throw error;
         inserted.push(...(data || []));
       }

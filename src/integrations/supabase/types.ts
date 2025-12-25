@@ -1839,44 +1839,85 @@ export type Database = {
       curated_artists: {
         Row: {
           added_at: string | null
+          albums_count: number | null
+          albums_processed: number | null
           artist_name: string
+          artist_story_id: string | null
           country_code: string | null
           created_at: string | null
+          discogs_id: string | null
+          genre: string | null
+          has_artist_story: boolean | null
           id: string
           is_active: boolean | null
+          last_content_sync: string | null
           last_crawled_at: string | null
           notes: string | null
           priority: number | null
+          products_created: number | null
           releases_found_count: number | null
+          singles_count: number | null
+          singles_processed: number | null
+          spotify_id: string | null
           updated_at: string | null
         }
         Insert: {
           added_at?: string | null
+          albums_count?: number | null
+          albums_processed?: number | null
           artist_name: string
+          artist_story_id?: string | null
           country_code?: string | null
           created_at?: string | null
+          discogs_id?: string | null
+          genre?: string | null
+          has_artist_story?: boolean | null
           id?: string
           is_active?: boolean | null
+          last_content_sync?: string | null
           last_crawled_at?: string | null
           notes?: string | null
           priority?: number | null
+          products_created?: number | null
           releases_found_count?: number | null
+          singles_count?: number | null
+          singles_processed?: number | null
+          spotify_id?: string | null
           updated_at?: string | null
         }
         Update: {
           added_at?: string | null
+          albums_count?: number | null
+          albums_processed?: number | null
           artist_name?: string
+          artist_story_id?: string | null
           country_code?: string | null
           created_at?: string | null
+          discogs_id?: string | null
+          genre?: string | null
+          has_artist_story?: boolean | null
           id?: string
           is_active?: boolean | null
+          last_content_sync?: string | null
           last_crawled_at?: string | null
           notes?: string | null
           priority?: number | null
+          products_created?: number | null
           releases_found_count?: number | null
+          singles_count?: number | null
+          singles_processed?: number | null
+          spotify_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "curated_artists_artist_story_id_fkey"
+            columns: ["artist_story_id"]
+            isOneToOne: false
+            referencedRelation: "artist_stories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_challenge_results: {
         Row: {

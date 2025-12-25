@@ -123,13 +123,15 @@ export default function MasterArtists() {
   // Stats query - accurate counts from actual content tables
   const { data: stats } = useQuery({
     queryKey: ["master-artists-stats"],
+    refetchInterval: 30000,
+    refetchIntervalInBackground: true,
     queryFn: async () => {
       // Get curated artists stats
       const { data: artistStats } = await supabase
         .from("curated_artists")
         .select("has_artist_story, albums_count, singles_count")
         .eq("is_active", true);
-      
+
       // Get count of artists with discogs_artist_id
       const { count: withDiscogsId } = await supabase
         .from("curated_artists")
@@ -159,7 +161,7 @@ export default function MasterArtists() {
         .eq("status", "active");
 
       const total = artistStats?.length || 0;
-      const withStory = artistStats?.filter(a => a.has_artist_story).length || 0;
+      const withStory = artistStats?.filter((a) => a.has_artist_story).length || 0;
       const albumsDiscovered = artistStats?.reduce((sum, a) => sum + (a.albums_count || 0), 0) || 0;
       const singlesDiscovered = artistStats?.reduce((sum, a) => sum + (a.singles_count || 0), 0) || 0;
 
@@ -168,15 +170,16 @@ export default function MasterArtists() {
         withStory,
         withoutStory: total - withStory,
         withDiscogsId: withDiscogsId || 0,
-        albumsProcessed: actualAlbumBlogs || 0,   // Actual blog posts
-        singlesProcessed: actualSingles || 0,     // Actual singles
-        productsCreated: actualProducts || 0,     // Actual products
-        artistStories: actualArtistStories || 0,  // Actual artist stories
-        albumsDiscovered,     // From master_albums
-        singlesDiscovered,    // From master_singles
+        albumsProcessed: actualAlbumBlogs || 0, // Actual blog posts
+        singlesProcessed: actualSingles || 0, // Actual singles
+        productsCreated: actualProducts || 0, // Actual products
+        artistStories: actualArtistStories || 0, // Actual artist stories
+        albumsDiscovered, // From master_albums
+        singlesDiscovered, // From master_singles
       };
     },
   });
+
 
   // Add single artist mutation
   const addArtistMutation = useMutation({

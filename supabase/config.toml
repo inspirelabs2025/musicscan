@@ -603,6 +603,12 @@ verify_jwt = false
 [functions.lookup-artist-discogs-id]
 verify_jwt = false
 
+[functions.fill-missing-discogs-ids]
+verify_jwt = false
+
+[[functions.fill-missing-discogs-ids.schedule]]
+cron = "* * * * *"
+
 [functions.discover-artist-albums]
 verify_jwt = false
 

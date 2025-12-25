@@ -246,6 +246,32 @@ serve(async (req) => {
       if (error) throw error;
       albumData = data;
       actualTableUsed = 'platform_products';
+    } else if (albumType === 'master_album' || albumType === 'blog_post') {
+      // Query master_albums table for curated artist albums
+      const { data, error } = await supabase
+        .from('master_albums')
+        .select('*')
+        .eq('id', albumId)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) {
+        // Map master_albums fields to expected format
+        albumData = {
+          id: data.id,
+          artist: data.artist_name,
+          title: data.title,
+          year: data.year,
+          genre: data.genre,
+          label: data.label,
+          country: data.country,
+          format: data.format || 'Album',
+          front_image: data.artwork_large || data.artwork_thumb,
+          discogs_id: data.discogs_release_id,
+          master_id: data.discogs_master_id,
+          discogs_url: data.discogs_url
+        };
+        actualTableUsed = 'master_albums';
+      }
     } else {
       throw new Error("Ongeldig album type: " + albumType);
     }

@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     // Get pending albums with artwork that haven't been processed
     const { data: albums, error: fetchError } = await supabase
       .from('master_albums')
-      .select('id, artist_name, title, year, artwork_thumb, artwork_large, discogs_master_id, discogs_url')
+      .select('id, artist_name, title, year, attempts, artwork_thumb, artwork_large, discogs_master_id, discogs_url')
       .eq('status', 'pending')
       .not('artwork_large', 'is', null)
       .order('discovered_at', { ascending: true })
@@ -112,25 +112,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[album-queue-processor] Processing ${albumsToProcess.length} album(s) (${albums.length - albumsToProcess.length} duplicates skipped)...`);
-
-    if (fetchError) {
-      throw new Error(`Failed to fetch albums: ${fetchError.message}`);
-    }
-
-    if (!albums || albums.length === 0) {
-      console.log('[album-queue-processor] No pending albums to process');
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'No pending albums to process',
-          processed: 0,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`[album-queue-processor] Processing ${albums.length} album(s)...`);
+    console.log(`[album-queue-processor] Processing ${albumsToProcess.length} album(s)...`);
 
     const results: Array<{
       albumTitle: string;
@@ -141,16 +123,29 @@ Deno.serve(async (req) => {
 
     for (const album of albumsToProcess) {
       console.log(`[album-queue-processor] Processing: ${album.artist_name} - ${album.title}`);
-      
+
+      const nextAttempts = (album.attempts ?? 0) + 1;
+
       // Mark as processing
-      await supabase
+      const { error: markProcessingError } = await supabase
         .from('master_albums')
         .update({
           status: 'processing',
-          attempts: album.attempts + 1,
+          attempts: nextAttempts,
           updated_at: new Date().toISOString(),
         })
         .eq('id', album.id);
+
+      if (markProcessingError) {
+        console.error(`[album-queue-processor] Failed to mark processing for ${album.title}:`, markProcessingError);
+        results.push({
+          albumTitle: album.title,
+          artist: album.artist_name,
+          success: false,
+          error: markProcessingError.message,
+        });
+        continue;
+      }
 
       try {
         // Add to photo_batch_queue for product generation

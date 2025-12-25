@@ -641,3 +641,10 @@ cron = "*/5 * * * *"
 
 [functions.sync-artist-counts]
 verify_jwt = false
+
+# Photo Queue Auto Processor (verwerkt photo_batch_queue naar products)
+[functions.photo-queue-auto-processor]
+verify_jwt = false
+
+[[functions.photo-queue-auto-processor.schedule]]
+cron = "*/2 * * * *"

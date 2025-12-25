@@ -114,6 +114,12 @@ Deno.serve(async (req) => {
 
     console.log(`[master-singles-processor] Processing ${singlesToProcess.length} singles`);
 
+    // Create a batch ID for this processor run
+    const batchId = crypto.randomUUID();
+    
+    // Use the existing system user from singles_import_queue
+    const systemUserId = '567d3376-a797-447c-86cb-4c2f1260e997';
+
     let inserted = 0;
     let skipped = 0;
     let failed = 0;
@@ -124,6 +130,8 @@ Deno.serve(async (req) => {
         const { error: insertError } = await supabase
           .from('singles_import_queue')
           .insert({
+            user_id: systemUserId,
+            batch_id: batchId,
             artist: single.artist_name,
             single_name: single.title,
             year: single.year,

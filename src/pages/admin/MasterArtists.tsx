@@ -213,11 +213,21 @@ export default function MasterArtists() {
     },
   });
 
-  // Bulk add artists mutation - supports format: "artist_name" or "artist_name|discogs_id"
+  // Bulk add artists mutation - supports formats:
+  // "Artist Name – 12345" (with en-dash from Discogs)
+  // "Artist Name|12345" (pipe separator)
+  // "Artist Name" (without ID)
   const bulkAddMutation = useMutation({
     mutationFn: async (lines: string[]) => {
-      const artists = lines.map(line => {
-        const parts = line.split("|").map(p => p.trim());
+      // Filter out empty lines and "Discogs" labels
+      const validLines = lines.filter(line => {
+        const trimmed = line.trim();
+        return trimmed && trimmed.toLowerCase() !== 'discogs';
+      });
+
+      const artists = validLines.map(line => {
+        // Split on en-dash (–) or pipe (|) with optional spaces
+        const parts = line.split(/\s*[–|]\s*/).map(p => p.trim());
         const artistName = parts[0];
         const discogsId = parts[1] ? parseInt(parts[1], 10) : null;
         
@@ -700,14 +710,17 @@ export default function MasterArtists() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Textarea
-                placeholder={`Madonna|3945
-Michael Jackson|15885
-Prince|6575
-The Beatles|82730
-Coldplay|29735
-Adele|1424821
-Ed Sheeran|2766660
-Rolling Stones|166199`}
+                placeholder={`Louis Armstrong – 38201
+
+Discogs
+
+Duke Ellington – 145257
+
+Discogs
+
+Miles Davis – 23755
+
+Discogs`}
                 value={bulkArtistsText}
                 onChange={(e) => setBulkArtistsText(e.target.value)}
                 rows={12}
@@ -715,11 +728,22 @@ Rolling Stones|166199`}
               />
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground space-y-1">
-                  <p>{bulkArtistsText.split("\n").filter(l => l.trim()).length} artiesten om te importeren</p>
-                  <p className="text-xs">
-                    {bulkArtistsText.split("\n").filter(l => l.includes("|")).length} met Discogs ID, {" "}
-                    {bulkArtistsText.split("\n").filter(l => l.trim() && !l.includes("|")).length} zonder
-                  </p>
+                  {(() => {
+                    const validLines = bulkArtistsText.split("\n").filter(l => {
+                      const trimmed = l.trim();
+                      return trimmed && trimmed.toLowerCase() !== 'discogs';
+                    });
+                    const withId = validLines.filter(l => /[–|]/.test(l)).length;
+                    const withoutId = validLines.length - withId;
+                    return (
+                      <>
+                        <p>{validLines.length} artiesten om te importeren</p>
+                        <p className="text-xs">
+                          {withId} met Discogs ID, {withoutId} zonder
+                        </p>
+                      </>
+                    );
+                  })()}
                 </div>
                 <Button 
                   onClick={handleBulkAdd} 

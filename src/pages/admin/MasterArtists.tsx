@@ -101,50 +101,32 @@ export default function MasterArtists() {
     },
   });
 
-  // Stats query - use master_albums and master_singles for accurate counts
+  // Stats query - accurate counts from curated_artists aggregated data
   const { data: stats } = useQuery({
     queryKey: ["master-artists-stats"],
     queryFn: async () => {
-      const { count: total } = await supabase
-        .from("curated_artists")
-        .select("id", { count: "exact", head: true });
-      
-      const { count: withStory } = await supabase
-        .from("curated_artists")
-        .select("id", { count: "exact", head: true })
-        .eq("has_artist_story", true);
-      
-      // Get albums from master_albums table
-      const { count: masterAlbums } = await supabase
-        .from("master_albums")
-        .select("id", { count: "exact", head: true });
-      
-      // Get singles from master_singles table
-      const { count: masterSingles } = await supabase
-        .from("master_singles")
-        .select("id", { count: "exact", head: true });
-      
-      // Also get processed counts from curated_artists
+      // Get all aggregated stats in one query
       const { data: artistStats } = await supabase
         .from("curated_artists")
-        .select("albums_count, singles_count");
+        .select("has_artist_story, albums_processed, singles_processed, products_created, albums_count, singles_count");
       
-      const totalAlbumsCount = artistStats?.reduce((sum, a) => sum + (a.albums_count || 0), 0) || 0;
-      const totalSinglesCount = artistStats?.reduce((sum, a) => sum + (a.singles_count || 0), 0) || 0;
-      
-      const { count: totalProducts } = await supabase
-        .from("platform_products")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "active");
+      const total = artistStats?.length || 0;
+      const withStory = artistStats?.filter(a => a.has_artist_story).length || 0;
+      const albumsProcessed = artistStats?.reduce((sum, a) => sum + (a.albums_processed || 0), 0) || 0;
+      const singlesProcessed = artistStats?.reduce((sum, a) => sum + (a.singles_processed || 0), 0) || 0;
+      const productsCreated = artistStats?.reduce((sum, a) => sum + (a.products_created || 0), 0) || 0;
+      const albumsDiscovered = artistStats?.reduce((sum, a) => sum + (a.albums_count || 0), 0) || 0;
+      const singlesDiscovered = artistStats?.reduce((sum, a) => sum + (a.singles_count || 0), 0) || 0;
 
       return {
-        total: total || 0,
-        withStory: withStory || 0,
-        withoutStory: (total || 0) - (withStory || 0),
-        // Use master tables for discovered albums/singles, fallback to aggregated counts
-        totalAlbums: masterAlbums || totalAlbumsCount || 0,
-        totalSingles: masterSingles || totalSinglesCount || 0,
-        totalProducts: totalProducts || 0,
+        total,
+        withStory,
+        withoutStory: total - withStory,
+        albumsProcessed,      // Album stories created
+        singlesProcessed,     // Singles processed  
+        productsCreated,      // Products linked
+        albumsDiscovered,     // From master_albums
+        singlesDiscovered,    // From master_singles
       };
     },
   });
@@ -342,7 +324,7 @@ export default function MasterArtists() {
             <div className="flex items-center gap-2">
               <Disc3 className="h-5 w-5 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{stats?.totalAlbums || 0}</p>
+                <p className="text-2xl font-bold">{stats?.albumsProcessed || 0}</p>
                 <p className="text-xs text-muted-foreground">Album Verhalen</p>
               </div>
             </div>
@@ -353,7 +335,7 @@ export default function MasterArtists() {
             <div className="flex items-center gap-2">
               <Music className="h-5 w-5 text-purple-500" />
               <div>
-                <p className="text-2xl font-bold">{stats?.totalSingles || 0}</p>
+                <p className="text-2xl font-bold">{stats?.singlesProcessed || 0}</p>
                 <p className="text-xs text-muted-foreground">Singles</p>
               </div>
             </div>
@@ -364,7 +346,7 @@ export default function MasterArtists() {
             <div className="flex items-center gap-2">
               <ShoppingBag className="h-5 w-5 text-pink-500" />
               <div>
-                <p className="text-2xl font-bold">{stats?.totalProducts || 0}</p>
+                <p className="text-2xl font-bold">{stats?.productsCreated || 0}</p>
                 <p className="text-xs text-muted-foreground">Producten</p>
               </div>
             </div>

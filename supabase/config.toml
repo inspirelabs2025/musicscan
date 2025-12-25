@@ -631,3 +631,13 @@ verify_jwt = false
 
 [[functions.singles-discovery-processor.schedule]]
 cron = "*/30 * * * *"
+
+# Master Singles Processor (verplaatst master_singles naar singles_import_queue)
+[functions.master-singles-processor]
+verify_jwt = false
+
+[[functions.master-singles-processor.schedule]]
+cron = "*/5 * * * *"
+
+[functions.sync-artist-counts]
+verify_jwt = false

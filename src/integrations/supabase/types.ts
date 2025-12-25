@@ -4810,40 +4810,64 @@ export type Database = {
       }
       photo_batch_queue: {
         Row: {
+          artist: string | null
           completed_at: string | null
           completed_jobs: number
           created_at: string | null
           current_job: string | null
+          discogs_id: number | null
           id: string
-          photo_url: string
+          image_url: string | null
+          metadata: Json | null
+          photo_url: string | null
           results: Json | null
+          source: string | null
+          source_id: string | null
           status: string
+          title: string | null
           total_jobs: number
           updated_at: string | null
+          year: number | null
         }
         Insert: {
+          artist?: string | null
           completed_at?: string | null
           completed_jobs?: number
           created_at?: string | null
           current_job?: string | null
+          discogs_id?: number | null
           id?: string
-          photo_url: string
+          image_url?: string | null
+          metadata?: Json | null
+          photo_url?: string | null
           results?: Json | null
+          source?: string | null
+          source_id?: string | null
           status?: string
+          title?: string | null
           total_jobs?: number
           updated_at?: string | null
+          year?: number | null
         }
         Update: {
+          artist?: string | null
           completed_at?: string | null
           completed_jobs?: number
           created_at?: string | null
           current_job?: string | null
+          discogs_id?: number | null
           id?: string
-          photo_url?: string
+          image_url?: string | null
+          metadata?: Json | null
+          photo_url?: string | null
           results?: Json | null
+          source?: string | null
+          source_id?: string | null
           status?: string
+          title?: string | null
           total_jobs?: number
           updated_at?: string | null
+          year?: number | null
         }
         Relationships: []
       }

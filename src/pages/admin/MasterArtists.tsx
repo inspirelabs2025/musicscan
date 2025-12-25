@@ -110,6 +110,12 @@ export default function MasterArtists() {
         .from("curated_artists")
         .select("has_artist_story, albums_processed, singles_processed, products_created, albums_count, singles_count");
       
+      // Get count of artists with discogs_artist_id
+      const { count: withDiscogsId } = await supabase
+        .from("curated_artists")
+        .select("*", { count: "exact", head: true })
+        .not("discogs_artist_id", "is", null);
+
       const total = artistStats?.length || 0;
       const withStory = artistStats?.filter(a => a.has_artist_story).length || 0;
       const albumsProcessed = artistStats?.reduce((sum, a) => sum + (a.albums_processed || 0), 0) || 0;
@@ -122,6 +128,7 @@ export default function MasterArtists() {
         total,
         withStory,
         withoutStory: total - withStory,
+        withDiscogsId: withDiscogsId || 0,
         albumsProcessed,      // Album stories created
         singlesProcessed,     // Singles processed  
         productsCreated,      // Products linked
@@ -315,6 +322,17 @@ export default function MasterArtists() {
               <div>
                 <p className="text-2xl font-bold">{stats?.withoutStory || 0}</p>
                 <p className="text-xs text-muted-foreground">Zonder Story</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-cyan-500" />
+              <div>
+                <p className="text-2xl font-bold">{stats?.withDiscogsId || 0}</p>
+                <p className="text-xs text-muted-foreground">Met Discogs ID</p>
               </div>
             </div>
           </CardContent>

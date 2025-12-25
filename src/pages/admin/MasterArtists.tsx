@@ -25,11 +25,14 @@ interface CuratedArtist {
   is_active: boolean | null;
   has_artist_story: boolean | null;
   artist_story_id: string | null;
-  albums_processed: number | null;
-  singles_processed: number | null;
+  albums_count: number | null;      // Discovered albums from Discogs
+  singles_count: number | null;     // Discovered singles from Discogs
+  albums_processed: number | null;  // Albums with stories/products
+  singles_processed: number | null; // Singles processed
   products_created: number | null;
   last_content_sync: string | null;
   discogs_id: string | null;
+  discogs_artist_id: number | null;
   spotify_id: string | null;
   created_at: string | null;
 }
@@ -448,30 +451,33 @@ export default function MasterArtists() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[250px]">Artiest</TableHead>
+                        <TableHead className="w-[200px]">Artiest</TableHead>
                         <TableHead>Land</TableHead>
-                        <TableHead>Genre</TableHead>
                         <TableHead className="text-center">🎤 Story</TableHead>
-                        <TableHead className="text-center">📀 Albums</TableHead>
-                        <TableHead className="text-center">🎵 Singles</TableHead>
+                        <TableHead className="text-center">
+                          <div className="text-xs">📀 Albums</div>
+                          <div className="text-[10px] text-muted-foreground">gevonden/verwerkt</div>
+                        </TableHead>
+                        <TableHead className="text-center">
+                          <div className="text-xs">🎵 Singles</div>
+                          <div className="text-[10px] text-muted-foreground">gevonden/verwerkt</div>
+                        </TableHead>
                         <TableHead className="text-center">🛍️ Products</TableHead>
                         <TableHead className="text-center">Prioriteit</TableHead>
-                        <TableHead className="w-[80px]"></TableHead>
+                        <TableHead className="w-[60px]"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {artists?.map((artist) => (
                         <TableRow key={artist.id}>
                           <TableCell className="font-medium">
-                            {artist.artist_name}
+                            <div>{artist.artist_name}</div>
+                            {artist.genre && (
+                              <Badge variant="secondary" className="text-[10px] mt-1">{artist.genre}</Badge>
+                            )}
                           </TableCell>
                           <TableCell>
                             <span className="text-lg">{getCountryFlag(artist.country_code)}</span>
-                          </TableCell>
-                          <TableCell>
-                            {artist.genre && (
-                              <Badge variant="secondary">{artist.genre}</Badge>
-                            )}
                           </TableCell>
                           <TableCell className="text-center">
                             {artist.has_artist_story ? (
@@ -481,17 +487,29 @@ export default function MasterArtists() {
                             )}
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className={artist.albums_processed ? "font-medium" : "text-muted-foreground"}>
-                              {artist.albums_processed || 0}
-                            </span>
+                            <div className="flex items-center justify-center gap-1">
+                              <span className={artist.albums_count ? "font-bold text-blue-600" : "text-muted-foreground"}>
+                                {artist.albums_count || 0}
+                              </span>
+                              <span className="text-muted-foreground">/</span>
+                              <span className={artist.albums_processed ? "text-green-600" : "text-muted-foreground"}>
+                                {artist.albums_processed || 0}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className={artist.singles_processed ? "font-medium" : "text-muted-foreground"}>
-                              {artist.singles_processed || 0}
-                            </span>
+                            <div className="flex items-center justify-center gap-1">
+                              <span className={artist.singles_count ? "font-bold text-purple-600" : "text-muted-foreground"}>
+                                {artist.singles_count || 0}
+                              </span>
+                              <span className="text-muted-foreground">/</span>
+                              <span className={artist.singles_processed ? "text-green-600" : "text-muted-foreground"}>
+                                {artist.singles_processed || 0}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className={artist.products_created ? "font-medium" : "text-muted-foreground"}>
+                            <span className={artist.products_created ? "font-medium text-pink-600" : "text-muted-foreground"}>
                               {artist.products_created || 0}
                             </span>
                           </TableCell>
@@ -517,7 +535,7 @@ export default function MasterArtists() {
                       ))}
                       {(!artists || artists.length === 0) && (
                         <TableRow>
-                          <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                             Geen artiesten gevonden
                           </TableCell>
                         </TableRow>

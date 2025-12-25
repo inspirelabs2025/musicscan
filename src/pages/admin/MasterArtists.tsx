@@ -225,7 +225,7 @@ export default function MasterArtists() {
         return trimmed && trimmed.toLowerCase() !== 'discogs';
       });
 
-      const artists = validLines.map(line => {
+      const parsedArtists = validLines.map(line => {
         // Split on en-dash (–) or pipe (|) with optional spaces
         const parts = line.split(/\s*[–|]\s*/).map(p => p.trim());
         const artistName = parts[0];
@@ -239,17 +239,44 @@ export default function MasterArtists() {
         };
       });
 
+      // Get existing artists to deduplicate
+      const artistNames = parsedArtists.map(a => a.artist_name.toLowerCase());
+      const { data: existingArtists } = await supabase
+        .from("curated_artists")
+        .select("artist_name")
+        .in("artist_name", parsedArtists.map(a => a.artist_name));
+
+      const existingNames = new Set(
+        (existingArtists || []).map(a => a.artist_name.toLowerCase())
+      );
+
+      // Filter out duplicates
+      const newArtists = parsedArtists.filter(
+        a => !existingNames.has(a.artist_name.toLowerCase())
+      );
+
+      if (newArtists.length === 0) {
+        return { inserted: [], skipped: parsedArtists.length };
+      }
+
       const { data, error } = await supabase
         .from("curated_artists")
-        .upsert(artists, { onConflict: "artist_name", ignoreDuplicates: false })
+        .insert(newArtists)
         .select();
       
       if (error) throw error;
-      return data;
+      return { inserted: data, skipped: parsedArtists.length - newArtists.length };
     },
-    onSuccess: (data) => {
-      const withDiscogs = data?.filter(a => a.discogs_artist_id).length || 0;
-      toast.success(`${data?.length || 0} artiesten toegevoegd (${withDiscogs} met Discogs ID)`);
+    onSuccess: (result) => {
+      const { inserted, skipped } = result;
+      const withDiscogs = inserted?.filter(a => a.discogs_artist_id).length || 0;
+      const insertedCount = inserted?.length || 0;
+      
+      if (skipped > 0) {
+        toast.success(`${insertedCount} artiesten toegevoegd (${withDiscogs} met Discogs ID), ${skipped} overgeslagen (bestonden al)`);
+      } else {
+        toast.success(`${insertedCount} artiesten toegevoegd (${withDiscogs} met Discogs ID)`);
+      }
       setBulkArtistsText("");
       queryClient.invalidateQueries({ queryKey: ["master-artists"] });
       queryClient.invalidateQueries({ queryKey: ["master-artists-stats"] });

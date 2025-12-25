@@ -606,6 +606,9 @@ verify_jwt = false
 [functions.discover-artist-albums]
 verify_jwt = false
 
+[functions.discover-artist-singles]
+verify_jwt = false
+
 [functions.batch-album-discovery]
 verify_jwt = false
 

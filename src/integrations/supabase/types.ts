@@ -3501,6 +3501,99 @@ export type Database = {
           },
         ]
       }
+      master_singles: {
+        Row: {
+          album_id: string | null
+          album_title: string | null
+          artist_id: string | null
+          artist_name: string
+          artwork_large: string | null
+          artwork_thumb: string | null
+          country: string | null
+          created_at: string | null
+          discogs_artist_id: number | null
+          discogs_master_id: number | null
+          discogs_release_id: number | null
+          discogs_url: string | null
+          discovered_at: string | null
+          format: string | null
+          has_products: boolean | null
+          has_story: boolean | null
+          id: string
+          label: string | null
+          processed_at: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          year: number | null
+        }
+        Insert: {
+          album_id?: string | null
+          album_title?: string | null
+          artist_id?: string | null
+          artist_name: string
+          artwork_large?: string | null
+          artwork_thumb?: string | null
+          country?: string | null
+          created_at?: string | null
+          discogs_artist_id?: number | null
+          discogs_master_id?: number | null
+          discogs_release_id?: number | null
+          discogs_url?: string | null
+          discovered_at?: string | null
+          format?: string | null
+          has_products?: boolean | null
+          has_story?: boolean | null
+          id?: string
+          label?: string | null
+          processed_at?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Update: {
+          album_id?: string | null
+          album_title?: string | null
+          artist_id?: string | null
+          artist_name?: string
+          artwork_large?: string | null
+          artwork_thumb?: string | null
+          country?: string | null
+          created_at?: string | null
+          discogs_artist_id?: number | null
+          discogs_master_id?: number | null
+          discogs_release_id?: number | null
+          discogs_url?: string | null
+          discovered_at?: string | null
+          format?: string | null
+          has_products?: boolean | null
+          has_story?: boolean | null
+          id?: string
+          label?: string | null
+          processed_at?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_singles_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "master_albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "master_singles_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "curated_artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media_library: {
         Row: {
           ai_context_type: string | null

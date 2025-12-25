@@ -32,7 +32,7 @@ interface DiscogsReleasesResponse {
 // Delay helper for rate limiting
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Filter function: only keep main albums (not singles, compilations, etc.)
+// Filter function: only keep OFFICIAL STUDIO albums (strict filtering)
 function isMainAlbum(release: DiscogsRelease): boolean {
   // Only "Main" role (not Appearance, Remix, etc.)
   if (release.role !== 'Main') return false;
@@ -40,29 +40,31 @@ function isMainAlbum(release: DiscogsRelease): boolean {
   // Type should be "master" for unique albums
   if (release.type !== 'master') return false;
   
-  // Skip if title contains typical compilation indicators
   const lowerTitle = release.title.toLowerCase();
+  
+  // SKIP patterns - compilations, live, bootlegs, etc.
   const skipPatterns = [
-    'greatest hits',
-    'best of',
-    'compilation',
-    'collection',
-    'anthology',
-    'complete',
-    'essential',
-    'ultimate',
-    'singles',
-    'remixes',
-    'remix album',
-    'live at',
-    'live in',
-    'bootleg',
-    'unofficial',
-    'tribute',
-    'covers',
+    'greatest hits', 'best of', 'compilation', 'collection', 'anthology',
+    'complete', 'essential', 'ultimate', 'singles', 'remixes', 'remix album',
+    'live at', 'live in', 'live from', 'live -', 'in concert', 'on stage',
+    'bootleg', 'unofficial', 'tribute', 'covers', 'sessions', 'outtakes',
+    'demos', 'rarities', 'b-sides', 'unreleased', 'alternate', 'bonus',
+    'deluxe edition', 'remastered', 'anniversary', 'expanded', 'special edition',
+    'box set', 'collected', 'retrospective', 'definitive', 'works',
+    'volume 1', 'volume 2', 'vol. 1', 'vol. 2', 'vol 1', 'vol 2',
+    'disc 1', 'disc 2', 'cd 1', 'cd 2', 'part 1', 'part 2',
+    'interview', 'spoken word', 'documentary', 'soundtrack', 'score',
+    'promo', 'sampler', 'preview', 'teaser', 'ep', 'mini album',
+    'split', 'various artists', 'v/a', 'v.a.',
   ];
   
   if (skipPatterns.some(pattern => lowerTitle.includes(pattern))) {
+    return false;
+  }
+  
+  // Must have a valid year (between 1920 and current year)
+  const currentYear = new Date().getFullYear();
+  if (!release.year || release.year < 1920 || release.year > currentYear) {
     return false;
   }
   
@@ -110,16 +112,17 @@ Deno.serve(async (req) => {
       console.log(`[discover-artist-albums] Found Discogs ID: ${finalDiscogsId}`);
     }
 
-    // Step 2: Fetch ALL releases with pagination
+    // Step 2: Fetch releases with pagination (MAX 3 pages = 300 releases to prevent timeout)
     let allReleases: DiscogsRelease[] = [];
     let page = 1;
     let totalPages = 1;
     const perPage = 100;
+    const MAX_PAGES = 3; // Limit to prevent timeout on artists with many releases
 
     // Use type=master to fetch ONLY unique albums (not all pressings/versions)
-    console.log(`[discover-artist-albums] Fetching MASTER releases only for artist ID: ${finalDiscogsId}`);
+    console.log(`[discover-artist-albums] Fetching MASTER releases for artist ID: ${finalDiscogsId} (max ${MAX_PAGES} pages)`);
 
-    while (page <= totalPages) {
+    while (page <= totalPages && page <= MAX_PAGES) {
       const releasesUrl = `https://api.discogs.com/artists/${finalDiscogsId}/releases?type=master&page=${page}&per_page=${perPage}&sort=year&sort_order=asc`;
       
       const response = await fetch(releasesUrl, {
@@ -141,12 +144,12 @@ Deno.serve(async (req) => {
       const data: DiscogsReleasesResponse = await response.json();
       
       if (page === 1) {
-        totalPages = data.pagination.pages;
-        console.log(`[discover-artist-albums] Total MASTER albums: ${data.pagination.items} (${totalPages} pages)`);
+        totalPages = Math.min(data.pagination.pages, MAX_PAGES);
+        console.log(`[discover-artist-albums] Total in Discogs: ${data.pagination.items}, fetching max ${MAX_PAGES} pages`);
       }
 
       allReleases = allReleases.concat(data.releases);
-      console.log(`[discover-artist-albums] Fetched page ${page}/${totalPages} (${data.releases.length} master albums)`);
+      console.log(`[discover-artist-albums] Fetched page ${page}/${totalPages} (${data.releases.length} releases)`);
 
       page++;
       

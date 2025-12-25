@@ -83,7 +83,9 @@ Deno.serve(async (req) => {
 
     console.log(`[discover-artist-singles] Fetching singles for artist ID: ${discogsArtistId}`);
 
-    while (page <= totalPages) {
+    const MAX_PAGES = 3; // Limit to prevent timeout
+
+    while (page <= totalPages && page <= MAX_PAGES) {
       // Use format filter for singles/7"/12"
       const url = `https://api.discogs.com/artists/${discogsArtistId}/releases?format=Single&page=${page}&per_page=100&sort=year&sort_order=asc`;
       
@@ -106,8 +108,8 @@ Deno.serve(async (req) => {
       const data: DiscogsReleasesResponse = await response.json();
       
       if (page === 1) {
-        totalPages = data.pagination.pages;
-        console.log(`[discover-artist-singles] Total singles: ${data.pagination.items} (${totalPages} pages)`);
+        totalPages = Math.min(data.pagination.pages, MAX_PAGES);
+        console.log(`[discover-artist-singles] Total in Discogs: ${data.pagination.items}, fetching max ${MAX_PAGES} pages`);
       }
 
       allReleases = allReleases.concat(data.releases);
@@ -119,12 +121,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Also fetch 7" and 12" formats
+    // Also fetch 7" and 12" formats (limited to 2 pages each)
     for (const format of ['7"', '12"']) {
       page = 1;
       totalPages = 1;
+      const FORMAT_MAX_PAGES = 2;
       
-      while (page <= totalPages) {
+      while (page <= totalPages && page <= FORMAT_MAX_PAGES) {
         const url = `https://api.discogs.com/artists/${discogsArtistId}/releases?format=${encodeURIComponent(format)}&page=${page}&per_page=100`;
         
         const response = await fetch(url, {
@@ -145,8 +148,8 @@ Deno.serve(async (req) => {
         const data: DiscogsReleasesResponse = await response.json();
         
         if (page === 1) {
-          totalPages = Math.min(data.pagination.pages, 3); // Limit to 3 pages per format
-          console.log(`[discover-artist-singles] ${format} releases: ${data.pagination.items}`);
+          totalPages = Math.min(data.pagination.pages, FORMAT_MAX_PAGES);
+          console.log(`[discover-artist-singles] ${format} releases: ${data.pagination.items}, fetching max ${FORMAT_MAX_PAGES} pages`);
         }
 
         allReleases = allReleases.concat(data.releases);

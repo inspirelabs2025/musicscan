@@ -3523,6 +3523,7 @@ export type Database = {
           label: string | null
           processed_at: string | null
           status: string | null
+          story_id: string | null
           title: string
           updated_at: string | null
           year: number | null
@@ -3548,6 +3549,7 @@ export type Database = {
           label?: string | null
           processed_at?: string | null
           status?: string | null
+          story_id?: string | null
           title: string
           updated_at?: string | null
           year?: number | null
@@ -3573,6 +3575,7 @@ export type Database = {
           label?: string | null
           processed_at?: string | null
           status?: string | null
+          story_id?: string | null
           title?: string
           updated_at?: string | null
           year?: number | null
@@ -3590,6 +3593,13 @@ export type Database = {
             columns: ["artist_id"]
             isOneToOne: false
             referencedRelation: "curated_artists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "master_singles_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "music_stories"
             referencedColumns: ["id"]
           },
         ]

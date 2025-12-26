@@ -9,8 +9,9 @@ cron = "0 5 * * *"
 [functions.top2000-auto-processor]
 verify_jwt = false
 
-[[functions.top2000-auto-processor.schedule]]
-cron = "* * * * *"
+# DISABLED - not needed now
+# [[functions.top2000-auto-processor.schedule]]
+# cron = "* * * * *"
 
 [functions.parse-top2000-pdf]
 verify_jwt = false
@@ -97,19 +98,20 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.bulk-poster-processor.schedule]]
-cron = "*/5 * * * *"
+cron = "0 */2 * * *"
 
 [functions.discogs-lp-crawler]
 verify_jwt = false
 
 [[functions.discogs-lp-crawler.schedule]]
-cron = "0 * * * *"
+cron = "0 */3 * * *"
 
 [functions.process-discogs-queue]
 verify_jwt = false
 
-[[functions.process-discogs-queue.schedule]]
-cron = "*/2 * * * *"
+# DISABLED - uses AI for product generation
+# [[functions.process-discogs-queue.schedule]]
+# cron = "*/2 * * * *"
 
 [functions.seed-curated-artists]
 verify_jwt = false
@@ -162,8 +164,9 @@ verify_jwt = false
 [functions.batch-blog-processor]
 verify_jwt = false
 
-[[functions.batch-blog-processor.schedule]]
-cron = "*/10 * * * *"
+# DISABLED - uses AI
+# [[functions.batch-blog-processor.schedule]]
+# cron = "*/10 * * * *"
 
 [functions.collection-quiz-generator]
 verify_jwt = true
@@ -423,6 +426,10 @@ verify_jwt = false
 [functions.photo-batch-processor]
 verify_jwt = false
 
+# DISABLED - Product image generation uses too much AI credits
+# [[functions.photo-batch-processor.schedule]]
+# cron = "*/2 * * * *"
+
 [functions.bulk-photo-batch-processor]
 verify_jwt = false
 
@@ -438,11 +445,12 @@ verify_jwt = true
 [functions.singles-batch-generator]
 verify_jwt = false
 
+# Singles story generation - 1x per uur (was elke minuut)
 [functions.singles-batch-processor]
 verify_jwt = false
 
 [[functions.singles-batch-processor.schedule]]
-cron = "* * * * *"
+cron = "0 * * * *"
 
 [functions.generate-single-story]
 verify_jwt = false
@@ -453,11 +461,12 @@ verify_jwt = false
 [functions.backfill-singles-artwork]
 verify_jwt = false
 
+# Artist stories - 1x per uur (was elke minuut)
 [functions.artist-stories-batch-processor]
 verify_jwt = false
 
 [[functions.artist-stories-batch-processor.schedule]]
-cron = "* * * * *"
+cron = "15 * * * *"
 
 [functions.cleanup-duplicate-blogs]
 verify_jwt = false
@@ -510,8 +519,9 @@ verify_jwt = false
 [functions.repair-christmas-sock-images]
 verify_jwt = false
 
-[[functions.repair-christmas-sock-images.schedule]]
-cron = "*/3 * * * *"
+# DISABLED - Christmas is over
+# [[functions.repair-christmas-sock-images.schedule]]
+# cron = "*/3 * * * *"
 
 [functions.generate-artist-christmas-sock]
 verify_jwt = false
@@ -525,8 +535,9 @@ verify_jwt = false
 [functions.backfill-christmas-socks]
 verify_jwt = false
 
-[[functions.backfill-christmas-socks.schedule]]
-cron = "*/2 * * * *"
+# DISABLED - Christmas is over
+# [[functions.backfill-christmas-socks.schedule]]
+# cron = "*/2 * * * *"
 
 [functions.generate-composer-story]
 verify_jwt = false
@@ -534,17 +545,19 @@ verify_jwt = false
 [functions.generate-soundtrack-story]
 verify_jwt = false
 
+# Composer stories - DISABLED (not priority)
 [functions.composer-batch-processor]
 verify_jwt = false
 
-[[functions.composer-batch-processor.schedule]]
-cron = "* * * * *"
+# [[functions.composer-batch-processor.schedule]]
+# cron = "* * * * *"
 
+# Soundtrack stories - DISABLED (not priority)
 [functions.soundtrack-batch-processor]
 verify_jwt = false
 
-[[functions.soundtrack-batch-processor.schedule]]
-cron = "* * * * *"
+# [[functions.soundtrack-batch-processor.schedule]]
+# cron = "* * * * *"
 
 [functions.admin-daily-stats-email]
 verify_jwt = false
@@ -555,8 +568,9 @@ cron = "0 7 * * *"
 [functions.backfill-truncated-stories]
 verify_jwt = false
 
-[[functions.backfill-truncated-stories.schedule]]
-cron = "* * * * *"
+# DISABLED - uses AI
+# [[functions.backfill-truncated-stories.schedule]]
+# cron = "* * * * *"
 
 [functions.deduplicate-products]
 verify_jwt = false
@@ -568,7 +582,7 @@ cron = "0 4 * * *"
 verify_jwt = false
 
 [[functions.backfill-country-codes.schedule]]
-cron = "0 * * * *"
+cron = "0 */4 * * *"
 
 [functions.fetch-studio-image]
 verify_jwt = false
@@ -576,27 +590,32 @@ verify_jwt = false
 [functions.generate-studio-story]
 verify_jwt = false
 
+# Studio stories - DISABLED (not priority)
 [functions.studio-batch-processor]
 verify_jwt = false
 
-[[functions.studio-batch-processor.schedule]]
-cron = "* * * * *"
+# [[functions.studio-batch-processor.schedule]]
+# cron = "* * * * *"
 
-# NEW: Singles uit albums extraheren (elke 2 uur)
+# Singles uit albums extraheren (elke 4 uur)
 [functions.extract-singles-from-albums]
 verify_jwt = false
 
 [[functions.extract-singles-from-albums.schedule]]
-cron = "0 */2 * * *"
+cron = "0 */4 * * *"
 
-# NEW: Facebook queues recyclen (elk uur)
+# Facebook queues recyclen (elk uur)
 [functions.recycle-facebook-queue]
 verify_jwt = false
 
 [[functions.recycle-facebook-queue.schedule]]
 cron = "30 * * * *"
 
-# Album Discovery System
+# ============================================
+# CORE PIPELINE - 1x per uur elk
+# ============================================
+
+# 1. Discogs ID zoeken - 1x per uur op :00
 [functions.lookup-artist-discogs-id]
 verify_jwt = false
 
@@ -604,8 +623,9 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.fill-missing-discogs-ids.schedule]]
-cron = "* * * * *"
+cron = "0 * * * *"
 
+# 2. Album discovery - 1x per uur op :30
 [functions.discover-artist-albums]
 verify_jwt = false
 
@@ -616,45 +636,46 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.batch-album-discovery.schedule]]
-cron = "0 * * * *"
+cron = "30 * * * *"
 
+# 3. Album queue to photo queue - 1x per uur op :45
 [functions.album-queue-processor]
 verify_jwt = false
 
 [[functions.album-queue-processor.schedule]]
-cron = "*/15 * * * *"
+cron = "45 * * * *"
 
 # Admin Queue Cleanup
 [functions.admin-queue-cleanup]
 verify_jwt = false
 
-# Singles Discovery Processor (elke 30 min om master_singles te vullen)
+# Singles Discovery - 1x per uur op :20
 [functions.singles-discovery-processor]
 verify_jwt = false
 
 [[functions.singles-discovery-processor.schedule]]
-cron = "*/30 * * * *"
+cron = "20 * * * *"
 
-# Master Singles Processor (verplaatst master_singles naar singles_import_queue)
+# Master Singles to import queue - 1x per uur op :25
 [functions.master-singles-processor]
 verify_jwt = false
 
 [[functions.master-singles-processor.schedule]]
-cron = "*/5 * * * *"
+cron = "25 * * * *"
 
 [functions.sync-artist-counts]
 verify_jwt = false
 
-# Photo Queue Auto Processor (verwerkt photo_batch_queue naar products)
+# DISABLED - Photo queue processor (generates 7 product images = too expensive)
 [functions.photo-queue-auto-processor]
 verify_jwt = false
 
-[[functions.photo-queue-auto-processor.schedule]]
-cron = "*/2 * * * *"
+# [[functions.photo-queue-auto-processor.schedule]]
+# cron = "*/2 * * * *"
 
-# Sync Artist Content Status (updates has_artist_story, albums_processed, etc.)
+# Sync Artist Content Status - elke 2 uur
 [functions.sync-artist-content-status]
 verify_jwt = false
 
 [[functions.sync-artist-content-status.schedule]]
-cron = "*/15 * * * *"
+cron = "0 */2 * * *"

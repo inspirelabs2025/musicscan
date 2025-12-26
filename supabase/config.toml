@@ -654,3 +654,10 @@ verify_jwt = false
 
 [[functions.photo-queue-auto-processor.schedule]]
 cron = "*/2 * * * *"
+
+# Sync Artist Content Status (updates has_artist_story, albums_processed, etc.)
+[functions.sync-artist-content-status]
+verify_jwt = false
+
+[[functions.sync-artist-content-status.schedule]]
+cron = "*/15 * * * *"

@@ -28,6 +28,15 @@ const QUEUE_CONFIGS: QueueConfig[] = [
     contentFilter: "is_published = true AND single_name IS NOT NULL",
   },
   {
+    queueTable: 'album_facebook_queue',
+    contentTable: 'blog_posts',
+    contentIdField: 'blog_post_id',
+    postedAtField: 'social_post', // Use social_post field as indicator
+    minPending: 5,
+    batchSize: 10,
+    contentFilter: "is_published = true",
+  },
+  {
     queueTable: 'music_history_facebook_queue',
     contentTable: 'music_history_events',
     contentIdField: 'event_id',
@@ -154,12 +163,33 @@ serve(async (req) => {
           const scheduledFor = new Date();
           scheduledFor.setMinutes(scheduledFor.getMinutes() + (addedCount * 30)); // 30 min intervals
 
-          const insertData: any = {
+          // Build insert data based on queue type
+          let insertData: any = {
             [config.contentIdField]: content.id,
             status: 'pending',
             scheduled_for: scheduledFor.toISOString(),
             priority: 5, // Lower priority than fresh content
           };
+
+          // For album_facebook_queue, we need to fetch blog post details
+          if (config.queueTable === 'album_facebook_queue') {
+            const { data: blogPost } = await supabase
+              .from('blog_posts')
+              .select('slug, album_cover_url, yaml_frontmatter')
+              .eq('id', content.id)
+              .maybeSingle();
+
+            if (blogPost) {
+              const frontmatter = blogPost.yaml_frontmatter as any;
+              insertData = {
+                ...insertData,
+                artist: frontmatter?.artist || 'Onbekend',
+                album_title: frontmatter?.title || 'Onbekend',
+                slug: blogPost.slug,
+                artwork_url: blogPost.album_cover_url,
+              };
+            }
+          }
 
           const { error: insertError } = await supabase
             .from(config.queueTable)

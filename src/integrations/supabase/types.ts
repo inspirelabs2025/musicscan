@@ -203,6 +203,57 @@ export type Database = {
         }
         Relationships: []
       }
+      album_facebook_queue: {
+        Row: {
+          album_title: string
+          artist: string
+          artwork_url: string | null
+          blog_post_id: string
+          created_at: string | null
+          error_message: string | null
+          facebook_post_id: string | null
+          id: string
+          posted_at: string | null
+          priority: number | null
+          scheduled_for: string | null
+          slug: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          album_title: string
+          artist: string
+          artwork_url?: string | null
+          blog_post_id: string
+          created_at?: string | null
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          posted_at?: string | null
+          priority?: number | null
+          scheduled_for?: string | null
+          slug: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          album_title?: string
+          artist?: string
+          artwork_url?: string | null
+          blog_post_id?: string
+          created_at?: string | null
+          error_message?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          posted_at?: string | null
+          priority?: number | null
+          scheduled_for?: string | null
+          slug?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       album_insights: {
         Row: {
           ai_model: string

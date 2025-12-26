@@ -1,0 +1,26 @@
+-- Try disabling scheduled jobs via cron.unschedule (no direct table writes)
+SELECT cron.unschedule(74);
+SELECT cron.unschedule(73);
+SELECT cron.unschedule(72);
+SELECT cron.unschedule(71);
+SELECT cron.unschedule(69);
+SELECT cron.unschedule(68);
+SELECT cron.unschedule(67);
+SELECT cron.unschedule(66);
+SELECT cron.unschedule(64);
+SELECT cron.unschedule(63);
+SELECT cron.unschedule(59);
+SELECT cron.unschedule(58);
+SELECT cron.unschedule(57);
+SELECT cron.unschedule(54);
+SELECT cron.unschedule(52);
+SELECT cron.unschedule(51);
+SELECT cron.unschedule(50);
+SELECT cron.unschedule(49);
+SELECT cron.unschedule(47);
+SELECT cron.unschedule(42);
+SELECT cron.unschedule(41);
+SELECT cron.unschedule(40);
+SELECT cron.unschedule(39);
+SELECT cron.unschedule(38);
+SELECT cron.unschedule(37);

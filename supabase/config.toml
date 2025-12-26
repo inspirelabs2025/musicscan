@@ -596,9 +596,6 @@ verify_jwt = false
 [[functions.recycle-facebook-queue.schedule]]
 cron = "30 * * * *"
 
-[functions.sync-artist-content-status]
-verify_jwt = false
-
 # Album Discovery System
 [functions.lookup-artist-discogs-id]
 verify_jwt = false

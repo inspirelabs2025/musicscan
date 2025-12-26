@@ -16,7 +16,23 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { action, photoUrl, batchId, artist, title, description } = await req.json();
+    const { action, photoUrl, batchId, artist, title, description, queueItemId } = await req.json();
+
+    // NEW: Process existing queue item (used by photo-queue-auto-processor)
+    if (action === 'process-existing' && queueItemId) {
+      console.log(`🚀 Processing existing queue item ${queueItemId} for photo: ${photoUrl}`);
+
+      // Start background processing for existing item
+      EdgeRuntime.waitUntil(processPhotoBatchForExistingItem(queueItemId, photoUrl, artist, title, description, supabase));
+
+      return new Response(JSON.stringify({
+        success: true,
+        queueItemId: queueItemId,
+        message: 'Batch processing started in background for existing item'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     if (action === 'start') {
       // Create batch record
@@ -94,6 +110,20 @@ serve(async (req) => {
     });
   }
 });
+
+// Process existing queue item (updates the existing item instead of creating new)
+async function processPhotoBatchForExistingItem(
+  queueItemId: string, 
+  photoUrl: string,
+  artist: string,
+  title: string,
+  description: string,
+  supabase: any
+) {
+  // Reuse processPhotoBatch but with the existing queueItemId as batchId
+  // The existing function updates photo_batch_queue by ID, so this will work correctly
+  await processPhotoBatch(queueItemId, photoUrl, artist, title, description, supabase);
+}
 
 async function processPhotoBatch(
   batchId: string, 

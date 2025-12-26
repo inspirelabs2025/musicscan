@@ -604,12 +604,19 @@ verify_jwt = false
 [[functions.extract-singles-from-albums.schedule]]
 cron = "0 */4 * * *"
 
+# Singles posten naar Facebook (elk half uur)
+[functions.post-scheduled-singles]
+verify_jwt = false
+
+[[functions.post-scheduled-singles.schedule]]
+cron = "30 9-21/2 * * *"
+
 # Facebook queues recyclen (elk uur)
 [functions.recycle-facebook-queue]
 verify_jwt = false
 
 [[functions.recycle-facebook-queue.schedule]]
-cron = "30 * * * *"
+cron = "45 * * * *"
 
 # ============================================
 # CORE PIPELINE - 1x per uur elk

@@ -604,12 +604,19 @@ verify_jwt = false
 [[functions.extract-singles-from-albums.schedule]]
 cron = "0 */4 * * *"
 
-# Singles posten naar Facebook (elk half uur)
+# Singles posten naar Facebook (elke 2 uur op :30)
 [functions.post-scheduled-singles]
 verify_jwt = false
 
 [[functions.post-scheduled-singles.schedule]]
 cron = "30 9-21/2 * * *"
+
+# Albums posten naar Facebook (elke 2 uur op :00)
+[functions.post-scheduled-albums]
+verify_jwt = false
+
+[[functions.post-scheduled-albums.schedule]]
+cron = "0 10-22/2 * * *"
 
 # Facebook queues recyclen (elk uur)
 [functions.recycle-facebook-queue]

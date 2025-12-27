@@ -8,6 +8,10 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // CRITICAL: Log at the very start to confirm function is being invoked
+  console.log('🚀 post-scheduled-albums function INVOKED at:', new Date().toISOString());
+  console.log('📋 Request method:', req.method);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -15,11 +19,14 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    console.log('🔧 Creating Supabase client...');
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     console.log('💿 Album Facebook queue processor started');
 
     // Get next item from queue (highest priority first, then oldest)
+    console.log('📊 Fetching next pending item from album_facebook_queue...');
     const { data: queueItem, error: fetchError } = await supabase
       .from('album_facebook_queue')
       .select('*')
@@ -29,27 +36,40 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error('❌ Error fetching queue item:', fetchError);
+      throw fetchError;
+    }
+
+    console.log('📊 Queue query result:', queueItem ? `Found: ${queueItem.artist} - ${queueItem.album_title}` : 'No pending items');
 
     if (!queueItem) {
       console.log('✅ No pending albums in Facebook queue');
       return new Response(JSON.stringify({
         success: true,
-        message: 'No pending albums'
+        message: 'No pending albums',
+        timestamp: new Date().toISOString()
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`💿 Posting album: ${queueItem.artist} - ${queueItem.album_title} (priority: ${queueItem.priority})`);
+    console.log(`💿 Posting album: ${queueItem.artist} - ${queueItem.album_title} (priority: ${queueItem.priority}, id: ${queueItem.id})`);
 
     // Mark as processing (to prevent double processing)
-    await supabase
+    const { error: updateError } = await supabase
       .from('album_facebook_queue')
       .update({ status: 'processing' })
       .eq('id', queueItem.id);
 
+    if (updateError) {
+      console.error('❌ Error marking as processing:', updateError);
+    } else {
+      console.log('✅ Marked as processing');
+    }
+
     // Get the full blog post content for summary
+    console.log('📖 Fetching blog post content...');
     const { data: blogPost } = await supabase
       .from('blog_posts')
       .select('markdown_content, album_cover_url, yaml_frontmatter')
@@ -75,9 +95,11 @@ serve(async (req) => {
     const albumUrl = `https://www.musicscan.app/plaat-verhaal/${queueItem.slug}`;
 
     console.log(`🖼️ Artwork URL: ${artworkUrl ? 'found' : 'missing'}`);
+    console.log(`📝 Summary length: ${summary.length} chars`);
 
     // Post to Facebook
     try {
+      console.log('📤 Posting to Facebook...');
       const fbResponse = await fetch(`${supabaseUrl}/functions/v1/post-to-facebook`, {
         method: 'POST',
         headers: {
@@ -95,7 +117,9 @@ serve(async (req) => {
         })
       });
 
+      console.log('📥 Facebook response status:', fbResponse.status);
       const fbResult = await fbResponse.json();
+      console.log('📥 Facebook response:', JSON.stringify(fbResult));
 
       if (fbResponse.ok && fbResult.success) {
         // Mark as posted
@@ -134,7 +158,8 @@ serve(async (req) => {
           posted: queueItem.id,
           facebook_post_id: fbResult.post_id,
           artist: queueItem.artist,
-          album: queueItem.album_title
+          album: queueItem.album_title,
+          timestamp: new Date().toISOString()
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -162,7 +187,8 @@ serve(async (req) => {
     console.error('❌ Album queue processor error:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
-      success: false 
+      success: false,
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

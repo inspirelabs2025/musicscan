@@ -693,3 +693,7 @@ verify_jwt = false
 
 [[functions.sync-artist-content-status.schedule]]
 cron = "0 */2 * * *"
+
+# Populate album queue (manual trigger)
+[functions.populate-album-queue]
+verify_jwt = false

@@ -116,7 +116,7 @@ const BASE_PROMO_BLOCKS: Array<{
   selectedCountry,
   { id: 'promo-dance', type: 'dance', title: 'Dance & House', subtitle: 'Feel the beat', link: '/dance-house', emoji: '🎧', image: promoDanceBg },
   { id: 'promo-film', type: 'filmmuziek', title: 'Filmmuziek', subtitle: 'Soundtracks & scores', link: '/filmmuziek', emoji: '🎬', image: promoFilmmuziekBg },
-  { id: 'promo-kerst', type: 'kerst', title: 'Kerstmuziek', subtitle: 'Feestelijke hits', link: '/kerst', emoji: '🎄', image: promoKerstBg },
+  
 ];
 
 // Shuffle helper

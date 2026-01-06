@@ -1,639 +1,338 @@
-// OPTIMIZED V2.0 - Uses Lovable AI Gateway for faster CD analysis
-// Single-call optimization for all images
-
+// V3.0 - Two-Pass Verification System to prevent AI hallucination
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const CD_FUNCTION_VERSION = "V2.0-OPTIMIZED";
-
-// Use Lovable API key (faster) with OpenAI fallback
+const CD_FUNCTION_VERSION = "V3.0-TWO-PASS-VERIFICATION";
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 const DISCOGS_TOKEN = Deno.env.get('DISCOGS_TOKEN');
 const DISCOGS_CONSUMER_KEY = Deno.env.get('DISCOGS_CONSUMER_KEY');
 const DISCOGS_CONSUMER_SECRET = Deno.env.get('DISCOGS_CONSUMER_SECRET');
 
 console.log(`🚀 CD ANALYSIS ${CD_FUNCTION_VERSION}`);
-console.log(`🔑 Using: ${LOVABLE_API_KEY ? 'Lovable AI Gateway' : 'OpenAI API'}`);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface CDAnalysisRequest {
-  imageUrls: string[];
-  scanId: string;
-}
-
-interface OCRResult {
-  artist?: string;
-  title?: string;
-  label?: string;
-  catalog_number?: string;
-  barcode?: string;
-  year?: number;
-  format?: string;
-  country?: string;
-  genre?: string;
-  matrix_number?: string;
-  side?: string;
-  stamper_codes?: string;
-}
-
-async function validateImageUrls(imageUrls: string[]): Promise<void> {
-  console.log('🔍 Validating image URLs:', imageUrls.length, 'images');
-  
-  for (let i = 0; i < imageUrls.length; i++) {
-    const url = imageUrls[i];
-    
-    // Skip validation for base64 data URIs
-    if (url.startsWith('data:')) {
-      console.log(`✅ Image ${i + 1} is base64 data URI, skipping URL validation`);
-      continue;
-    }
-    
-    try {
-      const response = await fetch(url, { method: 'HEAD' });
-      if (!response.ok) {
-        throw new Error(`Image ${i + 1} not accessible: ${response.status}`);
-      }
-      console.log(`✅ Image ${i + 1} validated: ${url.substring(0, 50)}...`);
-    } catch (error) {
-      console.error(`❌ Image ${i + 1} validation failed: ${error.message}`);
-      throw new Error(`Image ${i + 1} validation failed: ${error.message}`);
-    }
-  }
-}
-
-async function performMatrixAnalysis(imageUrls: string[]): Promise<{ matrix_number?: string; side?: string; stamper_codes?: string; confidence: number }> {
-  console.log('🔍 Starting dedicated matrix analysis for', imageUrls.length, 'images');
-  
-  const matrixPrompt = `You are a specialist in CD matrix number identification. Focus ONLY on extracting matrix information from CD disc images.
-
-MATRIX ANALYSIS INSTRUCTIONS:
-- Look specifically for the CD disc image (the shiny reflective disc itself)
-- Focus on the area around the center hole (spindle hole)
-- Matrix numbers are usually etched, molded, or printed on the inner ring area
-- They appear on the non-label side (data side) of the CD
-
-TYPICAL CD MATRIX FORMATS:
-- DIDP format: "DIDP-093347", "DIDP 070042"
-- Sony format: "SRCS-1234 1A1", "SRCL-4567 2B2"
-- EMI format: "7243 8 95713 2 4", "EMI 72438957132 4 01"
-- Universal format: "UICY-1234 A", "UMCK-1234 1B1"
-- Numeric codes: "123456-2", "789012 A1"
-
-WHAT TO EXTRACT:
-- Matrix Number: The main identification code (REQUIRED)
-- Side: Usually "A", "B", "1", "2", or single letter/number
-- Stamper Codes: Additional small codes like "1A1", "2B2", manufacturing marks
-
-CONFIDENCE SCORING:
-- 1.0: Clear, well-lit matrix number, easily readable
-- 0.8: Matrix number visible but requires some interpretation
-- 0.6: Partially visible matrix number, some uncertainty
-- 0.4: Barely visible or heavily worn matrix number
-- 0.2: Very uncertain identification
-- 0.0: No matrix number found or image doesn't show CD disc
-
-Return ONLY a JSON object:
-{
-  "matrix_number": "EXACT_CODE_AS_SEEN",
-  "side": "A",
-  "stamper_codes": "1A1",
-  "confidence": 0.8
-}
-
-If NO matrix number is found, return: {"confidence": 0.0}`;
-
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: matrixPrompt },
-              ...imageUrls.map(url => ({
-                type: 'image_url',
-                image_url: { url, detail: 'high' }
-              }))
-            ]
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.1
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ OpenAI API error for matrix analysis:', response.status, errorText);
-      return { confidence: 0.0 };
-    }
-
-    const data = await response.json();
-    console.log('🔍 Matrix analysis response:', JSON.stringify(data, null, 2));
-
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('❌ Invalid response structure from OpenAI API');
-      return { confidence: 0.0 };
-    }
-
-    const content = data.choices[0].message.content;
-    console.log('🔍 Matrix analysis content:', content);
-
-    try {
-      const cleanedContent = content.replace(/```json\n?|\n?```/g, '').trim();
-      const matrixResult = JSON.parse(cleanedContent);
-      console.log('✅ Parsed matrix result:', matrixResult);
-      
-      return {
-        matrix_number: matrixResult.matrix_number || undefined,
-        side: matrixResult.side || undefined,
-        stamper_codes: matrixResult.stamper_codes || undefined,
-        confidence: matrixResult.confidence || 0.0
-      };
-    } catch (parseError) {
-      console.error('❌ Failed to parse matrix analysis JSON:', parseError);
-      console.error('❌ Raw content:', content);
-      return { confidence: 0.0 };
-    }
-  } catch (error) {
-    console.error('❌ Matrix analysis error:', error);
-    return { confidence: 0.0 };
-  }
-}
-
-async function performOCRAnalysis(imageUrls: string[]): Promise<OCRResult & { confidence?: { artist: number; title: number; overall: number }; ocr_notes?: string }> {
-  console.log(`🔍 [${CD_FUNCTION_VERSION}] Starting STRICT OCR analysis for ${imageUrls.length} images`);
-  
-  // Use Lovable API Gateway if available
-  const apiKey = LOVABLE_API_KEY || openaiApiKey;
-  const apiUrl = LOVABLE_API_KEY 
-    ? 'https://ai.gateway.lovable.dev/v1/chat/completions'
-    : 'https://api.openai.com/v1/chat/completions';
-  const model = LOVABLE_API_KEY ? 'google/gemini-2.5-flash' : 'gpt-4o';
-
-  if (!apiKey) {
-    throw new Error('No API key configured (LOVABLE_API_KEY or OPENAI_API_KEY)');
+// Two-Pass OCR Analysis
+async function performTwoPassOCR(imageUrls: string[]): Promise<any> {
+  if (!LOVABLE_API_KEY) {
+    throw new Error('LOVABLE_API_KEY not configured');
   }
 
-  console.log(`🤖 [${CD_FUNCTION_VERSION}] Using ${LOVABLE_API_KEY ? 'Lovable Gateway' : 'OpenAI'} with model: ${model}`);
-
-  // Build ALL images in single call
-  const imageContents = imageUrls.map(url => ({
-    type: 'image_url',
-    image_url: { url, detail: 'high' }
+  const imageContent = imageUrls.map((url: string) => ({
+    type: "image_url",
+    image_url: { url }
   }));
 
-  const systemPrompt = `You are a STRICT OCR specialist for CD analysis. Your ONLY job is to READ TEXT that is ACTUALLY VISIBLE on the CD images.
+  // PASS 1: Spelling-based OCR extraction
+  const pass1Prompt = `YOU ARE A TEXT READER, NOT AN IMAGE RECOGNIZER.
 
-CRITICAL RULES - FOLLOW EXACTLY:
-1. ONLY report text you can CLEARLY SEE in the images
-2. NEVER guess, assume, or hallucinate artist/album names
-3. If you cannot clearly read text, set that field to null
-4. Do NOT use your knowledge of music - only read what is printed
-5. The front cover typically shows the artist name and album title prominently
-6. The back cover has tracklisting, barcode, catalog number, label info
-7. The disc itself may have matrix codes, catalog numbers
+CRITICAL: Do NOT recognize album covers. Do NOT use your knowledge of music.
+You must READ and SPELL the actual printed text character by character.
 
-IMAGE IDENTIFICATION:
-- Image 1: Front cover
-- Image 2: Back cover  
-- Image 3 (if present): Disc or additional
+SPELLING TASK:
+1. Look at the FRONT COVER image
+2. Find the LARGEST text - this is usually the artist name
+3. SPELL IT OUT letter by letter (e.g., "Q-U-E-E-N" not "Queen")
+4. Find the second largest text - this is usually the album title
+5. SPELL IT OUT letter by letter
 
-CONFIDENCE SCORING (0.0 to 1.0):
-- 1.0: Text is crystal clear and unambiguous
-- 0.8-0.9: Text is readable with high certainty
-- 0.6-0.7: Text is partially visible or slightly unclear
-- 0.3-0.5: Text is hard to read, low certainty
-- 0.0-0.2: Cannot read, guessing would be required (use null instead)`;
+Then look at the BACK COVER:
+- Find the barcode number (13 digits near barcode)
+- Find the catalog number (alphanumeric code like "CDP 7 46208 2")
 
-  const userPrompt = `Analyze these CD images. READ ONLY the text that is ACTUALLY PRINTED on the covers and disc. Do not guess or use music knowledge.
+IMPORTANT:
+- If you see "QUEEN" printed, spell it as "Q-U-E-E-N"
+- If you see "NEIL YOUNG" printed, spell it as "N-E-I-L Y-O-U-N-G"
+- Do NOT guess based on what album this looks like
+- ONLY report text you can PHYSICALLY see printed
 
-Return ONLY valid JSON:
+Return JSON:
 {
-  "artist": "exact text as printed or null",
-  "title": "exact text as printed or null",
-  "year": number or null,
-  "label": "exact text or null",
-  "catalog_number": "exact text or null",
-  "barcode": "exact text or null",
-  "format": "CD",
-  "genre": "if clearly labeled or null",
-  "country": "if clearly labeled or null",
-  "matrix_number": "from disc or null",
-  "confidence": {
-    "artist": 0.0-1.0,
-    "title": 0.0-1.0,
-    "overall": 0.0-1.0
-  },
-  "ocr_notes": "brief notes about what you could/couldn't read"
-}
+  "artist_spelled": "letter-by-letter spelling of artist from front cover",
+  "title_spelled": "letter-by-letter spelling of title from front cover", 
+  "catalog_number": "exact catalog code from back",
+  "barcode": "13 digit barcode number",
+  "year": null,
+  "label": "record label name if visible",
+  "ocr_notes": "describe what text you actually see on the cover"
+}`;
 
-IMPORTANT: If the artist or title is not clearly readable, return null. Do NOT guess based on artwork recognition.`;
+  console.log('🔍 PASS 1: Spelling-based OCR extraction...');
+  const pass1Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [{
+        role: 'user',
+        content: [{ type: 'text', text: pass1Prompt }, ...imageContent]
+      }],
+      max_tokens: 1000,
+    }),
+  });
 
-  const startTime = Date.now();
+  if (!pass1Response.ok) {
+    const errorText = await pass1Response.text();
+    console.error('❌ Pass 1 API error:', pass1Response.status, errorText);
+    
+    if (pass1Response.status === 429) {
+      throw new Error('Rate limit exceeded, please try again later');
+    }
+    if (pass1Response.status === 402) {
+      throw new Error('API credits exhausted');
+    }
+    throw new Error(`API error: ${pass1Response.status}`);
+  }
 
+  const pass1Data = await pass1Response.json();
+  const pass1Content = pass1Data.choices?.[0]?.message?.content;
+  console.log('📝 PASS 1 raw response:', pass1Content);
+
+  // Parse Pass 1 result
+  let pass1Result;
   try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
+    const jsonMatch = pass1Content.match(/\{[\s\S]*\}/);
+    pass1Result = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+  } catch (e) {
+    console.error('❌ Failed to parse Pass 1:', e);
+    pass1Result = { ocr_notes: pass1Content };
+  }
+
+  console.log('📝 PASS 1 parsed:', JSON.stringify(pass1Result));
+
+  // Convert spelled text to normal text
+  const convertSpelling = (spelled: string | null): string | null => {
+    if (!spelled) return null;
+    return spelled.replace(/-/g, '').replace(/\s+/g, ' ').trim();
+  };
+
+  const extractedArtist = convertSpelling(pass1Result.artist_spelled);
+  const extractedTitle = convertSpelling(pass1Result.title_spelled);
+
+  console.log('📝 Extracted artist:', extractedArtist);
+  console.log('📝 Extracted title:', extractedTitle);
+
+  // PASS 2: Verification
+  let verified = true;
+  let verificationNotes = '';
+
+  if (extractedArtist || extractedTitle) {
+    const pass2Prompt = `VERIFICATION TASK - Look at the FRONT COVER image only.
+
+I need you to verify if specific text is PHYSICALLY PRINTED on the cover.
+
+Question 1: Is the text "${extractedArtist || 'unknown'}" actually printed/written on the front cover?
+- Look for these exact letters printed on the cover
+- Answer: YES if you can see these letters, NO if not
+
+Question 2: Is the text "${extractedTitle || 'unknown'}" actually printed/written on the front cover?
+- Look for these exact letters printed on the cover  
+- Answer: YES if you can see these letters, NO if not
+
+Return JSON:
+{
+  "artist_visible": true or false,
+  "title_visible": true or false,
+  "what_i_actually_see": "describe the main text you see on the front cover"
+}`;
+
+    console.log('🔍 PASS 2: Verification...');
+    try {
+      const pass2Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{
             role: 'user',
             content: [
-              { type: 'text', text: userPrompt },
-              ...imageContents
+              { type: 'text', text: pass2Prompt },
+              { type: 'image_url', image_url: { url: imageUrls[0] } }
             ]
-          }
-        ],
-        max_tokens: 1500,
-      }),
-    });
-
-    const aiTime = Date.now() - startTime;
-    console.log(`⚡ [${CD_FUNCTION_VERSION}] AI analysis completed in ${aiTime}ms`);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ AI API error: ${response.status}`, errorText);
-      
-      if (response.status === 429) {
-        throw new Error('Rate limit bereikt, probeer het over een minuut opnieuw.');
-      }
-      if (response.status === 402) {
-        throw new Error('AI credits op, neem contact op met de beheerder.');
-      }
-      throw new Error(`AI API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    console.log(`🔍 [${CD_FUNCTION_VERSION}] Raw AI response:`, content);
-
-    // Parse JSON
-    let result: OCRResult & { confidence?: { artist: number; title: number; overall: number }; ocr_notes?: string };
-    try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      result = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
-    } catch (e) {
-      console.error('Failed to parse AI response:', e);
-      result = {};
-    }
-
-    // Ensure confidence object exists
-    if (!result.confidence) {
-      result.confidence = {
-        artist: result.artist ? 0.5 : 0,
-        title: result.title ? 0.5 : 0,
-        overall: 0.5
-      };
-    }
-
-    console.log(`✅ [${CD_FUNCTION_VERSION}] OCR result with confidence:`, result);
-    
-    if (!result.artist && !result.title && !result.barcode && !result.catalog_number) {
-      console.warn('⚠️ No meaningful data extracted - images may be unclear');
-    }
-    
-    return result;
-  } catch (error) {
-    console.error(`❌ [${CD_FUNCTION_VERSION}] OCR analysis failed:`, error);
-    throw error;
-  }
-}
-
-async function searchDiscogs(catalogNumber: string, artist?: string, title?: string, barcode?: string): Promise<any | null> {
-  console.log('🔍 Starting Discogs search for CD', { catalogNumber, artist, title, barcode });
-  
-  const discogsToken = Deno.env.get('DISCOGS_TOKEN');
-  const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
-  const discogsConsumerSecret = Deno.env.get('DISCOGS_CONSUMER_SECRET');
-  
-  if (!discogsToken && (!discogsConsumerKey || !discogsConsumerSecret)) {
-    console.log('⚠️ No Discogs credentials available, skipping search');
-    return null;
-  }
-
-  const authHeaders = discogsToken 
-    ? { 'Authorization': `Discogs token=${discogsToken}` }
-    : { 'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}` };
-
-  try {
-    // Try different search strategies
-    const searchQueries = [];
-    
-    // Strategy 1: Barcode search (most accurate for CDs)
-    if (barcode) {
-      searchQueries.push(`barcode:"${barcode}"`);
-      console.log(`📊 Added barcode search: barcode:"${barcode}"`);
-    }
-    
-    // Strategy 2: Catalog number
-    if (catalogNumber) {
-      searchQueries.push(`catno:"${catalogNumber}"`);
-      console.log(`📊 Added catalog search: catno:"${catalogNumber}"`);
-      if (artist) {
-        searchQueries.push(`catno:"${catalogNumber}" artist:"${artist}"`);
-        console.log(`📊 Added catalog+artist search: catno:"${catalogNumber}" artist:"${artist}"`);
-      }
-    }
-    
-    // Strategy 3: Artist and title
-    if (artist && title) {
-      searchQueries.push(`artist:"${artist}" title:"${title}"`);
-      console.log(`📊 Added artist+title search: artist:"${artist}" title:"${title}"`);
-    }
-
-    console.log(`🔍 Will try ${searchQueries.length} search strategies`);
-
-    for (let i = 0; i < searchQueries.length; i++) {
-      const query = searchQueries[i];
-      console.log(`🔍 [${i + 1}/${searchQueries.length}] Trying query: ${query}`);
-      
-      const searchUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&format=CD&per_page=5`;
-      console.log(`📡 Request URL: ${searchUrl}`);
-      
-      const response = await fetch(searchUrl, {
-        headers: {
-          ...authHeaders,
-          'User-Agent': 'VinylScanner/2.0'
-        }
+          }],
+          max_tokens: 500,
+        }),
       });
 
-      console.log(`📡 Response status: ${response.status}`);
+      if (pass2Response.ok) {
+        const pass2Data = await pass2Response.json();
+        const pass2Content = pass2Data.choices?.[0]?.message?.content;
+        console.log('📝 PASS 2 raw response:', pass2Content);
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`📦 Response data:`, { 
-          resultsCount: data.results?.length || 0, 
-          pagination: data.pagination 
-        });
-        
-        if (data.results && data.results.length > 0) {
-          const bestMatch = data.results[0];
-          console.log(`✅ Found match: ${bestMatch.title} (ID: ${bestMatch.id})`);
-          console.log(`🎯 Full match data:`, bestMatch);
-          
-          const discogsResult = {
-            discogs_id: bestMatch.id,
-            discogs_url: `https://www.discogs.com/release/${bestMatch.id}`,
-            marketplace_url: `https://www.discogs.com/sell/release/${bestMatch.id}`,
-            similarity_score: 0.9, // High confidence for first result
-            search_query_used: query,
-            search_strategy: i + 1
-          };
-          
-          console.log(`🎯 Returning Discogs result:`, discogsResult);
-          return discogsResult;
-        } else {
-          console.log(`❌ No results found for query: ${query}`);
+        try {
+          const jsonMatch = pass2Content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const pass2Result = JSON.parse(jsonMatch[0]);
+            console.log('📝 PASS 2 parsed:', JSON.stringify(pass2Result));
+            
+            verified = pass2Result.artist_visible === true || pass2Result.title_visible === true;
+            verificationNotes = pass2Result.what_i_actually_see || '';
+            
+            console.log('✅ Verification result:', verified ? 'VERIFIED' : 'NOT VERIFIED');
+            console.log('📝 What AI sees:', verificationNotes);
+          }
+        } catch (e) {
+          console.error('⚠️ Failed to parse Pass 2:', e);
+          verified = false;
+          verificationNotes = pass2Content;
         }
-      } else {
-        const errorText = await response.text();
-        console.error(`❌ Discogs API error for query "${query}":`, response.status, errorText);
       }
-      
-      // Small delay between requests
-      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (e) {
+      console.warn('⚠️ Pass 2 failed, continuing:', e);
     }
-    
-    console.log('❌ No Discogs match found after trying all strategies');
-    return null;
-  } catch (error) {
-    console.error('❌ Discogs search failed with exception:', error);
-    return null;
   }
+
+  // Calculate confidence
+  const confidence = {
+    artist: verified ? 0.9 : 0.3,
+    title: verified ? 0.85 : 0.3,
+    overall: verified ? 0.85 : 0.3,
+    verified
+  };
+
+  return {
+    artist: extractedArtist || null,
+    title: extractedTitle || null,
+    year: pass1Result.year || null,
+    label: pass1Result.label || null,
+    catalog_number: pass1Result.catalog_number || null,
+    barcode: pass1Result.barcode || null,
+    format: 'CD',
+    country: null,
+    genre: null,
+    confidence,
+    ocr_notes: verified 
+      ? pass1Result.ocr_notes 
+      : `⚠️ Verificatie mislukt. AI ziet: ${verificationNotes || pass1Result.ocr_notes}`,
+    raw_spelling: {
+      artist: pass1Result.artist_spelled,
+      title: pass1Result.title_spelled
+    }
+  };
 }
 
-async function saveToDatabase(scanId: string, ocrResults: OCRResult, imageUrls: string[], discogsData?: any): Promise<any> {
-  console.log('💾 Saving CD scan to database');
-  console.log('💾 OCR Results:', ocrResults);
-  console.log('💾 Discogs Data:', discogsData);
+// Discogs search
+async function searchDiscogs(catalogNumber: string | null, artist: string | null, title: string | null, barcode: string | null): Promise<any | null> {
+  console.log('🔍 Discogs search:', { catalogNumber, artist, title, barcode });
   
-  try {
-    // Prepare data with validation
-    const insertData = {
-      front_image: imageUrls[0] || null,
-      back_image: imageUrls[1] || null,
-      barcode_image: imageUrls[2] || null,
-      matrix_image: imageUrls[3] || null, // Optional 4th image
-      barcode_number: ocrResults.barcode || null,
-      artist: ocrResults.artist || null,
-      title: ocrResults.title || null,
-      label: ocrResults.label || null,
-      catalog_number: ocrResults.catalog_number || null,
-      matrix_number: ocrResults.matrix_number || null,
-      side: ocrResults.side || null,
-      stamper_codes: ocrResults.stamper_codes || null,
-      year: ocrResults.year || null,
-      format: 'CD',
-      genre: ocrResults.genre || null,
-      country: ocrResults.country || null,
-      discogs_id: discogsData?.discogs_id || null,
-      discogs_url: discogsData?.discogs_url || null,
-    };
-    
-    // Validate data types and lengths
-    if (insertData.artist && typeof insertData.artist === 'string' && insertData.artist.length > 255) {
-      insertData.artist = insertData.artist.substring(0, 255);
-      console.warn('⚠️ Artist name truncated to 255 characters');
-    }
-    if (insertData.title && typeof insertData.title === 'string' && insertData.title.length > 255) {
-      insertData.title = insertData.title.substring(0, 255);
-      console.warn('⚠️ Title truncated to 255 characters');
-    }
-    if (insertData.year && (insertData.year < 1900 || insertData.year > 2030)) {
-      console.warn(`⚠️ Invalid year ${insertData.year}, setting to null`);
-      insertData.year = null;
-    }
-    
-    // ✅ FIXED: Database insertion removed - will be handled by frontend after condition selection
-    console.log('💾 OCR data prepared for frontend (not saved to database yet):', insertData);
-    
-    // Return the prepared data instead of database record
-    return insertData;
-  } catch (error) {
-    console.error('❌ Failed to save to database:', error);
-    
-    // Enhance error context
-    if (error.message.includes('Database error:')) {
-      throw error; // Already enhanced
-    } else {
-      throw new Error(`Database Save Error: ${error.message}`);
+  const token = DISCOGS_TOKEN;
+  const key = DISCOGS_CONSUMER_KEY;
+  const secret = DISCOGS_CONSUMER_SECRET;
+  
+  if (!token && (!key || !secret)) {
+    console.log('⚠️ No Discogs credentials');
+    return null;
+  }
+
+  const auth = token 
+    ? { 'Authorization': `Discogs token=${token}` }
+    : { 'Authorization': `Discogs key=${key}, secret=${secret}` };
+
+  const queries = [];
+  if (barcode) queries.push(`barcode:${barcode}`);
+  if (catalogNumber) queries.push(`catno:${catalogNumber}`);
+  if (artist && title) queries.push(`${artist} ${title}`);
+
+  for (const q of queries) {
+    try {
+      const url = `https://api.discogs.com/database/search?q=${encodeURIComponent(q)}&type=release&format=CD&per_page=3`;
+      const res = await fetch(url, { headers: { ...auth, 'User-Agent': 'MusicScan/3.0' } });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.results?.length > 0) {
+          const match = data.results[0];
+          console.log('✅ Discogs match:', match.id, match.title);
+          return {
+            discogs_id: match.id,
+            discogs_url: `https://www.discogs.com/release/${match.id}`,
+            cover_image: match.cover_image,
+            title: match.title,
+            year: match.year
+          };
+        }
+      }
+      await new Promise(r => setTimeout(r, 300));
+    } catch (e) {
+      console.error('Discogs error:', e);
     }
   }
+  return null;
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const startTime = Date.now();
-  console.log(`🚀 CD Analysis request started at ${new Date().toISOString()}`);
-
   try {
-    // Parse and validate request
-    let requestData;
-    try {
-      requestData = await req.json();
-    } catch (parseError) {
-      console.error('❌ Failed to parse request JSON:', parseError);
-      return new Response(JSON.stringify({ 
-        error: 'Invalid JSON in request body',
-        success: false,
-        details: parseError.message
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const { imageUrls } = await req.json();
+    console.log(`📸 [${CD_FUNCTION_VERSION}] Received ${imageUrls?.length || 0} images`);
+
+    if (!imageUrls || imageUrls.length < 2) {
+      return new Response(
+        JSON.stringify({ error: 'At least 2 images required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Support both imageUrls (URLs) and imageBase64 (base64 data URIs)
-    const imageUrls = requestData.imageUrls || requestData.imageBase64 || [];
-    const scanId = requestData.scanId;
-    const isBase64 = !!requestData.imageBase64;
+    // Two-pass OCR
+    const ocrResult = await performTwoPassOCR(imageUrls);
+    console.log('📝 OCR result:', JSON.stringify(ocrResult));
 
-    console.log(`📸 Image type: ${isBase64 ? 'base64' : 'URL'}`);
-
-    // Comprehensive input validation
-    if (!imageUrls || !Array.isArray(imageUrls)) {
-      return new Response(JSON.stringify({ 
-        error: 'Missing or invalid images in request. Send imageUrls or imageBase64 array.',
-        success: false
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Discogs search
+    let discogsData = null;
+    if (ocrResult.barcode || ocrResult.catalog_number || (ocrResult.artist && ocrResult.title)) {
+      discogsData = await searchDiscogs(
+        ocrResult.catalog_number,
+        ocrResult.artist,
+        ocrResult.title,
+        ocrResult.barcode
+      );
     }
 
-    if (imageUrls.length === 0) {
-      return new Response(JSON.stringify({ 
-        error: 'At least one image is required',
-        success: false
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (imageUrls.length < 2) {
-      return new Response(JSON.stringify({ 
-        error: 'CD scanning requires at least 2 images (front and back)',
-        success: false
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log(`🎵 Starting CD analysis for scan ${scanId || 'quick-check'} with ${imageUrls.length} images`);
-
-    // Perform OCR analysis
-    const ocrResults = await performOCRAnalysis(imageUrls);
-
-    // Search Discogs for release ID
-    const discogsData = await searchDiscogs(
-      ocrResults.catalog_number || '', 
-      ocrResults.artist, 
-      ocrResults.title, 
-      ocrResults.barcode
-    );
-
-    // Return analysis results without saving to database
-    // The frontend will handle saving when user clicks "Opslaan in Database"
-    const response = {
-      success: true,
-      scanId: scanId,
-      analysis: {
-        artist: ocrResults.artist,
-        title: ocrResults.title,
-        label: ocrResults.label,
-        catalog_number: ocrResults.catalog_number,
-        barcode: ocrResults.barcode,
-        year: ocrResults.year,
-        format: 'CD',
-        genre: ocrResults.genre,
-        country: ocrResults.country,
-        matrix_number: ocrResults.matrix_number,
-        side: ocrResults.side,
-        stamper_codes: ocrResults.stamper_codes
-      },
-      discogsData: discogsData,
-      // Legacy fields for backward compatibility
-      ocr_results: ocrResults,
-      combinedResults: {
-        artist: ocrResults.artist,
-        title: ocrResults.title,
-        label: ocrResults.label,
-        catalog_number: ocrResults.catalog_number,
-        barcode: ocrResults.barcode,
-        year: ocrResults.year,
-        format: 'CD',
-        genre: ocrResults.genre,
-        country: ocrResults.country,
-        discogs_id: discogsData?.discogs_id || null,
-        discogs_url: discogsData?.discogs_url || null,
-      }
+    // Merge results
+    const finalResult = {
+      ...ocrResult,
+      discogs_id: discogsData?.discogs_id || null,
+      discogs_url: discogsData?.discogs_url || null,
+      cover_image: discogsData?.cover_image || null,
     };
 
-    console.log('✅ CD analysis completed successfully');
+    // If Discogs found a match and OCR wasn't confident, prefer Discogs data
+    if (discogsData && !ocrResult.confidence.verified) {
+      console.log('📝 Using Discogs data due to low OCR confidence');
+      // Parse Discogs title format "Artist - Title"
+      if (discogsData.title?.includes(' - ')) {
+        const [artist, title] = discogsData.title.split(' - ', 2);
+        finalResult.artist = artist.trim();
+        finalResult.title = title.trim();
+        finalResult.confidence.overall = 0.8;
+        finalResult.ocr_notes = `${ocrResult.ocr_notes}\n✅ Bevestigd via Discogs lookup.`;
+      }
+    }
 
-    return new Response(JSON.stringify(response), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.log('✅ Final result:', JSON.stringify(finalResult));
+
+    return new Response(
+      JSON.stringify(finalResult),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
-    const endTime = Date.now();
-    const duration = endTime - startTime;
-    
-    console.error('❌ CD analysis failed:', error);
-    console.error(`❌ Total processing time: ${duration}ms`);
-    
-    // Determine appropriate error status and message
-    let statusCode = 500;
-    let userFriendlyMessage = error.message;
-    
-    if (error.message.includes('OpenAI API')) {
-      statusCode = 502; // Bad Gateway
-      userFriendlyMessage = 'AI image analysis service unavailable. Please try again later.';
-    } else if (error.message.includes('Image')) {
-      statusCode = 400; // Bad Request
-      userFriendlyMessage = 'Image processing failed. Please check your images and try again.';
-    } else if (error.message.includes('Database')) {
-      statusCode = 503; // Service Unavailable
-      userFriendlyMessage = 'Database service temporarily unavailable. Please try again.';
-    } else if (error.message.includes('Network error')) {
-      statusCode = 502; // Bad Gateway
-      userFriendlyMessage = 'Network connectivity issue. Please check your connection and try again.';
-    }
-    
-    return new Response(JSON.stringify({ 
-      error: userFriendlyMessage,
-      success: false,
-      details: error.message,
-      processingTime: duration,
-      timestamp: new Date().toISOString()
-    }), {
-      status: statusCode,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('❌ Error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 });

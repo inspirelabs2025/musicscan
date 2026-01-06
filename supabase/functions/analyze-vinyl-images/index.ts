@@ -1,559 +1,337 @@
-// OPTIMIZED V5.0 - Uses Lovable AI Gateway for faster analysis
-// All images analyzed in single call instead of sequential calls
-
+// V6.0 - Two-Pass Verification System to prevent AI hallucination
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const VINYL_FUNCTION_VERSION = "V5.0-OPTIMIZED-SINGLE-CALL";
-const VINYL_DEPLOYMENT_TIMESTAMP = Date.now();
-
-// Use Lovable API key (faster, no extra cost) with OpenAI fallback
+const VINYL_FUNCTION_VERSION = "V6.0-TWO-PASS-VERIFICATION";
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-const OPENAI_API_KEY_V4 = Deno.env.get('OPENAI_API_KEY');
-const DISCOGS_CONSUMER_KEY_V4 = Deno.env.get('DISCOGS_CONSUMER_KEY');
-const DISCOGS_CONSUMER_SECRET_V4 = Deno.env.get('DISCOGS_CONSUMER_SECRET');
+const DISCOGS_CONSUMER_KEY = Deno.env.get('DISCOGS_CONSUMER_KEY');
+const DISCOGS_CONSUMER_SECRET = Deno.env.get('DISCOGS_CONSUMER_SECRET');
 
-console.log(`🚀 VINYL ANALYSIS ${VINYL_FUNCTION_VERSION} - Single-call optimization`);
-console.log(`🔑 Using: ${LOVABLE_API_KEY ? 'Lovable AI Gateway' : 'OpenAI API'}`);
+console.log(`🚀 VINYL ANALYSIS ${VINYL_FUNCTION_VERSION}`);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// V4 Helper Functions - All renamed to force cache invalidation
-function cleanJsonFromMarkdownV4(text: string): string {
-  return text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-}
-
-const normalizeTextV4 = (text: string): string => {
-  return text.toLowerCase()
-    .replace(/[^\w\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-};
-
-const levenshteinDistanceV4 = (str1: string, str2: string): number => {
-  const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
-  
-  for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
-  for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
-  
-  for (let j = 1; j <= str2.length; j++) {
-    for (let i = 1; i <= str1.length; i++) {
-      const substitutionCost = str1[i - 1] === str2[j - 1] ? 0 : 1;
-      matrix[j][i] = Math.min(
-        matrix[j][i - 1] + 1,
-        matrix[j - 1][i] + 1,
-        matrix[j - 1][i - 1] + substitutionCost
-      );
-    }
-  }
-  
-  return matrix[str2.length][str1.length];
-};
-
-const calculateSimilarityV4 = (str1: string, str2: string): number => {
-  const distance = levenshteinDistanceV4(normalizeTextV4(str1), normalizeTextV4(str2));
-  const maxLength = Math.max(str1.length, str2.length);
-  return maxLength === 0 ? 1 : 1 - (distance / maxLength);
-};
-
-const generateCatalogVariantsV4 = (catalogNumber: string): string[] => {
-  const variants = [catalogNumber];
-  const cleanCatalog = catalogNumber.replace(/[\s\-_.]/g, '');
-  variants.push(cleanCatalog);
-  
-  if (catalogNumber.includes(' ')) {
-    variants.push(catalogNumber.replace(/\s/g, '.'));
-    variants.push(catalogNumber.replace(/\s/g, '-'));
-    variants.push(catalogNumber.replace(/\s/g, '_'));
-  }
-  
-  return [...new Set(variants)];
-};
-
-// V4 Discogs Integration - Completely rewritten
-async function searchDiscogsReleaseV4(artist: string, title: string, catalogNumber: string | null) {
-  console.log(`🔍 [${VINYL_FUNCTION_VERSION_V4}] Searching Discogs for: {
-  artist: "${artist}",
-  title: "${title}",
-  catalogNumber: "${catalogNumber}"
-}`);
-
-  if (!DISCOGS_CONSUMER_KEY_V4 || !DISCOGS_CONSUMER_SECRET_V4) {
-    console.log(`🔐 [${VINYL_FUNCTION_VERSION_V4}] Missing Discogs credentials`);
-    return null;
+// Two-Pass OCR Analysis
+async function performTwoPassOCR(imageUrls: string[]): Promise<any> {
+  if (!LOVABLE_API_KEY) {
+    throw new Error('LOVABLE_API_KEY not configured');
   }
 
-  console.log(`🔐 [${VINYL_FUNCTION_VERSION_V4}] Checking Discogs API credentials... { hasKey: ${!!DISCOGS_CONSUMER_KEY_V4}, hasSecret: ${!!DISCOGS_CONSUMER_SECRET_V4}, keyLength: ${DISCOGS_CONSUMER_KEY_V4?.length}, secretLength: ${DISCOGS_CONSUMER_SECRET_V4?.length} }`);
-
-  const searchStrategiesV4: Array<{ strategy: string; query: string; priority: number }> = [];
-
-  // Add catalog variants
-  if (catalogNumber) {
-    const catalogVariantsV4 = generateCatalogVariantsV4(catalogNumber);
-    console.log(`📋 [${VINYL_FUNCTION_VERSION_V4}] Catalog variants to try: ${JSON.stringify(catalogVariantsV4)}`);
-    
-    catalogVariantsV4.forEach((variant, index) => {
-      searchStrategiesV4.push({
-        strategy: `catalog-variant-${variant}`,
-        query: variant,
-        priority: index + 1
-      });
-    });
-  }
-
-  // Add artist strategies
-  if (artist) {
-    searchStrategiesV4.push({
-      strategy: `artist-exact`,
-      query: `"${artist}"`,
-      priority: 100
-    });
-  }
-
-  // Add title strategies
-  if (title) {
-    searchStrategiesV4.push({
-      strategy: `title-exact`,
-      query: `"${title}"`,
-      priority: 101
-    });
-  }
-
-  // Add combined strategies
-  if (artist && title) {
-    searchStrategiesV4.push({
-      strategy: `artist-title-combined`,
-      query: `"${artist}" "${title}"`,
-      priority: 102
-    });
-  }
-
-  searchStrategiesV4.sort((a, b) => a.priority - b.priority);
-  console.log(`🎯 [${VINYL_FUNCTION_VERSION_V4}] Will try ${searchStrategiesV4.length} search strategies`);
-
-  for (const { strategy, query, priority } of searchStrategiesV4) {
-    console.log(`🎯 [${VINYL_FUNCTION_VERSION_V4}] Trying search strategy: ${strategy} (priority ${priority})`);
-    
-    const searchUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&per_page=25&catno=${encodeURIComponent(query)}`;
-    console.log(`🔗 [${VINYL_FUNCTION_VERSION_V4}] Search URL: ${searchUrl}`);
-
-    try {
-      const response = await fetch(searchUrl, {
-        headers: {
-          'User-Agent': 'VinylAnalyzer/1.0 +https://example.com',
-          'Authorization': `Discogs key=${DISCOGS_CONSUMER_KEY_V4}, secret=${DISCOGS_CONSUMER_SECRET_V4}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`📊 [${VINYL_FUNCTION_VERSION_V4}] Strategy ${strategy} returned ${data.results?.length || 0} results`);
-
-        if (data.results && data.results.length > 0) {
-          for (const result of data.results) {
-            let scoreV4 = 0;
-
-            if (catalogNumber && result.catno) {
-              const catalogSimilarityV4 = calculateSimilarityV4(catalogNumber, result.catno);
-              console.log(`📋 [${VINYL_FUNCTION_VERSION_V4}] Catalog similarity for "${result.catno}": ${catalogSimilarityV4.toFixed(2)}`);
-              scoreV4 += catalogSimilarityV4 * 30;
-            }
-
-            if (title && result.title) {
-              const titleSimilarityV4 = calculateSimilarityV4(title, result.title);
-              console.log(`🎵 [${VINYL_FUNCTION_VERSION_V4}] Title similarity for "${result.title}": ${titleSimilarityV4.toFixed(2)}`);
-              scoreV4 += titleSimilarityV4 * 30;
-            }
-
-            scoreV4 += 10; // Base score
-
-            console.log(`📊 [${VINYL_FUNCTION_VERSION_V4}] Result "${result.title}" (ID: ${result.id}) scored: ${scoreV4.toFixed(2)}`);
-
-            if (scoreV4 >= 50) {
-              console.log(`✅ [${VINYL_FUNCTION_VERSION_V4}] Found Discogs release using ${strategy} with score ${scoreV4.toFixed(2)}: ${result.id}`);
-              
-              const discogsResultV4 = {
-                discogs_id: result.id,
-                discogs_url: `https://www.discogs.com/release/${result.id}`,
-                strategy_used: strategy,
-                match_score: Math.round(scoreV4)
-              };
-
-              console.log(`🎯 [${VINYL_FUNCTION_VERSION_V4}] Discogs search result: ${JSON.stringify(discogsResultV4)}`);
-              return discogsResultV4;
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error(`❌ [${VINYL_FUNCTION_VERSION_V4}] Error with strategy ${strategy}:`, error);
-    }
-  }
-
-  console.log(`❌ [${VINYL_FUNCTION_VERSION_V4}] No suitable Discogs release found after trying all strategies`);
-  return null;
-}
-
-interface DiscogsListingV4 {
-  price: {
-    value: number;
-    currency: string;
-  };
-  condition: string;
-  seller: {
-    username: string;
-  };
-  shipping_price?: {
-    value: number;
-    currency: string;
-  };
-}
-
-function flexibleConditionsMatchV4(requestedCondition: string, discogsCondition: string): boolean {
-  const conditionMappingV4: { [key: string]: string[] } = {
-    'Very Good': ['Very Good (VG)', 'VG', 'Very Good', 'Good Plus (G+)', 'G+'],
-    'Near Mint': ['Near Mint (NM or M-)', 'NM', 'Near Mint', 'Mint (M)', 'M'],
-    'Good': ['Good (G)', 'G', 'Good', 'Good Plus (G+)', 'G+'],
-    'Fair': ['Fair (F)', 'F', 'Fair', 'Poor (P)', 'P'],
-    'Mint': ['Mint (M)', 'M', 'Mint', 'Near Mint (NM or M-)', 'NM']
-  };
-
-  const requestedNormalized = requestedCondition.toLowerCase();
-  const discogsNormalized = discogsCondition.toLowerCase();
-
-  if (requestedNormalized === discogsNormalized) return true;
-
-  for (const [condition, variants] of Object.entries(conditionMappingV4)) {
-    if (condition.toLowerCase() === requestedNormalized) {
-      return variants.some(variant => variant.toLowerCase() === discogsNormalized);
-    }
-  }
-
-  return false;
-}
-
-async function getDiscogsPriceAnalysisByIdV4(releaseId: number, condition: string = 'Very Good') {
-  console.log(`🔍 [${VINYL_FUNCTION_VERSION_V4}] Starting price analysis for release ${releaseId}`);
-
-  try {
-    const statsUrl = `https://api.discogs.com/releases/${releaseId}/stats`;
-    const statsResponse = await fetch(statsUrl, {
-      headers: {
-        'User-Agent': 'VinylAnalyzer/1.0 +https://example.com',
-        'Authorization': `Discogs key=${DISCOGS_CONSUMER_KEY_V4}, secret=${DISCOGS_CONSUMER_SECRET_V4}`
-      }
-    });
-
-    if (statsResponse.ok) {
-      const statsData = await statsResponse.json();
-      console.log(`💰 [${VINYL_FUNCTION_VERSION_V4}] Stats API result: Low: ${statsData.lowest_price?.value}, Median: ${statsData.median_price?.value}, High: ${statsData.highest_price?.value}, For Sale: ${statsData.num_for_sale}`);
-      console.log(`📊 [${VINYL_FUNCTION_VERSION_V4}] Raw marketplace stats response: ${JSON.stringify(statsData)}`);
-
-      if (!statsData.median_price || statsData.median_price.value === null) {
-        console.log(`🔄 [${VINYL_FUNCTION_VERSION_V4}] Stats API missing median_price, falling back to listings`);
-        return await fallbackToMarketplaceListingsV4(releaseId, condition);
-      }
-
-      const pricingDataV4 = {
-        lowest_price: statsData.lowest_price?.value || null,
-        median_price: statsData.median_price?.value || null,
-        highest_price: statsData.highest_price?.value || null,
-        num_for_sale: statsData.num_for_sale || 0,
-        currency: statsData.lowest_price?.currency || 'EUR'
-      };
-
-      console.log(`💰 [${VINYL_FUNCTION_VERSION_V4}] Pricing data retrieved: ${JSON.stringify(pricingDataV4)}`);
-      return pricingDataV4;
-    }
-  } catch (error) {
-    console.error(`❌ [${VINYL_FUNCTION_VERSION_V4}] Stats API error:`, error);
-  }
-
-  return await fallbackToMarketplaceListingsV4(releaseId, condition);
-}
-
-async function fallbackToMarketplaceListingsV4(releaseId: number, condition: string = 'Very Good') {
-  console.log(`🔄 [${VINYL_FUNCTION_VERSION_V4}] Fetching marketplace listings for release ${releaseId}`);
-
-  try {
-    const listingsUrl = `https://api.discogs.com/releases/${releaseId}/marketplace`;
-    const listingsResponse = await fetch(listingsUrl, {
-      headers: {
-        'User-Agent': 'VinylAnalyzer/1.0 +https://example.com',
-        'Authorization': `Discogs key=${DISCOGS_CONSUMER_KEY_V4}, secret=${DISCOGS_CONSUMER_SECRET_V4}`
-      }
-    });
-
-    if (!listingsResponse.ok) {
-      console.error(`❌ [${VINYL_FUNCTION_VERSION_V4}] Discogs listings error: ${listingsResponse.status} ${listingsResponse.statusText} ${await listingsResponse.text()}`);
-      return {
-        lowest_price: null,
-        median_price: null,
-        highest_price: null,
-        num_for_sale: 0,
-        currency: 'EUR'
-      };
-    }
-
-    const listingsData = await listingsResponse.json();
-    const listings: DiscogsListingV4[] = listingsData.listings || [];
-
-    const filteredListingsV4 = listings.filter(listing => 
-      flexibleConditionsMatchV4(condition, listing.condition)
-    );
-
-    if (filteredListingsV4.length === 0) {
-      console.log(`⚠️ [${VINYL_FUNCTION_VERSION_V4}] No listings found for condition: ${condition}`);
-      return {
-        lowest_price: null,
-        median_price: null,
-        highest_price: null,
-        num_for_sale: 0,
-        currency: 'EUR'
-      };
-    }
-
-    const pricesV4 = filteredListingsV4
-      .map(listing => listing.price.value)
-      .filter(price => price > 0)
-      .sort((a, b) => a - b);
-
-    if (pricesV4.length === 0) {
-      return {
-        lowest_price: null,
-        median_price: null,
-        highest_price: null,
-        num_for_sale: 0,
-        currency: 'EUR'
-      };
-    }
-
-    const lowestPriceV4 = Math.min(...pricesV4);
-    const highestPriceV4 = Math.max(...pricesV4);
-    const medianPriceV4 = pricesV4.length % 2 === 0
-      ? (pricesV4[pricesV4.length / 2 - 1] + pricesV4[pricesV4.length / 2]) / 2
-      : pricesV4[Math.floor(pricesV4.length / 2)];
-
-    const currencyV4 = filteredListingsV4[0]?.price?.currency || 'EUR';
-
-    return {
-      lowest_price: lowestPriceV4,
-      median_price: medianPriceV4,
-      highest_price: highestPriceV4,
-      num_for_sale: filteredListingsV4.length,
-      currency: currencyV4
-    };
-
-  } catch (error) {
-    console.error(`❌ [${VINYL_FUNCTION_VERSION_V4}] Marketplace listings error:`, error);
-    return {
-      lowest_price: null,
-      median_price: null,
-      highest_price: null,
-      num_for_sale: 0,
-      currency: 'EUR'
-    };
-  }
-}
-
-// V5 Main Analysis Function - STRICT OCR with confidence scoring
-async function executeVinylAnalysisV5(req: Request) {
-  console.log(`🚀 [${VINYL_FUNCTION_VERSION}] REQUEST RECEIVED AT: ${new Date().toISOString()}`);
-
-  const requestBody = await req.json();
-  const imageUrls = requestBody.imageUrls || requestBody.imageBase64 || [];
-
-  console.log(`📸 [${VINYL_FUNCTION_VERSION}] Processing ${imageUrls.length} images with STRICT OCR`);
-
-  if (!imageUrls || imageUrls.length === 0) {
-    throw new Error('No images provided');
-  }
-
-  // Use Lovable API Gateway if available, fallback to OpenAI
-  const apiKey = LOVABLE_API_KEY || OPENAI_API_KEY_V4;
-  const apiUrl = LOVABLE_API_KEY 
-    ? 'https://ai.gateway.lovable.dev/v1/chat/completions'
-    : 'https://api.openai.com/v1/chat/completions';
-  const model = LOVABLE_API_KEY ? 'google/gemini-2.5-flash' : 'gpt-4o-mini';
-
-  if (!apiKey) {
-    throw new Error('No API key configured (LOVABLE_API_KEY or OPENAI_API_KEY)');
-  }
-
-  console.log(`🤖 [${VINYL_FUNCTION_VERSION}] Using ${LOVABLE_API_KEY ? 'Lovable Gateway' : 'OpenAI'} with model: ${model}`);
-
-  // Build image content for ALL images in single call
-  const imageContents = imageUrls.map((url: string, i: number) => ({
-    type: 'image_url',
-    image_url: { url, detail: 'high' }
+  const imageContent = imageUrls.map((url: string) => ({
+    type: "image_url",
+    image_url: { url }
   }));
 
-  const systemPrompt = `You are a STRICT OCR specialist for vinyl record analysis. Your ONLY job is to READ TEXT that is ACTUALLY VISIBLE on the record images.
+  // PASS 1: Spelling-based OCR extraction
+  const pass1Prompt = `YOU ARE A TEXT READER, NOT AN IMAGE RECOGNIZER.
 
-CRITICAL RULES - FOLLOW EXACTLY:
-1. ONLY report text you can CLEARLY SEE in the images
-2. NEVER guess, assume, or hallucinate artist/album names
-3. If you cannot clearly read text, set that field to null
-4. Do NOT use your knowledge of music - only read what is printed
-5. The front cover shows the artist name and album title
-6. The back cover has tracklisting, barcode, catalog number, label info
-7. The record label (center) has catalog number, matrix codes, side info
+CRITICAL: Do NOT recognize album covers. Do NOT use your knowledge of music.
+You must READ and SPELL the actual printed text character by character.
 
-IMAGE IDENTIFICATION:
-- Image 1: Front cover
-- Image 2: Back cover
-- Image 3: Record label (center of vinyl)
+SPELLING TASK:
+1. Look at the FRONT COVER image (sleeve)
+2. Find the LARGEST text - this is usually the artist name
+3. SPELL IT OUT letter by letter (e.g., "Q-U-E-E-N" not "Queen")
+4. Find the second largest text - this is usually the album title
+5. SPELL IT OUT letter by letter
 
-CONFIDENCE SCORING (0.0 to 1.0):
-- 1.0: Text is crystal clear and unambiguous
-- 0.8-0.9: Text is readable with high certainty
-- 0.6-0.7: Text is partially visible or slightly unclear
-- 0.3-0.5: Text is hard to read, low certainty
-- 0.0-0.2: Cannot read, guessing would be required (use null instead)`;
+Look at the BACK COVER:
+- Find the catalog number (alphanumeric code)
+- Find any barcode digits
 
-  const userPrompt = `Analyze these vinyl record images. READ ONLY the text that is ACTUALLY PRINTED on the covers and label. Do not guess or use music knowledge.
+Look at the RECORD LABEL (center of vinyl):
+- Find the matrix/runout codes etched in the vinyl
+- Find the label name
 
-Return ONLY valid JSON:
+IMPORTANT:
+- If you see "QUEEN" printed, spell it as "Q-U-E-E-N"
+- If you see "PINK FLOYD" printed, spell it as "P-I-N-K F-L-O-Y-D"
+- Do NOT guess based on what album this looks like
+- ONLY report text you can PHYSICALLY see printed
+
+Return JSON:
 {
-  "artist": "exact text as printed or null",
-  "title": "exact text as printed or null",
-  "label": "Record label or null",
-  "catalog_number": "Catalog number (e.g. CBS 85224) or null",
-  "barcode": "Barcode if visible or null",
-  "year": number or null,
-  "format": "LP or 7\" or null",
-  "genre": "if clearly labeled or null",
-  "country": "if clearly labeled or null",
-  "matrix_number": "Matrix/runout etchings or null",
-  "confidence": {
-    "artist": 0.0-1.0,
-    "title": 0.0-1.0,
-    "overall": 0.0-1.0
-  },
-  "ocr_notes": "brief notes about what you could/couldn't read"
-}
+  "artist_spelled": "letter-by-letter spelling of artist from front cover",
+  "title_spelled": "letter-by-letter spelling of title from front cover",
+  "catalog_number": "exact catalog code",
+  "matrix_number": "runout/matrix code from vinyl",
+  "label": "record label name",
+  "year": null,
+  "ocr_notes": "describe what text you actually see"
+}`;
 
-IMPORTANT: If the artist or title is not clearly readable, return null. Do NOT guess based on artwork recognition.`;
-
-  const startTime = Date.now();
-  
-  const response = await fetch(apiUrl, {
+  console.log('🔍 PASS 1: Spelling-based OCR extraction...');
+  const pass1Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: userPrompt },
-            ...imageContents
-          ]
-        }
-      ],
-      max_tokens: 1500,
-    })
+      model: 'google/gemini-2.5-flash',
+      messages: [{
+        role: 'user',
+        content: [{ type: 'text', text: pass1Prompt }, ...imageContent]
+      }],
+      max_tokens: 1000,
+    }),
   });
 
-  const aiTime = Date.now() - startTime;
-  console.log(`⚡ [${VINYL_FUNCTION_VERSION}] AI analysis completed in ${aiTime}ms`);
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`❌ AI API error: ${response.status}`, errorText);
+  if (!pass1Response.ok) {
+    const errorText = await pass1Response.text();
+    console.error('❌ Pass 1 API error:', pass1Response.status, errorText);
     
-    if (response.status === 429) {
-      throw new Error('Rate limit bereikt, probeer het over een minuut opnieuw.');
+    if (pass1Response.status === 429) {
+      throw new Error('Rate limit exceeded, please try again later');
     }
-    if (response.status === 402) {
-      throw new Error('AI credits op, neem contact op met de beheerder.');
+    if (pass1Response.status === 402) {
+      throw new Error('API credits exhausted');
     }
-    throw new Error(`AI API error: ${response.status}`);
+    throw new Error(`API error: ${pass1Response.status}`);
   }
 
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content || '';
-  console.log(`🔍 [${VINYL_FUNCTION_VERSION}] Raw AI response:`, content);
+  const pass1Data = await pass1Response.json();
+  const pass1Content = pass1Data.choices?.[0]?.message?.content;
+  console.log('📝 PASS 1 raw response:', pass1Content);
 
-  // Parse JSON
-  let analysis;
+  // Parse Pass 1 result
+  let pass1Result;
   try {
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    const jsonMatch = pass1Content.match(/\{[\s\S]*\}/);
+    pass1Result = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
   } catch (e) {
-    console.error('Failed to parse AI response:', e);
-    analysis = {};
+    console.error('❌ Failed to parse Pass 1:', e);
+    pass1Result = { ocr_notes: pass1Content };
   }
 
-  // Ensure confidence object exists
-  if (!analysis.confidence) {
-    analysis.confidence = {
-      artist: analysis.artist ? 0.5 : 0,
-      title: analysis.title ? 0.5 : 0,
-      overall: 0.5
-    };
-  }
+  console.log('📝 PASS 1 parsed:', JSON.stringify(pass1Result));
 
-  console.log(`🎯 [${VINYL_FUNCTION_VERSION}] OCR result with confidence:`, analysis);
+  // Convert spelled text to normal text
+  const convertSpelling = (spelled: string | null): string | null => {
+    if (!spelled) return null;
+    return spelled.replace(/-/g, '').replace(/\s+/g, ' ').trim();
+  };
 
-  // Quick Discogs search if we have data
-  let discogsResult = null;
-  let pricingData = null;
+  const extractedArtist = convertSpelling(pass1Result.artist_spelled);
+  const extractedTitle = convertSpelling(pass1Result.title_spelled);
 
-  if (analysis.catalog_number || analysis.artist || analysis.title) {
-    console.log(`🔍 [${VINYL_FUNCTION_VERSION}] Searching Discogs...`);
-    discogsResult = await searchDiscogsReleaseV4(
-      analysis.artist || '',
-      analysis.title || '',
-      analysis.catalog_number || ''
-    );
+  console.log('📝 Extracted artist:', extractedArtist);
+  console.log('📝 Extracted title:', extractedTitle);
 
-    if (discogsResult) {
-      pricingData = await getDiscogsPriceAnalysisByIdV4(discogsResult.discogs_id);
+  // PASS 2: Verification
+  let verified = true;
+  let verificationNotes = '';
+
+  if (extractedArtist || extractedTitle) {
+    const pass2Prompt = `VERIFICATION TASK - Look at the FRONT COVER image only.
+
+I need you to verify if specific text is PHYSICALLY PRINTED on the cover.
+
+Question 1: Is the text "${extractedArtist || 'unknown'}" actually printed/written on the front cover?
+- Look for these exact letters printed on the cover
+- Answer: YES if you can see these letters, NO if not
+
+Question 2: Is the text "${extractedTitle || 'unknown'}" actually printed/written on the front cover?
+- Look for these exact letters printed on the cover
+- Answer: YES if you can see these letters, NO if not
+
+Return JSON:
+{
+  "artist_visible": true or false,
+  "title_visible": true or false,
+  "what_i_actually_see": "describe the main text you see on the front cover"
+}`;
+
+    console.log('🔍 PASS 2: Verification...');
+    try {
+      const pass2Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'text', text: pass2Prompt },
+              { type: 'image_url', image_url: { url: imageUrls[0] } }
+            ]
+          }],
+          max_tokens: 500,
+        }),
+      });
+
+      if (pass2Response.ok) {
+        const pass2Data = await pass2Response.json();
+        const pass2Content = pass2Data.choices?.[0]?.message?.content;
+        console.log('📝 PASS 2 raw response:', pass2Content);
+
+        try {
+          const jsonMatch = pass2Content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const pass2Result = JSON.parse(jsonMatch[0]);
+            console.log('📝 PASS 2 parsed:', JSON.stringify(pass2Result));
+            
+            verified = pass2Result.artist_visible === true || pass2Result.title_visible === true;
+            verificationNotes = pass2Result.what_i_actually_see || '';
+            
+            console.log('✅ Verification result:', verified ? 'VERIFIED' : 'NOT VERIFIED');
+            console.log('📝 What AI sees:', verificationNotes);
+          }
+        } catch (e) {
+          console.error('⚠️ Failed to parse Pass 2:', e);
+          verified = false;
+          verificationNotes = pass2Content;
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Pass 2 failed, continuing:', e);
     }
   }
 
-  const totalTime = Date.now() - startTime;
-  console.log(`✅ [${VINYL_FUNCTION_VERSION}] COMPLETED in ${totalTime}ms (AI: ${aiTime}ms)`);
+  // Calculate confidence
+  const confidence = {
+    artist: verified ? 0.9 : 0.3,
+    title: verified ? 0.85 : 0.3,
+    overall: verified ? 0.85 : 0.3,
+    verified
+  };
 
   return {
-    success: true,
-    analysis,
-    combinedResults: analysis,
-    discogs: discogsResult,
-    pricing: pricingData,
-    version: VINYL_FUNCTION_VERSION,
-    timing: { total: totalTime, ai: aiTime }
+    artist: extractedArtist || null,
+    title: extractedTitle || null,
+    year: pass1Result.year || null,
+    label: pass1Result.label || null,
+    catalog_number: pass1Result.catalog_number || null,
+    matrix_number: pass1Result.matrix_number || null,
+    format: 'Vinyl',
+    country: null,
+    genre: null,
+    confidence,
+    ocr_notes: verified 
+      ? pass1Result.ocr_notes 
+      : `⚠️ Verificatie mislukt. AI ziet: ${verificationNotes || pass1Result.ocr_notes}`,
+    raw_spelling: {
+      artist: pass1Result.artist_spelled,
+      title: pass1Result.title_spelled
+    }
   };
 }
 
-// Main serve function
+// Discogs search
+async function searchDiscogs(catalogNumber: string | null, artist: string | null, title: string | null, matrixNumber: string | null): Promise<any | null> {
+  console.log('🔍 Discogs search:', { catalogNumber, artist, title, matrixNumber });
+  
+  const key = DISCOGS_CONSUMER_KEY;
+  const secret = DISCOGS_CONSUMER_SECRET;
+  
+  if (!key || !secret) {
+    console.log('⚠️ No Discogs credentials');
+    return null;
+  }
+
+  const auth = { 'Authorization': `Discogs key=${key}, secret=${secret}` };
+
+  const queries = [];
+  if (catalogNumber) queries.push(`catno:${catalogNumber}`);
+  if (artist && title) queries.push(`${artist} ${title}`);
+  if (artist) queries.push(artist);
+
+  for (const q of queries) {
+    try {
+      const url = `https://api.discogs.com/database/search?q=${encodeURIComponent(q)}&type=release&format=Vinyl&per_page=3`;
+      const res = await fetch(url, { headers: { ...auth, 'User-Agent': 'MusicScan/3.0' } });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.results?.length > 0) {
+          const match = data.results[0];
+          console.log('✅ Discogs match:', match.id, match.title);
+          return {
+            discogs_id: match.id,
+            discogs_url: `https://www.discogs.com/release/${match.id}`,
+            cover_image: match.cover_image,
+            title: match.title,
+            year: match.year
+          };
+        }
+      }
+      await new Promise(r => setTimeout(r, 300));
+    } catch (e) {
+      console.error('Discogs error:', e);
+    }
+  }
+  return null;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const result = await executeVinylAnalysisV5(req);
-    
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    const { imageUrls } = await req.json();
+    console.log(`📸 [${VINYL_FUNCTION_VERSION}] Received ${imageUrls?.length || 0} images`);
+
+    if (!imageUrls || imageUrls.length < 3) {
+      return new Response(
+        JSON.stringify({ error: 'At least 3 images required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Two-pass OCR
+    const ocrResult = await performTwoPassOCR(imageUrls);
+    console.log('📝 OCR result:', JSON.stringify(ocrResult));
+
+    // Discogs search
+    let discogsData = null;
+    if (ocrResult.catalog_number || (ocrResult.artist && ocrResult.title)) {
+      discogsData = await searchDiscogs(
+        ocrResult.catalog_number,
+        ocrResult.artist,
+        ocrResult.title,
+        ocrResult.matrix_number
+      );
+    }
+
+    // Merge results
+    const finalResult = {
+      ...ocrResult,
+      discogs_id: discogsData?.discogs_id || null,
+      discogs_url: discogsData?.discogs_url || null,
+      cover_image: discogsData?.cover_image || null,
+    };
+
+    // If Discogs found a match and OCR wasn't confident, prefer Discogs data
+    if (discogsData && !ocrResult.confidence.verified) {
+      console.log('📝 Using Discogs data due to low OCR confidence');
+      if (discogsData.title?.includes(' - ')) {
+        const [artist, title] = discogsData.title.split(' - ', 2);
+        finalResult.artist = artist.trim();
+        finalResult.title = title.trim();
+        finalResult.confidence.overall = 0.8;
+        finalResult.ocr_notes = `${ocrResult.ocr_notes}\n✅ Bevestigd via Discogs lookup.`;
+      }
+    }
+
+    console.log('✅ Final result:', JSON.stringify(finalResult));
+
+    return new Response(
+      JSON.stringify(finalResult),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
   } catch (error) {
-    console.error(`❌ [${VINYL_FUNCTION_VERSION}] Error:`, error);
-    return new Response(JSON.stringify({ 
-      error: error.message, 
-      version: VINYL_FUNCTION_VERSION 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('❌ Error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 });

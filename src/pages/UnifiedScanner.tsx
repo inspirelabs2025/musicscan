@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
+// Unified Scanner - Single flow for photo upload + price check
 import { useSearchParams, Navigate } from 'react-router-dom';
 import { Disc, Disc3, Hash, RotateCcw, Save, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';

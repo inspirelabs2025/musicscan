@@ -359,14 +359,14 @@ async function fallbackToMarketplaceListingsV4(releaseId: number, condition: str
   }
 }
 
-// V5 Main Analysis Function - OPTIMIZED SINGLE CALL
+// V5 Main Analysis Function - STRICT OCR with confidence scoring
 async function executeVinylAnalysisV5(req: Request) {
   console.log(`🚀 [${VINYL_FUNCTION_VERSION}] REQUEST RECEIVED AT: ${new Date().toISOString()}`);
 
   const requestBody = await req.json();
   const imageUrls = requestBody.imageUrls || requestBody.imageBase64 || [];
 
-  console.log(`📸 [${VINYL_FUNCTION_VERSION}] Processing ${imageUrls.length} images in SINGLE CALL`);
+  console.log(`📸 [${VINYL_FUNCTION_VERSION}] Processing ${imageUrls.length} images with STRICT OCR`);
 
   if (!imageUrls || imageUrls.length === 0) {
     throw new Error('No images provided');
@@ -388,29 +388,55 @@ async function executeVinylAnalysisV5(req: Request) {
   // Build image content for ALL images in single call
   const imageContents = imageUrls.map((url: string, i: number) => ({
     type: 'image_url',
-    image_url: { url }
+    image_url: { url, detail: 'high' }
   }));
 
-  const prompt = `Analyze ALL these vinyl record images together and extract information.
+  const systemPrompt = `You are a STRICT OCR specialist for vinyl record analysis. Your ONLY job is to READ TEXT that is ACTUALLY VISIBLE on the record images.
 
-Look at all images (front cover, back cover, label, matrix) and combine the information.
+CRITICAL RULES - FOLLOW EXACTLY:
+1. ONLY report text you can CLEARLY SEE in the images
+2. NEVER guess, assume, or hallucinate artist/album names
+3. If you cannot clearly read text, set that field to null
+4. Do NOT use your knowledge of music - only read what is printed
+5. The front cover shows the artist name and album title
+6. The back cover has tracklisting, barcode, catalog number, label info
+7. The record label (center) has catalog number, matrix codes, side info
 
-Return ONLY a valid JSON object with:
+IMAGE IDENTIFICATION:
+- Image 1: Front cover
+- Image 2: Back cover
+- Image 3: Record label (center of vinyl)
+
+CONFIDENCE SCORING (0.0 to 1.0):
+- 1.0: Text is crystal clear and unambiguous
+- 0.8-0.9: Text is readable with high certainty
+- 0.6-0.7: Text is partially visible or slightly unclear
+- 0.3-0.5: Text is hard to read, low certainty
+- 0.0-0.2: Cannot read, guessing would be required (use null instead)`;
+
+  const userPrompt = `Analyze these vinyl record images. READ ONLY the text that is ACTUALLY PRINTED on the covers and label. Do not guess or use music knowledge.
+
+Return ONLY valid JSON:
 {
-  "artist": "Artist name",
-  "title": "Album title",
-  "label": "Record label",
-  "catalog_number": "Catalog number (e.g. CBS 85224)",
-  "barcode": "Barcode if visible",
-  "year": 1985,
-  "format": "LP or 7\"",
-  "genre": "Genre",
-  "country": "Country",
-  "matrix_number": "Matrix/runout etchings",
-  "confidence": 0.9
+  "artist": "exact text as printed or null",
+  "title": "exact text as printed or null",
+  "label": "Record label or null",
+  "catalog_number": "Catalog number (e.g. CBS 85224) or null",
+  "barcode": "Barcode if visible or null",
+  "year": number or null,
+  "format": "LP or 7\" or null",
+  "genre": "if clearly labeled or null",
+  "country": "if clearly labeled or null",
+  "matrix_number": "Matrix/runout etchings or null",
+  "confidence": {
+    "artist": 0.0-1.0,
+    "title": 0.0-1.0,
+    "overall": 0.0-1.0
+  },
+  "ocr_notes": "brief notes about what you could/couldn't read"
 }
 
-Be precise. Use null for fields you cannot determine.`;
+IMPORTANT: If the artist or title is not clearly readable, return null. Do NOT guess based on artwork recognition.`;
 
   const startTime = Date.now();
   
@@ -422,14 +448,17 @@ Be precise. Use null for fields you cannot determine.`;
     },
     body: JSON.stringify({
       model,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'text', text: prompt },
-          ...imageContents
-        ]
-      }],
-      max_tokens: 1000,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: userPrompt },
+            ...imageContents
+          ]
+        }
+      ],
+      max_tokens: 1500,
     })
   });
 
@@ -439,11 +468,19 @@ Be precise. Use null for fields you cannot determine.`;
   if (!response.ok) {
     const errorText = await response.text();
     console.error(`❌ AI API error: ${response.status}`, errorText);
+    
+    if (response.status === 429) {
+      throw new Error('Rate limit bereikt, probeer het over een minuut opnieuw.');
+    }
+    if (response.status === 402) {
+      throw new Error('AI credits op, neem contact op met de beheerder.');
+    }
     throw new Error(`AI API error: ${response.status}`);
   }
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content || '';
+  console.log(`🔍 [${VINYL_FUNCTION_VERSION}] Raw AI response:`, content);
 
   // Parse JSON
   let analysis;
@@ -455,7 +492,16 @@ Be precise. Use null for fields you cannot determine.`;
     analysis = {};
   }
 
-  console.log(`🎯 [${VINYL_FUNCTION_VERSION}] OCR result:`, analysis);
+  // Ensure confidence object exists
+  if (!analysis.confidence) {
+    analysis.confidence = {
+      artist: analysis.artist ? 0.5 : 0,
+      title: analysis.title ? 0.5 : 0,
+      overall: 0.5
+    };
+  }
+
+  console.log(`🎯 [${VINYL_FUNCTION_VERSION}] OCR result with confidence:`, analysis);
 
   // Quick Discogs search if we have data
   let discogsResult = null;

@@ -1,24 +1,20 @@
-// COMPLETE REWRITE - FORCE CACHE BUST V4.0.0-MEGA-CACHE-BUST
-// DEPLOYMENT ID: VINYL_ANALYSIS_V4_FORCE_REDEPLOY
-// CRITICAL: ABSOLUTELY NO DATABASE SAVES - FRONTEND ONLY SAVES
+// OPTIMIZED V5.0 - Uses Lovable AI Gateway for faster analysis
+// All images analyzed in single call instead of sequential calls
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// V4.0.0 VERSION CONSTANTS - FORCE NEW DEPLOYMENT
-const VINYL_FUNCTION_VERSION_V4: string = "V4.0.0-MEGA-CACHE-BUST-NO-DB-SAVES";
-const VINYL_DEPLOYMENT_TIMESTAMP_V4: number = Date.now();
+const VINYL_FUNCTION_VERSION = "V5.0-OPTIMIZED-SINGLE-CALL";
+const VINYL_DEPLOYMENT_TIMESTAMP = Date.now();
 
-// Environment variables
+// Use Lovable API key (faster, no extra cost) with OpenAI fallback
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const OPENAI_API_KEY_V4 = Deno.env.get('OPENAI_API_KEY');
-const SUPABASE_URL_V4 = Deno.env.get('SUPABASE_URL');
-const SUPABASE_ANON_KEY_V4 = Deno.env.get('SUPABASE_ANON_KEY');
 const DISCOGS_CONSUMER_KEY_V4 = Deno.env.get('DISCOGS_CONSUMER_KEY');
 const DISCOGS_CONSUMER_SECRET_V4 = Deno.env.get('DISCOGS_CONSUMER_SECRET');
 
-console.log(`🚀 VINYL ANALYSIS FUNCTION ${VINYL_FUNCTION_VERSION_V4} INITIALIZING`);
-console.log(`⚠️  CRITICAL: NO DATABASE SAVES IN THIS VERSION!`);
-console.log(`📋 DEPLOYMENT TIMESTAMP: ${VINYL_DEPLOYMENT_TIMESTAMP_V4}`);
+console.log(`🚀 VINYL ANALYSIS ${VINYL_FUNCTION_VERSION} - Single-call optimization`);
+console.log(`🔑 Using: ${LOVABLE_API_KEY ? 'Lovable AI Gateway' : 'OpenAI API'}`);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -363,140 +359,133 @@ async function fallbackToMarketplaceListingsV4(releaseId: number, condition: str
   }
 }
 
-// V4 Main Analysis Function - CRITICAL: NO DATABASE SAVES
-async function executeVinylAnalysisV4(req: Request) {
-  console.log(`🚀 [${VINYL_FUNCTION_VERSION_V4}] REQUEST RECEIVED AT: ${new Date().toISOString()}`);
-  console.log(`📋 [${VINYL_FUNCTION_VERSION_V4}] DEPLOYMENT TIMESTAMP: ${VINYL_DEPLOYMENT_TIMESTAMP_V4}`);
+// V5 Main Analysis Function - OPTIMIZED SINGLE CALL
+async function executeVinylAnalysisV5(req: Request) {
+  console.log(`🚀 [${VINYL_FUNCTION_VERSION}] REQUEST RECEIVED AT: ${new Date().toISOString()}`);
 
   const requestBody = await req.json();
+  const imageUrls = requestBody.imageUrls || requestBody.imageBase64 || [];
+
+  console.log(`📸 [${VINYL_FUNCTION_VERSION}] Processing ${imageUrls.length} images in SINGLE CALL`);
+
+  if (!imageUrls || imageUrls.length === 0) {
+    throw new Error('No images provided');
+  }
+
+  // Use Lovable API Gateway if available, fallback to OpenAI
+  const apiKey = LOVABLE_API_KEY || OPENAI_API_KEY_V4;
+  const apiUrl = LOVABLE_API_KEY 
+    ? 'https://ai.gateway.lovable.dev/v1/chat/completions'
+    : 'https://api.openai.com/v1/chat/completions';
+  const model = LOVABLE_API_KEY ? 'google/gemini-2.5-flash' : 'gpt-4o-mini';
+
+  if (!apiKey) {
+    throw new Error('No API key configured (LOVABLE_API_KEY or OPENAI_API_KEY)');
+  }
+
+  console.log(`🤖 [${VINYL_FUNCTION_VERSION}] Using ${LOVABLE_API_KEY ? 'Lovable Gateway' : 'OpenAI'} with model: ${model}`);
+
+  // Build image content for ALL images in single call
+  const imageContents = imageUrls.map((url: string, i: number) => ({
+    type: 'image_url',
+    image_url: { url }
+  }));
+
+  const prompt = `Analyze ALL these vinyl record images together and extract information.
+
+Look at all images (front cover, back cover, label, matrix) and combine the information.
+
+Return ONLY a valid JSON object with:
+{
+  "artist": "Artist name",
+  "title": "Album title",
+  "label": "Record label",
+  "catalog_number": "Catalog number (e.g. CBS 85224)",
+  "barcode": "Barcode if visible",
+  "year": 1985,
+  "format": "LP or 7\"",
+  "genre": "Genre",
+  "country": "Country",
+  "matrix_number": "Matrix/runout etchings",
+  "confidence": 0.9
+}
+
+Be precise. Use null for fields you cannot determine.`;
+
+  const startTime = Date.now();
   
-  // Support both imageUrls (URLs) and imageBase64 (base64 data URIs)
-  const imageUrlsV4 = requestBody.imageUrls || requestBody.imageBase64 || [];
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          ...imageContents
+        ]
+      }],
+      max_tokens: 1000,
+    })
+  });
 
-  console.log(`🎵 [${VINYL_FUNCTION_VERSION_V4}] Starting vinyl image analysis...`);
-  console.log(`📸 [${VINYL_FUNCTION_VERSION_V4}] Processing ${imageUrlsV4.length} images`);
-  console.log(`📸 [${VINYL_FUNCTION_VERSION_V4}] Image type: ${requestBody.imageBase64 ? 'base64' : 'URL'}`);
+  const aiTime = Date.now() - startTime;
+  console.log(`⚡ [${VINYL_FUNCTION_VERSION}] AI analysis completed in ${aiTime}ms`);
 
-  if (!OPENAI_API_KEY_V4) {
-    throw new Error('OpenAI API key not configured');
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`❌ AI API error: ${response.status}`, errorText);
+    throw new Error(`AI API error: ${response.status}`);
   }
 
-  if (!imageUrlsV4 || imageUrlsV4.length === 0) {
-    throw new Error('No images provided. Send imageUrls or imageBase64 array.');
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content || '';
+
+  // Parse JSON
+  let analysis;
+  try {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+  } catch (e) {
+    console.error('Failed to parse AI response:', e);
+    analysis = {};
   }
 
-  console.log(`🔍 [${VINYL_FUNCTION_VERSION_V4}] Analyzing images with OpenAI Vision...`);
+  console.log(`🎯 [${VINYL_FUNCTION_VERSION}] OCR result:`, analysis);
 
-  const analysisResultsV4 = [];
+  // Quick Discogs search if we have data
+  let discogsResult = null;
+  let pricingData = null;
 
-  for (let i = 0; i < imageUrlsV4.length; i++) {
-    console.log(`📸 [${VINYL_FUNCTION_VERSION_V4}] Processing image ${i + 1}/${imageUrlsV4.length}...`);
-    
-    const openaiResponseV4 = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY_V4}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Analyze this vinyl record image and extract information. Return ONLY a JSON object with these fields:
-- catalog_number: The catalog number (e.g., "ABC-123")
-- matrix_number: Matrix/runout numbers from the center label
-- artist: Artist name
-- title: Album title
-- year: Release year (number)
-- format: "LP" or "7\""
-- label: Record label name
-- barcode: Barcode if visible
-- genre: Music genre
-- country: Country of release
-- additional_info: Any other relevant information
-- confidence: Your confidence level (0.0-1.0)
+  if (analysis.catalog_number || analysis.artist || analysis.title) {
+    console.log(`🔍 [${VINYL_FUNCTION_VERSION}] Searching Discogs...`);
+    discogsResult = await searchDiscogsReleaseV4(
+      analysis.artist || '',
+      analysis.title || '',
+      analysis.catalog_number || ''
+    );
 
-Be precise and only include information you can clearly see in the image.`
-              },
-              {
-                type: 'image_url',
-                image_url: { url: imageUrlsV4[i] }
-              }
-            ]
-          }
-        ],
-        max_tokens: 1000
-      })
-    });
-
-    const openaiDataV4 = await openaiResponseV4.json();
-    const contentV4 = openaiDataV4.choices[0].message.content;
-    
-    try {
-      const cleanedJsonV4 = cleanJsonFromMarkdownV4(contentV4);
-      const parsedResultV4 = JSON.parse(cleanedJsonV4);
-      
-      console.log(`✅ [${VINYL_FUNCTION_VERSION_V4}] Image ${i + 1} analysis result: ${JSON.stringify(parsedResultV4)}`);
-      console.log(`🧹 [${VINYL_FUNCTION_VERSION_V4}] Cleaned result for image ${i + 1}: ${JSON.stringify(parsedResultV4)}`);
-      
-      analysisResultsV4.push(parsedResultV4);
-    } catch (parseError) {
-      console.error(`❌ [${VINYL_FUNCTION_VERSION_V4}] Failed to parse image ${i + 1} result:`, parseError);
+    if (discogsResult) {
+      pricingData = await getDiscogsPriceAnalysisByIdV4(discogsResult.discogs_id);
     }
   }
 
-  // Combine analysis results
-  const combinedResultV4: any = {};
-  
-  for (const result of analysisResultsV4) {
-    for (const [key, value] of Object.entries(result)) {
-      if (value && value !== "Not visible" && value !== "") {
-        if (!combinedResultV4[key] || 
-            (typeof value === 'string' && value.length > (combinedResultV4[key]?.length || 0))) {
-          combinedResultV4[key] = value;
-        }
-      }
-    }
-  }
+  const totalTime = Date.now() - startTime;
+  console.log(`✅ [${VINYL_FUNCTION_VERSION}] COMPLETED in ${totalTime}ms (AI: ${aiTime}ms)`);
 
-  console.log(`🎯 [${VINYL_FUNCTION_VERSION_V4}] Combined OCR results: ${JSON.stringify(combinedResultV4)}`);
-
-  // Search Discogs - NO AUTOMATIC SAVES
-  console.log(`🎵 [${VINYL_FUNCTION_VERSION_V4}] Starting Discogs search and pricing lookup...`);
-  console.log(`🔍 [${VINYL_FUNCTION_VERSION_V4}] Search params: Artist="${combinedResultV4.artist}", Title="${combinedResultV4.title}", Catalog="${combinedResultV4.catalog_number}"`);
-
-  const discogsResultV4 = await searchDiscogsReleaseV4(
-    combinedResultV4.artist,
-    combinedResultV4.title,
-    combinedResultV4.catalog_number
-  );
-
-  let pricingDataV4 = null;
-  if (discogsResultV4) {
-    console.log(`💰 [${VINYL_FUNCTION_VERSION_V4}] Getting pricing data for release ${discogsResultV4.discogs_id}`);
-    pricingDataV4 = await getDiscogsPriceAnalysisByIdV4(discogsResultV4.discogs_id);
-  }
-
-  // CRITICAL: NO DATABASE SAVE - Only return data for frontend
-  console.log(`✅ [${VINYL_FUNCTION_VERSION_V4}] VINYL ANALYSIS COMPLETED - ABSOLUTELY NO DATABASE SAVE!`);
-  console.log(`🔒 [${VINYL_FUNCTION_VERSION_V4}] Frontend will handle all saves after condition selection.`);
-
-  const finalResponseV4 = {
+  return {
     success: true,
-    analysis: combinedResultV4,
-    discogs: discogsResultV4,
-    pricing: pricingDataV4,
-    version: VINYL_FUNCTION_VERSION_V4,
-    deployment_timestamp: VINYL_DEPLOYMENT_TIMESTAMP_V4,
-    message: "ANALYSIS COMPLETE - NO DATABASE SAVE PERFORMED",
-    save_method: "FRONTEND_ONLY_AFTER_CONDITION_SELECTION"
+    analysis,
+    combinedResults: analysis,
+    discogs: discogsResult,
+    pricing: pricingData,
+    version: VINYL_FUNCTION_VERSION,
+    timing: { total: totalTime, ai: aiTime }
   };
-
-  return finalResponseV4;
 }
 
 // Main serve function
@@ -506,17 +495,16 @@ serve(async (req) => {
   }
 
   try {
-    const resultV4 = await executeVinylAnalysisV4(req);
+    const result = await executeVinylAnalysisV5(req);
     
-    return new Response(JSON.stringify(resultV4), {
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error(`❌ [${VINYL_FUNCTION_VERSION_V4}] Error:`, error);
+    console.error(`❌ [${VINYL_FUNCTION_VERSION}] Error:`, error);
     return new Response(JSON.stringify({ 
       error: error.message, 
-      version: VINYL_FUNCTION_VERSION_V4,
-      deployment_timestamp: VINYL_DEPLOYMENT_TIMESTAMP_V4 
+      version: VINYL_FUNCTION_VERSION 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

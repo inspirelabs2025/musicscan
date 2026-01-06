@@ -275,12 +275,30 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrls } = await req.json();
-    console.log(`📸 [${VINYL_FUNCTION_VERSION}] Received ${imageUrls?.length || 0} images`);
+    const body = await req.json().catch(() => ({} as any));
+
+    const imageUrls: string[] | null = Array.isArray(body.imageUrls)
+      ? body.imageUrls
+      : Array.isArray(body.imageBase64)
+        ? body.imageBase64
+        : Array.isArray(body.image_base64)
+          ? body.image_base64
+          : null;
+
+    const sourceField = Array.isArray(body.imageUrls)
+      ? 'imageUrls'
+      : Array.isArray(body.imageBase64)
+        ? 'imageBase64'
+        : Array.isArray(body.image_base64)
+          ? 'image_base64'
+          : 'unknown';
+
+    console.log(`📦 [${VINYL_FUNCTION_VERSION}] Payload keys: ${Object.keys(body || {}).join(', ')}`);
+    console.log(`📸 [${VINYL_FUNCTION_VERSION}] Received ${imageUrls?.length || 0} images (source: ${sourceField})`);
 
     if (!imageUrls || imageUrls.length < 3) {
       return new Response(
-        JSON.stringify({ error: 'At least 3 images required' }),
+        JSON.stringify({ error: 'At least 3 images required', expected: 'imageUrls[] (or imageBase64[])' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

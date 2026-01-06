@@ -31,9 +31,9 @@ import NotFound from "./pages/NotFound";
 
 // Lazy loaded pages - grouped by feature
 const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Scanner = lazy(() => import("./pages/Scanner"));
+const Scanner = lazy(() => import("./pages/UnifiedScanner"));
 const Scan = lazy(() => import("./pages/Scan"));
-const QuickPriceCheck = lazy(() => import("./pages/QuickPriceCheck"));
+const QuickPriceCheck = lazy(() => import("./pages/UnifiedScanner")); // Redirect to unified scanner
 const ArtistSearchResults = lazy(() => import("./pages/ArtistSearchResults"));
 
 // Shop pages
@@ -305,7 +305,7 @@ const AppContent = () => {
         {/* Scanner routes */}
         <Route path="/scan" element={<LazyRoute><Scan /></LazyRoute>} />
         <Route path="/scanner" element={<LazyRoute><Scanner /></LazyRoute>} />
-        <Route path="/quick-price-check" element={<LazyRoute><QuickPriceCheck /></LazyRoute>} />
+        <Route path="/quick-price-check" element={<Navigate to="/scanner?mode=quick" replace />} />
         <Route path="/scanner/discogs" element={<ProtectedRoute><LazyRoute><BulkerImage /></LazyRoute></ProtectedRoute>} />
         <Route path="/ai-scan" element={<ProtectedRoute><LazyRoute><AIScan /></LazyRoute></ProtectedRoute>} />
         <Route path="/ai-scan-overview" element={<ProtectedRoute><LazyRoute><AIScanOverview /></LazyRoute></ProtectedRoute>} />

@@ -1,33 +1,25 @@
+// OPTIMIZED V2.0 - Uses Lovable AI Gateway for faster CD analysis
+// Single-call optimization for all images
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.5';
+
+const CD_FUNCTION_VERSION = "V2.0-OPTIMIZED";
+
+// Use Lovable API key (faster) with OpenAI fallback
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+const DISCOGS_TOKEN = Deno.env.get('DISCOGS_TOKEN');
+const DISCOGS_CONSUMER_KEY = Deno.env.get('DISCOGS_CONSUMER_KEY');
+const DISCOGS_CONSUMER_SECRET = Deno.env.get('DISCOGS_CONSUMER_SECRET');
+
+console.log(`🚀 CD ANALYSIS ${CD_FUNCTION_VERSION}`);
+console.log(`🔑 Using: ${LOVABLE_API_KEY ? 'Lovable AI Gateway' : 'OpenAI API'}`);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Environment validation with detailed logging
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-
-// Validate required environment variables
-if (!supabaseUrl) {
-  console.error('❌ SUPABASE_URL environment variable is missing');
-  throw new Error('SUPABASE_URL is required');
-}
-if (!supabaseServiceKey) {
-  console.error('❌ SUPABASE_SERVICE_ROLE_KEY environment variable is missing');
-  throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
-}
-if (!openaiApiKey) {
-  console.error('❌ OPENAI_API_KEY environment variable is missing');
-  throw new Error('OPENAI_API_KEY is required');
-}
-
-console.log('✅ All required environment variables are present');
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 interface CDAnalysisRequest {
   imageUrls: string[];
@@ -181,138 +173,111 @@ If NO matrix number is found, return: {"confidence": 0.0}`;
 }
 
 async function performOCRAnalysis(imageUrls: string[]): Promise<OCRResult> {
-  console.log('🔍 Starting multi-step CD analysis for', imageUrls.length, 'images');
+  console.log(`🔍 [${CD_FUNCTION_VERSION}] Starting OPTIMIZED single-call CD analysis for ${imageUrls.length} images`);
   
-  // Validate images first
-  await validateImageUrls(imageUrls);
-  
-  // Step 1: General CD information extraction
-  const generalPrompt = `You are an expert at analyzing CD images. Extract general CD information from these images.
+  // Use Lovable API Gateway if available
+  const apiKey = LOVABLE_API_KEY || openaiApiKey;
+  const apiUrl = LOVABLE_API_KEY 
+    ? 'https://ai.gateway.lovable.dev/v1/chat/completions'
+    : 'https://api.openai.com/v1/chat/completions';
+  const model = LOVABLE_API_KEY ? 'google/gemini-2.5-flash' : 'gpt-4o';
 
-PRIORITY ORDER:
-1. BARCODE - Extract barcode numbers (highest priority for direct lookup)
-2. FRONT COVER - Extract artist, album title, year, label
-3. BACK COVER - Extract catalog number, additional information
+  if (!apiKey) {
+    throw new Error('No API key configured (LOVABLE_API_KEY or OPENAI_API_KEY)');
+  }
 
-Focus on:
-- Barcode numbers from any visible barcodes
-- Artist name and album title from front cover
-- Record label name
-- Catalog number (usually on back cover or spine)
-- Year of release
-- Genre if clearly visible
-- Country information
+  console.log(`🤖 [${CD_FUNCTION_VERSION}] Using ${LOVABLE_API_KEY ? 'Lovable Gateway' : 'OpenAI'} with model: ${model}`);
 
-Return ONLY a JSON object with these exact keys:
+  // Build ALL images in single call
+  const imageContents = imageUrls.map(url => ({
+    type: 'image_url',
+    image_url: { url, detail: 'high' }
+  }));
+
+  const prompt = `Analyze ALL these CD images together and extract information.
+
+Look at front cover, back cover, disc, and any other images. Combine all information.
+
+PRIORITY:
+1. BARCODE (for Discogs lookup)
+2. Artist and album title
+3. Catalog number
+4. Matrix/IFPI codes from disc
+
+Return ONLY a valid JSON object:
 {
   "artist": "Artist Name",
-  "title": "Album Title", 
+  "title": "Album Title",
   "label": "Record Label",
   "catalog_number": "CAT123",
   "barcode": "1234567890123",
   "year": 2023,
   "format": "CD",
   "country": "Country",
-  "genre": "Genre"
+  "genre": "Genre",
+  "matrix_number": "Matrix code from disc",
+  "side": "A or null",
+  "stamper_codes": "Stamper codes or null"
 }
 
-Be precise and only include information you can clearly see. If uncertain, omit the field.`;
+Be precise. Use null for fields you cannot determine.`;
+
+  const startTime = Date.now();
 
   try {
-    console.log('🤖 Step 1: General CD information extraction...');
-    const generalResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: generalPrompt },
-              ...imageUrls.map(url => ({
-                type: 'image_url',
-                image_url: { url, detail: 'high' }
-              }))
-            ]
-          }
-        ],
+        model,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            ...imageContents
+          ]
+        }],
         max_tokens: 1000,
         temperature: 0.1
       }),
     });
 
-    if (!generalResponse.ok) {
-      const errorText = await generalResponse.text();
-      console.error('❌ OpenAI API error for general analysis:', generalResponse.status, errorText);
-      throw new Error(`OpenAI API error: ${generalResponse.status} - ${errorText}`);
+    const aiTime = Date.now() - startTime;
+    console.log(`⚡ [${CD_FUNCTION_VERSION}] AI analysis completed in ${aiTime}ms`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ AI API error: ${response.status}`, errorText);
+      throw new Error(`AI API error: ${response.status}`);
     }
 
-    const generalData = await generalResponse.json();
-    const generalContent = generalData.choices[0].message.content;
-    console.log('🤖 General analysis response:', generalContent);
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    console.log(`🔍 [${CD_FUNCTION_VERSION}] AI response received`);
 
-    // Parse general results
-    let generalResult;
+    // Parse JSON
+    let result: OCRResult;
     try {
-      const jsonMatch = generalContent.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in general analysis response');
-      }
-      generalResult = JSON.parse(jsonMatch[0]);
-      console.log('✅ Parsed general result:', generalResult);
-    } catch (parseError) {
-      console.error('❌ Failed to parse general analysis JSON:', parseError);
-      throw new Error('Failed to parse general CD information');
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      result = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    } catch (e) {
+      console.error('Failed to parse AI response:', e);
+      result = {};
     }
 
-    // Step 2: Dedicated matrix analysis
-    console.log('🤖 Step 2: Dedicated matrix analysis...');
-    const matrixResults = await performMatrixAnalysis(imageUrls);
-    console.log('✅ Matrix analysis completed with confidence:', matrixResults.confidence);
-
-    // Step 3: Combine results
-    const combinedResult: OCRResult = {
-      ...generalResult,
-      matrix_number: matrixResults.matrix_number,
-      side: matrixResults.side,
-      stamper_codes: matrixResults.stamper_codes
-    };
-
-    console.log('✅ Combined analysis result:', combinedResult);
+    console.log(`✅ [${CD_FUNCTION_VERSION}] OCR result:`, result);
     
-    // Enhanced validation
-    if (!combinedResult.artist && !combinedResult.title && !combinedResult.barcode && !combinedResult.catalog_number && !combinedResult.matrix_number) {
-      console.warn('⚠️ No meaningful data extracted from any analysis step');
-      throw new Error('No meaningful data extracted from images');
-    }
-
-    // Log matrix extraction success
-    if (matrixResults.confidence > 0.5) {
-      console.log(`🎯 Matrix extraction successful: ${matrixResults.matrix_number} (confidence: ${matrixResults.confidence})`);
-    } else if (matrixResults.confidence > 0) {
-      console.log(`⚠️ Matrix extraction uncertain: ${matrixResults.matrix_number || 'none'} (confidence: ${matrixResults.confidence})`);
-    } else {
-      console.log('❌ No matrix number detected');
+    if (!result.artist && !result.title && !result.barcode && !result.catalog_number) {
+      console.warn('⚠️ No meaningful data extracted');
     }
     
-    return combinedResult;
+    return result;
   } catch (error) {
-    console.error('❌ Multi-step OCR analysis failed:', error);
-    
-    // Enhance error message with context
-    if (error.message.includes('OpenAI API')) {
-      throw new Error(`OpenAI API Error: ${error.message}`);
-    } else if (error.message.includes('JSON')) {
-      throw new Error(`Data Parsing Error: ${error.message}`);
-    } else if (error.message.includes('Image')) {
-      throw new Error(`Image Processing Error: ${error.message}`);
-    } else {
-      throw new Error(`OCR Analysis Error: ${error.message}`);
-    }
+    console.error(`❌ [${CD_FUNCTION_VERSION}] OCR analysis failed:`, error);
+    throw error;
   }
 }
 

@@ -172,8 +172,8 @@ If NO matrix number is found, return: {"confidence": 0.0}`;
   }
 }
 
-async function performOCRAnalysis(imageUrls: string[]): Promise<OCRResult> {
-  console.log(`🔍 [${CD_FUNCTION_VERSION}] Starting OPTIMIZED single-call CD analysis for ${imageUrls.length} images`);
+async function performOCRAnalysis(imageUrls: string[]): Promise<OCRResult & { confidence?: { artist: number; title: number; overall: number }; ocr_notes?: string }> {
+  console.log(`🔍 [${CD_FUNCTION_VERSION}] Starting STRICT OCR analysis for ${imageUrls.length} images`);
   
   // Use Lovable API Gateway if available
   const apiKey = LOVABLE_API_KEY || openaiApiKey;
@@ -194,33 +194,52 @@ async function performOCRAnalysis(imageUrls: string[]): Promise<OCRResult> {
     image_url: { url, detail: 'high' }
   }));
 
-  const prompt = `Analyze ALL these CD images together and extract information.
+  const systemPrompt = `You are a STRICT OCR specialist for CD analysis. Your ONLY job is to READ TEXT that is ACTUALLY VISIBLE on the CD images.
 
-Look at front cover, back cover, disc, and any other images. Combine all information.
+CRITICAL RULES - FOLLOW EXACTLY:
+1. ONLY report text you can CLEARLY SEE in the images
+2. NEVER guess, assume, or hallucinate artist/album names
+3. If you cannot clearly read text, set that field to null
+4. Do NOT use your knowledge of music - only read what is printed
+5. The front cover typically shows the artist name and album title prominently
+6. The back cover has tracklisting, barcode, catalog number, label info
+7. The disc itself may have matrix codes, catalog numbers
 
-PRIORITY:
-1. BARCODE (for Discogs lookup)
-2. Artist and album title
-3. Catalog number
-4. Matrix/IFPI codes from disc
+IMAGE IDENTIFICATION:
+- Image 1: Front cover
+- Image 2: Back cover  
+- Image 3 (if present): Disc or additional
 
-Return ONLY a valid JSON object:
+CONFIDENCE SCORING (0.0 to 1.0):
+- 1.0: Text is crystal clear and unambiguous
+- 0.8-0.9: Text is readable with high certainty
+- 0.6-0.7: Text is partially visible or slightly unclear
+- 0.3-0.5: Text is hard to read, low certainty
+- 0.0-0.2: Cannot read, guessing would be required (use null instead)`;
+
+  const userPrompt = `Analyze these CD images. READ ONLY the text that is ACTUALLY PRINTED on the covers and disc. Do not guess or use music knowledge.
+
+Return ONLY valid JSON:
 {
-  "artist": "Artist Name",
-  "title": "Album Title",
-  "label": "Record Label",
-  "catalog_number": "CAT123",
-  "barcode": "1234567890123",
-  "year": 2023,
+  "artist": "exact text as printed or null",
+  "title": "exact text as printed or null",
+  "year": number or null,
+  "label": "exact text or null",
+  "catalog_number": "exact text or null",
+  "barcode": "exact text or null",
   "format": "CD",
-  "country": "Country",
-  "genre": "Genre",
-  "matrix_number": "Matrix code from disc",
-  "side": "A or null",
-  "stamper_codes": "Stamper codes or null"
+  "genre": "if clearly labeled or null",
+  "country": "if clearly labeled or null",
+  "matrix_number": "from disc or null",
+  "confidence": {
+    "artist": 0.0-1.0,
+    "title": 0.0-1.0,
+    "overall": 0.0-1.0
+  },
+  "ocr_notes": "brief notes about what you could/couldn't read"
 }
 
-Be precise. Use null for fields you cannot determine.`;
+IMPORTANT: If the artist or title is not clearly readable, return null. Do NOT guess based on artwork recognition.`;
 
   const startTime = Date.now();
 
@@ -233,15 +252,17 @@ Be precise. Use null for fields you cannot determine.`;
       },
       body: JSON.stringify({
         model,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'text', text: prompt },
-            ...imageContents
-          ]
-        }],
-        max_tokens: 1000,
-        temperature: 0.1
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: userPrompt },
+              ...imageContents
+            ]
+          }
+        ],
+        max_tokens: 1500,
       }),
     });
 
@@ -251,15 +272,22 @@ Be precise. Use null for fields you cannot determine.`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`❌ AI API error: ${response.status}`, errorText);
+      
+      if (response.status === 429) {
+        throw new Error('Rate limit bereikt, probeer het over een minuut opnieuw.');
+      }
+      if (response.status === 402) {
+        throw new Error('AI credits op, neem contact op met de beheerder.');
+      }
       throw new Error(`AI API error: ${response.status}`);
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
-    console.log(`🔍 [${CD_FUNCTION_VERSION}] AI response received`);
+    console.log(`🔍 [${CD_FUNCTION_VERSION}] Raw AI response:`, content);
 
     // Parse JSON
-    let result: OCRResult;
+    let result: OCRResult & { confidence?: { artist: number; title: number; overall: number }; ocr_notes?: string };
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       result = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
@@ -268,10 +296,19 @@ Be precise. Use null for fields you cannot determine.`;
       result = {};
     }
 
-    console.log(`✅ [${CD_FUNCTION_VERSION}] OCR result:`, result);
+    // Ensure confidence object exists
+    if (!result.confidence) {
+      result.confidence = {
+        artist: result.artist ? 0.5 : 0,
+        title: result.title ? 0.5 : 0,
+        overall: 0.5
+      };
+    }
+
+    console.log(`✅ [${CD_FUNCTION_VERSION}] OCR result with confidence:`, result);
     
     if (!result.artist && !result.title && !result.barcode && !result.catalog_number) {
-      console.warn('⚠️ No meaningful data extracted');
+      console.warn('⚠️ No meaningful data extracted - images may be unclear');
     }
     
     return result;

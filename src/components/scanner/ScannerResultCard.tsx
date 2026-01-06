@@ -9,11 +9,16 @@ interface ConfidenceInfo {
   artist?: number;
   title?: number;
   overall?: number;
+  verified?: boolean;
 }
 
 interface ExtendedScanResult extends ScanResult {
   confidence?: ConfidenceInfo;
   ocr_notes?: string;
+  raw_spelling?: {
+    artist?: string;
+    title?: string;
+  };
 }
 
 interface ScannerResultCardProps {
@@ -21,20 +26,32 @@ interface ScannerResultCardProps {
   status: ScanStatus;
 }
 
-const ConfidenceIndicator = ({ confidence }: { confidence?: ConfidenceInfo }) => {
+const ConfidenceIndicator = ({ confidence, ocrNotes }: { confidence?: ConfidenceInfo; ocrNotes?: string }) => {
   if (!confidence) return null;
   
   const overall = confidence.overall ?? 0.5;
-  const isLowConfidence = overall < 0.7;
+  const isVerified = confidence.verified ?? true;
+  const isLowConfidence = overall < 0.7 || !isVerified;
   
   if (!isLowConfidence) return null;
   
   return (
-    <div className="flex items-center gap-2 p-2 bg-warning/10 border border-warning/30 rounded-md text-warning text-xs">
-      <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-      <span>
-        Niet helemaal zeker van dit resultaat. Controleer of de gegevens kloppen.
-      </span>
+    <div className="flex flex-col gap-2 p-3 bg-orange-500/10 border border-orange-500/30 rounded-md text-orange-600 dark:text-orange-400 text-sm">
+      <div className="flex items-center gap-2">
+        <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+        <span className="font-medium">
+          ⚠️ Let op: AI herkenning onzeker
+        </span>
+      </div>
+      <p className="text-xs opacity-80">
+        De automatische herkenning kon dit album niet met zekerheid identificeren. 
+        Controleer of de artiest en titel kloppen voordat je opslaat.
+      </p>
+      {ocrNotes && (
+        <p className="text-xs italic opacity-70 border-t border-orange-500/20 pt-2 mt-1">
+          {ocrNotes}
+        </p>
+      )}
     </div>
   );
 };
@@ -73,7 +90,10 @@ export const ScannerResultCard = React.memo(({ result, status }: ScannerResultCa
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-4">
-        <ConfidenceIndicator confidence={extendedResult?.confidence} />
+        <ConfidenceIndicator 
+          confidence={extendedResult?.confidence} 
+          ocrNotes={extendedResult?.ocr_notes}
+        />
         <div className="flex gap-4 mt-2">
           {/* Cover image */}
           <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 bg-muted rounded-lg overflow-hidden">

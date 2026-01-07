@@ -1,12 +1,13 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
+import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
@@ -40,6 +41,9 @@ interface AnalysisResult {
     extracted_details?: any;
     // Technical identifiers
     matrix_number?: string | null;
+    sid_code_mastering?: string | null;
+    sid_code_mould?: string | null;
+    label_code?: string | null;
     barcode?: string | null;
     genre?: string | null;
     country?: string | null;
@@ -540,10 +544,29 @@ export default function AIScanV2() {
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="font-semibold">Technische Details</h3>
+                  <h3 className="font-semibold flex items-center gap-2">
+                    Technische Details
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>Matrix nummer: gegraveerd in de binnenste ring van de CD. Foto de disc onder een hoek voor beste resultaat.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </h3>
                   <div className="space-y-1 text-sm">
                     {analysisResult.result.matrix_number && (
                       <div><strong>Matrix Nr:</strong> {analysisResult.result.matrix_number}</div>
+                    )}
+                    {analysisResult.result.sid_code_mastering && (
+                      <div><strong>IFPI Mastering:</strong> {analysisResult.result.sid_code_mastering}</div>
+                    )}
+                    {analysisResult.result.sid_code_mould && (
+                      <div><strong>IFPI Mould:</strong> {analysisResult.result.sid_code_mould}</div>
+                    )}
+                    {analysisResult.result.label_code && (
+                      <div><strong>Label Code:</strong> {analysisResult.result.label_code}</div>
                     )}
                     {analysisResult.result.barcode && (
                       <div><strong>Barcode:</strong> {analysisResult.result.barcode}</div>

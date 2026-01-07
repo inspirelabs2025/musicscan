@@ -2,12 +2,42 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+// Convert File to base64 data URL
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+// Check if input is a File object
+const isFile = (input: any): input is File => {
+  return input instanceof File;
+};
+
+// Convert mixed array of Files/URLs to URLs only
+const convertToUrls = async (inputs: (string | File)[]): Promise<string[]> => {
+  const results = await Promise.all(
+    inputs.map(async (input) => {
+      if (isFile(input)) {
+        // Convert File to base64 data URL
+        return await fileToBase64(input);
+      }
+      // Already a URL string
+      return input;
+    })
+  );
+  return results;
+};
+
 export const useVinylAnalysis = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
 
-  const analyzeImages = async (imageUrls: string[]) => {
-    if (imageUrls.length !== 3) {
+  const analyzeImages = async (imageInputs: (string | File)[]) => {
+    if (imageInputs.length !== 3) {
       toast({
         title: "Error",
         description: "Alle 3 foto's zijn nodig voor analyse",
@@ -19,11 +49,15 @@ export const useVinylAnalysis = () => {
     setIsAnalyzing(true);
     
     try {
-      // Starting vinyl analysis with images
+      // Convert Files to base64 data URLs
+      console.log('📸 Converting images for analysis...');
+      const imageUrls = await convertToUrls(imageInputs);
+      console.log('📸 Images ready:', imageUrls.length, 'images');
       
       // Mobile-optimized timeout
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const ANALYSIS_TIMEOUT = isMobile ? 30000 : 50000; // 30s mobile, 50s desktop
+      const ANALYSIS_TIMEOUT = isMobile ? 30000 : 50000;
+      
       const analysisPromise = supabase.functions.invoke('analyze-vinyl-images', {
         body: {
           imageUrls: imageUrls,
@@ -44,10 +78,8 @@ export const useVinylAnalysis = () => {
         throw error;
       }
 
-      // Analysis completed successfully
       console.log('📦 Vinyl Analysis raw data:', JSON.stringify(data));
 
-      // The edge function now returns data directly at root level
       const analysis = {
         artist: data.artist || null,
         title: data.title || null,
@@ -86,9 +118,7 @@ export const useVinylAnalysis = () => {
 
       return transformedData;
     } catch (error: any) {
-      // Analysis failed
-      
-      // Reset state on error to prevent hanging
+      console.error('❌ Analysis error:', error);
       setAnalysisResult(null);
       
       const isTimeout = error.message?.includes('timeout');

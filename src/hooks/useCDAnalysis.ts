@@ -2,12 +2,40 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+// Convert File to base64 data URL
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+// Check if input is a File object
+const isFile = (input: any): input is File => {
+  return input instanceof File;
+};
+
+// Convert mixed array of Files/URLs to URLs only
+const convertToUrls = async (inputs: (string | File)[]): Promise<string[]> => {
+  const results = await Promise.all(
+    inputs.map(async (input) => {
+      if (isFile(input)) {
+        return await fileToBase64(input);
+      }
+      return input;
+    })
+  );
+  return results;
+};
+
 export const useCDAnalysis = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
 
-  const analyzeImages = async (imageUrls: string[]) => {
-    if (imageUrls.length < 2) {
+  const analyzeImages = async (imageInputs: (string | File)[]) => {
+    if (imageInputs.length < 2) {
       toast({
         title: "Error",
         description: "Minimaal 2 foto's zijn nodig voor CD analyse (voorkant en achterkant)",
@@ -19,11 +47,14 @@ export const useCDAnalysis = () => {
     setIsAnalyzing(true);
     
     try {
-      // Starting CD analysis with images
+      // Convert Files to base64 data URLs
+      console.log('📸 Converting CD images for analysis...');
+      const imageUrls = await convertToUrls(imageInputs);
+      console.log('📸 CD Images ready:', imageUrls.length, 'images');
       
       // Mobile-optimized timeout
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const ANALYSIS_TIMEOUT = isMobile ? 30000 : 50000; // 30s mobile, 50s desktop
+      const ANALYSIS_TIMEOUT = isMobile ? 30000 : 50000;
       
       const analysisPromise = supabase.functions.invoke('analyze-cd-images', {
         body: {
@@ -39,17 +70,13 @@ export const useCDAnalysis = () => {
 
       const result = await Promise.race([analysisPromise, timeoutPromise]) as any;
       const { data, error } = result;
-      
 
       if (error) {
         throw error;
       }
 
-      // CD analysis completed successfully
       console.log('📦 CD Analysis raw data:', JSON.stringify(data));
 
-      // The edge function now returns data directly at root level
-      // Format: { artist, title, catalog_number, barcode, confidence, discogs_id, ... }
       const analysis = {
         artist: data.artist || null,
         title: data.title || null,
@@ -87,11 +114,11 @@ export const useCDAnalysis = () => {
         variant: "default"
       });
 
-      return data;
-    } catch (error) {
+      return transformedData;
+    } catch (error: any) {
       console.error('❌ CD Analysis failed:', error);
+      setAnalysisResult(null);
       
-      // Parse error response for better user feedback
       let errorMessage = "Er is een fout opgetreden tijdens de CD analyse";
       let errorTitle = "Analyse Mislukt";
       
@@ -100,28 +127,10 @@ export const useCDAnalysis = () => {
         errorMessage = "De beeldanalyse service is tijdelijk niet beschikbaar. Probeer het later opnieuw.";
       } else if (error.message?.includes('Image processing failed')) {
         errorTitle = "Beeldverwerking Mislukt";
-        errorMessage = "De uploaded afbeeldingen konden niet worden verwerkt. Controleer of de afbeeldingen geldig zijn en probeer opnieuw.";
-      } else if (error.message?.includes('Database service temporarily unavailable')) {
-        errorTitle = "Database Tijdelijk Niet Beschikbaar";
-        errorMessage = "De database service is tijdelijk niet beschikbaar. Probeer het later opnieuw.";
-      } else if (error.message?.includes('Network connectivity issue')) {
-        errorTitle = "Netwerkverbinding Probleem";
-        errorMessage = "Er is een probleem met de netwerkverbinding. Controleer je internetverbinding en probeer opnieuw.";
-      } else if (error.message?.includes('CD scanning requires at least 2 images')) {
-        errorTitle = "Onvoldoende Afbeeldingen";
-        errorMessage = "Voor CD analyse zijn minimaal 2 afbeeldingen nodig (voorkant en achterkant).";
-      } else if (error.message?.includes('No meaningful data extracted')) {
-        errorTitle = "Geen Gegevens Gevonden";
-        errorMessage = "Er konden geen bruikbare gegevens uit de afbeeldingen worden gehaald. Probeer duidelijkere afbeeldingen.";
-      } else {
-        // Try to extract the error message from the response
-        const errorData = error.message || error.toString();
-        if (errorData.includes('details:')) {
-          const detailsMatch = errorData.match(/details:\s*(.+)/);
-          if (detailsMatch) {
-            errorMessage = detailsMatch[1];
-          }
-        }
+        errorMessage = "De uploaded afbeeldingen konden niet worden verwerkt.";
+      } else if (error.message?.includes('timeout')) {
+        errorTitle = "Analyse Timeout";
+        errorMessage = "Analyse duurde te lang. Probeer opnieuw.";
       }
       
       toast({

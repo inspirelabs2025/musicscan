@@ -45,22 +45,46 @@ export const useVinylAnalysis = () => {
       }
 
       // Analysis completed successfully
+      console.log('📦 Vinyl Analysis raw data:', JSON.stringify(data));
 
-      setAnalysisResult(data);
+      // The edge function now returns data directly at root level
+      const analysis = {
+        artist: data.artist || null,
+        title: data.title || null,
+        label: data.label || null,
+        catalog_number: data.catalog_number || null,
+        barcode: data.barcode || null,
+        year: data.year || null,
+        format: data.format || 'Vinyl',
+        genre: data.genre || null,
+        country: data.country || null,
+        matrix_number: data.matrix_number || null,
+        confidence: data.confidence || null,
+        ocr_notes: data.ocr_notes || null,
+        raw_spelling: data.raw_spelling || null,
+      };
+
+      const transformedData = {
+        analysis,
+        discogsData: {
+          discogs_id: data.discogs_id || null,
+          discogs_url: data.discogs_url || null,
+          cover_image: data.cover_image || null,
+        },
+        success: true
+      };
+
+      console.log('📦 Transformed data:', JSON.stringify(transformedData));
+      setAnalysisResult(transformedData);
       
-      // Show success with more details about missing data
-      const missingBarcode = !data.analysis?.barcode;
-      const successMessage = missingBarcode 
-        ? `Gevonden: ${data.analysis?.artist || 'Onbekend'} - ${data.analysis?.title || 'Onbekend'} (geen barcode gevonden)`
-        : `Gevonden: ${data.analysis?.artist || 'Onbekend'} - ${data.analysis?.title || 'Onbekend'}`;
-
+      const confidenceInfo = data.confidence?.verified === false ? ' ⚠️ Niet zeker' : '';
       toast({
         title: "OCR Analyse Voltooid! 🎉",
-        description: successMessage,
+        description: `Gevonden: ${analysis.artist || 'Onbekend'} - ${analysis.title || 'Onbekend'}${confidenceInfo}`,
         variant: "default"
       });
 
-      return data;
+      return transformedData;
     } catch (error: any) {
       // Analysis failed
       

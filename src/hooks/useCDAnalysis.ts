@@ -46,35 +46,44 @@ export const useCDAnalysis = () => {
       }
 
       // CD analysis completed successfully
+      console.log('📦 CD Analysis raw data:', JSON.stringify(data));
 
-      // Transform the data structure to match what the frontend expects
-      const transformedData = {
-        analysis: data.ocr_results || data.combinedResults || data.analysis || {
-          artist: data.artist,
-          title: data.title,
-          label: data.label,
-          catalog_number: data.catalog_number,
-          barcode: data.barcode,
-          year: data.year,
-          format: data.format,
-          genre: data.genre,
-          country: data.country,
-          matrix_number: data.matrix_number,
-          side: data.side,
-          stamper_codes: data.stamper_codes
-        },
-        discogsData: data.discogsData,
-        success: data.success
+      // The edge function now returns data directly at root level
+      // Format: { artist, title, catalog_number, barcode, confidence, discogs_id, ... }
+      const analysis = {
+        artist: data.artist || null,
+        title: data.title || null,
+        label: data.label || null,
+        catalog_number: data.catalog_number || null,
+        barcode: data.barcode || null,
+        year: data.year || null,
+        format: data.format || 'CD',
+        genre: data.genre || null,
+        country: data.country || null,
+        matrix_number: data.matrix_number || null,
+        confidence: data.confidence || null,
+        ocr_notes: data.ocr_notes || null,
+        raw_spelling: data.raw_spelling || null,
       };
 
+      const transformedData = {
+        analysis,
+        discogsData: {
+          discogs_id: data.discogs_id || null,
+          discogs_url: data.discogs_url || null,
+          cover_image: data.cover_image || null,
+        },
+        success: true
+      };
+
+      console.log('📦 Transformed data:', JSON.stringify(transformedData));
       setAnalysisResult(transformedData);
       
-      const analysis = transformedData.analysis;
-      const releaseInfo = data.discogsData?.discogs_id ? ` (Release ID: ${data.discogsData.discogs_id})` : '';
-      const matrixInfo = analysis?.matrix_number ? ` | Matrix: ${analysis.matrix_number}` : '';
+      const releaseInfo = data.discogs_id ? ` (Release ID: ${data.discogs_id})` : '';
+      const confidenceInfo = data.confidence?.verified === false ? ' ⚠️ Niet zeker' : '';
       toast({
         title: "CD Analyse Voltooid! 🎉",
-        description: `Gevonden: ${analysis?.artist || 'Onbekend'} - ${analysis?.title || 'Onbekend'}${releaseInfo}${matrixInfo}`,
+        description: `Gevonden: ${analysis.artist || 'Onbekend'} - ${analysis.title || 'Onbekend'}${releaseInfo}${confidenceInfo}`,
         variant: "default"
       });
 

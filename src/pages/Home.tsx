@@ -119,10 +119,6 @@ const Home = () => {
     <div className="min-h-screen bg-background">
       {/* 1. Scanner Hero - Grote CTA bovenaan */}
       <ScannerHero />
-
-      {/* Spacing tussen hero en content */}
-      <div className="h-12 md:h-20" />
-
       {/* 2. Quick Navigation */}
       <QuickLinks />
 

@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
 import { useSEO } from '@/hooks/useSEO';
 import { useUnifiedNewsFeed } from '@/hooks/useUnifiedNewsFeed';
+import { ScannerHero } from '@/components/home/ScannerHero';
 import { HeroFeature } from '@/components/home/HeroFeature';
 import { QuickLinks } from '@/components/home/QuickLinks';
 import { MasonryContentGrid } from '@/components/home/MasonryContentGrid';
 import { ProductBanner } from '@/components/home/ProductBanner';
 import { ShopCategoriesFooter } from '@/components/home/ShopCategoriesFooter';
 import { EchoSpotlight } from '@/components/home/EchoSpotlight';
-import { CommunityStats } from '@/components/home/CommunityStats';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Shuffle array helper
@@ -117,15 +117,18 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* 1. Hero - Featured Item */}
+      {/* 1. Scanner Hero - Grote CTA bovenaan */}
+      <ScannerHero />
+
+      {/* 2. Quick Navigation */}
+      <QuickLinks />
+
+      {/* 3. Hero - Featured Item */}
       {heroItem && (
         <section className="bg-black">
           <HeroFeature item={heroItem} />
         </section>
       )}
-
-      {/* 2. Quick Navigation */}
-      <QuickLinks />
 
       {/* 3. ONE Masonry Grid - ALL content types mixed */}
       {allGridItems.length > 0 && (

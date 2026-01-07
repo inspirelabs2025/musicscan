@@ -373,16 +373,25 @@ serve(async (req) => {
   }
 })
 
-async function analyzePhotosWithOpenAI(photoUrls: string[], mediaType: string, analysisType: 'general' | 'details' | 'matrix') {
+async function analyzePhotosWithOpenAI(
+  photoUrls: string[],
+  mediaType: string,
+  analysisType: 'general' | 'details' | 'matrix'
+) {
   try {
     console.log(`🔍 Running ${analysisType} analysis with OpenAI Vision V2...`)
 
-    const mediaTypeLabel = mediaType === 'vinyl' ? 'vinyl record/LP' : 'CD'
-    
+    // Keep payload small to avoid 400s due to oversized multimodal inputs
+    const urlsForPass = (() => {
+      if (analysisType === 'general') return photoUrls.slice(0, 4)
+      if (analysisType === 'matrix') return photoUrls.slice(0, 3)
+      return photoUrls
+    })()
+
     // Media-specific prompts with structured output
     const systemPrompt = getSystemPrompt(mediaType, analysisType)
     const userPrompt = getUserPrompt(mediaType, analysisType)
-    
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -394,37 +403,50 @@ async function analyzePhotosWithOpenAI(photoUrls: string[], mediaType: string, a
         messages: [
           {
             role: 'system',
-            content: systemPrompt
+            content: systemPrompt,
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: userPrompt
+                text: userPrompt,
               },
-              ...photoUrls.map(url => ({
+              ...urlsForPass.map((url) => ({
                 type: 'image_url',
-                image_url: { 
+                image_url: {
                   url,
-                  detail: 'high' // Higher detail for better text recognition
-                }
-              }))
-            ]
-          }
+                  detail: 'high', // Higher detail for better text recognition
+                },
+              })),
+            ],
+          },
         ],
         max_tokens: 2000,
         temperature: 0.1,
-        response_format: { type: "json_object" }
+        response_format: { type: 'json_object' },
       }),
     })
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`)
+      const errText = await response.text().catch(() => '')
+      console.error('❌ OpenAI API error details:', {
+        status: response.status,
+        analysisType,
+        mediaType,
+        urlsSent: urlsForPass.length,
+        body: errText?.slice(0, 2000) || null,
+      })
+      throw new Error(`OpenAI API error: ${response.status}${errText ? ` - ${errText}` : ''}`)
     }
 
     const data = await response.json()
-    const analysis = data.choices[0].message.content
+    const analysis = data.choices?.[0]?.message?.content
+
+    if (!analysis || typeof analysis !== 'string') {
+      console.error('❌ OpenAI returned empty/invalid content:', data)
+      throw new Error('OpenAI returned empty response')
+    }
 
     console.log(`🤖 OpenAI ${analysisType} analysis V2:`, analysis)
 
@@ -436,17 +458,16 @@ async function analyzePhotosWithOpenAI(photoUrls: string[], mediaType: string, a
       console.error('❌ Failed to parse JSON response:', parseError)
       throw new Error('Invalid JSON response from OpenAI')
     }
-    
+
     return {
       success: true,
-      data: parsedAnalysis
+      data: parsedAnalysis,
     }
-
   } catch (error) {
     console.error(`❌ OpenAI ${analysisType} analysis error:`, error)
     return {
       success: false,
-      error: `AI ${analysisType} analysis failed: ${error.message}`
+      error: `AI ${analysisType} analysis failed: ${error.message}`,
     }
   }
 }

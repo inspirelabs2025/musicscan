@@ -302,7 +302,12 @@ serve(async (req) => {
             confidence_score: discogsResult.confidence,
             ai_description: combinedData.description,
             image_quality: combinedData.imageQuality,
-            extracted_details: combinedData.extractedDetails
+            extracted_details: combinedData.extractedDetails,
+            // Technical identifiers from OCR
+            matrix_number: combinedData.matrixNumber || null,
+            barcode: combinedData.barcode || null,
+            genre: combinedData.genre || null,
+            country: combinedData.country || null
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

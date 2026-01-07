@@ -390,7 +390,7 @@ async function analyzePhotosWithOpenAI(photoUrls: string[], mediaType: string, a
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o', // Reliable vision model
+        model: 'gpt-4o-mini', // Vision model for image analysis
         messages: [
           {
             role: 'system',
@@ -413,9 +413,9 @@ async function analyzePhotosWithOpenAI(photoUrls: string[], mediaType: string, a
             ]
           }
         ],
-        max_tokens: 2000, // Increased for more detailed analysis
-        temperature: 0.05, // Very low for consistency
-        response_format: { type: "json_object" } // Structured JSON output
+        max_tokens: 2000,
+        temperature: 0.1,
+        response_format: { type: "json_object" }
       }),
     })
 

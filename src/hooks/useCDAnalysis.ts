@@ -88,6 +88,7 @@ export const useCDAnalysis = () => {
         genre: data.genre || null,
         country: data.country || null,
         matrix_number: data.matrix_number || null,
+        ifpi_code: data.ifpi_code || null,
         confidence: data.confidence || null,
         ocr_notes: data.ocr_notes || null,
         raw_spelling: data.raw_spelling || null,

@@ -26,7 +26,7 @@ async function performTwoPassOCR(imageUrls: string[]): Promise<any> {
     image_url: { url }
   }));
 
-  // PASS 1: Spelling-based OCR extraction
+  // PASS 1: Spelling-based OCR extraction with enhanced data fields
   const pass1Prompt = `YOU ARE A TEXT READER, NOT AN IMAGE RECOGNIZER.
 
 CRITICAL: Do NOT recognize album covers. Do NOT use your knowledge of music.
@@ -42,6 +42,12 @@ SPELLING TASK:
 Then look at the BACK COVER:
 - Find the barcode number (13 digits near barcode)
 - Find the catalog number (alphanumeric code like "CDP 7 46208 2")
+- Find the matrix/mastering code (often near the inner ring of the CD, like "DIDP-10614" or stamped codes)
+
+Look at the CD DISC surface:
+- Find the matrix/mastering code (etched or printed near center hole)
+- Common formats: "DIDP-XXXXX", "DADC", "PMDC", alphanumeric codes
+- Also look for IFPI codes (e.g., "IFPI L123")
 
 IMPORTANT:
 - If you see "QUEEN" printed, spell it as "Q-U-E-E-N"
@@ -55,9 +61,12 @@ Return JSON:
   "title_spelled": "letter-by-letter spelling of title from front cover", 
   "catalog_number": "exact catalog code from back",
   "barcode": "13 digit barcode number",
+  "matrix_number": "matrix/mastering code from CD disc or back cover",
+  "ifpi_code": "IFPI code if visible",
   "year": null,
   "label": "record label name if visible",
-  "ocr_notes": "describe what text you actually see on the cover"
+  "country": "country of manufacture if visible (e.g., Made in Germany)",
+  "ocr_notes": "describe what text you actually see on the cover and disc"
 }`;
 
   console.log('🔍 PASS 1: Spelling-based OCR extraction...');
@@ -206,8 +215,10 @@ Return JSON:
     label: pass1Result.label || null,
     catalog_number: pass1Result.catalog_number || null,
     barcode: pass1Result.barcode || null,
+    matrix_number: pass1Result.matrix_number || null,
+    ifpi_code: pass1Result.ifpi_code || null,
     format: 'CD',
-    country: null,
+    country: pass1Result.country || null,
     genre: null,
     confidence,
     ocr_notes: verified 

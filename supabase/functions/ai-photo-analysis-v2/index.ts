@@ -305,6 +305,9 @@ serve(async (req) => {
             extracted_details: combinedData.extractedDetails,
             // Technical identifiers from OCR
             matrix_number: combinedData.matrixNumber || null,
+            sid_code_mastering: combinedData.sidCodeMastering || null,
+            sid_code_mould: combinedData.sidCodeMould || null,
+            label_code: combinedData.labelCode || null,
             barcode: combinedData.barcode || null,
             genre: combinedData.genre || null,
             country: combinedData.country || null
@@ -463,16 +466,33 @@ ${mediaType === 'vinyl' ? `For VINYL, pay special attention to:
 - Stamper codes and pressing marks
 - Label variations and catalog numbers
 - Any hand-etched markings
-- Dead wax inscriptions` : `For CDs, focus on:
-- Catalog numbers on disc and case
-- Barcode numbers
-- Matrix codes on inner ring of disc
-- Label logos and publisher information
-- Manufacturing codes`}
+- Dead wax inscriptions` : `For CDs, carefully distinguish between these DIFFERENT identifiers:
+
+**MATRIX NUMBER** (CRITICAL - located in INNER RING of disc):
+- This is text ENGRAVED/ETCHED in the transparent inner ring near the center hole
+- NOT the same as catalog number printed on the label!
+- Often includes: catalog number + pressing codes + country + manufacturer
+- Example: "MADE IN GERMANY BY PDO 835 268-2 01 ✓" or "835 268-2 02 DOC"
+- Read the FULL engraved text, not just part of it
+
+**SID CODES** (small codes in mirror band/inner ring):
+- IFPI Mastering SID: starts with "IFPI L" followed by 3-4 characters (e.g., "IFPI L123")
+- IFPI Mould SID: starts with "IFPI" + 4 characters NOT starting with L (e.g., "IFPI 0123")
+
+**CATALOG NUMBER** (on printed label area):
+- The number printed on the paper label or case
+- This is DIFFERENT from the engraved matrix number
+
+**OTHER CODES**:
+- Barcode: usually on case back
+- Label Code: "LC" followed by 4-5 digits (e.g., "LC 0309")`}
 
 RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
 {
-  "matrixNumber": "matrix/runout info or null",
+  "matrixNumber": "FULL engraved text from inner ring (NOT just catalog number) or null",
+  "sidCodeMastering": "IFPI L... code or null",
+  "sidCodeMould": "IFPI ... code (not starting with L) or null",
+  "labelCode": "LC xxxx code or null",
   "barcode": "barcode number or null", 
   "extractedText": ["array", "of", "all", "visible", "text"],
   "technicalDetails": "detailed technical analysis",
@@ -511,6 +531,9 @@ function mergeAnalysisResults(generalData: any, detailData: any) {
     
     // Technical details from detail analysis
     matrixNumber: detailData?.matrixNumber,
+    sidCodeMastering: detailData?.sidCodeMastering,
+    sidCodeMould: detailData?.sidCodeMould,
+    labelCode: detailData?.labelCode,
     barcode: detailData?.barcode,
     extractedText: [...(generalData.searchQueries || []), ...(detailData?.extractedText || [])],
     

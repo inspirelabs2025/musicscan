@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart } from 'lucide-react';
+import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
 
 // Simple V2 components for media type and condition selection
 
@@ -55,6 +56,23 @@ export default function AIScanV2() {
   
   const { checkUsageLimit, incrementUsage } = useUsageTracking();
   const { subscription } = useSubscription();
+  
+  // Discogs search for automatic pricing
+  const { 
+    searchByDiscogsId, 
+    searchResults, 
+    isPricingLoading,
+    retryPricing,
+    resetSearchState
+  } = useDiscogsSearch();
+
+  // Auto-trigger price check when analysis finds a Discogs ID
+  useEffect(() => {
+    if (analysisResult?.result?.discogs_id) {
+      console.log('🔍 Auto-triggering price check for Discogs ID:', analysisResult.result.discogs_id);
+      searchByDiscogsId(analysisResult.result.discogs_id.toString());
+    }
+  }, [analysisResult?.result?.discogs_id, searchByDiscogsId]);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -239,6 +257,7 @@ export default function AIScanV2() {
     setAnalysisResult(null);
     setError(null);
     setAnalysisProgress(0);
+    resetSearchState();
   };
 
   // Simulate progress during analysis
@@ -529,19 +548,81 @@ export default function AIScanV2() {
                 </div>
               </div>
 
+              {/* Pricing Section */}
+              <div className="pt-4 border-t">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Euro className="h-4 w-4" />
+                  Marktprijzen
+                </h3>
+                
+                {isPricingLoading ? (
+                  <div className="flex items-center justify-center py-4 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    Prijzen laden...
+                  </div>
+                ) : searchResults[0]?.pricing_stats ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg text-center">
+                        <TrendingDown className="h-4 w-4 mx-auto text-green-600 mb-1" />
+                        <p className="text-xs text-muted-foreground">Laagste</p>
+                        <p className="font-bold text-green-600">
+                          €{searchResults[0].pricing_stats.lowest_price || '-'}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-center">
+                        <TrendingUp className="h-4 w-4 mx-auto text-blue-600 mb-1" />
+                        <p className="text-xs text-muted-foreground">Mediaan</p>
+                        <p className="font-bold text-blue-600">
+                          €{searchResults[0].pricing_stats.median_price || '-'}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg text-center">
+                        <TrendingUp className="h-4 w-4 mx-auto text-orange-600 mb-1" />
+                        <p className="text-xs text-muted-foreground">Hoogste</p>
+                        <p className="font-bold text-orange-600">
+                          €{searchResults[0].pricing_stats.highest_price || '-'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>
+                        {searchResults[0].pricing_stats.have_count || 0} hebben | {searchResults[0].pricing_stats.want_count || 0} willen
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => analysisResult.result.discogs_id && retryPricing(analysisResult.result.discogs_id)}
+                        className="h-7 text-xs"
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Vernieuw
+                      </Button>
+                    </div>
+                  </div>
+                ) : analysisResult.result.discogs_id ? (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground mb-2">Geen prijsdata beschikbaar</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => searchByDiscogsId(analysisResult.result.discogs_id!.toString())}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Opnieuw proberen
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Geen Discogs ID gevonden - prijzen niet beschikbaar
+                  </p>
+                )}
+              </div>
+
               {/* Action Buttons */}
               {analysisResult.result.discogs_url && (
                 <div className="pt-4 space-y-3">
-                  <Button asChild className="w-full">
-                    <a 
-                      href={analysisResult.result.discogs_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                    >
-                      Bekijk op Discogs
-                    </a>
-                  </Button>
-                  
                   <Button 
                     onClick={() => {
                       if (!conditionGrade) {
@@ -568,12 +649,21 @@ export default function AIScanV2() {
                       console.log('🚀 Navigating to:', `/scanner/discogs?${params.toString()}`);
                       navigate(`/scanner/discogs?${params.toString()}`);
                     }}
-                    variant="secondary" 
                     className="w-full"
                     disabled={!conditionGrade}
                   >
                     <ShoppingCart className="mr-2 h-4 w-4" />
                     Toevoegen aan Collectie
+                  </Button>
+                  
+                  <Button asChild variant="outline" className="w-full">
+                    <a 
+                      href={analysisResult.result.discogs_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      Bekijk op Discogs
+                    </a>
                   </Button>
                 </div>
               )}

@@ -302,6 +302,23 @@ serve(async (req) => {
         }
       }
 
+      // Fetch pricing data if Discogs ID is available
+      let pricingStats = null;
+      if (discogsResult?.discogsId) {
+        try {
+          console.log('💰 Starting pricing fetch for Discogs ID:', discogsResult.discogsId);
+          pricingStats = await fetchDiscogsPricing(discogsResult.discogsId);
+          
+          if (pricingStats) {
+            console.log('✅ Pricing data fetched:', pricingStats);
+          } else {
+            console.log('ℹ️ No pricing data available for this release');
+          }
+        } catch (error) {
+          console.log('❌ Pricing fetch failed but scan succeeded:', error);
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -326,7 +343,9 @@ serve(async (req) => {
             label_code: combinedData.labelCode || null,
             barcode: combinedData.barcode || null,
             genre: combinedData.genre || null,
-            country: combinedData.country || null
+            country: combinedData.country || null,
+            // Pricing data from Discogs
+            pricing_stats: pricingStats
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -637,6 +656,126 @@ function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: an
       ...(generalData?.searchQueries || []),
       ...(detailData?.alternativeSearchTerms || [])
     ].filter((query, index, array) => array.indexOf(query) === index)
+  }
+}
+
+// Fetch pricing data for a Discogs release
+async function fetchDiscogsPricing(discogsId: number): Promise<{
+  lowest_price: number | null;
+  median_price: number | null;
+  highest_price: number | null;
+  num_for_sale: number;
+  currency: string;
+} | null> {
+  try {
+    console.log(`💰 Fetching pricing for Discogs ID: ${discogsId}`);
+    
+    const scraperApiKey = Deno.env.get('SCRAPERAPI_KEY');
+    const discogsToken = Deno.env.get('DISCOGS_TOKEN');
+    
+    // Try scraping first if ScraperAPI is available
+    if (scraperApiKey) {
+      const sellUrl = `https://www.discogs.com/sell/release/${discogsId}`;
+      const scraperUrl = `https://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(sellUrl)}&render=false`;
+      
+      console.log(`🌐 Scraping pricing from: ${sellUrl}`);
+      
+      try {
+        const response = await fetch(scraperUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        });
+        
+        if (response.ok) {
+          const html = await response.text();
+          console.log(`📄 Retrieved HTML, length: ${html.length}`);
+          
+          // Extract pricing with multiple patterns
+          const extractPrice = (patterns: RegExp[]): number | null => {
+            for (const pattern of patterns) {
+              const match = html.match(pattern);
+              if (match?.[1]) {
+                const price = parseFloat(match[1].replace(',', '.'));
+                if (!isNaN(price)) return price;
+              }
+            }
+            return null;
+          };
+          
+          const lowestPatterns = [
+            /<span>Lowest:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
+            /Lowest:[\s\n\r]*[€$£]?([\d.,]+)/,
+            /<span>Low:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/
+          ];
+          
+          const medianPatterns = [
+            /<span>Median:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
+            /Median:[\s\n\r]*[€$£]?([\d.,]+)/
+          ];
+          
+          const highestPatterns = [
+            /<span>Highest:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
+            /Highest:[\s\n\r]*[€$£]?([\d.,]+)/,
+            /<span>High:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/
+          ];
+          
+          const numForSaleMatch = html.match(/(\d+)\s+for sale/i);
+          
+          const lowest = extractPrice(lowestPatterns);
+          const median = extractPrice(medianPatterns);
+          const highest = extractPrice(highestPatterns);
+          const numForSale = numForSaleMatch ? parseInt(numForSaleMatch[1]) : 0;
+          
+          if (lowest || median || highest) {
+            console.log(`✅ Scraped pricing: lowest=${lowest}, median=${median}, highest=${highest}, for_sale=${numForSale}`);
+            return {
+              lowest_price: lowest,
+              median_price: median,
+              highest_price: highest,
+              num_for_sale: numForSale,
+              currency: 'EUR'
+            };
+          }
+          console.log('⚠️ No pricing found in scraped HTML');
+        }
+      } catch (scrapeError) {
+        console.error('❌ Scraping failed:', scrapeError);
+      }
+    }
+    
+    // Fallback: Use Discogs API directly (only provides lowest_price)
+    if (discogsToken) {
+      console.log('🔄 Falling back to Discogs API for pricing...');
+      const apiUrl = `https://api.discogs.com/releases/${discogsId}`;
+      
+      const apiResponse = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `Discogs token=${discogsToken}`,
+          'User-Agent': 'VinylScanApp/2.0'
+        }
+      });
+      
+      if (apiResponse.ok) {
+        const releaseData = await apiResponse.json();
+        if (releaseData.lowest_price) {
+          console.log(`✅ API pricing: lowest_price=${releaseData.lowest_price}, num_for_sale=${releaseData.num_for_sale}`);
+          return {
+            lowest_price: releaseData.lowest_price,
+            median_price: null,
+            highest_price: null,
+            num_for_sale: releaseData.num_for_sale || 0,
+            currency: 'EUR'
+          };
+        }
+      }
+    }
+    
+    console.log('⚠️ No pricing data available');
+    return null;
+  } catch (error) {
+    console.error('❌ Pricing fetch error:', error);
+    return null;
   }
 }
 

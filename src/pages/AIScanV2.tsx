@@ -48,6 +48,14 @@ interface AnalysisResult {
     barcode?: string | null;
     genre?: string | null;
     country?: string | null;
+    // Pricing from Discogs (now included in V2 response)
+    pricing_stats?: {
+      lowest_price: number | null;
+      median_price: number | null;
+      highest_price: number | null;
+      num_for_sale: number;
+      currency: string;
+    } | null;
   };
   version: string;
 }
@@ -596,69 +604,93 @@ export default function AIScanV2() {
                   Marktprijzen
                 </h3>
                 
-                {isPricingLoading ? (
-                  <div className="flex items-center justify-center py-4 text-muted-foreground">
-                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                    Prijzen laden...
-                  </div>
-                ) : searchResults[0]?.pricing_stats ? (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg text-center">
-                        <TrendingDown className="h-4 w-4 mx-auto text-green-600 mb-1" />
-                        <p className="text-xs text-muted-foreground">Laagste</p>
-                        <p className="font-bold text-green-600">
-                          €{searchResults[0].pricing_stats.lowest_price || '-'}
-                        </p>
+                {(() => {
+                  // Use pricing from V2 response first, fallback to searchResults
+                  const pricing = analysisResult.result.pricing_stats || searchResults[0]?.pricing_stats;
+                  
+                  if (isPricingLoading) {
+                    return (
+                      <div className="flex items-center justify-center py-4 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                        Prijzen laden...
                       </div>
-                      <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-center">
-                        <TrendingUp className="h-4 w-4 mx-auto text-blue-600 mb-1" />
-                        <p className="text-xs text-muted-foreground">Mediaan</p>
-                        <p className="font-bold text-blue-600">
-                          €{searchResults[0].pricing_stats.median_price || '-'}
-                        </p>
-                      </div>
-                      <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg text-center">
-                        <TrendingUp className="h-4 w-4 mx-auto text-orange-600 mb-1" />
-                        <p className="text-xs text-muted-foreground">Hoogste</p>
-                        <p className="font-bold text-orange-600">
-                          €{searchResults[0].pricing_stats.highest_price || '-'}
-                        </p>
-                      </div>
-                    </div>
+                    );
+                  }
+                  
+                  if (pricing && (pricing.lowest_price || pricing.median_price || pricing.highest_price)) {
+                    const formatPrice = (val: string | number | null | undefined): string => {
+                      if (val == null) return '-';
+                      const num = typeof val === 'string' ? parseFloat(val) : val;
+                      return isNaN(num) ? '-' : num.toFixed(2);
+                    };
+                    const numForSale = 'num_for_sale' in pricing ? pricing.num_for_sale : 0;
                     
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>
-                        {searchResults[0].pricing_stats.have_count || 0} hebben | {searchResults[0].pricing_stats.want_count || 0} willen
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => analysisResult.result.discogs_id && retryPricing(analysisResult.result.discogs_id)}
-                        className="h-7 text-xs"
-                      >
-                        <RefreshCw className="h-3 w-3 mr-1" />
-                        Vernieuw
-                      </Button>
-                    </div>
-                  </div>
-                ) : analysisResult.result.discogs_id ? (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground mb-2">Geen prijsdata beschikbaar</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => searchByDiscogsId(analysisResult.result.discogs_id!.toString())}
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Opnieuw proberen
-                    </Button>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Geen Discogs ID gevonden - prijzen niet beschikbaar
-                  </p>
-                )}
+                    return (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg text-center">
+                            <TrendingDown className="h-4 w-4 mx-auto text-green-600 mb-1" />
+                            <p className="text-xs text-muted-foreground">Laagste</p>
+                            <p className="font-bold text-green-600">
+                              €{formatPrice(pricing.lowest_price)}
+                            </p>
+                          </div>
+                          <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-center">
+                            <TrendingUp className="h-4 w-4 mx-auto text-blue-600 mb-1" />
+                            <p className="text-xs text-muted-foreground">Mediaan</p>
+                            <p className="font-bold text-blue-600">
+                              €{formatPrice(pricing.median_price)}
+                            </p>
+                          </div>
+                          <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg text-center">
+                            <TrendingUp className="h-4 w-4 mx-auto text-orange-600 mb-1" />
+                            <p className="text-xs text-muted-foreground">Hoogste</p>
+                            <p className="font-bold text-orange-600">
+                              €{formatPrice(pricing.highest_price)}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>
+                            {numForSale} te koop
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => analysisResult.result.discogs_id && retryPricing(analysisResult.result.discogs_id)}
+                            className="h-7 text-xs"
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            Vernieuw
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  if (analysisResult.result.discogs_id) {
+                    return (
+                      <div className="text-center py-4">
+                        <p className="text-sm text-muted-foreground mb-2">Geen prijsdata beschikbaar</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => searchByDiscogsId(analysisResult.result.discogs_id!.toString())}
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Opnieuw proberen
+                        </Button>
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Geen Discogs ID gevonden - prijzen niet beschikbaar
+                    </p>
+                  );
+                })()}
               </div>
 
               {/* Action Buttons */}

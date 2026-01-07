@@ -781,84 +781,210 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
 
 async function searchDiscogsV2(analysisData: any) {
   try {
-    console.log('🔍 Searching Discogs V2 with enhanced strategy...')
+    console.log('🔍 Searching Discogs V2 with matrix/IFPI verification...')
+    
+    // Log technical identifiers for debugging
+    console.log('📋 Technical identifiers available:', {
+      matrixNumber: analysisData.matrixNumber || analysisData.matrixNumberFull || null,
+      sidCodeMastering: analysisData.sidCodeMastering || null,
+      sidCodeMould: analysisData.sidCodeMould || null,
+      barcode: analysisData.barcode || null,
+      catalogNumber: analysisData.catalogNumber || null,
+      labelCode: analysisData.labelCode || null
+    });
     
     const searchStrategies = [
-      // Strategy 1: Exact catalog number (highest priority)
-      ...(analysisData.catalogNumber ? [analysisData.catalogNumber] : []),
+      // Strategy 1: Barcode (most precise for exact pressing)
+      ...(analysisData.barcode ? [{ query: analysisData.barcode, type: 'barcode' }] : []),
       
-      // Strategy 2: Artist + Title combination
-      ...(analysisData.artist && analysisData.title ? [`${analysisData.artist} ${analysisData.title}`] : []),
+      // Strategy 2: Exact catalog number
+      ...(analysisData.catalogNumber ? [{ query: analysisData.catalogNumber, type: 'catno' }] : []),
       
-      // Strategy 3: Label + Catalog number
-      ...(analysisData.label && analysisData.catalogNumber ? [`${analysisData.label} ${analysisData.catalogNumber}`] : []),
+      // Strategy 3: Matrix number (identifies specific pressing)
+      ...(analysisData.matrixNumber ? [{ query: analysisData.matrixNumber, type: 'matrix' }] : []),
+      ...(analysisData.matrixNumberFull ? [{ query: analysisData.matrixNumberFull, type: 'matrix' }] : []),
       
-      // Strategy 4: Barcode (if available)
-      ...(analysisData.barcode ? [analysisData.barcode] : []),
+      // Strategy 4: Artist + Title combination
+      ...(analysisData.artist && analysisData.title ? [{ query: `${analysisData.artist} ${analysisData.title}`, type: 'general' }] : []),
       
-      // Strategy 5: Matrix number (for vinyl)
-      ...(analysisData.matrixNumber ? [analysisData.matrixNumber] : []),
+      // Strategy 5: Label + Catalog number
+      ...(analysisData.label && analysisData.catalogNumber ? [{ query: `${analysisData.label} ${analysisData.catalogNumber}`, type: 'label_catno' }] : []),
       
       // Strategy 6: Additional search terms
-      ...(analysisData.searchQueries || [])
+      ...(analysisData.searchQueries || []).map((q: string) => ({ query: q, type: 'alternative' }))
     ]
 
     let bestMatch = null
     let highestConfidence = 0
+    let verifiedByMatrix = false
     const searchMetadata = {
-      strategies: [],
+      strategies: [] as any[],
       totalSearches: 0,
-      bestStrategy: null
+      bestStrategy: null as string | null,
+      matrixVerified: false,
+      technicalMatches: {
+        barcode: false,
+        matrix: false,
+        sidCode: false
+      }
     }
 
-    for (const [index, query] of searchStrategies.entries()) {
+    for (const [index, strategyItem] of searchStrategies.entries()) {
+      const { query, type } = strategyItem as { query: string; type: string }
       if (!query || query.trim().length < 2) continue
       
-      console.log(`🔍 V2 Strategy ${index + 1}: "${query}"`)
+      console.log(`🔍 V2 Strategy ${index + 1} (${type}): "${query}"`)
       searchMetadata.totalSearches++
       
-      const response = await fetch(
-        `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release`,
-        {
-          headers: {
-            'User-Agent': 'VinylScanApp/2.0',
-            'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
-          }
+      // Build search URL with type-specific parameters
+      let searchUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release`
+      if (type === 'barcode') {
+        searchUrl = `https://api.discogs.com/database/search?barcode=${encodeURIComponent(query)}&type=release`
+      } else if (type === 'catno') {
+        searchUrl = `https://api.discogs.com/database/search?catno=${encodeURIComponent(query)}&type=release`
+      }
+      
+      const response = await fetch(searchUrl, {
+        headers: {
+          'User-Agent': 'VinylScanApp/2.0',
+          'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
         }
-      )
+      })
 
       if (response.ok) {
         const data = await response.json()
         
         if (data.results && data.results.length > 0) {
-          for (const match of data.results.slice(0, 3)) { // Check top 3 results
-            const confidence = calculateConfidenceV2(match, analysisData, index)
+          // For each candidate, fetch detailed release info to verify matrix/IFPI
+          for (const match of data.results.slice(0, 5)) {
+            let releaseDetails = null
+            let matrixMatch = false
+            let sidMatch = false
+            
+            // Fetch full release details for matrix verification
+            if (analysisData.matrixNumber || analysisData.matrixNumberFull || analysisData.sidCodeMastering || analysisData.sidCodeMould) {
+              try {
+                const releaseResponse = await fetch(`https://api.discogs.com/releases/${match.id}`, {
+                  headers: {
+                    'User-Agent': 'VinylScanApp/2.0',
+                    'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
+                  }
+                });
+                
+                if (releaseResponse.ok) {
+                  releaseDetails = await releaseResponse.json();
+                  
+                  // Check matrix/runout match
+                  if (releaseDetails.identifiers) {
+                    const extractedMatrix = (analysisData.matrixNumber || analysisData.matrixNumberFull || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const extractedSidMastering = (analysisData.sidCodeMastering || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const extractedSidMould = (analysisData.sidCodeMould || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    
+                    for (const identifier of releaseDetails.identifiers) {
+                      const identValue = (identifier.value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                      
+                      // Matrix/Runout match
+                      if (identifier.type === 'Matrix / Runout' && extractedMatrix) {
+                        if (identValue.includes(extractedMatrix) || extractedMatrix.includes(identValue)) {
+                          console.log(`✅ Matrix match found: "${identifier.value}" matches "${analysisData.matrixNumber || analysisData.matrixNumberFull}"`);
+                          matrixMatch = true;
+                          searchMetadata.technicalMatches.matrix = true;
+                        }
+                      }
+                      
+                      // SID Code match
+                      if (identifier.type === 'Mastering SID Code' && extractedSidMastering) {
+                        if (identValue === extractedSidMastering) {
+                          console.log(`✅ SID Mastering match: "${identifier.value}"`);
+                          sidMatch = true;
+                          searchMetadata.technicalMatches.sidCode = true;
+                        }
+                      }
+                      
+                      if (identifier.type === 'Mould SID Code' && extractedSidMould) {
+                        if (identValue === extractedSidMould) {
+                          console.log(`✅ SID Mould match: "${identifier.value}"`);
+                          sidMatch = true;
+                          searchMetadata.technicalMatches.sidCode = true;
+                        }
+                      }
+                    }
+                  }
+                  
+                  // Check barcode match
+                  if (releaseDetails.identifiers && analysisData.barcode) {
+                    const extractedBarcode = analysisData.barcode.replace(/[^0-9]/g, '');
+                    for (const identifier of releaseDetails.identifiers) {
+                      if (identifier.type === 'Barcode' && identifier.value) {
+                        const discogsBarcode = identifier.value.replace(/[^0-9]/g, '');
+                        if (discogsBarcode === extractedBarcode) {
+                          console.log(`✅ Barcode match: "${identifier.value}"`);
+                          searchMetadata.technicalMatches.barcode = true;
+                        }
+                      }
+                    }
+                  }
+                }
+              } catch (detailError) {
+                console.log('⚠️ Could not fetch release details for verification:', detailError);
+              }
+            }
+            
+            // Calculate confidence with technical verification bonus
+            let confidence = calculateConfidenceV2(match, analysisData, index)
+            
+            // Boost confidence significantly for technical matches
+            if (matrixMatch) {
+              confidence = Math.min(confidence + 0.25, 1.0);
+              console.log(`📈 Matrix match bonus applied, confidence now: ${confidence}`);
+            }
+            if (sidMatch) {
+              confidence = Math.min(confidence + 0.15, 1.0);
+              console.log(`📈 SID match bonus applied, confidence now: ${confidence}`);
+            }
+            if (searchMetadata.technicalMatches.barcode) {
+              confidence = Math.min(confidence + 0.2, 1.0);
+              console.log(`📈 Barcode match bonus applied, confidence now: ${confidence}`);
+            }
             
             searchMetadata.strategies.push({
               query,
+              type,
               strategy: index + 1,
               resultsCount: data.results.length,
               confidence,
-              match: match.title
+              match: match.title,
+              matrixVerified: matrixMatch,
+              sidVerified: sidMatch
             })
             
             if (confidence > highestConfidence) {
               highestConfidence = confidence
               bestMatch = match
-              searchMetadata.bestStrategy = index + 1
+              bestMatch.releaseDetails = releaseDetails // Store for pricing context
+              searchMetadata.bestStrategy = `${index + 1} (${type})`
+              verifiedByMatrix = matrixMatch || sidMatch
+              searchMetadata.matrixVerified = verifiedByMatrix
             }
           }
         }
       }
       
+      // Early exit if we have a matrix-verified match
+      if (verifiedByMatrix && highestConfidence > 0.85) {
+        console.log(`🎯 Matrix/SID verified match found (${highestConfidence}), stopping search`)
+        break
+      }
+      
       // Early exit if we have a very high confidence match
-      if (highestConfidence > 0.9) {
-        console.log(`🎯 High confidence match found (${highestConfidence}), stopping search`)
+      if (highestConfidence > 0.95) {
+        console.log(`🎯 Very high confidence match found (${highestConfidence}), stopping search`)
         break
       }
     }
 
     if (bestMatch) {
+      console.log(`✅ Best match found: ${bestMatch.title} (ID: ${bestMatch.id}, confidence: ${highestConfidence}, matrix verified: ${verifiedByMatrix})`);
       return {
         discogsId: bestMatch.id,
         discogsUrl: `https://www.discogs.com/release/${bestMatch.id}`,
@@ -868,6 +994,7 @@ async function searchDiscogsV2(analysisData: any) {
         catalogNumber: bestMatch.catno || analysisData.catalogNumber,
         year: bestMatch.year || analysisData.year,
         confidence: highestConfidence,
+        matrixVerified: verifiedByMatrix,
         searchMetadata
       }
     }
@@ -881,7 +1008,8 @@ async function searchDiscogsV2(analysisData: any) {
       label: analysisData.label,
       catalogNumber: analysisData.catalogNumber,
       year: analysisData.year,
-      confidence: Math.max(analysisData.confidence * 0.3, 0.1), // Reduced confidence for no match
+      confidence: Math.max(analysisData.confidence * 0.3, 0.1),
+      matrixVerified: false,
       searchMetadata
     }
 
@@ -897,6 +1025,7 @@ async function searchDiscogsV2(analysisData: any) {
       catalogNumber: analysisData.catalogNumber,
       year: analysisData.year,
       confidence: 0.1,
+      matrixVerified: false,
       searchMetadata: { error: error.message }
     }
   }

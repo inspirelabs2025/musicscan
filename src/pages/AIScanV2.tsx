@@ -38,6 +38,11 @@ interface AnalysisResult {
     ai_description: string;
     image_quality?: string;
     extracted_details?: any;
+    // Technical identifiers
+    matrix_number?: string | null;
+    barcode?: string | null;
+    genre?: string | null;
+    country?: string | null;
   };
   version: string;
 }
@@ -535,8 +540,20 @@ export default function AIScanV2() {
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="font-semibold">V2 Details</h3>
+                  <h3 className="font-semibold">Technische Details</h3>
                   <div className="space-y-1 text-sm">
+                    {analysisResult.result.matrix_number && (
+                      <div><strong>Matrix Nr:</strong> {analysisResult.result.matrix_number}</div>
+                    )}
+                    {analysisResult.result.barcode && (
+                      <div><strong>Barcode:</strong> {analysisResult.result.barcode}</div>
+                    )}
+                    {analysisResult.result.genre && (
+                      <div><strong>Genre:</strong> {analysisResult.result.genre}</div>
+                    )}
+                    {analysisResult.result.country && (
+                      <div><strong>Land:</strong> {analysisResult.result.country}</div>
+                    )}
                     {analysisResult.result.image_quality && (
                       <div><strong>Beeld kwaliteit:</strong> {analysisResult.result.image_quality}</div>
                     )}

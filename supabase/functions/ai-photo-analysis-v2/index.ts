@@ -180,9 +180,22 @@ serve(async (req) => {
 
       // Pass 2: Detail extraction
       const detailAnalysis = await analyzePhotosWithOpenAI(photoUrls, mediaType, 'details')
-      
+
+      // Pass 3 (CD only): Dedicated inner-ring matrix/SID extraction
+      const matrixAnalysis = mediaType === 'cd'
+        ? await analyzePhotosWithOpenAI(photoUrls, mediaType, 'matrix')
+        : null
+
+      if (matrixAnalysis && !matrixAnalysis.success) {
+        console.log('⚠️ Matrix pass failed (continuing):', matrixAnalysis.error)
+      }
+
       // Merge analysis results
-      const combinedData = mergeAnalysisResults(generalAnalysis.data, detailAnalysis.data)
+      const combinedData = mergeAnalysisResults(
+        generalAnalysis.data,
+        detailAnalysis.success ? detailAnalysis.data : null,
+        matrixAnalysis?.success ? matrixAnalysis.data : null
+      )
       
       // Update with analysis progress
       await supabase
@@ -192,7 +205,10 @@ serve(async (req) => {
             version: 'v2', 
             phase: 'analysis_complete',
             generalAnalysis: generalAnalysis.data,
-            detailAnalysis: detailAnalysis.data,
+            detailAnalysis: detailAnalysis.success ? detailAnalysis.data : { error: detailAnalysis.error },
+            matrixAnalysis: matrixAnalysis
+              ? (matrixAnalysis.success ? matrixAnalysis.data : { error: matrixAnalysis.error })
+              : null,
             combined: combinedData
           }
         })
@@ -357,7 +373,7 @@ serve(async (req) => {
   }
 })
 
-async function analyzePhotosWithOpenAI(photoUrls: string[], mediaType: string, analysisType: 'general' | 'details') {
+async function analyzePhotosWithOpenAI(photoUrls: string[], mediaType: string, analysisType: 'general' | 'details' | 'matrix') {
   try {
     console.log(`🔍 Running ${analysisType} analysis with OpenAI Vision V2...`)
 
@@ -435,7 +451,7 @@ async function analyzePhotosWithOpenAI(photoUrls: string[], mediaType: string, a
   }
 }
 
-function getSystemPrompt(mediaType: string, analysisType: 'general' | 'details'): string {
+function getSystemPrompt(mediaType: string, analysisType: 'general' | 'details' | 'matrix'): string {
   const basePrompt = `You are an expert music release identification specialist with deep knowledge of ${mediaType === 'vinyl' ? 'vinyl records, LPs, and vinyl production' : 'CDs and optical disc production'}. `
 
   if (analysisType === 'general') {
@@ -458,8 +474,48 @@ RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
 }
 
 Focus on the primary release identification. Be extremely accurate with text extraction.`
-  } else {
-    return basePrompt + `Your task is to extract detailed technical information and small text details.
+  }
+
+  if (analysisType === 'matrix') {
+    return basePrompt + `You are performing a dedicated OCR pass for CD INNER RING identifiers.
+
+CRITICAL RULES:
+- Only output what you can actually SEE in the inner ring.
+- DO NOT invent missing characters. If unclear, use "?" in-place.
+- Do NOT copy example values.
+- Keep spaces, hyphens, stars, dots, and symbols exactly as seen.
+
+For CDs, carefully distinguish between these DIFFERENT identifiers:
+
+**MATRIX NUMBER** (CRITICAL - located in INNER RING of disc):
+- Text ENGRAVED/ETCHED in the transparent inner ring near the center hole
+- Often appears in multiple segments around the ring (top/bottom)
+- Return BOTH top-arc and bottom-arc readings when possible
+
+**SID CODES**:
+- IFPI Mastering SID: starts with "IFPI L" (e.g., "IFPI L123")
+- IFPI Mould SID: starts with "IFPI" + 4 chars NOT starting with L (e.g., "IFPI 0123")
+
+**LABEL CODE**:
+- "LC" followed by 4-5 digits (e.g., "LC 0309")
+
+RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
+{
+  "matrixNumberFull": "best full continuous reading (use ? for unclear) or null",
+  "matrixNumberTopArc": "top arc reading or null",
+  "matrixNumberBottomArc": "bottom arc reading or null",
+  "sidCodeMastering": "IFPI L... code or null",
+  "sidCodeMould": "IFPI ... code (not starting with L) or null",
+  "labelCode": "LC xxxx code or null",
+  "confidence": number between 0-1,
+  "notes": "brief notes about readability / uncertain parts"
+}
+
+Prioritize inner-ring text over printed tracklist text.`
+  }
+
+  // details
+  return basePrompt + `Your task is to extract detailed technical information and small text details.
 
 ${mediaType === 'vinyl' ? `For VINYL, pay special attention to:
 - Matrix numbers (etched in runout groove)
@@ -471,21 +527,19 @@ ${mediaType === 'vinyl' ? `For VINYL, pay special attention to:
 **MATRIX NUMBER** (CRITICAL - located in INNER RING of disc):
 - This is text ENGRAVED/ETCHED in the transparent inner ring near the center hole
 - NOT the same as catalog number printed on the label!
-- Often includes: catalog number + pressing codes + country + manufacturer
-- Example: "MADE IN GERMANY BY PDO 835 268-2 01 ✓" or "835 268-2 02 DOC"
-- Read the FULL engraved text, not just part of it
+- Read the FULL engraved text. If unclear, use "?" or return null.
+- Do NOT copy example values.
 
 **SID CODES** (small codes in mirror band/inner ring):
-- IFPI Mastering SID: starts with "IFPI L" followed by 3-4 characters (e.g., "IFPI L123")
-- IFPI Mould SID: starts with "IFPI" + 4 characters NOT starting with L (e.g., "IFPI 0123")
+- IFPI Mastering SID: starts with "IFPI L" followed by 3-4 characters
+- IFPI Mould SID: starts with "IFPI" + 4 characters NOT starting with L
 
 **CATALOG NUMBER** (on printed label area):
 - The number printed on the paper label or case
-- This is DIFFERENT from the engraved matrix number
 
 **OTHER CODES**:
 - Barcode: usually on case back
-- Label Code: "LC" followed by 4-5 digits (e.g., "LC 0309")`}
+- Label Code: "LC" followed by 4-5 digits`}
 
 RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
 {
@@ -506,48 +560,62 @@ RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
 }
 
 Use OCR-like precision for reading small text and codes.`
-  }
 }
 
-function getUserPrompt(mediaType: string, analysisType: 'general' | 'details'): string {
+function getUserPrompt(mediaType: string, analysisType: 'general' | 'details' | 'matrix'): string {
   if (analysisType === 'general') {
     return `Analyze these ${mediaType} images and identify the music release. Extract the main information like artist, title, label, and catalog number. Provide multiple search terms that would help find this exact release on Discogs. Assess image quality for text readability.`
-  } else {
-    return `Examine these ${mediaType} images for detailed technical information. Look for small text, codes, matrix numbers, barcodes, and any markings that might help with precise identification. Extract ALL visible text, even if partially obscured.`
   }
+
+  if (analysisType === 'matrix') {
+    return `Focus ONLY on CD inner ring / mirror band text and codes. Read the matrix number segment-by-segment around the ring (top arc + bottom arc if present). Use '?' for unclear characters. Do not guess missing parts.`
+  }
+
+  return `Examine these ${mediaType} images for detailed technical information. Look for small text, codes, matrix numbers, barcodes, and any markings that might help with precise identification. Extract ALL visible text, even if partially obscured.`
 }
 
-function mergeAnalysisResults(generalData: any, detailData: any) {
+function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: any) {
+  const matrixFromMatrixPass =
+    matrixData?.matrixNumberFull ||
+    [matrixData?.matrixNumberTopArc, matrixData?.matrixNumberBottomArc]
+      .filter(Boolean)
+      .join(' | ') ||
+    null
+
   return {
     // Primary fields from general analysis
-    artist: generalData.artist,
-    title: generalData.title,
-    label: generalData.label,
-    catalogNumber: generalData.catalogNumber,
-    year: generalData.year,
-    genre: generalData.genre,
-    format: generalData.format,
-    country: generalData.country,
-    
-    // Technical details from detail analysis
-    matrixNumber: detailData?.matrixNumber,
-    sidCodeMastering: detailData?.sidCodeMastering,
-    sidCodeMould: detailData?.sidCodeMould,
-    labelCode: detailData?.labelCode,
-    barcode: detailData?.barcode,
-    extractedText: [...(generalData.searchQueries || []), ...(detailData?.extractedText || [])],
-    
+    artist: generalData?.artist ?? null,
+    title: generalData?.title ?? null,
+    label: generalData?.label ?? null,
+    catalogNumber: generalData?.catalogNumber ?? null,
+    year: generalData?.year ?? null,
+    genre: generalData?.genre ?? null,
+    format: generalData?.format ?? null,
+    country: generalData?.country ?? null,
+
+    // Technical details (prefer dedicated matrix pass)
+    matrixNumber: matrixFromMatrixPass || detailData?.matrixNumber || null,
+    sidCodeMastering: matrixData?.sidCodeMastering ?? detailData?.sidCodeMastering ?? null,
+    sidCodeMould: matrixData?.sidCodeMould ?? detailData?.sidCodeMould ?? null,
+    labelCode: matrixData?.labelCode ?? detailData?.labelCode ?? null,
+    barcode: detailData?.barcode ?? null,
+
+    extractedText: [
+      ...(generalData?.searchQueries || []),
+      ...(detailData?.extractedText || [])
+    ],
+
     // Combined metadata
-    confidence: Math.max(generalData.confidence || 0, 0.1),
-    description: generalData.description,
-    imageQuality: generalData.imageQuality || 'fair',
+    confidence: Math.max(generalData?.confidence || 0, 0.1),
+    description: generalData?.description ?? null,
+    imageQuality: generalData?.imageQuality || 'fair',
     extractedDetails: detailData?.extractedDetails,
-    
+
     // Enhanced search queries
     searchQueries: [
-      ...(generalData.searchQueries || []),
+      ...(generalData?.searchQueries || []),
       ...(detailData?.alternativeSearchTerms || [])
-    ].filter((query, index, array) => array.indexOf(query) === index) // Remove duplicates
+    ].filter((query, index, array) => array.indexOf(query) === index)
   }
 }
 

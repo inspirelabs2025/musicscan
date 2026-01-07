@@ -16,6 +16,7 @@ import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
+import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 
 // Simple V2 components for media type and condition selection
 

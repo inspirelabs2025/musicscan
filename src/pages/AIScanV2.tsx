@@ -402,6 +402,7 @@ export default function AIScanV2() {
                   <input
                     type="file"
                     accept="image/*"
+                    capture="environment"
                     multiple
                     onChange={handleFileUpload}
                     className="hidden"

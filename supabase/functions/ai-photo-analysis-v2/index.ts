@@ -440,6 +440,32 @@ async function toOpenAIImageUrl(url: string, opts?: { width?: number; quality?: 
   }
 }
 
+function parsePossiblyBrokenJson(raw: string): any {
+  const s = (raw ?? '').trim()
+
+  // 1) Normal strict JSON
+  try {
+    return JSON.parse(s)
+  } catch {
+    // continue
+  }
+
+  // 2) Extract first JSON object and sanitize common issues like unescaped newlines in strings
+  const start = s.indexOf('{')
+  const end = s.lastIndexOf('}')
+  if (start !== -1 && end !== -1 && end > start) {
+    const candidate = s
+      .slice(start, end + 1)
+      .replace(/\r/g, ' ')
+      .replace(/\n/g, ' ')
+      .replace(/\t/g, ' ')
+
+    return JSON.parse(candidate)
+  }
+
+  throw new Error('No JSON object found in model output')
+}
+
 async function analyzePhotosWithOpenAI(
   photoUrls: string[],
   mediaType: string,
@@ -523,12 +549,21 @@ async function analyzePhotosWithOpenAI(
 
     console.log(`🤖 OpenAI ${analysisType} analysis V2:`, analysis)
 
-    // Parse JSON response
+    const finishReason = data.choices?.[0]?.finish_reason
+    if (finishReason === 'length') {
+      console.error('❌ OpenAI response truncated (finish_reason=length)', { analysisType, mediaType })
+      throw new Error('OpenAI response was truncated (length).')
+    }
+
+    // Parse JSON response (defensive: the model sometimes returns JSON with unescaped newlines)
     let parsedAnalysis
     try {
-      parsedAnalysis = JSON.parse(analysis)
+      parsedAnalysis = parsePossiblyBrokenJson(analysis)
     } catch (parseError) {
-      console.error('❌ Failed to parse JSON response:', parseError)
+      console.error('❌ Failed to parse JSON response:', {
+        parseError,
+        analysisPreview: analysis.slice(0, 800),
+      })
       throw new Error('Invalid JSON response from OpenAI')
     }
 

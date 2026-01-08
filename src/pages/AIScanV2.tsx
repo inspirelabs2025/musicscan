@@ -123,11 +123,14 @@ export default function AIScanV2() {
   }, []);
 
   const uploadToSupabase = async (file: File): Promise<string> => {
-    const fileName = `ai-scan-v2/${Date.now()}-${file.name}`;
+    // Generate unique filename with timestamp + random ID to prevent "resource already exists" errors on mobile
+    const uniqueId = Math.random().toString(36).substring(2, 10);
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fileName = `ai-scan-v2/${Date.now()}-${uniqueId}-${safeFileName}`;
     
     const { data, error } = await supabase.storage
       .from('vinyl_images')
-      .upload(fileName, file);
+      .upload(fileName, file, { upsert: true });
 
     if (error) {
       throw new Error(`Upload failed: ${error.message}`);

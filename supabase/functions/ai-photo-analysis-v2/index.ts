@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { encodeBase64 } from "https://deno.land/std@0.168.0/encoding/base64.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,14 +52,14 @@ serve(async (req) => {
     // Extract JWT token and get user info
     const jwt = authHeader.replace('Bearer ', '')
     console.log('🔐 Attempting to get user from JWT token...')
-    
+
     const { data: { user }, error: userError } = await supabase.auth.getUser(jwt)
-    
+
     if (userError) {
       console.error('❌ User authentication error:', userError)
       throw new Error(`Invalid authentication token: ${userError.message}`)
     }
-    
+
     if (!user) {
       console.error('❌ No user found in token')
       throw new Error('Invalid authentication token: No user found')
@@ -72,7 +73,7 @@ serve(async (req) => {
 
     // Check AI scan usage limits
     console.log('🔍 Checking AI scan usage limits for user:', user.id)
-    
+
     const { data: usageCheck, error: usageError } = await supabase.rpc('check_usage_limit', {
       p_user_id: user.id,
       p_usage_type: 'ai_scans'
@@ -88,7 +89,7 @@ serve(async (req) => {
 
     if (!limitCheck.can_use) {
       console.log(`🚫 Usage limit reached: ${limitCheck.current_usage}/${limitCheck.limit_amount} for ${limitCheck.plan_name}`);
-      
+
       return new Response(JSON.stringify({
         error: 'USAGE_LIMIT_EXCEEDED',
         message: `Je hebt je limiet van ${limitCheck.limit_amount} AI scans deze maand bereikt. Upgrade je plan voor meer scans.`,
@@ -107,9 +108,9 @@ serve(async (req) => {
 
     const { photoUrls, mediaType, conditionGrade }: AnalysisRequest = await req.json()
 
-    console.log('🤖 Starting AI photo analysis V2 for:', { 
-      photoCount: photoUrls.length, 
-      mediaType, 
+    console.log('🤖 Starting AI photo analysis V2 for:', {
+      photoCount: photoUrls.length,
+      mediaType,
       conditionGrade,
       userId: user.id,
       userEmail: user.email
@@ -119,7 +120,7 @@ serve(async (req) => {
     console.log('📝 Creating scan record in database...')
     console.log('🔍 User ID being inserted:', user.id)
     console.log('🔍 User ID type:', typeof user.id)
-    
+
     const insertData = {
       user_id: user.id,
       photo_urls: photoUrls,
@@ -128,9 +129,9 @@ serve(async (req) => {
       status: 'pending',
       analysis_data: { version: 'v2', phase: 'initialization' }
     }
-    
+
     console.log('📦 Insert data being sent:', insertData)
-    
+
     const { data: scanRecord, error: insertError } = await supabase
       .from('ai_scan_results')
       .insert(insertData)
@@ -155,10 +156,10 @@ serve(async (req) => {
     try {
       // Multi-pass analysis
       console.log('🔍 Starting multi-pass analysis...')
-      
+
       // Pass 1: General release identification
       const generalAnalysis = await analyzePhotosWithOpenAI(photoUrls, mediaType, 'general')
-      
+
       if (!generalAnalysis.success) {
         await supabase
           .from('ai_scan_results')
@@ -169,10 +170,10 @@ serve(async (req) => {
           .eq('id', scanId)
 
         return new Response(
-          JSON.stringify({ 
-            success: false, 
+          JSON.stringify({
+            success: false,
             error: generalAnalysis.error,
-            scanId 
+            scanId
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -196,13 +197,13 @@ serve(async (req) => {
         detailAnalysis.success ? detailAnalysis.data : null,
         matrixAnalysis?.success ? matrixAnalysis.data : null
       )
-      
+
       // Update with analysis progress
       await supabase
         .from('ai_scan_results')
         .update({
-          analysis_data: { 
-            version: 'v2', 
+          analysis_data: {
+            version: 'v2',
             phase: 'analysis_complete',
             generalAnalysis: generalAnalysis.data,
             detailAnalysis: detailAnalysis.success ? detailAnalysis.data : { error: detailAnalysis.error },
@@ -286,13 +287,13 @@ serve(async (req) => {
               item_type: 'ai_scan' // Flag to indicate this is for ai_scan_results table
             }
           });
-          
+
           if (artworkData?.artwork_url) {
             // Update scan record with artwork
             await supabase.from('ai_scan_results')
               .update({ artwork_url: artworkData.artwork_url })
               .eq('id', scanId);
-            
+
             console.log('✅ Artwork enrichment completed:', artworkData.artwork_url);
           } else {
             console.log('ℹ️ No artwork found during enrichment');
@@ -308,7 +309,7 @@ serve(async (req) => {
         try {
           console.log('💰 Starting pricing fetch for Discogs ID:', discogsResult.discogsId);
           pricingStats = await fetchDiscogsPricing(discogsResult.discogsId);
-          
+
           if (pricingStats) {
             console.log('✅ Pricing data fetched:', pricingStats);
           } else {
@@ -353,7 +354,7 @@ serve(async (req) => {
 
     } catch (error) {
       console.error('❌ Error during V2 analysis:', error)
-      
+
       await supabase
         .from('ai_scan_results')
         .update({
@@ -364,15 +365,15 @@ serve(async (req) => {
         .eq('id', scanId)
 
       return new Response(
-        JSON.stringify({ 
-          success: false, 
+        JSON.stringify({
+          success: false,
           error: error.message,
           scanId,
           version: 'v2'
         }),
-        { 
+        {
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -380,17 +381,64 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Request error:', error)
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message,
         details: 'Authentication or request processing failed'
       }),
-      { 
+      {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
   }
 })
+
+function toSupabaseRenderImageUrl(url: string, width = 1600, quality = 70): string {
+  // Convert Supabase public object URLs into resized render URLs to avoid huge image downloads/timeouts.
+  // Example:
+  // /storage/v1/object/public/<bucket>/<path>
+  // -> /storage/v1/render/image/public/<bucket>/<path>?width=1600&quality=70
+  if (!url.includes('/storage/v1/object/public/')) return url
+
+  const renderUrl = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/')
+  const joinChar = renderUrl.includes('?') ? '&' : '?'
+  return `${renderUrl}${joinChar}width=${width}&quality=${quality}`
+}
+
+async function toOpenAIImageUrl(url: string, opts?: { width?: number; quality?: number; maxBytes?: number }): Promise<string> {
+  const width = opts?.width ?? 1600
+  const quality = opts?.quality ?? 70
+  const maxBytes = opts?.maxBytes ?? 2_500_000 // safety guard to avoid huge OpenAI payloads
+
+  const candidateUrl = toSupabaseRenderImageUrl(url, width, quality)
+
+  try {
+    const res = await fetch(candidateUrl)
+    if (!res.ok) {
+      throw new Error(`fetch failed: ${res.status}`)
+    }
+
+    const contentType = res.headers.get('content-type') ?? 'image/jpeg'
+    const bytes = new Uint8Array(await res.arrayBuffer())
+
+    if (bytes.byteLength > maxBytes) {
+      console.log('⚠️ Image too large for data URL, falling back to URL:', {
+        bytes: bytes.byteLength,
+        maxBytes,
+        candidateUrl: candidateUrl.slice(0, 200)
+      })
+      return candidateUrl
+    }
+
+    return `data:${contentType};base64,${encodeBase64(bytes)}`
+  } catch (e) {
+    console.log('⚠️ Failed to build data URL, falling back to URL:', {
+      error: e?.message ?? String(e),
+      candidateUrl: candidateUrl.slice(0, 200)
+    })
+    return candidateUrl
+  }
+}
 
 async function analyzePhotosWithOpenAI(
   photoUrls: string[],
@@ -406,6 +454,12 @@ async function analyzePhotosWithOpenAI(
       if (analysisType === 'matrix') return photoUrls.slice(0, 3)
       return photoUrls
     })()
+
+    // For matrix pass we embed resized images as data URLs.
+    // This prevents OpenAI from timing out while downloading from Supabase Storage (common on mobile high-res photos).
+    const openAiImageUrls = analysisType === 'matrix'
+      ? await Promise.all(urlsForPass.map((url) => toOpenAIImageUrl(url, { width: 1800, quality: 70 })))
+      : urlsForPass.map((url) => toSupabaseRenderImageUrl(url, 1600, 70))
 
     // Media-specific prompts with structured output
     const systemPrompt = getSystemPrompt(mediaType, analysisType)
@@ -431,7 +485,7 @@ async function analyzePhotosWithOpenAI(
                 type: 'text',
                 text: userPrompt,
               },
-              ...urlsForPass.map((url) => ({
+              ...openAiImageUrls.map((url) => ({
                 type: 'image_url',
                 image_url: {
                   url,
@@ -453,7 +507,7 @@ async function analyzePhotosWithOpenAI(
         status: response.status,
         analysisType,
         mediaType,
-        urlsSent: urlsForPass.length,
+        urlsSent: openAiImageUrls.length,
         body: errText?.slice(0, 2000) || null,
       })
       throw new Error(`OpenAI API error: ${response.status}${errText ? ` - ${errText}` : ''}`)

@@ -405,39 +405,59 @@ function toSupabaseRenderImageUrl(url: string, width = 1600, quality = 70): stri
   return `${renderUrl}${joinChar}width=${width}&quality=${quality}`
 }
 
-async function toOpenAIImageUrl(url: string, opts?: { width?: number; quality?: number; maxBytes?: number }): Promise<string> {
-  const width = opts?.width ?? 1600
-  const quality = opts?.quality ?? 70
+async function toOpenAIImageUrl(
+  url: string,
+  opts?: { width?: number; quality?: number; maxBytes?: number }
+): Promise<string> {
   const maxBytes = opts?.maxBytes ?? 2_500_000 // safety guard to avoid huge OpenAI payloads
+  const quality = opts?.quality ?? 70
 
-  const candidateUrl = toSupabaseRenderImageUrl(url, width, quality)
+  // Try progressively smaller renders until the image fits.
+  const preferredWidth = opts?.width ?? 1600
+  const widths = [preferredWidth, 1400, 1200, 1000, 800, 640]
+    .filter((v, i, arr) => arr.indexOf(v) === i)
+    .filter((v) => v > 0)
 
-  try {
-    const res = await fetch(candidateUrl)
-    if (!res.ok) {
-      throw new Error(`fetch failed: ${res.status}`)
+  let lastError: string | null = null
+
+  for (const width of widths) {
+    const candidateUrl = toSupabaseRenderImageUrl(url, width, quality)
+
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const res = await fetch(candidateUrl)
+        if (!res.ok) throw new Error(`fetch failed: ${res.status}`)
+
+        const contentType = res.headers.get('content-type') ?? 'image/jpeg'
+        const bytes = new Uint8Array(await res.arrayBuffer())
+
+        if (bytes.byteLength > maxBytes) {
+          console.log('⚠️ Image too large, trying smaller resize:', {
+            bytes: bytes.byteLength,
+            maxBytes,
+            width,
+            candidateUrl: candidateUrl.slice(0, 160),
+          })
+          break // try next smaller width
+        }
+
+        return `data:${contentType};base64,${encodeBase64(bytes)}`
+      } catch (e) {
+        lastError = e?.message ?? String(e)
+        console.log('⚠️ Failed to fetch/encode image for OpenAI:', {
+          attempt,
+          width,
+          error: lastError,
+          candidateUrl: candidateUrl.slice(0, 160),
+        })
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, attempt * 250))
+        }
+      }
     }
-
-    const contentType = res.headers.get('content-type') ?? 'image/jpeg'
-    const bytes = new Uint8Array(await res.arrayBuffer())
-
-    if (bytes.byteLength > maxBytes) {
-      console.log('⚠️ Image too large for data URL, falling back to URL:', {
-        bytes: bytes.byteLength,
-        maxBytes,
-        candidateUrl: candidateUrl.slice(0, 200)
-      })
-      return candidateUrl
-    }
-
-    return `data:${contentType};base64,${encodeBase64(bytes)}`
-  } catch (e) {
-    console.log('⚠️ Failed to build data URL, falling back to URL:', {
-      error: e?.message ?? String(e),
-      candidateUrl: candidateUrl.slice(0, 200)
-    })
-    return candidateUrl
   }
+
+  throw new Error(`Failed to prepare image for OpenAI: ${lastError ?? 'unknown error'}`)
 }
 
 function parsePossiblyBrokenJson(raw: string): any {
@@ -481,11 +501,16 @@ async function analyzePhotosWithOpenAI(
       return photoUrls
     })()
 
-    // For matrix pass we embed resized images as data URLs.
-    // This prevents OpenAI from timing out while downloading from Supabase Storage (common on mobile high-res photos).
-    const openAiImageUrls = analysisType === 'matrix'
-      ? await Promise.all(urlsForPass.map((url) => toOpenAIImageUrl(url, { width: 1800, quality: 70 })))
-      : urlsForPass.map((url) => toSupabaseRenderImageUrl(url, 1600, 70))
+    // We embed resized images as data URLs for ALL passes.
+    // This prevents OpenAI from timing out while downloading from Supabase Storage URLs.
+    const openAiImageUrls = await Promise.all(
+      urlsForPass.map((url) =>
+        toOpenAIImageUrl(url, {
+          width: analysisType === 'matrix' ? 1800 : 1400,
+          quality: 70,
+        })
+      )
+    )
 
     // Media-specific prompts with structured output
     const systemPrompt = getSystemPrompt(mediaType, analysisType)

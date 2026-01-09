@@ -157,15 +157,19 @@ export const ScannerResultCard = React.memo(({ result, status }: ScannerResultCa
               </p>
             )}
 
-            {/* Discogs link */}
-            {result.discogs_url && (
+            {/* Discogs link - always show if we have discogs_id or discogs_url */}
+            {(result.discogs_url || result.discogs_id) && (
               <Button
                 variant="link"
                 size="sm"
                 className="h-auto p-0 text-xs"
                 asChild
               >
-                <a href={result.discogs_url} target="_blank" rel="noopener noreferrer">
+                <a 
+                  href={result.discogs_url || `https://www.discogs.com/release/${result.discogs_id}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Bekijk op Discogs
                 </a>

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useWakeLock } from '@/hooks/useWakeLock';
 
 // Convert File to base64 data URL
 const fileToBase64 = (file: File): Promise<string> => {
@@ -33,6 +34,31 @@ const convertToUrls = async (inputs: (string | File)[]): Promise<string[]> => {
 export const useCDAnalysis = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const wakeLock = useWakeLock();
+
+  // Show warning when leaving page during analysis
+  useEffect(() => {
+    if (!isAnalyzing) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = 'Analyse is nog bezig. Weet je zeker dat je wilt verlaten?';
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && isAnalyzing) {
+        console.log('⚠️ Page hidden during CD analysis - wake lock should keep process alive');
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAnalyzing]);
 
   const analyzeImages = async (imageInputs: (string | File)[]) => {
     if (imageInputs.length < 2) {
@@ -45,6 +71,9 @@ export const useCDAnalysis = () => {
     }
 
     setIsAnalyzing(true);
+    
+    // Request wake lock to keep screen on during analysis
+    await wakeLock.request();
     
     try {
       // Convert Files to base64 data URLs
@@ -141,6 +170,7 @@ export const useCDAnalysis = () => {
       });
       return null;
     } finally {
+      await wakeLock.release();
       setIsAnalyzing(false);
     }
   };

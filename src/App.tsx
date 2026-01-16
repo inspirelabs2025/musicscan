@@ -292,7 +292,9 @@ const AppContent = () => {
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/set-password" element={<LazyRoute><SetPassword /></LazyRoute>} />
-        
+        {/* Backwards compatibility: old recovery link path */}
+        <Route path="/set-password" element={<LazyRoute><SetPassword /></LazyRoute>} />
+
         {/* LLM routes */}
         <Route path="/.well-known/llms.txt" element={<LazyRoute><LlmsTxt /></LazyRoute>} />
         <Route path="/llms.txt" element={<LazyRoute><LlmsTxt /></LazyRoute>} />

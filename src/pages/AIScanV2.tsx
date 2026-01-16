@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info } from 'lucide-react';
+import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -374,7 +374,8 @@ export default function AIScanV2() {
                   </p>
                   <input type="file" accept="image/*" capture="environment" multiple onChange={handleFileUpload} className="hidden" id="file-upload-v2" />
                   <Button asChild variant="outline">
-                    <label htmlFor="file-upload-v2" className="cursor-pointer">
+                    <label htmlFor="file-upload-v2" className="cursor-pointer flex items-center gap-2">
+                      <Camera className="h-4 w-4" />
                       Foto's
                     </label>
                   </Button>

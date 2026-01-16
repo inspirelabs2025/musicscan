@@ -45,41 +45,17 @@ const Home = () => {
       return shuffleArray(allOfType).slice(0, count);
     };
 
-    // NIEUWS: Pak de 2 laatste nieuwsberichten
-    const latestNews = newsItems.filter(i => i.type === 'news' && i.id !== excludedId).slice(0, 2);
-
-    // MUZIEKGESCHIEDENIS: meerdere items van vandaag (als beschikbaar)
-    const historyItems = (() => {
-      const picks = getRandomFromType('history', 3);
-      if (picks.length) return picks;
-      // Fallback met datum van vandaag
-      const today = new Date();
-      const monthNames = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
-      return [
-        {
-          id: 'history-promo',
-          type: 'history' as const,
-          title: `📅 ${today.getDate()} ${monthNames[today.getMonth()]}`,
-          subtitle: 'Ontdek wat er vandaag in de muziekgeschiedenis gebeurde',
-          image_url: undefined,
-          category_label: 'MUZIEKGESCHIEDENIS',
-          link: '/vandaag-in-de-muziekgeschiedenis',
-          date: new Date().toISOString(),
-        },
-      ];
-    })();
-
     // Random keuze tussen poster of canvas voor ART
     const artType = Math.random() > 0.5 ? 'poster' : 'canvas';
 
     // Bouw de grid met echte random items uit ALLE beschikbare content
+    // REMOVED: news, history, quiz
     const items = shuffleArray([
       ...getRandomFromType('single', 2, true),     // 2 Singles (met artwork)
       ...getRandomFromType('artist', 2),           // 2 Artist verhalen
       ...getRandomFromType('album', 2),            // 2 Album verhalen
       ...getRandomFromType('release', 2),          // 2 Nieuwe releases
       ...getRandomFromType('youtube', 2),          // 2 Videos
-      ...historyItems,                              // Muziekgeschiedenis (meerdere)
       ...getRandomFromType('review', 1),           // 1 Review
       ...getRandomFromType('spotlight', 1),        // 1 Artiest Spotlight
       ...getRandomFromType('studio', 1),           // 1 Studio Story
@@ -87,11 +63,9 @@ const Home = () => {
       ...getRandomFromType('podcast', 1),          // 1 Podcast
       ...getRandomFromType('concert', 1),          // 1 Concert/Event
       ...getRandomFromType('fanwall', 2, true),    // 2 Fanwall (met afbeelding)
-      ...latestNews,                                // 2 Nieuwsitems
       ...getRandomFromType('product', 1),          // 1 Product
       ...getRandomFromType('metal_print', 1),      // 1 Metal Print
       ...getRandomFromType(artType, 1),            // 1 Poster OF Canvas
-      ...getRandomFromType('quiz', 1),             // 1 Quiz van de dag
     ]).filter(item => item?.id !== heroItem?.id);
 
     return items;

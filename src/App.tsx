@@ -338,6 +338,7 @@ const AppContent = () => {
         <Route path="/product/:slug" element={<LazyRoute><PlatformProductDetail /></LazyRoute>} />
         <Route path="/art-shop" element={<LazyRoute><ArtShop /></LazyRoute>} />
         <Route path="/metaalprints" element={<LazyRoute><ArtShop /></LazyRoute>} />
+        <Route path="/metal-prints" element={<LazyRoute><ArtShop /></LazyRoute>} />
         <Route path="/posters" element={<LazyRoute><PosterShop /></LazyRoute>} />
         <Route path="/canvas" element={<LazyRoute><CanvasShop /></LazyRoute>} />
         <Route path="/doeken" element={<LazyRoute><CanvasShop /></LazyRoute>} />

@@ -368,9 +368,9 @@ export default function AIScanV2() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                  <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <Camera className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-sm text-muted-foreground mb-4">
-                    Sleep bestanden hierheen of klik om te selecteren
+                    Klik om foto's toe te voegen
                   </p>
                   <input type="file" accept="image/*" capture="environment" multiple onChange={handleFileUpload} className="hidden" id="file-upload-v2" />
                   <Button asChild variant="outline">

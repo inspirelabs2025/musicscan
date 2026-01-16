@@ -76,7 +76,7 @@ const scanCollectionMenuItems = [
 const aiToolsMenuItems = [
   { title: "Echo 🎵", url: "/echo", icon: Music },
   { title: "Chat met Collectie", url: "/collection-chat", icon: MessageCircle },
-  { title: "Prijscheck", url: "/quick-price-check", icon: DollarSign },
+  { title: "Prijscheck", url: "/ai-scan-v2", icon: DollarSign },
   { title: "Muziek Analyse", url: "/ai-analysis", icon: Brain },
   { title: "Spotify Profiel", url: "/spotify-profile", icon: Music }
 ];

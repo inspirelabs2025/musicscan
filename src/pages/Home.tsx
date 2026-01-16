@@ -6,7 +6,7 @@ import { HeroFeature } from '@/components/home/HeroFeature';
 import { QuickLinks } from '@/components/home/QuickLinks';
 import { MasonryContentGrid } from '@/components/home/MasonryContentGrid';
 import { ProductBanner } from '@/components/home/ProductBanner';
-import { ShopCategoriesFooter } from '@/components/home/ShopCategoriesFooter';
+
 import { EchoSpotlight } from '@/components/home/EchoSpotlight';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -140,8 +140,6 @@ const Home = () => {
       {/* 5. Product Banner */}
       <ProductBanner />
 
-      {/* 7. Shop Categories Footer */}
-      <ShopCategoriesFooter />
     </div>
   );
 };

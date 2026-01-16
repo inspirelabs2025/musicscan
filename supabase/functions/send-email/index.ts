@@ -61,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
     // For password recovery, redirect to set-password page; otherwise use provided redirect or dashboard
     let redirectUrl = redirect_to || 'https://www.musicscan.app/dashboard';
     if (email_action_type === 'recovery') {
-      redirectUrl = 'https://www.musicscan.app/set-password';
+      redirectUrl = 'https://www.musicscan.app/auth/set-password';
     }
     
     const confirmationUrl = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(redirectUrl)}`;

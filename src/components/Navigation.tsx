@@ -223,47 +223,27 @@ export function Navigation() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
-                {/* Community Dropdown */}
+                {/* User menu with logout */}
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className={cn(
-                    "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
-                    isCommunityPageActive && "bg-accent text-accent-foreground"
-                  )}>
-                    <Users className="h-4 w-4 mr-2" />
-                    Community
+                  <NavigationMenuTrigger className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <User className="h-4 w-4 mr-2" />
+                    Account
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="grid w-[250px] gap-1 p-4 bg-popover">
-                      {communityMenuItems.map((item) => (
-                        <NavigationMenuLink key={item.title} asChild>
+                      {profileMenuItem && (
+                        <NavigationMenuLink asChild>
                           <Link
-                            to={item.url}
+                            to={profileMenuItem.url}
                             className={cn(
                               "flex items-center gap-2 rounded-md p-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
-                              currentPath === item.url && "bg-accent text-accent-foreground"
+                              currentPath === profileMenuItem.url && "bg-accent text-accent-foreground"
                             )}
                           >
-                            <item.icon className="h-4 w-4" />
-                            <div className="font-medium">{item.title}</div>
+                            <profileMenuItem.icon className="h-4 w-4" />
+                            <div className="font-medium">{profileMenuItem.title}</div>
                           </Link>
                         </NavigationMenuLink>
-                      ))}
-                      {profileMenuItem && (
-                        <>
-                          <div className="border-t my-2" />
-                          <NavigationMenuLink asChild>
-                            <Link
-                              to={profileMenuItem.url}
-                              className={cn(
-                                "flex items-center gap-2 rounded-md p-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
-                                currentPath === profileMenuItem.url && "bg-accent text-accent-foreground"
-                              )}
-                            >
-                              <profileMenuItem.icon className="h-4 w-4" />
-                              <div className="font-medium">{profileMenuItem.title}</div>
-                            </Link>
-                          </NavigationMenuLink>
-                        </>
                       )}
                       <div className="border-t mt-2 pt-2">
                         <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
@@ -420,37 +400,6 @@ export function Navigation() {
                        )}
                      </div>
 
-                     {/* Community Section */}
-                     <div className="mt-2">
-                       <Button
-                         variant="ghost"
-                         onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
-                         className={cn(
-                           "w-full justify-start text-muted-foreground hover:text-primary",
-                           isCommunityPageActive && "bg-muted text-primary"
-                         )}
-                       >
-                         <Users className="h-4 w-4 mr-3" />
-                         <span className="text-base">Community</span>
-                         <ChevronDown className={cn(
-                           "h-4 w-4 ml-auto transition-transform",
-                           isCommunityMenuOpen && "rotate-180"
-                         )} />
-                       </Button>
-                       {isCommunityMenuOpen && (
-                         <div className="ml-6 mt-1 space-y-1">
-                           {communityMenuItems.map((item) => (
-                             <NavLink key={item.title} item={item} mobile />
-                           ))}
-                           {profileMenuItem && (
-                             <>
-                               <div className="border-t my-2" />
-                               <NavLink item={profileMenuItem} mobile />
-                             </>
-                           )}
-                         </div>
-                       )}
-                     </div>
 
                      {/* Dashboard */}
                      <NavLink item={{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }} mobile />

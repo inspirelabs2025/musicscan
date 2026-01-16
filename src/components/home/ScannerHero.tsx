@@ -13,18 +13,18 @@ const navButtons = [
 
 export const ScannerHero = () => {
   return (
-    <section className="relative min-h-[400px] md:min-h-[500px] bg-black overflow-hidden flex items-center">
+    <section className="relative min-h-[500px] md:min-h-[600px] lg:min-h-[700px] bg-black overflow-hidden flex items-center">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/30 via-black to-vinyl-gold/10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-vinyl-purple/40 via-black to-vinyl-gold/20" />
       
       {/* Animated vinyl disc - left */}
-      <div className="absolute -left-20 top-1/2 -translate-y-1/2 opacity-20 md:opacity-30">
-        <Disc3 className="w-64 h-64 md:w-96 md:h-96 text-vinyl-purple animate-vinyl-spin" />
+      <div className="absolute -left-10 md:-left-20 top-1/2 -translate-y-1/2 opacity-30 md:opacity-40">
+        <Disc3 className="w-72 h-72 md:w-[28rem] md:h-[28rem] lg:w-[32rem] lg:h-[32rem] text-vinyl-purple animate-vinyl-spin" />
       </div>
       
       {/* Animated vinyl disc - right */}
-      <div className="absolute -right-20 top-1/2 -translate-y-1/2 opacity-10 md:opacity-20">
-        <Disc3 className="w-48 h-48 md:w-72 md:h-72 text-vinyl-gold animate-vinyl-spin" style={{ animationDirection: 'reverse', animationDuration: '25s' }} />
+      <div className="absolute -right-10 md:-right-20 top-1/2 -translate-y-1/2 opacity-20 md:opacity-30">
+        <Disc3 className="w-56 h-56 md:w-80 md:h-80 lg:w-96 lg:h-96 text-vinyl-gold animate-vinyl-spin" style={{ animationDirection: 'reverse', animationDuration: '25s' }} />
       </div>
       
       {/* Sparkle effects */}
@@ -33,37 +33,37 @@ export const ScannerHero = () => {
       <Sparkles className="absolute top-1/3 right-[15%] w-5 h-5 text-white/30 animate-pulse" style={{ animationDelay: '0.5s' }} />
 
       {/* Content */}
-      <div className="container relative z-10 py-12 md:py-20 text-center">
+      <div className="container relative z-10 py-16 md:py-24 lg:py-32 text-center">
         {/* Badge */}
         <Badge 
           variant="outline" 
-          className="bg-gradient-to-r from-vinyl-purple/20 to-vinyl-gold/20 border-vinyl-gold/50 text-white px-6 py-2 text-base md:text-lg font-semibold mb-8 backdrop-blur-sm"
+          className="bg-gradient-to-r from-vinyl-purple/30 to-vinyl-gold/30 border-vinyl-gold/60 text-white px-8 py-3 text-lg md:text-xl font-bold mb-10 backdrop-blur-md shadow-lg shadow-vinyl-purple/20"
         >
-          <Camera className="w-5 h-5 mr-2 text-vinyl-gold" />
+          <Camera className="w-6 h-6 mr-3 text-vinyl-gold" />
           Scan je collectie
         </Badge>
 
         {/* Main title */}
-        <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white mb-6 tracking-tight bg-gradient-to-r from-white via-white to-vinyl-gold/80 bg-clip-text">
           Hét Muziekplatform
         </h1>
         
         {/* Subtitle */}
-        <p className="text-base md:text-lg text-white/70 max-w-2xl mx-auto mb-10">
+        <p className="text-lg md:text-xl lg:text-2xl text-white/80 max-w-3xl mx-auto mb-12 font-medium">
           Nieuws, verhalen, quizzen, podcasts en unieke muziekproducten
         </p>
 
         {/* Navigation buttons */}
-        <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+        <div className="flex flex-wrap justify-center gap-4 md:gap-5">
           {navButtons.map(({ icon: Icon, label, href }) => (
             <Button 
               key={href}
               asChild 
               variant="outline"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white px-5 py-5 md:px-6 md:py-6 rounded-xl backdrop-blur-sm transition-all hover:scale-105"
+              className="bg-white/10 border-white/30 text-white hover:bg-white/25 hover:text-white hover:border-vinyl-gold/50 px-6 py-6 md:px-8 md:py-7 rounded-2xl backdrop-blur-md transition-all hover:scale-105 shadow-lg shadow-black/20 text-base md:text-lg font-semibold"
             >
               <Link to={href}>
-                <Icon className="w-5 h-5 mr-2" />
+                <Icon className="w-5 h-5 md:w-6 md:h-6 mr-2.5" />
                 {label}
               </Link>
             </Button>

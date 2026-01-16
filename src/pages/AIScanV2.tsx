@@ -375,7 +375,7 @@ export default function AIScanV2() {
                   <input type="file" accept="image/*" capture="environment" multiple onChange={handleFileUpload} className="hidden" id="file-upload-v2" />
                   <Button asChild variant="outline">
                     <label htmlFor="file-upload-v2" className="cursor-pointer">
-                      Bestanden selecteren
+                      Foto's
                     </label>
                   </Button>
                 </div>

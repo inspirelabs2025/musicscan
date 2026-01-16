@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -25,7 +24,6 @@ interface UploadedFile {
   preview: string;
   id: string;
 }
-
 interface AnalysisResult {
   scanId: string;
   result: {
@@ -59,9 +57,11 @@ interface AnalysisResult {
   };
   version: string;
 }
-
 export default function AIScanV2() {
-  const { user, loading } = useAuth();
+  const {
+    user,
+    loading
+  } = useAuth();
   const navigate = useNavigate();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | ''>('');
@@ -71,14 +71,18 @@ export default function AIScanV2() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
-  
-  const { checkUsageLimit, incrementUsage } = useUsageTracking();
-  const { subscription } = useSubscription();
-  
+  const {
+    checkUsageLimit,
+    incrementUsage
+  } = useUsageTracking();
+  const {
+    subscription
+  } = useSubscription();
+
   // Discogs search for automatic pricing
-  const { 
-    searchByDiscogsId, 
-    searchResults, 
+  const {
+    searchByDiscogsId,
+    searchResults,
     isPricingLoading,
     retryPricing,
     resetSearchState
@@ -98,14 +102,12 @@ export default function AIScanV2() {
       window.location.href = '/auth';
     }
   }, [user, loading]);
-
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    
     files.forEach(file => {
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = e => {
           const newFile: UploadedFile = {
             file,
             preview: e.target?.result as string,
@@ -117,32 +119,30 @@ export default function AIScanV2() {
       }
     });
   }, []);
-
   const removeFile = useCallback((id: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== id));
   }, []);
-
   const uploadToSupabase = async (file: File): Promise<string> => {
     // Generate unique filename with timestamp + random ID to prevent "resource already exists" errors on mobile
     const uniqueId = Math.random().toString(36).substring(2, 10);
     const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const fileName = `ai-scan-v2/${Date.now()}-${uniqueId}-${safeFileName}`;
-    
-    const { data, error } = await supabase.storage
-      .from('vinyl_images')
-      .upload(fileName, file, { upsert: true });
-
+    const {
+      data,
+      error
+    } = await supabase.storage.from('vinyl_images').upload(fileName, file, {
+      upsert: true
+    });
     if (error) {
       throw new Error(`Upload failed: ${error.message}`);
     }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('vinyl_images')
-      .getPublicUrl(fileName);
-
+    const {
+      data: {
+        publicUrl
+      }
+    } = supabase.storage.from('vinyl_images').getPublicUrl(fileName);
     return publicUrl;
   };
-
   const startAnalysis = async () => {
     if (!user) {
       toast({
@@ -152,7 +152,6 @@ export default function AIScanV2() {
       });
       return;
     }
-
     if (uploadedFiles.length === 0) {
       toast({
         title: "Geen bestanden",
@@ -181,12 +180,10 @@ export default function AIScanV2() {
       });
       return;
     }
-
     setIsAnalyzing(true);
     setAnalysisProgress(0);
     setError(null);
     setAnalysisResult(null);
-
     try {
       // Check usage limits before proceeding
       const usageCheck = await checkUsageLimit('ai_scans');
@@ -199,19 +196,21 @@ export default function AIScanV2() {
       // Upload images
       setAnalysisProgress(20);
       console.log('📤 Uploading images to Supabase storage...');
-      const photoUrls = await Promise.all(
-        uploadedFiles.map(({ file }) => uploadToSupabase(file))
-      );
-
+      const photoUrls = await Promise.all(uploadedFiles.map(({
+        file
+      }) => uploadToSupabase(file)));
       console.log('✅ Images uploaded successfully:', photoUrls);
       setAnalysisProgress(40);
 
       // Get current session for authentication
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (!session) {
         throw new Error('No active session found');
       }
-
       console.log('🔐 Using session for authentication:', {
         userId: session.user.id,
         email: session.user.email
@@ -219,50 +218,45 @@ export default function AIScanV2() {
 
       // Call the V2 AI analysis function
       console.log('🤖 Calling AI analysis V2 function...');
-      const { data, error: functionError } = await supabase.functions.invoke(
-        'ai-photo-analysis-v2',
-        {
-          body: {
-            photoUrls,
-            mediaType,
-            conditionGrade
-          }
+      const {
+        data,
+        error: functionError
+      } = await supabase.functions.invoke('ai-photo-analysis-v2', {
+        body: {
+          photoUrls,
+          mediaType,
+          conditionGrade
         }
-      );
-
-      console.log('📊 Function response:', { data, error: functionError });
-
+      });
+      console.log('📊 Function response:', {
+        data,
+        error: functionError
+      });
       if (functionError) {
         console.error('❌ Function error:', functionError);
         throw new Error(functionError.message || 'Function call failed');
       }
-
       if (!data) {
         throw new Error('No data received from function');
       }
-
       if (!data.success) {
         console.error('❌ Analysis failed:', data.error);
         throw new Error(data.error || 'Analysis failed');
       }
-
       setAnalysisProgress(100);
       setAnalysisResult(data);
 
       // Increment usage after successful analysis
       await incrementUsage('ai_scans');
-
       console.log('✅ Analysis completed successfully');
       toast({
         title: "Analyse voltooid!",
         description: `V2 analyse succesvol afgerond met ${Math.round(data.result.confidence_score * 100)}% vertrouwen.`
       });
-
     } catch (err) {
       console.error('❌ Analysis error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
-      
       toast({
         title: "Analyse mislukt",
         description: `Fout: ${errorMessage}`,
@@ -272,7 +266,6 @@ export default function AIScanV2() {
       setIsAnalyzing(false);
     }
   };
-
   const resetForm = () => {
     setUploadedFiles([]);
     setAnalysisResult(null);
@@ -293,18 +286,14 @@ export default function AIScanV2() {
 
   // Show loading while checking auth
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
+    return <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
         <div className="text-center">
           <Clock className="h-8 w-8 animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">Laden...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <>
+  return <>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
 
       <div className="p-4">
@@ -320,15 +309,12 @@ export default function AIScanV2() {
             <p className="text-muted-foreground">
               Ontdek supersnel de juiste release ID - verbeterde analyse met GPT-4.1 en multi-pass technologie
             </p>
-            {user && (
-              <p className="text-sm text-muted-foreground">
+            {user && <p className="text-sm text-muted-foreground">
                 Ingelogd als: {user.email}
-              </p>
-            )}
+              </p>}
           </div>
 
-        {!analysisResult && (
-          <>
+        {!analysisResult && <>
             {/* Media Type Selection */}
             <Card>
               <CardHeader>
@@ -338,26 +324,16 @@ export default function AIScanV2() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Selecteer media type (verplicht)</label>
                   <div className="grid grid-cols-2 gap-4">
-                    <Button
-                      variant={mediaType === 'vinyl' ? 'default' : 'outline'}
-                      onClick={() => setMediaType('vinyl')}
-                      className={`h-16 flex flex-col gap-1 ${!mediaType ? 'border-red-300' : ''}`}
-                    >
+                    <Button variant={mediaType === 'vinyl' ? 'default' : 'outline'} onClick={() => setMediaType('vinyl')} className={`h-16 flex flex-col gap-1 ${!mediaType ? 'border-red-300' : ''}`}>
                       <span className="font-medium">Vinyl</span>
                       <span className="text-xs">LP / Single / EP</span>
                     </Button>
-                    <Button
-                      variant={mediaType === 'cd' ? 'default' : 'outline'}
-                      onClick={() => setMediaType('cd')}
-                      className={`h-16 flex flex-col gap-1 ${!mediaType ? 'border-red-300' : ''}`}
-                    >
+                    <Button variant={mediaType === 'cd' ? 'default' : 'outline'} onClick={() => setMediaType('cd')} className={`h-16 flex flex-col gap-1 ${!mediaType ? 'border-red-300' : ''}`}>
                       <span className="font-medium">CD</span>
                       <span className="text-xs">Album / Single</span>
                     </Button>
                   </div>
-                  {!mediaType && (
-                    <p className="text-sm text-red-600">Een media type selectie is verplicht</p>
-                  )}
+                  {!mediaType && <p className="text-sm text-red-600">Een media type selectie is verplicht</p>}
                 </div>
               </CardContent>
             </Card>
@@ -370,11 +346,7 @@ export default function AIScanV2() {
               <CardContent>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Selecteer staat (verplicht)</label>
-                  <select 
-                    value={conditionGrade}
-                    onChange={(e) => setConditionGrade(e.target.value)}
-                    className={`w-full p-2 border rounded-md ${!conditionGrade ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
-                  >
+                  <select value={conditionGrade} onChange={e => setConditionGrade(e.target.value)} className={`w-full p-2 border rounded-md ${!conditionGrade ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}>
                     <option value="" disabled>Selecteer een conditie</option>
                     <option value="Mint (M)">Mint (M) - Perfect, nieuwstaat</option>
                     <option value="Near Mint (NM)">Near Mint (NM) - Bijna perfect</option>
@@ -384,9 +356,7 @@ export default function AIScanV2() {
                     <option value="Good (G)">Good (G) - Duidelijke slijtage</option>
                     <option value="Fair (F)">Fair (F) - Slechte staat</option>
                   </select>
-                  {!conditionGrade && (
-                    <p className="text-sm text-red-600">Een conditie selectie is verplicht</p>
-                  )}
+                  {!conditionGrade && <p className="text-sm text-red-600">Een conditie selectie is verplicht</p>}
                 </div>
               </CardContent>
             </Card>
@@ -394,7 +364,7 @@ export default function AIScanV2() {
             {/* File Upload */}
             <Card>
               <CardHeader>
-                <CardTitle>Upload Foto's</CardTitle>
+                <CardTitle>Foto's</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
@@ -402,15 +372,7 @@ export default function AIScanV2() {
                   <p className="text-sm text-muted-foreground mb-4">
                     Sleep bestanden hierheen of klik om te selecteren
                   </p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    multiple
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="file-upload-v2"
-                  />
+                  <input type="file" accept="image/*" capture="environment" multiple onChange={handleFileUpload} className="hidden" id="file-upload-v2" />
                   <Button asChild variant="outline">
                     <label htmlFor="file-upload-v2" className="cursor-pointer">
                       Bestanden selecteren
@@ -419,70 +381,45 @@ export default function AIScanV2() {
                 </div>
 
                 {/* Uploaded Files Preview */}
-                {uploadedFiles.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {uploadedFiles.map((file) => (
-                      <div key={file.id} className="relative group">
-                        <img
-                          src={file.preview}
-                          alt={file.file.name}
-                          className="w-full h-32 object-cover rounded-lg border"
-                        />
-                        <button
-                          onClick={() => removeFile(file.id)}
-                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
+                {uploadedFiles.length > 0 && <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {uploadedFiles.map(file => <div key={file.id} className="relative group">
+                        <img src={file.preview} alt={file.file.name} className="w-full h-32 object-cover rounded-lg border" />
+                        <button onClick={() => removeFile(file.id)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <X className="h-4 w-4" />
                         </button>
                         <p className="text-xs text-muted-foreground mt-1 truncate">
                           {file.file.name}
                         </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      </div>)}
+                  </div>}
               </CardContent>
             </Card>
 
             {/* Analysis Button */}
             <Card>
               <CardContent className="pt-6">
-                <Button 
-                  onClick={startAnalysis}
-                  disabled={uploadedFiles.length === 0 || isAnalyzing || !conditionGrade || !mediaType || !user}
-                  className="w-full"
-                  size="lg"
-                >
-                  {isAnalyzing ? (
-                    <>
+                <Button onClick={startAnalysis} disabled={uploadedFiles.length === 0 || isAnalyzing || !conditionGrade || !mediaType || !user} className="w-full" size="lg">
+                  {isAnalyzing ? <>
                       <Clock className="mr-2 h-4 w-4 animate-spin" />
                       V2 Analyse bezig...
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       <Brain className="mr-2 h-4 w-4" />
                       <Sparkles className="mr-1 h-4 w-4" />
                       Start V2 Analyse
-                    </>
-                  )}
+                    </>}
                 </Button>
 
-                {!user && (
-                  <p className="text-sm text-red-600 text-center mt-2">
+                {!user && <p className="text-sm text-red-600 text-center mt-2">
                     Je moet ingelogd zijn om de analyse te gebruiken
-                  </p>
-                )}
+                  </p>}
 
-                {(!conditionGrade || !mediaType) && uploadedFiles.length > 0 && user && (
-                  <p className="text-sm text-red-600 text-center mt-2">
+                {(!conditionGrade || !mediaType) && uploadedFiles.length > 0 && user && <p className="text-sm text-red-600 text-center mt-2">
                     {!mediaType && "Selecteer eerst een media type en "}
                     {!conditionGrade && "selecteer een conditie "}
                     om de analyse te starten
-                  </p>
-                )}
+                  </p>}
 
-                {isAnalyzing && (
-                  <div className="mt-4 space-y-2">
+                {isAnalyzing && <div className="mt-4 space-y-2">
                     <Progress value={analysisProgress} className="w-full" />
                     <p className="text-sm text-center text-muted-foreground">
                       {analysisProgress < 40 && "Foto's uploaden..."}
@@ -490,14 +427,12 @@ export default function AIScanV2() {
                       {analysisProgress >= 70 && analysisProgress < 90 && "Discogs zoekstrategie..."}
                       {analysisProgress >= 90 && "Resultaten verwerken..."}
                     </p>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
 
             {/* Error Display */}
-            {error && (
-              <Alert variant="destructive">
+            {error && <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   <div className="space-y-2">
@@ -509,14 +444,11 @@ export default function AIScanV2() {
                     </p>
                   </div>
                 </AlertDescription>
-              </Alert>
-            )}
-          </>
-        )}
+              </Alert>}
+          </>}
 
         {/* Analysis Results */}
-        {analysisResult && (
-          <Card>
+        {analysisResult && <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
@@ -533,12 +465,7 @@ export default function AIScanV2() {
               {/* Confidence Score */}
               <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <span className="font-medium">Vertrouwen Score:</span>
-                <Badge 
-                  variant={
-                    analysisResult.result.confidence_score > 0.8 ? "default" :
-                    analysisResult.result.confidence_score > 0.5 ? "secondary" : "destructive"
-                  }
-                >
+                <Badge variant={analysisResult.result.confidence_score > 0.8 ? "default" : analysisResult.result.confidence_score > 0.5 ? "secondary" : "destructive"}>
                   {Math.round(analysisResult.result.confidence_score * 100)}%
                 </Badge>
               </div>
@@ -569,34 +496,16 @@ export default function AIScanV2() {
                     </Tooltip>
                   </h3>
                   <div className="space-y-1 text-sm">
-                    {analysisResult.result.matrix_number && (
-                      <div><strong>Matrix Nr:</strong> {analysisResult.result.matrix_number}</div>
-                    )}
-                    {analysisResult.result.sid_code_mastering && (
-                      <div><strong>IFPI Mastering:</strong> {analysisResult.result.sid_code_mastering}</div>
-                    )}
-                    {analysisResult.result.sid_code_mould && (
-                      <div><strong>IFPI Mould:</strong> {analysisResult.result.sid_code_mould}</div>
-                    )}
-                    {analysisResult.result.label_code && (
-                      <div><strong>Label Code:</strong> {analysisResult.result.label_code}</div>
-                    )}
-                    {analysisResult.result.barcode && (
-                      <div><strong>Barcode:</strong> {analysisResult.result.barcode}</div>
-                    )}
-                    {analysisResult.result.genre && (
-                      <div><strong>Genre:</strong> {analysisResult.result.genre}</div>
-                    )}
-                    {analysisResult.result.country && (
-                      <div><strong>Land:</strong> {analysisResult.result.country}</div>
-                    )}
-                    {analysisResult.result.image_quality && (
-                      <div><strong>Beeld kwaliteit:</strong> {analysisResult.result.image_quality}</div>
-                    )}
+                    {analysisResult.result.matrix_number && <div><strong>Matrix Nr:</strong> {analysisResult.result.matrix_number}</div>}
+                    {analysisResult.result.sid_code_mastering && <div><strong>IFPI Mastering:</strong> {analysisResult.result.sid_code_mastering}</div>}
+                    {analysisResult.result.sid_code_mould && <div><strong>IFPI Mould:</strong> {analysisResult.result.sid_code_mould}</div>}
+                    {analysisResult.result.label_code && <div><strong>Label Code:</strong> {analysisResult.result.label_code}</div>}
+                    {analysisResult.result.barcode && <div><strong>Barcode:</strong> {analysisResult.result.barcode}</div>}
+                    {analysisResult.result.genre && <div><strong>Genre:</strong> {analysisResult.result.genre}</div>}
+                    {analysisResult.result.country && <div><strong>Land:</strong> {analysisResult.result.country}</div>}
+                    {analysisResult.result.image_quality && <div><strong>Beeld kwaliteit:</strong> {analysisResult.result.image_quality}</div>}
                     <div><strong>Scan ID:</strong> {analysisResult.scanId}</div>
-                    {analysisResult.result.discogs_id && (
-                      <div><strong>Discogs ID:</strong> {analysisResult.result.discogs_id}</div>
-                    )}
+                    {analysisResult.result.discogs_id && <div><strong>Discogs ID:</strong> {analysisResult.result.discogs_id}</div>}
                   </div>
                 </div>
               </div>
@@ -611,16 +520,12 @@ export default function AIScanV2() {
                 {(() => {
                   // Use pricing from V2 response first, fallback to searchResults
                   const pricing = analysisResult.result.pricing_stats || searchResults[0]?.pricing_stats;
-                  
                   if (isPricingLoading) {
-                    return (
-                      <div className="flex items-center justify-center py-4 text-muted-foreground">
+                    return <div className="flex items-center justify-center py-4 text-muted-foreground">
                         <Loader2 className="h-5 w-5 animate-spin mr-2" />
                         Prijzen laden...
-                      </div>
-                    );
+                      </div>;
                   }
-                  
                   if (pricing && (pricing.lowest_price || pricing.median_price || pricing.highest_price)) {
                     const formatPrice = (val: string | number | null | undefined): string => {
                       if (val == null) return '-';
@@ -628,9 +533,7 @@ export default function AIScanV2() {
                       return isNaN(num) ? '-' : num.toFixed(2);
                     };
                     const numForSale = 'num_for_sale' in pricing ? pricing.num_for_sale : 0;
-                    
-                    return (
-                      <div className="space-y-3">
+                    return <div className="space-y-3">
                         <div className="grid grid-cols-3 gap-3">
                           <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg text-center">
                             <TrendingDown className="h-4 w-4 mx-auto text-green-600 mb-1" />
@@ -659,115 +562,79 @@ export default function AIScanV2() {
                           <span>
                             {numForSale} te koop
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => analysisResult.result.discogs_id && retryPricing(analysisResult.result.discogs_id)}
-                            className="h-7 text-xs"
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => analysisResult.result.discogs_id && retryPricing(analysisResult.result.discogs_id)} className="h-7 text-xs">
                             <RefreshCw className="h-3 w-3 mr-1" />
                             Vernieuw
                           </Button>
                         </div>
-                      </div>
-                    );
+                      </div>;
                   }
-                  
                   if (analysisResult.result.discogs_id) {
-                    return (
-                      <div className="text-center py-4">
+                    return <div className="text-center py-4">
                         <p className="text-sm text-muted-foreground mb-2">Geen prijsdata beschikbaar</p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => searchByDiscogsId(analysisResult.result.discogs_id!.toString())}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => searchByDiscogsId(analysisResult.result.discogs_id!.toString())}>
                           <RefreshCw className="h-4 w-4 mr-2" />
                           Opnieuw proberen
                         </Button>
-                      </div>
-                    );
+                      </div>;
                   }
-                  
-                  return (
-                    <p className="text-sm text-muted-foreground text-center py-4">
+                  return <p className="text-sm text-muted-foreground text-center py-4">
                       Geen Discogs ID gevonden - prijzen niet beschikbaar
-                    </p>
-                  );
+                    </p>;
                 })()}
               </div>
 
               {/* Action Buttons */}
-              {analysisResult.result.discogs_url && (
-                <div className="pt-4 space-y-3">
-                  <Button 
-                    onClick={() => {
-                      if (!conditionGrade) {
-                        toast({
-                          title: "Conditie vereist",
-                          description: "Selecteer eerst een conditie voordat je het item aan je collectie toevoegt.",
-                          variant: "destructive"
-                        });
-                        return;
-                      }
-                      
-                      console.log('🔗 Adding to collection with condition:', conditionGrade);
-                      const params = new URLSearchParams({
-                        mediaType: mediaType,
-                        discogsId: analysisResult.result.discogs_id?.toString() || '',
-                        artist: analysisResult.result.artist || '',
-                        title: analysisResult.result.title || '',
-                        label: analysisResult.result.label || '',
-                        catalogNumber: analysisResult.result.catalog_number || '',
-                        year: analysisResult.result.year?.toString() || '',
-                        condition: conditionGrade,
-                        fromAiScan: 'true'
-                      });
-                      console.log('🚀 Navigating to:', `/scanner/discogs?${params.toString()}`);
-                      navigate(`/scanner/discogs?${params.toString()}`);
-                    }}
-                    className="w-full"
-                    disabled={!conditionGrade}
-                  >
+              {analysisResult.result.discogs_url && <div className="pt-4 space-y-3">
+                  <Button onClick={() => {
+                  if (!conditionGrade) {
+                    toast({
+                      title: "Conditie vereist",
+                      description: "Selecteer eerst een conditie voordat je het item aan je collectie toevoegt.",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  console.log('🔗 Adding to collection with condition:', conditionGrade);
+                  const params = new URLSearchParams({
+                    mediaType: mediaType,
+                    discogsId: analysisResult.result.discogs_id?.toString() || '',
+                    artist: analysisResult.result.artist || '',
+                    title: analysisResult.result.title || '',
+                    label: analysisResult.result.label || '',
+                    catalogNumber: analysisResult.result.catalog_number || '',
+                    year: analysisResult.result.year?.toString() || '',
+                    condition: conditionGrade,
+                    fromAiScan: 'true'
+                  });
+                  console.log('🚀 Navigating to:', `/scanner/discogs?${params.toString()}`);
+                  navigate(`/scanner/discogs?${params.toString()}`);
+                }} className="w-full" disabled={!conditionGrade}>
                     <ShoppingCart className="mr-2 h-4 w-4" />
                     Toevoegen aan Collectie
                   </Button>
                   
                   <Button asChild variant="outline" className="w-full">
-                    <a 
-                      href={analysisResult.result.discogs_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                    >
+                    <a href={analysisResult.result.discogs_url} target="_blank" rel="noopener noreferrer">
                       Bekijk op Discogs
                     </a>
                   </Button>
-                </div>
-              )}
+                </div>}
 
               {/* AI Description */}
-              {analysisResult.result.ai_description && (
-                <div className="pt-4 border-t">
+              {analysisResult.result.ai_description && <div className="pt-4 border-t">
                   <h3 className="font-semibold mb-2">V2 AI Analyse</h3>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                     {analysisResult.result.ai_description}
                   </p>
-                </div>
-              )}
+                </div>}
             </CardContent>
-          </Card>
-        )}
+          </Card>}
         </div>
       </div>
       </div>
 
       {/* Upgrade Prompt Modal */}
-      <UpgradePrompt 
-        isOpen={showUpgradePrompt}
-        onClose={() => setShowUpgradePrompt(false)}
-        reason="usage_limit"
-        currentPlan={subscription?.plan_slug || 'free'}
-      />
-    </>
-  );
+      <UpgradePrompt isOpen={showUpgradePrompt} onClose={() => setShowUpgradePrompt(false)} reason="usage_limit" currentPlan={subscription?.plan_slug || 'free'} />
+    </>;
 }

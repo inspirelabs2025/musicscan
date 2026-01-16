@@ -373,10 +373,6 @@ export function Navigation() {
                  {/* Home */}
                  <NavLink item={{ title: "Home", url: "/", icon: Home }} mobile />
 
-                 {/* Quizzen */}
-                 <NavLink item={{ title: "Quizzen", url: "/quizzen", icon: Trophy }} mobile />
-
-                
                   {user ? (
                    <>
                      {/* Scan & Collectie Section */}

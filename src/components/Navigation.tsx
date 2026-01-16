@@ -162,14 +162,8 @@ export function Navigation() {
               </NavigationMenuLink>
             </NavigationMenuItem>
 
-            {/* Quizzen */}
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <NavLink item={{ title: "Quizzen", url: "/quizzen", icon: Trophy }} />
-              </NavigationMenuLink>
-            </NavigationMenuItem>
 
-            
+
             {user && (
               <>
                 {/* Scan & Collectie Dropdown */}

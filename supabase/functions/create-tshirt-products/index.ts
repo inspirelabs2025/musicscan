@@ -68,7 +68,7 @@ Draag je favoriete album met trots op dit comfortabele T-shirt!`;
         title: productTitle,
         slug: productSlug,
         description: productDescription,
-        price: 29.95,
+        price: 39.95,
         currency: 'EUR',
         stock_quantity: 999,
         allow_backorder: true,

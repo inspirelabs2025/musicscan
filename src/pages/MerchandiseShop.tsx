@@ -19,27 +19,22 @@ export default function MerchandiseShop() {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc" | "popular">("newest");
   const [showFeatured, setShowFeatured] = useState(false);
-  const [activeTab, setActiveTab] = useState<"all" | "tshirts" | "socks">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "tshirts">("all");
 
   const { data: allProducts, isLoading } = usePlatformProducts({ 
     mediaType: 'merchandise',
     featured: showFeatured || undefined,
   });
 
-  // Separate T-shirts and Socks
+  // Separate T-shirts (socks hidden from assortment)
   const tshirtProducts = allProducts?.filter(product => 
     product.categories?.includes('tshirts')
-  );
-  const sockProducts = allProducts?.filter(product => 
-    product.categories?.includes('socks')
   );
 
   // Filter based on active tab
   const tabFilteredProducts = activeTab === "all" 
-    ? allProducts 
-    : activeTab === "tshirts" 
     ? tshirtProducts 
-    : sockProducts;
+    : tshirtProducts;
 
   // Filter and sort products
   const filteredProducts = tabFilteredProducts
@@ -73,11 +68,11 @@ export default function MerchandiseShop() {
   return (
     <>
       <Helmet>
-        <title>Merchandise - T-Shirts & Sokken | VinylScout</title>
-        <meta name="description" content="Draag je favoriete muziek met stijl. Premium T-shirts en sokken met iconische album artwork. Verkrijgbaar in diverse maten en stijlen." />
+        <title>Merchandise - T-Shirts | VinylScout</title>
+        <meta name="description" content="Draag je favoriete muziek met stijl. Premium T-shirts met iconische album artwork. Verkrijgbaar in diverse maten en stijlen." />
         <meta name="keywords" content="muziek merchandise, band t-shirts, album sokken, muziek kleding, merchandise, music fashion" />
-        <meta property="og:title" content="Merchandise - T-Shirts & Sokken" />
-        <meta property="og:description" content="Premium T-shirts en sokken geïnspireerd op iconische albums." />
+        <meta property="og:title" content="Merchandise - T-Shirts" />
+        <meta property="og:description" content="Premium T-shirts geïnspireerd op iconische albums." />
         <meta property="og:type" content="website" />
         
         <script type="application/ld+json">
@@ -85,7 +80,7 @@ export default function MerchandiseShop() {
             "@context": "https://schema.org",
             "@type": "CollectionPage",
             "name": "Merchandise Collectie",
-            "description": "T-Shirts en sokken geïnspireerd op iconische albums",
+            "description": "T-Shirts geïnspireerd op iconische albums",
             "url": "https://www.musicscan.app/merchandise",
             "numberOfItems": allProducts?.length || 0,
             "about": {
@@ -114,22 +109,22 @@ export default function MerchandiseShop() {
                 🎁 Merchandise Collectie
               </h1>
               <p className="text-xl text-white/90 max-w-2xl">
-                Draag je favoriete muziek met stijl. Premium T-shirts en sokken met iconische album artwork.
+                Draag je favoriete muziek met stijl. Premium T-shirts met iconische album artwork.
               </p>
               
               {/* Stats Row */}
               <div className="flex flex-wrap gap-6 pt-4">
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold">{allProducts?.length || 0}</div>
-                  <div className="text-sm text-white/80">Designs</div>
+                  <div className="text-3xl font-bold">{tshirtProducts?.length || 0}</div>
+                  <div className="text-sm text-white/80">T-Shirts</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">€{avgPrice}</div>
                   <div className="text-sm text-white/80">Gem. Prijs</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold">2</div>
-                  <div className="text-sm text-white/80">Product Types</div>
+                  <div className="text-3xl font-bold">7</div>
+                  <div className="text-sm text-white/80">Style Variants</div>
                 </div>
                 {featuredCount > 0 && (
                   <div className="space-y-1">
@@ -145,33 +140,16 @@ export default function MerchandiseShop() {
           {/* Info Card */}
           <Card className="bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-950/50 dark:to-purple-900/50 border-pink-200 dark:border-pink-800">
             <CardContent className="p-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* T-Shirts Info */}
-                <div className="space-y-2">
-                  <h3 className="font-bold text-lg flex items-center gap-2">
-                    👕 Premium T-Shirts
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Premium cotton T-shirts met all-over designs. Comfortabel en duurzaam.
-                  </p>
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-2xl font-bold text-primary">€24,95</p>
-                    <span className="text-sm text-muted-foreground">S t/m XXL</span>
-                  </div>
-                </div>
-
-                {/* Socks Info */}
-                <div className="space-y-2">
-                  <h3 className="font-bold text-lg flex items-center gap-2">
-                    🧦 Premium Sokken
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Premium merino wool blend sokken. Temperatuurregelerend en comfortabel.
-                  </p>
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-2xl font-bold text-primary">€24,95</p>
-                    <span className="text-sm text-muted-foreground">One Size (EU 38-46)</span>
-                  </div>
+              <div className="space-y-2">
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  👕 Premium T-Shirts
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Premium cotton T-shirts met all-over designs. Comfortabel en duurzaam.
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl font-bold text-primary">€24,95</p>
+                  <span className="text-sm text-muted-foreground">S t/m XXL</span>
                 </div>
               </div>
             </CardContent>
@@ -179,15 +157,12 @@ export default function MerchandiseShop() {
 
           {/* Tab Navigation */}
           <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="all">
-                Alle Merchandise ({allProducts?.length || 0})
+                Alle T-Shirts ({tshirtProducts?.length || 0})
               </TabsTrigger>
               <TabsTrigger value="tshirts">
-                T-Shirts ({tshirtProducts?.length || 0})
-              </TabsTrigger>
-              <TabsTrigger value="socks">
-                Sokken ({sockProducts?.length || 0})
+                Nieuwste Designs
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -253,7 +228,6 @@ export default function MerchandiseShop() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product) => {
                 const isTshirt = product.categories?.includes('tshirts');
-                const isSock = product.categories?.includes('socks');
                 
                 return (
                   <Link key={product.id} to={`/product/${product.slug}`}>
@@ -273,11 +247,6 @@ export default function MerchandiseShop() {
                               👕 T-Shirt
                             </Badge>
                           )}
-                          {isSock && (
-                            <Badge className="bg-purple-600 text-white font-bold">
-                              🧦 Sokken
-                            </Badge>
-                          )}
                           {product.is_featured && (
                             <Badge className="bg-vinyl-gold text-black font-bold">
                               <Sparkles className="h-3 w-3 mr-1" />
@@ -289,7 +258,7 @@ export default function MerchandiseShop() {
                         {/* Size Badge */}
                         <div className="absolute top-3 right-3">
                           <Badge variant="secondary" className="bg-black/60 text-white border-0">
-                            {isTshirt ? 'S-XXL' : 'One Size'}
+                            S-XXL
                           </Badge>
                         </div>
 
@@ -327,7 +296,7 @@ export default function MerchandiseShop() {
                             €{product.price.toFixed(2)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {isTshirt ? 'Premium Cotton' : 'Premium Merino Wool'}
+                            Premium Cotton
                           </p>
                         </div>
                         <Button variant="outline" size="sm">

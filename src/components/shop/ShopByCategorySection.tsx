@@ -19,13 +19,7 @@ const categories = [
     name: "Merchandise", 
     emoji: "🎁", 
     slug: "merchandise",
-    description: "T-shirts & Sokken"
-  },
-  { 
-    name: "Buttons", 
-    emoji: "📌", 
-    slug: "buttons",
-    description: "Artist Speldjes"
+    description: "T-shirts"
   },
   { 
     name: "Art", 

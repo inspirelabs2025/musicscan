@@ -705,3 +705,7 @@ verify_jwt = false
 # Domain knowledge OCR corrections for matrix codes
 [functions.apply-matrix-ocr-corrections]
 verify_jwt = false
+
+# Confidence stacking for multi-variant OCR consensus
+[functions.matrix-ocr-confidence-stack]
+verify_jwt = false

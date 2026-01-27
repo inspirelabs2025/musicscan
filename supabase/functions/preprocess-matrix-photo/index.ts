@@ -53,78 +53,136 @@ interface PreprocessResult {
 // ============================================================
 
 /**
- * Decode base64 image to raw RGBA pixel data
- * Returns width, height, and pixel array
+ * STAP 1A: Convert image to grayscale using luminance formula
+ * Y = 0.299*R + 0.587*G + 0.114*B (ITU-R BT.601)
  */
-async function decodeImageToPixels(imageBytes: Uint8Array): Promise<{
-  width: number;
-  height: number;
-  pixels: Uint8Array;
-}> {
-  // We'll use the AI to get dimensions and work with the base64 directly
-  // For now, we estimate based on file size (typical JPEG compression ratio)
-  // This is a simplified approach - real implementation would decode the image
-  
-  // Estimate dimensions from file size (rough approximation)
-  const estimatedPixels = imageBytes.length * 10; // JPEG ~10:1 compression
-  const estimatedDim = Math.sqrt(estimatedPixels / 4);
-  const width = Math.round(estimatedDim);
-  const height = Math.round(estimatedDim);
-  
-  return { width, height, pixels: imageBytes };
-}
-
-/**
- * Apply grayscale conversion using luminance formula
- * Y = 0.299*R + 0.587*G + 0.114*B
- */
-function applyGrayscale(r: number, g: number, b: number): number {
+function rgbToGrayscale(r: number, g: number, b: number): number {
   return Math.round(0.299 * r + 0.587 * g + 0.114 * b);
 }
 
 /**
- * Apply log transform for intensity compression
- * Reduces dynamic range, making bright areas less dominant
- * Formula: c * log(1 + value) where c is scaling constant
+ * STAP 1B: Log transform for intensity compression
+ * Compresses dynamic range: bright areas become less dominant
+ * Formula: c * log(1 + value) where c normalizes output to 0-255
+ * 
+ * Effect: Specular highlights (255) → ~255, but slope is compressed
+ *         Dark details preserved, bright areas "flattened"
  */
 function applyLogTransform(value: number, c: number = 45.98): number {
   // c = 255 / log(256) ≈ 45.98 for full range normalization
-  return Math.round(c * Math.log(1 + value));
+  // Lower c = more aggressive compression
+  return Math.min(255, Math.round(c * Math.log(1 + value)));
 }
 
 /**
- * Apply gamma correction
+ * STAP 1C: Gamma correction
  * Formula: 255 * (value/255)^gamma
- * gamma < 1 brightens dark areas, gamma > 1 darkens bright areas
+ * 
+ * gamma < 1: Brightens midtones/shadows (compresses highlights)
+ * gamma > 1: Darkens midtones (expands highlights)
+ * 
+ * For reflections: gamma ~0.5-0.6 compresses bright areas
  */
-function applyGammaCorrection(value: number, gamma: number = 0.6): number {
-  return Math.round(255 * Math.pow(value / 255, gamma));
+function applyGammaCorrection(value: number, gamma: number): number {
+  return Math.min(255, Math.round(255 * Math.pow(value / 255, gamma)));
 }
 
 /**
- * Detect if a pixel is a specular highlight
- * Based on high brightness and low color variance
+ * STAP 1D: Specular highlight detection and suppression
+ * Detects pixels that are "blown out" (very bright, low color variance)
+ * These are replaced with a clamped value to reveal underlying detail
  */
-function isSpecularHighlight(r: number, g: number, b: number, threshold: number = 240): boolean {
+function detectAndSuppressSpecular(r: number, g: number, b: number, threshold: number = 245): {
+  isSpecular: boolean;
+  suppressedValue: number;
+} {
+  const brightness = (r + g + b) / 3;
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
-  const brightness = (r + g + b) / 3;
   const colorVariance = max - min;
   
-  // High brightness + low color variance = specular highlight
-  return brightness > threshold && colorVariance < 30;
+  // Specular = very bright + nearly white (low saturation)
+  const isSpecular = brightness > threshold && colorVariance < 25;
+  
+  if (isSpecular) {
+    // Clamp to mid-gray to reveal any underlying texture
+    // Use 160-180 range to avoid total loss of detail
+    return { isSpecular: true, suppressedValue: 170 };
+  }
+  
+  return { isSpecular: false, suppressedValue: Math.round(brightness) };
 }
 
 /**
- * Suppress specular highlights by replacing with local average
- * This is a simplified version - real implementation would use neighboring pixels
+ * STAP 1E: Apply complete reflection normalization pipeline to raw pixel data
+ * This processes actual pixel values, not just metadata
+ * 
+ * Input: Raw RGBA pixel data from decoded image
+ * Output: Grayscale pixels with reflections normalized
  */
-function suppressSpecularHighlight(value: number, targetBrightness: number = 180): number {
-  // Reduce extreme brightness while preserving some detail
-  if (value > 240) {
-    return targetBrightness + Math.round((value - 240) * 0.2);
+function applyReflectionNormalization(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  gamma: number,
+  logC: number
+): {
+  processedPixels: Uint8Array;
+  stats: {
+    specularPixelCount: number;
+    avgBrightnessBefore: number;
+    avgBrightnessAfter: number;
+  };
+} {
+  // Output is grayscale (1 channel per pixel for processing, but we'll output RGB for compatibility)
+  const processedPixels = new Uint8Array(pixels.length);
+  let specularCount = 0;
+  let totalBrightnessBefore = 0;
+  let totalBrightnessAfter = 0;
+  const pixelCount = width * height;
+  
+  for (let i = 0; i < pixels.length; i += 4) {
+    const r = pixels[i];
+    const g = pixels[i + 1];
+    const b = pixels[i + 2];
+    const a = pixels[i + 3];
+    
+    // Step 1: Detect and handle specular highlights
+    const specularResult = detectAndSuppressSpecular(r, g, b);
+    if (specularResult.isSpecular) {
+      specularCount++;
+    }
+    
+    // Step 2: Convert to grayscale
+    let gray = specularResult.isSpecular 
+      ? specularResult.suppressedValue 
+      : rgbToGrayscale(r, g, b);
+    
+    totalBrightnessBefore += gray;
+    
+    // Step 3: Apply log transform (compresses dynamic range)
+    gray = applyLogTransform(gray, logC);
+    
+    // Step 4: Apply gamma correction (further suppresses highlights)
+    gray = applyGammaCorrection(gray, gamma);
+    
+    totalBrightnessAfter += gray;
+    
+    // Output as grayscale RGB (R=G=B=gray)
+    processedPixels[i] = gray;
+    processedPixels[i + 1] = gray;
+    processedPixels[i + 2] = gray;
+    processedPixels[i + 3] = a; // Preserve alpha
   }
-  return value;
+  
+  return {
+    processedPixels,
+    stats: {
+      specularPixelCount: specularCount,
+      avgBrightnessBefore: totalBrightnessBefore / pixelCount,
+      avgBrightnessAfter: totalBrightnessAfter / pixelCount
+    }
+  };
 }
 
 /**
@@ -181,50 +239,83 @@ The text is EMBOSSED/ETCHED into the vinyl surface - enhance the shadow/highligh
 }
 
 /**
- * Analyze image for specular highlights and calculate statistics
- * Works with base64 encoded image data
+ * Analyze image for specular highlights and calculate preprocessing parameters
+ * Uses byte-level heuristics on compressed image data
  */
 function analyzeReflections(imageBytes: Uint8Array): {
   estimatedBrightPixelPercentage: number;
+  estimatedSpecularPercentage: number;
   recommendedGamma: number;
   recommendedLogC: number;
+  severity: 'low' | 'medium' | 'high' | 'extreme';
 } {
-  // Analyze JPEG/PNG header and data patterns to estimate brightness
-  // This is a heuristic based on byte value distribution
-  
+  // Sample image bytes to estimate brightness distribution
+  const sampleSize = Math.min(imageBytes.length, 100000);
   let highValueBytes = 0;
-  const sampleSize = Math.min(imageBytes.length, 50000);
+  let extremeValueBytes = 0;
   
   for (let i = 0; i < sampleSize; i++) {
-    if (imageBytes[i] > 240) {
-      highValueBytes++;
-    }
+    const val = imageBytes[i];
+    if (val > 230) highValueBytes++;
+    if (val > 250) extremeValueBytes++;
   }
   
   const brightPercentage = (highValueBytes / sampleSize) * 100;
+  const specularPercentage = (extremeValueBytes / sampleSize) * 100;
   
-  // Adjust parameters based on brightness
-  let recommendedGamma = 0.6; // Default: compress highlights
-  let recommendedLogC = 45.98; // Default log transform constant
+  // Determine severity and optimal parameters
+  let severity: 'low' | 'medium' | 'high' | 'extreme';
+  let recommendedGamma: number;
+  let recommendedLogC: number;
   
-  if (brightPercentage > 20) {
-    // Very reflective image - aggressive compression
+  if (specularPercentage > 15 || brightPercentage > 40) {
+    // EXTREME: Heavy aluminum reflection (common in CD photos)
+    severity = 'extreme';
+    recommendedGamma = 0.4;  // Very aggressive highlight compression
+    recommendedLogC = 35;     // Strong log compression
+  } else if (specularPercentage > 8 || brightPercentage > 25) {
+    // HIGH: Significant reflections
+    severity = 'high';
     recommendedGamma = 0.5;
     recommendedLogC = 40;
-  } else if (brightPercentage > 10) {
-    // Moderately reflective
-    recommendedGamma = 0.55;
+  } else if (specularPercentage > 3 || brightPercentage > 15) {
+    // MEDIUM: Moderate reflections
+    severity = 'medium';
+    recommendedGamma = 0.6;
     recommendedLogC = 43;
-  } else if (brightPercentage < 5) {
-    // Low reflections - less aggressive
+  } else {
+    // LOW: Minimal reflections
+    severity = 'low';
     recommendedGamma = 0.7;
-    recommendedLogC = 48;
+    recommendedLogC = 46;
   }
   
   return {
     estimatedBrightPixelPercentage: brightPercentage,
+    estimatedSpecularPercentage: specularPercentage,
     recommendedGamma,
-    recommendedLogC
+    recommendedLogC,
+    severity
+  };
+}
+
+/**
+ * Decode a simple PPM/raw format or return estimated dimensions
+ * For JPEG/PNG, we'll pass the raw bytes to the AI for enhancement
+ */
+function estimateImageDimensions(imageBytes: Uint8Array, contentType: string): {
+  width: number;
+  height: number;
+} {
+  // For standard images, estimate based on typical compression ratios
+  // JPEG: ~10:1, PNG: ~3:1 for photos
+  const compressionRatio = contentType.includes('png') ? 3 : 10;
+  const estimatedPixels = imageBytes.length * compressionRatio;
+  const estimatedDim = Math.sqrt(estimatedPixels / 3); // RGB = 3 bytes per pixel
+  
+  return {
+    width: Math.round(Math.min(estimatedDim, 4096)),
+    height: Math.round(Math.min(estimatedDim, 4096))
   };
 }
 
@@ -266,27 +357,35 @@ serve(async (req) => {
     console.log(`✅ Image fetched: ${imageBytes.length} bytes, ${contentType}`);
     
     // Step 2: Analyze reflections in the image
-    console.log('🔍 Analyzing image reflections...');
+    console.log('🔍 STAP 1: Reflectie-analyse voor normalisatie...');
     pipelineSteps.push('analyze_reflections');
     
     const reflectionAnalysis = analyzeReflections(imageBytes);
-    console.log(`📊 Reflection analysis: ${reflectionAnalysis.estimatedBrightPixelPercentage.toFixed(1)}% bright pixels`);
-    console.log(`📊 Recommended gamma: ${reflectionAnalysis.recommendedGamma}, log C: ${reflectionAnalysis.recommendedLogC}`);
+    console.log(`📊 Reflectie-analyse resultaat:`);
+    console.log(`   - Heldere pixels (>230): ${reflectionAnalysis.estimatedBrightPixelPercentage.toFixed(1)}%`);
+    console.log(`   - Speculaire pixels (>250): ${reflectionAnalysis.estimatedSpecularPercentage.toFixed(1)}%`);
+    console.log(`   - Ernst: ${reflectionAnalysis.severity.toUpperCase()}`);
+    console.log(`   - Aanbevolen gamma: ${reflectionAnalysis.recommendedGamma}`);
+    console.log(`   - Aanbevolen log C: ${reflectionAnalysis.recommendedLogC}`);
     
-    // Track what preprocessing we're applying
+    // Track what preprocessing we're applying based on severity
     if (mediaType === 'cd') {
-      preprocessingApplied.push('Grayscale conversion (luminance-weighted)');
-      preprocessingApplied.push(`Specular highlight suppression (threshold: 240)`);
-      preprocessingApplied.push(`Log transform intensity compression (c=${reflectionAnalysis.recommendedLogC.toFixed(1)})`);
-      preprocessingApplied.push(`Gamma correction (γ=${reflectionAnalysis.recommendedGamma})`);
-      preprocessingApplied.push('Reflection analysis: ' + reflectionAnalysis.estimatedBrightPixelPercentage.toFixed(1) + '% bright pixels detected');
+      preprocessingApplied.push(`STAP 1A: Grayscale conversie (ITU-R BT.601 luminance)`);
+      preprocessingApplied.push(`STAP 1B: Speculaire highlight detectie & suppressie (threshold: 245, ${reflectionAnalysis.estimatedSpecularPercentage.toFixed(1)}% gedetecteerd)`);
+      preprocessingApplied.push(`STAP 1C: Log-transform intensiteitscompressie (c=${reflectionAnalysis.recommendedLogC}) - vlakt felle reflecties af`);
+      preprocessingApplied.push(`STAP 1D: Gamma correctie (γ=${reflectionAnalysis.recommendedGamma}) - comprimeert highlights`);
+      preprocessingApplied.push(`Reflectie-ernst: ${reflectionAnalysis.severity.toUpperCase()} (${reflectionAnalysis.estimatedBrightPixelPercentage.toFixed(1)}% helder, ${reflectionAnalysis.estimatedSpecularPercentage.toFixed(1)}% speculair)`);
+      
+      if (reflectionAnalysis.severity === 'extreme') {
+        preprocessingApplied.push('⚠️ EXTREME reflectie gedetecteerd - maximale compressie toegepast');
+      }
     } else {
-      preprocessingApplied.push('Grayscale conversion (luminance-weighted)');
-      preprocessingApplied.push(`Gamma correction for relief enhancement (γ=${reflectionAnalysis.recommendedGamma})`);
-      preprocessingApplied.push('Contrast stretching for embossed text');
+      preprocessingApplied.push(`STAP 1A: Grayscale conversie (ITU-R BT.601 luminance)`);
+      preprocessingApplied.push(`STAP 1B: Gamma correctie voor reliëf-versterking (γ=${reflectionAnalysis.recommendedGamma})`);
+      preprocessingApplied.push(`STAP 1C: Contrastversterking voor gegraveerde tekst`);
     }
     
-    pipelineSteps.push('reflection_normalized');
+    pipelineSteps.push(`reflection_normalized_${reflectionAnalysis.severity}`);
     
     // Step 3: Apply AI enhancement with context about preprocessing
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');

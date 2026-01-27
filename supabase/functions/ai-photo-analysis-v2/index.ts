@@ -182,10 +182,55 @@ serve(async (req) => {
       // Pass 2: Detail extraction
       const detailAnalysis = await analyzePhotosWithOpenAI(photoUrls, mediaType, 'details')
 
-      // Pass 3 (CD only): Dedicated inner-ring matrix/SID extraction
-      const matrixAnalysis = mediaType === 'cd'
-        ? await analyzePhotosWithOpenAI(photoUrls, mediaType, 'matrix')
-        : null
+      // Pass 3: Dedicated matrix/SID extraction with preprocessing
+      // For BOTH CD and LP, we now preprocess the matrix photo for better OCR
+      let matrixPhotoUrls = photoUrls;
+      
+      // Try to preprocess the matrix photo (last photo for vinyl, photo 3 for CD)
+      const matrixPhotoIndex = mediaType === 'vinyl' ? photoUrls.length - 1 : Math.min(2, photoUrls.length - 1);
+      const matrixPhotoUrl = photoUrls[matrixPhotoIndex];
+      
+      if (matrixPhotoUrl) {
+        try {
+          console.log(`🔧 Preprocessing ${mediaType} matrix photo (index ${matrixPhotoIndex})...`);
+          
+          const preprocessResponse = await fetch(
+            `${supabaseUrl}/functions/v1/preprocess-matrix-photo`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${supabaseServiceKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                imageUrl: matrixPhotoUrl,
+                mediaType: mediaType
+              })
+            }
+          );
+          
+          if (preprocessResponse.ok) {
+            const preprocessResult = await preprocessResponse.json();
+            if (preprocessResult.success && preprocessResult.enhancedImageBase64) {
+              console.log(`✅ Matrix photo preprocessed in ${preprocessResult.processingTime}ms`);
+              console.log(`📊 Pipeline steps: ${preprocessResult.pipeline?.join(' → ')}`);
+              
+              // Replace the matrix photo URL with the enhanced base64 for the matrix pass
+              matrixPhotoUrls = [...photoUrls];
+              matrixPhotoUrls[matrixPhotoIndex] = preprocessResult.enhancedImageBase64;
+            } else {
+              console.log('⚠️ Preprocessing returned no enhanced image, using original');
+            }
+          } else {
+            console.log(`⚠️ Preprocessing failed (${preprocessResponse.status}), using original photo`);
+          }
+        } catch (preprocessError) {
+          console.log('⚠️ Preprocessing error (continuing with original):', preprocessError.message);
+        }
+      }
+
+      // Run matrix analysis with potentially preprocessed image
+      const matrixAnalysis = await analyzePhotosWithOpenAI(matrixPhotoUrls, mediaType, 'matrix')
 
       if (matrixAnalysis && !matrixAnalysis.success) {
         console.log('⚠️ Matrix pass failed (continuing):', matrixAnalysis.error)
@@ -631,13 +676,16 @@ Focus on the primary release identification. Be extremely accurate with text ext
   }
 
   if (analysisType === 'matrix') {
-    return basePrompt + `You are performing a dedicated OCR pass for CD INNER RING identifiers.
+    if (mediaType === 'cd') {
+      return basePrompt + `You are performing a dedicated OCR pass for CD INNER RING identifiers.
+The image may have been preprocessed to enhance text visibility.
 
 CRITICAL RULES:
 - Only output what you can actually SEE in the inner ring.
 - DO NOT invent missing characters. If unclear, use "?" in-place.
 - Do NOT copy example values.
 - Keep spaces, hyphens, stars, dots, and symbols exactly as seen.
+- Look for high-contrast edges where text has been enhanced.
 
 For CDs, carefully distinguish between these DIFFERENT identifiers:
 
@@ -645,6 +693,7 @@ For CDs, carefully distinguish between these DIFFERENT identifiers:
 - Text ENGRAVED/ETCHED in the transparent inner ring near the center hole
 - Often appears in multiple segments around the ring (top/bottom)
 - Return BOTH top-arc and bottom-arc readings when possible
+- The preprocessing enhances engraved text - look for edge-highlighted characters
 
 **SID CODES**:
 - IFPI Mastering SID: starts with "IFPI L" (e.g., "IFPI L123")
@@ -666,6 +715,50 @@ RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
 }
 
 Prioritize inner-ring text over printed tracklist text.`
+    } else {
+      // Vinyl matrix pass
+      return basePrompt + `You are performing a dedicated OCR pass for VINYL DEAD WAX / RUNOUT GROOVE identifiers.
+The image may have been preprocessed to enhance embossed/etched text visibility.
+
+CRITICAL RULES:
+- Only output what you can actually SEE in the dead wax area (between the label and grooves).
+- DO NOT invent missing characters. If unclear, use "?" in-place.
+- Do NOT copy example values.
+- Keep spaces, hyphens, stars, dots, and symbols exactly as seen.
+- Look for edge-enhanced relief text where embossed characters have been highlighted.
+
+For VINYL, carefully look for these identifiers in the RUNOUT GROOVE / DEAD WAX area:
+
+**MATRIX NUMBER** (CRITICAL - etched/stamped in runout groove):
+- Text ETCHED, STAMPED, or HAND-WRITTEN in the blank area near the label
+- May include letters, numbers, and symbols
+- Often appears on Side A and Side B separately
+- Look for both machine-stamped and hand-etched text
+
+**STAMPER CODES**:
+- Often single letters (A, B, AA, AB, etc.) indicating stamper used
+- May be in different locations around the runout
+
+**PRESSING PLANT CODES**:
+- Often include abbreviations like "PRC", "STERLING", "RL", "SS", etc.
+
+**CATALOG VARIATIONS**:
+- Suffixes like -1, -A, -B indicating pressing variations
+
+RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
+{
+  "matrixNumberFull": "full matrix number reading (use ? for unclear) or null",
+  "matrixNumberSideA": "Side A matrix if visible or null",
+  "matrixNumberSideB": "Side B matrix if visible or null",
+  "stamperCodes": "stamper letter codes or null",
+  "pressingPlant": "pressing plant indicators or null",
+  "handEtched": "any hand-written/etched text or null",
+  "confidence": number between 0-1,
+  "notes": "brief notes about readability / uncertain parts"
+}
+
+Focus on the dead wax area between the label and the first groove.`
+    }
   }
 
   // details
@@ -722,19 +815,46 @@ function getUserPrompt(mediaType: string, analysisType: 'general' | 'details' | 
   }
 
   if (analysisType === 'matrix') {
-    return `Focus ONLY on CD inner ring / mirror band text and codes. Read the matrix number segment-by-segment around the ring (top arc + bottom arc if present). Use '?' for unclear characters. Do not guess missing parts.`
+    if (mediaType === 'cd') {
+      return `Focus ONLY on CD inner ring / mirror band text and codes. The image may be preprocessed for enhanced contrast. Read the matrix number segment-by-segment around the ring (top arc + bottom arc if present). Use '?' for unclear characters. Do not guess missing parts.`
+    } else {
+      return `Focus ONLY on vinyl dead wax / runout groove area between the label and grooves. The image may be preprocessed to enhance embossed text. Look for etched, stamped, or hand-written matrix numbers. Include stamper codes and pressing plant indicators. Use '?' for unclear characters.`
+    }
   }
 
   return `Examine these ${mediaType} images for detailed technical information. Look for small text, codes, matrix numbers, barcodes, and any markings that might help with precise identification. Extract ALL visible text, even if partially obscured.`
 }
 
 function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: any) {
-  const matrixFromMatrixPass =
-    matrixData?.matrixNumberFull ||
-    [matrixData?.matrixNumberTopArc, matrixData?.matrixNumberBottomArc]
-      .filter(Boolean)
-      .join(' | ') ||
-    null
+  // Handle both CD and vinyl matrix data structures
+  const matrixFromMatrixPass = (() => {
+    if (!matrixData) return null;
+    
+    // CD format: matrixNumberFull, matrixNumberTopArc, matrixNumberBottomArc
+    if (matrixData.matrixNumberFull) return matrixData.matrixNumberFull;
+    if (matrixData.matrixNumberTopArc || matrixData.matrixNumberBottomArc) {
+      return [matrixData.matrixNumberTopArc, matrixData.matrixNumberBottomArc]
+        .filter(Boolean)
+        .join(' | ');
+    }
+    
+    // Vinyl format: matrixNumberFull, matrixNumberSideA, matrixNumberSideB
+    if (matrixData.matrixNumberSideA || matrixData.matrixNumberSideB) {
+      const parts = [];
+      if (matrixData.matrixNumberSideA) parts.push(`A: ${matrixData.matrixNumberSideA}`);
+      if (matrixData.matrixNumberSideB) parts.push(`B: ${matrixData.matrixNumberSideB}`);
+      return parts.join(' / ');
+    }
+    
+    return null;
+  })();
+
+  // Extract vinyl-specific data
+  const vinylExtras = matrixData ? {
+    stamperCodes: matrixData.stamperCodes ?? null,
+    pressingPlant: matrixData.pressingPlant ?? null,
+    handEtched: matrixData.handEtched ?? null,
+  } : {};
 
   return {
     // Primary fields from general analysis
@@ -753,6 +873,9 @@ function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: an
     sidCodeMould: matrixData?.sidCodeMould ?? detailData?.sidCodeMould ?? null,
     labelCode: matrixData?.labelCode ?? detailData?.labelCode ?? null,
     barcode: detailData?.barcode ?? null,
+    
+    // Vinyl-specific extras
+    ...vinylExtras,
 
     extractedText: [
       ...(generalData?.searchQueries || []),
@@ -764,6 +887,9 @@ function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: an
     description: generalData?.description ?? null,
     imageQuality: generalData?.imageQuality || 'fair',
     extractedDetails: detailData?.extractedDetails,
+    
+    // Matrix pass notes for debugging
+    matrixNotes: matrixData?.notes ?? null,
 
     // Enhanced search queries
     searchQueries: [

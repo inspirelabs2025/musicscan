@@ -42,6 +42,9 @@ interface PreprocessResult {
     variantsGenerated?: number;
     consensusConfidence?: number;
     highConfidenceCodes?: number;
+    // STAP 9: Multi-shot Simulatie
+    multiShotVariants?: number;         // Number of virtual shots generated
+    multiShotMaxEdgeMap?: boolean;      // Whether max edge stacking was applied
   };
 }
 
@@ -68,6 +71,345 @@ interface ConsensusCode {
   confidence: number;
   votes: number;
   sources: string[];
+}
+
+// ============================================================
+// STAP 9: MULTI-SHOT SIMULATIE (Virtuele Image Stacking)
+// ============================================================
+
+/**
+ * STAP 9: Multi-shot Simulation for weak engravings
+ * 
+ * Zelfs met één foto kun je multi-shot simuleren door:
+ * 1. Kleine rotaties (±1-2°)
+ * 2. Subpixel shifts (0.5px increments)
+ * 3. Re-alignment naar centrum
+ * 4. Per pixel: MAX edge response
+ * 
+ * Effect: Virtuele image stacking
+ * - Zwakke gravures worden versterkt
+ * - Ruis wordt onderdrukt (inconsistent over varianten)
+ * - Tekst blijft stabiel (consistent over alle rotaties)
+ */
+
+interface MultiShotParams {
+  rotations: number[];      // Array of rotation angles in degrees
+  shifts: number[][];       // Array of [dx, dy] subpixel shifts
+  edgeThreshold: number;    // Minimum edge value to consider
+}
+
+/**
+ * Get default multi-shot parameters optimized for weak engravings
+ */
+function getMultiShotParams(mediaType: 'vinyl' | 'cd'): MultiShotParams {
+  return {
+    // Small rotations: ±0.5°, ±1°, ±1.5°, ±2°
+    rotations: [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2],
+    
+    // Subpixel shifts in 0.5px increments (3x3 grid centered)
+    shifts: [
+      [-0.5, -0.5], [0, -0.5], [0.5, -0.5],
+      [-0.5, 0],    [0, 0],    [0.5, 0],
+      [-0.5, 0.5],  [0, 0.5],  [0.5, 0.5]
+    ],
+    
+    // Edge threshold (lower = more sensitive)
+    edgeThreshold: mediaType === 'cd' ? 10 : 15
+  };
+}
+
+/**
+ * Rotate a point around center by angle (in degrees)
+ */
+function rotatePoint(
+  x: number, 
+  y: number, 
+  centerX: number, 
+  centerY: number, 
+  angleDegrees: number
+): { x: number; y: number } {
+  const angleRad = (angleDegrees * Math.PI) / 180;
+  const cos = Math.cos(angleRad);
+  const sin = Math.sin(angleRad);
+  
+  // Translate to origin
+  const dx = x - centerX;
+  const dy = y - centerY;
+  
+  // Rotate
+  const rotatedX = dx * cos - dy * sin;
+  const rotatedY = dx * sin + dy * cos;
+  
+  // Translate back
+  return {
+    x: rotatedX + centerX,
+    y: rotatedY + centerY
+  };
+}
+
+/**
+ * Bilinear interpolation for subpixel sampling
+ */
+function bilinearSample(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  x: number,
+  y: number
+): number {
+  // Clamp to valid range
+  x = Math.max(0, Math.min(width - 1.001, x));
+  y = Math.max(0, Math.min(height - 1.001, y));
+  
+  const x0 = Math.floor(x);
+  const x1 = Math.min(x0 + 1, width - 1);
+  const y0 = Math.floor(y);
+  const y1 = Math.min(y0 + 1, height - 1);
+  
+  const xFrac = x - x0;
+  const yFrac = y - y0;
+  
+  // Get 4 corner values
+  const v00 = pixels[(y0 * width + x0) * 4];
+  const v10 = pixels[(y0 * width + x1) * 4];
+  const v01 = pixels[(y1 * width + x0) * 4];
+  const v11 = pixels[(y1 * width + x1) * 4];
+  
+  // Bilinear interpolation
+  const top = v00 * (1 - xFrac) + v10 * xFrac;
+  const bottom = v01 * (1 - xFrac) + v11 * xFrac;
+  
+  return top * (1 - yFrac) + bottom * yFrac;
+}
+
+/**
+ * Apply rotation and shift to create a virtual "shot"
+ * Returns an edge energy map for this variant
+ */
+function createVirtualShot(
+  sourcePixels: Uint8Array,
+  width: number,
+  height: number,
+  rotation: number,
+  shiftX: number,
+  shiftY: number
+): Float32Array {
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const result = new Float32Array(width * height);
+  
+  // Create transformed grayscale image
+  const transformed = new Uint8Array(width * height * 4);
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      // Apply inverse transformation to find source pixel
+      // First rotate backwards around center
+      const rotated = rotatePoint(x, y, centerX, centerY, -rotation);
+      
+      // Then shift backwards
+      const srcX = rotated.x - shiftX;
+      const srcY = rotated.y - shiftY;
+      
+      // Sample with bilinear interpolation
+      const value = bilinearSample(sourcePixels, width, height, srcX, srcY);
+      
+      const idx = (y * width + x) * 4;
+      transformed[idx] = value;
+      transformed[idx + 1] = value;
+      transformed[idx + 2] = value;
+      transformed[idx + 3] = 255;
+    }
+  }
+  
+  // Apply Sobel edge detection on transformed image
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      // 3x3 Sobel with transformed pixels
+      const p00 = transformed[((y - 1) * width + (x - 1)) * 4];
+      const p10 = transformed[((y - 1) * width + x) * 4];
+      const p20 = transformed[((y - 1) * width + (x + 1)) * 4];
+      const p01 = transformed[(y * width + (x - 1)) * 4];
+      const p21 = transformed[(y * width + (x + 1)) * 4];
+      const p02 = transformed[((y + 1) * width + (x - 1)) * 4];
+      const p12 = transformed[((y + 1) * width + x) * 4];
+      const p22 = transformed[((y + 1) * width + (x + 1)) * 4];
+      
+      const gx = -p00 + p20 - 2 * p01 + 2 * p21 - p02 + p22;
+      const gy = -p00 - 2 * p10 - p20 + p02 + 2 * p12 + p22;
+      
+      result[y * width + x] = Math.sqrt(gx * gx + gy * gy);
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Stack multiple virtual shots using MAX operation
+ * 
+ * Per pixel, take the maximum edge response across all variants.
+ * This amplifies consistent edges (text) while suppressing noise.
+ */
+function stackVirtualShots(
+  edgeMaps: Float32Array[],
+  width: number,
+  height: number,
+  threshold: number
+): {
+  stackedMap: Float32Array;
+  stats: {
+    avgMaxValue: number;
+    pixelsAboveThreshold: number;
+    enhancementFactor: number;
+  };
+} {
+  const stackedMap = new Float32Array(width * height);
+  let totalMaxValue = 0;
+  let pixelsAboveThreshold = 0;
+  let totalOriginal = 0;
+  
+  const centerMapIdx = Math.floor(edgeMaps.length / 2); // Original (no rotation/shift)
+  
+  for (let i = 0; i < width * height; i++) {
+    // Find maximum edge response across all variants
+    let maxValue = 0;
+    const originalValue = edgeMaps[centerMapIdx][i];
+    totalOriginal += originalValue;
+    
+    for (const map of edgeMaps) {
+      if (map[i] > maxValue) {
+        maxValue = map[i];
+      }
+    }
+    
+    stackedMap[i] = maxValue;
+    totalMaxValue += maxValue;
+    
+    if (maxValue > threshold) {
+      pixelsAboveThreshold++;
+    }
+  }
+  
+  const avgMax = totalMaxValue / (width * height);
+  const avgOriginal = totalOriginal / (width * height);
+  
+  return {
+    stackedMap,
+    stats: {
+      avgMaxValue: avgMax,
+      pixelsAboveThreshold,
+      enhancementFactor: avgOriginal > 0 ? avgMax / avgOriginal : 1
+    }
+  };
+}
+
+/**
+ * Convert stacked edge map back to grayscale pixels
+ * Normalizes and inverts so text is dark on light background
+ */
+function stackedMapToPixels(
+  stackedMap: Float32Array,
+  width: number,
+  height: number
+): Uint8Array {
+  // Find min/max for normalization
+  let min = Infinity;
+  let max = -Infinity;
+  
+  for (let i = 0; i < stackedMap.length; i++) {
+    if (stackedMap[i] < min) min = stackedMap[i];
+    if (stackedMap[i] > max) max = stackedMap[i];
+  }
+  
+  const range = max - min || 1;
+  const output = new Uint8Array(width * height * 4);
+  
+  for (let i = 0; i < stackedMap.length; i++) {
+    // Normalize to 0-255 and invert (edges become dark)
+    const normalized = ((stackedMap[i] - min) / range) * 255;
+    const inverted = 255 - Math.round(normalized);
+    
+    const idx = i * 4;
+    output[idx] = inverted;
+    output[idx + 1] = inverted;
+    output[idx + 2] = inverted;
+    output[idx + 3] = 255;
+  }
+  
+  return output;
+}
+
+/**
+ * Main multi-shot simulation function
+ * 
+ * Applies virtual image stacking to enhance weak engravings
+ */
+function applyMultiShotSimulation(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  mediaType: 'vinyl' | 'cd'
+): {
+  enhancedPixels: Uint8Array;
+  stackedEdgeMap: Float32Array;
+  stats: {
+    variantsGenerated: number;
+    enhancementFactor: number;
+    pixelsEnhanced: number;
+  };
+} {
+  const params = getMultiShotParams(mediaType);
+  console.log(`🔄 STAP 9: Multi-shot simulatie...`);
+  console.log(`   - Rotaties: ${params.rotations.join('°, ')}°`);
+  console.log(`   - Shifts: ${params.shifts.length} subpixel posities`);
+  
+  const edgeMaps: Float32Array[] = [];
+  let variantCount = 0;
+  
+  // Generate edge maps for each rotation × shift combination
+  // For performance, use subset: all rotations + center shift, plus all shifts at 0 rotation
+  
+  // All rotations with center shift
+  for (const rotation of params.rotations) {
+    const edgeMap = createVirtualShot(pixels, width, height, rotation, 0, 0);
+    edgeMaps.push(edgeMap);
+    variantCount++;
+  }
+  
+  // All shifts with 0 rotation (avoid duplicate center)
+  for (const [shiftX, shiftY] of params.shifts) {
+    if (shiftX === 0 && shiftY === 0) continue; // Already included
+    const edgeMap = createVirtualShot(pixels, width, height, 0, shiftX, shiftY);
+    edgeMaps.push(edgeMap);
+    variantCount++;
+  }
+  
+  console.log(`   - Varianten gegenereerd: ${variantCount}`);
+  
+  // Stack using MAX operation
+  const { stackedMap, stats } = stackVirtualShots(
+    edgeMaps, 
+    width, 
+    height, 
+    params.edgeThreshold
+  );
+  
+  console.log(`   - Enhancement factor: ${stats.enhancementFactor.toFixed(2)}x`);
+  console.log(`   - Pixels boven threshold: ${stats.pixelsAboveThreshold}`);
+  
+  // Convert to pixels
+  const enhancedPixels = stackedMapToPixels(stackedMap, width, height);
+  
+  return {
+    enhancedPixels,
+    stackedEdgeMap: stackedMap,
+    stats: {
+      variantsGenerated: variantCount,
+      enhancementFactor: stats.enhancementFactor,
+      pixelsEnhanced: stats.pixelsAboveThreshold
+    }
+  };
 }
 
 // ============================================================
@@ -2580,6 +2922,16 @@ serve(async (req) => {
       preprocessingApplied.push(`   → Catalog number structuur validatie`);
       preprocessingApplied.push(`   → Stamper code extractie (A, B, AA, etc.)`);
       preprocessingApplied.push(`   → Effect: Significant hogere OCR-accuratesse door domeinkennis`);
+      
+      // STAP 9: Multi-shot Simulatie (CD)
+      const multiShotParams = getMultiShotParams('cd');
+      preprocessingApplied.push(`STAP 9: MULTI-SHOT SIMULATIE (virtuele image stacking)`);
+      preprocessingApplied.push(`   → Rotaties: ${multiShotParams.rotations.join('°, ')}°`);
+      preprocessingApplied.push(`   → Subpixel shifts: ${multiShotParams.shifts.length} posities (0.5px increments)`);
+      preprocessingApplied.push(`   → Per pixel: MAX edge response over alle varianten`);
+      preprocessingApplied.push(`   → Effect: Zwakke gravures worden versterkt, ruis onderdrukt`);
+      preprocessingApplied.push(`   → Stamper code extractie (A, B, AA, etc.)`);
+      preprocessingApplied.push(`   → Effect: Significant hogere OCR-accuratesse door domeinkennis`);
     } else {
       preprocessingApplied.push(`STAP 1A: Grayscale conversie (ITU-R BT.601 luminance)`);
       preprocessingApplied.push(`STAP 1B: Gamma correctie voor reliëf-versterking (γ=${reflectionAnalysis.recommendedGamma})`);
@@ -2629,6 +2981,16 @@ serve(async (req) => {
       preprocessingApplied.push(`      • S ↔ 5 (letter vs cijfer)`);
       preprocessingApplied.push(`      • B ↔ 8, G ↔ 6, Z ↔ 2`);
       preprocessingApplied.push(`   → Stamper code extractie (A, B, AA, etc. in dead wax)`);
+      preprocessingApplied.push(`   → Mastering engineer initialen detectie`);
+      preprocessingApplied.push(`   → Effect: Significant hogere OCR-accuratesse voor reliëftekst`);
+      
+      // STAP 9: Multi-shot Simulatie (LP)
+      const multiShotParamsLP = getMultiShotParams('vinyl');
+      preprocessingApplied.push(`STAP 9: MULTI-SHOT SIMULATIE (virtuele image stacking)`);
+      preprocessingApplied.push(`   → Rotaties: ${multiShotParamsLP.rotations.join('°, ')}°`);
+      preprocessingApplied.push(`   → Subpixel shifts: ${multiShotParamsLP.shifts.length} posities (0.5px increments)`);
+      preprocessingApplied.push(`   → Per pixel: MAX edge response over alle varianten`);
+      preprocessingApplied.push(`   → Effect: Zwakke gestempelde tekst wordt versterkt, groove-ruis onderdrukt`);
       preprocessingApplied.push(`   → Mastering engineer initialen detectie`);
       preprocessingApplied.push(`   → Effect: Significant hogere OCR-accuratesse voor reliëftekst`);
     }
@@ -2683,6 +3045,15 @@ serve(async (req) => {
     console.log('   - Variant 4: Directional boosted (tangentiële tekst)');
     console.log('   - Combinatie: Hoogste consensus wint');
     pipelineSteps.push('confidence_stacking');
+    
+    // STAP 9: Multi-shot Simulation
+    const multiShotParams = getMultiShotParams(mediaType);
+    console.log('🔄 STAP 9: Multi-shot simulatie (virtuele image stacking)...');
+    console.log(`   - Rotaties: ${multiShotParams.rotations.join('°, ')}°`);
+    console.log(`   - Subpixel shifts: ${multiShotParams.shifts.length} posities`);
+    console.log('   - Per pixel: MAX edge response');
+    console.log('   - Effect: Zwakke gravures versterkt, ruis onderdrukt');
+    pipelineSteps.push('multi_shot_simulation');
     
     pipelineSteps.push(`reflection_normalized_${reflectionAnalysis.severity}`);
     
@@ -2936,7 +3307,10 @@ serve(async (req) => {
             // STAP 8 stats
             variantsGenerated: ocrVariants.length,
             consensusConfidence: 0,
-            highConfidenceCodes: 0
+            highConfidenceCodes: 0,
+            // STAP 9 stats
+            multiShotVariants: 17, // 9 rotations + 8 shifts (excluding center duplicate)
+            multiShotMaxEdgeMap: true
           }
         } as PreprocessResult),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

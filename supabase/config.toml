@@ -701,3 +701,7 @@ verify_jwt = false
 # Matrix photo preprocessing for improved OCR
 [functions.preprocess-matrix-photo]
 verify_jwt = false
+
+# Domain knowledge OCR corrections for matrix codes
+[functions.apply-matrix-ocr-corrections]
+verify_jwt = false

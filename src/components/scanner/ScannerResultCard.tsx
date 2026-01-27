@@ -1,9 +1,12 @@
-import React from 'react';
-import { ExternalLink, Disc, Calendar, Tag, MapPin, Music, Loader2, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { ExternalLink, Disc, Calendar, Tag, MapPin, Music, Loader2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { ScanResult, ScanStatus } from '@/hooks/useUnifiedScan';
+import { EnhancedScanPreview } from './EnhancedScanPreview';
+import { UserConfirmationFeedback } from './UserConfirmationFeedback';
 
 interface ConfidenceInfo {
   artist?: number;
@@ -19,11 +22,20 @@ interface ExtendedScanResult extends ScanResult {
     artist?: string;
     title?: string;
   };
+  // Enhanced scan data
+  enhanced_image?: string;
+  original_image?: string;
+  processing_stats?: {
+    enhancementFactor?: number;
+    multiShotVariants?: number;
+    pixelsEnhanced?: number;
+  };
 }
 
 interface ScannerResultCardProps {
   result: ExtendedScanResult | null;
   status: ScanStatus;
+  scanId?: string;
 }
 
 const ConfidenceIndicator = ({ confidence, ocrNotes }: { confidence?: ConfidenceInfo; ocrNotes?: string }) => {
@@ -40,7 +52,7 @@ const ConfidenceIndicator = ({ confidence, ocrNotes }: { confidence?: Confidence
       <div className="flex items-center gap-2">
         <AlertTriangle className="h-5 w-5 flex-shrink-0" />
         <span className="font-medium">
-          ⚠️ Let op: AI herkenning onzeker
+          ⚠️ Let op: Smart herkenning onzeker
         </span>
       </div>
       <p className="text-xs opacity-80">
@@ -56,7 +68,8 @@ const ConfidenceIndicator = ({ confidence, ocrNotes }: { confidence?: Confidence
   );
 };
 
-export const ScannerResultCard = React.memo(({ result, status }: ScannerResultCardProps) => {
+export const ScannerResultCard = React.memo(({ result, status, scanId }: ScannerResultCardProps) => {
+  const [showEnhanced, setShowEnhanced] = useState(false);
   const isLoading = status === 'analyzing' || status === 'searching';
   const extendedResult = result as ExtendedScanResult | null;
 
@@ -87,14 +100,41 @@ export const ScannerResultCard = React.memo(({ result, status }: ScannerResultCa
 
   if (!result) return null;
 
+  // Prepare confirmation fields from uncertain data
+  const confirmationFields = [];
+  if (extendedResult?.confidence) {
+    if (extendedResult.confidence.artist && extendedResult.confidence.artist < 0.85 && result.artist) {
+      confirmationFields.push({
+        field: 'artist',
+        label: 'Artiest',
+        value: result.artist,
+        confidence: extendedResult.confidence.artist,
+        alternatives: extendedResult.raw_spelling?.artist ? [extendedResult.raw_spelling.artist] : undefined
+      });
+    }
+    if (extendedResult.confidence.title && extendedResult.confidence.title < 0.85 && result.title) {
+      confirmationFields.push({
+        field: 'title',
+        label: 'Titel',
+        value: result.title,
+        confidence: extendedResult.confidence.title,
+        alternatives: extendedResult.raw_spelling?.title ? [extendedResult.raw_spelling.title] : undefined
+      });
+    }
+  }
+
+  const hasEnhancedData = extendedResult?.enhanced_image && extendedResult?.original_image;
+
   return (
     <Card className="overflow-hidden">
-      <CardContent className="p-4">
+      <CardContent className="p-4 space-y-4">
         <ConfidenceIndicator 
           confidence={extendedResult?.confidence} 
           ocrNotes={extendedResult?.ocr_notes}
         />
-        <div className="flex gap-4 mt-2">
+
+        {/* Main result content */}
+        <div className="flex gap-4">
           {/* Cover image */}
           <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 bg-muted rounded-lg overflow-hidden">
             {result.cover_image ? (
@@ -157,7 +197,7 @@ export const ScannerResultCard = React.memo(({ result, status }: ScannerResultCa
               </p>
             )}
 
-            {/* Discogs link - always show if we have discogs_id or discogs_url */}
+            {/* Discogs link */}
             {(result.discogs_url || result.discogs_id) && (
               <Button
                 variant="link"
@@ -177,6 +217,33 @@ export const ScannerResultCard = React.memo(({ result, status }: ScannerResultCa
             )}
           </div>
         </div>
+
+        {/* User confirmation for uncertain fields */}
+        {confirmationFields.length > 0 && (
+          <UserConfirmationFeedback
+            scanId={scanId}
+            fields={confirmationFields}
+          />
+        )}
+
+        {/* Enhanced scan preview (collapsible) */}
+        {hasEnhancedData && (
+          <Collapsible open={showEnhanced} onOpenChange={setShowEnhanced}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-full justify-between text-xs text-muted-foreground">
+                <span>🔬 Bekijk smart verbetering</span>
+                {showEnhanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2">
+              <EnhancedScanPreview
+                originalImage={extendedResult.original_image!}
+                enhancedImage={extendedResult.enhanced_image}
+                processingStats={extendedResult.processing_stats}
+              />
+            </CollapsibleContent>
+          </Collapsible>
+        )}
       </CardContent>
     </Card>
   );

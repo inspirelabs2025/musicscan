@@ -31,6 +31,25 @@ export interface ScanResult {
   cover_image?: string;
   pricing_stats?: PricingStats;
   similarity_score?: number;
+  // Enhanced scan data for UX improvements
+  confidence?: {
+    artist?: number;
+    title?: number;
+    overall?: number;
+    verified?: boolean;
+  };
+  ocr_notes?: string;
+  raw_spelling?: {
+    artist?: string;
+    title?: string;
+  };
+  enhanced_image?: string;
+  original_image?: string;
+  processing_stats?: {
+    enhancementFactor?: number;
+    multiShotVariants?: number;
+    pixelsEnhanced?: number;
+  };
 }
 
 export interface UnifiedScanState {

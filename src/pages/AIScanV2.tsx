@@ -423,9 +423,10 @@ export default function AIScanV2() {
                 {isAnalyzing && <div className="mt-4 space-y-2">
                     <Progress value={analysisProgress} className="w-full" />
                     <p className="text-sm text-center text-muted-foreground">
-                      {analysisProgress < 40 && "Foto's uploaden..."}
-                      {analysisProgress >= 40 && analysisProgress < 70 && "Multi-pass AI analyse..."}
-                      {analysisProgress >= 70 && analysisProgress < 90 && "Discogs zoekstrategie..."}
+                      {analysisProgress < 30 && "Foto's uploaden..."}
+                      {analysisProgress >= 30 && analysisProgress < 50 && "Matrix foto optimalisatie..."}
+                      {analysisProgress >= 50 && analysisProgress < 75 && "Multi-pass AI analyse..."}
+                      {analysisProgress >= 75 && analysisProgress < 90 && "Discogs zoekstrategie..."}
                       {analysisProgress >= 90 && "Resultaten verwerken..."}
                     </p>
                   </div>}

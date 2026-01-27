@@ -185,55 +185,294 @@ function applyReflectionNormalization(
   };
 }
 
+// ============================================================
+// STAP 2: CLAHE - Contrast Limited Adaptive Histogram Equalization
+// ============================================================
+
+/**
+ * CLAHE implementatie voor lokaal contrast enhancement
+ * 
+ * Waarom CLAHE i.p.v. globaal contrast:
+ * - Werkt per regio (tile) - lokale aanpassing
+ * - Laat micro-details "poppen" 
+ * - Stabiel bij ongelijk licht (reflecties)
+ * - Clip limit voorkomt over-enhancement artefacten
+ */
+
+interface CLAHEParams {
+  tileSize: number;      // 8x8 of 16x16 pixels per tile
+  clipLimit: number;     // 2.0-4.0, lager = minder artefacten
+  numBins: number;       // Histogram bins (256 voor 8-bit)
+}
+
+/**
+ * Bereken histogram voor een tile (regio) van de afbeelding
+ */
+function calculateTileHistogram(
+  pixels: Uint8Array,
+  width: number,
+  startX: number,
+  startY: number,
+  tileWidth: number,
+  tileHeight: number,
+  numBins: number = 256
+): number[] {
+  const histogram = new Array(numBins).fill(0);
+  
+  for (let y = startY; y < startY + tileHeight; y++) {
+    for (let x = startX; x < startX + tileWidth; x++) {
+      // Bounds check
+      if (x >= 0 && x < width && y >= 0) {
+        const idx = (y * width + x) * 4; // RGBA
+        if (idx < pixels.length) {
+          const gray = pixels[idx]; // R channel (grayscale, so R=G=B)
+          histogram[gray]++;
+        }
+      }
+    }
+  }
+  
+  return histogram;
+}
+
+/**
+ * Clip histogram en herverdeel overtollige pixels
+ * Dit voorkomt over-enhancement en artefacten
+ */
+function clipHistogram(histogram: number[], clipLimit: number, numPixels: number): number[] {
+  const clipped = [...histogram];
+  const actualClipLimit = Math.floor(clipLimit * numPixels / 256);
+  
+  let excess = 0;
+  
+  // Clip en tel excess
+  for (let i = 0; i < clipped.length; i++) {
+    if (clipped[i] > actualClipLimit) {
+      excess += clipped[i] - actualClipLimit;
+      clipped[i] = actualClipLimit;
+    }
+  }
+  
+  // Herverdeel excess gelijkmatig
+  const perBin = Math.floor(excess / 256);
+  const remainder = excess % 256;
+  
+  for (let i = 0; i < clipped.length; i++) {
+    clipped[i] += perBin;
+    if (i < remainder) {
+      clipped[i]++;
+    }
+  }
+  
+  return clipped;
+}
+
+/**
+ * Bereken CDF (Cumulative Distribution Function) van histogram
+ * Dit wordt de lookup table voor pixel mapping
+ */
+function calculateCDF(histogram: number[], numPixels: number): number[] {
+  const cdf = new Array(256).fill(0);
+  let sum = 0;
+  
+  for (let i = 0; i < 256; i++) {
+    sum += histogram[i];
+    // Normaliseer naar 0-255 bereik
+    cdf[i] = Math.round((sum / numPixels) * 255);
+  }
+  
+  return cdf;
+}
+
+/**
+ * Bilineaire interpolatie tussen 4 tile CDFs
+ * Dit zorgt voor smooth transitions tussen tiles
+ */
+function bilinearInterpolate(
+  value: number,
+  cdfs: number[][],
+  weights: number[]
+): number {
+  let result = 0;
+  for (let i = 0; i < cdfs.length; i++) {
+    result += cdfs[i][value] * weights[i];
+  }
+  return Math.min(255, Math.max(0, Math.round(result)));
+}
+
+/**
+ * Pas CLAHE toe op grayscale afbeelding
+ * 
+ * @param pixels - RGBA pixel array (grayscale, dus R=G=B)
+ * @param width - Afbeelding breedte
+ * @param height - Afbeelding hoogte
+ * @param params - CLAHE parameters
+ */
+function applyCLAHE(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  params: CLAHEParams
+): Uint8Array {
+  const { tileSize, clipLimit, numBins } = params;
+  const output = new Uint8Array(pixels.length);
+  
+  // Bereken aantal tiles
+  const tilesX = Math.ceil(width / tileSize);
+  const tilesY = Math.ceil(height / tileSize);
+  
+  // Pre-bereken CDFs voor alle tiles
+  const tileCDFs: number[][][] = [];
+  
+  for (let ty = 0; ty < tilesY; ty++) {
+    tileCDFs[ty] = [];
+    for (let tx = 0; tx < tilesX; tx++) {
+      const startX = tx * tileSize;
+      const startY = ty * tileSize;
+      const tileWidth = Math.min(tileSize, width - startX);
+      const tileHeight = Math.min(tileSize, height - startY);
+      const numPixels = tileWidth * tileHeight;
+      
+      // Stap 1: Bereken histogram voor deze tile
+      const histogram = calculateTileHistogram(
+        pixels, width, startX, startY, tileWidth, tileHeight, numBins
+      );
+      
+      // Stap 2: Clip histogram (voorkom artefacten)
+      const clippedHistogram = clipHistogram(histogram, clipLimit, numPixels);
+      
+      // Stap 3: Bereken CDF
+      const cdf = calculateCDF(clippedHistogram, numPixels);
+      
+      tileCDFs[ty][tx] = cdf;
+    }
+  }
+  
+  // Pas CLAHE toe met bilineaire interpolatie
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      const pixelValue = pixels[idx];
+      
+      // Vind de 4 dichtstbijzijnde tile centers
+      const tileX = x / tileSize - 0.5;
+      const tileY = y / tileSize - 0.5;
+      
+      const tx1 = Math.max(0, Math.floor(tileX));
+      const tx2 = Math.min(tilesX - 1, tx1 + 1);
+      const ty1 = Math.max(0, Math.floor(tileY));
+      const ty2 = Math.min(tilesY - 1, ty1 + 1);
+      
+      // Bereken interpolatie gewichten
+      const fx = tileX - tx1;
+      const fy = tileY - ty1;
+      
+      const w1 = (1 - fx) * (1 - fy); // top-left
+      const w2 = fx * (1 - fy);       // top-right
+      const w3 = (1 - fx) * fy;       // bottom-left
+      const w4 = fx * fy;             // bottom-right
+      
+      // Interpoleer tussen 4 tiles
+      const cdfs = [
+        tileCDFs[ty1][tx1],
+        tileCDFs[ty1][tx2],
+        tileCDFs[ty2][tx1],
+        tileCDFs[ty2][tx2]
+      ];
+      
+      const newValue = bilinearInterpolate(pixelValue, cdfs, [w1, w2, w3, w4]);
+      
+      // Output als grayscale RGB
+      output[idx] = newValue;
+      output[idx + 1] = newValue;
+      output[idx + 2] = newValue;
+      output[idx + 3] = pixels[idx + 3]; // Behoud alpha
+    }
+  }
+  
+  return output;
+}
+
+/**
+ * Wrapper functie voor CLAHE met mediatype-specifieke instellingen
+ */
+function applyCLAHEForMediaType(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  mediaType: 'vinyl' | 'cd'
+): {
+  processedPixels: Uint8Array;
+  params: CLAHEParams;
+} {
+  // Mediatype-specifieke instellingen
+  const params: CLAHEParams = mediaType === 'cd' 
+    ? {
+        tileSize: 8,        // Kleinere tiles voor fijnere details
+        clipLimit: 2.5,     // Lager voor CD (minder ruis)
+        numBins: 256
+      }
+    : {
+        tileSize: 16,       // Grotere tiles voor LP grooves
+        clipLimit: 3.0,     // Hoger voor LP (meer reliëf nodig)
+        numBins: 256
+      };
+  
+  const processedPixels = applyCLAHE(pixels, width, height, params);
+  
+  return { processedPixels, params };
+}
+
 /**
  * Build detailed enhancement prompt with preprocessing context
  */
 function buildEnhancementPrompt(mediaType: 'vinyl' | 'cd', preprocessingApplied: string[]): string {
-  const basePromptCD = `This CD matrix photo has been pre-processed to reduce reflections. 
-Now enhance it further for optimal OCR text extraction:
+  const basePromptCD = `This CD matrix photo has been extensively pre-processed to reduce reflections and enhance local contrast.
 
 PRE-PROCESSING ALREADY APPLIED:
 ${preprocessingApplied.map(s => `- ${s}`).join('\n')}
 
-ENHANCEMENT INSTRUCTIONS:
-1. GRAYSCALE OUTPUT - Convert to pure grayscale for maximum text contrast
-2. LOCAL CONTRAST - Apply aggressive local contrast enhancement (like CLAHE with clipLimit=2.5)
-3. EDGE ENHANCEMENT - Emphasize edges of engraved/etched characters
-4. TEXT FOCUS - The inner ring contains matrix numbers, IFPI codes, and stamper marks
-5. NOISE REDUCTION - Reduce grain while preserving sharp text edges
-6. BINARY CONTRAST - Push towards high contrast black/white for OCR
+ENHANCEMENT INSTRUCTIONS (build on top of preprocessing):
+1. GRAYSCALE OUTPUT - Maintain pure grayscale for maximum text contrast
+2. EDGE SHARPENING - Apply unsharp mask to emphasize engraved character edges
+3. NOISE REDUCTION - Bilateral filter to reduce remaining grain while preserving edges
+4. FINAL CONTRAST BOOST - Subtle curves adjustment to maximize text/background separation
 
-CRITICAL: The output must be a HIGH-CONTRAST GRAYSCALE image optimized for reading:
+NOTE: CLAHE (local contrast) has already been applied - do NOT add more local contrast.
+NOTE: Specular highlights have been suppressed - focus on revealing engraved details.
+
+CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
 - Matrix numbers (e.g., "DIDX-123456")  
 - IFPI codes (e.g., "IFPI L123")
 - Mastering SID codes
 - Mould SID codes
 - Any hand-etched text
 
-Make the text as readable as possible - this will be used for OCR.`;
+Make the text as readable as possible for OCR.`;
 
-  const basePromptLP = `This vinyl dead wax photo has been pre-processed to enhance relief visibility.
-Now enhance it further for optimal OCR text extraction:
+  const basePromptLP = `This vinyl dead wax photo has been pre-processed with local contrast enhancement for relief visibility.
 
 PRE-PROCESSING ALREADY APPLIED:
 ${preprocessingApplied.map(s => `- ${s}`).join('\n')}
 
-ENHANCEMENT INSTRUCTIONS:
-1. GRAYSCALE OUTPUT - Convert to pure grayscale for maximum text contrast
-2. LOCAL CONTRAST - Apply aggressive local contrast enhancement (like CLAHE with clipLimit=3.0)
-3. RELIEF DETECTION - Enhance the 3D relief effect of stamped/etched text
-4. DIRECTIONAL LIGHTING - Emphasize text that follows the circular groove pattern
-5. EDGE ENHANCEMENT - Make embossed character edges more visible
-6. NOISE REDUCTION - Reduce groove noise while preserving text detail
+ENHANCEMENT INSTRUCTIONS (build on top of preprocessing):
+1. GRAYSCALE OUTPUT - Maintain pure grayscale for maximum text contrast
+2. RELIEF EMPHASIS - Enhance the 3D shadow/highlight effect of stamped text
+3. DIRECTIONAL LIGHTING - Emphasize text following the circular groove pattern
+4. EDGE SHARPENING - Make embossed character edges more defined
+5. NOISE REDUCTION - Reduce groove noise while preserving text detail
 
-CRITICAL: The output must be a HIGH-CONTRAST GRAYSCALE image optimized for reading:
+NOTE: CLAHE (local contrast) has already been applied with larger tiles for grooves.
+NOTE: Focus on revealing EMBOSSED/ETCHED text in the dead wax area.
+
+CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
 - Matrix numbers (stamped in dead wax)
 - Stamper codes (hand-etched letters like "A", "B", "AA")
 - Pressing plant codes
 - Mastering engineer initials
 - Any hand-written text in the runout groove
 
-The text is EMBOSSED/ETCHED into the vinyl surface - enhance the shadow/highlight contrast to reveal it.`;
+The text is physically embossed - enhance shadow/highlight contrast to reveal it.`;
 
   return mediaType === 'cd' ? basePromptCD : basePromptLP;
 }
@@ -369,6 +608,10 @@ serve(async (req) => {
     console.log(`   - Aanbevolen log C: ${reflectionAnalysis.recommendedLogC}`);
     
     // Track what preprocessing we're applying based on severity
+    const claheParams = mediaType === 'cd' 
+      ? { tileSize: 8, clipLimit: 2.5 }
+      : { tileSize: 16, clipLimit: 3.0 };
+    
     if (mediaType === 'cd') {
       preprocessingApplied.push(`STAP 1A: Grayscale conversie (ITU-R BT.601 luminance)`);
       preprocessingApplied.push(`STAP 1B: Speculaire highlight detectie & suppressie (threshold: 245, ${reflectionAnalysis.estimatedSpecularPercentage.toFixed(1)}% gedetecteerd)`);
@@ -379,11 +622,24 @@ serve(async (req) => {
       if (reflectionAnalysis.severity === 'extreme') {
         preprocessingApplied.push('⚠️ EXTREME reflectie gedetecteerd - maximale compressie toegepast');
       }
+      
+      // STAP 2: CLAHE
+      preprocessingApplied.push(`STAP 2: CLAHE lokaal contrast (tileSize=${claheParams.tileSize}×${claheParams.tileSize}, clipLimit=${claheParams.clipLimit})`);
+      preprocessingApplied.push(`   → Werkt per regio, laat micro-details "poppen", stabiel bij ongelijk licht`);
     } else {
       preprocessingApplied.push(`STAP 1A: Grayscale conversie (ITU-R BT.601 luminance)`);
       preprocessingApplied.push(`STAP 1B: Gamma correctie voor reliëf-versterking (γ=${reflectionAnalysis.recommendedGamma})`);
       preprocessingApplied.push(`STAP 1C: Contrastversterking voor gegraveerde tekst`);
+      
+      // STAP 2: CLAHE voor LP
+      preprocessingApplied.push(`STAP 2: CLAHE lokaal contrast (tileSize=${claheParams.tileSize}×${claheParams.tileSize}, clipLimit=${claheParams.clipLimit})`);
+      preprocessingApplied.push(`   → Grotere tiles voor LP grooves, hoger clipLimit voor reliëf-detectie`);
     }
+    
+    console.log('🔲 STAP 2: CLAHE lokaal contrast enhancement...');
+    console.log(`   - Tile size: ${claheParams.tileSize}×${claheParams.tileSize}`);
+    console.log(`   - Clip limit: ${claheParams.clipLimit}`);
+    pipelineSteps.push(`clahe_${claheParams.tileSize}x${claheParams.tileSize}`);
     
     pipelineSteps.push(`reflection_normalized_${reflectionAnalysis.severity}`);
     

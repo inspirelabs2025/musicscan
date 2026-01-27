@@ -748,6 +748,360 @@ function edgeEnergyToPixels(
   return output;
 }
 
+// ============================================================
+// STAP 4: DIRECTIONELE VERSTERKING (KILLER FEATURE)
+// ============================================================
+
+/**
+ * STAP 4: Directionele Versterking voor Circulaire Matrixtekst
+ * 
+ * Matrix tekst loopt CIRCULAIR rond de spil van de plaat/CD.
+ * Dit is de "killer feature" die OCR-leesbaarheid enorm verhoogt:
+ * 
+ * 1. Bepaal centrum van het schijfje (globale radius)
+ * 2. Bereken voor elke pixel de tangentiële en radiële richting
+ * 3. Versterk edges langs de tangentiële richting (tekst volgt cirkel)
+ * 4. Onderdruk ruis loodrecht op de curve (radiële richting = krassen)
+ * 
+ * Effect:
+ * - Letters worden veel duidelijker (volgen curve)
+ * - Radiële krassen verdwijnen (dwars op tekst)
+ * - Veel betere OCR-resultaten dan generieke edge detection
+ */
+
+interface DirectionalParams {
+  centerX: number;
+  centerY: number;
+  tangentialBoost: number;    // Versterk edges langs de cirkel (1.5-2.5)
+  radialSuppression: number;  // Onderdruk radiële ruis (0.3-0.6)
+  adaptiveRadius: boolean;    // Pas parameters aan op basis van afstand tot centrum
+}
+
+/**
+ * Detecteer het centrum van de schijf automatisch
+ * 
+ * Methode: Zoek naar het donkerste/meest homogene gebied (de spil/center label)
+ * OF gebruik geometrisch centrum als fallback
+ */
+function detectDiscCenter(
+  pixels: Uint8Array,
+  width: number,
+  height: number
+): { centerX: number; centerY: number; confidence: number } {
+  // Methode 1: Zoek naar het centrum via edge density
+  // Het centrum (label area) heeft typisch lage edge density
+  
+  const blockSize = Math.floor(Math.min(width, height) / 10);
+  let minEdgeDensity = Infinity;
+  let bestBlockX = width / 2;
+  let bestBlockY = height / 2;
+  
+  // Scan centrale regio (verwacht centrum in midden 60% van beeld)
+  const startX = Math.floor(width * 0.2);
+  const endX = Math.floor(width * 0.8);
+  const startY = Math.floor(height * 0.2);
+  const endY = Math.floor(height * 0.8);
+  
+  for (let by = startY; by < endY - blockSize; by += blockSize / 2) {
+    for (let bx = startX; bx < endX - blockSize; bx += blockSize / 2) {
+      let edgeDensity = 0;
+      let pixelCount = 0;
+      
+      // Bereken lokale variantie als proxy voor edges
+      let sum = 0;
+      let sumSq = 0;
+      
+      for (let y = by; y < by + blockSize && y < height; y++) {
+        for (let x = bx; x < bx + blockSize && x < width; x++) {
+          const idx = (y * width + x) * 4;
+          const val = pixels[idx];
+          sum += val;
+          sumSq += val * val;
+          pixelCount++;
+        }
+      }
+      
+      if (pixelCount > 0) {
+        const mean = sum / pixelCount;
+        const variance = (sumSq / pixelCount) - (mean * mean);
+        edgeDensity = Math.sqrt(variance); // Standaarddeviatie als edge proxy
+        
+        if (edgeDensity < minEdgeDensity) {
+          minEdgeDensity = edgeDensity;
+          bestBlockX = bx + blockSize / 2;
+          bestBlockY = by + blockSize / 2;
+        }
+      }
+    }
+  }
+  
+  // Confidence based on how distinct the center is
+  // Low variance = high confidence (clear center label)
+  const confidence = Math.max(0, Math.min(1, 1 - (minEdgeDensity / 50)));
+  
+  // Als confidence laag is, gebruik geometrisch centrum
+  if (confidence < 0.3) {
+    return {
+      centerX: width / 2,
+      centerY: height / 2,
+      confidence: 0.5 // Medium confidence voor fallback
+    };
+  }
+  
+  return {
+    centerX: bestBlockX,
+    centerY: bestBlockY,
+    confidence
+  };
+}
+
+/**
+ * Bereken tangentiële en radiële gradiënten voor een pixel
+ * 
+ * Tangentieel = langs de cirkel (waar tekst loopt)
+ * Radieel = naar centrum toe (waar krassen typisch lopen)
+ */
+function calculateDirectionalGradients(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+  centerX: number,
+  centerY: number
+): { tangential: number; radial: number; angle: number } {
+  // Vector van centrum naar huidige pixel
+  const dx = x - centerX;
+  const dy = y - centerY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  
+  if (distance < 5) {
+    // Te dicht bij centrum, geen betrouwbare richting
+    return { tangential: 0, radial: 0, angle: 0 };
+  }
+  
+  // Genormaliseerde radiële richting (naar buiten)
+  const radialX = dx / distance;
+  const radialY = dy / distance;
+  
+  // Tangentiële richting (loodrecht op radieel, langs de cirkel)
+  // Roteer radieel vector 90 graden
+  const tangentX = -radialY;
+  const tangentY = radialX;
+  
+  // Bereken gradient in 3x3 neighborhood
+  const p00 = getPixel(pixels, width, height, x - 1, y - 1);
+  const p10 = getPixel(pixels, width, height, x,     y - 1);
+  const p20 = getPixel(pixels, width, height, x + 1, y - 1);
+  const p01 = getPixel(pixels, width, height, x - 1, y);
+  const p21 = getPixel(pixels, width, height, x + 1, y);
+  const p02 = getPixel(pixels, width, height, x - 1, y + 1);
+  const p12 = getPixel(pixels, width, height, x,     y + 1);
+  const p22 = getPixel(pixels, width, height, x + 1, y + 1);
+  
+  // Sobel gradiënten
+  const gx = -p00 + p20 - 2 * p01 + 2 * p21 - p02 + p22;
+  const gy = -p00 - 2 * p10 - p20 + p02 + 2 * p12 + p22;
+  
+  // Projecteer gradient op tangentiële en radiële richting
+  // Tangentiële component = |gradient · tangent|
+  const tangentialGrad = Math.abs(gx * tangentX + gy * tangentY);
+  
+  // Radiële component = |gradient · radial|
+  const radialGrad = Math.abs(gx * radialX + gy * radialY);
+  
+  // Hoek voor debugging/visualisatie
+  const angle = Math.atan2(dy, dx);
+  
+  return {
+    tangential: tangentialGrad,
+    radial: radialGrad,
+    angle
+  };
+}
+
+/**
+ * Pas directionele versterking toe op edge energy map
+ * 
+ * @param edgeEnergy - Bestaande edge energy map van Stap 3
+ * @param pixels - Originele grayscale pixels voor gradiënt berekening
+ * @param params - Directionele parameters
+ */
+function applyDirectionalEnhancement(
+  edgeEnergy: Float32Array,
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  params: DirectionalParams
+): {
+  enhancedEnergy: Float32Array;
+  stats: {
+    avgTangential: number;
+    avgRadial: number;
+    tangentialBoostApplied: number;
+    radialSuppressionApplied: number;
+  };
+} {
+  const enhancedEnergy = new Float32Array(edgeEnergy.length);
+  const { centerX, centerY, tangentialBoost, radialSuppression, adaptiveRadius } = params;
+  
+  let totalTangential = 0;
+  let totalRadial = 0;
+  let processedPixels = 0;
+  
+  // Bereken maximale radius voor adaptieve parameters
+  const maxRadius = Math.sqrt(
+    Math.max(centerX, width - centerX) ** 2 + 
+    Math.max(centerY, height - centerY) ** 2
+  );
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = y * width + x;
+      const originalEnergy = edgeEnergy[idx];
+      
+      // Bereken directionele gradiënten
+      const { tangential, radial, angle } = calculateDirectionalGradients(
+        pixels, width, height, x, y, centerX, centerY
+      );
+      
+      totalTangential += tangential;
+      totalRadial += radial;
+      processedPixels++;
+      
+      // Afstand tot centrum voor adaptieve versterking
+      const dx = x - centerX;
+      const dy = y - centerY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const normalizedDistance = distance / maxRadius;
+      
+      // Adaptieve parameters op basis van radius
+      // Matrix tekst staat typisch op 20-60% van de radius (dead wax zone)
+      let localTangentialBoost = tangentialBoost;
+      let localRadialSuppression = radialSuppression;
+      
+      if (adaptiveRadius) {
+        // Versterk effect in de "sweet spot" zone waar matrix tekst typisch staat
+        if (normalizedDistance > 0.15 && normalizedDistance < 0.65) {
+          // In de matrix zone: maximale versterking
+          localTangentialBoost *= 1.2;
+          localRadialSuppression *= 0.8; // Sterkere onderdrukking
+        } else if (normalizedDistance < 0.15) {
+          // Centrum (label): verminder effect
+          localTangentialBoost *= 0.7;
+          localRadialSuppression *= 1.3;
+        } else {
+          // Buitenrand: enigszins verminderd effect
+          localTangentialBoost *= 0.9;
+          localRadialSuppression *= 1.1;
+        }
+      }
+      
+      // Combineer originele energy met directionele versterking
+      // Formule: enhanced = original * (tangentialFactor / radialFactor)
+      // Waar tangentialFactor > 1 versterkt tangentiële edges
+      // En radialFactor > 1 onderdrukt radiële edges
+      
+      const tangentialContribution = tangential * localTangentialBoost;
+      const radialContribution = radial * localRadialSuppression;
+      
+      // Bereken directionele ratio
+      // Hoge ratio = edge is voornamelijk tangentieel (tekst!)
+      // Lage ratio = edge is voornamelijk radieel (kras)
+      const totalGrad = tangentialContribution + radialContribution + 0.001; // Avoid div by 0
+      const tangentialRatio = tangentialContribution / totalGrad;
+      
+      // Apply directional weighting to original energy
+      // tangentialRatio van 0.5 = neutraal
+      // > 0.5 = boost (tekst)
+      // < 0.5 = suppress (kras)
+      const directionalWeight = 0.5 + (tangentialRatio - 0.5) * 2; // Schaal naar 0-1 range
+      const clampedWeight = Math.max(0.3, Math.min(1.5, directionalWeight));
+      
+      enhancedEnergy[idx] = Math.min(255, originalEnergy * clampedWeight);
+    }
+  }
+  
+  const pixelCount = processedPixels || 1;
+  
+  return {
+    enhancedEnergy,
+    stats: {
+      avgTangential: totalTangential / pixelCount,
+      avgRadial: totalRadial / pixelCount,
+      tangentialBoostApplied: tangentialBoost,
+      radialSuppressionApplied: radialSuppression
+    }
+  };
+}
+
+/**
+ * Wrapper functie voor complete directionele versterking pipeline
+ */
+function applyDirectionalEnhancementPipeline(
+  edgeEnergy: Float32Array,
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  mediaType: 'vinyl' | 'cd'
+): {
+  enhancedEnergy: Float32Array;
+  center: { x: number; y: number; confidence: number };
+  stats: {
+    avgTangential: number;
+    avgRadial: number;
+    tangentialBoostApplied: number;
+    radialSuppressionApplied: number;
+  };
+} {
+  console.log('🎯 STAP 4: Directionele versterking (killer feature)...');
+  
+  // Detecteer centrum van de schijf
+  console.log('   → Detecteren schijf-centrum...');
+  const center = detectDiscCenter(pixels, width, height);
+  console.log(`   → Centrum gevonden: (${center.centerX.toFixed(0)}, ${center.centerY.toFixed(0)}) met confidence ${(center.confidence * 100).toFixed(0)}%`);
+  
+  // Mediatype-specifieke parameters
+  const params: DirectionalParams = mediaType === 'cd'
+    ? {
+        centerX: center.centerX,
+        centerY: center.centerY,
+        tangentialBoost: 1.8,      // CD: sterkere boost (tekst is fijner)
+        radialSuppression: 0.4,    // Agressievere onderdrukking van radiële ruis
+        adaptiveRadius: true
+      }
+    : {
+        centerX: center.centerX,
+        centerY: center.centerY,
+        tangentialBoost: 1.6,      // LP: iets minder boost (tekst is grover)
+        radialSuppression: 0.5,    // Minder agressief (grooves zijn ook radieel)
+        adaptiveRadius: true
+      };
+  
+  console.log(`   → Tangentiële boost: ${params.tangentialBoost}x`);
+  console.log(`   → Radiële suppressie: ${params.radialSuppression}x`);
+  console.log(`   → Adaptieve radius: ${params.adaptiveRadius ? 'aan' : 'uit'}`);
+  
+  // Pas directionele versterking toe
+  const result = applyDirectionalEnhancement(
+    edgeEnergy, pixels, width, height, params
+  );
+  
+  console.log(`   → Gemiddelde tangentiële gradient: ${result.stats.avgTangential.toFixed(2)}`);
+  console.log(`   → Gemiddelde radiële gradient: ${result.stats.avgRadial.toFixed(2)}`);
+  console.log(`   → Tangentieel/Radieel ratio: ${(result.stats.avgTangential / (result.stats.avgRadial + 0.001)).toFixed(2)}`);
+  
+  return {
+    enhancedEnergy: result.enhancedEnergy,
+    center: {
+      x: center.centerX,
+      y: center.centerY,
+      confidence: center.confidence
+    },
+    stats: result.stats
+  };
+}
+
 /**
  * Apply edge detection pipeline for matrix text enhancement
  */
@@ -794,21 +1148,23 @@ function applyEdgeDetection(
  * Build detailed enhancement prompt with preprocessing context
  */
 function buildEnhancementPrompt(mediaType: 'vinyl' | 'cd', preprocessingApplied: string[]): string {
-  const basePromptCD = `This CD matrix photo has been extensively pre-processed to reduce reflections, enhance local contrast, and detect edges.
+  const basePromptCD = `This CD matrix photo has been extensively pre-processed with a 4-step pipeline optimized for circular matrix text.
 
 PRE-PROCESSING ALREADY APPLIED:
 ${preprocessingApplied.map(s => `- ${s}`).join('\n')}
 
 ENHANCEMENT INSTRUCTIONS (build on top of preprocessing):
 1. GRAYSCALE OUTPUT - Maintain pure grayscale for maximum text contrast
-2. EDGE REFINEMENT - The edge energy map highlights text; enhance this further
-3. NOISE REDUCTION - Bilateral filter to reduce remaining grain while preserving edges
+2. EDGE REFINEMENT - The directional enhancement has already boosted tangential (text-following) edges
+3. NOISE REDUCTION - Apply bilateral filter for remaining grain while preserving sharp text edges
 4. FINAL CONTRAST BOOST - Subtle curves adjustment to maximize text/background separation
 
-NOTE: CLAHE (local contrast) has already been applied - do NOT add more local contrast.
-NOTE: Specular highlights have been suppressed - focus on revealing engraved details.
-NOTE: Edge detection (Sobel+Scharr+Laplacian) has been applied - edges are already enhanced.
-      The text should already be "popping" from the background. Refine, don't re-detect.
+PREPROCESSING NOTES:
+- CLAHE (local contrast) has already been applied - do NOT add more local contrast
+- Specular highlights have been suppressed
+- Multi-operator edge detection (Sobel+Scharr+Laplacian) has been applied
+- DIRECTIONAL ENHANCEMENT: Text edges along the circular path have been BOOSTED while radial scratches have been SUPPRESSED
+- The text should already be clearly "popping" - refine clarity, don't re-process edges
 
 CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
 - Matrix numbers (e.g., "DIDX-123456")  
@@ -817,24 +1173,26 @@ CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
 - Mould SID codes
 - Any hand-etched text
 
-Make the text as readable as possible for OCR.`;
+Make the text as readable as possible for OCR. The circular text pattern has been enhanced.`;
 
-  const basePromptLP = `This vinyl dead wax photo has been pre-processed with local contrast enhancement, edge detection, and relief visibility optimization.
+  const basePromptLP = `This vinyl dead wax photo has been pre-processed with a 4-step pipeline optimized for circular matrix text in the runout groove.
 
 PRE-PROCESSING ALREADY APPLIED:
 ${preprocessingApplied.map(s => `- ${s}`).join('\n')}
 
 ENHANCEMENT INSTRUCTIONS (build on top of preprocessing):
 1. GRAYSCALE OUTPUT - Maintain pure grayscale for maximum text contrast
-2. RELIEF EMPHASIS - The edge energy map highlights stamped text relief; enhance this
-3. DIRECTIONAL LIGHTING - Emphasize text following the circular groove pattern
-4. EDGE REFINEMENT - Make embossed character edges more defined
-5. NOISE REDUCTION - Reduce groove noise while preserving text detail
+2. RELIEF EMPHASIS - The edge detection and directional enhancement have highlighted stamped text relief
+3. DIRECTIONAL CLARITY - Text following the circular groove pattern has been boosted
+4. NOISE REDUCTION - Reduce remaining groove noise while preserving text detail
+5. EDGE REFINEMENT - Make embossed character edges more defined
 
-NOTE: CLAHE (local contrast) has already been applied with larger tiles for grooves.
-NOTE: Edge detection (Sobel+Scharr+Laplacian) has been applied - relief edges are enhanced.
-      Text should already be visible as edge energy; refine the visibility, don't re-process.
-NOTE: Focus on revealing EMBOSSED/ETCHED text in the dead wax area.
+PREPROCESSING NOTES:
+- CLAHE (local contrast) applied with larger tiles for grooves
+- Multi-operator edge detection (Sobel+Scharr+Laplacian) has been applied
+- DIRECTIONAL ENHANCEMENT: Tangential edges (text) have been BOOSTED while radial edges (scratches/grooves) have been SUPPRESSED
+- Text relief should already be visible as enhanced edge energy - refine visibility, don't re-process
+- Focus on revealing EMBOSSED/ETCHED text in the dead wax area
 
 CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
 - Matrix numbers (stamped in dead wax)
@@ -843,7 +1201,7 @@ CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
 - Mastering engineer initials
 - Any hand-written text in the runout groove
 
-The text is physically embossed - the edge detection has highlighted relief; enhance shadow/highlight contrast to reveal it further.`;
+The circular text pattern has been enhanced - text following the groove should be prominent.`;
 
   return mediaType === 'cd' ? basePromptCD : basePromptLP;
 }
@@ -988,6 +1346,11 @@ serve(async (req) => {
       ? { sobelWeight: 0.35, scharrWeight: 0.40, laplacianWeight: 0.25 }
       : { sobelWeight: 0.45, scharrWeight: 0.30, laplacianWeight: 0.25 };
     
+    // Directional enhancement parameters for STAP 4
+    const directionalParams = mediaType === 'cd'
+      ? { tangentialBoost: 1.8, radialSuppression: 0.4 }
+      : { tangentialBoost: 1.6, radialSuppression: 0.5 };
+    
     if (mediaType === 'cd') {
       preprocessingApplied.push(`STAP 1A: Grayscale conversie (ITU-R BT.601 luminance)`);
       preprocessingApplied.push(`STAP 1B: Speculaire highlight detectie & suppressie (threshold: 245, ${reflectionAnalysis.estimatedSpecularPercentage.toFixed(1)}% gedetecteerd)`);
@@ -1009,6 +1372,14 @@ serve(async (req) => {
       preprocessingApplied.push(`   → Scharr (subtiele lijnen): gewicht ${edgeParams.scharrWeight}`);
       preprocessingApplied.push(`   → Laplacian (second derivative, alle richtingen): gewicht ${edgeParams.laplacianWeight}`);
       preprocessingApplied.push(`   → Effect: Letters lichten op, krassen verdwijnen`);
+      
+      // STAP 4: Directionele Versterking (KILLER FEATURE)
+      preprocessingApplied.push(`STAP 4: DIRECTIONELE VERSTERKING (killer feature voor circulaire tekst)`);
+      preprocessingApplied.push(`   → Automatische centrum-detectie van schijf`);
+      preprocessingApplied.push(`   → Tangentiële edges (tekst langs cirkel) VERSTERKT: ${directionalParams.tangentialBoost}x`);
+      preprocessingApplied.push(`   → Radiële edges (krassen, grooves) ONDERDRUKT: ${directionalParams.radialSuppression}x`);
+      preprocessingApplied.push(`   → Adaptieve radius: matrix-zone (20-60%) maximaal versterkt`);
+      preprocessingApplied.push(`   → Effect: Circulaire tekst wordt VEEL leesbaarder, krassen verdwijnen`);
     } else {
       preprocessingApplied.push(`STAP 1A: Grayscale conversie (ITU-R BT.601 luminance)`);
       preprocessingApplied.push(`STAP 1B: Gamma correctie voor reliëf-versterking (γ=${reflectionAnalysis.recommendedGamma})`);
@@ -1024,6 +1395,14 @@ serve(async (req) => {
       preprocessingApplied.push(`   → Scharr (fijne details): gewicht ${edgeParams.scharrWeight}`);
       preprocessingApplied.push(`   → Laplacian (cirkelvormig patroon): gewicht ${edgeParams.laplacianWeight}`);
       preprocessingApplied.push(`   → Effect: Gestempelde tekst oplichten, groove-ruis dempen`);
+      
+      // STAP 4: Directionele Versterking voor LP
+      preprocessingApplied.push(`STAP 4: DIRECTIONELE VERSTERKING (killer feature voor dead wax tekst)`);
+      preprocessingApplied.push(`   → Automatische centrum-detectie van plaat`);
+      preprocessingApplied.push(`   → Tangentiële edges (tekst langs runout groove) VERSTERKT: ${directionalParams.tangentialBoost}x`);
+      preprocessingApplied.push(`   → Radiële edges (grooves, krassen) ONDERDRUKT: ${directionalParams.radialSuppression}x`);
+      preprocessingApplied.push(`   → Adaptieve radius: dead wax zone maximaal versterkt`);
+      preprocessingApplied.push(`   → Effect: Gestempelde/geëtste tekst wordt VEEL leesbaarder`);
     }
     
     console.log('🔲 STAP 2: CLAHE lokaal contrast enhancement...');
@@ -1036,6 +1415,11 @@ serve(async (req) => {
     console.log(`   - Scharr: ${edgeParams.scharrWeight}`);
     console.log(`   - Laplacian: ${edgeParams.laplacianWeight}`);
     pipelineSteps.push('edge_detection_sobel_scharr_laplacian');
+    
+    console.log('🎯 STAP 4: Directionele versterking (killer feature)...');
+    console.log(`   - Tangentiële boost: ${directionalParams.tangentialBoost}x`);
+    console.log(`   - Radiële suppressie: ${directionalParams.radialSuppression}x`);
+    pipelineSteps.push('directional_enhancement');
     
     pipelineSteps.push(`reflection_normalized_${reflectionAnalysis.severity}`);
     

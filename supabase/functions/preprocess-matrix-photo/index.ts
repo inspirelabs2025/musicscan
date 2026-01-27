@@ -749,6 +749,256 @@ function edgeEnergyToPixels(
 }
 
 // ============================================================
+// STAP 5: EDGE-PRESERVING NOISE REDUCTION (BILATERAL FILTER)
+// ============================================================
+
+/**
+ * STAP 5: Edge-Preserving Noise Reduction
+ * 
+ * Cruciale stap: Ruis verwijderen ZONDER details te vernietigen
+ * 
+ * ❌ NIET gebruiken:
+ * - Gaussian blur → vermoord details, maakt tekst onleesbaar
+ * - Box blur → zelfde probleem, goedkoop maar destructief
+ * 
+ * ✅ WEL gebruiken:
+ * - Bilateral filter → behoudt scherpe randen, smootht alleen homogene gebieden
+ * - Non-local means → alternatief maar computationeel duurder
+ * 
+ * Werking Bilateral Filter:
+ * - Combineert ruimtelijke nabijheid MET intensiteit-gelijkheid
+ * - Pixels dichtbij EN qua intensiteit vergelijkbaar → gemiddeld (smooth)
+ * - Pixels dichtbij MAAR qua intensiteit anders → genegeerd (edge behouden)
+ * 
+ * Parameters:
+ * - σs (spatial): Ruimtelijke spreiding (radius van invloed)
+ * - σr (range): Intensiteitspreiding (hoeveel verschil tolereren)
+ */
+
+interface BilateralParams {
+  spatialSigma: number;   // σs: 3-10, hoger = grotere smoothing radius
+  rangeSigma: number;     // σr: 20-50, lager = strengere edge-preservatie
+  kernelRadius: number;   // Typisch ceil(3 * spatialSigma)
+}
+
+/**
+ * Gaussian weight functie
+ * G(x, σ) = exp(-x² / (2σ²))
+ */
+function gaussianWeight(distance: number, sigma: number): number {
+  return Math.exp(-(distance * distance) / (2 * sigma * sigma));
+}
+
+/**
+ * Apply Bilateral Filter to grayscale image
+ * 
+ * Voor elke pixel:
+ * 1. Bekijk alle pixels binnen kernel radius
+ * 2. Bereken gewicht = spatialWeight × rangeWeight
+ * 3. spatialWeight = Gaussian(afstand, σs)
+ * 4. rangeWeight = Gaussian(|intensity_verschil|, σr)
+ * 5. Gewogen gemiddelde van alle pixels in kernel
+ * 
+ * Effect:
+ * - Homogene gebieden (ruis): pixels lijken qua intensiteit → smoothing
+ * - Randen (tekst): pixels verschillen sterk → edge behouden
+ */
+function applyBilateralFilter(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  params: BilateralParams
+): Uint8Array {
+  const { spatialSigma, rangeSigma, kernelRadius } = params;
+  const output = new Uint8Array(pixels.length);
+  
+  // Pre-compute spatial Gaussian weights (onafhankelijk van pixel intensiteit)
+  const spatialWeights: number[][] = [];
+  for (let dy = -kernelRadius; dy <= kernelRadius; dy++) {
+    spatialWeights[dy + kernelRadius] = [];
+    for (let dx = -kernelRadius; dx <= kernelRadius; dx++) {
+      const spatialDistance = Math.sqrt(dx * dx + dy * dy);
+      spatialWeights[dy + kernelRadius][dx + kernelRadius] = gaussianWeight(spatialDistance, spatialSigma);
+    }
+  }
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      const centerIntensity = pixels[idx]; // R channel (grayscale)
+      
+      let weightedSum = 0;
+      let totalWeight = 0;
+      
+      // Iterate over kernel neighborhood
+      for (let dy = -kernelRadius; dy <= kernelRadius; dy++) {
+        for (let dx = -kernelRadius; dx <= kernelRadius; dx++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          
+          // Boundary handling (replicate border)
+          const clampedX = Math.max(0, Math.min(width - 1, nx));
+          const clampedY = Math.max(0, Math.min(height - 1, ny));
+          const neighborIdx = (clampedY * width + clampedX) * 4;
+          const neighborIntensity = pixels[neighborIdx];
+          
+          // Spatial weight (pre-computed)
+          const spatialW = spatialWeights[dy + kernelRadius][dx + kernelRadius];
+          
+          // Range weight (gebaseerd op intensiteitsverschil)
+          const intensityDiff = Math.abs(neighborIntensity - centerIntensity);
+          const rangeW = gaussianWeight(intensityDiff, rangeSigma);
+          
+          // Combined weight
+          const weight = spatialW * rangeW;
+          
+          weightedSum += neighborIntensity * weight;
+          totalWeight += weight;
+        }
+      }
+      
+      // Normalize by total weight
+      const filteredValue = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : centerIntensity;
+      
+      // Output als grayscale RGB
+      output[idx] = filteredValue;
+      output[idx + 1] = filteredValue;
+      output[idx + 2] = filteredValue;
+      output[idx + 3] = pixels[idx + 3]; // Preserve alpha
+    }
+  }
+  
+  return output;
+}
+
+/**
+ * Apply bilateral filter to edge energy map
+ * Smootht ruis in de energy map terwijl edge energie behouden blijft
+ */
+function applyBilateralToEnergyMap(
+  energyMap: Float32Array,
+  width: number,
+  height: number,
+  params: BilateralParams
+): Float32Array {
+  const { spatialSigma, rangeSigma, kernelRadius } = params;
+  const output = new Float32Array(energyMap.length);
+  
+  // Pre-compute spatial weights
+  const spatialWeights: number[][] = [];
+  for (let dy = -kernelRadius; dy <= kernelRadius; dy++) {
+    spatialWeights[dy + kernelRadius] = [];
+    for (let dx = -kernelRadius; dx <= kernelRadius; dx++) {
+      const spatialDistance = Math.sqrt(dx * dx + dy * dy);
+      spatialWeights[dy + kernelRadius][dx + kernelRadius] = gaussianWeight(spatialDistance, spatialSigma);
+    }
+  }
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = y * width + x;
+      const centerEnergy = energyMap[idx];
+      
+      let weightedSum = 0;
+      let totalWeight = 0;
+      
+      for (let dy = -kernelRadius; dy <= kernelRadius; dy++) {
+        for (let dx = -kernelRadius; dx <= kernelRadius; dx++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          
+          const clampedX = Math.max(0, Math.min(width - 1, nx));
+          const clampedY = Math.max(0, Math.min(height - 1, ny));
+          const neighborIdx = clampedY * width + clampedX;
+          const neighborEnergy = energyMap[neighborIdx];
+          
+          const spatialW = spatialWeights[dy + kernelRadius][dx + kernelRadius];
+          const energyDiff = Math.abs(neighborEnergy - centerEnergy);
+          const rangeW = gaussianWeight(energyDiff, rangeSigma);
+          
+          const weight = spatialW * rangeW;
+          weightedSum += neighborEnergy * weight;
+          totalWeight += weight;
+        }
+      }
+      
+      output[idx] = totalWeight > 0 ? weightedSum / totalWeight : centerEnergy;
+    }
+  }
+  
+  return output;
+}
+
+/**
+ * Wrapper functie voor bilateral filter met mediatype-specifieke instellingen
+ * 
+ * CD's: Fijnere filter (kleinere radius, strengere edge-preservatie)
+ * LP's: Grovere filter (grotere radius, meer smoothing voor grooves)
+ */
+function applyNoiseReduction(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  mediaType: 'vinyl' | 'cd'
+): {
+  processedPixels: Uint8Array;
+  params: BilateralParams;
+  stats: {
+    avgSmoothing: number;
+    edgesPreserved: number;
+  };
+} {
+  // Mediatype-specifieke parameters
+  const params: BilateralParams = mediaType === 'cd'
+    ? {
+        spatialSigma: 3,        // Kleine radius voor fijne gravures
+        rangeSigma: 25,         // Strenge edge-preservatie
+        kernelRadius: 5         // ceil(3 * 3) / 2 ≈ 5
+      }
+    : {
+        spatialSigma: 5,        // Grotere radius voor LP grooves
+        rangeSigma: 35,         // Iets toleranter (grooves kunnen variëren)
+        kernelRadius: 7         // ceil(3 * 5) / 2 ≈ 7
+      };
+  
+  console.log(`🔇 STAP 5: Bilateral noise reduction (${mediaType})`);
+  console.log(`   → Spatial σ: ${params.spatialSigma} (radius invloed)`);
+  console.log(`   → Range σ: ${params.rangeSigma} (intensiteitstolerantie)`);
+  console.log(`   → Kernel radius: ${params.kernelRadius}px`);
+  
+  const processedPixels = applyBilateralFilter(pixels, width, height, params);
+  
+  // Calculate smoothing statistics
+  let totalDiff = 0;
+  let edgePixels = 0;
+  const edgeThreshold = 30; // Pixels met groot verschil = edges
+  
+  for (let i = 0; i < pixels.length; i += 4) {
+    const diff = Math.abs(pixels[i] - processedPixels[i]);
+    totalDiff += diff;
+    if (diff < 5) {
+      edgePixels++; // Pixel bleef bijna hetzelfde = was edge of al smooth
+    }
+  }
+  
+  const pixelCount = pixels.length / 4;
+  const avgSmoothing = totalDiff / pixelCount;
+  const edgesPreserved = (edgePixels / pixelCount) * 100;
+  
+  console.log(`   → Gemiddelde smoothing: ${avgSmoothing.toFixed(2)} intensity units`);
+  console.log(`   → Edges behouden: ${edgesPreserved.toFixed(1)}% van pixels`);
+  
+  return {
+    processedPixels,
+    params,
+    stats: {
+      avgSmoothing,
+      edgesPreserved
+    }
+  };
+}
+
+// ============================================================
 // STAP 4: DIRECTIONELE VERSTERKING (KILLER FEATURE)
 // ============================================================
 
@@ -1148,7 +1398,7 @@ function applyEdgeDetection(
  * Build detailed enhancement prompt with preprocessing context
  */
 function buildEnhancementPrompt(mediaType: 'vinyl' | 'cd', preprocessingApplied: string[]): string {
-  const basePromptCD = `This CD matrix photo has been extensively pre-processed with a 4-step pipeline optimized for circular matrix text.
+  const basePromptCD = `This CD matrix photo has been extensively pre-processed with a 5-step pipeline optimized for circular matrix text.
 
 PRE-PROCESSING ALREADY APPLIED:
 ${preprocessingApplied.map(s => `- ${s}`).join('\n')}
@@ -1156,7 +1406,7 @@ ${preprocessingApplied.map(s => `- ${s}`).join('\n')}
 ENHANCEMENT INSTRUCTIONS (build on top of preprocessing):
 1. GRAYSCALE OUTPUT - Maintain pure grayscale for maximum text contrast
 2. EDGE REFINEMENT - The directional enhancement has already boosted tangential (text-following) edges
-3. NOISE REDUCTION - Apply bilateral filter for remaining grain while preserving sharp text edges
+3. FINAL CLARITY - Bilateral noise reduction has already smoothed noise while preserving edges
 4. FINAL CONTRAST BOOST - Subtle curves adjustment to maximize text/background separation
 
 PREPROCESSING NOTES:
@@ -1164,6 +1414,7 @@ PREPROCESSING NOTES:
 - Specular highlights have been suppressed
 - Multi-operator edge detection (Sobel+Scharr+Laplacian) has been applied
 - DIRECTIONAL ENHANCEMENT: Text edges along the circular path have been BOOSTED while radial scratches have been SUPPRESSED
+- BILATERAL NOISE REDUCTION: Random noise has been smoothed WHILE preserving sharp text edges (NO Gaussian blur!)
 - The text should already be clearly "popping" - refine clarity, don't re-process edges
 
 CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
@@ -1173,9 +1424,9 @@ CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
 - Mould SID codes
 - Any hand-etched text
 
-Make the text as readable as possible for OCR. The circular text pattern has been enhanced.`;
+Make the text as readable as possible for OCR. The circular text pattern has been enhanced and noise reduced.`;
 
-  const basePromptLP = `This vinyl dead wax photo has been pre-processed with a 4-step pipeline optimized for circular matrix text in the runout groove.
+  const basePromptLP = `This vinyl dead wax photo has been pre-processed with a 5-step pipeline optimized for circular matrix text in the runout groove.
 
 PRE-PROCESSING ALREADY APPLIED:
 ${preprocessingApplied.map(s => `- ${s}`).join('\n')}
@@ -1184,13 +1435,14 @@ ENHANCEMENT INSTRUCTIONS (build on top of preprocessing):
 1. GRAYSCALE OUTPUT - Maintain pure grayscale for maximum text contrast
 2. RELIEF EMPHASIS - The edge detection and directional enhancement have highlighted stamped text relief
 3. DIRECTIONAL CLARITY - Text following the circular groove pattern has been boosted
-4. NOISE REDUCTION - Reduce remaining groove noise while preserving text detail
+4. NOISE ALREADY REDUCED - Bilateral filter has smoothed groove noise while preserving text
 5. EDGE REFINEMENT - Make embossed character edges more defined
 
 PREPROCESSING NOTES:
 - CLAHE (local contrast) applied with larger tiles for grooves
 - Multi-operator edge detection (Sobel+Scharr+Laplacian) has been applied
 - DIRECTIONAL ENHANCEMENT: Tangential edges (text) have been BOOSTED while radial edges (scratches/grooves) have been SUPPRESSED
+- BILATERAL NOISE REDUCTION: Groove noise smoothed WHILE preserving stamped text edges (NO Gaussian blur!)
 - Text relief should already be visible as enhanced edge energy - refine visibility, don't re-process
 - Focus on revealing EMBOSSED/ETCHED text in the dead wax area
 
@@ -1201,7 +1453,7 @@ CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
 - Mastering engineer initials
 - Any hand-written text in the runout groove
 
-The circular text pattern has been enhanced - text following the groove should be prominent.`;
+The circular text pattern has been enhanced and noise reduced - text following the groove should be prominent.`;
 
   return mediaType === 'cd' ? basePromptCD : basePromptLP;
 }
@@ -1380,6 +1632,14 @@ serve(async (req) => {
       preprocessingApplied.push(`   → Radiële edges (krassen, grooves) ONDERDRUKT: ${directionalParams.radialSuppression}x`);
       preprocessingApplied.push(`   → Adaptieve radius: matrix-zone (20-60%) maximaal versterkt`);
       preprocessingApplied.push(`   → Effect: Circulaire tekst wordt VEEL leesbaarder, krassen verdwijnen`);
+      
+      // STAP 5: Noise Reduction (Bilateral Filter)
+      const noiseParams = { spatialSigma: 3, rangeSigma: 25, kernelRadius: 5 };
+      preprocessingApplied.push(`STAP 5: EDGE-PRESERVING NOISE REDUCTION (Bilateral Filter)`);
+      preprocessingApplied.push(`   → Spatial σ: ${noiseParams.spatialSigma} (kleine radius voor fijne gravures)`);
+      preprocessingApplied.push(`   → Range σ: ${noiseParams.rangeSigma} (strenge edge-preservatie)`);
+      preprocessingApplied.push(`   → GEEN Gaussian blur (vernietigt details!)`);
+      preprocessingApplied.push(`   → Effect: Ruis verwijderd, scherpe tekstranden BEHOUDEN`);
     } else {
       preprocessingApplied.push(`STAP 1A: Grayscale conversie (ITU-R BT.601 luminance)`);
       preprocessingApplied.push(`STAP 1B: Gamma correctie voor reliëf-versterking (γ=${reflectionAnalysis.recommendedGamma})`);
@@ -1403,6 +1663,14 @@ serve(async (req) => {
       preprocessingApplied.push(`   → Radiële edges (grooves, krassen) ONDERDRUKT: ${directionalParams.radialSuppression}x`);
       preprocessingApplied.push(`   → Adaptieve radius: dead wax zone maximaal versterkt`);
       preprocessingApplied.push(`   → Effect: Gestempelde/geëtste tekst wordt VEEL leesbaarder`);
+      
+      // STAP 5: Noise Reduction (Bilateral Filter) voor LP
+      const noiseParamsLP = { spatialSigma: 5, rangeSigma: 35, kernelRadius: 7 };
+      preprocessingApplied.push(`STAP 5: EDGE-PRESERVING NOISE REDUCTION (Bilateral Filter)`);
+      preprocessingApplied.push(`   → Spatial σ: ${noiseParamsLP.spatialSigma} (grotere radius voor grooves)`);
+      preprocessingApplied.push(`   → Range σ: ${noiseParamsLP.rangeSigma} (toleranter voor groove-variatie)`);
+      preprocessingApplied.push(`   → GEEN Gaussian blur (vernietigt reliëf-details!)`);
+      preprocessingApplied.push(`   → Effect: Groove-ruis verwijderd, gestempelde tekst BEHOUDEN`);
     }
     
     console.log('🔲 STAP 2: CLAHE lokaal contrast enhancement...');
@@ -1420,6 +1688,19 @@ serve(async (req) => {
     console.log(`   - Tangentiële boost: ${directionalParams.tangentialBoost}x`);
     console.log(`   - Radiële suppressie: ${directionalParams.radialSuppression}x`);
     pipelineSteps.push('directional_enhancement');
+    
+    // STAP 5: Noise Reduction parameters
+    const noiseReductionParams = mediaType === 'cd'
+      ? { spatialSigma: 3, rangeSigma: 25, kernelRadius: 5 }
+      : { spatialSigma: 5, rangeSigma: 35, kernelRadius: 7 };
+    
+    console.log('🔇 STAP 5: Edge-preserving noise reduction (Bilateral Filter)...');
+    console.log(`   - Spatial σ: ${noiseReductionParams.spatialSigma}`);
+    console.log(`   - Range σ: ${noiseReductionParams.rangeSigma}`);
+    console.log(`   - Kernel radius: ${noiseReductionParams.kernelRadius}px`);
+    console.log('   - ❌ GEEN Gaussian blur (vernietigt details)');
+    console.log('   - ✅ Bilateral filter (behoudt scherpe randen)');
+    pipelineSteps.push('bilateral_noise_reduction');
     
     pipelineSteps.push(`reflection_normalized_${reflectionAnalysis.severity}`);
     

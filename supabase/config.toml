@@ -697,3 +697,7 @@ cron = "0 */2 * * *"
 # Populate album queue (manual trigger)
 [functions.populate-album-queue]
 verify_jwt = false
+
+# Matrix photo preprocessing for improved OCR
+[functions.preprocess-matrix-photo]
+verify_jwt = false

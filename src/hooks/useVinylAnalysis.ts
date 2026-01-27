@@ -1,41 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useWakeLock } from '@/hooks/useWakeLock';
-
-// Convert File to base64 data URL
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-};
+import { preprocessImagesClient, ClientPreprocessResult } from '@/utils/clientImagePreprocess';
 
 // Check if input is a File object
 const isFile = (input: any): input is File => {
   return input instanceof File;
 };
 
-// Convert mixed array of Files/URLs to URLs only
-const convertToUrls = async (inputs: (string | File)[]): Promise<string[]> => {
-  const results = await Promise.all(
-    inputs.map(async (input) => {
-      if (isFile(input)) {
-        // Convert File to base64 data URL
-        return await fileToBase64(input);
-      }
-      // Already a URL string
-      return input;
-    })
-  );
-  return results;
-};
+export interface PreprocessingState {
+  isPreprocessing: boolean;
+  progress: number;
+  currentImage: number;
+  totalImages: number;
+  previews: ClientPreprocessResult[];
+}
 
 export const useVinylAnalysis = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [preprocessState, setPreprocessState] = useState<PreprocessingState>({
+    isPreprocessing: false,
+    progress: 0,
+    currentImage: 0,
+    totalImages: 0,
+    previews: [],
+  });
   const wakeLock = useWakeLock();
 
   // Show warning when leaving page during analysis
@@ -62,6 +53,51 @@ export const useVinylAnalysis = () => {
     };
   }, [isAnalyzing]);
 
+  /**
+   * Client-side preprocessing for quick preview feedback
+   * Returns preprocessed images ready for server analysis
+   */
+  const preprocessImages = useCallback(async (imageInputs: (string | File)[]): Promise<ClientPreprocessResult[] | null> => {
+    if (imageInputs.length === 0) return null;
+    
+    setPreprocessState({
+      isPreprocessing: true,
+      progress: 0,
+      currentImage: 0,
+      totalImages: imageInputs.length,
+      previews: [],
+    });
+
+    try {
+      console.log('📸 Starting client-side preprocessing...');
+      
+      const { results, totalTimeMs } = await preprocessImagesClient(imageInputs, {
+        maxDimension: 1600,
+        applyContrast: true,
+        quality: 0.85,
+      });
+
+      setPreprocessState(prev => ({
+        ...prev,
+        isPreprocessing: false,
+        progress: 100,
+        previews: results,
+      }));
+
+      console.log(`✅ Client preprocessing complete: ${results.length} images in ${totalTimeMs.toFixed(0)}ms`);
+      
+      return results;
+    } catch (error) {
+      console.error('❌ Client preprocessing error:', error);
+      setPreprocessState(prev => ({
+        ...prev,
+        isPreprocessing: false,
+        progress: 0,
+      }));
+      return null;
+    }
+  }, []);
+
   const analyzeImages = async (imageInputs: (string | File)[]) => {
     if (imageInputs.length !== 3) {
       toast({
@@ -78,10 +114,36 @@ export const useVinylAnalysis = () => {
     await wakeLock.request();
     
     try {
-      // Convert Files to base64 data URLs
-      console.log('📸 Converting images for analysis...');
-      const imageUrls = await convertToUrls(imageInputs);
+      // STEP 1: Client-side preprocessing (fast, <500ms)
+      console.log('📸 Step 1: Client-side preprocessing...');
+      const preprocessed = await preprocessImages(imageInputs);
+      
+      // Use preprocessed images if available, otherwise convert directly
+      let imageUrls: string[];
+      if (preprocessed) {
+        imageUrls = preprocessed.map(p => p.processedImage);
+        console.log('📸 Using client-preprocessed images');
+      } else {
+        // Fallback: convert Files to base64 directly
+        imageUrls = await Promise.all(
+          imageInputs.map(async (input) => {
+            if (isFile(input)) {
+              return new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(input);
+              });
+            }
+            return input;
+          })
+        );
+      }
+      
       console.log('📸 Images ready:', imageUrls.length, 'images');
+      
+      // STEP 2: Server-side heavy processing (OCR, stacking, Discogs matching)
+      console.log('🔍 Step 2: Server-side analysis...');
       
       // Mobile-optimized timeout
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -92,7 +154,13 @@ export const useVinylAnalysis = () => {
           imageUrls: imageUrls,
           scanId: Date.now().toString(),
           enableCaching: true,
-          parallelProcessing: true
+          parallelProcessing: true,
+          // Include preprocessing stats for server
+          clientPreprocessed: !!preprocessed,
+          preprocessStats: preprocessed ? {
+            totalImages: preprocessed.length,
+            avgProcessingTime: preprocessed.reduce((sum, p) => sum + p.stats.processingTimeMs, 0) / preprocessed.length,
+          } : null,
         }
       });
 
@@ -125,8 +193,22 @@ export const useVinylAnalysis = () => {
         raw_spelling: data.raw_spelling || null,
       };
 
+      // Include enhanced images from preprocessing for comparison UI
+      const enhancedImageData = preprocessed && preprocessed.length > 0 ? {
+        enhanced_image: preprocessed[0].processedImage,
+        original_image: preprocessed[0].originalImage,
+        processing_stats: {
+          enhancementFactor: 1.2, // Light client enhancement
+          clientProcessingMs: preprocessed[0].stats.processingTimeMs,
+          wasResized: preprocessed[0].stats.wasResized,
+        },
+      } : {};
+
       const transformedData = {
-        analysis,
+        analysis: {
+          ...analysis,
+          ...enhancedImageData,
+        },
         discogsData: {
           discogs_id: data.discogs_id || null,
           discogs_url: data.discogs_url || null,
@@ -172,6 +254,9 @@ export const useVinylAnalysis = () => {
     isAnalyzing,
     analysisResult,
     analyzeImages,
-    setAnalysisResult
+    setAnalysisResult,
+    // Expose preprocessing state for UI feedback
+    preprocessState,
+    preprocessImages,
   };
 };

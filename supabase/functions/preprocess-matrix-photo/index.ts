@@ -423,23 +423,392 @@ function applyCLAHEForMediaType(
   return { processedPixels, params };
 }
 
+// ============================================================
+// STAP 3: EDGE DETECTION - RELIËF ZICHTBAAR MAKEN
+// ============================================================
+
+/**
+ * STAP 3: Multi-operator edge detection voor reliëf zichtbaarheid
+ * 
+ * Matrix tekst = hoogteverschil, geen kleurverschil
+ * Daarom gebruiken we meerdere edge-lagen tegelijk:
+ * 
+ * 1. Sobel (horizontaal + verticaal) - sterke edges
+ * 2. Scharr (gevoeliger voor subtiele lijnen) - fine details
+ * 3. Laplacian (second derivative) - alle richtingen
+ * 
+ * Combinatie → edge energy map waar:
+ * - Letters oplichten
+ * - Krassen grotendeels verdwijnen
+ */
+
+/**
+ * Get pixel value at (x, y) with boundary handling (replicate border)
+ */
+function getPixel(pixels: Uint8Array, width: number, height: number, x: number, y: number): number {
+  // Clamp coordinates to valid range
+  x = Math.max(0, Math.min(width - 1, x));
+  y = Math.max(0, Math.min(height - 1, y));
+  const idx = (y * width + x) * 4;
+  return pixels[idx]; // R channel (grayscale)
+}
+
+/**
+ * SOBEL OPERATOR
+ * 
+ * Sobel kernels for horizontal (Gx) and vertical (Gy) gradients:
+ * 
+ * Gx = [-1  0  1]     Gy = [-1 -2 -1]
+ *      [-2  0  2]          [ 0  0  0]
+ *      [-1  0  1]          [ 1  2  1]
+ * 
+ * Magnitude = sqrt(Gx² + Gy²)
+ * 
+ * Good for: Strong, well-defined edges
+ */
+function applySobel(
+  pixels: Uint8Array,
+  width: number,
+  height: number
+): Float32Array {
+  const output = new Float32Array(width * height);
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      // Get 3x3 neighborhood
+      const p00 = getPixel(pixels, width, height, x - 1, y - 1);
+      const p10 = getPixel(pixels, width, height, x,     y - 1);
+      const p20 = getPixel(pixels, width, height, x + 1, y - 1);
+      const p01 = getPixel(pixels, width, height, x - 1, y);
+      const p21 = getPixel(pixels, width, height, x + 1, y);
+      const p02 = getPixel(pixels, width, height, x - 1, y + 1);
+      const p12 = getPixel(pixels, width, height, x,     y + 1);
+      const p22 = getPixel(pixels, width, height, x + 1, y + 1);
+      
+      // Sobel horizontal gradient (Gx)
+      const gx = -p00 + p20 - 2 * p01 + 2 * p21 - p02 + p22;
+      
+      // Sobel vertical gradient (Gy)
+      const gy = -p00 - 2 * p10 - p20 + p02 + 2 * p12 + p22;
+      
+      // Magnitude
+      const magnitude = Math.sqrt(gx * gx + gy * gy);
+      
+      output[y * width + x] = magnitude;
+    }
+  }
+  
+  return output;
+}
+
+/**
+ * SCHARR OPERATOR
+ * 
+ * Scharr kernels - more accurate gradient estimation than Sobel:
+ * 
+ * Gx = [-3   0   3]     Gy = [-3  -10  -3]
+ *      [-10  0  10]          [ 0    0   0]
+ *      [-3   0   3]          [ 3   10   3]
+ * 
+ * Better for: Subtiele lijnen en fijne details
+ * More rotationally invariant than Sobel
+ */
+function applyScharr(
+  pixels: Uint8Array,
+  width: number,
+  height: number
+): Float32Array {
+  const output = new Float32Array(width * height);
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      // Get 3x3 neighborhood
+      const p00 = getPixel(pixels, width, height, x - 1, y - 1);
+      const p10 = getPixel(pixels, width, height, x,     y - 1);
+      const p20 = getPixel(pixels, width, height, x + 1, y - 1);
+      const p01 = getPixel(pixels, width, height, x - 1, y);
+      const p21 = getPixel(pixels, width, height, x + 1, y);
+      const p02 = getPixel(pixels, width, height, x - 1, y + 1);
+      const p12 = getPixel(pixels, width, height, x,     y + 1);
+      const p22 = getPixel(pixels, width, height, x + 1, y + 1);
+      
+      // Scharr horizontal gradient (Gx)
+      const gx = -3 * p00 + 3 * p20 - 10 * p01 + 10 * p21 - 3 * p02 + 3 * p22;
+      
+      // Scharr vertical gradient (Gy)
+      const gy = -3 * p00 - 10 * p10 - 3 * p20 + 3 * p02 + 10 * p12 + 3 * p22;
+      
+      // Magnitude (normalized to comparable range with Sobel)
+      const magnitude = Math.sqrt(gx * gx + gy * gy) / 4; // Divide by 4 to normalize
+      
+      output[y * width + x] = magnitude;
+    }
+  }
+  
+  return output;
+}
+
+/**
+ * LAPLACIAN OPERATOR
+ * 
+ * Second derivative operator - detects edges in all directions:
+ * 
+ * Standard kernel:    Enhanced kernel (8-connected):
+ * [ 0  1  0]          [ 1  1  1]
+ * [ 1 -4  1]          [ 1 -8  1]
+ * [ 0  1  0]          [ 1  1  1]
+ * 
+ * Good for: Detecting rapid intensity changes regardless of direction
+ * Especially useful for circular/irregular text patterns on vinyl
+ */
+function applyLaplacian(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  enhanced: boolean = true
+): Float32Array {
+  const output = new Float32Array(width * height);
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const center = getPixel(pixels, width, height, x, y);
+      
+      if (enhanced) {
+        // 8-connected Laplacian (more sensitive)
+        const p00 = getPixel(pixels, width, height, x - 1, y - 1);
+        const p10 = getPixel(pixels, width, height, x,     y - 1);
+        const p20 = getPixel(pixels, width, height, x + 1, y - 1);
+        const p01 = getPixel(pixels, width, height, x - 1, y);
+        const p21 = getPixel(pixels, width, height, x + 1, y);
+        const p02 = getPixel(pixels, width, height, x - 1, y + 1);
+        const p12 = getPixel(pixels, width, height, x,     y + 1);
+        const p22 = getPixel(pixels, width, height, x + 1, y + 1);
+        
+        const laplacian = p00 + p10 + p20 + p01 - 8 * center + p21 + p02 + p12 + p22;
+        output[y * width + x] = Math.abs(laplacian);
+      } else {
+        // 4-connected Laplacian (standard)
+        const top = getPixel(pixels, width, height, x, y - 1);
+        const bottom = getPixel(pixels, width, height, x, y + 1);
+        const left = getPixel(pixels, width, height, x - 1, y);
+        const right = getPixel(pixels, width, height, x + 1, y);
+        
+        const laplacian = top + bottom + left + right - 4 * center;
+        output[y * width + x] = Math.abs(laplacian);
+      }
+    }
+  }
+  
+  return output;
+}
+
+/**
+ * Normalize edge map to 0-255 range
+ */
+function normalizeEdgeMap(edgeMap: Float32Array): Float32Array {
+  let min = Infinity;
+  let max = -Infinity;
+  
+  for (let i = 0; i < edgeMap.length; i++) {
+    if (edgeMap[i] < min) min = edgeMap[i];
+    if (edgeMap[i] > max) max = edgeMap[i];
+  }
+  
+  const range = max - min;
+  if (range === 0) return edgeMap;
+  
+  const normalized = new Float32Array(edgeMap.length);
+  for (let i = 0; i < edgeMap.length; i++) {
+    normalized[i] = ((edgeMap[i] - min) / range) * 255;
+  }
+  
+  return normalized;
+}
+
+/**
+ * EDGE ENERGY MAP COMBINATIE
+ * 
+ * Combineert Sobel, Scharr en Laplacian tot één energy map:
+ * 
+ * Voor CD's (fijne gravures):
+ * - Scharr: 0.4 (gevoelig voor subtiele lijnen)
+ * - Sobel: 0.35 (sterke edges)
+ * - Laplacian: 0.25 (second derivative voor kleine details)
+ * 
+ * Voor LP's (gestempeld reliëf):
+ * - Sobel: 0.45 (sterke edges van reliëf)
+ * - Scharr: 0.30 (fijne details)
+ * - Laplacian: 0.25 (edges in alle richtingen voor cirkelvormig patroon)
+ * 
+ * Effect:
+ * - Letters lichten op (hoge edge energie)
+ * - Krassen verdwijnen (random orientatie, geen consistente edges)
+ */
+interface EdgeEnergyParams {
+  sobelWeight: number;
+  scharrWeight: number;
+  laplacianWeight: number;
+  enhancedLaplacian: boolean;
+}
+
+function createEdgeEnergyMap(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  params: EdgeEnergyParams
+): {
+  energyMap: Float32Array;
+  stats: {
+    avgSobel: number;
+    avgScharr: number;
+    avgLaplacian: number;
+    avgCombined: number;
+  };
+} {
+  console.log('🔍 Computing Sobel edges (horizontal + vertical gradients)...');
+  const sobelEdges = applySobel(pixels, width, height);
+  const normalizedSobel = normalizeEdgeMap(sobelEdges);
+  
+  console.log('🔍 Computing Scharr edges (subtiele lijnen)...');
+  const scharrEdges = applyScharr(pixels, width, height);
+  const normalizedScharr = normalizeEdgeMap(scharrEdges);
+  
+  console.log('🔍 Computing Laplacian edges (second derivative, all directions)...');
+  const laplacianEdges = applyLaplacian(pixels, width, height, params.enhancedLaplacian);
+  const normalizedLaplacian = normalizeEdgeMap(laplacianEdges);
+  
+  // Combine into edge energy map
+  console.log(`🔗 Combining edges (Sobel: ${params.sobelWeight}, Scharr: ${params.scharrWeight}, Laplacian: ${params.laplacianWeight})...`);
+  const energyMap = new Float32Array(width * height);
+  
+  let totalSobel = 0;
+  let totalScharr = 0;
+  let totalLaplacian = 0;
+  let totalCombined = 0;
+  
+  for (let i = 0; i < width * height; i++) {
+    const sobel = normalizedSobel[i];
+    const scharr = normalizedScharr[i];
+    const laplacian = normalizedLaplacian[i];
+    
+    totalSobel += sobel;
+    totalScharr += scharr;
+    totalLaplacian += laplacian;
+    
+    // Weighted combination
+    const combined = 
+      params.sobelWeight * sobel + 
+      params.scharrWeight * scharr + 
+      params.laplacianWeight * laplacian;
+    
+    energyMap[i] = Math.min(255, combined);
+    totalCombined += energyMap[i];
+  }
+  
+  const pixelCount = width * height;
+  
+  return {
+    energyMap,
+    stats: {
+      avgSobel: totalSobel / pixelCount,
+      avgScharr: totalScharr / pixelCount,
+      avgLaplacian: totalLaplacian / pixelCount,
+      avgCombined: totalCombined / pixelCount
+    }
+  };
+}
+
+/**
+ * Convert edge energy map to grayscale RGBA pixels
+ * Inverts the map so edges become dark (text) on light background
+ */
+function edgeEnergyToPixels(
+  energyMap: Float32Array,
+  width: number,
+  height: number,
+  invert: boolean = true
+): Uint8Array {
+  const output = new Uint8Array(width * height * 4);
+  
+  for (let i = 0; i < width * height; i++) {
+    let value = Math.round(energyMap[i]);
+    
+    // Invert: high edge energy (text) → dark, low energy (background) → light
+    if (invert) {
+      value = 255 - value;
+    }
+    
+    const idx = i * 4;
+    output[idx] = value;     // R
+    output[idx + 1] = value; // G
+    output[idx + 2] = value; // B
+    output[idx + 3] = 255;   // A
+  }
+  
+  return output;
+}
+
+/**
+ * Apply edge detection pipeline for matrix text enhancement
+ */
+function applyEdgeDetection(
+  pixels: Uint8Array,
+  width: number,
+  height: number,
+  mediaType: 'vinyl' | 'cd'
+): {
+  edgePixels: Uint8Array;
+  stats: {
+    avgSobel: number;
+    avgScharr: number;
+    avgLaplacian: number;
+    avgCombined: number;
+  };
+} {
+  // Mediatype-specific edge detection parameters
+  const params: EdgeEnergyParams = mediaType === 'cd'
+    ? {
+        // CD: fijne gravures, nadruk op Scharr voor subtiele lijnen
+        sobelWeight: 0.35,
+        scharrWeight: 0.40,
+        laplacianWeight: 0.25,
+        enhancedLaplacian: true
+      }
+    : {
+        // LP: gestempeld reliëf, nadruk op Sobel voor sterke edges
+        sobelWeight: 0.45,
+        scharrWeight: 0.30,
+        laplacianWeight: 0.25,
+        enhancedLaplacian: true
+      };
+  
+  const { energyMap, stats } = createEdgeEnergyMap(pixels, width, height, params);
+  
+  // Don't invert - we want edges as bright for better OCR visibility
+  const edgePixels = edgeEnergyToPixels(energyMap, width, height, false);
+  
+  return { edgePixels, stats };
+}
+
 /**
  * Build detailed enhancement prompt with preprocessing context
  */
 function buildEnhancementPrompt(mediaType: 'vinyl' | 'cd', preprocessingApplied: string[]): string {
-  const basePromptCD = `This CD matrix photo has been extensively pre-processed to reduce reflections and enhance local contrast.
+  const basePromptCD = `This CD matrix photo has been extensively pre-processed to reduce reflections, enhance local contrast, and detect edges.
 
 PRE-PROCESSING ALREADY APPLIED:
 ${preprocessingApplied.map(s => `- ${s}`).join('\n')}
 
 ENHANCEMENT INSTRUCTIONS (build on top of preprocessing):
 1. GRAYSCALE OUTPUT - Maintain pure grayscale for maximum text contrast
-2. EDGE SHARPENING - Apply unsharp mask to emphasize engraved character edges
+2. EDGE REFINEMENT - The edge energy map highlights text; enhance this further
 3. NOISE REDUCTION - Bilateral filter to reduce remaining grain while preserving edges
 4. FINAL CONTRAST BOOST - Subtle curves adjustment to maximize text/background separation
 
 NOTE: CLAHE (local contrast) has already been applied - do NOT add more local contrast.
 NOTE: Specular highlights have been suppressed - focus on revealing engraved details.
+NOTE: Edge detection (Sobel+Scharr+Laplacian) has been applied - edges are already enhanced.
+      The text should already be "popping" from the background. Refine, don't re-detect.
 
 CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
 - Matrix numbers (e.g., "DIDX-123456")  
@@ -450,19 +819,21 @@ CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
 
 Make the text as readable as possible for OCR.`;
 
-  const basePromptLP = `This vinyl dead wax photo has been pre-processed with local contrast enhancement for relief visibility.
+  const basePromptLP = `This vinyl dead wax photo has been pre-processed with local contrast enhancement, edge detection, and relief visibility optimization.
 
 PRE-PROCESSING ALREADY APPLIED:
 ${preprocessingApplied.map(s => `- ${s}`).join('\n')}
 
 ENHANCEMENT INSTRUCTIONS (build on top of preprocessing):
 1. GRAYSCALE OUTPUT - Maintain pure grayscale for maximum text contrast
-2. RELIEF EMPHASIS - Enhance the 3D shadow/highlight effect of stamped text
+2. RELIEF EMPHASIS - The edge energy map highlights stamped text relief; enhance this
 3. DIRECTIONAL LIGHTING - Emphasize text following the circular groove pattern
-4. EDGE SHARPENING - Make embossed character edges more defined
+4. EDGE REFINEMENT - Make embossed character edges more defined
 5. NOISE REDUCTION - Reduce groove noise while preserving text detail
 
 NOTE: CLAHE (local contrast) has already been applied with larger tiles for grooves.
+NOTE: Edge detection (Sobel+Scharr+Laplacian) has been applied - relief edges are enhanced.
+      Text should already be visible as edge energy; refine the visibility, don't re-process.
 NOTE: Focus on revealing EMBOSSED/ETCHED text in the dead wax area.
 
 CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
@@ -472,7 +843,7 @@ CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
 - Mastering engineer initials
 - Any hand-written text in the runout groove
 
-The text is physically embossed - enhance shadow/highlight contrast to reveal it.`;
+The text is physically embossed - the edge detection has highlighted relief; enhance shadow/highlight contrast to reveal it further.`;
 
   return mediaType === 'cd' ? basePromptCD : basePromptLP;
 }
@@ -612,6 +983,11 @@ serve(async (req) => {
       ? { tileSize: 8, clipLimit: 2.5 }
       : { tileSize: 16, clipLimit: 3.0 };
     
+    // Edge detection parameters for STAP 3
+    const edgeParams = mediaType === 'cd'
+      ? { sobelWeight: 0.35, scharrWeight: 0.40, laplacianWeight: 0.25 }
+      : { sobelWeight: 0.45, scharrWeight: 0.30, laplacianWeight: 0.25 };
+    
     if (mediaType === 'cd') {
       preprocessingApplied.push(`STAP 1A: Grayscale conversie (ITU-R BT.601 luminance)`);
       preprocessingApplied.push(`STAP 1B: Speculaire highlight detectie & suppressie (threshold: 245, ${reflectionAnalysis.estimatedSpecularPercentage.toFixed(1)}% gedetecteerd)`);
@@ -626,6 +1002,13 @@ serve(async (req) => {
       // STAP 2: CLAHE
       preprocessingApplied.push(`STAP 2: CLAHE lokaal contrast (tileSize=${claheParams.tileSize}×${claheParams.tileSize}, clipLimit=${claheParams.clipLimit})`);
       preprocessingApplied.push(`   → Werkt per regio, laat micro-details "poppen", stabiel bij ongelijk licht`);
+      
+      // STAP 3: Edge Detection
+      preprocessingApplied.push(`STAP 3: Multi-operator edge detection (reliëf zichtbaar maken)`);
+      preprocessingApplied.push(`   → Sobel (sterke edges): gewicht ${edgeParams.sobelWeight}`);
+      preprocessingApplied.push(`   → Scharr (subtiele lijnen): gewicht ${edgeParams.scharrWeight}`);
+      preprocessingApplied.push(`   → Laplacian (second derivative, alle richtingen): gewicht ${edgeParams.laplacianWeight}`);
+      preprocessingApplied.push(`   → Effect: Letters lichten op, krassen verdwijnen`);
     } else {
       preprocessingApplied.push(`STAP 1A: Grayscale conversie (ITU-R BT.601 luminance)`);
       preprocessingApplied.push(`STAP 1B: Gamma correctie voor reliëf-versterking (γ=${reflectionAnalysis.recommendedGamma})`);
@@ -634,12 +1017,25 @@ serve(async (req) => {
       // STAP 2: CLAHE voor LP
       preprocessingApplied.push(`STAP 2: CLAHE lokaal contrast (tileSize=${claheParams.tileSize}×${claheParams.tileSize}, clipLimit=${claheParams.clipLimit})`);
       preprocessingApplied.push(`   → Grotere tiles voor LP grooves, hoger clipLimit voor reliëf-detectie`);
+      
+      // STAP 3: Edge Detection voor LP
+      preprocessingApplied.push(`STAP 3: Multi-operator edge detection (gestempeld reliëf)`);
+      preprocessingApplied.push(`   → Sobel (sterke edges van reliëf): gewicht ${edgeParams.sobelWeight}`);
+      preprocessingApplied.push(`   → Scharr (fijne details): gewicht ${edgeParams.scharrWeight}`);
+      preprocessingApplied.push(`   → Laplacian (cirkelvormig patroon): gewicht ${edgeParams.laplacianWeight}`);
+      preprocessingApplied.push(`   → Effect: Gestempelde tekst oplichten, groove-ruis dempen`);
     }
     
     console.log('🔲 STAP 2: CLAHE lokaal contrast enhancement...');
     console.log(`   - Tile size: ${claheParams.tileSize}×${claheParams.tileSize}`);
     console.log(`   - Clip limit: ${claheParams.clipLimit}`);
     pipelineSteps.push(`clahe_${claheParams.tileSize}x${claheParams.tileSize}`);
+    
+    console.log('🔍 STAP 3: Multi-operator edge detection...');
+    console.log(`   - Sobel: ${edgeParams.sobelWeight}`);
+    console.log(`   - Scharr: ${edgeParams.scharrWeight}`);
+    console.log(`   - Laplacian: ${edgeParams.laplacianWeight}`);
+    pipelineSteps.push('edge_detection_sobel_scharr_laplacian');
     
     pipelineSteps.push(`reflection_normalized_${reflectionAnalysis.severity}`);
     

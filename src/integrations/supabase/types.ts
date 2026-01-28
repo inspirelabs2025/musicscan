@@ -122,6 +122,7 @@ export type Database = {
           matrix_number: string | null
           media_type: string
           photo_urls: string[]
+          release_id: string | null
           search_queries: string[] | null
           status: string
           style: string[] | null
@@ -157,6 +158,7 @@ export type Database = {
           matrix_number?: string | null
           media_type: string
           photo_urls: string[]
+          release_id?: string | null
           search_queries?: string[] | null
           status?: string
           style?: string[] | null
@@ -192,6 +194,7 @@ export type Database = {
           matrix_number?: string | null
           media_type?: string
           photo_urls?: string[]
+          release_id?: string | null
           search_queries?: string[] | null
           status?: string
           style?: string[] | null
@@ -201,7 +204,15 @@ export type Database = {
           user_id?: string
           year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ai_scan_results_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       album_facebook_queue: {
         Row: {

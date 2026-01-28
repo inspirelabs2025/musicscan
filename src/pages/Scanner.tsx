@@ -411,6 +411,40 @@ const Scanner = () => {
 
       dispatch({ type: 'SET_COMPLETED_SCAN_DATA', payload: data });
       
+      // 🔗 Automatic release linking - connect scan to central releases table
+      const discogsId = searchResults[0]?.discogs_id || searchResults[0]?.id || extractDiscogsIdFromUrl(searchResults[0]?.discogs_url);
+      if (data && discogsId) {
+        try {
+          console.log('🔗 Linking to releases table for Discogs ID:', discogsId);
+          const { data: releaseData, error: releaseError } = await supabase.functions.invoke('find-or-create-release', {
+            body: {
+              discogs_id: discogsId,
+              artist: bestArtist,
+              title: bestTitle,
+              label: insertData.label,
+              catalog_number: insertData.catalog_number,
+              year: insertData.year,
+              format: state.mediaType === 'vinyl' ? 'Vinyl' : 'CD',
+              genre: insertData.genre,
+              country: insertData.country,
+              discogs_url: searchResults[0]?.discogs_url,
+            }
+          });
+
+          if (releaseError) {
+            console.log('⚠️ Release linking function error:', releaseError);
+          } else if (releaseData?.release_id) {
+            // Update scan record with release_id
+            await supabase.from(tableName)
+              .update({ release_id: releaseData.release_id })
+              .eq('id', data.id);
+            console.log('✅ Linked to release:', releaseData.release_id);
+          }
+        } catch (linkError) {
+          console.log('⚠️ Release linking failed (non-blocking):', linkError);
+        }
+      }
+      
       // Increment usage after successful save
       try {
         await incrementUsage('bulk_uploads', 1);

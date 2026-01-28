@@ -348,6 +348,41 @@ serve(async (req) => {
         }
       }
 
+      // 🔗 Automatic release linking - connect scan to central releases table
+      let releaseId = null;
+      if (discogsResult?.discogsId) {
+        try {
+          console.log('🔗 Linking to releases table for Discogs ID:', discogsResult.discogsId);
+          const { data: releaseData, error: releaseError } = await supabase.functions.invoke('find-or-create-release', {
+            body: {
+              discogs_id: discogsResult.discogsId,
+              artist: discogsResult.artist || combinedData.artist,
+              title: discogsResult.title || combinedData.title,
+              label: discogsResult.label || combinedData.label,
+              catalog_number: discogsResult.catalogNumber || combinedData.catalogNumber,
+              year: discogsResult.year || combinedData.year,
+              format: mediaType === 'vinyl' ? 'Vinyl' : 'CD',
+              genre: combinedData.genre,
+              country: combinedData.country,
+              discogs_url: discogsResult.discogsUrl,
+            }
+          });
+
+          if (releaseError) {
+            console.log('⚠️ Release linking function error:', releaseError);
+          } else if (releaseData?.release_id) {
+            releaseId = releaseData.release_id;
+            // Update scan record with release_id
+            await supabase.from('ai_scan_results')
+              .update({ release_id: releaseId })
+              .eq('id', scanId);
+            console.log('✅ Linked to release:', releaseId);
+          }
+        } catch (error) {
+          console.log('⚠️ Release linking failed (non-blocking):', error.message);
+        }
+      }
+
       // Fetch pricing data if Discogs ID is available
       let pricingStats = null;
       if (discogsResult?.discogsId) {

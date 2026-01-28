@@ -1,204 +1,125 @@
 
-# Matrix Foto OCR Verbetering Plan
+# Plan: Automatische Artist/Album Linking na Scan
 
-## Samenvatting
-Een complete image preprocessing pipeline implementeren voor matrix/label foto's van LP's en CD's. De pipeline past specifieke optimalisaties toe afhankelijk van het mediatype voordat de afbeelding naar AI OCR wordt gestuurd.
+## Probleem Analyse
 
-## Probleemanalyse
+De matrix OCR-registratie werkt correct, maar de koppeling naar de canonieke `releases` tabel gebeurt niet automatisch. Dit betekent:
+- Scans staan los van de centrale release database
+- Artist stories en album verhalen worden niet gekoppeld
+- Statistieken en aggregatie werken niet
 
-### CD Matrix Foto's
-- **Probleem**: Sterke lichtreflectie op het glanzende oppervlak
-- **Gevolg**: AI kan gegraveerde tekst in de binnenring niet goed lezen
-- **Oplossing**: Reflectie-normalisatie, contrast enhancement, edge detection
+## Oplossing: Post-Scan Release Linking
 
-### LP Matrix Foto's  
-- **Probleem**: Slechte leesbaarheid van tekst in dead wax/runout groove
-- **Gevolg**: Gegraveerde/geëtste tekst is nauwelijks zichtbaar
-- **Oplossing**: Reliëf-detectie, directional enhancement, noise reduction
+### Stap 1: Uitbreiden ai_scan_results tabel
+Toevoegen van een `release_id` kolom aan `ai_scan_results`:
 
-## Architectuur
+```sql
+ALTER TABLE ai_scan_results 
+ADD COLUMN release_id UUID REFERENCES releases(id);
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                    FRONTEND (AIScanV2.tsx)                   │
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │  Upload foto's → Detecteer matrix/label foto index     │ │
-│  └─────────────────────────────────────────────────────────┘ │
-│                            ↓                                 │
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │  preprocess-matrix-photo edge function                  │ │
-│  │  (nieuwe edge function voor image preprocessing)        │ │
-│  └─────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-                             ↓
-┌─────────────────────────────────────────────────────────────┐
-│           preprocess-matrix-photo Edge Function              │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  INPUT: imageUrl, mediaType ('vinyl' | 'cd')                 │
-│                                                              │
-│  ┌────────────────┐                                          │
-│  │  1. RAW/JPG    │ ← Fetch image, decode to pixel buffer    │
-│  │     Ingest     │                                          │
-│  └───────┬────────┘                                          │
-│          ↓                                                   │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │  2. REFLECTIE-NORMALISATIE (CD alleen)                 │  │
-│  │     - Homomorphic filtering (log domain)               │  │
-│  │     - Specular highlight detection & suppression       │  │
-│  │     - Adaptive white balance                           │  │
-│  └───────┬────────────────────────────────────────────────┘  │
-│          ↓                                                   │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │  3. LOKAAL CONTRAST (CLAHE)                            │  │
-│  │     - Tile-based histogram equalization                │  │
-│  │     - Clip limit: 2.0-3.0                              │  │
-│  │     - 8x8 tile grid                                    │  │
-│  └───────┬────────────────────────────────────────────────┘  │
-│          ↓                                                   │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │  4. RELIËF-DETECTIE                                    │  │
-│  │     - Sobel edge detection (horizontal + vertical)     │  │
-│  │     - Gradient magnitude calculation                   │  │
-│  │     - LP: emphasis on groove edges                     │  │
-│  └───────┬────────────────────────────────────────────────┘  │
-│          ↓                                                   │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │  5. DIRECTIONAL ENHANCEMENT (LP alleen)                │  │
-│  │     - Circular pattern detection                       │  │
-│  │     - Radial gradient enhancement                      │  │
-│  │     - Tangential text edge boosting                    │  │
-│  └───────┬────────────────────────────────────────────────┘  │
-│          ↓                                                   │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │  6. NOISE SUPPRESSION                                  │  │
-│  │     - Bilateral filtering (edge-preserving)            │  │
-│  │     - Median filter for salt-and-pepper noise          │  │
-│  └───────┬────────────────────────────────────────────────┘  │
-│          ↓                                                   │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │  7. BINARY + SOFT MASK                                 │  │
-│  │     - Adaptive thresholding (Otsu's method)            │  │
-│  │     - Soft mask blending (original + enhanced)         │  │
-│  │     - Final sharpening pass                            │  │
-│  └───────┬────────────────────────────────────────────────┘  │
-│          ↓                                                   │
-│  OUTPUT: Enhanced image as base64 (ready for OCR)            │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-                             ↓
-┌─────────────────────────────────────────────────────────────┐
-│              ai-photo-analysis-v2 Edge Function              │
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │  Receives preprocessed matrix image                    │ │
-│  │  + original images for cover/back analysis             │ │
-│  │  → Enhanced matrix OCR pass with better text detection │ │
-│  └─────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
+CREATE INDEX idx_ai_scan_release ON ai_scan_results(release_id);
 ```
 
-## Implementatie Details
+### Stap 2: Automatische linking in ai-photo-analysis-v2
+Na succesvolle Discogs match, direct `find-or-create-release` aanroepen:
 
-### 1. Nieuwe Edge Function: `preprocess-matrix-photo`
-
-**Locatie**: `supabase/functions/preprocess-matrix-photo/index.ts`
-
-**Technologie**: ImageMagick WASM voor Deno (`imagemagick_deno`)
-
-**Functies per mediatype**:
-
-| Stap | CD | LP |
-|------|----|----|
-| Reflectie-normalisatie | ✅ Intensief | ⚪ Licht |
-| CLAHE | ✅ clipLimit=2.5 | ✅ clipLimit=3.0 |
-| Edge Detection | ✅ Sobel | ✅ Sobel + Laplacian |
-| Directional Enhancement | ⚪ Niet nodig | ✅ Radiaal |
-| Noise Suppression | ✅ Bilateral | ✅ Median |
-| Binary Threshold | ✅ Otsu | ✅ Adaptive |
-
-### 2. Update `ai-photo-analysis-v2`
-
-**Wijzigingen**:
-- Matrix pass (pass 3) ontvangt voorbewerkte afbeelding
-- Dedicated prompt voor CD inner-ring vs LP dead wax
-- Verbeterde confidence scoring gebaseerd op preprocessing kwaliteit
-
-### 3. Frontend Integratie (AIScanV2.tsx)
-
-**Flow**:
-1. Gebruiker uploadt foto's
-2. Identificeer matrix foto (foto 3 voor vinyl, foto 3/4 voor CD)
-3. Verstuur matrix foto naar `preprocess-matrix-photo`
-4. Ontvang enhanced base64 image
-5. Vervang originele matrix foto in array
-6. Stuur alle foto's (met enhanced matrix) naar `ai-photo-analysis-v2`
-
-### 4. Preprocessing Parameters
-
-**CD-specifieke settings**:
 ```text
-- Reflectie threshold: 95% luminance
-- Specular suppression: gaussian blur 5px radius op highlights
-- CLAHE: clipLimit=2.5, tileGrid=8x8
-- Sharpening: unsharp mask (amount=1.5, radius=1.0, threshold=0.02)
+Location: supabase/functions/ai-photo-analysis-v2/index.ts
+
+Na regel ~350 (na artwork enrichment):
+1. Aanroepen van find-or-create-release met Discogs data
+2. Update ai_scan_results met release_id
 ```
 
-**LP-specifieke settings**:
+### Stap 3: Update Scanner.tsx voor vinyl2_scan/cd_scan
+In de `saveFinalScan` functie (rond regel 359-410):
+1. Na insert, aanroepen van `find-or-create-release` 
+2. Update scan record met verkregen `release_id`
+
+### Stap 4: Backfill bestaande scans
+Edge function voor achtergrond-koppeling van bestaande scans zonder release_id:
+
 ```text
-- Grayscale conversie eerst
-- CLAHE: clipLimit=3.0, tileGrid=8x8
-- Sobel edge: kernel 3x3
-- Directional boost: radiale gradient 20% opacity blend
-- Adaptive threshold: blockSize=11, C=2
+Nieuwe edge function: backfill-scan-releases
+- Query scans met discogs_id maar zonder release_id
+- Batch processing (100 per run)
+- Automatisch via cronjob
 ```
 
-## Bestanden die Worden Aangemaakt/Gewijzigd
+## Technische Details
 
-### Nieuwe bestanden:
-1. `supabase/functions/preprocess-matrix-photo/index.ts`
-   - Nieuwe edge function voor image preprocessing
-   - ImageMagick WASM integratie
-   - Separate pipelines voor CD en LP
+### Wijzigingen ai-photo-analysis-v2/index.ts
 
-### Gewijzigde bestanden:
-1. `supabase/functions/ai-photo-analysis-v2/index.ts`
-   - Integratie met preprocessing function
-   - Enhanced matrix prompts
-   
-2. `src/pages/AIScanV2.tsx`
-   - Call preprocessing voor matrix foto's
-   - Progress indicator voor preprocessing stap
-   - Error handling voor preprocessing failures
+```typescript
+// Na artwork enrichment (regel ~350)
+if (discogsResult?.discogsId) {
+  try {
+    console.log('🔗 Linking to releases table...');
+    const { data: releaseData } = await supabase.functions.invoke('find-or-create-release', {
+      body: {
+        discogs_id: discogsResult.discogsId,
+        artist: discogsResult.artist,
+        title: discogsResult.title,
+        label: discogsResult.label,
+        catalog_number: discogsResult.catalogNumber,
+        year: discogsResult.year,
+        genre: combinedData.genre,
+        country: combinedData.country,
+        discogs_url: discogsResult.discogsUrl,
+      }
+    });
+    
+    if (releaseData?.release_id) {
+      await supabase.from('ai_scan_results')
+        .update({ release_id: releaseData.release_id })
+        .eq('id', scanId);
+      console.log('✅ Linked to release:', releaseData.release_id);
+    }
+  } catch (error) {
+    console.log('⚠️ Release linking failed:', error);
+  }
+}
+```
 
-3. `supabase/config.toml`
-   - Nieuwe function registratie
+### Wijzigingen Scanner.tsx
 
-## Technische Overwegingen
+```typescript
+// Na succesvolle insert (regel ~410)
+if (data && searchResults[0]?.discogs_id) {
+  try {
+    const { data: releaseData } = await supabase.functions.invoke('find-or-create-release', {
+      body: {
+        discogs_id: searchResults[0].discogs_id,
+        artist: bestArtist,
+        title: bestTitle,
+        // ... rest van de data
+      }
+    });
+    
+    if (releaseData?.release_id) {
+      await supabase.from(tableName)
+        .update({ release_id: releaseData.release_id })
+        .eq('id', data.id);
+    }
+  } catch (error) {
+    console.error('Release linking failed:', error);
+  }
+}
+```
 
-### ImageMagick WASM in Deno
-- Gebruikt `imagemagick_deno` package
-- Ondersteunt alle benodigde operaties (resize, blur, sharpen, edge detection)
-- Performance: ~500ms-2s per afbeelding afhankelijk van grootte
+## Bestanden die aangepast worden
 
-### Fallback Strategie
-Als preprocessing faalt:
-1. Log error
-2. Gebruik originele afbeelding
-3. Scan doorgaat met standaard OCR
+| Bestand | Actie |
+|---------|-------|
+| Database migratie | `release_id` kolom toevoegen aan `ai_scan_results` |
+| `supabase/functions/ai-photo-analysis-v2/index.ts` | Automatische release linking na scan |
+| `src/pages/Scanner.tsx` | Release linking na vinyl/cd scan |
+| `supabase/functions/backfill-scan-releases/index.ts` | Nieuwe functie voor bestaande scans |
 
-### Memory Management
-- Max image size: 4096x4096 pixels
-- Resize grotere afbeeldingen naar max dimensie
-- Temp files opruimen na processing
+## Impact
 
-## Fase 1 vs Fase 2
-
-### Fase 1 (Dit Plan)
-- Basis preprocessing pipeline
-- CLAHE, edge detection, noise reduction
-- Integratie in bestaande scan flow
-
-### Fase 2 (Toekomstig)
-- AI-gestuurde preprocessing (auto-detect beste parameters)
-- Pattern inference voor onleesbare karakters
-- Training data collectie voor ML model
+Na implementatie:
+- Elke nieuwe scan wordt automatisch gekoppeld aan releases tabel
+- Bestaande scans worden via backfill gekoppeld
+- Artist stories en album verhalen zijn vindbaar via scans
+- Platform-brede statistieken werken correct

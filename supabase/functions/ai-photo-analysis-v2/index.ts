@@ -941,6 +941,8 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
   highest_price: number | null;
   num_for_sale: number;
   currency: string;
+  blocked?: boolean;
+  blocked_reason?: string;
 } | null> {
   try {
     console.log(`💰 Fetching pricing for Discogs ID: ${discogsId}`);
@@ -965,6 +967,30 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
         if (response.ok) {
           const html = await response.text();
           console.log(`📄 Retrieved HTML, length: ${html.length}`);
+          
+          // Check if release is blocked from sale
+          const blockedPatterns = [
+            /blocked from sale/i,
+            /not permitted to sell/i,
+            /This release is blocked/i,
+            /not available for sale/i,
+            /sale.*?prohibited/i,
+          ];
+          
+          for (const pattern of blockedPatterns) {
+            if (pattern.test(html)) {
+              console.log('🚫 Release is blocked from sale on Discogs');
+              return {
+                lowest_price: null,
+                median_price: null,
+                highest_price: null,
+                num_for_sale: 0,
+                currency: 'EUR',
+                blocked: true,
+                blocked_reason: 'Deze release is geblokkeerd voor verkoop op Discogs. Het is niet toegestaan dit item te verkopen op de Discogs Marketplace.'
+              };
+            }
+          }
           
           // Extract pricing with multiple patterns
           const extractPrice = (patterns: RegExp[]): number | null => {

@@ -53,6 +53,8 @@ interface AnalysisResult {
       highest_price: number | null;
       num_for_sale: number;
       currency: string;
+      blocked?: boolean;
+      blocked_reason?: string;
     } | null;
   };
   version: string;
@@ -526,6 +528,25 @@ export default function AIScanV2() {
                     return <div className="flex items-center justify-center py-4 text-muted-foreground">
                         <Loader2 className="h-5 w-5 animate-spin mr-2" />
                         Prijzen laden...
+                      </div>;
+                  }
+                  // Check if release is blocked from sale (only in V2 response)
+                  const v2Pricing = analysisResult.result.pricing_stats;
+                  if (v2Pricing && 'blocked' in v2Pricing && v2Pricing.blocked) {
+                    return <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 bg-red-100 dark:bg-red-900 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="font-medium text-red-800 dark:text-red-200">Verkoop geblokkeerd</p>
+                            <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                              {('blocked_reason' in v2Pricing && v2Pricing.blocked_reason) || 'Deze release is geblokkeerd voor verkoop op Discogs.'}
+                            </p>
+                          </div>
+                        </div>
                       </div>;
                   }
                   if (pricing && (pricing.lowest_price || pricing.median_price || pricing.highest_price)) {

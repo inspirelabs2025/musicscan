@@ -67,7 +67,8 @@ Deno.serve(async (req) => {
       const releaseUrl = `https://www.discogs.com/release/${discogsId}`;
       console.log(`🔍 Checking release page for blocked status: ${releaseUrl}`);
       
-      const scraperUrl = `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(releaseUrl)}&keep_headers=true&render=false`;
+      // Use render=true to ensure JavaScript content is loaded
+      const scraperUrl = `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(releaseUrl)}&keep_headers=true&render=true`;
       
       const response = await fetch(scraperUrl, {
         headers: {
@@ -84,7 +85,13 @@ Deno.serve(async (req) => {
       const html = await response.text();
       console.log(`✅ Retrieved release page HTML, length: ${html.length}`);
       
-      // Check for blocked sale patterns
+      // Log a snippet to debug what content we're getting
+      const lowerHtml = html.toLowerCase();
+      if (lowerHtml.includes('blocked') || lowerHtml.includes('not permitted')) {
+        console.log(`🔍 Found 'blocked' or 'not permitted' keywords in HTML`);
+      }
+      
+      // Check for blocked sale patterns - more comprehensive
       const blockedPatterns = [
         /blocked from sale/i,
         /not permitted to sell/i,
@@ -93,11 +100,32 @@ Deno.serve(async (req) => {
         /sale.*?prohibited/i,
         /restricted from sale/i,
         /cannot be sold/i,
+        /blocked.*?marketplace/i,
+        /item.*?blocked/i,
+        /release.*?blocked/i,
       ];
       
       for (const pattern of blockedPatterns) {
         if (pattern.test(html)) {
-          console.log(`🚫 Release ${discogsId} is blocked from sale on Discogs`);
+          console.log(`🚫 Release ${discogsId} is blocked from sale (matched pattern: ${pattern})`);
+          return {
+            blocked: true,
+            blocked_reason: 'Deze release is geblokkeerd voor verkoop op Discogs. Het is niet toegestaan dit item te verkopen op de Discogs Marketplace.'
+          };
+        }
+      }
+      
+      // Also check for specific text strings without regex
+      const blockIndicators = [
+        'blocked from sale',
+        'not permitted to sell',
+        'blocked in the Discogs Marketplace',
+        'This release is blocked',
+      ];
+      
+      for (const indicator of blockIndicators) {
+        if (lowerHtml.includes(indicator.toLowerCase())) {
+          console.log(`🚫 Release ${discogsId} is blocked from sale (found text: "${indicator}")`);
           return {
             blocked: true,
             blocked_reason: 'Deze release is geblokkeerd voor verkoop op Discogs. Het is niet toegestaan dit item te verkopen op de Discogs Marketplace.'

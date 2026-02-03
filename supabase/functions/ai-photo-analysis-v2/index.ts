@@ -1357,11 +1357,35 @@ async function searchDiscogsV2(analysisData: any) {
 
     if (bestMatch) {
       console.log(`✅ Best match found: ${bestMatch.title} (ID: ${bestMatch.id}, confidence: ${highestConfidence}, matrix verified: ${verifiedByMatrix})`);
+      
+      // Parse artist and title from Discogs result
+      // Discogs returns "Artist - Title" or "Artist (num) - Title" format
+      let parsedArtist = bestMatch.artist;
+      let parsedTitle = bestMatch.title;
+      
+      // If no separate artist field, extract from the combined title field
+      if (!parsedArtist && parsedTitle && parsedTitle.includes(' - ')) {
+        const parts = parsedTitle.split(' - ');
+        if (parts.length >= 2) {
+          // Remove numbering like "(2)" from artist name
+          parsedArtist = parts[0].replace(/\s*\(\d+\)\s*$/, '').trim();
+          parsedTitle = parts.slice(1).join(' - ').trim();
+          console.log(`📝 Parsed artist/title from Discogs: "${parsedArtist}" - "${parsedTitle}"`);
+        }
+      }
+      
+      // Use Discogs data, fall back to OCR only if Discogs has nothing
+      const finalArtist = parsedArtist || analysisData.artist;
+      const finalTitle = parsedTitle || analysisData.title;
+      
+      console.log(`🎯 Final artist: "${finalArtist}" (from ${parsedArtist ? 'Discogs' : 'OCR'})`);
+      console.log(`🎯 Final title: "${finalTitle}" (from ${parsedTitle ? 'Discogs' : 'OCR'})`);
+      
       return {
         discogsId: bestMatch.id,
         discogsUrl: `https://www.discogs.com/release/${bestMatch.id}`,
-        artist: bestMatch.artist || analysisData.artist,
-        title: bestMatch.title || analysisData.title,
+        artist: finalArtist,
+        title: finalTitle,
         label: bestMatch.label?.[0] || analysisData.label,
         catalogNumber: bestMatch.catno || analysisData.catalogNumber,
         year: bestMatch.year || analysisData.year,

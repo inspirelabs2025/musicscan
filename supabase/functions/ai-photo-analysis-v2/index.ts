@@ -971,36 +971,90 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
             for (const pattern of patterns) {
               const match = html.match(pattern);
               if (match?.[1]) {
-                const price = parseFloat(match[1].replace(',', '.'));
-                if (!isNaN(price)) return price;
+                const price = parseFloat(match[1].replace(',', '.').replace(/\s/g, ''));
+                if (!isNaN(price) && price > 0) return price;
               }
             }
             return null;
           };
           
+          // Updated patterns for current Discogs HTML structure (2024-2026)
           const lowestPatterns = [
+            // New Discogs structure
+            /class="price"[^>]*>[\s\S]*?€\s*([\d.,]+)/i,
+            /data-price="([\d.,]+)"/i,
+            /"lowest"[^}]*"amount":\s*([\d.]+)/i,
+            // Statistics section patterns
+            /Lowest[:\s]*<[^>]*>[\s]*[€$£]?\s*([\d.,]+)/i,
+            /Low[:\s]*<[^>]*>[\s]*[€$£]?\s*([\d.,]+)/i,
             /<span>Lowest:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
             /Lowest:[\s\n\r]*[€$£]?([\d.,]+)/,
-            /<span>Low:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/
+            /<span>Low:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
+            // From price to sale format
+            /from\s+[€$£]?\s*([\d.,]+)/i,
+            /starting\s+at\s+[€$£]?\s*([\d.,]+)/i,
           ];
           
           const medianPatterns = [
+            /"median"[^}]*"amount":\s*([\d.]+)/i,
+            /Median[:\s]*<[^>]*>[\s]*[€$£]?\s*([\d.,]+)/i,
             /<span>Median:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
-            /Median:[\s\n\r]*[€$£]?([\d.,]+)/
+            /Median:[\s\n\r]*[€$£]?([\d.,]+)/,
           ];
           
           const highestPatterns = [
+            /"highest"[^}]*"amount":\s*([\d.]+)/i,
+            /Highest[:\s]*<[^>]*>[\s]*[€$£]?\s*([\d.,]+)/i,
+            /High[:\s]*<[^>]*>[\s]*[€$£]?\s*([\d.,]+)/i,
             /<span>Highest:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
             /Highest:[\s\n\r]*[€$£]?([\d.,]+)/,
-            /<span>High:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/
+            /<span>High:<\/span>[\s\n\r]*[€$£]?([\d.,]+)/,
           ];
           
-          const numForSaleMatch = html.match(/(\d+)\s+for sale/i);
+          // Also try to extract from JSON-LD or embedded data
+          const jsonLdMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/i);
+          let jsonLdPricing: any = null;
+          if (jsonLdMatch?.[1]) {
+            try {
+              const jsonLd = JSON.parse(jsonLdMatch[1]);
+              if (jsonLd.offers) {
+                const offers = Array.isArray(jsonLd.offers) ? jsonLd.offers : [jsonLd.offers];
+                const prices = offers.map((o: any) => parseFloat(o.price)).filter((p: number) => !isNaN(p) && p > 0);
+                if (prices.length > 0) {
+                  jsonLdPricing = {
+                    lowest: Math.min(...prices),
+                    highest: Math.max(...prices),
+                    median: prices.sort((a: number, b: number) => a - b)[Math.floor(prices.length / 2)]
+                  };
+                  console.log('✅ Found JSON-LD pricing data:', jsonLdPricing);
+                }
+              }
+            } catch (e) {
+              // JSON-LD parsing failed, continue with regex
+            }
+          }
           
-          const lowest = extractPrice(lowestPatterns);
-          const median = extractPrice(medianPatterns);
-          const highest = extractPrice(highestPatterns);
-          const numForSale = numForSaleMatch ? parseInt(numForSaleMatch[1]) : 0;
+          const numForSalePatterns = [
+            /(\d+)\s+for sale/i,
+            /(\d+)\s+items?\s+for sale/i,
+            /(\d+)\s+available/i,
+            /"numForSale":\s*(\d+)/i,
+          ];
+          
+          let numForSale = 0;
+          for (const pattern of numForSalePatterns) {
+            const match = html.match(pattern);
+            if (match?.[1]) {
+              numForSale = parseInt(match[1]);
+              break;
+            }
+          }
+          
+          const lowest = jsonLdPricing?.lowest || extractPrice(lowestPatterns);
+          const median = jsonLdPricing?.median || extractPrice(medianPatterns);
+          const highest = jsonLdPricing?.highest || extractPrice(highestPatterns);
+          
+          console.log(`📊 Pricing extraction attempt: lowest=${lowest}, median=${median}, highest=${highest}, for_sale=${numForSale}`);
           
           if (lowest || median || highest) {
             console.log(`✅ Scraped pricing: lowest=${lowest}, median=${median}, highest=${highest}, for_sale=${numForSale}`);
@@ -1012,7 +1066,24 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
               currency: 'EUR'
             };
           }
-          console.log('⚠️ No pricing found in scraped HTML');
+          
+          // Last resort: Try to find any price on the page
+          const anyPriceMatch = html.match(/[€$£]\s*([\d]+[.,][\d]{2})/);
+          if (anyPriceMatch?.[1]) {
+            const fallbackPrice = parseFloat(anyPriceMatch[1].replace(',', '.'));
+            if (!isNaN(fallbackPrice) && fallbackPrice > 0) {
+              console.log(`⚠️ Using fallback single price: ${fallbackPrice}`);
+              return {
+                lowest_price: fallbackPrice,
+                median_price: null,
+                highest_price: null,
+                num_for_sale: numForSale,
+                currency: 'EUR'
+              };
+            }
+          }
+          
+          console.log('⚠️ No pricing found in scraped HTML, release may not have items for sale');
         }
       } catch (scrapeError) {
         console.error('❌ Scraping failed:', scrapeError);

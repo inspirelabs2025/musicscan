@@ -61,8 +61,79 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  // Function to check if release is blocked from sale
+  const checkIfBlocked = async (discogsId: string, apiKey: string): Promise<{ blocked: boolean; blocked_reason?: string }> => {
+    try {
+      const releaseUrl = `https://www.discogs.com/release/${discogsId}`;
+      console.log(`🔍 Checking release page for blocked status: ${releaseUrl}`);
+      
+      const scraperUrl = `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(releaseUrl)}&keep_headers=true&render=false`;
+      
+      const response = await fetch(scraperUrl, {
+        headers: {
+          'Accept-Language': 'en-US,en;q=0.9',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+      
+      if (!response.ok) {
+        console.log(`⚠️ Could not check release page: ${response.status}`);
+        return { blocked: false };
+      }
+      
+      const html = await response.text();
+      console.log(`✅ Retrieved release page HTML, length: ${html.length}`);
+      
+      // Check for blocked sale patterns
+      const blockedPatterns = [
+        /blocked from sale/i,
+        /not permitted to sell/i,
+        /This release is blocked/i,
+        /It is not permitted to sell this item/i,
+        /sale.*?prohibited/i,
+        /restricted from sale/i,
+        /cannot be sold/i,
+      ];
+      
+      for (const pattern of blockedPatterns) {
+        if (pattern.test(html)) {
+          console.log(`🚫 Release ${discogsId} is blocked from sale on Discogs`);
+          return {
+            blocked: true,
+            blocked_reason: 'Deze release is geblokkeerd voor verkoop op Discogs. Het is niet toegestaan dit item te verkopen op de Discogs Marketplace.'
+          };
+        }
+      }
+      
+      console.log(`✅ Release ${discogsId} is NOT blocked from sale`);
+      return { blocked: false };
+    } catch (error) {
+      console.error(`❌ Error checking blocked status:`, error);
+      return { blocked: false };
+    }
+  };
+
   // Function to scrape pricing statistics with retry logic and fallback (improved)
   const scrapePricingStatsWithRetry = async (sellUrl: string, apiKey: string, discogsId?: string, maxRetries: number = 3) => {
+    // First check if release is blocked (only if we have a discogs ID)
+    if (discogsId) {
+      const blockedCheck = await checkIfBlocked(discogsId, apiKey);
+      if (blockedCheck.blocked) {
+        return {
+          lowest_price: null,
+          median_price: null,
+          highest_price: null,
+          have_count: 0,
+          want_count: 0,
+          avg_rating: 0,
+          ratings_count: 0,
+          last_sold: null,
+          blocked: true,
+          blocked_reason: blockedCheck.blocked_reason
+        };
+      }
+    }
+    
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       console.log(`💰 Pricing attempt ${attempt}/${maxRetries} for: ${sellUrl}`);
       

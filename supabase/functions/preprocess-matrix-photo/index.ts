@@ -2653,69 +2653,53 @@ function applyEdgeDetection(
 }
 
 /**
- * Build detailed enhancement prompt with preprocessing context
+ * Build enhancement prompt for AI-based matrix photo enhancement
+ * Since we can't do pixel-level preprocessing in Deno, we ask AI to enhance directly
  */
-function buildEnhancementPrompt(mediaType: 'vinyl' | 'cd', preprocessingApplied: string[]): string {
-  const basePromptCD = `This CD matrix photo has been extensively pre-processed with a 6-step pipeline optimized for circular matrix text.
+function buildEnhancementPrompt(mediaType: 'vinyl' | 'cd', _preprocessingApplied: string[]): string {
+  const basePromptCD = `TASK: Enhance this CD matrix photo for optimal OCR text extraction.
 
-PRE-PROCESSING ALREADY APPLIED:
-${preprocessingApplied.map(s => `- ${s}`).join('\n')}
+YOUR MISSION - Apply these image enhancements:
+1. GRAYSCALE CONVERSION - Convert to pure grayscale for maximum text contrast
+2. REFLECTION SUPPRESSION - Reduce bright aluminum reflections that wash out text
+3. CONTRAST ENHANCEMENT - Use local contrast (CLAHE-like) to reveal faint text
+4. EDGE SHARPENING - Enhance edges of stamped/etched characters
+5. NOISE REDUCTION - Smooth random noise while preserving text edges (bilateral filter style)
+6. DIRECTIONAL ENHANCEMENT - Boost text following the CIRCULAR pattern (tangential edges)
 
-ENHANCEMENT INSTRUCTIONS (build on top of preprocessing):
-1. GRAYSCALE OUTPUT - Maintain pure grayscale for maximum text contrast
-2. EDGE REFINEMENT - The directional enhancement has already boosted tangential (text-following) edges
-3. FINAL CLARITY - Bilateral noise reduction has already smoothed noise while preserving edges
-4. DUAL OUTPUT READY - Human-enhanced view and machine OCR mask have been generated
-5. FINAL POLISH - Subtle refinement for maximum readability
+CRITICAL: The text runs in a CIRCLE around the center hole. Enhance tangential (text-following) edges MORE than radial edges.
 
-PREPROCESSING NOTES:
-- CLAHE (local contrast) has already been applied - do NOT add more local contrast
-- Specular highlights have been suppressed
-- Multi-operator edge detection (Sobel+Scharr+Laplacian) has been applied
-- DIRECTIONAL ENHANCEMENT: Text edges along the circular path have been BOOSTED while radial scratches have been SUPPRESSED
-- BILATERAL NOISE REDUCTION: Random noise has been smoothed WHILE preserving sharp text edges (NO Gaussian blur!)
-- DUAL OUTPUT: A machine-optimized soft binary mask has been generated with text = high certainty, noise = low certainty
-- The text should already be clearly "popping" - refine clarity, don't re-process edges
-
-CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
-- Matrix numbers (e.g., "DIDX-123456")  
-- IFPI codes (e.g., "IFPI L123")
+TARGET TEXT TO REVEAL:
+- Matrix numbers (e.g., "DIDX-123456", "1-234567")
+- IFPI codes (e.g., "IFPI L123", "IFPI LB12")
 - Mastering SID codes
 - Mould SID codes
-- Any hand-etched text
+- Hand-etched text
 
-Make the text as readable as possible for OCR. The circular text pattern has been enhanced and noise reduced.`;
+OUTPUT: High-contrast grayscale image where ALL text is clearly readable for OCR.
+DO NOT add colors, filters, or artistic effects. Pure enhancement for text legibility.`;
 
-  const basePromptLP = `This vinyl dead wax photo has been pre-processed with a 6-step pipeline optimized for circular matrix text in the runout groove.
+  const basePromptLP = `TASK: Enhance this vinyl dead wax photo for optimal OCR text extraction.
 
-PRE-PROCESSING ALREADY APPLIED:
-${preprocessingApplied.map(s => `- ${s}`).join('\n')}
+YOUR MISSION - Apply these image enhancements:
+1. GRAYSCALE CONVERSION - Convert to pure grayscale for maximum text contrast
+2. RELIEF EMPHASIS - Enhance the subtle EMBOSSED/STAMPED text relief visible under lighting
+3. CONTRAST ENHANCEMENT - Use local contrast (CLAHE-like) to reveal faint engravings
+4. EDGE DETECTION - Make embossed character edges more visible
+5. NOISE REDUCTION - Smooth groove noise while preserving text edges (bilateral filter style)
+6. DIRECTIONAL ENHANCEMENT - Boost text following the CIRCULAR pattern in the runout groove
 
-ENHANCEMENT INSTRUCTIONS (build on top of preprocessing):
-1. GRAYSCALE OUTPUT - Maintain pure grayscale for maximum text contrast
-2. RELIEF EMPHASIS - The edge detection and directional enhancement have highlighted stamped text relief
-3. DIRECTIONAL CLARITY - Text following the circular groove pattern has been boosted
-4. NOISE ALREADY REDUCED - Bilateral filter has smoothed groove noise while preserving text
-5. DUAL OUTPUT READY - Human-enhanced view and machine OCR mask have been generated
-6. EDGE REFINEMENT - Make embossed character edges more defined
+CRITICAL: The text is STAMPED/ENGRAVED in the dead wax area near the label. It follows a CIRCULAR path. Enhance tangential edges (text direction) more than radial edges (grooves/scratches).
 
-PREPROCESSING NOTES:
-- CLAHE (local contrast) applied with larger tiles for grooves
-- Multi-operator edge detection (Sobel+Scharr+Laplacian) has been applied
-- DIRECTIONAL ENHANCEMENT: Tangential edges (text) have been BOOSTED while radial edges (scratches/grooves) have been SUPPRESSED
-- BILATERAL NOISE REDUCTION: Groove noise smoothed WHILE preserving stamped text edges (NO Gaussian blur!)
-- DUAL OUTPUT: A machine-optimized soft binary mask has been generated with text = high certainty, noise = low certainty
-- Text relief should already be visible as enhanced edge energy - refine visibility, don't re-process
-- Focus on revealing EMBOSSED/ETCHED text in the dead wax area
-
-CRITICAL OUTPUT: HIGH-CONTRAST GRAYSCALE optimized for reading:
+TARGET TEXT TO REVEAL:
 - Matrix numbers (stamped in dead wax)
-- Stamper codes (hand-etched letters like "A", "B", "AA")
+- Stamper codes (hand-etched letters: A, B, AA, etc.)
 - Pressing plant codes
-- Mastering engineer initials
-- Any hand-written text in the runout groove
+- Mastering engineer initials (often hand-written)
+- Any etched text in the runout groove
 
-The circular text pattern has been enhanced and noise reduced - text following the groove should be prominent.`;
+OUTPUT: High-contrast grayscale image where ALL embossed/etched text is clearly readable for OCR.
+DO NOT add colors, filters, or artistic effects. Pure enhancement for text legibility.`;
 
   return mediaType === 'cd' ? basePromptCD : basePromptLP;
 }
@@ -3278,97 +3262,25 @@ serve(async (req) => {
     pipelineSteps.push(`reflection_normalized_${reflectionAnalysis.severity}`);
     
     // ============================================================
-    // ACTUAL PREPROCESSING EXECUTION - Apply real filters to pixels
+    // SKIP PIXEL PREPROCESSING - Deno has no proper JPEG decoder
+    // Go directly to AI enhancement which CAN process the image properly
     // ============================================================
     
-    let processedImageBase64: string;
-    let processingStats = {
+    console.log('🔧 Skipping pixel preprocessing (no JPEG library in Deno)');
+    console.log('🎨 Using AI-only enhancement for matrix OCR...');
+    pipelineSteps.push('pixel_preprocessing_skipped');
+    
+    // Convert original image to base64 for AI processing
+    const dataUrlOriginal = `data:${contentType};base64,${btoa(String.fromCharCode(...imageBytes))}`;
+    let processedImageBase64 = dataUrlOriginal;
+    
+    const processingStats = {
       specularPixelsRemoved: 0,
       avgBrightnessChange: 0,
       edgeEnhancementApplied: false,
       claheApplied: false,
       directionalBoostApplied: false,
     };
-    
-    // Try to decode and process the image with actual algorithms
-    try {
-      console.log('🔧 STARTING ACTUAL PREPROCESSING (not just logging)...');
-      
-      // Decode image to raw pixel data using simple JPEG/PNG parsing
-      const { pixels, width, height } = await decodeImageToPixels(imageBytes, contentType);
-      
-      if (pixels && width > 0 && height > 0) {
-        console.log(`📐 Image decoded: ${width}x${height} (${pixels.length} bytes)`);
-        pipelineSteps.push('image_decoded');
-        
-        // STAP 1: Apply reflection normalization
-        console.log('🔧 STAP 1: Applying ACTUAL reflection normalization...');
-        const normResult = applyReflectionNormalization(
-          pixels, 
-          width, 
-          height, 
-          reflectionAnalysis.recommendedGamma,
-          reflectionAnalysis.recommendedLogC
-        );
-        let processedPixels = normResult.processedPixels;
-        processingStats.specularPixelsRemoved = normResult.stats.specularPixelCount;
-        processingStats.avgBrightnessChange = normResult.stats.avgBrightnessBefore - normResult.stats.avgBrightnessAfter;
-        console.log(`   ✅ Specular pixels suppressed: ${normResult.stats.specularPixelCount}`);
-        console.log(`   ✅ Brightness reduced: ${normResult.stats.avgBrightnessBefore.toFixed(1)} → ${normResult.stats.avgBrightnessAfter.toFixed(1)}`);
-        pipelineSteps.push('reflection_norm_applied');
-        
-        // STAP 2: Apply CLAHE
-        console.log('🔧 STAP 2: Applying ACTUAL CLAHE...');
-        const claheResult = applyCLAHEForMediaType(processedPixels, width, height, mediaType);
-        processedPixels = claheResult.processedPixels;
-        processingStats.claheApplied = true;
-        console.log(`   ✅ CLAHE applied: tileSize=${claheResult.params.tileSize}, clipLimit=${claheResult.params.clipLimit}`);
-        pipelineSteps.push('clahe_applied');
-        
-        // STAP 3: Apply edge detection
-        console.log('🔧 STAP 3: Applying ACTUAL multi-operator edge detection...');
-        const edgeEnergy = applyMultiOperatorEdgeDetection(processedPixels, width, height, mediaType);
-        processingStats.edgeEnhancementApplied = true;
-        console.log(`   ✅ Edge detection applied (Sobel+Scharr+Laplacian)`);
-        pipelineSteps.push('edge_detection_applied');
-        
-        // STAP 4: Apply directional enhancement
-        console.log('🔧 STAP 4: Applying ACTUAL directional enhancement...');
-        const dirResult = applyDirectionalEnhancementWrapper(edgeEnergy, processedPixels, width, height, mediaType);
-        processingStats.directionalBoostApplied = true;
-        console.log(`   ✅ Directional enhancement: tangential boost=${dirResult.stats.tangentialBoost}x`);
-        pipelineSteps.push('directional_applied');
-        
-        // STAP 5: Apply bilateral noise reduction
-        console.log('🔧 STAP 5: Applying ACTUAL bilateral filter...');
-        const filteredPixels = applyBilateralFilterWrapper(processedPixels, width, height, mediaType);
-        console.log(`   ✅ Bilateral noise reduction applied`);
-        pipelineSteps.push('bilateral_applied');
-        
-        // STAP 6: Generate dual output
-        console.log('🔧 STAP 6: Generating ACTUAL dual output...');
-        const dualOutput = generateDualOutput(dirResult.enhancedEnergy, filteredPixels, width, height, mediaType);
-        console.log(`   ✅ Dual output: ${dualOutput.stats.textCertaintyPixels} text pixels, ${dualOutput.stats.noisePixels} noise pixels`);
-        pipelineSteps.push('dual_output_applied');
-        
-        // Combine: merge edge energy back into pixels for final output
-        const finalPixels = combineEdgeWithPixels(filteredPixels, dirResult.enhancedEnergy, width, height);
-        
-        // Encode processed pixels back to base64
-        processedImageBase64 = pixelsToBase64DataUrl(finalPixels, width, height);
-        console.log('✅ PREPROCESSING COMPLETE - Image actually processed!');
-        pipelineSteps.push('preprocessing_complete');
-        
-      } else {
-        throw new Error('Failed to decode image to pixels');
-      }
-    } catch (decodeError) {
-      console.log('⚠️ Image decoding failed, falling back to AI-only processing:', decodeError.message);
-      pipelineSteps.push('decode_fallback');
-      
-      // Fallback: use original image
-      processedImageBase64 = `data:${contentType};base64,${btoa(String.fromCharCode(...imageBytes))}`;
-    }
     
     // Step 3: Apply AI enhancement on top of preprocessed image
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
@@ -3455,6 +3367,9 @@ serve(async (req) => {
     if (enhancedImageUrl) {
       pipelineSteps.push('ai_success');
       console.log('✅ AI enhancement completed successfully');
+      
+      // Since we're using AI-only enhancement (no pixel preprocessing in Deno),
+      // use the AI result directly
       
       // Analyze the enhanced image for comparison (if it's base64)
       let normalizedBrightPixels = 0;

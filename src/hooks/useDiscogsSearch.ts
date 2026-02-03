@@ -321,11 +321,26 @@ export const useDiscogsSearch = () => {
             : result
         ));
         
-        toast({
-          title: "Prijzen Bijgewerkt! 💰",
-          description: "Nieuwe prijsinformatie opgehaald",
-          variant: "default"
-        });
+        // Check if release is blocked
+        if (normalizedStats?.blocked) {
+          toast({
+            title: "Verkoop Geblokkeerd 🚫",
+            description: "Deze release is geblokkeerd voor verkoop op Discogs",
+            variant: "destructive"
+          });
+        } else if (normalizedStats?.lowest_price || normalizedStats?.median_price) {
+          toast({
+            title: "Prijzen Bijgewerkt! 💰",
+            description: "Nieuwe prijsinformatie opgehaald",
+            variant: "default"
+          });
+        } else {
+          toast({
+            title: "Geen Prijzen Beschikbaar",
+            description: "Er zijn momenteel geen items te koop voor deze release",
+            variant: "default"
+          });
+        }
       }
 
       return data;

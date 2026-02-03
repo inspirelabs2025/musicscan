@@ -530,9 +530,10 @@ export default function AIScanV2() {
                         Prijzen laden...
                       </div>;
                   }
-                  // Check if release is blocked from sale (only in V2 response)
-                  const v2Pricing = analysisResult.result.pricing_stats;
-                  if (v2Pricing && 'blocked' in v2Pricing && v2Pricing.blocked) {
+                  // Check if release is blocked from sale (check both V2 response and searchResults)
+                  const isBlocked = (pricing && 'blocked' in pricing && pricing.blocked);
+                  const blockedReason = pricing && 'blocked_reason' in pricing ? pricing.blocked_reason : null;
+                  if (isBlocked) {
                     return <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
                         <div className="flex items-start gap-3">
                           <div className="p-2 bg-red-100 dark:bg-red-900 rounded-full">
@@ -543,7 +544,7 @@ export default function AIScanV2() {
                           <div>
                             <p className="font-medium text-red-800 dark:text-red-200">Verkoop geblokkeerd</p>
                             <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-                              {('blocked_reason' in v2Pricing && v2Pricing.blocked_reason) || 'Deze release is geblokkeerd voor verkoop op Discogs.'}
+                              {blockedReason || 'Deze release is geblokkeerd voor verkoop op Discogs.'}
                             </p>
                           </div>
                         </div>

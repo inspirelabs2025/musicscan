@@ -1,142 +1,168 @@
 
-# Plan: CD Matrix Filtering Fine-tuning
+# Plan: Extreme Matrix Enhancement Pipeline
 
-## Probleemanalyse van je Foto
+## Probleem Analyse
 
-De foto toont een CD met zware regenboog-reflecties (interferentie patronen). Dit is het moeilijkste scenario voor OCR omdat:
+De foto heeft drie uitdagingen:
+1. **Extreme regenboog reflecties** - De hele CD-oppervlak is bedekt met prismatische interferentie
+2. **Lage matrix tekst contrast** - De gegraveerde tekst is nauwelijks zichtbaar
+3. **Schaduw van fotograaf** - Extra donkere gebieden verstoren de analyse
 
-- **Kleurverschillen**: Reflecties variëren per kleurkanaal (R/G/B)
-- **Gegraveerde tekst**: Matrix nummers zijn uniform grijs (geen kleur)
-- **Locatie**: Matrix info zit in de binnenste ring rond de hub
+## Oplossing: Multi-Stage Aggressive Filtering
 
-## Technische Oplossing
-
-### Strategie: AI-gestuurde Reflection Suppression
-
-Gezien de Deno edge function beperkingen (geen native image libraries zoals Sharp/Jimp), gebruiken we de **AI gateway** met gespecialiseerde prompts voor matrix enhancement.
-
-### Nieuwe Aanpak: Multi-Pass AI Enhancement
+### Nieuwe Filtering Strategie
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│ HUIDIGE FLOW                                                │
-│ ┌──────────┐    ┌──────────────┐    ┌─────────────┐        │
-│ │ Upload   │ →  │ preprocess-  │ →  │ ai-photo-   │        │
-│ │ foto     │    │ matrix-photo │    │ analysis-v2 │        │
-│ └──────────┘    └──────────────┘    └─────────────┘        │
-│                       ↑                                     │
-│            Edge detection only                              │
-│            (niet genoeg voor reflecties)                    │
-└─────────────────────────────────────────────────────────────┘
+HUIDIGE PIPELINE:
+Upload → Min-channel → Light contrast → AI analyse
+        (niet genoeg voor extreme reflecties)
 
-┌─────────────────────────────────────────────────────────────┐
-│ NIEUWE FLOW                                                 │
-│ ┌──────────┐    ┌──────────────────┐    ┌─────────────┐    │
-│ │ Upload   │ →  │ ai-enhance-      │ →  │ ai-photo-   │    │
-│ │ foto     │    │ matrix-photo     │    │ analysis-v2 │    │
-│ └──────────┘    │ (NEW)            │    └─────────────┘    │
-│                 │                   │                       │
-│                 │ 1. AI Reflection  │                       │
-│                 │    Suppression    │                       │
-│                 │ 2. Circular Text  │                       │
-│                 │    Enhancement    │                       │
-│                 │ 3. Local Contrast │                       │
-│                 │    in Hub Area    │                       │
-│                 └──────────────────┘                       │
-└─────────────────────────────────────────────────────────────┘
+NIEUWE PIPELINE:
+Upload → Hub Crop → Min-channel (agressief) → Adaptive Binarization → Multi-variant AI
+   │         │              │                        │                     │
+   │         │              │                        │                     └─ 3 filter varianten
+   │         │              │                        └─ Zwart/wit output
+   │         │              └─ Boost factor 1.8 (was 1.3)
+   │         └─ Focus op 15-40% van centrum (matrix ring)
+   └─ Origineel behouden voor fallback
 ```
 
-### Implementatie Details
+### Fase 1: Automatische Hub Detection & Crop
 
-#### 1. Nieuwe Edge Function: `ai-enhance-matrix-photo`
-
-Gebruikt Gemini's vision capabilities met gespecialiseerde prompt:
+Detecteert automatisch de CD hub en croppt naar de matrix ring area:
 
 ```typescript
-const enhancementPrompt = `
-You are an expert image processor specializing in CD/vinyl matrix number enhancement.
-
-TASK: Enhance this CD surface image to make engraved text maximally readable.
-
-CHALLENGES TO ADDRESS:
-1. Rainbow/prismatic reflections (iridescence)
-2. Low contrast engraved text
-3. Circular text arrangement around hub
-4. Specular highlights
-
-ENHANCEMENT STRATEGY:
-1. Suppress color variations (reflections appear colored, text is uniform gray)
-2. Increase local contrast in the inner ring area (15-30mm from center)
-3. Apply directional sharpening along circular text paths
-4. Normalize brightness to reveal subtle engravings
-
-OUTPUT: The same image with enhanced readability of matrix numbers, IFPI codes, and catalog numbers.
-`;
-```
-
-#### 2. Client-side Preview Enhancement
-
-Uitbreiding van `clientImagePreprocess.ts`:
-
-```typescript
-// Nieuwe functie voor CD-specifieke preprocessing
-export function preprocessCDMatrix(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number
-): void {
-  const imageData = ctx.getImageData(0, 0, width, height);
-  const data = imageData.data;
-  
-  // Per pixel: neem MINIMUM van R/G/B kanalen
-  // Dit onderdrukt kleurrijke reflecties (die in 1 kanaal sterk zijn)
-  for (let i = 0; i < data.length; i += 4) {
-    const minChannel = Math.min(data[i], data[i+1], data[i+2]);
-    // Boost het minimum kanaal voor betere zichtbaarheid
-    const enhanced = Math.min(255, minChannel * 1.3);
-    data[i] = enhanced;
-    data[i+1] = enhanced;
-    data[i+2] = enhanced;
-  }
-  
-  ctx.putImageData(imageData, 0, 0);
+function detectAndCropHub(ctx, width, height) {
+  // 1. Zoek donkerste circulaire regio (hub gat)
+  // 2. Bepaal centrum
+  // 3. Crop naar ring: 15% tot 40% van radius
+  // 4. Return alleen het relevante gebied
 }
 ```
 
-#### 3. Foto Tips UI Component
+Dit verkleint het analysegebied drastisch en elimineert irrelevante reflecties.
 
-Nieuwe component met real-time feedback:
+### Fase 2: Agressieve Reflection Suppression
+
+Verbeterde min-channel filter met hogere boost:
+
+- **Boost factor**: 1.3 → 1.8
+- **Gamma correctie**: 0.7 voor donkere gebieden
+- **Hub enhancement**: Sterker centrum-gewogen
+
+### Fase 3: Adaptive Binarization (Nieuw)
+
+Omzetten naar puur zwart/wit met adaptive threshold:
 
 ```typescript
-// Voorbeeld tips voor betere foto's
-const cdPhotoTips = [
-  "💡 Gebruik indirect licht (geen directe lamp op CD)",
-  "📐 Fotografeer onder hoek van 45° om reflecties te minimaliseren",
-  "🔍 Focus op de binnenste ring waar matrix codes staan",
-  "🌑 Donkere achtergrond vermindert reflecties"
-];
+function adaptiveBinarize(ctx, width, height) {
+  // Per regio (32x32 blokken):
+  // 1. Bereken lokale gemiddelde
+  // 2. Threshold = gemiddelde - C (constante)
+  // 3. Pixel > threshold = wit, anders = zwart
+}
 ```
 
-### Bestanden
+Dit maakt zelfs vage gravures scherp zichtbaar.
 
-| Actie | Bestand | Doel |
-|-------|---------|------|
-| Wijzigen | `supabase/functions/preprocess-matrix-photo/index.ts` | AI-prompt enhancement toevoegen |
-| Wijzigen | `src/utils/clientImagePreprocess.ts` | Min-channel filter voor CD's |
-| Wijzigen | `src/pages/AIScanV2.tsx` | Preview tonen van filtering |
-| Nieuw | `src/components/scanner/CDPhotoTips.tsx` | Tips voor betere foto's |
+### Fase 4: Multi-Variant AI Analysis
 
-### Verwachte Resultaten
+Stuur 3 verschillende beeldvarianten naar de AI:
 
-Met deze aanpassingen:
-1. **Reflecties onderdrukt**: Min-channel filter elimineert kleurverschillen
-2. **Tekst versterkt**: Lokale contrast boost in hub-gebied
-3. **Betere OCR**: AI krijgt schonere input voor matrix herkenning
-4. **Gebruiker feedback**: Preview slider toont verbetering
+| Variant | Doel |
+|---------|------|
+| Original cropped | Fallback voor leesbare gevallen |
+| Min-channel enhanced | Reflectie onderdrukking |
+| Binarized | Maximale tekst contrast |
 
-### Test Scenario
+De AI combineert informatie uit alle drie.
 
-Met jouw foto als test case:
-1. Upload → Direct min-channel preview
-2. Vergelijk origineel vs gefilterd in slider
-3. Analyse → Check of matrix nummer correct wordt herkend
+## Technische Implementatie
+
+### Bestand 1: `src/utils/clientImagePreprocess.ts`
+
+Nieuwe functies toevoegen:
+
+```typescript
+// Hub detectie en crop
+export function detectHubCenter(ctx, width, height): { cx, cy, radius }
+
+// Crop naar matrix ring
+export function cropToMatrixRing(ctx, width, height, hubCenter): Canvas
+
+// Adaptive binarization
+export function adaptiveBinarize(ctx, width, height, blockSize = 32, C = 10): void
+
+// Volledige extreme enhancement pipeline
+export async function extremeMatrixEnhancement(
+  imageInput: File | string
+): Promise<{
+  variants: {
+    original: string;
+    minChannel: string;
+    binarized: string;
+  };
+  hubDetected: boolean;
+  cropApplied: boolean;
+}>
+```
+
+### Bestand 2: `supabase/functions/ai-photo-analysis-v2/index.ts`
+
+Aangepaste AI prompt voor extreme gevallen:
+
+```typescript
+const extremeMatrixPrompt = `
+You are analyzing a DIFFICULT CD matrix photo with heavy reflections.
+
+CRITICAL INSTRUCTIONS:
+1. Multiple image variants are provided - combine information from ALL
+2. The BINARIZED version shows text as black on white - focus here first
+3. Matrix codes are in the inner ring near the hub
+4. Common OCR confusions to correct: O/0, I/1, S/5, B/8
+
+Look for:
+- IFPI codes (format: IFPI LXXXX or IFPI XXXXX)
+- Catalog numbers (often start with label prefix)
+- Matrix/stamper numbers
+`;
+```
+
+### Bestand 3: `src/pages/AIScanV2.tsx`
+
+UI updates:
+
+1. "Extreme Enhancement" toggle voor moeilijke foto's
+2. Preview van alle 3 filter varianten
+3. Quality indicator met feedback ("Foto te donker", "Zware reflecties gedetecteerd")
+
+### Bestand 4: `src/components/scanner/ExtremeEnhancementPreview.tsx` (Nieuw)
+
+Component om de 3 varianten naast elkaar te tonen met tabs:
+
+- Tab 1: Origineel (gecropped)
+- Tab 2: Reflectie filter
+- Tab 3: Zwart/Wit
+
+## Verwachte Resultaten
+
+Met de voorbeeld foto:
+1. **Hub crop** verwijdert 60% irrelevante pixels
+2. **Agressieve min-channel** onderdrukt regenboog effecten
+3. **Binarisatie** maakt zelfs vage gravures zichtbaar
+4. **Multi-variant AI** combineert beste resultaten
+
+## Bestanden
+
+| Actie | Bestand |
+|-------|---------|
+| Wijzigen | `src/utils/clientImagePreprocess.ts` |
+| Wijzigen | `supabase/functions/ai-photo-analysis-v2/index.ts` |
+| Wijzigen | `src/pages/AIScanV2.tsx` |
+| Nieuw | `src/components/scanner/ExtremeEnhancementPreview.tsx` |
+
+## Optionele Uitbreidingen
+
+- **Auto-detect difficult photos**: Automatisch extreme mode inschakelen bij hoge kleurvariatie
+- **User guidance**: Real-time feedback tijdens fotograferen ("Draai CD 45°")
+- **Fallback chain**: Als binarisatie faalt, probeer andere drempels

@@ -93,8 +93,9 @@ export default function AIScanV2() {
   const [error, setError] = useState<string | null>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   
-  // Pre-filled matrix and photo from Matrix Enhancer
+  // Pre-filled matrix, IFPI codes, and photo from Matrix Enhancer
   const [prefilledMatrix, setPrefilledMatrix] = useState<string | null>(null);
+  const [prefilledIfpiCodes, setPrefilledIfpiCodes] = useState<string[]>([]);
   const [fromMatrixEnhancer, setFromMatrixEnhancer] = useState(false);
   
   // Matrix verification state
@@ -113,6 +114,11 @@ export default function AIScanV2() {
             setPrefilledMatrix(data.matrix);
             setFromMatrixEnhancer(true);
             
+            // Load IFPI codes if available
+            if (data.ifpiCodes && Array.isArray(data.ifpiCodes)) {
+              setPrefilledIfpiCodes(data.ifpiCodes);
+            }
+            
             // Convert base64 to File and add to uploadedFiles
             if (data.photo) {
               fetch(data.photo)
@@ -128,9 +134,10 @@ export default function AIScanV2() {
                 });
             }
             
+            const ifpiText = data.ifpiCodes?.length > 0 ? ` + ${data.ifpiCodes.length} IFPI` : '';
             toast({
               title: "Foto en matrix code geladen",
-              description: "Selecteer een conditie om direct te starten",
+              description: `Selecteer een conditie om direct te starten${ifpiText}`,
             });
           }
           // Clear sessionStorage after reading
@@ -357,6 +364,9 @@ export default function AIScanV2() {
       if (prefilledMatrix) {
         console.log('📎 Using prefilled matrix from Matrix Enhancer:', prefilledMatrix);
       }
+      if (prefilledIfpiCodes.length > 0) {
+        console.log('📎 Using prefilled IFPI codes from Matrix Enhancer:', prefilledIfpiCodes);
+      }
       const {
         data,
         error: functionError
@@ -365,7 +375,8 @@ export default function AIScanV2() {
           photoUrls,
           mediaType,
           conditionGrade,
-          prefilledMatrix: prefilledMatrix || undefined
+          prefilledMatrix: prefilledMatrix || undefined,
+          prefilledIfpiCodes: prefilledIfpiCodes.length > 0 ? prefilledIfpiCodes : undefined
         }
       });
       console.log('📊 Function response:', {
@@ -414,6 +425,7 @@ export default function AIScanV2() {
     setVerificationStep('pending');
     setVerifiedMatrixNumber(null);
     setPrefilledMatrix(null);
+    setPrefilledIfpiCodes([]);
     setFromMatrixEnhancer(false);
     resetSearchState();
   };
@@ -542,6 +554,26 @@ export default function AIScanV2() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setPrefilledMatrix(null)}
+                        className="h-6 px-2 text-xs"
+                      >
+                        Verwijder
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {/* Show prefilled IFPI codes if present */}
+                {prefilledIfpiCodes.length > 0 && (
+                  <Alert className="border-blue-500/50 bg-blue-500/10">
+                    <Info className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="flex items-center justify-between">
+                      <span>
+                        <strong>IFPI codes:</strong> {prefilledIfpiCodes.join(', ')}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPrefilledIfpiCodes([])}
                         className="h-6 px-2 text-xs"
                       >
                         Verwijder

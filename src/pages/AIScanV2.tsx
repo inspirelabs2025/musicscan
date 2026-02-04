@@ -80,8 +80,8 @@ export default function AIScanV2() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Get matrix from URL params (from Matrix Enhancer)
-  const urlMatrix = searchParams.get('matrix');
+  // Get params from URL (from Matrix Enhancer)
+  const fromEnhancer = searchParams.get('fromEnhancer') === 'true';
   const urlMediaType = searchParams.get('mediaType') as 'vinyl' | 'cd' | null;
   
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -93,24 +93,56 @@ export default function AIScanV2() {
   const [error, setError] = useState<string | null>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   
-  // Pre-filled matrix from URL or Matrix Enhancer
-  const [prefilledMatrix, setPrefilledMatrix] = useState<string | null>(urlMatrix);
+  // Pre-filled matrix and photo from Matrix Enhancer
+  const [prefilledMatrix, setPrefilledMatrix] = useState<string | null>(null);
+  const [fromMatrixEnhancer, setFromMatrixEnhancer] = useState(false);
   
   // Matrix verification state
   const [verificationStep, setVerificationStep] = useState<'pending' | 'verifying' | 'verified' | 'skipped'>('pending');
   const [verifiedMatrixNumber, setVerifiedMatrixNumber] = useState<string | null>(null);
   
-  // Show notification when matrix is prefilled from URL
+  // Load data from Matrix Enhancer via sessionStorage
   useEffect(() => {
-    if (urlMatrix) {
-      toast({
-        title: "Matrix code ingeladen",
-        description: `"${urlMatrix}" wordt gebruikt voor de analyse`,
-      });
-      // Clear URL params after reading
+    if (fromEnhancer) {
+      try {
+        const storedData = sessionStorage.getItem('matrixEnhancerData');
+        if (storedData) {
+          const data = JSON.parse(storedData);
+          // Check if data is recent (within 5 minutes)
+          if (Date.now() - data.timestamp < 5 * 60 * 1000) {
+            setPrefilledMatrix(data.matrix);
+            setFromMatrixEnhancer(true);
+            
+            // Convert base64 to File and add to uploadedFiles
+            if (data.photo) {
+              fetch(data.photo)
+                .then(res => res.blob())
+                .then(blob => {
+                  const file = new File([blob], 'matrix-enhancer-photo.jpg', { type: 'image/jpeg' });
+                  const id = Math.random().toString(36).substr(2, 9);
+                  setUploadedFiles([{
+                    file,
+                    preview: data.photo,
+                    id
+                  }]);
+                });
+            }
+            
+            toast({
+              title: "Foto en matrix code geladen",
+              description: "Selecteer een conditie om direct te starten",
+            });
+          }
+          // Clear sessionStorage after reading
+          sessionStorage.removeItem('matrixEnhancerData');
+        }
+      } catch (e) {
+        console.error('Failed to load matrix enhancer data:', e);
+      }
+      // Clear URL params
       setSearchParams({});
     }
-  }, []);
+  }, [fromEnhancer]);
   
   const {
     checkUsageLimit,
@@ -382,6 +414,7 @@ export default function AIScanV2() {
     setVerificationStep('pending');
     setVerifiedMatrixNumber(null);
     setPrefilledMatrix(null);
+    setFromMatrixEnhancer(false);
     resetSearchState();
   };
 
@@ -559,61 +592,105 @@ export default function AIScanV2() {
               </CardContent>
             </Card>
 
-            {/* File Upload */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Foto's</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                  <Camera className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Klik om foto's toe te voegen
-                  </p>
-                  <input type="file" accept="image/*" capture="environment" multiple onChange={handleFileUpload} className="hidden" id="file-upload-v2" />
-                  <Button asChild variant="outline">
-                    <label htmlFor="file-upload-v2" className="cursor-pointer flex items-center gap-2">
-                      <Camera className="h-4 w-4" />
-                      Foto's
-                    </label>
-                  </Button>
-                </div>
-
-                {/* Uploaded Files Preview with Smart Enhancement Comparison */}
-                {uploadedFiles.length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        {uploadedFiles.length} foto{uploadedFiles.length !== 1 ? "'s" : ''} geüpload
+            {/* From Matrix Enhancer: Show compact preview */}
+            {fromMatrixEnhancer && uploadedFiles.length > 0 && (
+              <Card className="border-green-500/50 bg-green-500/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                    <CheckCircle className="h-5 w-5" />
+                    Foto geladen van Matrix Enhancer
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4">
+                    <img 
+                      src={uploadedFiles[0].preview} 
+                      alt="Matrix foto" 
+                      className="w-24 h-24 object-cover rounded-lg border"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">
+                        Foto is klaar voor analyse
                       </p>
-                      {uploadedFiles.some(f => f.processedPreview) && (
-                        <Badge variant="outline" className="text-xs">
-                          <Sparkles className="h-3 w-3 mr-1" />
-                          Smart verbeterd
+                      {prefilledMatrix && (
+                        <Badge className="mt-2 bg-primary/20 text-primary">
+                          Matrix: {prefilledMatrix}
                         </Badge>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {uploadedFiles.map(file => (
-                        <ScannerPhotoPreview
-                          key={file.id}
-                          id={file.id}
-                          fileName={file.file.name}
-                          originalPreview={file.preview}
-                          processedPreview={file.processedPreview}
-                          processingStats={file.processingStats}
-                          onRemove={removeFile}
-                          disabled={isAnalyzing}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center">
-                      💡 Sleep de slider om origineel vs. smart verbeterd te vergelijken
-                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setFromMatrixEnhancer(false);
+                        setUploadedFiles([]);
+                        setPrefilledMatrix(null);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* File Upload - only show if NOT from Matrix Enhancer */}
+            {!fromMatrixEnhancer && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Foto's</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                    <Camera className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Klik om foto's toe te voegen
+                    </p>
+                    <input type="file" accept="image/*" capture="environment" multiple onChange={handleFileUpload} className="hidden" id="file-upload-v2" />
+                    <Button asChild variant="outline">
+                      <label htmlFor="file-upload-v2" className="cursor-pointer flex items-center gap-2">
+                        <Camera className="h-4 w-4" />
+                        Foto's
+                      </label>
+                    </Button>
+                  </div>
+
+                  {/* Uploaded Files Preview with Smart Enhancement Comparison */}
+                  {uploadedFiles.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {uploadedFiles.length} foto{uploadedFiles.length !== 1 ? "'s" : ''} geüpload
+                        </p>
+                        {uploadedFiles.some(f => f.processedPreview) && (
+                          <Badge variant="outline" className="text-xs">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Smart verbeterd
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {uploadedFiles.map(file => (
+                          <ScannerPhotoPreview
+                            key={file.id}
+                            id={file.id}
+                            fileName={file.file.name}
+                            originalPreview={file.preview}
+                            processedPreview={file.processedPreview}
+                            processingStats={file.processingStats}
+                            onRemove={removeFile}
+                            disabled={isAnalyzing}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground text-center">
+                        💡 Sleep de slider om origineel vs. smart verbeterd te vergelijken
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Analysis Button */}
             <Card>

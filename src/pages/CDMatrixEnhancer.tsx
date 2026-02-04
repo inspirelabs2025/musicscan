@@ -389,25 +389,31 @@ export default function CDMatrixEnhancer() {
               />
               
               {/* Use in Scanner button */}
-              {ocrResult.cleanText && (
+              {ocrResult.cleanText && originalImage && (
                 <div className="mt-4">
                   <Button
                     onClick={() => {
                       const matrixCode = ocrResult.cleanText;
-                      navigate(`/ai-scan-v2?matrix=${encodeURIComponent(matrixCode)}&mediaType=cd`);
+                      // Store photo data in sessionStorage for V2 scanner
+                      sessionStorage.setItem('matrixEnhancerData', JSON.stringify({
+                        matrix: matrixCode,
+                        photo: originalImage,
+                        timestamp: Date.now(),
+                      }));
+                      navigate(`/ai-scan-v2?fromEnhancer=true&mediaType=cd`);
                       toast({
-                        title: 'Matrix code overgenomen',
-                        description: `"${matrixCode}" wordt gebruikt in de scanner`,
+                        title: 'Doorgaan naar scanner',
+                        description: 'Foto en matrix code overgenomen - selecteer conditie om te starten',
                       });
                     }}
                     className="w-full gap-2"
                     size="lg"
                   >
                     <ArrowRight className="h-4 w-4" />
-                    Gebruik in Scanner
+                    Doorgaan met Scannen
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-2">
-                    Ga terug naar de V2 scanner met deze matrix code
+                    Foto + matrix code worden meegenomen - alleen conditie kiezen
                   </p>
                 </div>
               )}

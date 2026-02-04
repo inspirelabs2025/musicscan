@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface OCRSegment {
   text: string;
-  type: 'ifpi' | 'catalog' | 'matrix' | 'unknown';
+  type: 'matrix' | 'ifpi' | 'other';
   confidence: number;
 }
 
@@ -76,19 +76,19 @@ export function MatrixOCRResult({
 
   const getSegmentTypeLabel = (type: OCRSegment['type']) => {
     switch (type) {
+      case 'matrix': return 'Matrix Nummer';
       case 'ifpi': return 'IFPI Code';
-      case 'catalog': return 'Catalogusnummer';
-      case 'matrix': return 'Matrix';
-      default: return 'Onbekend';
+      case 'other': return 'Extra Info';
+      default: return 'Extra Info';
     }
   };
 
-  const getSegmentTypeBadge = (type: OCRSegment['type']) => {
+  const getSegmentTypeBadgeClass = (type: OCRSegment['type']) => {
     switch (type) {
-      case 'ifpi': return 'default';
-      case 'catalog': return 'secondary';
-      case 'matrix': return 'outline';
-      default: return 'outline';
+      case 'matrix': return 'bg-green-500/20 text-green-700 border-green-500/30';
+      case 'ifpi': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
+      case 'other': return 'bg-gray-500/20 text-gray-600 border-gray-500/30';
+      default: return 'bg-gray-500/20 text-gray-600 border-gray-500/30';
     }
   };
 
@@ -142,7 +142,7 @@ export function MatrixOCRResult({
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <Badge variant={getSegmentTypeBadge(segment.type) as any}>
+                        <Badge variant="outline" className={getSegmentTypeBadgeClass(segment.type)}>
                           {getSegmentTypeLabel(segment.type)}
                         </Badge>
                         <span className={cn('text-xs', getConfidenceColor(segment.confidence))}>
@@ -281,16 +281,16 @@ export function MatrixOCRResult({
           </Card>
 
           {/* Discogs lookup */}
-          {result.segments.some(s => s.type === 'catalog') && (
+          {result.segments.some(s => s.type === 'matrix') && (
             <Card>
               <CardContent className="p-4">
                 <Button
                   variant="outline"
                   className="w-full gap-2"
                   onClick={() => {
-                    const catalog = result.segments.find(s => s.type === 'catalog');
-                    if (catalog) {
-                      window.open(`https://www.discogs.com/search/?q=${encodeURIComponent(catalog.text)}&type=release`, '_blank');
+                    const matrix = result.segments.find(s => s.type === 'matrix');
+                    if (matrix) {
+                      window.open(`https://www.discogs.com/search/?q=${encodeURIComponent(matrix.text)}&type=release`, '_blank');
                     }
                   }}
                 >

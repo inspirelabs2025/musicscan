@@ -402,13 +402,13 @@ export default function CDMatrixEnhancer() {
                         .filter(s => s.type === 'ifpi')
                         .map(s => s.text);
                       
-                      // Extract catalog/matrix code (prefer catalog type, fallback to cleanText)
-                      const catalogCode = ocrResult.segments
-                        .find(s => s.type === 'catalog')?.text || ocrResult.cleanText;
+                      // Extract matrix code (prefer matrix type, fallback to cleanText)
+                      const matrixCode = ocrResult.segments
+                        .find(s => s.type === 'matrix')?.text || ocrResult.cleanText;
                       
                       // Store all data in sessionStorage for V2 scanner
                       sessionStorage.setItem('matrixEnhancerData', JSON.stringify({
-                        matrix: catalogCode,
+                        matrix: matrixCode,
                         ifpiCodes: ifpiCodes,
                         allSegments: ocrResult.segments,
                         photo: originalImage,

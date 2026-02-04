@@ -1,113 +1,66 @@
 
-# Plan: IFPI Codes Toevoegen aan CD Matrix Enhancer Flow
+# Plan: IFPI Code Detectie Verbeteren voor Kleine Binnenste Ring Tekst
 
-## Huidige Situatie
-De `matrix-ocr` Edge Function detecteert al meerdere code-types in het `segments` array:
-- **catalog**: Catalogusnummer (lange numerieke reeks)
-- **ifpi**: IFPI codes (bijv. "IFPI L028", "IFPI 0110")
-- **matrix**: Andere matrix codes
+## Probleem Analyse
+De IFPI code bevindt zich op de **allerkleinste binnenste ring** (boven "Germany" tekst), en de letters zijn:
+- Veel kleiner dan de matrix/catalogusnummers
+- Mogelijk gestampt/embossed in plaats van gegraveerd
+- In een zeer klein gebied dicht bij het centergat
 
-Echter, alleen `cleanText` (meestal alleen de matrix) wordt doorgegeven aan de AIScanV2 scanner.
+Huidige IFPI ring crop: 8-40% radius met 3x zoom - dit is te breed en zoomt niet genoeg in op het specifieke IFPI gebied.
 
-## Wijzigingen
+## Technische Oplossing
 
-### 1. CDMatrixEnhancer.tsx - Data Overdracht Uitbreiden
-**Huidige code (regel 396-402):**
-```typescript
-sessionStorage.setItem('matrixEnhancerData', JSON.stringify({
-  matrix: matrixCode,
-  photo: originalImage,
-  timestamp: Date.now(),
-}));
-```
+### 1. Nieuwe "Super-Zoom IFPI" Crop Toevoegen
+Maak een extra, veel agressievere zoom specifiek voor de binnenste IFPI-zone:
 
-**Nieuwe code:**
-```typescript
-// Extract IFPI codes from segments
-const ifpiCodes = ocrResult.segments
-  .filter(s => s.type === 'ifpi')
-  .map(s => s.text);
+| Parameter | Huidige IFPI Crop | Nieuwe Super-Zoom |
+|-----------|-------------------|-------------------|
+| Inner radius | 8% | 3% (dichter bij centergat) |
+| Outer radius | 40% | 15% (alleen binnenste ring) |
+| Zoom factor | 3.0x | 5.0x (veel agressiever) |
+| Unsharp radius | 0.4 | 0.3 (scherper voor kleine tekst) |
+| Unsharp amount | 1.5 | 2.0 (sterker contrast) |
 
-// Extract catalog/matrix codes
-const catalogCode = ocrResult.segments
-  .find(s => s.type === 'catalog')?.text || ocrResult.cleanText;
+### 2. Contrast Versterking voor Gestampte Tekst
+Gestampte/embossed tekst is vaak alleen zichtbaar door subtiele schaduwen. Toevoegen:
+- Extra CLAHE pass met hogere clip limit (3.5)
+- Directional shadow enhancement voor embossed tekst
+- Inverted versie voor lichte tekst op donkere achtergrond
 
-sessionStorage.setItem('matrixEnhancerData', JSON.stringify({
-  matrix: catalogCode,
-  ifpiCodes: ifpiCodes,
-  allSegments: ocrResult.segments,
-  photo: originalImage,
-  timestamp: Date.now(),
-}));
-```
+### 3. Bestandswijzigingen
 
-### 2. MatrixOCRResult.tsx - UI Verbetering voor IFPI
-De component toont al alle segments met badges (IFPI, Catalogus, Matrix). Geen wijzigingen nodig, maar we kunnen de weergave verduidelijken.
+**`src/utils/matrixEnhancementPipeline.ts`:**
+- Nieuwe functie `createSuperZoomIfpiCrop()` toevoegen
+- Extra output velden: `superZoomIfpi` en `superZoomIfpiEnhanced`
+- Speciale embossed-text enhancement filter
 
-### 3. AIScanV2.tsx - IFPI Codes Ontvangen
-De scanner moet de IFPI codes uit sessionStorage laden en meesturen naar de analyse.
+**`supabase/functions/matrix-ocr/index.ts`:**
+- Super-zoom afbeeldingen accepteren en prioriteit geven
+- OCR prompt aanpassen om naar zeer kleine tekst te zoeken
 
-**Toevoegen aan state:**
-```typescript
-const [prefilledIfpiCodes, setPrefilledIfpiCodes] = useState<string[]>([]);
-```
+**`src/pages/CDMatrixEnhancer.tsx`:**
+- Super-zoom data meesturen naar OCR functie
 
-**Uitbreiden van useEffect (regel ~85):**
-```typescript
-if (storedData.ifpiCodes) {
-  setPrefilledIfpiCodes(storedData.ifpiCodes);
-}
-```
+**`src/components/matrix-enhancer/MatrixReviewStep.tsx`:**
+- Nieuwe tab "🔬 Super Zoom IFPI" toevoegen voor preview
 
-**Uitbreiden van API call:**
-```typescript
-body: {
-  photoUrls,
-  mediaType,
-  conditionGrade,
-  prefilledMatrix: prefilledMatrix || undefined,
-  prefilledIfpiCodes: prefilledIfpiCodes.length > 0 ? prefilledIfpiCodes : undefined
-}
-```
-
-### 4. ai-photo-analysis-v2 Edge Function - IFPI Verwerken
-De Edge Function moet IFPI codes gebruiken voor betere Discogs matching.
-
-**Interface uitbreiden:**
-```typescript
-interface AnalysisRequest {
-  // ...existing fields
-  prefilledIfpiCodes?: string[];
-}
-```
-
-**Logica toevoegen:**
-IFPI codes kunnen worden gebruikt voor:
-- Validatie van het juiste pressing (land van origine)
-- Verfijning van Discogs zoekresultaten
-
-### 5. UI Feedback - IFPI Badge in Scanner
-Wanneer IFPI codes zijn meegenomen, toon dit visueel:
-```tsx
-{prefilledIfpiCodes.length > 0 && (
-  <Badge variant="secondary">
-    IFPI: {prefilledIfpiCodes.join(', ')}
-  </Badge>
-)}
-```
-
-## Samenvatting Bestanden
-
-| Bestand | Wijziging |
-|---------|-----------|
-| `src/pages/CDMatrixEnhancer.tsx` | IFPI codes toevoegen aan sessionStorage |
-| `src/pages/AIScanV2.tsx` | IFPI codes laden en tonen + meesturen |
-| `supabase/functions/ai-photo-analysis-v2/index.ts` | IFPI accepteren en gebruiken |
+### 4. Verbeterde OCR Prompt
+Specifieke instructies voor de AI om te zoeken naar:
+- Zeer kleine tekst (< 2mm hoog)
+- Gestampte/embossed karakters met subtiele schaduwen
+- IFPI formaat: "IFPI L" + 3 tekens OF "IFPI" + 4 tekens
+- Tekst die BOVEN andere tekst staat (zoals "Germany")
 
 ## Verwacht Resultaat
-Na deze wijzigingen:
-1. Matrix Enhancer detecteert zowel catalogusnummer ALS IFPI codes
-2. Beide worden visueel getoond in de OCR resultaten
-3. Bij "Doorgaan met Scannen" worden ALLE codes meegenomen
-4. De AIScanV2 scanner toont welke codes zijn overgenomen
-5. De Discogs matching wordt nauwkeuriger door IFPI validatie
+- 5x zoom op de binnenste 3-15% van de disc
+- Geoptimaliseerde filters voor embossed/gestampte tekst
+- Aparte preview tab om de super-zoom te controleren
+- Betere kans op IFPI detectie door focus op juiste gebied
+
+## Implementatie Volgorde
+1. Super-zoom crop functie in pipeline
+2. UI preview tab toevoegen
+3. Edge function updaten met nieuwe afbeeldingen
+4. OCR prompt verfijnen
+5. Testen en fine-tunen

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info, Camera } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info, Camera, Disc } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -78,8 +78,14 @@ export default function AIScanV2() {
     loading
   } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Get matrix from URL params (from Matrix Enhancer)
+  const urlMatrix = searchParams.get('matrix');
+  const urlMediaType = searchParams.get('mediaType') as 'vinyl' | 'cd' | null;
+  
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | ''>('');
+  const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | ''>(urlMediaType || '');
   const [conditionGrade, setConditionGrade] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
@@ -87,9 +93,24 @@ export default function AIScanV2() {
   const [error, setError] = useState<string | null>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   
+  // Pre-filled matrix from URL or Matrix Enhancer
+  const [prefilledMatrix, setPrefilledMatrix] = useState<string | null>(urlMatrix);
+  
   // Matrix verification state
   const [verificationStep, setVerificationStep] = useState<'pending' | 'verifying' | 'verified' | 'skipped'>('pending');
   const [verifiedMatrixNumber, setVerifiedMatrixNumber] = useState<string | null>(null);
+  
+  // Show notification when matrix is prefilled from URL
+  useEffect(() => {
+    if (urlMatrix) {
+      toast({
+        title: "Matrix code ingeladen",
+        description: `"${urlMatrix}" wordt gebruikt voor de analyse`,
+      });
+      // Clear URL params after reading
+      setSearchParams({});
+    }
+  }, []);
   
   const {
     checkUsageLimit,
@@ -301,6 +322,9 @@ export default function AIScanV2() {
 
       // Call the V2 AI analysis function
       console.log('🤖 Calling AI analysis V2 function...');
+      if (prefilledMatrix) {
+        console.log('📎 Using prefilled matrix from Matrix Enhancer:', prefilledMatrix);
+      }
       const {
         data,
         error: functionError
@@ -308,7 +332,8 @@ export default function AIScanV2() {
         body: {
           photoUrls,
           mediaType,
-          conditionGrade
+          conditionGrade,
+          prefilledMatrix: prefilledMatrix || undefined
         }
       });
       console.log('📊 Function response:', {
@@ -356,6 +381,7 @@ export default function AIScanV2() {
     setAnalysisProgress(0);
     setVerificationStep('pending');
     setVerifiedMatrixNumber(null);
+    setPrefilledMatrix(null);
     resetSearchState();
   };
 
@@ -471,6 +497,26 @@ export default function AIScanV2() {
               <div className="space-y-4">
                 <CDPhotoTips />
                 
+                {/* Show prefilled matrix if present */}
+                {prefilledMatrix && (
+                  <Alert className="border-green-500/50 bg-green-500/10">
+                    <Disc className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="flex items-center justify-between">
+                      <span>
+                        <strong>Matrix code ingeladen:</strong> {prefilledMatrix}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPrefilledMatrix(null)}
+                        className="h-6 px-2 text-xs"
+                      >
+                        Verwijder
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
                 {/* Directe link naar Matrix Enhancer */}
                 <Card className="border-primary/30 bg-primary/5">
                   <CardContent className="pt-4">
@@ -480,7 +526,7 @@ export default function AIScanV2() {
                       onClick={() => navigate('/cd-matrix-enhancer')}
                     >
                       <Sparkles className="h-4 w-4" />
-                      Open Matrix Enhancer (Geavanceerd)
+                      {prefilledMatrix ? 'Andere Matrix Detecteren' : 'Open Matrix Enhancer (Geavanceerd)'}
                     </Button>
                     <p className="text-xs text-muted-foreground mt-2 text-center">
                       Handmatige tuning voor moeilijke CD foto's

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info, Camera, Disc } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
+import { useParallelMatrixProcessing, EnhancedMatrixData } from '@/hooks/useParallelMatrixProcessing';
+import { detectMatrixPhoto } from '@/utils/matrixPhotoDetector';
 import { ScannerPhotoPreview, MatrixVerificationStep, CDPhotoTips } from '@/components/scanner';
 import type { MatrixVerificationData, MatrixCharacter } from '@/components/scanner';
 import { preprocessImageClient, preprocessCDImageClient } from '@/utils/clientImagePreprocess';
@@ -102,6 +104,19 @@ export default function AIScanV2() {
   // Matrix verification state
   const [verificationStep, setVerificationStep] = useState<'pending' | 'verifying' | 'verified' | 'skipped'>('pending');
   const [verifiedMatrixNumber, setVerifiedMatrixNumber] = useState<string | null>(null);
+  
+  // Parallel matrix processing state
+  const {
+    result: matrixProcessingResult,
+    isProcessing: isMatrixProcessing,
+    startBackgroundProcessing,
+    waitForResult: waitForMatrixResult,
+    reset: resetMatrixProcessing
+  } = useParallelMatrixProcessing();
+  
+  // Track which file is being processed for matrix
+  const [matrixFileId, setMatrixFileId] = useState<string | null>(null);
+  const matrixProcessingPromiseRef = useRef<Promise<EnhancedMatrixData | null> | null>(null);
   
   // Load data from Matrix Enhancer via sessionStorage
   useEffect(() => {
@@ -249,6 +264,33 @@ export default function AIScanV2() {
           };
           setUploadedFiles(prev => [...prev, newFile]);
           
+          // For CD media type, detect if this is a matrix photo and process in background
+          if (mediaType === 'cd' && !matrixFileId) {
+            try {
+              console.log(`🔍 Checking if "${file.name}" is a matrix photo...`);
+              const detection = await detectMatrixPhoto(file);
+              
+              if (detection.isMatrix && detection.confidence >= 0.5) {
+                console.log(`✅ Matrix photo detected: "${file.name}" (${(detection.confidence * 100).toFixed(0)}%)`);
+                setMatrixFileId(id);
+                
+                // Start background processing
+                const processingPromise = startBackgroundProcessing(file, {
+                  skipDetection: true, // Already detected
+                  confidenceThreshold: 0.5
+                });
+                matrixProcessingPromiseRef.current = processingPromise;
+                
+                toast({
+                  title: "🔬 Matrix foto gedetecteerd",
+                  description: "Geavanceerde verwerking gestart op de achtergrond...",
+                });
+              }
+            } catch (err) {
+              console.warn('Matrix detection failed:', err);
+            }
+          }
+          
           // Process with standard preprocessing
           try {
             const preprocessResult = mediaType === 'cd' 
@@ -296,7 +338,7 @@ export default function AIScanV2() {
         reader.readAsDataURL(file);
       }
     }
-  }, [mediaType]);
+  }, [mediaType, matrixFileId, startBackgroundProcessing]);
   const removeFile = useCallback((id: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== id));
   }, []);
@@ -396,12 +438,44 @@ export default function AIScanV2() {
 
       // Call the V2 AI analysis function
       console.log('🤖 Calling AI analysis V2 function...');
-      if (prefilledMatrix) {
-        console.log('📎 Using prefilled matrix from Matrix Enhancer:', prefilledMatrix);
+      
+      // Wait for background matrix processing if running for CD
+      let enhancedMatrixData: EnhancedMatrixData | null = null;
+      if (mediaType === 'cd' && matrixProcessingPromiseRef.current) {
+        console.log('⏳ Waiting for background matrix enhancement to complete...');
+        setAnalysisProgress(45);
+        
+        try {
+          enhancedMatrixData = await matrixProcessingPromiseRef.current;
+          if (enhancedMatrixData) {
+            console.log('✅ Background matrix processing complete:', enhancedMatrixData);
+            toast({
+              title: "🔬 Matrix verwerking voltooid",
+              description: enhancedMatrixData.matrixNumber 
+                ? `Matrix: ${enhancedMatrixData.matrixNumber}` 
+                : "Verwerking afgerond",
+            });
+          }
+        } catch (err) {
+          console.warn('⚠️ Background matrix processing failed (continuing with normal analysis):', err);
+        }
       }
-      if (prefilledIfpiCodes.length > 0) {
-        console.log('📎 Using prefilled IFPI codes from Matrix Enhancer:', prefilledIfpiCodes);
+      
+      setAnalysisProgress(50);
+      
+      // Use enhanced matrix data OR prefilled data from manual Matrix Enhancer
+      const finalPrefilledMatrix = enhancedMatrixData?.matrixNumber || prefilledMatrix || undefined;
+      const finalPrefilledIfpiCodes = enhancedMatrixData?.ifpiCodes?.length 
+        ? enhancedMatrixData.ifpiCodes 
+        : (prefilledIfpiCodes.length > 0 ? prefilledIfpiCodes : undefined);
+      
+      if (finalPrefilledMatrix) {
+        console.log('📎 Using matrix from Matrix Enhancer:', finalPrefilledMatrix);
       }
+      if (finalPrefilledIfpiCodes?.length) {
+        console.log('📎 Using IFPI codes from Matrix Enhancer:', finalPrefilledIfpiCodes);
+      }
+      
       const {
         data,
         error: functionError
@@ -410,8 +484,24 @@ export default function AIScanV2() {
           photoUrls,
           mediaType,
           conditionGrade,
-          prefilledMatrix: prefilledMatrix || undefined,
-          prefilledIfpiCodes: prefilledIfpiCodes.length > 0 ? prefilledIfpiCodes : undefined
+          prefilledMatrix: finalPrefilledMatrix,
+          prefilledIfpiCodes: finalPrefilledIfpiCodes,
+          // Pass full enhanced matrix data for cross-validation
+          enhancedMatrixData: enhancedMatrixData ? {
+            matrixNumber: enhancedMatrixData.matrixNumber,
+            ifpiCodes: enhancedMatrixData.ifpiCodes,
+            discogsId: enhancedMatrixData.discogsId,
+            discogsUrl: enhancedMatrixData.discogsUrl,
+            artist: enhancedMatrixData.artist,
+            title: enhancedMatrixData.title,
+            catalogNumber: enhancedMatrixData.catalogNumber,
+            label: enhancedMatrixData.label,
+            year: enhancedMatrixData.year,
+            country: enhancedMatrixData.country,
+            genre: enhancedMatrixData.genre,
+            coverImage: enhancedMatrixData.coverImage,
+            matchConfidence: enhancedMatrixData.matchConfidence
+          } : undefined
         }
       });
       console.log('📊 Function response:', {
@@ -463,6 +553,10 @@ export default function AIScanV2() {
     setPrefilledIfpiCodes([]);
     setFromMatrixEnhancer(false);
     resetSearchState();
+    // Reset parallel matrix processing state
+    resetMatrixProcessing();
+    setMatrixFileId(null);
+    matrixProcessingPromiseRef.current = null;
   };
 
   // Handle matrix verification completion

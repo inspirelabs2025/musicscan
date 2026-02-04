@@ -47,7 +47,20 @@ Then look at the BACK COVER:
 Look at the CD DISC surface:
 - Find the matrix/mastering code (etched or printed near center hole)
 - Common formats: "DIDP-XXXXX", "DADC", "PMDC", alphanumeric codes
-- Also look for IFPI codes (e.g., "IFPI L123")
+
+**IFPI CODE EXTRACTION (CRITICAL - STRIKTE REGELS)**
+Look carefully for IFPI codes on the CD disc inner ring area. There are TWO types:
+
+1. IFPI MASTERING CODE (identificeert mastering facility):
+   - Format: "IFPI Lxxx" or "IFPI LYxx" (L/LY prefix + 2-4 chars)
+   - Examples: "IFPI L003", "IFPI LY12", "IFPI LZ45"
+   
+2. IFPI MOULD CODE (identificeert persmachine):
+   - Format: "IFPI xxxx" (exact 4 alfanumerieke tekens, GEEN L/LY prefix)
+   - Examples: "IFPI 94A1", "IFPI 1234", "IFPI AB12"
+
+A CD can have BOTH types - look for multiple IFPI codes!
+IFPI codes are NEVER part of the matrix number - keep them SEPARATE.
 
 IMPORTANT:
 - If you see "QUEEN" printed, spell it as "Q-U-E-E-N"
@@ -61,12 +74,13 @@ Return JSON:
   "title_spelled": "letter-by-letter spelling of title from front cover", 
   "catalog_number": "exact catalog code from back",
   "barcode": "13 digit barcode number",
-  "matrix_number": "matrix/mastering code from CD disc or back cover",
-  "ifpi_code": "IFPI code if visible",
+  "matrix_number": "matrix/mastering code from CD disc or back cover - EXCLUDE any IFPI codes!",
+  "ifpi_mastering": "IFPI mastering code (format: IFPI Lxxx or IFPI LYxx) or null if not found",
+  "ifpi_mould": "IFPI mould code (format: IFPI xxxx, 4 chars, no L prefix) or null if not found",
   "year": null,
   "label": "record label name if visible",
   "country": "country of manufacture if visible (e.g., Made in Germany)",
-  "ocr_notes": "describe what text you actually see on the cover and disc"
+  "ocr_notes": "describe what text you actually see on the cover and disc, including ALL IFPI codes found"
 }`;
 
   console.log('🔍 PASS 1: Spelling-based OCR extraction...');
@@ -216,7 +230,8 @@ Return JSON:
     catalog_number: pass1Result.catalog_number || null,
     barcode: pass1Result.barcode || null,
     matrix_number: pass1Result.matrix_number || null,
-    ifpi_code: pass1Result.ifpi_code || null,
+    ifpi_mastering: pass1Result.ifpi_mastering || null,
+    ifpi_mould: pass1Result.ifpi_mould || null,
     format: 'CD',
     country: pass1Result.country || null,
     genre: null,

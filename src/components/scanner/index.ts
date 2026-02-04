@@ -7,3 +7,5 @@ export { EnhancedScanPreview } from './EnhancedScanPreview';
 export { OCRCharacterHighlight } from './OCRCharacterHighlight';
 export { UserConfirmationFeedback } from './UserConfirmationFeedback';
 export { ScannerPhotoPreview } from './ScannerPhotoPreview';
+export { MatrixVerificationStep } from './MatrixVerificationStep';
+export type { MatrixCharacter, MatrixVerificationData } from './MatrixVerificationStep';

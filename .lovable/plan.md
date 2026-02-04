@@ -1,101 +1,139 @@
 
-# Plan: Fix Matrix Enhancer Data Merge
+# Plan: Fix Multi-File Upload Matrix Detection Bug
 
 ## Probleem Analyse
 
-De Matrix Enhancer vindt de correcte Discogs release maar deze data wordt genegeerd door de ai-photo-analysis-v2 edge function door twee bugs:
+### Root Cause
+Er is een **React state closure bug** in de file upload handler. Wanneer de gebruiker meerdere foto's tegelijk selecteert:
 
-1. **Te hoge confidence drempel**: `matchConfidence > 0.7` blokkeert data met 0.6 confidence
-2. **searchDiscogsV2 negeert enhancedDiscogsMatch**: De functie checkt nooit voor pre-gevonden Discogs data
-
-## Oplossing
-
-### Fix 1: Verlaag Confidence Threshold
-
-In `ai-photo-analysis-v2/index.ts` lijn 284:
-
-```typescript
-// OUD: > 0.7 (te strikt)
-if (enhancedMatrixData.discogsId && enhancedMatrixData.matchConfidence && enhancedMatrixData.matchConfidence > 0.7)
-
-// NIEUW: >= 0.5 (realistischer)
-if (enhancedMatrixData.discogsId && enhancedMatrixData.matchConfidence && enhancedMatrixData.matchConfidence >= 0.5)
+```text
+User selecteert: ella1.jpeg, ella2.jpeg, ella3.jpeg, ella4.jpeg (4 files in één keer)
+     │
+     ├─ for (file of files) loop start
+     │
+     ├─ File 1: uploadedFiles.length = 0 (state nog niet geüpdatet)
+     │   └─ isConventionalMatrixPosition = (0 === 2) = FALSE ❌
+     │   └─ Visual detection: confidence 75% → Matrix Enhancer START
+     │
+     ├─ File 2: uploadedFiles.length = 0 (nog steeds!)
+     │   └─ isConventionalMatrixPosition = (0 === 2) = FALSE ❌
+     │   └─ Visual detection: confidence 100% → Matrix Enhancer OVERSCHRIJFT ⚠️
+     │
+     ├─ File 3: uploadedFiles.length = 0 (nog steeds!)
+     │   └─ isConventionalMatrixPosition = (0 === 2) = FALSE ❌
+     │   └─ Visual detection: confidence 40% → Matrix Enhancer OVERSCHRIJFT ⚠️
+     │
+     └─ React batch update: uploadedFiles.length wordt nu pas 4
 ```
 
-### Fix 2: Gebruik enhancedDiscogsMatch in searchDiscogsV2
+De `uploadedFiles.length` waarde in de callback is **stale** (uit de closure), waardoor:
+1. Position-based detectie NOOIT werkt (currentFileCount is altijd de oude waarde)
+2. Visual detection kan triggeren voor ALLE foto's
+3. De LAATSTE foto die door visual detection komt overschrijft de matrix promise
 
-Begin van `searchDiscogsV2` functie moet checken voor pre-gevonden match:
+### Bewijs uit Logs
+
+```
+matrix-ocr: "SUMCD 4164" (ella1 of ella2 - catalogusnummer)
+matrix-ocr: "2NWCD 4TEA" (ella3 of ella4 - verkeerde matrix)
+matrix-discogs-lookup: Zoekt op "2NWCD 4TEA" → Vindt verkeerde CD!
+```
+
+## Oplossing: Track File Index in Batch
+
+Gebruik een **lokale counter** binnen de for-loop om de correcte positie te bepalen:
+
+### Code Wijziging
 
 ```typescript
-async function searchDiscogsV2(analysisData: any) {
-  try {
-    console.log('🔍 Searching Discogs V2 with matrix/IFPI verification...')
-    
-    // NIEUW: Check for pre-found enhanced Discogs match from Matrix Enhancer
-    if (analysisData.enhancedDiscogsMatch?.discogsId) {
-      const enhanced = analysisData.enhancedDiscogsMatch;
-      console.log(`🎯 Using pre-found Discogs match from Matrix Enhancer: ${enhanced.discogsId} (confidence: ${enhanced.confidence})`);
+const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const files = Array.from(event.target.files || []);
+  
+  // Track starting count + index within this batch
+  const startingCount = uploadedFiles.length;
+  let processedInBatch = 0;
+  let batchMatrixFound = false; // Prevent multiple matrix detections in same batch
+  
+  for (const file of files) {
+    if (file.type.startsWith('image/')) {
+      const id = Math.random().toString(36).substr(2, 9);
+      const fileIndexInTotal = startingCount + processedInBatch;
+      processedInBatch++;
       
-      return {
-        discogsId: enhanced.discogsId,
-        discogsUrl: enhanced.discogsUrl || `https://www.discogs.com/release/${enhanced.discogsId}`,
-        artist: enhanced.artist || analysisData.artist,
-        title: enhanced.title || analysisData.title,
-        label: enhanced.label || analysisData.label,
-        catalogNumber: enhanced.catalogNumber || analysisData.catalogNumber,
-        year: enhanced.year || analysisData.year,
-        country: enhanced.country || analysisData.country,
-        genre: enhanced.genre || analysisData.genre,
-        confidence: enhanced.confidence || 0.8,
-        matrixVerified: true,
-        searchMetadata: {
-          strategies: [],
-          totalSearches: 0,
-          bestStrategy: 'enhanced_matrix_lookup',
-          matrixVerified: true,
-          technicalMatches: { matrix: true }
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        // ... add file logic ...
+        
+        // For CD media type, detect matrix photo
+        if (mediaType === 'cd' && !matrixFileId && !batchMatrixFound) {
+          // Strategy 1: Position-based (3rd photo = index 2)
+          const isConventionalMatrixPosition = fileIndexInTotal === 2;
+          
+          if (isConventionalMatrixPosition) {
+            batchMatrixFound = true; // Prevent other files from also triggering
+            console.log(`📍 Position-based matrix detection: file at index ${fileIndexInTotal}`);
+            setMatrixFileId(id);
+            // ... start processing ...
+          } else if (!batchMatrixFound) {
+            // Strategy 2: Visual detection as fallback (only if position-based didn't trigger)
+            // ... visual detection ...
+          }
         }
       };
     }
-    
-    // ... bestaande search logica ...
-```
-
-## Data Flow Na Fix
-
-```text
-Upload 4 foto's
-     │
-     ├─ Matrix Enhancer (parallel)
-     │  └─ matrix-discogs-lookup
-     │     └─ discogsId: 1755390 (confidence: 0.6)
-     │
-     ├─ ai-photo-analysis-v2
-     │  ├─ enhancedMatrixData ontvangen ✅
-     │  ├─ matchConfidence >= 0.5 ? JA ✅
-     │  ├─ enhancedDiscogsMatch aangemaakt ✅
-     │  └─ searchDiscogsV2()
-     │     └─ "Using pre-found Discogs match: 1755390" ✅
-     │
-     └─ Final Result:
-        discogs_id: 1755390 ✅ (Matrix Enhancer match)
-        artist: "Various" ✅
-        title: "Ready Steady Boogaloo!" ✅
+  }
+}, [mediaType, matrixFileId, startBackgroundProcessing, uploadedFiles.length]);
 ```
 
 ## Bestanden te Wijzigen
 
 | Bestand | Wijziging |
 |---------|-----------|
-| `supabase/functions/ai-photo-analysis-v2/index.ts` | 1. Verlaag threshold van > 0.7 naar >= 0.5 |
-| | 2. Voeg enhancedDiscogsMatch check toe aan begin searchDiscogsV2 |
+| `src/pages/AIScanV2.tsx` | Fix batch upload index tracking + prevent multiple matrix detections |
 
-## Fallback Gedrag
+## Data Flow Na Fix
 
-Als `enhancedDiscogsMatch` niet beschikbaar is (geen matrix foto, lage confidence, of matrix-discogs-lookup faalde), blijft de normale search flow werken zoals voorheen.
+```text
+User selecteert: ella1.jpeg, ella2.jpeg, ella3.jpeg, ella4.jpeg
+     │
+     ├─ startingCount = 0, processedInBatch = 0
+     │
+     ├─ File 1: fileIndexInTotal = 0
+     │   └─ isConventionalMatrixPosition = (0 === 2) = FALSE
+     │   └─ Visual detection skipped (wacht op positie 2)
+     │
+     ├─ File 2: fileIndexInTotal = 1
+     │   └─ isConventionalMatrixPosition = (1 === 2) = FALSE
+     │   └─ Visual detection skipped
+     │
+     ├─ File 3: fileIndexInTotal = 2 ✅
+     │   └─ isConventionalMatrixPosition = (2 === 2) = TRUE ✅
+     │   └─ batchMatrixFound = true
+     │   └─ Matrix Enhancer gestart voor correcte foto
+     │
+     └─ File 4: fileIndexInTotal = 3
+         └─ batchMatrixFound = true → SKIP (al gevonden)
+```
 
-## Risico Analyse
+## Extra Safeguard
 
-- **Laag risico**: Fallback naar bestaande logica blijft intact
-- **Voordeel**: Matrix Enhancer matches worden nu daadwerkelijk gebruikt
-- **Edge case**: Bij conflict tussen matrix-match en hoes-OCR wint matrix (correct gedrag)
+Voeg ook een check toe om te voorkomen dat de matrix promise wordt overschreven:
+
+```typescript
+// Only start if no processing is already running
+if (!matrixProcessingPromiseRef.current) {
+  const processingPromise = startBackgroundProcessing(file, {
+    skipDetection: true,
+    confidenceThreshold: 0.5
+  });
+  matrixProcessingPromiseRef.current = processingPromise;
+}
+```
+
+## Verwachte Resultaat
+
+Na deze fix:
+1. Bij 4-foto upload wordt ALLEEN foto 3 (index 2) door de Matrix Enhancer verwerkt
+2. De correcte matrix "SUMCD 4164" wordt gelezen
+3. De Discogs lookup vindt "Ella Fitzgerald - Portrait"
+4. De merge met ai-photo-analysis-v2 gebruikt de correcte data

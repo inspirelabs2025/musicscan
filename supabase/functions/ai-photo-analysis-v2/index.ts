@@ -280,8 +280,8 @@ serve(async (req) => {
           if (!combinedData.extractedText) combinedData.extractedText = [];
           combinedData.extractedText.push(...enhancedMatrixData.ifpiCodes);
         }
-        // Cross-validate or use enhanced Discogs data
-        if (enhancedMatrixData.discogsId && enhancedMatrixData.matchConfidence && enhancedMatrixData.matchConfidence > 0.7) {
+        // Cross-validate or use enhanced Discogs data (lowered threshold from 0.7 to 0.5)
+        if (enhancedMatrixData.discogsId && enhancedMatrixData.matchConfidence && enhancedMatrixData.matchConfidence >= 0.5) {
           console.log(`✅ Using high-confidence Discogs match from matrix enhancer: ${enhancedMatrixData.discogsId}`);
           combinedData.enhancedDiscogsMatch = {
             discogsId: enhancedMatrixData.discogsId,
@@ -1274,6 +1274,34 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
 async function searchDiscogsV2(analysisData: any) {
   try {
     console.log('🔍 Searching Discogs V2 with matrix/IFPI verification...')
+    
+    // Check for pre-found enhanced Discogs match from Matrix Enhancer
+    if (analysisData.enhancedDiscogsMatch?.discogsId) {
+      const enhanced = analysisData.enhancedDiscogsMatch;
+      console.log(`🎯 Using pre-found Discogs match from Matrix Enhancer: ${enhanced.discogsId} (confidence: ${enhanced.confidence})`);
+      
+      return {
+        discogsId: enhanced.discogsId,
+        discogsUrl: enhanced.discogsUrl || `https://www.discogs.com/release/${enhanced.discogsId}`,
+        artist: enhanced.artist || analysisData.artist,
+        title: enhanced.title || analysisData.title,
+        label: enhanced.label || analysisData.label,
+        catalogNumber: enhanced.catalogNumber || analysisData.catalogNumber,
+        year: enhanced.year || analysisData.year,
+        country: enhanced.country || analysisData.country,
+        genre: enhanced.genre || analysisData.genre,
+        coverImage: enhanced.coverImage,
+        confidence: enhanced.confidence || 0.8,
+        matrixVerified: true,
+        searchMetadata: {
+          strategies: [],
+          totalSearches: 0,
+          bestStrategy: 'enhanced_matrix_lookup',
+          matrixVerified: true,
+          technicalMatches: { matrix: true }
+        }
+      };
+    }
     
     // Log technical identifiers for debugging
     console.log('📋 Technical identifiers available:', {

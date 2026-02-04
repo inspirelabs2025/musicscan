@@ -1,208 +1,152 @@
 
+# Plan: Strikte Barcode/Catno Verificatie met OCR Behoud
 
-# Plan: Strikt 100% Matching Systeem (Geen Fallbacks)
+## Kernprobleem Bewezen
 
-## Kernprobleem
+De database query bewijst:
 
-Het huidige systeem gebruikt "beste gok" fallback logica:
-- Als geen exacte catno match → pak eerste zoekresultaat
-- Als geen Discogs match → retourneer OCR data alsof het correct is
-- Barcodes worden niet strikt geverifieerd
+| Wat | Waarde |
+|-----|--------|
+| OCR catalogusnummer | `SUMCD 4164` ✅ |
+| Opgeslagen catalogusnummer | `PYCD 130` ❌ |
+| OCR barcode | `5 027626 416423` ✅ |
+| Discogs release | `2453993` (Penny versie) |
 
-Dit resulteert in verkeerde releases zoals de Penny-versie (PYCD 130) terwijl je de Summit-versie (SUMCD 4164) scant.
+**Oorzaak**: De code overschrijft correcte OCR data met verkeerde Discogs metadata zonder verificatie.
 
-## Nieuwe Filosofie
+## Oplossing Architectuur
 
 ```text
 ┌─────────────────────────────────────────┐
-│  SCAN INVOER                            │
-│  - Artist: Ella Fitzgerald              │
-│  - Title: A Portrait of Ella Fitzgerald │
-│  - Catalog: SUMCD 4164                  │
-│  - Barcode: 5027626416423               │
+│  OCR EXTRACTIE                          │
+│  barcode: 5027626416423                 │
+│  catno: SUMCD 4164                      │
 └─────────────────┬───────────────────────┘
                   ▼
 ┌─────────────────────────────────────────┐
-│  STAP 1: ZOEK                           │
-│  Artist + Title + Format=CD             │
-│  → 50 resultaten                        │
+│  DISCOGS SEARCH                         │
+│  "Ella Fitzgerald Portrait" + CD        │
+│  → 50 kandidaten                        │
 └─────────────────┬───────────────────────┘
                   ▼
 ┌─────────────────────────────────────────┐
-│  STAP 2: EXACTE MATCH VEREIST           │
-│  Binnen resultaten zoeken naar:         │
-│  - EXACT barcode: 5027626416423    OF   │
-│  - EXACT catno: SUMCD 4164              │
+│  STRIKTE VERIFICATIE (NIEUW)            │
 │                                         │
-│  ✅ Match gevonden → Release ID         │
-│  ❌ Geen match → NO_EXACT_MATCH         │
+│  Voor elke kandidaat (max 10):          │
+│  1. Haal release details op             │
+│  2. Check: release.barcode === OCR?     │
+│     OF: release.catno === OCR?          │
+│                                         │
+│  ✅ EXACT MATCH → Gebruik release       │
+│  ❌ GEEN MATCH → NO_EXACT_MATCH         │
+│                                         │
+│  BELANGRIJK: Behoud OCR data!           │
+│  NOOIT Discogs catno overschrijven      │
 └─────────────────────────────────────────┘
 ```
 
 ## Technische Wijzigingen
 
-### 1. searchDiscogsV2 Herschrijven - Verwijder Alle Fallbacks
+### Bestand 1: `supabase/functions/ai-photo-analysis-v2/index.ts`
 
-**Verwijderen (regels 1402-1418):**
+**Wijziging A - Barcode Verificatie Versterken (rond regel 1388-1433)**
+
+De huidige barcode check loopt door top 10 resultaten maar vergelijkt alleen de barcode van de release details. Het probleem is dat de release gevonden wordt via artist+title maar de barcode komt niet overeen.
+
+Toevoegen na de huidige barcode loop:
 ```typescript
-// VERWIJDEREN - Geen fallback naar eerste resultaat
-if (!bestMatch) {
-  bestMatch = data.results[0]; // ← WEG
-  highestConfidence = 0.7;     // ← WEG
+// Als geen barcode match EN barcode was gescand → direct NO_EXACT_MATCH
+if (analysisData.barcode && !bestMatch) {
+  console.log(`❌ Gescande barcode ${analysisData.barcode} niet gevonden in top 10 kandidaten`);
+  // Stop hier - ga NIET door naar catno matching want barcode is primair
 }
 ```
 
-**Nieuwe logica:**
+**Wijziging B - Database Update: Behoud OCR Data (rond regel 342-368)**
+
+HUIDIGE code overschrijft OCR met Discogs:
 ```typescript
-// NIEUW - Alleen exacte match of niets
-if (!catnoMatch && !barcodeMatch) {
-  console.log('❌ NO_EXACT_MATCH: Geen exacte barcode/catno gevonden');
-  return {
-    status: 'NO_EXACT_MATCH',
-    discogsId: null,
-    reason: 'Geen release met exacte barcode of catalogusnummer gevonden',
-    searchedBarcode: analysisData.barcode,
-    searchedCatno: analysisData.catalogNumber,
-    candidatesChecked: data.results.length
-  };
-}
+catalog_number: discogsResult.catalogNumber ?? combinedData.catalogNumber ?? null,
 ```
 
-### 2. Barcode Verificatie Toevoegen in Primaire Search
-
-Momenteel wordt barcode alleen in fallback gecontroleerd. Dit moet in de primaire search:
-
+NIEUWE code behoudt OCR als verificatie faalt:
 ```typescript
-// Na Artist+Title+Format search
-if (data.results && data.results.length > 0) {
+// Bij EXACT_MATCH: gebruik Discogs data (geverifieerd)
+// Bij NO_EXACT_MATCH: behoud OCR data ALTIJD
+catalog_number: discogsResult.status === 'EXACT_MATCH' 
+  ? (discogsResult.catalogNumber ?? combinedData.catalogNumber) 
+  : combinedData.catalogNumber,
+```
+
+**Wijziging C - Return Object Uitbreiden**
+
+Toevoegen aan NO_EXACT_MATCH return (rond regel 1618-1632):
+```typescript
+return {
+  status: 'NO_EXACT_MATCH',
+  // ...bestaande velden...
   
-  // PRIORITEIT 1: Exacte barcode match
-  if (analysisData.barcode) {
-    const extractedBarcode = analysisData.barcode.replace(/[^0-9]/g, '');
-    
-    for (const result of data.results.slice(0, 10)) {
-      const releaseDetails = await fetchReleaseDetails(result.id);
-      const barcodeMatch = releaseDetails?.identifiers?.find(id => 
-        id.type === 'Barcode' && 
-        id.value?.replace(/[^0-9]/g, '') === extractedBarcode
-      );
-      
-      if (barcodeMatch) {
-        console.log(`✅ EXACT BARCODE MATCH: ${result.id}`);
-        return { status: 'EXACT_MATCH', ... };
-      }
-    }
+  // NIEUW: Behoud originele OCR data expliciet
+  ocrData: {
+    barcode: analysisData.barcode,
+    catalogNumber: analysisData.catalogNumber,
+    artist: analysisData.artist,
+    title: analysisData.title
+  },
+  verificationFailed: {
+    scannedBarcode: analysisData.barcode,
+    scannedCatno: analysisData.catalogNumber,
+    candidatesWithBarcodes: checkedBarcodes, // array van gevonden barcodes
+    mismatchReason: 'Geen kandidaat met exacte barcode of catalogusnummer'
   }
-  
-  // PRIORITEIT 2: Exacte catno match
-  if (analysisData.catalogNumber) {
-    const catnoMatch = data.results.find(r => 
-      normalizedCatno(r.catno) === normalizedCatno(analysisData.catalogNumber)
-    );
-    
-    if (catnoMatch) {
-      console.log(`✅ EXACT CATNO MATCH: ${catnoMatch.id}`);
-      return { status: 'EXACT_MATCH', ... };
-    }
-  }
-  
-  // GEEN FALLBACK - Expliciet geen match retourneren
-  return { status: 'NO_EXACT_MATCH', ... };
-}
+};
 ```
 
-### 3. Fallback Loop Verwijderen (regels 1426-1605)
+### Bestand 2: `src/pages/AIScanV2.tsx`
 
-De hele fallback sectie wordt vervangen door een directe barcode/catno lookup:
+**UI Verbetering voor NO_EXACT_MATCH**
 
+Toon duidelijk de OCR data en waarom geen match:
 ```typescript
-// Als primaire search geen resultaten: directe identifier lookup
-if (!bestMatch) {
-  // Direct barcode search (zonder format filter - barcode is uniek)
-  if (analysisData.barcode) {
-    const barcodeResult = await searchByExactBarcode(analysisData.barcode);
-    if (barcodeResult?.exactMatch) {
-      return barcodeResult;
-    }
-  }
-  
-  // Direct catno + format search  
-  if (analysisData.catalogNumber) {
-    const catnoResult = await searchByExactCatno(
-      analysisData.catalogNumber, 
-      formatParam
-    );
-    if (catnoResult?.exactMatch) {
-      return catnoResult;
-    }
-  }
-  
-  // GEEN verdere fallbacks
-  return { status: 'NO_EXACT_MATCH', ... };
-}
+{analysisResult?.status === 'NO_EXACT_MATCH' && (
+  <Alert variant="warning">
+    <AlertTitle>Geen Exacte Match in Discogs</AlertTitle>
+    <AlertDescription>
+      <p>Gescande gegevens (correct):</p>
+      <ul>
+        <li>Barcode: {analysisResult.ocrData?.barcode}</li>
+        <li>Catalogus: {analysisResult.ocrData?.catalogNumber}</li>
+      </ul>
+      <p className="mt-2 text-sm">
+        Deze release staat niet in Discogs of heeft andere barcodes geregistreerd.
+      </p>
+    </AlertDescription>
+  </Alert>
+)}
 ```
 
-### 4. Return Type Uitbreiden
+## Verwacht Gedrag Na Fix
 
-```typescript
-interface DiscogsSearchResult {
-  status: 'EXACT_MATCH' | 'NO_EXACT_MATCH' | 'ERROR';
-  matchType?: 'barcode' | 'catno' | 'matrix';
-  discogsId: number | null;
-  discogsUrl: string | null;
-  artist: string | null;
-  title: string | null;
-  // ... overige velden
-  
-  // Nieuwe velden voor debugging/UI
-  searchedIdentifiers?: {
-    barcode: string | null;
-    catalogNumber: string | null;
-    matrixNumber: string | null;
-  };
-  candidatesChecked?: number;
-  reason?: string;
-}
-```
-
-### 5. Frontend Aanpassen - NO_EXACT_MATCH Status
-
-In `AIScanV2.tsx` moet de UI duidelijk tonen wanneer geen exacte match is gevonden:
-
-```typescript
-// Na Discogs search
-if (discogsResult.status === 'NO_EXACT_MATCH') {
-  // Toon duidelijke melding
-  toast({
-    title: "Geen exacte match gevonden",
-    description: `Release met barcode ${discogsResult.searchedIdentifiers?.barcode} of catalogus ${discogsResult.searchedIdentifiers?.catalogNumber} niet in Discogs`,
-    variant: "warning"
-  });
-  
-  // Sla op met status 'no_match' in plaats van 'completed'
-  await updateScanStatus(scanId, 'no_exact_match', discogsResult);
-}
-```
-
-## Bestanden te Wijzigen
-
-| Bestand | Wijziging |
-|---------|-----------|
-| `supabase/functions/ai-photo-analysis-v2/index.ts` | searchDiscogsV2 herschrijven: verwijder fallbacks, alleen exacte matches |
-| `src/pages/AIScanV2.tsx` | UI voor NO_EXACT_MATCH status |
-
-## Verwacht Gedrag Na Implementatie
-
-**Scenario: Ella Fitzgerald CD (SUMCD 4164)**
+### Scenario: Ella Fitzgerald CD (SUMCD 4164)
 
 | Stap | Actie | Resultaat |
 |------|-------|-----------|
-| 1 | Zoek "Ella Fitzgerald A Portrait" + format=CD | 50 resultaten |
-| 2 | Check barcode 5027626416423 in top 10 | ❌ Niet gevonden |
-| 3 | Check catno SUMCD 4164 exact | ❌ Niet in Discogs |
-| 4 | Retourneer | `status: 'NO_EXACT_MATCH'` |
+| 1 | OCR extraheert | barcode: `5027626416423`, catno: `SUMCD 4164` |
+| 2 | Discogs search | 50 kandidaten voor "Ella Fitzgerald Portrait" + CD |
+| 3 | Barcode check top 10 | Geen match (Summit release niet in Discogs) |
+| 4 | Return | `status: 'NO_EXACT_MATCH'` |
+| 5 | Database opslaan | `catalog_number: 'SUMCD 4164'` (OCR behouden!) |
+| 6 | UI toont | "Geen exacte match - OCR gegevens: SUMCD 4164" |
 
-**UI toont:** "Geen exacte match gevonden - deze release staat niet in Discogs"
+**Cruciaal verschil**: Het gescande catalogusnummer `SUMCD 4164` blijft behouden in de database, niet overschreven met `PYCD 130`.
 
-Geen verkeerde releases meer. Alleen 100% zekerheid of eerlijk "niet gevonden".
+## Samenvatting Wijzigingen
 
+| Bestand | Wijziging |
+|---------|-----------|
+| `ai-photo-analysis-v2/index.ts` | Strikte barcode verificatie, OCR data behoud, uitgebreide NO_EXACT_MATCH response |
+| `AIScanV2.tsx` | UI voor OCR data weergave bij geen match |
+
+## Kernregel
+
+**"Bij geen exacte barcode/catno match: retourneer NO_EXACT_MATCH en behoud ALTIJD de originele OCR gegevens. Discogs metadata mag OCR nooit overschrijven zonder verificatie."**

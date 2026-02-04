@@ -7,38 +7,51 @@ const corsHeaders = {
 
 const OCR_PROMPT = `You are an expert OCR system specialized in reading CD matrix numbers from enhanced images.
 
-CRITICAL TASK: Extract ALL text visible in this CD inner ring image. CDs typically have MULTIPLE codes engraved - you MUST find ALL of them, not just one.
+CRITICAL TASK: Extract ALL text visible in this CD inner ring image. CDs typically have MULTIPLE codes engraved - you MUST find ALL of them.
+
+**WHERE TO LOOK - SCAN ALL THESE AREAS:**
+1. OUTERMOST RING (near the data area edge): Usually contains the CATALOG NUMBER - the most important identifier
+2. MIDDLE RING: Often has IFPI codes and manufacturing info  
+3. INNERMOST RING (near center hole): May have SID codes or additional matrix info
+4. BETWEEN THE RINGS: Small text, dates, or stamper codes
 
 CHARACTER WHITELIST: A-Z 0-9 - / . ( ) + space
 
-WHAT TO LOOK FOR (CDs usually have 2-4 of these):
-1. **CATALOG NUMBER** (MOST IMPORTANT): The main release identifier, usually 6-12 characters
+**CODE TYPES TO FIND (most CDs have 2-4 of these):**
+
+1. **CATALOG NUMBER** (MOST IMPORTANT - usually on the OUTER ring):
+   - The main release identifier from the record label
+   - Usually 6-15 characters, often the LONGEST readable code
    - Examples: "538 972-2", "CDEPC 3252", "7243 8 56092 2 4", "82876 54321 2"
-   - Often contains spaces, dashes, or dots
-   - Usually the LONGEST code on the disc
+   - May start with label prefixes: EMI, BMG, SONY, POLY, UMG, WEA, etc.
+   - Often contains spaces, dashes, or dots between number groups
    
-2. **IFPI CODES**: Manufacturing plant identifiers
-   - Format: "IFPI LXXX" or "IFPI XXXX" (L followed by numbers, or 2 letters + numbers)
-   - Examples: "IFPI L028", "IFPI LV23", "IFPI 0110"
+2. **IFPI CODES** (usually MIDDLE ring):
+   - Format: "IFPI LXXX" or "IFPI XXXX"
+   - L-codes identify the mastering plant
+   - 4-digit codes identify the pressing plant
+   - Examples: "IFPI L028", "IFPI 0110"
    
-3. **MATRIX/MASTERING CODES**: Additional production identifiers
-   - Often alphanumeric with dashes: "DOC-55-001-1", "PMDC", "MASTERED BY..."
-   - May include dates or initials
+3. **MATRIX/MASTERING CODES**:
+   - Stamper identifiers, often ending in -1, -2, A1, B1
+   - Examples: "DOC-55-001-1", "PMDC", "1-458992 01 A1"
 
-4. **SID CODES**: Source Identification codes (separate from IFPI)
-   - Usually near the center hub
+4. **ADDITIONAL TEXT**:
+   - "MADE IN..." country names
+   - Studio names or mastering engineer initials
+   - Dates
 
-COMMON OCR CONFUSIONS TO CORRECT:
-- O ↔ 0 (letter O vs zero) - In catalog numbers, usually 0
-- I ↔ 1 (letter I vs one) - In IFPI codes, usually I; in numbers, usually 1
+**OCR CORRECTIONS:**
+- O ↔ 0 (in catalog numbers, usually 0; in IFPI, context-dependent)
+- I ↔ 1 (in IFPI = letter I; in numbers = digit 1)
 - S ↔ 5, B ↔ 8, Z ↔ 2, G ↔ 6
 
-CRITICAL INSTRUCTIONS:
-1. SCAN THE ENTIRE IMAGE - text runs in circles around the center
-2. Look for text at DIFFERENT RADII (inner ring, outer ring, near hub)
-3. The catalog number is often LARGER or in a different position than IFPI
-4. Do NOT stop after finding just the IFPI code - keep looking for more codes
-5. If you only find one code, look again - most CDs have at least 2
+**CRITICAL INSTRUCTIONS:**
+1. Start scanning from the OUTERMOST visible text and work inward
+2. The catalog number is often FAINTER and in the outer area - look carefully!
+3. Do NOT stop after finding IFPI codes - the catalog number is MORE important
+4. If text is faint or partially visible, still report it with lower confidence
+5. Report ALL readable text, even if you're not sure what type it is
 
 OUTPUT FORMAT - Return ONLY valid JSON:
 {
@@ -48,25 +61,22 @@ OUTPUT FORMAT - Return ONLY valid JSON:
     {
       "text": "538 972-2",
       "type": "catalog",
-      "confidence": 0.88
+      "confidence": 0.85,
+      "location": "outer ring"
     },
     {
       "text": "IFPI L028",
       "type": "ifpi",
-      "confidence": 0.95
-    },
-    {
-      "text": "DOC-55-001",
-      "type": "matrix",
-      "confidence": 0.75
+      "confidence": 0.95,
+      "location": "middle ring"
     }
   ],
   "overall_confidence": 0.85,
-  "layer_used": "normal"
+  "notes": "describe what you see and any challenges"
 }
 
-Segment types: "catalog" (main number), "ifpi", "matrix", "sid", "unknown"
-ALWAYS put the catalog number FIRST in segments if found.`;
+Segment types: "catalog", "ifpi", "matrix", "sid", "unknown"
+ALWAYS prioritize finding the catalog number - it's usually on the OUTER ring and longer than IFPI codes.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

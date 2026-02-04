@@ -6,3 +6,4 @@ export { ScannerManualSearch } from './ScannerManualSearch';
 export { EnhancedScanPreview } from './EnhancedScanPreview';
 export { OCRCharacterHighlight } from './OCRCharacterHighlight';
 export { UserConfirmationFeedback } from './UserConfirmationFeedback';
+export { ScannerPhotoPreview } from './ScannerPhotoPreview';

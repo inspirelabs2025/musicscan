@@ -7,58 +7,56 @@ const corsHeaders = {
 
 const OCR_PROMPT = `You are an expert OCR system specialized in reading engraved text from CD rings.
 
-**STRICT CLASSIFICATION RULES:**
+**3 CATEGORIES - STRICT RULES:**
 
-## 1. MATRIX NUMBER (type: "catalog")
-ONLY numeric/alphanumeric codes that identify the pressing. Examples:
-- "DESCD09"
-- "50999 50844 02"
-- "519 613-2 04"
-- "4904512 04 6"
+## 1. MATRIX NUMMER (type: "matrix") 🟢
+The pressing identification code - THE MOST IMPORTANT!
+✅ Alphanumeric code, typically 8-15 characters
+✅ Contains digits, letters, spaces, hyphens
+✅ Examples: "3384732 02 1", "DESCD09", "519 613-2 04", "50999 50844 02"
 
-❌ NOT a matrix number:
-- URLs or websites (www.something.com)
-- Country names (Germany, Netherlands)
-- Company names (Sony, EMI, Sonopress)
-- Generic text
+❌ NEVER a matrix number:
+- URLs (www.anything.com)
+- Words like "Germany", "Sony", "DADC"
+- Short codes under 6 characters (probably partial)
 
-## 2. IFPI CODE (type: "ifpi")
-MUST start with "IFPI" - NO EXCEPTIONS!
-- "IFPI" + space + 4 characters: "IFPI 01H3", "IFPI 4A11"
-- "IFPI L" + 3 characters: "IFPI L028", "IFPI L551"
+## 2. IFPI CODE (type: "ifpi") 🔵
+MUST literally start with the letters "IFPI" - NO EXCEPTIONS!
+✅ "IFPI" + space + 4 chars: "IFPI 01H3", "IFPI 4A11"  
+✅ "IFPI L" + 3 chars: "IFPI L028", "IFPI L551"
 
-❌ NOT an IFPI code if it doesn't start with "IFPI"
+❌ If it doesn't START with "IFPI", it's NOT an IFPI code!
 
-## 3. OTHER INFO (type: "other")
-Everything else goes here:
+## 3. EXTRA INFO (type: "other") ⚪
+Everything that is NOT matrix or IFPI:
 - URLs: "www.megatmotion.com"
-- Countries: "Made in Germany", "Netherlands"  
-- Companies: "Sony DADC", "Sonopress"
-- Any other text
+- Countries: "Made in Germany", "Netherlands"
+- Companies: "Sony DADC", "Sonopress", "EMI"
+- Any readable text that doesn't fit above
 
 **WHERE TO LOOK:**
-- OUTER RING (35-58% radius): Matrix/catalog numbers
-- INNER RING (5-20% radius): IFPI codes
-- SUPER-ZOOM: Tiny IFPI codes near center
+- OUTER RING (35-58%): Matrix numbers (long alphanumeric codes)
+- INNER RING (5-20%): IFPI codes (start with "IFPI")
+- SUPER-ZOOM: Tiny stamped IFPI near center hole
 
 **OUTPUT FORMAT (JSON only):**
 {
-  "raw_text": "all text found | separated",
-  "clean_text": "cleaned combined text",
+  "raw_text": "all text | separated",
+  "clean_text": "cleaned text",
   "segments": [
-    {"text": "DESCD09", "type": "catalog", "confidence": 0.9},
-    {"text": "IFPI L028", "type": "ifpi", "confidence": 0.85},
-    {"text": "Made in Germany", "type": "other", "confidence": 0.9},
-    {"text": "www.example.com", "type": "other", "confidence": 0.8}
+    {"text": "3384732 02 1", "type": "matrix", "confidence": 0.95},
+    {"text": "IFPI L028", "type": "ifpi", "confidence": 0.9},
+    {"text": "www.megatmotion.com", "type": "other", "confidence": 0.85},
+    {"text": "Made in Germany", "type": "other", "confidence": 0.8}
   ],
   "overall_confidence": 0.0-1.0,
-  "notes": "Describe findings. Matrix must be numeric code only, IFPI must start with IFPI."
+  "notes": "Brief description of what was found"
 }
 
-**CRITICAL:** 
-- If text doesn't start with "IFPI", it's NOT an IFPI code
-- URLs and websites are NEVER matrix numbers
-- When in doubt, use type "other"`;
+**REMEMBER:**
+- Matrix = long alphanumeric pressing code (type: "matrix")
+- IFPI = MUST start with "IFPI" (type: "ifpi")  
+- Everything else = type: "other"`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

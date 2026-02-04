@@ -1,135 +1,53 @@
 
-# Plan: Verbeterde Discogs Zoekstrategie
+# Plan: Verbeterde Discogs Zoekstrategie ✅ GEÏMPLEMENTEERD
 
-## Probleem Analyse
+## Status: Voltooid
 
-De huidige `ai-photo-analysis-v2` edge function heeft twee problemen:
+De `ai-photo-analysis-v2` edge function is bijgewerkt met:
 
-1. **Geen format filtering** - Zoekt alle releases, niet specifiek CD's
-2. **OCR-fouten in zoekquery** - "Exas" ipv "Texas" wordt gebruikt omdat de zoekopdracht direct de OCR-output neemt
+### Nieuwe Zoekstrategie (in volgorde)
 
-De URL die je deelde laat zien hoe Discogs werkt:
-```
-https://www.discogs.com/master/572403-Ella-Fitzgerald-A-Portrait-Of-Ella-Fitzgerald?format=CD
-```
+1. **Artist + Title + format=CD/Vinyl** ← Primair (Discogs fuzzy matching corrigeert OCR-fouten)
+2. **Barcode + format** ← Precise identifier
+3. **Catalogusnummer + format** ← Label-specifiek
+4. **Matrix nummer** ← Geen format (uniek per pressing)
+5. **Label + Catno + format** ← Combinatie
+6. **Fallback zonder format** ← Als CD/Vinyl versie niet bestaat
+7. **Alternative search terms** ← Extra zoektermen
 
-## Oplossing
+### Format Filtering
 
-### Stap 1: Primaire Zoekstrategie Vereenvoudigen
+- CD scans krijgen `&format=CD` parameter
+- Vinyl scans krijgen `&format=Vinyl` parameter
+- Matrix zoekstrategie heeft GEEN format (uniek per pressing)
+- Fallback strategieën hebben GEEN format voor bredere matching
 
-De eerste zoekstrategie wordt: **Artiest + Titel + format=CD**
+### OCR Correctie via Discogs
 
-```
-Huidige volgorde:
-1. Barcode
-2. Catalogusnummer  
-3. Matrix nummer
-4. Artist + Title (ZONDER format)
-5. Label + Catno
+De bestaande Discogs-parsing (regels 1358-1382) corrigeert automatisch:
+- "Exas" → "Texas" (via Discogs resultaat)
+- "Texas (2)" → "Texas" (verwijdert numerieke suffixen)
+- Gebruikt Discogs artiestennaam boven OCR wanneer beschikbaar
 
-Nieuwe volgorde:
-1. Artist + Title + format=CD  ← NIEUW: Prioriteit #1
-2. Barcode + format=CD
-3. Catalogusnummer + format=CD
-4. Matrix nummer
-5. Fallback zonder format
-```
+### Technische Wijzigingen
 
-### Stap 2: Format Parameter Toevoegen
-
-De Discogs API search krijgt `&format=CD` parameter:
+**File:** `supabase/functions/ai-photo-analysis-v2/index.ts`
 
 ```typescript
-// Voor CD scans
-const searchUrl = `https://api.discogs.com/database/search?` +
-  `q=${encodeURIComponent(`${artist} ${title}`)}&` +
-  `type=release&` +
-  `format=CD&` +     // ← NIEUW
-  `per_page=20`;
+// Nieuwe functie signature
+async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'cd')
+
+// Format filter bepaald op basis van mediaType
+const formatFilter = mediaType === 'vinyl' ? 'Vinyl' : 'CD';
+
+// URL met format parameter
+searchUrl += `&format=${encodeURIComponent(strategyFormat)}`;
 ```
 
-### Stap 3: Artiestcorrectie via Discogs Resultaten
+## Verwachte Resultaten
 
-Als we een match vinden, gebruiken we de **Discogs artiestennaam** (niet de OCR):
-
-```
-OCR: "Exas - The Hush"
-Discogs result: "Texas (2) - The Hush"
-→ Gecorrigeerde artiest: "Texas"
-```
-
-Dit is al gedeeltelijk geïmplementeerd in de laatste update, maar de zoekquery gebruikt nog steeds de foute OCR-naam.
-
-### Stap 4: Fuzzy Matching op Discogs Resultaten
-
-Omdat OCR "Exas" kan produceren, maar Discogs "Texas" heeft:
-- Zoek met originele OCR tekst
-- Filter resultaten op 80%+ similarity met title
-- Neem artiestnaam van Discogs result
-
-## Technische Wijzigingen
-
-### File: `supabase/functions/ai-photo-analysis-v2/index.ts`
-
-```typescript
-// Nieuwe primaire zoekstrategie
-const searchStrategies = [
-  // NIEUW: Strategy 1: Simple Artist + Title with format filter
-  ...(analysisData.artist && analysisData.title ? [{
-    query: `${analysisData.artist} ${analysisData.title}`,
-    type: 'artist_title_format',
-    format: 'CD'  // of 'Vinyl' afhankelijk van mediaType
-  }] : []),
-  
-  // Strategy 2: Barcode with format
-  ...(analysisData.barcode ? [{
-    query: analysisData.barcode,
-    type: 'barcode',
-    format: 'CD'
-  }] : []),
-  
-  // ... rest met format parameter
-];
-
-// Bij bouwen van URL
-let searchUrl = `https://api.discogs.com/database/search?`;
-
-if (type === 'barcode') {
-  searchUrl += `barcode=${encodeURIComponent(query)}`;
-} else if (type === 'catno') {
-  searchUrl += `catno=${encodeURIComponent(query)}`;
-} else {
-  searchUrl += `q=${encodeURIComponent(query)}`;
-}
-
-searchUrl += `&type=release`;
-
-// NIEUW: Format filter toevoegen
-if (strategy.format) {
-  searchUrl += `&format=${encodeURIComponent(strategy.format)}`;
-}
-
-searchUrl += `&per_page=20`;
-```
-
-### Resultaat Verwerking
-
-Na een succesvolle zoekopdracht:
-1. Parse "Texas (2) - The Hush" → artiest: "Texas", titel: "The Hush"
-2. Verwijder numerieke suffixen zoals "(2)"
-3. Gebruik deze gecorrigeerde waarden in het resultaat
-
-## Voordelen
-
-| Aspect | Huidig | Nieuw |
-|--------|--------|-------|
-| Format filtering | Geen | CD/Vinyl specifiek |
-| OCR fouten | Propageren naar resultaat | Gecorrigeerd via Discogs |
-| Zoekprecisie | Breed | Gericht op juiste format |
-| Match kwaliteit | Kan LP teruggeven voor CD | Alleen CD resultaten |
-
-## Edge Cases
-
-- **Geen CD versie bestaat**: Fallback naar algemene zoekopdracht zonder format filter
-- **OCR volledig fout**: Catalog number en barcode blijven als backup strategieën
-- **Compilatie albums**: Title matching met fuzzy logic (80% threshold)
+| Test Case | Vóór | Na |
+|-----------|------|-----|
+| Texas - The Hush (CD) | "Exas" als artiest | "Texas" gecorrigeerd via Discogs |
+| Format matching | Kon LP teruggeven | Alleen CD resultaten |
+| OCR fouten | Propageren | Gecorrigeerd via Discogs fuzzy search |

@@ -47,6 +47,7 @@ interface AnalysisResult {
     ai_description: string;
     image_quality?: string;
     extracted_details?: any;
+    artwork_url?: string | null;
     // Technical identifiers
     matrix_number?: string | null;
     sid_code_mastering?: string | null;
@@ -119,6 +120,37 @@ export default function AIScanV2() {
               setPrefilledIfpiCodes(data.ifpiCodes);
             }
             
+            // NEW: If Discogs match exists, show it directly (skip re-analysis)
+            if (data.discogsMatch) {
+              setAnalysisResult({
+                scanId: `enhancer-${Date.now()}`,
+                result: {
+                  discogs_id: data.discogsMatch.discogs_id,
+                  discogs_url: data.discogsMatch.discogs_url,
+                  artist: data.discogsMatch.artist,
+                  title: data.discogsMatch.title,
+                  label: data.discogsMatch.label,
+                  catalog_number: data.discogsMatch.catalog_number,
+                  year: data.discogsMatch.year,
+                  confidence_score: data.discogsMatch.match_confidence,
+                  ai_description: `Matrix match via CD Matrix Enhancer`,
+                  matrix_number: data.matrix,
+                  country: data.discogsMatch.country,
+                  genre: data.discogsMatch.genre,
+                  artwork_url: data.discogsMatch.cover_image,
+                },
+                version: 'enhancer-v1'
+              });
+              // Skip verification - already verified in enhancer
+              setVerificationStep('verified');
+              setVerifiedMatrixNumber(data.matrix);
+              
+              toast({
+                title: "✅ Discogs match geladen",
+                description: `${data.discogsMatch.artist} - ${data.discogsMatch.title}`,
+              });
+            }
+            
             // Convert base64 to File and add to uploadedFiles
             if (data.photo) {
               fetch(data.photo)
@@ -134,11 +166,14 @@ export default function AIScanV2() {
                 });
             }
             
-            const ifpiText = data.ifpiCodes?.length > 0 ? ` + ${data.ifpiCodes.length} IFPI` : '';
-            toast({
-              title: "Foto en matrix code geladen",
-              description: `Selecteer een conditie om direct te starten${ifpiText}`,
-            });
+            // Only show "selecteer conditie" toast if no Discogs match was loaded
+            if (!data.discogsMatch) {
+              const ifpiText = data.ifpiCodes?.length > 0 ? ` + ${data.ifpiCodes.length} IFPI` : '';
+              toast({
+                title: "Foto en matrix code geladen",
+                description: `Selecteer een conditie om direct te starten${ifpiText}`,
+              });
+            }
           }
           // Clear sessionStorage after reading
           sessionStorage.removeItem('matrixEnhancerData');

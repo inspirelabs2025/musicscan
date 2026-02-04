@@ -293,7 +293,7 @@ export default function AIScanV2() {
               matrixProcessingPromiseRef.current = processingPromise;
               
               toast({
-                title: "🔬 Matrix foto gedetecteerd",
+                title: "Matrix foto gedetecteerd",
                 description: "Positie 3: Label/Matrix - Geavanceerde verwerking gestart...",
               });
             } else if (!batchMatrixFound) {
@@ -316,7 +316,7 @@ export default function AIScanV2() {
                   matrixProcessingPromiseRef.current = processingPromise;
                   
                   toast({
-                    title: "🔬 Matrix foto gedetecteerd",
+                    title: "Matrix foto gedetecteerd",
                     description: `Visuele detectie: ${(detection.confidence * 100).toFixed(0)}% zekerheid`,
                   });
                 }

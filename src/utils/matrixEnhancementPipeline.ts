@@ -279,13 +279,14 @@ function createZoomedIfpiRingCrop(
   
   const minSize = Math.min(width, height);
   
-  // IFPI codes are in the inner ring - smaller area closer to center
-  // Typically between 5-15% of image from center (inside the matrix ring)
-  const innerRadius = minSize * 0.05;  // Start just outside center hole
-  const outerRadius = minSize * 0.18;  // End before matrix codes begin
+  // IFPI codes can be in the inner/middle ring area - typically between mirror band and matrix
+  // Mould SID (IFPI L-xxx) is often stamped in the mirror band at 10-25% from center
+  // Mastering SID (IFPI xxxx) can be anywhere between 15-40% from center
+  const innerRadius = minSize * 0.08;  // Start just outside center hole/mirror band
+  const outerRadius = minSize * 0.40;  // Extend into the area before outer matrix codes
   
-  // Create a larger crop to capture the full inner ring
-  const cropSize = outerRadius * 2.5;
+  // Create a larger crop to capture the full IFPI zone
+  const cropSize = outerRadius * 2.0;
   const cropX = Math.max(0, centerX - cropSize / 2);
   const cropY = Math.max(0, centerY - cropSize / 2);
   const actualCropWidth = Math.min(cropSize, width - cropX);
@@ -337,7 +338,7 @@ function createZoomedIfpiRingCrop(
   
   const zoomedIfpiRingEnhanced = zoomedEnhancedCanvas.toDataURL('image/jpeg', 0.95);
   
-  console.log(`🔍 Zoomed IFPI ring crop: ${zoomedWidth}x${zoomedHeight} (inner ring for IFPI codes)`);
+  console.log(`🔍 Zoomed IFPI ring crop: ${zoomedWidth}x${zoomedHeight} (radius 8-40% for IFPI/SID codes)`);
   
   return { zoomedIfpiRing, zoomedIfpiRingEnhanced };
 }

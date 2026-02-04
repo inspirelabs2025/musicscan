@@ -1,102 +1,101 @@
 
-# Plan: Fix Matrix Foto Detectie
+# Plan: Fix Matrix Enhancer Data Merge
 
-## Probleem
+## Probleem Analyse
 
-De huidige visuele detectie-algoritmes zijn te strikt voor echte smartphone foto's van CD's:
-- Hub hole detectie verwacht >50% donkere pixels (brightness < 60)
-- Rainbow detectie verwacht saturation > 0.2 EN hue variance > 40
-- Typische foto's scoren slechts 25-40%, onder de 40% drempel
+De Matrix Enhancer vindt de correcte Discogs release maar deze data wordt genegeerd door de ai-photo-analysis-v2 edge function door twee bugs:
 
-## Oplossing: Dubbele Strategie
+1. **Te hoge confidence drempel**: `matchConfidence > 0.7` blokkeert data met 0.6 confidence
+2. **searchDiscogsV2 negeert enhancedDiscogsMatch**: De functie checkt nooit voor pre-gevonden Discogs data
 
-### Strategie 1: Positie-Based Auto-Detectie
+## Oplossing
 
-Voor CD uploads is de 3e foto (index 2) conventioneel de "Label (plaat)" foto. We behandelen deze automatisch als matrix foto:
+### Fix 1: Verlaag Confidence Threshold
 
-```text
-Upload Flow voor CD:
-────────────────────
-Foto 1 (index 0) = Voorkant hoes
-Foto 2 (index 1) = Achterkant hoes  
-Foto 3 (index 2) = Label/Matrix     → AUTO-DETECT als matrix
-Foto 4 (index 3) = Binnenkant booklet
+In `ai-photo-analysis-v2/index.ts` lijn 284:
+
+```typescript
+// OUD: > 0.7 (te strikt)
+if (enhancedMatrixData.discogsId && enhancedMatrixData.matchConfidence && enhancedMatrixData.matchConfidence > 0.7)
+
+// NIEUW: >= 0.5 (realistischer)
+if (enhancedMatrixData.discogsId && enhancedMatrixData.matchConfidence && enhancedMatrixData.matchConfidence >= 0.5)
 ```
 
-### Strategie 2: Verlaagde Visuele Thresholds
+### Fix 2: Gebruik enhancedDiscogsMatch in searchDiscogsV2
 
-Visuele detectie als backup met veel lagere drempels:
+Begin van `searchDiscogsV2` functie moet checken voor pre-gevonden match:
 
-| Feature | Oud | Nieuw |
-|---------|-----|-------|
-| Hub hole dark ratio | >50% | >25% |
-| Hub hole brightness | <60 | <100 |
-| Rainbow saturation | >0.2 | >0.1 |
-| Rainbow hue variance | >40 | >20 |
-| Central dark ratio | <85% outer | <95% outer |
-| Overall threshold | 40% | 25% |
+```typescript
+async function searchDiscogsV2(analysisData: any) {
+  try {
+    console.log('🔍 Searching Discogs V2 with matrix/IFPI verification...')
+    
+    // NIEUW: Check for pre-found enhanced Discogs match from Matrix Enhancer
+    if (analysisData.enhancedDiscogsMatch?.discogsId) {
+      const enhanced = analysisData.enhancedDiscogsMatch;
+      console.log(`🎯 Using pre-found Discogs match from Matrix Enhancer: ${enhanced.discogsId} (confidence: ${enhanced.confidence})`);
+      
+      return {
+        discogsId: enhanced.discogsId,
+        discogsUrl: enhanced.discogsUrl || `https://www.discogs.com/release/${enhanced.discogsId}`,
+        artist: enhanced.artist || analysisData.artist,
+        title: enhanced.title || analysisData.title,
+        label: enhanced.label || analysisData.label,
+        catalogNumber: enhanced.catalogNumber || analysisData.catalogNumber,
+        year: enhanced.year || analysisData.year,
+        country: enhanced.country || analysisData.country,
+        genre: enhanced.genre || analysisData.genre,
+        confidence: enhanced.confidence || 0.8,
+        matrixVerified: true,
+        searchMetadata: {
+          strategies: [],
+          totalSearches: 0,
+          bestStrategy: 'enhanced_matrix_lookup',
+          matrixVerified: true,
+          technicalMatches: { matrix: true }
+        }
+      };
+    }
+    
+    // ... bestaande search logica ...
+```
+
+## Data Flow Na Fix
+
+```text
+Upload 4 foto's
+     │
+     ├─ Matrix Enhancer (parallel)
+     │  └─ matrix-discogs-lookup
+     │     └─ discogsId: 1755390 (confidence: 0.6)
+     │
+     ├─ ai-photo-analysis-v2
+     │  ├─ enhancedMatrixData ontvangen ✅
+     │  ├─ matchConfidence >= 0.5 ? JA ✅
+     │  ├─ enhancedDiscogsMatch aangemaakt ✅
+     │  └─ searchDiscogsV2()
+     │     └─ "Using pre-found Discogs match: 1755390" ✅
+     │
+     └─ Final Result:
+        discogs_id: 1755390 ✅ (Matrix Enhancer match)
+        artist: "Various" ✅
+        title: "Ready Steady Boogaloo!" ✅
+```
 
 ## Bestanden te Wijzigen
 
 | Bestand | Wijziging |
 |---------|-----------|
-| `src/pages/AIScanV2.tsx` | Positie-based auto-detect voor foto 3 |
-| `src/utils/matrixPhotoDetector.ts` | Verlaagde thresholds |
+| `supabase/functions/ai-photo-analysis-v2/index.ts` | 1. Verlaag threshold van > 0.7 naar >= 0.5 |
+| | 2. Voeg enhancedDiscogsMatch check toe aan begin searchDiscogsV2 |
 
-## Implementatie Details
+## Fallback Gedrag
 
-### 1. AIScanV2.tsx - Positie-Based Detection
+Als `enhancedDiscogsMatch` niet beschikbaar is (geen matrix foto, lage confidence, of matrix-discogs-lookup faalde), blijft de normale search flow werken zoals voorheen.
 
-```typescript
-// Bij CD upload: foto op index 2 is conventioneel de matrix foto
-const isConventionalMatrixPosition = mediaType === 'cd' && uploadedFiles.length === 2;
+## Risico Analyse
 
-if (isConventionalMatrixPosition || (detection.isMatrix && detection.confidence >= 0.25)) {
-  // Start matrix enhancer
-  startBackgroundProcessing(file, { skipDetection: true });
-}
-```
-
-### 2. matrixPhotoDetector.ts - Verlaagde Thresholds
-
-```typescript
-// detectHubHole - verlaagd
-if (brightness < 100) darkPixels++; // was: 60
-return darkRatio > 0.25; // was: 0.5
-
-// detectRainbowReflection - verlaagd  
-return saturationRatio > 0.1 && hueVariance > 20; // was: 0.2 en 40
-
-// detectCentralDarkArea - verlaagd
-return avgCenter < avgOuter * 0.95; // was: 0.85
-
-// Overall threshold - verlaagd
-return { isMatrix: score >= 0.25 }; // was: 0.40
-```
-
-## Data Flow na Fix
-
-```text
-User Upload: 4 foto's voor CD
-     │
-     ├─ Foto 1 → Geen matrix check (index 0)
-     ├─ Foto 2 → Geen matrix check (index 1)  
-     ├─ Foto 3 → AUTO: Matrix Enhancer start! ✅
-     └─ Foto 4 → Geen matrix check (index 3)
-     
-     ↓
-Matrix Enhancer (achtergrond)
-     │
-     ├─ Ring crops + CLAHE
-     ├─ matrix-ocr
-     ├─ matrix-discogs-lookup
-     │
-     └─ Resultaat merged met andere OCR
-```
-
-## Voordelen
-
-1. **100% Betrouwbaar**: Positie-based detectie werkt altijd voor de 3e foto
-2. **Fallback**: Visuele detectie met lagere drempels als backup
-3. **Geen User Input**: Volledig automatisch zonder handmatige stappen
-4. **Backwards Compatible**: Bestaande flow blijft werken
+- **Laag risico**: Fallback naar bestaande logica blijft intact
+- **Voordeel**: Matrix Enhancer matches worden nu daadwerkelijk gebruikt
+- **Edge case**: Bij conflict tussen matrix-match en hoes-OCR wint matrix (correct gedrag)

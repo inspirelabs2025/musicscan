@@ -550,6 +550,22 @@ export default function AIScanV2() {
                         </ul>
                       </div>
                     )}
+                    
+                    {/* Link naar standalone Matrix Enhancer */}
+                    <div className="mt-3 pt-3 border-t border-orange-500/20">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2 text-primary border-primary/30 hover:bg-primary/10"
+                        onClick={() => navigate('/cd-matrix-enhancer')}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Open Matrix Enhancer (Geavanceerd)
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2 text-center">
+                        Handmatige tuning van alle enhancement parameters
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
                 

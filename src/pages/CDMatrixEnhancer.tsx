@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
-import { ArrowLeft, Disc } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft, Disc, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,6 +33,7 @@ interface ProcessingStep {
 export default function CDMatrixEnhancer() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Step state
   const [currentStep, setCurrentStep] = useState<Step>('upload');
@@ -386,6 +387,31 @@ export default function CDMatrixEnhancer() {
                 isProcessing={isRunningOCR}
                 isSaving={isSaving}
               />
+              
+              {/* Use in Scanner button */}
+              {ocrResult.cleanText && (
+                <div className="mt-4">
+                  <Button
+                    onClick={() => {
+                      const matrixCode = ocrResult.cleanText;
+                      navigate(`/ai-scan-v2?matrix=${encodeURIComponent(matrixCode)}&mediaType=cd`);
+                      toast({
+                        title: 'Matrix code overgenomen',
+                        description: `"${matrixCode}" wordt gebruikt in de scanner`,
+                      });
+                    }}
+                    className="w-full gap-2"
+                    size="lg"
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                    Gebruik in Scanner
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Ga terug naar de V2 scanner met deze matrix code
+                  </p>
+                </div>
+              )}
+              
               <MatrixDebugAccordion
                 params={enhancementResult.params}
                 roi={enhancementResult.roi}

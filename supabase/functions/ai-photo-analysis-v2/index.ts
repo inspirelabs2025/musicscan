@@ -17,6 +17,7 @@ interface AnalysisRequest {
   photoUrls: string[]
   mediaType: 'vinyl' | 'cd'
   conditionGrade: string
+  prefilledMatrix?: string // Matrix code from Matrix Enhancer
 }
 
 interface StructuredAnalysisData {
@@ -106,14 +107,15 @@ serve(async (req) => {
 
     // Skipping direct checks against auth.users (restricted schema). JWT already validated above.
 
-    const { photoUrls, mediaType, conditionGrade }: AnalysisRequest = await req.json()
+    const { photoUrls, mediaType, conditionGrade, prefilledMatrix }: AnalysisRequest = await req.json()
 
     console.log('🤖 Starting AI photo analysis V2 for:', {
       photoCount: photoUrls.length,
       mediaType,
       conditionGrade,
       userId: user.id,
-      userEmail: user.email
+      userEmail: user.email,
+      prefilledMatrix: prefilledMatrix || 'none'
     })
 
     // Create initial record with version marker and user_id
@@ -242,6 +244,12 @@ serve(async (req) => {
         detailAnalysis.success ? detailAnalysis.data : null,
         matrixAnalysis?.success ? matrixAnalysis.data : null
       )
+
+      // Override with prefilled matrix from Matrix Enhancer if provided
+      if (prefilledMatrix) {
+        console.log('📎 Using prefilled matrix code from Matrix Enhancer:', prefilledMatrix);
+        combinedData.matrixNumber = prefilledMatrix;
+      }
 
       // Update with analysis progress
       await supabase

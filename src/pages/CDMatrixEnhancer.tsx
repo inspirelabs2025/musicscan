@@ -523,6 +523,20 @@ export default function CDMatrixEnhancer() {
                         allSegments: ocrResult.segments,
                         photo: originalImage,
                         timestamp: Date.now(),
+                        // Include Discogs match data to prevent re-analysis
+                        discogsMatch: discogsResult?.success ? {
+                          discogs_id: discogsResult.discogs_id,
+                          discogs_url: discogsResult.discogs_url,
+                          artist: discogsResult.artist,
+                          title: discogsResult.title,
+                          catalog_number: discogsResult.catalog_number,
+                          label: discogsResult.label,
+                          year: discogsResult.year,
+                          country: discogsResult.country,
+                          genre: discogsResult.genre,
+                          cover_image: discogsResult.cover_image,
+                          match_confidence: discogsResult.match_confidence,
+                        } : null,
                       }));
                       navigate(`/ai-scan-v2?fromEnhancer=true&mediaType=cd`);
                       

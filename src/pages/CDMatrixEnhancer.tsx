@@ -306,7 +306,7 @@ export default function CDMatrixEnhancer() {
         <div className="container max-w-5xl py-6 px-4">
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
-            <Link to="/scanner">
+            <Link to="/ai-scan-v2">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
               </Button>

@@ -247,9 +247,16 @@ export default function AIScanV2() {
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     
+    // FIX: Track starting count + index within this batch to handle closure stale state
+    const startingCount = uploadedFiles.length;
+    let processedInBatch = 0;
+    let batchMatrixFound = false; // Prevent multiple matrix detections in same batch
+    
     for (const file of files) {
       if (file.type.startsWith('image/')) {
         const id = Math.random().toString(36).substr(2, 9);
+        const fileIndexInTotal = startingCount + processedInBatch;
+        processedInBatch++;
         
         // First, read the file as data URL for original preview
         const reader = new FileReader();
@@ -267,12 +274,14 @@ export default function AIScanV2() {
           // For CD media type, detect if this is a matrix photo and process in background
           // Strategy 1: Position-based auto-detection (3rd photo = index 2 is conventionally the matrix photo)
           // Strategy 2: Visual detection with lowered thresholds as fallback
-          if (mediaType === 'cd' && !matrixFileId) {
-            // Get current count BEFORE this file was added
-            const currentFileCount = uploadedFiles.length;
-            const isConventionalMatrixPosition = currentFileCount === 2; // This will be the 3rd photo (index 2)
+          if (mediaType === 'cd' && !matrixFileId && !batchMatrixFound && !matrixProcessingPromiseRef.current) {
+            // Use fileIndexInTotal instead of stale uploadedFiles.length
+            const isConventionalMatrixPosition = fileIndexInTotal === 2; // This will be the 3rd photo (index 2)
+            
+            console.log(`📍 File "${file.name}" at batch index ${fileIndexInTotal}, isMatrixPosition: ${isConventionalMatrixPosition}`);
             
             if (isConventionalMatrixPosition) {
+              batchMatrixFound = true; // Prevent other files in batch from also triggering
               console.log(`📍 Position-based matrix detection: 3rd photo (index 2) auto-detected as matrix`);
               setMatrixFileId(id);
               
@@ -287,13 +296,15 @@ export default function AIScanV2() {
                 title: "🔬 Matrix foto gedetecteerd",
                 description: "Positie 3: Label/Matrix - Geavanceerde verwerking gestart...",
               });
-            } else {
-              // Fallback: visual detection with lowered threshold
+            } else if (!batchMatrixFound) {
+              // Fallback: visual detection with lowered threshold (only if no matrix found yet)
               try {
                 console.log(`🔍 Checking if "${file.name}" is a matrix photo (visual detection)...`);
                 const detection = await detectMatrixPhoto(file);
                 
-                if (detection.isMatrix && detection.confidence >= 0.25) {
+                // Only use visual detection if nothing found yet AND confidence is high enough
+                if (detection.isMatrix && detection.confidence >= 0.25 && !batchMatrixFound && !matrixProcessingPromiseRef.current) {
+                  batchMatrixFound = true;
                   console.log(`✅ Matrix photo detected: "${file.name}" (${(detection.confidence * 100).toFixed(0)}%)`);
                   setMatrixFileId(id);
                   
@@ -362,7 +373,7 @@ export default function AIScanV2() {
         reader.readAsDataURL(file);
       }
     }
-  }, [mediaType, matrixFileId, startBackgroundProcessing]);
+  }, [mediaType, matrixFileId, startBackgroundProcessing, uploadedFiles.length]);
   const removeFile = useCallback((id: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== id));
   }, []);

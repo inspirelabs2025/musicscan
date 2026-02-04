@@ -402,9 +402,28 @@ export default function CDMatrixEnhancer() {
                         .filter(s => s.type === 'ifpi')
                         .map(s => s.text);
                       
-                      // Extract matrix code (prefer matrix type, fallback to cleanText)
-                      const matrixCode = ocrResult.segments
-                        .find(s => s.type === 'matrix')?.text || ocrResult.cleanText;
+                      // Extract pure matrix code with robust filtering
+                      const extractPureMatrixCode = (): string | null => {
+                        // Layer 1: Look for explicit matrix type
+                        const matrixSegment = ocrResult.segments.find(s => s.type === 'matrix');
+                        if (matrixSegment?.text) return matrixSegment.text;
+                        
+                        // Layer 2: Filter cleanText - remove URLs and known patterns
+                        let filtered = ocrResult.cleanText
+                          .replace(/www\.[^\s]+/gi, '')           // URLs like www.domain.com
+                          .replace(/https?:\/\/[^\s]+/gi, '')     // Full URLs
+                          .replace(/IFPI\s*[A-Z0-9]+/gi, '')      // IFPI codes
+                          .replace(/made\s+in\s+\w+/gi, '')       // "Made in Germany"
+                          .replace(/\b(sony|emi|dadc|sonopress|pmdc|universal|warner|bmg)\b/gi, '') // Company names
+                          .replace(/\b(germany|netherlands|usa|uk|france|austria)\b/gi, '')        // Country names
+                          .trim();
+                        
+                        // Extract first valid alphanumeric code (6+ chars)
+                        const codeMatch = filtered.match(/[A-Z0-9][A-Z0-9\s\-]{5,}/i);
+                        return codeMatch ? codeMatch[0].trim() : null;
+                      };
+                      
+                      const matrixCode = extractPureMatrixCode() || ocrResult.cleanText;
                       
                       // Store all data in sessionStorage for V2 scanner
                       sessionStorage.setItem('matrixEnhancerData', JSON.stringify({

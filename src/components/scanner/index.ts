@@ -9,4 +9,5 @@ export { UserConfirmationFeedback } from './UserConfirmationFeedback';
 export { ScannerPhotoPreview } from './ScannerPhotoPreview';
 export { MatrixVerificationStep } from './MatrixVerificationStep';
 export { CDPhotoTips } from './CDPhotoTips';
+export { ExtremeEnhancementPreview } from './ExtremeEnhancementPreview';
 export type { MatrixCharacter, MatrixVerificationData } from './MatrixVerificationStep';

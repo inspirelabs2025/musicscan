@@ -1,140 +1,142 @@
 
-# Plan: Matrix Nummer Verificatie Systeem
+# Plan: CD Matrix Filtering Fine-tuning
 
-## Overzicht
-Een verplichte verificatie-stap toevoegen na de AI analyse waarbij gebruikers het herkende matrix nummer kunnen bevestigen of corrigeren voordat het definitief wordt opgeslagen.
+## Probleemanalyse van je Foto
 
-## Waarom Dit Nodig Is
-- Matrix nummers zijn cruciaal voor exacte release identificatie op Discogs
-- OCR op gegraveerde/geëtste tekst is foutgevoelig (reflecties, slijtage)
-- Karakters zoals O/0, I/1, S/5 worden vaak verwisseld
-- 100% nauwkeurigheid verhoogt de match-kwaliteit aanzienlijk
+De foto toont een CD met zware regenboog-reflecties (interferentie patronen). Dit is het moeilijkste scenario voor OCR omdat:
 
-## Gebruikerservaring
+- **Kleurverschillen**: Reflecties variëren per kleurkanaal (R/G/B)
+- **Gegraveerde tekst**: Matrix nummers zijn uniform grijs (geen kleur)
+- **Locatie**: Matrix info zit in de binnenste ring rond de hub
 
-### Nieuwe Flow
+## Technische Oplossing
+
+### Strategie: AI-gestuurde Reflection Suppression
+
+Gezien de Deno edge function beperkingen (geen native image libraries zoals Sharp/Jimp), gebruiken we de **AI gateway** met gespecialiseerde prompts voor matrix enhancement.
+
+### Nieuwe Aanpak: Multi-Pass AI Enhancement
+
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│ 1. Upload Foto's                                            │
-│ 2. AI Analyse (multi-pass)                                  │
-│ 3. ★ NIEUW: Matrix Verificatie Stap ★                       │
-│    ┌─────────────────────────────────────────────────┐     │
-│    │ 🔢 Bevestig Matrix Nummer                        │     │
-│    │                                                   │     │
-│    │ Herkend: [5][3][8][ ][9][7][2][-][2]            │     │
-│    │          ▲groen  ▲geel   ▲rood                   │     │
-│    │                                                   │     │
-│    │ ⚠️ "9" is onzeker (72%) - Klik om te corrigeren │     │
-│    │                                                   │     │
-│    │ Correcties: [0] [O] [Q] [anders...]             │     │
-│    │                                                   │     │
-│    │ [Bevestigen & Doorgaan]  [Overslaan]            │     │
-│    └─────────────────────────────────────────────────┘     │
-│ 4. Discogs Resultaten + Prijzen                             │
-│ 5. Toevoegen aan Collectie                                  │
+│ HUIDIGE FLOW                                                │
+│ ┌──────────┐    ┌──────────────┐    ┌─────────────┐        │
+│ │ Upload   │ →  │ preprocess-  │ →  │ ai-photo-   │        │
+│ │ foto     │    │ matrix-photo │    │ analysis-v2 │        │
+│ └──────────┘    └──────────────┘    └─────────────┘        │
+│                       ↑                                     │
+│            Edge detection only                              │
+│            (niet genoeg voor reflecties)                    │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ NIEUWE FLOW                                                 │
+│ ┌──────────┐    ┌──────────────────┐    ┌─────────────┐    │
+│ │ Upload   │ →  │ ai-enhance-      │ →  │ ai-photo-   │    │
+│ │ foto     │    │ matrix-photo     │    │ analysis-v2 │    │
+│ └──────────┘    │ (NEW)            │    └─────────────┘    │
+│                 │                   │                       │
+│                 │ 1. AI Reflection  │                       │
+│                 │    Suppression    │                       │
+│                 │ 2. Circular Text  │                       │
+│                 │    Enhancement    │                       │
+│                 │ 3. Local Contrast │                       │
+│                 │    in Hub Area    │                       │
+│                 └──────────────────┘                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Technische Implementatie
+### Implementatie Details
 
-### Fase 1: Backend - Karakter-niveau Confidence
+#### 1. Nieuwe Edge Function: `ai-enhance-matrix-photo`
 
-**Bestand: `supabase/functions/ai-photo-analysis-v2/index.ts`**
+Gebruikt Gemini's vision capabilities met gespecialiseerde prompt:
 
-Uitbreiden van de matrix analysis response om per-karakter confidence te retourneren:
+```typescript
+const enhancementPrompt = `
+You are an expert image processor specializing in CD/vinyl matrix number enhancement.
 
-```json
-{
-  "matrixNumber": "538 972-2",
-  "matrixCharacters": [
-    { "char": "5", "confidence": 0.95, "alternatives": ["S"] },
-    { "char": "3", "confidence": 0.98, "alternatives": [] },
-    { "char": "8", "confidence": 0.92, "alternatives": ["B"] },
-    { "char": " ", "confidence": 1.0, "alternatives": [] },
-    { "char": "9", "confidence": 0.72, "alternatives": ["0", "O", "Q"] },
-    ...
-  ],
-  "overallConfidence": 0.89,
-  "needsVerification": true
+TASK: Enhance this CD surface image to make engraved text maximally readable.
+
+CHALLENGES TO ADDRESS:
+1. Rainbow/prismatic reflections (iridescence)
+2. Low contrast engraved text
+3. Circular text arrangement around hub
+4. Specular highlights
+
+ENHANCEMENT STRATEGY:
+1. Suppress color variations (reflections appear colored, text is uniform gray)
+2. Increase local contrast in the inner ring area (15-30mm from center)
+3. Apply directional sharpening along circular text paths
+4. Normalize brightness to reveal subtle engravings
+
+OUTPUT: The same image with enhanced readability of matrix numbers, IFPI codes, and catalog numbers.
+`;
+```
+
+#### 2. Client-side Preview Enhancement
+
+Uitbreiding van `clientImagePreprocess.ts`:
+
+```typescript
+// Nieuwe functie voor CD-specifieke preprocessing
+export function preprocessCDMatrix(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number
+): void {
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+  
+  // Per pixel: neem MINIMUM van R/G/B kanalen
+  // Dit onderdrukt kleurrijke reflecties (die in 1 kanaal sterk zijn)
+  for (let i = 0; i < data.length; i += 4) {
+    const minChannel = Math.min(data[i], data[i+1], data[i+2]);
+    // Boost het minimum kanaal voor betere zichtbaarheid
+    const enhanced = Math.min(255, minChannel * 1.3);
+    data[i] = enhanced;
+    data[i+1] = enhanced;
+    data[i+2] = enhanced;
+  }
+  
+  ctx.putImageData(imageData, 0, 0);
 }
 ```
 
-Wijzigingen:
-- Nieuwe prompt instructie voor karakter-niveau output
-- Parsing van response naar gestructureerd format
-- `needsVerification` flag als confidence < 0.9
+#### 3. Foto Tips UI Component
 
-### Fase 2: Nieuwe Component - MatrixVerificationStep
+Nieuwe component met real-time feedback:
 
-**Nieuw bestand: `src/components/scanner/MatrixVerificationStep.tsx`**
-
-Component met:
-- Visuele weergave van elk karakter met kleurcodering
-- Klikbare onzekere karakters met alternatieve suggesties
-- Inline correctie mogelijkheid
-- Keyboard navigatie (pijltjes + Enter)
-- "Alles correct" quick-action voor hoge confidence
-- Foto thumbnail met zoom optie
-
-### Fase 3: UI Integratie in AIScanV2
-
-**Bestand: `src/pages/AIScanV2.tsx`**
-
-Nieuwe state en flow:
 ```typescript
-const [verificationStep, setVerificationStep] = useState<'pending' | 'verifying' | 'verified'>('pending');
-const [verifiedMatrixNumber, setVerifiedMatrixNumber] = useState<string | null>(null);
+// Voorbeeld tips voor betere foto's
+const cdPhotoTips = [
+  "💡 Gebruik indirect licht (geen directe lamp op CD)",
+  "📐 Fotografeer onder hoek van 45° om reflecties te minimaliseren",
+  "🔍 Focus op de binnenste ring waar matrix codes staan",
+  "🌑 Donkere achtergrond vermindert reflecties"
+];
 ```
 
-Conditionele rendering:
-- Na succesvolle analyse: toon MatrixVerificationStep
-- Na verificatie: toon volledige resultaten + prijzen
-- "Overslaan" optie voor ervaren gebruikers
+### Bestanden
 
-### Fase 4: Database - Correcties Opslaan
+| Actie | Bestand | Doel |
+|-------|---------|------|
+| Wijzigen | `supabase/functions/preprocess-matrix-photo/index.ts` | AI-prompt enhancement toevoegen |
+| Wijzigen | `src/utils/clientImagePreprocess.ts` | Min-channel filter voor CD's |
+| Wijzigen | `src/pages/AIScanV2.tsx` | Preview tonen van filtering |
+| Nieuw | `src/components/scanner/CDPhotoTips.tsx` | Tips voor betere foto's |
 
-**Nieuwe tabel: `matrix_corrections`**
-```sql
-CREATE TABLE matrix_corrections (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  scan_id UUID REFERENCES ai_scan_results(id),
-  original_matrix TEXT,
-  corrected_matrix TEXT,
-  character_corrections JSONB, -- [{position: 4, original: "9", corrected: "0"}]
-  user_id UUID REFERENCES auth.users(id),
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
+### Verwachte Resultaten
 
-Doel: Training data verzamelen voor AI verbetering
+Met deze aanpassingen:
+1. **Reflecties onderdrukt**: Min-channel filter elimineert kleurverschillen
+2. **Tekst versterkt**: Lokale contrast boost in hub-gebied
+3. **Betere OCR**: AI krijgt schonere input voor matrix herkenning
+4. **Gebruiker feedback**: Preview slider toont verbetering
 
-### Fase 5: Smart Defaults
+### Test Scenario
 
-Automatische correctie suggesties gebaseerd op:
-- Veelvoorkomende verwisselingen (O/0, I/1, S/5, B/8)
-- Bekende label patronen (Mercury nummers beginnen vaak met 5)
-- Historische correcties uit `matrix_corrections` tabel
-
-## Voordelen
-
-1. **100% Nauwkeurigheid**: Gebruiker bevestigt elk onzeker karakter
-2. **Snelle Verificatie**: Hoge confidence = 1 klik bevestiging
-3. **Training Data**: Elke correctie verbetert toekomstige herkenning
-4. **Transparantie**: Gebruiker ziet exact wat de AI heeft herkend
-5. **Gamification Ready**: Badges voor "100 verificaties" etc.
-
-## Bestanden
-
-| Actie | Bestand |
-|-------|---------|
-| Nieuw | `src/components/scanner/MatrixVerificationStep.tsx` |
-| Nieuw | `supabase/migrations/xxx_matrix_corrections.sql` |
-| Wijzigen | `supabase/functions/ai-photo-analysis-v2/index.ts` |
-| Wijzigen | `src/pages/AIScanV2.tsx` |
-| Wijzigen | `src/components/scanner/index.ts` |
-
-## Optionele Uitbreidingen
-
-- **Barcode verificatie**: Zelfde flow voor barcodes
-- **Collectieve verificatie**: Community kan elkaars scans helpen verifiëren
-- **Auto-learn**: Na X identieke correcties, pas AI prompt aan
+Met jouw foto als test case:
+1. Upload → Direct min-channel preview
+2. Vergelijk origineel vs gefilterd in slider
+3. Analyse → Check of matrix nummer correct wordt herkend

@@ -246,23 +246,27 @@ Return JSON:
   };
 }
 
-// CD Matching Hierarchy:
-// 1. Matrix number (primary) - most reliable for CD identification
-// 2. Catalog number
-// 3. Barcode
+// CD Matching Hierarchy v3.1:
+// 1. Matrix number (PRIMARY SEARCH KEY)
+// 2. Catalog number (SECONDARY VALIDATION - confirms matrix match)
+// 3. Barcode (tertiary)
 // 4. Artist + Title (fallback)
-// IFPI codes are used for validation/confidence, NOT as search keys
+// 
+// DUAL VALIDATION STRATEGY:
+// - Search Discogs by matrix number
+// - OCR-extracted catalog validates the matrix match
+// - IFPI codes boost confidence (NOT search keys)
 
 interface DiscogsSearchParams {
   matrixNumber: string | null;
-  catalogNumber: string | null;
+  catalogNumber: string | null;  // Used for VALIDATION, not primary search
   barcode: string | null;
   artist: string | null;
   title: string | null;
   label: string | null;
   country: string | null;
-  ifpiMastering: string | null;
-  ifpiMould: string | null;
+  ifpiMastering: string | null;   // Confidence booster only
+  ifpiMould: string | null;       // Confidence booster only
 }
 
 async function searchDiscogsWithMatrix(params: DiscogsSearchParams): Promise<any | null> {
@@ -342,21 +346,40 @@ async function searchDiscogsWithMatrix(params: DiscogsSearchParams): Promise<any
               let confidence = 0;
               const matchReasons: string[] = [];
               
-              // Matrix match is strongest signal
-              if (type === 'matrix' && releaseData.identifiers?.some((id: any) => 
+              // Matrix match is strongest signal (PRIMARY)
+              const matrixMatch = type === 'matrix' && releaseData.identifiers?.some((id: any) => 
                 id.type === 'Matrix / Runout' && 
                 id.value?.toLowerCase().includes(params.matrixNumber?.toLowerCase().slice(0, 8) || '')
-              )) {
-                confidence += 0.5;
-                matchReasons.push('matrix');
+              );
+              if (matrixMatch) {
+                confidence += 0.4;
+                matchReasons.push('matrix_primary');
               }
               
-              // Catalog number match
-              if (params.catalogNumber && releaseData.labels?.some((l: any) => 
-                l.catno?.toLowerCase() === params.catalogNumber?.toLowerCase()
-              )) {
-                confidence += 0.25;
-                matchReasons.push('catno');
+              // Catalog number VALIDATES the matrix match (SECONDARY CONFIRMATION)
+              // OCR reads catalog → confirms Discogs release is correct
+              const discogsCatno = releaseData.labels?.[0]?.catno?.toLowerCase()?.replace(/[\s-]/g, '') || '';
+              const ocrCatno = params.catalogNumber?.toLowerCase()?.replace(/[\s-]/g, '') || '';
+              
+              if (ocrCatno && discogsCatno) {
+                // Check for exact match or partial match (OCR might miss characters)
+                const exactMatch = discogsCatno === ocrCatno;
+                const partialMatch = discogsCatno.includes(ocrCatno) || ocrCatno.includes(discogsCatno);
+                
+                if (exactMatch) {
+                  confidence += 0.35;  // Strong validation
+                  matchReasons.push('catno_exact_validation');
+                  console.log(`✅ Catalog validation: OCR "${params.catalogNumber}" = Discogs "${releaseData.labels?.[0]?.catno}"`);
+                } else if (partialMatch && (ocrCatno.length >= 4 || discogsCatno.length >= 4)) {
+                  confidence += 0.2;   // Partial validation
+                  matchReasons.push('catno_partial_validation');
+                  console.log(`🔶 Partial catalog match: OCR "${params.catalogNumber}" ~ Discogs "${releaseData.labels?.[0]?.catno}"`);
+                } else {
+                  // Catalog mismatch - reduce confidence!
+                  confidence -= 0.1;
+                  matchReasons.push('catno_mismatch');
+                  console.log(`⚠️ Catalog mismatch: OCR "${params.catalogNumber}" ≠ Discogs "${releaseData.labels?.[0]?.catno}"`);
+                }
               }
               
               // IFPI validation (secondary signal, NOT search key)
@@ -518,6 +541,30 @@ serve(async (req) => {
       match_reasons: discogsData?.match_reasons || null,
     };
 
+    // Build validation status notes
+    const validationNotes: string[] = [];
+    
+    if (ocrResult.matrix_number) {
+      validationNotes.push(`Matrix: ${ocrResult.matrix_number}`);
+    }
+    if (ocrResult.catalog_number) {
+      validationNotes.push(`Catalog (OCR): ${ocrResult.catalog_number}`);
+    }
+    if (discogsData?.catalog_number && discogsData.catalog_number !== ocrResult.catalog_number) {
+      validationNotes.push(`Catalog (Discogs): ${discogsData.catalog_number}`);
+    }
+    
+    // Dual validation feedback
+    if (discogsData?.match_reasons) {
+      if (discogsData.match_reasons.includes('catno_exact_validation')) {
+        validationNotes.push('✅ Catalog bevestigt matrix match');
+      } else if (discogsData.match_reasons.includes('catno_partial_validation')) {
+        validationNotes.push('🔶 Catalog deels bevestigd');
+      } else if (discogsData.match_reasons.includes('catno_mismatch')) {
+        validationNotes.push('⚠️ Catalog komt niet overeen - controleer handmatig');
+      }
+    }
+
     // If Discogs found a match and OCR wasn't confident, prefer Discogs data
     if (discogsData && !ocrResult.confidence.verified) {
       console.log('📝 Using Discogs data due to low OCR confidence');
@@ -527,8 +574,12 @@ serve(async (req) => {
         finalResult.artist = artist.trim();
         finalResult.title = title.trim();
         finalResult.confidence.overall = Math.max(0.8, discogsData.match_confidence || 0);
-        finalResult.ocr_notes = `${ocrResult.ocr_notes}\n✅ Bevestigd via Discogs (${discogsData.match_reasons?.join(', ') || 'lookup'}).`;
       }
+    }
+    
+    // Add validation notes to ocr_notes
+    if (validationNotes.length > 0) {
+      finalResult.ocr_notes = `${ocrResult.ocr_notes}\n\n📋 Validatie:\n${validationNotes.join('\n')}`;
     }
 
     console.log('✅ Final result:', JSON.stringify(finalResult));

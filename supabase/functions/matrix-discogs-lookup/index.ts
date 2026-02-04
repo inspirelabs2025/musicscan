@@ -194,8 +194,34 @@ function calculateMatchScore(
   return { score, reasons };
 }
 
+// Check if release is a CD format
+function isCDFormat(formats: string[]): boolean {
+  if (!formats || formats.length === 0) return false;
+  
+  const cdKeywords = ['CD', 'CD-ROM', 'CDr', 'HDCD', 'SACD', 'CD+G', 'Enhanced CD', 'Mini CD'];
+  const vinylKeywords = ['Vinyl', 'LP', '12"', '7"', '10"', '78 RPM', '45 RPM', '33 RPM'];
+  
+  const formatStr = formats.join(' ').toUpperCase();
+  
+  // Explicitly reject if it has vinyl keywords
+  for (const vinyl of vinylKeywords) {
+    if (formatStr.includes(vinyl.toUpperCase())) {
+      return false;
+    }
+  }
+  
+  // Accept if it has CD keywords
+  for (const cd of cdKeywords) {
+    if (formatStr.includes(cd.toUpperCase())) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 async function searchDiscogs(query: string, token: string): Promise<DiscogsSearchResult[]> {
-  const url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&format=CD&per_page=15`;
+  const url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&format=CD&per_page=25`;
   
   console.log(`[matrix-discogs-lookup] Searching: ${query}`);
   
@@ -213,7 +239,19 @@ async function searchDiscogs(query: string, token: string): Promise<DiscogsSearc
   }
   
   const data = await response.json();
-  return data.results || [];
+  const results = data.results || [];
+  
+  // Filter to only CD formats - Discogs API format filter isn't always strict
+  const cdResults = results.filter((r: DiscogsSearchResult) => {
+    const isCD = isCDFormat(r.format);
+    if (!isCD) {
+      console.log(`[matrix-discogs-lookup] Filtered out non-CD: ${r.id} - ${r.title} (format: ${r.format?.join(', ')})`);
+    }
+    return isCD;
+  });
+  
+  console.log(`[matrix-discogs-lookup] ${results.length} results -> ${cdResults.length} CDs`);
+  return cdResults;
 }
 
 async function fetchRelease(releaseId: number, token: string): Promise<DiscogsRelease | null> {

@@ -101,9 +101,9 @@ export function MatrixReviewStep({
                 <div className="flex items-center justify-between mb-4">
                   <TabsList>
                     <TabsTrigger value="compare">Vergelijken</TabsTrigger>
+                    <TabsTrigger value="zoomed">🔍 Zoom Ring</TabsTrigger>
                     <TabsTrigger value="enhanced">Verbeterd</TabsTrigger>
                     <TabsTrigger value="ocr">OCR Laag</TabsTrigger>
-                    <TabsTrigger value="ocr-inv">OCR (Inv)</TabsTrigger>
                   </TabsList>
 
                   {/* Zoom controls */}
@@ -137,6 +137,25 @@ export function MatrixReviewStep({
                   />
                 </TabsContent>
 
+                <TabsContent value="zoomed" className="mt-0">
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground text-center">
+                      Ingezoomd op de matrix ring (2.5× vergroting)
+                    </p>
+                    <div 
+                      className="aspect-square bg-muted rounded-lg overflow-auto"
+                      style={{ cursor: zoom > 1 ? 'grab' : 'default' }}
+                    >
+                      <img
+                        src={result.zoomedRingEnhanced}
+                        alt="Zoomed Matrix Ring"
+                        className="w-full h-full object-contain transition-transform"
+                        style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+
                 <TabsContent value="enhanced" className="mt-0">
                   <div 
                     className="aspect-square bg-muted rounded-lg overflow-auto"
@@ -159,20 +178,6 @@ export function MatrixReviewStep({
                     <img
                       src={result.ocrLayer}
                       alt="OCR Laag"
-                      className="w-full h-full object-contain transition-transform"
-                      style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
-                    />
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="ocr-inv" className="mt-0">
-                  <div 
-                    className="aspect-square bg-black rounded-lg overflow-auto"
-                    style={{ cursor: zoom > 1 ? 'grab' : 'default' }}
-                  >
-                    <img
-                      src={result.ocrLayerInverted}
-                      alt="OCR Laag (geïnverteerd)"
                       className="w-full h-full object-contain transition-transform"
                       style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
                     />

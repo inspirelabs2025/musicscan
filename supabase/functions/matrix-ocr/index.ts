@@ -51,9 +51,9 @@ serve(async (req) => {
   }
 
   try {
-    const { enhancedImage, ocrLayer, ocrLayerInverted } = await req.json();
+    const { enhancedImage, ocrLayer, ocrLayerInverted, zoomedRing, zoomedRingEnhanced } = await req.json();
 
-    if (!enhancedImage && !ocrLayer) {
+    if (!enhancedImage && !ocrLayer && !zoomedRing) {
       return new Response(
         JSON.stringify({ error: "No image provided" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -144,15 +144,23 @@ Return only valid JSON with what you can ACTUALLY SEE.`
       return parsed;
     };
 
-    // Collect all available images
+    // Collect all available images - prioritize zoomed ring (best for matrix text)
     const imagesToAnalyze: { data: string; name: string }[] = [];
     
-    // Always include enhanced image first (best for reading actual text)
-    if (enhancedImage) {
-      imagesToAnalyze.push({ data: enhancedImage, name: "Enhanced preview (contrast-adjusted)" });
+    // PRIORITY 1: Zoomed ring crops (best for reading small matrix text)
+    if (zoomedRingEnhanced) {
+      imagesToAnalyze.push({ data: zoomedRingEnhanced, name: "ZOOMED matrix ring area (enhanced, 2.5x magnification)" });
+    }
+    if (zoomedRing) {
+      imagesToAnalyze.push({ data: zoomedRing, name: "ZOOMED matrix ring area (original, 2.5x magnification)" });
     }
     
-    // Add OCR layer (edge-detected, good for finding text locations)
+    // PRIORITY 2: Full enhanced image
+    if (enhancedImage) {
+      imagesToAnalyze.push({ data: enhancedImage, name: "Full disc enhanced preview" });
+    }
+    
+    // PRIORITY 3: OCR layers (edge-detected)
     if (ocrLayer) {
       imagesToAnalyze.push({ data: ocrLayer, name: "OCR layer (edge-enhanced)" });
     }

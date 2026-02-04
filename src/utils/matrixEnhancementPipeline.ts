@@ -29,6 +29,8 @@ export interface MatrixProcessingResult {
   enhancedPreview: string;
   ocrLayer: string;
   ocrLayerInverted: string;
+  zoomedRing: string;           // Zoomed crop of the matrix ring area
+  zoomedRingEnhanced: string;   // Enhanced version of zoomed ring
   roi: RingDetectionResult | null;
   processingTimeMs: number;
   params: MatrixEnhancementParams;
@@ -149,6 +151,11 @@ export async function processMatrixImage(
   
   const ocrLayerInverted = ocrInvertedCanvas.toDataURL('image/png', 1.0);
   
+  // Step 9: Create zoomed ring crop (focus on matrix text area)
+  const { zoomedRing, zoomedRingEnhanced } = createZoomedRingCrop(
+    canvas, enhancedCanvas, roi, width, height
+  );
+  
   const processingTimeMs = performance.now() - startTime;
   
   console.log(`🔬 Matrix enhancement complete: ${processingTimeMs.toFixed(0)}ms, quality: ${quality.score}`);
@@ -157,11 +164,94 @@ export async function processMatrixImage(
     enhancedPreview,
     ocrLayer,
     ocrLayerInverted,
+    zoomedRing,
+    zoomedRingEnhanced,
     roi,
     processingTimeMs,
     params: fullParams,
     quality
   };
+}
+
+/**
+ * Create a zoomed crop of the matrix ring area
+ * This focuses on the dark ring between the center hole and the rainbow data area
+ */
+function createZoomedRingCrop(
+  originalCanvas: HTMLCanvasElement,
+  enhancedCanvas: HTMLCanvasElement,
+  roi: RingDetectionResult | null,
+  width: number,
+  height: number
+): { zoomedRing: string; zoomedRingEnhanced: string } {
+  // Calculate crop region - the matrix text ring
+  const centerX = roi?.center.x ?? width / 2;
+  const centerY = roi?.center.y ?? height / 2;
+  
+  // Matrix text is typically in a ring between 8-22% of image size from center
+  // Just outside the center hole, before the rainbow data area
+  const minSize = Math.min(width, height);
+  const outerRadius = minSize * 0.25;  // Capture the matrix ring area
+  
+  // Create a crop that captures this ring area
+  const cropSize = outerRadius * 2.2;
+  const cropX = Math.max(0, centerX - cropSize / 2);
+  const cropY = Math.max(0, centerY - cropSize / 2);
+  const actualCropWidth = Math.min(cropSize, width - cropX);
+  const actualCropHeight = Math.min(cropSize, height - cropY);
+  
+  // Create zoomed canvas at higher resolution for better OCR
+  const zoomFactor = 2.5;
+  const zoomedWidth = Math.round(actualCropWidth * zoomFactor);
+  const zoomedHeight = Math.round(actualCropHeight * zoomFactor);
+  
+  // Create zoomed original
+  const zoomedCanvas = document.createElement('canvas');
+  zoomedCanvas.width = zoomedWidth;
+  zoomedCanvas.height = zoomedHeight;
+  const zoomedCtx = zoomedCanvas.getContext('2d')!;
+  
+  // Use high-quality interpolation
+  zoomedCtx.imageSmoothingEnabled = true;
+  zoomedCtx.imageSmoothingQuality = 'high';
+  
+  // Draw cropped and zoomed region from original
+  zoomedCtx.drawImage(
+    originalCanvas,
+    cropX, cropY, actualCropWidth, actualCropHeight,
+    0, 0, zoomedWidth, zoomedHeight
+  );
+  
+  const zoomedRing = zoomedCanvas.toDataURL('image/jpeg', 0.95);
+  
+  // Create zoomed enhanced version
+  const zoomedEnhancedCanvas = document.createElement('canvas');
+  zoomedEnhancedCanvas.width = zoomedWidth;
+  zoomedEnhancedCanvas.height = zoomedHeight;
+  const zoomedEnhancedCtx = zoomedEnhancedCanvas.getContext('2d')!;
+  
+  zoomedEnhancedCtx.imageSmoothingEnabled = true;
+  zoomedEnhancedCtx.imageSmoothingQuality = 'high';
+  
+  // Draw cropped and zoomed region from enhanced
+  zoomedEnhancedCtx.drawImage(
+    enhancedCanvas,
+    cropX, cropY, actualCropWidth, actualCropHeight,
+    0, 0, zoomedWidth, zoomedHeight
+  );
+  
+  // Apply additional sharpening to zoomed version
+  applyUnsharpMask(zoomedEnhancedCtx, zoomedWidth, zoomedHeight, {
+    radius: 0.5,
+    amount: 1.2,
+    threshold: 2
+  });
+  
+  const zoomedRingEnhanced = zoomedEnhancedCanvas.toDataURL('image/jpeg', 0.95);
+  
+  console.log(`🔍 Zoomed ring crop: ${zoomedWidth}x${zoomedHeight} from region (${Math.round(cropX)},${Math.round(cropY)}) size ${Math.round(actualCropWidth)}x${Math.round(actualCropHeight)}`);
+  
+  return { zoomedRing, zoomedRingEnhanced };
 }
 
 // ============== FILTER IMPLEMENTATIONS ==============

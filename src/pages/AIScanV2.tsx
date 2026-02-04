@@ -15,9 +15,9 @@ import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
-import { ScannerPhotoPreview, MatrixVerificationStep } from '@/components/scanner';
+import { ScannerPhotoPreview, MatrixVerificationStep, CDPhotoTips } from '@/components/scanner';
 import type { MatrixVerificationData, MatrixCharacter } from '@/components/scanner';
-import { preprocessImageClient } from '@/utils/clientImagePreprocess';
+import { preprocessImageClient, preprocessCDImageClient } from '@/utils/clientImagePreprocess';
 import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 
 // Simple V2 components for media type and condition selection
@@ -155,12 +155,20 @@ export default function AIScanV2() {
           setUploadedFiles(prev => [...prev, newFile]);
           
           // Then process the image asynchronously
+          // Use CD-specific preprocessing if CD is selected
           try {
-            const preprocessResult = await preprocessImageClient(file, {
-              maxDimension: 1600,
-              applyContrast: true,
-              quality: 0.85
-            });
+            const preprocessResult = mediaType === 'cd' 
+              ? await preprocessCDImageClient(file, {
+                  maxDimension: 1600,
+                  applyContrast: true,
+                  quality: 0.85,
+                  applyCDMatrixFilter: true
+                })
+              : await preprocessImageClient(file, {
+                  maxDimension: 1600,
+                  applyContrast: true,
+                  quality: 0.85
+                });
             
             // Update the file with processed preview
             setUploadedFiles(prev => prev.map(f => 
@@ -176,6 +184,17 @@ export default function AIScanV2() {
                   }
                 : f
             ));
+            
+            // Show feedback for CD filtering
+            if (mediaType === 'cd' && 'cdFilterStats' in preprocessResult && preprocessResult.cdFilterStats) {
+              const stats = preprocessResult.cdFilterStats as { reflectionPixelsFiltered: number; avgColorVariation: number };
+              if (stats.avgColorVariation > 40) {
+                toast({
+                  title: "Reflecties gedetecteerd",
+                  description: `${stats.reflectionPixelsFiltered.toLocaleString()} pixels gefilterd voor betere matrix herkenning.`,
+                });
+              }
+            }
           } catch (err) {
             console.warn('Preprocessing failed, using original:', err);
           }
@@ -183,7 +202,7 @@ export default function AIScanV2() {
         reader.readAsDataURL(file);
       }
     }
-  }, []);
+  }, [mediaType]);
   const removeFile = useCallback((id: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== id));
   }, []);
@@ -447,6 +466,11 @@ export default function AIScanV2() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* CD Photo Tips - only shown when CD is selected */}
+            {mediaType === 'cd' && (
+              <CDPhotoTips />
+            )}
 
             {/* Condition Grade Selection */}
             <Card>

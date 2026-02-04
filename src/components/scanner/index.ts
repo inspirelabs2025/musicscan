@@ -8,4 +8,5 @@ export { OCRCharacterHighlight } from './OCRCharacterHighlight';
 export { UserConfirmationFeedback } from './UserConfirmationFeedback';
 export { ScannerPhotoPreview } from './ScannerPhotoPreview';
 export { MatrixVerificationStep } from './MatrixVerificationStep';
+export { CDPhotoTips } from './CDPhotoTips';
 export type { MatrixCharacter, MatrixVerificationData } from './MatrixVerificationStep';

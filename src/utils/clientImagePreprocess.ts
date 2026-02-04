@@ -220,6 +220,197 @@ function applyLightContrast(
   ctx.putImageData(imageData, 0, 0);
 }
 
+// ============== CD Matrix Specific Filters ==============
+
+/**
+ * CD-specifieke preprocessing voor matrix nummer herkenning
+ * 
+ * Strategie: Min-channel filter
+ * - Regenboog reflecties variëren sterk per RGB kanaal
+ * - Gegraveerde tekst is uniform grijs (alle kanalen gelijk)
+ * - Door het MINIMUM te nemen van R/G/B onderdrukken we kleurrijke reflecties
+ * 
+ * @param ctx - Canvas context met de afbeelding
+ * @param width - Breedte van de afbeelding
+ * @param height - Hoogte van de afbeelding
+ * @param options - Optionele instellingen voor de filter
+ */
+export function preprocessCDMatrix(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  options: {
+    /** Boost factor voor het minimum kanaal (default: 1.3) */
+    boostFactor?: number;
+    /** Extra lokale contrast in hub-gebied (default: true) */
+    enhanceHubArea?: boolean;
+    /** Hub radius als fractie van kleinste dimensie (default: 0.35) */
+    hubRadiusFraction?: number;
+  } = {}
+): {
+  /** Aantal pixels waar reflectie werd gedetecteerd en onderdrukt */
+  reflectionPixelsFiltered: number;
+  /** Gemiddelde kleurvariatie (hogere waarde = meer reflectie) */
+  avgColorVariation: number;
+  /** Processing tijd in ms */
+  processingTimeMs: number;
+} {
+  const startTime = performance.now();
+  const {
+    boostFactor = 1.3,
+    enhanceHubArea = true,
+    hubRadiusFraction = 0.35
+  } = options;
+
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+  
+  // Calculate center and hub radius for optional hub enhancement
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const hubRadius = Math.min(width, height) * hubRadiusFraction;
+  
+  let reflectionPixelsFiltered = 0;
+  let totalColorVariation = 0;
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      // Calculate color variation (indicator of reflection)
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const colorVariation = max - min;
+      totalColorVariation += colorVariation;
+      
+      // Min-channel filter: neem het minimum van R/G/B
+      // Dit onderdrukt kleurrijke reflecties (die sterk zijn in 1-2 kanalen)
+      // terwijl grijze tekst (uniform in alle kanalen) behouden blijft
+      let enhanced = min * boostFactor;
+      
+      // Check if this pixel had significant color variation (reflection)
+      if (colorVariation > 30) {
+        reflectionPixelsFiltered++;
+      }
+      
+      // Optional: Extra enhancement in hub area (where matrix codes are)
+      if (enhanceHubArea) {
+        const distFromCenter = Math.sqrt(
+          Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
+        );
+        
+        // If in hub area, apply extra local contrast
+        if (distFromCenter < hubRadius) {
+          // Contrast stretch factor increases toward center
+          const hubFactor = 1 + 0.2 * (1 - distFromCenter / hubRadius);
+          enhanced = enhanced * hubFactor;
+        }
+      }
+      
+      // Clamp to valid range
+      enhanced = Math.min(255, Math.max(0, Math.round(enhanced)));
+      
+      // Set all channels to the enhanced grayscale value
+      data[i] = enhanced;
+      data[i + 1] = enhanced;
+      data[i + 2] = enhanced;
+      // Alpha channel unchanged
+    }
+  }
+  
+  ctx.putImageData(imageData, 0, 0);
+  
+  const processingTimeMs = performance.now() - startTime;
+  const avgColorVariation = totalColorVariation / (width * height);
+  
+  console.log(`🔵 CD Matrix preprocessing: ${processingTimeMs.toFixed(0)}ms`);
+  console.log(`   - Reflectie pixels gefilterd: ${reflectionPixelsFiltered}`);
+  console.log(`   - Gem. kleurvariatie: ${avgColorVariation.toFixed(1)}`);
+  
+  return {
+    reflectionPixelsFiltered,
+    avgColorVariation,
+    processingTimeMs
+  };
+}
+
+/**
+ * Volledige CD preprocessing pipeline
+ * Combineert basis preprocessing met CD-specifieke matrix filtering
+ */
+export async function preprocessCDImageClient(
+  imageInput: File | string,
+  options: PreprocessOptions & {
+    /** Apply CD-specific matrix filter (default: true) */
+    applyCDMatrixFilter?: boolean;
+  } = {}
+): Promise<ClientPreprocessResult & {
+  cdFilterStats?: {
+    reflectionPixelsFiltered: number;
+    avgColorVariation: number;
+  };
+}> {
+  const startTime = performance.now();
+  const {
+    maxDimension = 1600,
+    applyContrast = true,
+    quality = 0.85,
+    applyCDMatrixFilter = true
+  } = options;
+  
+  // Load image
+  const img = await loadImage(imageInput);
+  const originalSize = imageInput instanceof File ? imageInput.size : 0;
+  
+  // Create canvas
+  const { canvas, ctx, wasResized } = createOptimizedCanvas(img, maxDimension);
+  
+  // Draw original
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  
+  // Get original for comparison
+  const originalImage = canvas.toDataURL('image/jpeg', quality);
+  
+  // Apply CD matrix filter if enabled
+  let cdFilterStats;
+  if (applyCDMatrixFilter) {
+    cdFilterStats = preprocessCDMatrix(ctx, canvas.width, canvas.height);
+  }
+  
+  // Apply light contrast on top if enabled
+  let contrastApplied = false;
+  if (applyContrast) {
+    applyLightContrast(ctx, canvas.width, canvas.height);
+    contrastApplied = true;
+  }
+  
+  // Export processed image
+  const processedImage = canvas.toDataURL('image/jpeg', quality);
+  
+  const processingTimeMs = performance.now() - startTime;
+  
+  console.log(`📸 CD preprocessing complete: ${processingTimeMs.toFixed(0)}ms`);
+  
+  return {
+    processedImage,
+    originalImage,
+    stats: {
+      originalSize,
+      processedSize: Math.round(processedImage.length * 0.75),
+      processingTimeMs,
+      wasResized,
+      contrastApplied,
+    },
+    cdFilterStats: cdFilterStats ? {
+      reflectionPixelsFiltered: cdFilterStats.reflectionPixelsFiltered,
+      avgColorVariation: cdFilterStats.avgColorVariation
+    } : undefined
+  };
+}
+
 /**
  * Quick quality check for preview feedback
  */

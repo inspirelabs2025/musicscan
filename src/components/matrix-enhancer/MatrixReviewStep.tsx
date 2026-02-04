@@ -99,10 +99,11 @@ export function MatrixReviewStep({
             <CardContent className="p-4">
               <Tabs value={selectedTab} onValueChange={setSelectedTab}>
                 <div className="flex items-center justify-between mb-4">
-                  <TabsList>
+                <TabsList className="flex-wrap h-auto gap-1">
                     <TabsTrigger value="compare">Vergelijken</TabsTrigger>
                     <TabsTrigger value="zoomed">🔍 Matrix Ring</TabsTrigger>
                     <TabsTrigger value="ifpi">🔍 IFPI Ring</TabsTrigger>
+                    <TabsTrigger value="superifpi">🔬 Super Zoom</TabsTrigger>
                     <TabsTrigger value="enhanced">Verbeterd</TabsTrigger>
                     <TabsTrigger value="ocr">OCR Laag</TabsTrigger>
                   </TabsList>
@@ -169,6 +170,25 @@ export function MatrixReviewStep({
                       <img
                         src={result.zoomedIfpiRingEnhanced}
                         alt="Zoomed IFPI Ring"
+                        className="w-full h-full object-contain transition-transform"
+                        style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="superifpi" className="mt-0">
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground text-center">
+                      🔬 Super Zoom (5x) op allerkleinste ring - voor embossed/gestampte IFPI codes
+                    </p>
+                    <div 
+                      className="aspect-square bg-muted rounded-lg overflow-auto"
+                      style={{ cursor: zoom > 1 ? 'grab' : 'default' }}
+                    >
+                      <img
+                        src={result.superZoomIfpiEnhanced}
+                        alt="Super Zoomed IFPI Ring"
                         className="w-full h-full object-contain transition-transform"
                         style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
                       />

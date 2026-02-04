@@ -19,20 +19,23 @@ IFPI codes are MANDATORY to look for. They appear as:
 - Sometimes just the letters I-F-P-I spaced around the ring
 - Often STAMPED (raised/embossed) rather than engraved - look for subtle shadows
 - Located in the MIRROR BAND (shiny area between center hole and data area)
-- Can be VERY small - zoom in mentally on the inner rings
+- Can be VERY small (< 2mm) - examine the super-zoom images carefully!
 
 **WHERE TO LOOK:**
 - OUTER RING (35-50% from center): Matrix/catalog numbers
 - MIDDLE RING (15-35% from center): IFPI mastering SID, additional codes  
 - INNER RING (5-15% from center): IFPI mould SID (L-codes), stamper marks
 - MIRROR BAND (reflective area near hole): Often contains stamped IFPI
+- ABOVE "Germany" or other country text: IFPI codes are often located just above this text
 
-**READING TECHNIQUES:**
-- IFPI text is often faint - look for subtle letter shapes
-- Check for embossed/raised text casting shadows
+**READING TECHNIQUES FOR TINY EMBOSSED TEXT:**
+- SUPER-ZOOM images (5x magnification) show the innermost ring at 3-15% radius
+- Embossed text creates subtle directional shadows - look for slight darkness variations
+- IFPI letters may be RAISED (embossed) not engraved - they catch light differently
+- Text is often lighter than surrounding area due to how embossing reflects light
 - Letters may be spaced out: I  F  P  I  L  0  2  8
-- Rotate your mental view - text goes around the ring
-- If you see "IFPI" anywhere, report it even with low confidence
+- The characters are often < 2mm in height - require careful examination
+- Look for faint "IFPI" text ABOVE any other visible text like "Germany", "Made in", etc.
 
 **ANTI-HALLUCINATION:**
 - Only report what you ACTUALLY see
@@ -48,7 +51,7 @@ IFPI codes are MANDATORY to look for. They appear as:
     {"text": "IFPI L028", "type": "ifpi", "confidence": 0.7}
   ],
   "overall_confidence": 0.0-1.0,
-  "notes": "Describe what you found in each ring area. If no IFPI found, explain where you looked."
+  "notes": "Describe what you found in each ring area. If no IFPI found, explain where you looked and what you saw."
 }`;
 
 serve(async (req) => {
@@ -64,10 +67,12 @@ serve(async (req) => {
       zoomedRing, 
       zoomedRingEnhanced,
       zoomedIfpiRing,
-      zoomedIfpiRingEnhanced 
+      zoomedIfpiRingEnhanced,
+      superZoomIfpi,
+      superZoomIfpiEnhanced
     } = await req.json();
 
-    if (!enhancedImage && !ocrLayer && !zoomedRing && !zoomedIfpiRing) {
+    if (!enhancedImage && !ocrLayer && !zoomedRing && !zoomedIfpiRing && !superZoomIfpi) {
       return new Response(
         JSON.stringify({ error: "No image provided" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -161,7 +166,15 @@ Return only valid JSON with what you can ACTUALLY SEE.`
     // Collect all available images - include both matrix and IFPI zones
     const imagesToAnalyze: { data: string; name: string }[] = [];
     
-    // PRIORITY 1: Zoomed IFPI ring crops (inner ring for IFPI codes)
+    // PRIORITY 1 (HIGHEST): Super-zoom IFPI crops (innermost ring, 5x zoom for tiny embossed text)
+    if (superZoomIfpiEnhanced) {
+      imagesToAnalyze.push({ data: superZoomIfpiEnhanced, name: "SUPER-ZOOM IFPI (innermost ring, 5x zoom, enhanced) - LOOK FOR TINY EMBOSSED IFPI CODES HERE - text is often ABOVE 'Germany'" });
+    }
+    if (superZoomIfpi) {
+      imagesToAnalyze.push({ data: superZoomIfpi, name: "SUPER-ZOOM IFPI (innermost ring, 5x zoom, original) - CHECK FOR FAINT STAMPED IFPI TEXT" });
+    }
+    
+    // PRIORITY 2: Zoomed IFPI ring crops (inner ring for IFPI codes)
     if (zoomedIfpiRingEnhanced) {
       imagesToAnalyze.push({ data: zoomedIfpiRingEnhanced, name: "INNER RING (IFPI zone) - enhanced, 3x zoom - LOOK FOR IFPI CODES HERE" });
     }
@@ -169,7 +182,7 @@ Return only valid JSON with what you can ACTUALLY SEE.`
       imagesToAnalyze.push({ data: zoomedIfpiRing, name: "INNER RING (IFPI zone) - original, 3x zoom - CHECK FOR IFPI TEXT" });
     }
     
-    // PRIORITY 2: Zoomed matrix ring crops (outer ring for catalog/matrix)
+    // PRIORITY 3: Zoomed matrix ring crops (outer ring for catalog/matrix)
     if (zoomedRingEnhanced) {
       imagesToAnalyze.push({ data: zoomedRingEnhanced, name: "OUTER RING (matrix zone) - enhanced, 2.5x zoom - CATALOG/MATRIX numbers here" });
     }
@@ -177,12 +190,12 @@ Return only valid JSON with what you can ACTUALLY SEE.`
       imagesToAnalyze.push({ data: zoomedRing, name: "OUTER RING (matrix zone) - original, 2.5x zoom" });
     }
     
-    // PRIORITY 3: Full enhanced image (overview)
+    // PRIORITY 4: Full enhanced image (overview)
     if (enhancedImage) {
       imagesToAnalyze.push({ data: enhancedImage, name: "Full disc overview - enhanced" });
     }
     
-    // PRIORITY 4: OCR layers (edge-detected)
+    // PRIORITY 5: OCR layers (edge-detected)
     if (ocrLayer) {
       imagesToAnalyze.push({ data: ocrLayer, name: "OCR edge-detection layer" });
     }

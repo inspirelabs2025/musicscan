@@ -33,6 +33,8 @@ export interface MatrixProcessingResult {
   zoomedRingEnhanced: string;   // Enhanced version of zoomed ring
   zoomedIfpiRing: string;       // Zoomed crop of inner ring area (for IFPI codes)
   zoomedIfpiRingEnhanced: string; // Enhanced version of IFPI ring
+  superZoomIfpi: string;        // Super-zoomed crop of innermost ring (3-15% radius, 5x zoom)
+  superZoomIfpiEnhanced: string; // Enhanced version with embossed-text filters
   roi: RingDetectionResult | null;
   processingTimeMs: number;
   params: MatrixEnhancementParams;
@@ -163,6 +165,11 @@ export async function processMatrixImage(
     canvas, enhancedCanvas, roi, width, height
   );
   
+  // Step 11: Create super-zoom IFPI crop (innermost ring, 5x zoom for tiny embossed text)
+  const { superZoomIfpi, superZoomIfpiEnhanced } = createSuperZoomIfpiCrop(
+    canvas, enhancedCanvas, roi, width, height
+  );
+  
   const processingTimeMs = performance.now() - startTime;
   
   console.log(`🔬 Matrix enhancement complete: ${processingTimeMs.toFixed(0)}ms, quality: ${quality.score}`);
@@ -175,6 +182,8 @@ export async function processMatrixImage(
     zoomedRingEnhanced,
     zoomedIfpiRing,
     zoomedIfpiRingEnhanced,
+    superZoomIfpi,
+    superZoomIfpiEnhanced,
     roi,
     processingTimeMs,
     params: fullParams,
@@ -341,6 +350,167 @@ function createZoomedIfpiRingCrop(
   console.log(`🔍 Zoomed IFPI ring crop: ${zoomedWidth}x${zoomedHeight} (radius 8-40% for IFPI/SID codes)`);
   
   return { zoomedIfpiRing, zoomedIfpiRingEnhanced };
+}
+
+/**
+ * Create a SUPER-ZOOMED crop of the innermost IFPI ring area
+ * This targets the tiny embossed/stamped IFPI codes near the center hole
+ * 
+ * Parameters optimized for tiny text:
+ * - Inner radius: 3% (very close to center hole)
+ * - Outer radius: 15% (only the innermost ring)
+ * - Zoom factor: 5.0x (aggressive magnification)
+ * - Enhanced contrast for embossed/stamped text
+ */
+function createSuperZoomIfpiCrop(
+  originalCanvas: HTMLCanvasElement,
+  enhancedCanvas: HTMLCanvasElement,
+  roi: RingDetectionResult | null,
+  width: number,
+  height: number
+): { superZoomIfpi: string; superZoomIfpiEnhanced: string } {
+  const centerX = roi?.center.x ?? width / 2;
+  const centerY = roi?.center.y ?? height / 2;
+  
+  const minSize = Math.min(width, height);
+  
+  // Super-focused on the innermost ring where IFPI mould SID codes are located
+  // This is the "mirror band" area just outside the center hole
+  const innerRadius = minSize * 0.03;  // Very close to center (3%)
+  const outerRadius = minSize * 0.15;  // Only innermost ring (15%)
+  
+  // Create a tight crop around this narrow zone
+  const cropSize = outerRadius * 2.2;
+  const cropX = Math.max(0, centerX - cropSize / 2);
+  const cropY = Math.max(0, centerY - cropSize / 2);
+  const actualCropWidth = Math.min(cropSize, width - cropX);
+  const actualCropHeight = Math.min(cropSize, height - cropY);
+  
+  // Very high zoom for tiny text (5x)
+  const zoomFactor = 5.0;
+  const zoomedWidth = Math.round(actualCropWidth * zoomFactor);
+  const zoomedHeight = Math.round(actualCropHeight * zoomFactor);
+  
+  // Create zoomed original
+  const zoomedCanvas = document.createElement('canvas');
+  zoomedCanvas.width = zoomedWidth;
+  zoomedCanvas.height = zoomedHeight;
+  const zoomedCtx = zoomedCanvas.getContext('2d')!;
+  
+  zoomedCtx.imageSmoothingEnabled = true;
+  zoomedCtx.imageSmoothingQuality = 'high';
+  
+  zoomedCtx.drawImage(
+    originalCanvas,
+    cropX, cropY, actualCropWidth, actualCropHeight,
+    0, 0, zoomedWidth, zoomedHeight
+  );
+  
+  const superZoomIfpi = zoomedCanvas.toDataURL('image/jpeg', 0.95);
+  
+  // Create super-enhanced version for embossed text detection
+  const zoomedEnhancedCanvas = document.createElement('canvas');
+  zoomedEnhancedCanvas.width = zoomedWidth;
+  zoomedEnhancedCanvas.height = zoomedHeight;
+  const zoomedEnhancedCtx = zoomedEnhancedCanvas.getContext('2d')!;
+  
+  zoomedEnhancedCtx.imageSmoothingEnabled = true;
+  zoomedEnhancedCtx.imageSmoothingQuality = 'high';
+  
+  zoomedEnhancedCtx.drawImage(
+    enhancedCanvas,
+    cropX, cropY, actualCropWidth, actualCropHeight,
+    0, 0, zoomedWidth, zoomedHeight
+  );
+  
+  // Apply CLAHE with higher clip limit for embossed text shadows
+  applyCLAHE(zoomedEnhancedCtx, zoomedWidth, zoomedHeight, {
+    clipLimit: 3.5,  // Higher than normal for maximum local contrast
+    tileSize: 8      // Smaller tiles for fine detail
+  });
+  
+  // Apply aggressive sharpening for tiny text
+  applyUnsharpMask(zoomedEnhancedCtx, zoomedWidth, zoomedHeight, {
+    radius: 0.3,     // Tight radius for small text
+    amount: 2.0,     // Strong sharpening
+    threshold: 1     // Low threshold to catch faint details
+  });
+  
+  // Apply embossed text shadow enhancement
+  applyEmbossedTextEnhancement(zoomedEnhancedCtx, zoomedWidth, zoomedHeight);
+  
+  const superZoomIfpiEnhanced = zoomedEnhancedCanvas.toDataURL('image/jpeg', 0.95);
+  
+  console.log(`🔬 Super-zoom IFPI crop: ${zoomedWidth}x${zoomedHeight} (radius 3-15%, 5x zoom for tiny embossed IFPI codes)`);
+  
+  return { superZoomIfpi, superZoomIfpiEnhanced };
+}
+
+/**
+ * Enhance embossed/stamped text by amplifying subtle shadows
+ * This helps make raised/debossed text more visible
+ */
+function applyEmbossedTextEnhancement(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number
+): void {
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+  
+  // Create a copy for edge detection
+  const edgeData = new Uint8ClampedArray(data);
+  
+  // Apply directional Sobel-like operator to detect embossed shadows
+  // Embossed text creates directional shadows at consistent angles
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const idx = (y * width + x) * 4;
+      
+      // Get surrounding pixel values
+      const topLeft = data[((y - 1) * width + (x - 1)) * 4];
+      const top = data[((y - 1) * width + x) * 4];
+      const topRight = data[((y - 1) * width + (x + 1)) * 4];
+      const left = data[(y * width + (x - 1)) * 4];
+      const center = data[idx];
+      const right = data[(y * width + (x + 1)) * 4];
+      const bottomLeft = data[((y + 1) * width + (x - 1)) * 4];
+      const bottom = data[((y + 1) * width + x) * 4];
+      const bottomRight = data[((y + 1) * width + (x + 1)) * 4];
+      
+      // Calculate directional gradient (favoring top-left to bottom-right shadows)
+      // This is typical for embossed text lit from above
+      const gradient = Math.abs(
+        (topLeft + 2 * top + topRight) - (bottomLeft + 2 * bottom + bottomRight) +
+        (topLeft + 2 * left + bottomLeft) - (topRight + 2 * right + bottomRight)
+      ) / 8;
+      
+      // Enhance edges while preserving midtones
+      const enhanced = Math.min(255, center + gradient * 0.5);
+      
+      edgeData[idx] = enhanced;
+      edgeData[idx + 1] = enhanced;
+      edgeData[idx + 2] = enhanced;
+    }
+  }
+  
+  // Blend edge-enhanced back with original with higher weight on edges
+  for (let i = 0; i < data.length; i += 4) {
+    const original = data[i];
+    const edge = edgeData[i];
+    
+    // Use edge detection to boost local contrast
+    const diff = Math.abs(edge - original);
+    const boost = diff > 10 ? 0.4 : 0.2;  // Boost more in edge areas
+    
+    const blended = Math.min(255, Math.max(0, original + (edge - original) * boost));
+    
+    data[i] = blended;
+    data[i + 1] = blended;
+    data[i + 2] = blended;
+  }
+  
+  ctx.putImageData(imageData, 0, 0);
 }
 
 // ============== FILTER IMPLEMENTATIONS ==============

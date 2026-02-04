@@ -149,7 +149,7 @@ export default function CDMatrixEnhancer() {
     const startTime = performance.now();
     
     try {
-      // Call the OCR edge function with both matrix and IFPI ring zones
+      // Call the OCR edge function with all ring zones including super-zoom
       const { data, error } = await supabase.functions.invoke('matrix-ocr', {
         body: {
           enhancedImage: enhancementResult.enhancedPreview,
@@ -159,6 +159,8 @@ export default function CDMatrixEnhancer() {
           zoomedRingEnhanced: enhancementResult.zoomedRingEnhanced,
           zoomedIfpiRing: enhancementResult.zoomedIfpiRing,
           zoomedIfpiRingEnhanced: enhancementResult.zoomedIfpiRingEnhanced,
+          superZoomIfpi: enhancementResult.superZoomIfpi,
+          superZoomIfpiEnhanced: enhancementResult.superZoomIfpiEnhanced,
         }
       });
       

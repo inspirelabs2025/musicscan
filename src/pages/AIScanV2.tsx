@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info, Camera, Zap } from 'lucide-react';
+import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
@@ -16,9 +15,9 @@ import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
-import { ScannerPhotoPreview, MatrixVerificationStep, CDPhotoTips, ExtremeEnhancementPreview } from '@/components/scanner';
+import { ScannerPhotoPreview, MatrixVerificationStep, CDPhotoTips } from '@/components/scanner';
 import type { MatrixVerificationData, MatrixCharacter } from '@/components/scanner';
-import { preprocessImageClient, preprocessCDImageClient, extremeMatrixEnhancement, type ExtremeEnhancementResult } from '@/utils/clientImagePreprocess';
+import { preprocessImageClient, preprocessCDImageClient } from '@/utils/clientImagePreprocess';
 import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 
 // Simple V2 components for media type and condition selection
@@ -92,11 +91,6 @@ export default function AIScanV2() {
   const [verificationStep, setVerificationStep] = useState<'pending' | 'verifying' | 'verified' | 'skipped'>('pending');
   const [verifiedMatrixNumber, setVerifiedMatrixNumber] = useState<string | null>(null);
   
-  // Extreme enhancement mode
-  const [extremeMode, setExtremeMode] = useState(false);
-  const [extremeEnhancementResult, setExtremeEnhancementResult] = useState<ExtremeEnhancementResult | null>(null);
-  const [isProcessingExtreme, setIsProcessingExtreme] = useState(false);
-  
   const {
     checkUsageLimit,
     incrementUsage
@@ -160,89 +154,54 @@ export default function AIScanV2() {
           };
           setUploadedFiles(prev => [...prev, newFile]);
           
-          // Process based on mode
+          // Process with standard preprocessing
           try {
-            // If extreme mode is enabled for CD, run extreme enhancement
-            if (mediaType === 'cd' && extremeMode) {
-              setIsProcessingExtreme(true);
-              const extremeResult = await extremeMatrixEnhancement(file, {
-                autoCrop: true,
-                blockSize: 32,
-                binarizeC: 12
-              });
-              
-              setExtremeEnhancementResult(extremeResult);
-              setIsProcessingExtreme(false);
-              
-              // Update file with binarized version as processed preview
-              setUploadedFiles(prev => prev.map(f => 
-                f.id === id 
-                  ? {
-                      ...f,
-                      processedPreview: extremeResult.variants.binarized,
-                      processingStats: {
-                        contrastApplied: true,
-                        wasResized: extremeResult.cropApplied,
-                        processingTimeMs: extremeResult.processingTimeMs
-                      }
+            const preprocessResult = mediaType === 'cd' 
+              ? await preprocessCDImageClient(file, {
+                  maxDimension: 1600,
+                  applyContrast: true,
+                  quality: 0.85,
+                  applyCDMatrixFilter: true
+                })
+              : await preprocessImageClient(file, {
+                  maxDimension: 1600,
+                  applyContrast: true,
+                  quality: 0.85
+                });
+            
+            // Update the file with processed preview
+            setUploadedFiles(prev => prev.map(f => 
+              f.id === id 
+                ? {
+                    ...f,
+                    processedPreview: preprocessResult.processedImage,
+                    processingStats: {
+                      contrastApplied: preprocessResult.stats.contrastApplied,
+                      wasResized: preprocessResult.stats.wasResized,
+                      processingTimeMs: preprocessResult.stats.processingTimeMs
                     }
-                  : f
-              ));
-              
-              toast({
-                title: "Extreme verbetering toegepast",
-                description: `Hub ${extremeResult.hubDetected ? 'gedetecteerd' : 'niet gevonden'}, kwaliteit: ${extremeResult.qualityScore}`,
-              });
-            } else {
-              // Standard preprocessing
-              const preprocessResult = mediaType === 'cd' 
-                ? await preprocessCDImageClient(file, {
-                    maxDimension: 1600,
-                    applyContrast: true,
-                    quality: 0.85,
-                    applyCDMatrixFilter: true
-                  })
-                : await preprocessImageClient(file, {
-                    maxDimension: 1600,
-                    applyContrast: true,
-                    quality: 0.85
-                  });
-              
-              // Update the file with processed preview
-              setUploadedFiles(prev => prev.map(f => 
-                f.id === id 
-                  ? {
-                      ...f,
-                      processedPreview: preprocessResult.processedImage,
-                      processingStats: {
-                        contrastApplied: preprocessResult.stats.contrastApplied,
-                        wasResized: preprocessResult.stats.wasResized,
-                        processingTimeMs: preprocessResult.stats.processingTimeMs
-                      }
-                    }
-                  : f
-              ));
-              
-              // Show feedback for CD filtering
-              if (mediaType === 'cd' && 'cdFilterStats' in preprocessResult && preprocessResult.cdFilterStats) {
-                const stats = preprocessResult.cdFilterStats as { reflectionPixelsFiltered: number; avgColorVariation: number };
-                if (stats.avgColorVariation > 40) {
-                  toast({
-                    title: "Reflecties gedetecteerd",
-                    description: `${stats.reflectionPixelsFiltered.toLocaleString()} pixels gefilterd voor betere matrix herkenning.`,
-                  });
-                }
+                  }
+                : f
+            ));
+            
+            // Show feedback for CD filtering
+            if (mediaType === 'cd' && 'cdFilterStats' in preprocessResult && preprocessResult.cdFilterStats) {
+              const stats = preprocessResult.cdFilterStats as { reflectionPixelsFiltered: number; avgColorVariation: number };
+              if (stats.avgColorVariation > 40) {
+                toast({
+                  title: "Reflecties gedetecteerd",
+                  description: `${stats.reflectionPixelsFiltered.toLocaleString()} pixels gefilterd voor betere matrix herkenning.`,
+                });
               }
             }
           } catch (err) {
             console.warn('Preprocessing failed, using original:', err);
-            setIsProcessingExtreme(false);
           }
         };
         reader.readAsDataURL(file);
       }
     }
-  }, [mediaType, extremeMode]);
+  }, [mediaType]);
   const removeFile = useCallback((id: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== id));
   }, []);
@@ -397,8 +356,6 @@ export default function AIScanV2() {
     setAnalysisProgress(0);
     setVerificationStep('pending');
     setVerifiedMatrixNumber(null);
-    setExtremeMode(false);
-    setExtremeEnhancementResult(null);
     resetSearchState();
   };
 
@@ -514,92 +471,22 @@ export default function AIScanV2() {
               <div className="space-y-4">
                 <CDPhotoTips />
                 
-                {/* Extreme Enhancement Toggle */}
-                <Card className="border-orange-500/30 bg-orange-500/5">
+                {/* Directe link naar Matrix Enhancer */}
+                <Card className="border-primary/30 bg-primary/5">
                   <CardContent className="pt-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Zap className="h-4 w-4 text-orange-500" />
-                          <span className="font-medium text-sm">Extreme Modus</span>
-                          <Badge variant="outline" className="text-xs bg-orange-500/10 text-orange-600 border-orange-500/30">
-                            NIEUW
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Voor moeilijke foto's met zware reflecties of vage gravures
-                        </p>
-                      </div>
-                      <Switch
-                        checked={extremeMode}
-                        onCheckedChange={(checked) => {
-                          setExtremeMode(checked);
-                          setExtremeEnhancementResult(null);
-                        }}
-                      />
-                    </div>
-                    
-                    {extremeMode && (
-                      <div className="mt-3 p-2 rounded bg-muted/50 text-xs text-muted-foreground">
-                        <p>✨ <strong>Extreme modus actief:</strong></p>
-                        <ul className="list-disc ml-4 mt-1 space-y-0.5">
-                          <li>Automatische hub detectie & crop</li>
-                          <li>Agressieve reflectie onderdrukking</li>
-                          <li>Adaptieve zwart/wit binarisatie</li>
-                          <li>Multi-variant AI analyse</li>
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {/* Link naar standalone Matrix Enhancer */}
-                    <div className="mt-3 pt-3 border-t border-orange-500/20">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full gap-2 text-primary border-primary/30 hover:bg-primary/10"
-                        onClick={() => navigate('/cd-matrix-enhancer')}
-                      >
-                        <Sparkles className="h-4 w-4" />
-                        Open Matrix Enhancer (Geavanceerd)
-                      </Button>
-                      <p className="text-xs text-muted-foreground mt-2 text-center">
-                        Handmatige tuning van alle enhancement parameters
-                      </p>
-                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={() => navigate('/cd-matrix-enhancer')}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Open Matrix Enhancer (Geavanceerd)
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      Handmatige tuning voor moeilijke CD foto's
+                    </p>
                   </CardContent>
                 </Card>
-                
-                {/* Extreme Enhancement Preview - shown after processing */}
-                {isProcessingExtreme && (
-                  <Card>
-                    <CardContent className="pt-4">
-                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-sm">Extreme verbetering wordt toegepast...</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                
-                {extremeEnhancementResult && !isProcessingExtreme && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-orange-500" />
-                        Extreme Verbetering Preview
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ExtremeEnhancementPreview
-                        variants={extremeEnhancementResult.variants}
-                        hubDetected={extremeEnhancementResult.hubDetected}
-                        cropApplied={extremeEnhancementResult.cropApplied}
-                        qualityScore={extremeEnhancementResult.qualityScore}
-                        reflectionLevel={extremeEnhancementResult.reflectionLevel}
-                      />
-                    </CardContent>
-                  </Card>
-                )}
               </div>
             )}
 

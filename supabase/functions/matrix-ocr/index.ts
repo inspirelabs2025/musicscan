@@ -7,51 +7,52 @@ const corsHeaders = {
 
 const OCR_PROMPT = `You are an expert OCR system specialized in reading engraved and stamped text from CD inner rings.
 
-**YOUR MISSION:**
-Find ALL text on this CD, especially:
-1. MATRIX/CATALOG numbers (outer ring) - long numeric codes like "4904512 04 6"
-2. IFPI codes (inner/middle ring) - CRITICAL to find these!
+**YOUR MISSION - FIND BOTH:**
+1. **MATRIX NUMBER (OUTER RING)** - CRITICAL! Long alphanumeric codes like "4904512 04 6", "519 613-2 04" - this is the PRIMARY identifier
+2. **IFPI codes (INNER RING)** - Small codes like "IFPI 01H3" or "IFPI L028"
 
-**IFPI CODE DETECTION - HIGHEST PRIORITY:**
-IFPI codes are MANDATORY to look for. They appear as:
-- "IFPI L" followed by 3 characters (mould SID): IFPI L028, IFPI L551, IFPI LV23
-- "IFPI" followed by 4 characters (mastering SID): IFPI 0110, IFPI 4A11, IFPI 94Z2
-- Sometimes just the letters I-F-P-I spaced around the ring
-- Often STAMPED (raised/embossed) rather than engraved - look for subtle shadows
-- Located in the MIRROR BAND (shiny area between center hole and data area)
-- Can be VERY small (< 2mm) - examine the super-zoom images carefully!
+**MATRIX/CATALOG NUMBER DETECTION - EQUALLY IMPORTANT:**
+Matrix numbers are the MAIN identifier for CD releases:
+- Located on the OUTER ring (35-58% from center) - look at the zoomed outer ring images!
+- Format: Usually 6-12 characters with spaces/dashes, like "519 613-2 04", "4904512 04 6"
+- Often includes label catalog number + pressing info
+- ENGRAVED (cut into the plastic) - appears as dark lines
+- May include manufacturer codes: PMDC, DADC, PDO, Sonopress, etc.
+- READ THE OUTER RING IMAGES CAREFULLY - they contain the matrix number!
+
+**IFPI CODE DETECTION:**
+IFPI codes are secondary identifiers:
+- "IFPI" followed by 4 characters (mastering SID): IFPI 0110, IFPI 01H3, IFPI 4A11
+- "IFPI L" followed by 3 characters (mould SID): IFPI L028, IFPI L551
+- Located in INNER ring (5-20% from center) - check super-zoom images
+- Often STAMPED (embossed) rather than engraved - subtle shadows
+- Can be very small (< 2mm)
 
 **WHERE TO LOOK:**
-- OUTER RING (35-50% from center): Matrix/catalog numbers
-- MIDDLE RING (15-35% from center): IFPI mastering SID, additional codes  
-- INNER RING (5-15% from center): IFPI mould SID (L-codes), stamper marks
-- MIRROR BAND (reflective area near hole): Often contains stamped IFPI
-- ABOVE "Germany" or other country text: IFPI codes are often located just above this text
+- **OUTER RING images (35-58%)**: MATRIX/CATALOG numbers - THE MAIN CODE
+- **INNER RING images (5-20%)**: IFPI codes, manufacturer marks
+- **SUPER-ZOOM images**: Tiny IFPI codes near center hole
 
-**READING TECHNIQUES FOR TINY EMBOSSED TEXT:**
-- SUPER-ZOOM images (5x magnification) show the innermost ring at 3-15% radius
-- Embossed text creates subtle directional shadows - look for slight darkness variations
-- IFPI letters may be RAISED (embossed) not engraved - they catch light differently
-- Text is often lighter than surrounding area due to how embossing reflects light
-- Letters may be spaced out: I  F  P  I  L  0  2  8
-- The characters are often < 2mm in height - require careful examination
-- Look for faint "IFPI" text ABOVE any other visible text like "Germany", "Made in", etc.
+**READING PRIORITY:**
+1. First find the MATRIX NUMBER in outer ring images (long alphanumeric code)
+2. Then find IFPI codes in inner ring / super-zoom images
+3. Note any other text (Made in Germany, PMDC, etc.)
 
 **ANTI-HALLUCINATION:**
 - Only report what you ACTUALLY see
 - Use low confidence (0.3-0.5) for uncertain readings
-- Say "possible IFPI" if you see letter-like shapes that could be IFPI
+- Matrix numbers are usually clearly visible - high confidence expected
 
 **OUTPUT FORMAT (JSON only):**
 {
   "raw_text": "all text found | separated",
   "clean_text": "cleaned combined text",
   "segments": [
-    {"text": "4904512 04 6", "type": "catalog", "confidence": 0.9},
-    {"text": "IFPI L028", "type": "ifpi", "confidence": 0.7}
+    {"text": "519 613-2 04", "type": "catalog", "confidence": 0.9},
+    {"text": "IFPI 01H3", "type": "ifpi", "confidence": 0.85}
   ],
   "overall_confidence": 0.0-1.0,
-  "notes": "Describe what you found in each ring area. If no IFPI found, explain where you looked and what you saw."
+  "notes": "Describe what you found. MUST mention what you saw in the outer ring (matrix) area."
 }`;
 
 serve(async (req) => {
@@ -163,44 +164,42 @@ Return only valid JSON with what you can ACTUALLY SEE.`
       return parsed;
     };
 
-    // Collect all available images - include both matrix and IFPI zones
+    // Collect all available images - BALANCED for both matrix AND IFPI detection
     const imagesToAnalyze: { data: string; name: string }[] = [];
     
-    // PRIORITY 1 (HIGHEST): Super-zoom IFPI crops (innermost ring, 5x zoom for tiny embossed text)
-    if (superZoomIfpiEnhanced) {
-      imagesToAnalyze.push({ data: superZoomIfpiEnhanced, name: "SUPER-ZOOM IFPI (innermost ring, 5x zoom, enhanced) - LOOK FOR TINY EMBOSSED IFPI CODES HERE - text is often ABOVE 'Germany'" });
-    }
-    if (superZoomIfpi) {
-      imagesToAnalyze.push({ data: superZoomIfpi, name: "SUPER-ZOOM IFPI (innermost ring, 5x zoom, original) - CHECK FOR FAINT STAMPED IFPI TEXT" });
-    }
-    
-    // PRIORITY 2: Zoomed IFPI ring crops (inner ring for IFPI codes)
-    if (zoomedIfpiRingEnhanced) {
-      imagesToAnalyze.push({ data: zoomedIfpiRingEnhanced, name: "INNER RING (IFPI zone) - enhanced, 3x zoom - LOOK FOR IFPI CODES HERE" });
-    }
-    if (zoomedIfpiRing) {
-      imagesToAnalyze.push({ data: zoomedIfpiRing, name: "INNER RING (IFPI zone) - original, 3x zoom - CHECK FOR IFPI TEXT" });
-    }
-    
-    // PRIORITY 3: Zoomed matrix ring crops (outer ring for catalog/matrix)
+    // PRIORITY 1: OUTER RING - Matrix/Catalog numbers (THE MAIN IDENTIFIER)
     if (zoomedRingEnhanced) {
-      imagesToAnalyze.push({ data: zoomedRingEnhanced, name: "OUTER RING (matrix zone) - enhanced, 2.5x zoom - CATALOG/MATRIX numbers here" });
+      imagesToAnalyze.push({ data: zoomedRingEnhanced, name: "★ OUTER RING (enhanced) - FIND THE MATRIX NUMBER HERE - long code like '519 613-2 04'" });
     }
     if (zoomedRing) {
-      imagesToAnalyze.push({ data: zoomedRing, name: "OUTER RING (matrix zone) - original, 2.5x zoom" });
+      imagesToAnalyze.push({ data: zoomedRing, name: "★ OUTER RING (original) - MATRIX/CATALOG NUMBER should be visible here" });
+    }
+    
+    // PRIORITY 2: Super-zoom IFPI crops (innermost ring for tiny IFPI codes)
+    if (superZoomIfpiEnhanced) {
+      imagesToAnalyze.push({ data: superZoomIfpiEnhanced, name: "SUPER-ZOOM IFPI (5x zoom, enhanced) - tiny embossed IFPI codes here" });
+    }
+    if (superZoomIfpi) {
+      imagesToAnalyze.push({ data: superZoomIfpi, name: "SUPER-ZOOM IFPI (5x zoom) - faint stamped IFPI text" });
+    }
+    
+    // PRIORITY 3: Zoomed IFPI ring crops (inner ring)
+    if (zoomedIfpiRingEnhanced) {
+      imagesToAnalyze.push({ data: zoomedIfpiRingEnhanced, name: "INNER RING (enhanced) - IFPI codes zone" });
+    }
+    if (zoomedIfpiRing) {
+      imagesToAnalyze.push({ data: zoomedIfpiRing, name: "INNER RING (original) - check for IFPI" });
     }
     
     // PRIORITY 4: Full enhanced image (overview)
     if (enhancedImage) {
-      imagesToAnalyze.push({ data: enhancedImage, name: "Full disc overview - enhanced" });
+      imagesToAnalyze.push({ data: enhancedImage, name: "Full disc overview" });
     }
     
     // PRIORITY 5: OCR layers (edge-detected)
     if (ocrLayer) {
       imagesToAnalyze.push({ data: ocrLayer, name: "OCR edge-detection layer" });
     }
-    
-    // Add inverted OCR layer (sometimes reveals hidden text)
     if (ocrLayerInverted) {
       imagesToAnalyze.push({ data: ocrLayerInverted, name: "Inverted OCR layer" });
     }

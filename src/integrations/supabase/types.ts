@@ -3707,6 +3707,63 @@ export type Database = {
           },
         ]
       }
+      matrix_scans: {
+        Row: {
+          created_at: string | null
+          enhanced_image_url: string | null
+          error: string | null
+          id: string
+          ocr_confidence: number | null
+          ocr_layer_url: string | null
+          ocr_layer_used: string | null
+          ocr_text_clean: string | null
+          ocr_text_raw: string | null
+          original_image_url: string
+          params_json: Json | null
+          processing_time_ms: number | null
+          roi_json: Json | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          enhanced_image_url?: string | null
+          error?: string | null
+          id?: string
+          ocr_confidence?: number | null
+          ocr_layer_url?: string | null
+          ocr_layer_used?: string | null
+          ocr_text_clean?: string | null
+          ocr_text_raw?: string | null
+          original_image_url: string
+          params_json?: Json | null
+          processing_time_ms?: number | null
+          roi_json?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          enhanced_image_url?: string | null
+          error?: string | null
+          id?: string
+          ocr_confidence?: number | null
+          ocr_layer_url?: string | null
+          ocr_layer_used?: string | null
+          ocr_text_clean?: string | null
+          ocr_text_raw?: string | null
+          original_image_url?: string
+          params_json?: Json | null
+          processing_time_ms?: number | null
+          roi_json?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       media_library: {
         Row: {
           ai_context_type: string | null

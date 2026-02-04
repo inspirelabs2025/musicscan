@@ -260,8 +260,8 @@ serve(async (req) => {
         })
         .eq('id', scanId)
 
-      // Search Discogs with improved strategy
-      const discogsResult = await searchDiscogsV2(combinedData)
+      // Search Discogs with improved strategy (now includes format filtering)
+      const discogsResult = await searchDiscogsV2(combinedData, mediaType)
 
       // Update record with final results
       const normalizedYear = typeof discogsResult.year === 'string'
@@ -1151,12 +1151,16 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
   }
 }
 
-async function searchDiscogsV2(analysisData: any) {
+async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'cd') {
   try {
-    console.log('🔍 Searching Discogs V2 with matrix/IFPI verification...')
+    // Determine format filter based on media type
+    const formatFilter = mediaType === 'vinyl' ? 'Vinyl' : 'CD';
+    console.log(`🔍 Searching Discogs V2 with format filter: ${formatFilter}`);
     
     // Log technical identifiers for debugging
     console.log('📋 Technical identifiers available:', {
+      artist: analysisData.artist || null,
+      title: analysisData.title || null,
       matrixNumber: analysisData.matrixNumber || analysisData.matrixNumberFull || null,
       sidCodeMastering: analysisData.sidCodeMastering || null,
       sidCodeMould: analysisData.sidCodeMould || null,
@@ -1165,25 +1169,55 @@ async function searchDiscogsV2(analysisData: any) {
       labelCode: analysisData.labelCode || null
     });
     
-    const searchStrategies = [
-      // Strategy 1: Barcode (most precise for exact pressing)
-      ...(analysisData.barcode ? [{ query: analysisData.barcode, type: 'barcode' }] : []),
+    // NEW: Prioritized search strategy with format filtering
+    // Strategy order: 
+    // 1. Artist + Title + format (catches OCR errors via Discogs fuzzy matching)
+    // 2. Barcode + format (precise identifier)
+    // 3. Catalog number + format (label-specific)
+    // 4. Matrix number (no format - matrix is unique per pressing)
+    // 5. Fallback searches without format filter
+    const searchStrategies: Array<{ query: string; type: string; format?: string | null }> = [
+      // Strategy 1: Artist + Title with format filter (PRIMARY - Discogs handles fuzzy matching)
+      ...(analysisData.artist && analysisData.title ? [{
+        query: `${analysisData.artist} ${analysisData.title}`,
+        type: 'artist_title_format',
+        format: formatFilter
+      }] : []),
       
-      // Strategy 2: Exact catalog number
-      ...(analysisData.catalogNumber ? [{ query: analysisData.catalogNumber, type: 'catno' }] : []),
+      // Strategy 2: Barcode with format filter (most precise for exact pressing)
+      ...(analysisData.barcode ? [{
+        query: analysisData.barcode,
+        type: 'barcode',
+        format: formatFilter
+      }] : []),
       
-      // Strategy 3: Matrix number (identifies specific pressing)
-      ...(analysisData.matrixNumber ? [{ query: analysisData.matrixNumber, type: 'matrix' }] : []),
-      ...(analysisData.matrixNumberFull ? [{ query: analysisData.matrixNumberFull, type: 'matrix' }] : []),
+      // Strategy 3: Exact catalog number with format filter
+      ...(analysisData.catalogNumber ? [{
+        query: analysisData.catalogNumber,
+        type: 'catno',
+        format: formatFilter
+      }] : []),
       
-      // Strategy 4: Artist + Title combination
-      ...(analysisData.artist && analysisData.title ? [{ query: `${analysisData.artist} ${analysisData.title}`, type: 'general' }] : []),
+      // Strategy 4: Matrix number (NO format - matrix is unique)
+      ...(analysisData.matrixNumber ? [{ query: analysisData.matrixNumber, type: 'matrix', format: null }] : []),
+      ...(analysisData.matrixNumberFull ? [{ query: analysisData.matrixNumberFull, type: 'matrix', format: null }] : []),
       
-      // Strategy 5: Label + Catalog number
-      ...(analysisData.label && analysisData.catalogNumber ? [{ query: `${analysisData.label} ${analysisData.catalogNumber}`, type: 'label_catno' }] : []),
+      // Strategy 5: Label + Catalog number with format filter
+      ...(analysisData.label && analysisData.catalogNumber ? [{
+        query: `${analysisData.label} ${analysisData.catalogNumber}`,
+        type: 'label_catno',
+        format: formatFilter
+      }] : []),
       
-      // Strategy 6: Additional search terms
-      ...(analysisData.searchQueries || []).map((q: string) => ({ query: q, type: 'alternative' }))
+      // Strategy 6: Fallback - Artist + Title WITHOUT format (in case CD version doesn't exist)
+      ...(analysisData.artist && analysisData.title ? [{
+        query: `${analysisData.artist} ${analysisData.title}`,
+        type: 'general_fallback',
+        format: null
+      }] : []),
+      
+      // Strategy 7: Additional search terms (no format)
+      ...(analysisData.searchQueries || []).map((q: string) => ({ query: q, type: 'alternative', format: null }))
     ]
 
     let bestMatch = null
@@ -1202,18 +1236,25 @@ async function searchDiscogsV2(analysisData: any) {
     }
 
     for (const [index, strategyItem] of searchStrategies.entries()) {
-      const { query, type } = strategyItem as { query: string; type: string }
+      const { query, type, format: strategyFormat } = strategyItem as { query: string; type: string; format?: string | null }
       if (!query || query.trim().length < 2) continue
       
-      console.log(`🔍 V2 Strategy ${index + 1} (${type}): "${query}"`)
+      console.log(`🔍 V2 Strategy ${index + 1} (${type}): "${query}"${strategyFormat ? ` [format=${strategyFormat}]` : ''}`);
       searchMetadata.totalSearches++
       
       // Build search URL with type-specific parameters
-      let searchUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release`
+      let searchUrl: string;
       if (type === 'barcode') {
-        searchUrl = `https://api.discogs.com/database/search?barcode=${encodeURIComponent(query)}&type=release`
+        searchUrl = `https://api.discogs.com/database/search?barcode=${encodeURIComponent(query)}&type=release`;
       } else if (type === 'catno') {
-        searchUrl = `https://api.discogs.com/database/search?catno=${encodeURIComponent(query)}&type=release`
+        searchUrl = `https://api.discogs.com/database/search?catno=${encodeURIComponent(query)}&type=release`;
+      } else {
+        searchUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release`;
+      }
+      
+      // Add format filter if specified (CD or Vinyl)
+      if (strategyFormat) {
+        searchUrl += `&format=${encodeURIComponent(strategyFormat)}`;
       }
       
       const response = await fetch(searchUrl, {

@@ -270,7 +270,7 @@ export default function AIScanV2() {
               console.log(`🔍 Checking if "${file.name}" is a matrix photo...`);
               const detection = await detectMatrixPhoto(file);
               
-              if (detection.isMatrix && detection.confidence >= 0.5) {
+              if (detection.isMatrix && detection.confidence >= 0.40) {
                 console.log(`✅ Matrix photo detected: "${file.name}" (${(detection.confidence * 100).toFixed(0)}%)`);
                 setMatrixFileId(id);
                 

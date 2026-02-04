@@ -19,10 +19,13 @@ export interface MatrixPhotoDetectionResult {
 
 /**
  * Detect if an image file is likely a CD matrix/disc surface photo
- * Uses visual feature analysis to identify disc characteristics
+ * Uses visual feature analysis + filename hints to identify disc characteristics
  */
 export async function detectMatrixPhoto(file: File): Promise<MatrixPhotoDetectionResult> {
   const startTime = performance.now();
+  
+  // First: quick filename-based detection
+  const filenameHint = detectFromFilename(file.name);
   
   // Load image
   const img = await loadImage(file);
@@ -51,34 +54,68 @@ export async function detectMatrixPhoto(file: File): Promise<MatrixPhotoDetectio
   const hasRainbowReflection = detectRainbowReflection(imageData, width, height);
   const hasCircularStructure = detectCircularStructure(imageData, width, height);
   const hasConcenticRings = detectConcentricRings(imageData, width, height);
+  const hasReflectiveSurface = detectReflectiveSurface(imageData, width, height);
+  const hasCentralDarkArea = detectCentralDarkArea(imageData, width, height);
   
-  // Calculate confidence score
+  // Calculate confidence score with weighted features
   let score = 0;
-  if (hasHubHole) score += 0.35;
-  if (hasRainbowReflection) score += 0.25;
-  if (hasCircularStructure) score += 0.25;
-  if (hasConcenticRings) score += 0.15;
+  
+  // Primary indicators (most reliable)
+  if (hasHubHole) score += 0.30;
+  if (hasCentralDarkArea) score += 0.20; // Less strict alternative to hub hole
+  if (hasCircularStructure) score += 0.20;
+  
+  // Secondary indicators
+  if (hasRainbowReflection) score += 0.15;
+  if (hasReflectiveSurface) score += 0.10; // Alternative to rainbow
+  if (hasConcenticRings) score += 0.10;
+  
+  // Filename hint bonus
+  if (filenameHint) score += 0.15;
+  
+  // Bonus for multiple circular indicators together
+  if (hasCircularStructure && (hasHubHole || hasCentralDarkArea)) {
+    score += 0.10;
+  }
+  
+  // Cap at 1.0
+  score = Math.min(score, 1.0);
   
   const detectionTimeMs = performance.now() - startTime;
   
   console.log(`🔍 Matrix photo detection: ${(score * 100).toFixed(0)}% confidence in ${detectionTimeMs.toFixed(0)}ms`, {
     hasHubHole,
+    hasCentralDarkArea,
     hasRainbowReflection,
+    hasReflectiveSurface,
     hasCircularStructure,
-    hasConcenticRings
+    hasConcenticRings,
+    filenameHint
   });
   
   return {
-    isMatrix: score >= 0.5,
+    isMatrix: score >= 0.40, // Lowered threshold
     confidence: score,
     features: {
-      hasHubHole,
-      hasRainbowReflection,
+      hasHubHole: hasHubHole || hasCentralDarkArea,
+      hasRainbowReflection: hasRainbowReflection || hasReflectiveSurface,
       hasCircularStructure,
       hasConcenticRings
     },
     detectionTimeMs
   };
+}
+
+/**
+ * Quick filename-based detection for common naming patterns
+ */
+function detectFromFilename(filename: string): boolean {
+  const lower = filename.toLowerCase();
+  const matrixKeywords = [
+    'matrix', 'disc', 'cd', 'label', 'plaat', 'ring',
+    'surface', 'back', 'bottom', 'data', 'runout'
+  ];
+  return matrixKeywords.some(kw => lower.includes(kw));
 }
 
 /**
@@ -293,6 +330,100 @@ function detectConcentricRings(imageData: ImageData, width: number, height: numb
   
   // Multiple transitions suggest concentric rings
   return transitions >= 3;
+}
+
+/**
+ * Detect reflective/shiny surface typical of CDs
+ * Less strict than rainbow detection - just checks for high brightness variance
+ */
+function detectReflectiveSurface(imageData: ImageData, width: number, height: number): boolean {
+  const data = imageData.data;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = Math.min(width, height) * 0.3;
+  
+  let brightnessValues: number[] = [];
+  
+  // Sample in a circular area
+  for (let angle = 0; angle < 360; angle += 15) {
+    const radians = (angle * Math.PI) / 180;
+    const x = Math.round(centerX + Math.cos(radians) * radius);
+    const y = Math.round(centerY + Math.sin(radians) * radius);
+    
+    if (x < 0 || x >= width || y < 0 || y >= height) continue;
+    
+    const idx = (y * width + x) * 4;
+    const brightness = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+    brightnessValues.push(brightness);
+  }
+  
+  if (brightnessValues.length < 8) return false;
+  
+  // Check for high brightness variance (reflective surfaces have hotspots)
+  const mean = brightnessValues.reduce((a, b) => a + b, 0) / brightnessValues.length;
+  const variance = brightnessValues.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / brightnessValues.length;
+  const stdDev = Math.sqrt(variance);
+  
+  // Reflective surfaces have high brightness with some variance
+  return mean > 100 && stdDev > 25;
+}
+
+/**
+ * Detect central dark area - less strict than hub hole detection
+ * Just checks if center region is darker than surrounding area
+ */
+function detectCentralDarkArea(imageData: ImageData, width: number, height: number): boolean {
+  const data = imageData.data;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  
+  // Sample center region (10% radius)
+  const innerRadius = Math.min(width, height) * 0.10;
+  // Sample outer ring (25-35% radius)
+  const outerRadiusInner = Math.min(width, height) * 0.25;
+  const outerRadiusOuter = Math.min(width, height) * 0.35;
+  
+  let centerBrightness = 0;
+  let centerSamples = 0;
+  let outerBrightness = 0;
+  let outerSamples = 0;
+  
+  // Sample center
+  for (let angle = 0; angle < 360; angle += 30) {
+    const radians = (angle * Math.PI) / 180;
+    for (let r = 0; r < innerRadius; r += 5) {
+      const x = Math.round(centerX + Math.cos(radians) * r);
+      const y = Math.round(centerY + Math.sin(radians) * r);
+      
+      if (x < 0 || x >= width || y < 0 || y >= height) continue;
+      
+      const idx = (y * width + x) * 4;
+      centerBrightness += (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+      centerSamples++;
+    }
+  }
+  
+  // Sample outer ring
+  for (let angle = 0; angle < 360; angle += 20) {
+    const radians = (angle * Math.PI) / 180;
+    const r = (outerRadiusInner + outerRadiusOuter) / 2;
+    const x = Math.round(centerX + Math.cos(radians) * r);
+    const y = Math.round(centerY + Math.sin(radians) * r);
+    
+    if (x < 0 || x >= width || y < 0 || y >= height) continue;
+    
+    const idx = (y * width + x) * 4;
+    outerBrightness += (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+    outerSamples++;
+  }
+  
+  if (centerSamples === 0 || outerSamples === 0) return false;
+  
+  const avgCenter = centerBrightness / centerSamples;
+  const avgOuter = outerBrightness / outerSamples;
+  
+  // Center should be noticeably darker than outer ring
+  return avgCenter < avgOuter * 0.85;
 }
 
 /**

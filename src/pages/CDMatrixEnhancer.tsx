@@ -12,9 +12,10 @@ import {
   MatrixReviewStep,
   MatrixOCRResult,
   MatrixDebugAccordion,
+  MatrixDiscogsResult,
   DEFAULT_PROCESSING_STEPS,
 } from '@/components/matrix-enhancer';
-import type { OCRResult } from '@/components/matrix-enhancer';
+import type { OCRResult, DiscogsLookupResult } from '@/components/matrix-enhancer';
 import {
   processMatrixImage,
   MatrixEnhancementParams,
@@ -54,8 +55,12 @@ export default function CDMatrixEnhancer() {
   const [isRunningOCR, setIsRunningOCR] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
+  // Discogs lookup state
+  const [discogsResult, setDiscogsResult] = useState<DiscogsLookupResult | null>(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  
   // Timing state
-  const [timings, setTimings] = useState<{ enhancement?: number; ocr?: number; total?: number }>({});
+  const [timings, setTimings] = useState<{ enhancement?: number; ocr?: number; discogs?: number; total?: number }>({});
 
   // Handle file selection
   const handleFileSelect = useCallback(async (file: File) => {
@@ -141,11 +146,74 @@ export default function CDMatrixEnhancer() {
     }
   }, [selectedFile, toast]);
 
+  // Discogs lookup function
+  const runDiscogsLookup = useCallback(async (ocrData: OCRResult) => {
+    setIsLookingUp(true);
+    const startTime = performance.now();
+    
+    try {
+      // Find matrix segment
+      const matrixSegment = ocrData.segments.find(s => s.type === 'matrix');
+      const matrixText = matrixSegment?.text || ocrData.cleanText;
+      
+      if (!matrixText || matrixText.length < 5) {
+        console.log('[CDMatrixEnhancer] No valid matrix text for lookup');
+        return;
+      }
+      
+      // Find IFPI codes
+      const ifpiSegments = ocrData.segments.filter(s => s.type === 'ifpi');
+      const ifpiMastering = ifpiSegments.find(s => 
+        s.text.toUpperCase().includes('IFPI L') || 
+        s.text.toUpperCase().match(/IFPI\s*L[A-Z]?\d/)
+      )?.text;
+      const ifpiMould = ifpiSegments.find(s => 
+        !s.text.toUpperCase().includes('IFPI L') &&
+        !s.text.toUpperCase().match(/IFPI\s*L[A-Z]?\d/)
+      )?.text;
+      
+      console.log(`[CDMatrixEnhancer] Discogs lookup: matrix="${matrixText}", ifpiM="${ifpiMastering || ''}", ifpiMould="${ifpiMould || ''}"`);
+      
+      const { data, error } = await supabase.functions.invoke('matrix-discogs-lookup', {
+        body: {
+          matrixNumber: matrixText,
+          ifpiMastering,
+          ifpiMould,
+        }
+      });
+      
+      if (error) throw error;
+      
+      const lookupTime = performance.now() - startTime;
+      
+      setDiscogsResult(data as DiscogsLookupResult);
+      setTimings(prev => ({ 
+        ...prev, 
+        discogs: lookupTime,
+        total: (prev.enhancement || 0) + (prev.ocr || 0) + lookupTime
+      }));
+      
+      if (data?.success) {
+        toast({
+          title: 'Discogs match gevonden!',
+          description: `${data.artist} - ${data.title} (${data.catalog_number || 'Geen catalog'})`,
+        });
+      }
+      
+    } catch (error) {
+      console.error('Discogs lookup error:', error);
+      // Don't show error toast - silent fail is OK here
+    } finally {
+      setIsLookingUp(false);
+    }
+  }, [toast]);
+
   // Run OCR
   const handleRunOCR = useCallback(async () => {
     if (!enhancementResult) return;
     
     setIsRunningOCR(true);
+    setDiscogsResult(null); // Reset previous lookup
     const startTime = performance.now();
     
     try {
@@ -189,6 +257,9 @@ export default function CDMatrixEnhancer() {
       }));
       setCurrentStep('ocr');
       
+      // Auto-trigger Discogs lookup after OCR success
+      runDiscogsLookup(result);
+      
     } catch (error) {
       console.error('OCR error:', error);
       toast({
@@ -199,7 +270,7 @@ export default function CDMatrixEnhancer() {
     } finally {
       setIsRunningOCR(false);
     }
-  }, [enhancementResult, toast]);
+  }, [enhancementResult, toast, runDiscogsLookup]);
 
   // Save result
   const handleSave = useCallback(async () => {
@@ -294,6 +365,7 @@ export default function CDMatrixEnhancer() {
     setProcessingError(null);
     setEnhancementResult(null);
     setOcrResult(null);
+    setDiscogsResult(null);
     setTimings({});
   }, []);
 
@@ -392,7 +464,13 @@ export default function CDMatrixEnhancer() {
                 isSaving={isSaving}
               />
               
-              {/* Use in Scanner button */}
+              {/* Discogs Lookup Result */}
+              <MatrixDiscogsResult
+                result={discogsResult}
+                isLoading={isLookingUp}
+                onRetry={() => runDiscogsLookup(ocrResult)}
+                matrixNumber={ocrResult.segments.find(s => s.type === 'matrix')?.text || ocrResult.cleanText}
+              />
               {ocrResult.cleanText && originalImage && (
                 <div className="mt-4">
                   <Button

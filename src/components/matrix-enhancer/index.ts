@@ -7,3 +7,5 @@ export { MatrixReviewStep } from './MatrixReviewStep';
 export { MatrixOCRResult } from './MatrixOCRResult';
 export type { OCRResult, OCRSegment } from './MatrixOCRResult';
 export { MatrixDebugAccordion } from './MatrixDebugAccordion';
+export { MatrixDiscogsResult } from './MatrixDiscogsResult';
+export type { DiscogsLookupResult } from './MatrixDiscogsResult';

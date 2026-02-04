@@ -1,143 +1,208 @@
 
-# Plan: Hiërarchische Discogs Zoekstrategie
 
-## Huidige Situatie
-De `ai-photo-analysis-v2` edge function zoekt nu gefragmenteerd:
-- Barcode search (zonder format filter)
-- Catno search (zonder format filter)  
-- Artist+Title search (zonder format filter)
+# Plan: Strikt 100% Matching Systeem (Geen Fallbacks)
 
-Hierdoor kan een LP release "winnen" bij een CD scan omdat format niet wordt meegenomen.
+## Kernprobleem
 
-## Nieuwe Aanpak
-Een **hiërarchische zoekstrategie** die de Discogs structuur volgt:
+Het huidige systeem gebruikt "beste gok" fallback logica:
+- Als geen exacte catno match → pak eerste zoekresultaat
+- Als geen Discogs match → retourneer OCR data alsof het correct is
+- Barcodes worden niet strikt geverifieerd
+
+Dit resulteert in verkeerde releases zoals de Penny-versie (PYCD 130) terwijl je de Summit-versie (SUMCD 4164) scant.
+
+## Nieuwe Filosofie
 
 ```text
-┌─────────────────────────────────────┐
-│  STAP 1: Artist + Title + Format    │
-│  "Ella Fitzgerald A Portrait..."    │
-│  + format=CD                        │
-│  → Master release met CD versions   │
-└─────────────────┬───────────────────┘
+┌─────────────────────────────────────────┐
+│  SCAN INVOER                            │
+│  - Artist: Ella Fitzgerald              │
+│  - Title: A Portrait of Ella Fitzgerald │
+│  - Catalog: SUMCD 4164                  │
+│  - Barcode: 5027626416423               │
+└─────────────────┬───────────────────────┘
                   ▼
-┌─────────────────────────────────────┐
-│  STAP 2: Filter op Catalogusnummer  │
-│  Zoek binnen resultaten naar        │
-│  catno="SMD 847"                    │
-│  → Exacte release match             │
-└─────────────────┬───────────────────┘
+┌─────────────────────────────────────────┐
+│  STAP 1: ZOEK                           │
+│  Artist + Title + Format=CD             │
+│  → 50 resultaten                        │
+└─────────────────┬───────────────────────┘
                   ▼
-┌─────────────────────────────────────┐
-│  STAP 3: Barcode/Matrix Verificatie │
-│  Bevestig match met technische      │
-│  identifiers (bonus, geen filter)   │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│  STAP 2: EXACTE MATCH VEREIST           │
+│  Binnen resultaten zoeken naar:         │
+│  - EXACT barcode: 5027626416423    OF   │
+│  - EXACT catno: SUMCD 4164              │
+│                                         │
+│  ✅ Match gevonden → Release ID         │
+│  ❌ Geen match → NO_EXACT_MATCH         │
+└─────────────────────────────────────────┘
 ```
 
 ## Technische Wijzigingen
 
-### 1. MediaType Parameter Toevoegen
-De edge function moet `mediaType` ontvangen vanuit de frontend:
+### 1. searchDiscogsV2 Herschrijven - Verwijder Alle Fallbacks
 
+**Verwijderen (regels 1402-1418):**
 ```typescript
-// Request body uitbreiden
-const { images, mediaType = 'cd' } = await req.json();
-```
-
-### 2. Nieuwe Zoekfunctie: `searchDiscogsHierarchical`
-
-```typescript
-async function searchDiscogsHierarchical(
-  artist: string,
-  title: string,
-  catalogNumber: string | null,
-  barcode: string | null,
-  mediaType: 'cd' | 'vinyl',
-  token: string
-): Promise<DiscogsResult | null> {
-  
-  // STAP 1: Artist + Title + Format
-  const formatParam = mediaType === 'cd' ? 'CD' : 'Vinyl';
-  const searchUrl = `https://api.discogs.com/database/search?` +
-    `q=${encodeURIComponent(`${artist} ${title}`)}&` +
-    `type=release&` +
-    `format=${formatParam}&` +
-    `per_page=50`;
-  
-  const response = await fetch(searchUrl, { headers });
-  const data = await response.json();
-  
-  // STAP 2: Filter op Catalogusnummer binnen resultaten
-  if (catalogNumber && data.results) {
-    const catnoMatch = data.results.find(r => {
-      // Fetch release details en check catno
-      return r.catno?.toUpperCase() === catalogNumber.toUpperCase();
-    });
-    if (catnoMatch) return catnoMatch;
-  }
-  
-  // STAP 3: Barcode verificatie als fallback
-  if (barcode && data.results) {
-    // Zoek binnen gefilterde resultaten naar barcode match
-  }
-  
-  return data.results?.[0] || null;
+// VERWIJDEREN - Geen fallback naar eerste resultaat
+if (!bestMatch) {
+  bestMatch = data.results[0]; // ← WEG
+  highestConfidence = 0.7;     // ← WEG
 }
 ```
 
-### 3. Search Strategies Herschrijven
-
-Van:
+**Nieuwe logica:**
 ```typescript
-const searchStrategies = [
-  { query: barcode, type: 'barcode' },      // Geen format
-  { query: catalogNumber, type: 'catno' },  // Geen format
-  { query: `${artist} ${title}`, type: 'general' }  // Geen format
-]
+// NIEUW - Alleen exacte match of niets
+if (!catnoMatch && !barcodeMatch) {
+  console.log('❌ NO_EXACT_MATCH: Geen exacte barcode/catno gevonden');
+  return {
+    status: 'NO_EXACT_MATCH',
+    discogsId: null,
+    reason: 'Geen release met exacte barcode of catalogusnummer gevonden',
+    searchedBarcode: analysisData.barcode,
+    searchedCatno: analysisData.catalogNumber,
+    candidatesChecked: data.results.length
+  };
+}
 ```
 
-Naar:
-```typescript
-// Primaire strategie: Hiërarchisch met format
-const primaryResult = await searchDiscogsHierarchical(
-  artist, title, catalogNumber, barcode, mediaType, token
-);
+### 2. Barcode Verificatie Toevoegen in Primaire Search
 
-// Fallback strategieën (alleen als primair faalt)
-const fallbackStrategies = [
-  { query: `${artist} ${title}`, type: 'general', format: mediaType },
-  { query: catalogNumber, type: 'catno', format: mediaType }
-];
-```
-
-### 4. Frontend Aanpassing
-
-In `AIScanV2.tsx`, stuur `mediaType` mee met de API call:
+Momenteel wordt barcode alleen in fallback gecontroleerd. Dit moet in de primaire search:
 
 ```typescript
-const { data: analysisResult } = await supabase.functions.invoke(
-  'ai-photo-analysis-v2',
-  {
-    body: {
-      images: imageUrls,
-      mediaType: state.mediaType  // 'cd' of 'vinyl'
+// Na Artist+Title+Format search
+if (data.results && data.results.length > 0) {
+  
+  // PRIORITEIT 1: Exacte barcode match
+  if (analysisData.barcode) {
+    const extractedBarcode = analysisData.barcode.replace(/[^0-9]/g, '');
+    
+    for (const result of data.results.slice(0, 10)) {
+      const releaseDetails = await fetchReleaseDetails(result.id);
+      const barcodeMatch = releaseDetails?.identifiers?.find(id => 
+        id.type === 'Barcode' && 
+        id.value?.replace(/[^0-9]/g, '') === extractedBarcode
+      );
+      
+      if (barcodeMatch) {
+        console.log(`✅ EXACT BARCODE MATCH: ${result.id}`);
+        return { status: 'EXACT_MATCH', ... };
+      }
     }
   }
-);
+  
+  // PRIORITEIT 2: Exacte catno match
+  if (analysisData.catalogNumber) {
+    const catnoMatch = data.results.find(r => 
+      normalizedCatno(r.catno) === normalizedCatno(analysisData.catalogNumber)
+    );
+    
+    if (catnoMatch) {
+      console.log(`✅ EXACT CATNO MATCH: ${catnoMatch.id}`);
+      return { status: 'EXACT_MATCH', ... };
+    }
+  }
+  
+  // GEEN FALLBACK - Expliciet geen match retourneren
+  return { status: 'NO_EXACT_MATCH', ... };
+}
+```
+
+### 3. Fallback Loop Verwijderen (regels 1426-1605)
+
+De hele fallback sectie wordt vervangen door een directe barcode/catno lookup:
+
+```typescript
+// Als primaire search geen resultaten: directe identifier lookup
+if (!bestMatch) {
+  // Direct barcode search (zonder format filter - barcode is uniek)
+  if (analysisData.barcode) {
+    const barcodeResult = await searchByExactBarcode(analysisData.barcode);
+    if (barcodeResult?.exactMatch) {
+      return barcodeResult;
+    }
+  }
+  
+  // Direct catno + format search  
+  if (analysisData.catalogNumber) {
+    const catnoResult = await searchByExactCatno(
+      analysisData.catalogNumber, 
+      formatParam
+    );
+    if (catnoResult?.exactMatch) {
+      return catnoResult;
+    }
+  }
+  
+  // GEEN verdere fallbacks
+  return { status: 'NO_EXACT_MATCH', ... };
+}
+```
+
+### 4. Return Type Uitbreiden
+
+```typescript
+interface DiscogsSearchResult {
+  status: 'EXACT_MATCH' | 'NO_EXACT_MATCH' | 'ERROR';
+  matchType?: 'barcode' | 'catno' | 'matrix';
+  discogsId: number | null;
+  discogsUrl: string | null;
+  artist: string | null;
+  title: string | null;
+  // ... overige velden
+  
+  // Nieuwe velden voor debugging/UI
+  searchedIdentifiers?: {
+    barcode: string | null;
+    catalogNumber: string | null;
+    matrixNumber: string | null;
+  };
+  candidatesChecked?: number;
+  reason?: string;
+}
+```
+
+### 5. Frontend Aanpassen - NO_EXACT_MATCH Status
+
+In `AIScanV2.tsx` moet de UI duidelijk tonen wanneer geen exacte match is gevonden:
+
+```typescript
+// Na Discogs search
+if (discogsResult.status === 'NO_EXACT_MATCH') {
+  // Toon duidelijke melding
+  toast({
+    title: "Geen exacte match gevonden",
+    description: `Release met barcode ${discogsResult.searchedIdentifiers?.barcode} of catalogus ${discogsResult.searchedIdentifiers?.catalogNumber} niet in Discogs`,
+    variant: "warning"
+  });
+  
+  // Sla op met status 'no_match' in plaats van 'completed'
+  await updateScanStatus(scanId, 'no_exact_match', discogsResult);
+}
 ```
 
 ## Bestanden te Wijzigen
 
 | Bestand | Wijziging |
 |---------|-----------|
-| `supabase/functions/ai-photo-analysis-v2/index.ts` | Nieuwe `searchDiscogsHierarchical` functie, format parameter in alle searches |
-| `src/pages/AIScanV2.tsx` | `mediaType` meesturen naar edge function |
+| `supabase/functions/ai-photo-analysis-v2/index.ts` | searchDiscogsV2 herschrijven: verwijder fallbacks, alleen exacte matches |
+| `src/pages/AIScanV2.tsx` | UI voor NO_EXACT_MATCH status |
 
-## Verwacht Resultaat
+## Verwacht Gedrag Na Implementatie
 
-Bij scan van de Ella Fitzgerald CD:
-1. Zoek: "Ella Fitzgerald A Portrait of Ella Fitzgerald" + format=CD
-2. Filter: Resultaten met catno "SMD 847"
-3. Match: Release 4381440 (de correcte CD)
+**Scenario: Ella Fitzgerald CD (SUMCD 4164)**
 
-LP releases worden nooit meer geretourneerd bij een CD scan.
+| Stap | Actie | Resultaat |
+|------|-------|-----------|
+| 1 | Zoek "Ella Fitzgerald A Portrait" + format=CD | 50 resultaten |
+| 2 | Check barcode 5027626416423 in top 10 | ❌ Niet gevonden |
+| 3 | Check catno SUMCD 4164 exact | ❌ Niet in Discogs |
+| 4 | Retourneer | `status: 'NO_EXACT_MATCH'` |
+
+**UI toont:** "Geen exacte match gevonden - deze release staat niet in Discogs"
+
+Geen verkeerde releases meer. Alleen 100% zekerheid of eerlijk "niet gevonden".
+

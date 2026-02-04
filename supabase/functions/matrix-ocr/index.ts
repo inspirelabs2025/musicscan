@@ -7,52 +7,66 @@ const corsHeaders = {
 
 const OCR_PROMPT = `You are an expert OCR system specialized in reading CD matrix numbers from enhanced images.
 
-TASK: Extract ALL text visible in this CD inner ring image. The image has been pre-processed for optimal OCR.
+CRITICAL TASK: Extract ALL text visible in this CD inner ring image. CDs typically have MULTIPLE codes engraved - you MUST find ALL of them, not just one.
 
 CHARACTER WHITELIST: A-Z 0-9 - / . ( ) + space
 
-COMMON CD MATRIX PATTERNS:
-- IFPI codes: "IFPI LXXXX" or "IFPI XX###" (manufacturing plant codes)
-- Catalog numbers: Label prefix followed by numbers (e.g., "538 972-2", "CDEPC 3252")
-- Matrix/stamper codes: Alphanumeric sequences often with dashes
-- Mastering info: May include studio codes, dates, or engineer initials
+WHAT TO LOOK FOR (CDs usually have 2-4 of these):
+1. **CATALOG NUMBER** (MOST IMPORTANT): The main release identifier, usually 6-12 characters
+   - Examples: "538 972-2", "CDEPC 3252", "7243 8 56092 2 4", "82876 54321 2"
+   - Often contains spaces, dashes, or dots
+   - Usually the LONGEST code on the disc
+   
+2. **IFPI CODES**: Manufacturing plant identifiers
+   - Format: "IFPI LXXX" or "IFPI XXXX" (L followed by numbers, or 2 letters + numbers)
+   - Examples: "IFPI L028", "IFPI LV23", "IFPI 0110"
+   
+3. **MATRIX/MASTERING CODES**: Additional production identifiers
+   - Often alphanumeric with dashes: "DOC-55-001-1", "PMDC", "MASTERED BY..."
+   - May include dates or initials
+
+4. **SID CODES**: Source Identification codes (separate from IFPI)
+   - Usually near the center hub
 
 COMMON OCR CONFUSIONS TO CORRECT:
 - O ↔ 0 (letter O vs zero) - In catalog numbers, usually 0
 - I ↔ 1 (letter I vs one) - In IFPI codes, usually I; in numbers, usually 1
-- S ↔ 5
-- B ↔ 8
-- Z ↔ 2
-- G ↔ 6
+- S ↔ 5, B ↔ 8, Z ↔ 2, G ↔ 6
 
-IMPORTANT INSTRUCTIONS:
-1. Read ALL text visible in the image, even if partially obscured
-2. Separate distinct code segments (IFPI codes, catalog numbers, etc.)
-3. Never hallucinate or guess text that isn't visible
-4. If text is unreadable, indicate low confidence
-5. Apply character corrections based on context (catalog numbers vs codes)
+CRITICAL INSTRUCTIONS:
+1. SCAN THE ENTIRE IMAGE - text runs in circles around the center
+2. Look for text at DIFFERENT RADII (inner ring, outer ring, near hub)
+3. The catalog number is often LARGER or in a different position than IFPI
+4. Do NOT stop after finding just the IFPI code - keep looking for more codes
+5. If you only find one code, look again - most CDs have at least 2
 
 OUTPUT FORMAT - Return ONLY valid JSON:
 {
-  "raw_text": "exact text as seen without corrections",
-  "clean_text": "text with likely corrections applied",
+  "raw_text": "all text found separated by | symbols",
+  "clean_text": "cleaned version of all text",
   "segments": [
-    {
-      "text": "IFPI L123",
-      "type": "ifpi",
-      "confidence": 0.95
-    },
     {
       "text": "538 972-2",
       "type": "catalog",
       "confidence": 0.88
+    },
+    {
+      "text": "IFPI L028",
+      "type": "ifpi",
+      "confidence": 0.95
+    },
+    {
+      "text": "DOC-55-001",
+      "type": "matrix",
+      "confidence": 0.75
     }
   ],
-  "overall_confidence": 0.91,
+  "overall_confidence": 0.85,
   "layer_used": "normal"
 }
 
-Segment types: "ifpi", "catalog", "matrix", "unknown"`;
+Segment types: "catalog" (main number), "ifpi", "matrix", "sid", "unknown"
+ALWAYS put the catalog number FIRST in segments if found.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

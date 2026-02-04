@@ -1,120 +1,143 @@
 
-# Plan: Strikte Format Filtering voor Matrix Discogs Lookup
+# Plan: Hiërarchische Discogs Zoekstrategie
 
-## Probleem
-De `matrix-discogs-lookup` edge function ontvangt geen `mediaType` parameter en zoekt altijd met hardcoded `format=CD`. Hierdoor:
-- Kan de functie niet weten of het een CD of Vinyl scan is
-- Kan de Discogs API filter omzeild worden (die niet 100% waterdicht is)
-- Worden soms verkeerde formaten geretourneerd (LP in plaats van CD)
+## Huidige Situatie
+De `ai-photo-analysis-v2` edge function zoekt nu gefragmenteerd:
+- Barcode search (zonder format filter)
+- Catno search (zonder format filter)  
+- Artist+Title search (zonder format filter)
 
-## Oplossing
+Hierdoor kan een LP release "winnen" bij een CD scan omdat format niet wordt meegenomen.
 
-### 1. Edge Function Aanpassen (`supabase/functions/matrix-discogs-lookup/index.ts`)
+## Nieuwe Aanpak
+Een **hiërarchische zoekstrategie** die de Discogs structuur volgt:
 
-**Nieuwe input parameter:**
-```typescript
-const { matrixNumber, ifpiMastering, ifpiMould, mediaType = 'cd' } = await req.json();
+```text
+┌─────────────────────────────────────┐
+│  STAP 1: Artist + Title + Format    │
+│  "Ella Fitzgerald A Portrait..."    │
+│  + format=CD                        │
+│  → Master release met CD versions   │
+└─────────────────┬───────────────────┘
+                  ▼
+┌─────────────────────────────────────┐
+│  STAP 2: Filter op Catalogusnummer  │
+│  Zoek binnen resultaten naar        │
+│  catno="SMD 847"                    │
+│  → Exacte release match             │
+└─────────────────┬───────────────────┘
+                  ▼
+┌─────────────────────────────────────┐
+│  STAP 3: Barcode/Matrix Verificatie │
+│  Bevestig match met technische      │
+│  identifiers (bonus, geen filter)   │
+└─────────────────────────────────────┘
 ```
 
-**Nieuwe Vinyl format filter:**
+## Technische Wijzigingen
+
+### 1. MediaType Parameter Toevoegen
+De edge function moet `mediaType` ontvangen vanuit de frontend:
+
 ```typescript
-function isVinylFormat(formats: string[]): boolean {
-  const vinylKeywords = ['Vinyl', 'LP', '12"', '7"', '10"', 'Album', 'EP', 'Single'];
-  const cdKeywords = ['CD', 'SACD', 'CDr', 'HDCD'];
+// Request body uitbreiden
+const { images, mediaType = 'cd' } = await req.json();
+```
+
+### 2. Nieuwe Zoekfunctie: `searchDiscogsHierarchical`
+
+```typescript
+async function searchDiscogsHierarchical(
+  artist: string,
+  title: string,
+  catalogNumber: string | null,
+  barcode: string | null,
+  mediaType: 'cd' | 'vinyl',
+  token: string
+): Promise<DiscogsResult | null> {
   
-  const formatStr = formats.join(' ').toUpperCase();
+  // STAP 1: Artist + Title + Format
+  const formatParam = mediaType === 'cd' ? 'CD' : 'Vinyl';
+  const searchUrl = `https://api.discogs.com/database/search?` +
+    `q=${encodeURIComponent(`${artist} ${title}`)}&` +
+    `type=release&` +
+    `format=${formatParam}&` +
+    `per_page=50`;
   
-  // Reject als het CD keywords bevat
-  for (const cd of cdKeywords) {
-    if (formatStr.includes(cd.toUpperCase())) return false;
+  const response = await fetch(searchUrl, { headers });
+  const data = await response.json();
+  
+  // STAP 2: Filter op Catalogusnummer binnen resultaten
+  if (catalogNumber && data.results) {
+    const catnoMatch = data.results.find(r => {
+      // Fetch release details en check catno
+      return r.catno?.toUpperCase() === catalogNumber.toUpperCase();
+    });
+    if (catnoMatch) return catnoMatch;
   }
   
-  // Accept als het vinyl keywords bevat
-  return vinylKeywords.some(v => formatStr.includes(v.toUpperCase()));
-}
-```
-
-**Dynamische Discogs API query:**
-```typescript
-async function searchDiscogs(query: string, token: string, mediaType: 'cd' | 'vinyl') {
-  const formatParam = mediaType === 'vinyl' ? 'Vinyl' : 'CD';
-  const url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&format=${formatParam}&per_page=25`;
+  // STAP 3: Barcode verificatie als fallback
+  if (barcode && data.results) {
+    // Zoek binnen gefilterde resultaten naar barcode match
+  }
   
-  // Filter resultaten STRIKT op basis van mediaType
-  const filteredResults = results.filter((r) => {
-    if (mediaType === 'cd') return isCDFormat(r.format);
-    return isVinylFormat(r.format);
-  });
+  return data.results?.[0] || null;
 }
 ```
 
-**Response met format indicator:**
+### 3. Search Strategies Herschrijven
+
+Van:
 ```typescript
-const result: LookupResult = {
-  // ...bestaande velden...
-  format: mediaType === 'vinyl' ? 'Vinyl' : 'CD', // Nieuw veld
-};
+const searchStrategies = [
+  { query: barcode, type: 'barcode' },      // Geen format
+  { query: catalogNumber, type: 'catno' },  // Geen format
+  { query: `${artist} ${title}`, type: 'general' }  // Geen format
+]
 ```
 
-### 2. Callers Aanpassen
-
-**useParallelMatrixProcessing.ts:**
+Naar:
 ```typescript
-const processMatrixPhotoInBackground = useCallback(async (
-  file: File,
-  options: { 
-    skipDetection?: boolean; 
-    confidenceThreshold?: number;
-    mediaType?: 'cd' | 'vinyl';  // Nieuwe optie
-  } = {}
-) => {
-  // ...
-  const { data: discogsData } = await supabase.functions.invoke('matrix-discogs-lookup', {
+// Primaire strategie: Hiërarchisch met format
+const primaryResult = await searchDiscogsHierarchical(
+  artist, title, catalogNumber, barcode, mediaType, token
+);
+
+// Fallback strategieën (alleen als primair faalt)
+const fallbackStrategies = [
+  { query: `${artist} ${title}`, type: 'general', format: mediaType },
+  { query: catalogNumber, type: 'catno', format: mediaType }
+];
+```
+
+### 4. Frontend Aanpassing
+
+In `AIScanV2.tsx`, stuur `mediaType` mee met de API call:
+
+```typescript
+const { data: analysisResult } = await supabase.functions.invoke(
+  'ai-photo-analysis-v2',
+  {
     body: {
-      matrixNumber: matrixText,
-      ifpiMastering,
-      ifpiMould,
-      mediaType: options.mediaType || 'cd'  // Doorsturen
+      images: imageUrls,
+      mediaType: state.mediaType  // 'cd' of 'vinyl'
     }
-  });
-});
+  }
+);
 ```
-
-**CDMatrixEnhancer.tsx:**
-Voeg mediaType selectie toe (of default naar 'cd' aangezien het CD Matrix Enhancer heet).
-
-**AIScanV2.tsx:**
-Bij aanroepen van parallel processing, stuur het geselecteerde mediaType mee.
-
-### 3. UI Feedback (MatrixDiscogsResult.tsx)
-
-Toon het gedetecteerde format in de resultaten:
-```tsx
-<Badge variant="outline" className="bg-primary/10">
-  <Disc className="h-3 w-3 mr-1" />
-  {result.format || 'CD'}
-</Badge>
-```
-
-## Technische Details
-
-| Aspect | Wijziging |
-|--------|-----------|
-| Edge Function | Nieuwe `mediaType` parameter, `isVinylFormat()` functie, dynamische API query |
-| Hook | `mediaType` option in `processMatrixPhotoInBackground()` |
-| CDMatrixEnhancer | Default `mediaType: 'cd'` bij aanroep |
-| AIScanV2 | Pass `mediaType` van scan state naar parallel processing |
-| UI Component | Toon format badge in resultaat |
 
 ## Bestanden te Wijzigen
-1. `supabase/functions/matrix-discogs-lookup/index.ts` - Edge function met mediaType support
-2. `src/hooks/useParallelMatrixProcessing.ts` - MediaType option toevoegen
-3. `src/pages/CDMatrixEnhancer.tsx` - MediaType meesturen (default cd)
-4. `src/pages/AIScanV2.tsx` - MediaType doorsturen naar parallel processing
-5. `src/components/matrix-enhancer/MatrixDiscogsResult.tsx` - Format badge tonen
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `supabase/functions/ai-photo-analysis-v2/index.ts` | Nieuwe `searchDiscogsHierarchical` functie, format parameter in alle searches |
+| `src/pages/AIScanV2.tsx` | `mediaType` meesturen naar edge function |
 
 ## Verwacht Resultaat
-- CD scans retourneren ALLEEN CD releases
-- Vinyl scans retourneren ALLEEN Vinyl releases
-- Format wordt getoond in de UI voor bevestiging
-- Geen cross-format matches meer mogelijk
+
+Bij scan van de Ella Fitzgerald CD:
+1. Zoek: "Ella Fitzgerald A Portrait of Ella Fitzgerald" + format=CD
+2. Filter: Resultaten met catno "SMD 847"
+3. Match: Release 4381440 (de correcte CD)
+
+LP releases worden nooit meer geretourneerd bij een CD scan.

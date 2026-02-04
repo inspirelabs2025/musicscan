@@ -784,10 +784,22 @@ export default function AIScanV2() {
                     </Tooltip>
                   </h3>
                   <div className="space-y-1 text-sm">
-                    {analysisResult.result.matrix_number && <div><strong>Matrix Nr:</strong> {analysisResult.result.matrix_number}</div>}
-                    {analysisResult.result.sid_code_mastering && <div><strong>IFPI Mastering:</strong> {analysisResult.result.sid_code_mastering}</div>}
-                    {analysisResult.result.sid_code_mould && <div><strong>IFPI Mould:</strong> {analysisResult.result.sid_code_mould}</div>}
-                    {analysisResult.result.label_code && <div><strong>Label Code:</strong> {analysisResult.result.label_code}</div>}
+                    <div className="flex items-center justify-between">
+                      <span><strong>Matrix Nr:</strong> {analysisResult.result.matrix_number || 'null'}</span>
+                      {!analysisResult.result.matrix_number && mediaType === 'cd' && (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-xs text-primary"
+                          onClick={() => navigate('/cd-matrix-enhancer')}
+                        >
+                          🔍 Matrix Enhancer →
+                        </Button>
+                      )}
+                    </div>
+                    <div><strong>IFPI Mastering:</strong> {analysisResult.result.sid_code_mastering || 'null'}</div>
+                    <div><strong>IFPI Mould:</strong> {analysisResult.result.sid_code_mould || 'null'}</div>
+                    <div><strong>Label Code:</strong> {analysisResult.result.label_code || 'null'}</div>
                     {analysisResult.result.barcode && <div><strong>Barcode:</strong> {analysisResult.result.barcode}</div>}
                     {analysisResult.result.genre && <div><strong>Genre:</strong> {analysisResult.result.genre}</div>}
                     {analysisResult.result.country && <div><strong>Land:</strong> {analysisResult.result.country}</div>}
@@ -795,6 +807,19 @@ export default function AIScanV2() {
                     <div><strong>Scan ID:</strong> {analysisResult.scanId}</div>
                     {analysisResult.result.discogs_id && <div><strong>Discogs ID:</strong> {analysisResult.result.discogs_id}</div>}
                   </div>
+                  
+                  {/* Matrix Enhancer link for poor quality scans */}
+                  {mediaType === 'cd' && analysisResult.result.image_quality === 'poor' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-2 gap-2"
+                      onClick={() => navigate('/cd-matrix-enhancer')}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Probeer Matrix Enhancer voor betere resultaten
+                    </Button>
+                  )}
                 </div>
               </div>
 

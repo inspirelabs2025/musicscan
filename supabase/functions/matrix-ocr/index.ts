@@ -5,55 +5,48 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const OCR_PROMPT = `You are an expert OCR system specialized in reading engraved and stamped text from CD inner rings.
+const OCR_PROMPT = `You are an expert OCR system specialized in reading engraved text from CD rings.
 
-**YOUR MISSION - FIND BOTH:**
-1. **MATRIX NUMBER (OUTER RING)** - CRITICAL! Long alphanumeric codes like "4904512 04 6", "519 613-2 04" - this is the PRIMARY identifier
-2. **IFPI codes (INNER RING)** - Small codes like "IFPI 01H3" or "IFPI L028"
+**CRITICAL MISSION - FIND THE COMPLETE MATRIX NUMBER:**
+The MATRIX NUMBER is the MOST IMPORTANT code on a CD. It is a LONG alphanumeric string (usually 10-15 characters) located on the OUTERMOST engraved ring.
 
-**MATRIX/CATALOG NUMBER DETECTION - EQUALLY IMPORTANT:**
-Matrix numbers are the MAIN identifier for CD releases:
-- Located on the OUTER ring (35-58% from center) - look at the zoomed outer ring images!
-- Format: Usually 6-12 characters with spaces/dashes, like "519 613-2 04", "4904512 04 6"
-- Often includes label catalog number + pressing info
-- ENGRAVED (cut into the plastic) - appears as dark lines
-- May include manufacturer codes: PMDC, DADC, PDO, Sonopress, etc.
-- READ THE OUTER RING IMAGES CAREFULLY - they contain the matrix number!
+**EXAMPLES OF FULL MATRIX NUMBERS:**
+- "50999 50844 02"
+- "519 613-2 04 ★"  
+- "4904512 04 6"
+- "7243 8 56423 2 1"
+- "PMDC 0344 02"
 
-**IFPI CODE DETECTION:**
-IFPI codes are secondary identifiers:
-- "IFPI" followed by 4 characters (mastering SID): IFPI 0110, IFPI 01H3, IFPI 4A11
-- "IFPI L" followed by 3 characters (mould SID): IFPI L028, IFPI L551
-- Located in INNER ring (5-20% from center) - check super-zoom images
-- Often STAMPED (embossed) rather than engraved - subtle shadows
-- Can be very small (< 2mm)
+**⚠️ IMPORTANT: "0344 02" alone is NOT a complete matrix number!**
+If you only see a short code like "0344 02", there is MORE text nearby - look for the FULL code!
+The complete matrix often has a prefix like "50999", "519", "PMDC", "7243", etc.
 
-**WHERE TO LOOK:**
-- **OUTER RING images (35-58%)**: MATRIX/CATALOG numbers - THE MAIN CODE
-- **INNER RING images (5-20%)**: IFPI codes, manufacturer marks
-- **SUPER-ZOOM images**: Tiny IFPI codes near center hole
+**WHERE THE MATRIX NUMBER IS:**
+- On the OUTERMOST ring of text (closest to the data/music area)
+- Usually 35-58% from the center
+- ENGRAVED deeply into plastic (dark lines)
+- Often the LONGEST string of characters on the disc
+- READ THE "OUTER RING" IMAGES FIRST!
 
-**READING PRIORITY:**
-1. First find the MATRIX NUMBER in outer ring images (long alphanumeric code)
-2. Then find IFPI codes in inner ring / super-zoom images
-3. Note any other text (Made in Germany, PMDC, etc.)
-
-**ANTI-HALLUCINATION:**
-- Only report what you ACTUALLY see
-- Use low confidence (0.3-0.5) for uncertain readings
-- Matrix numbers are usually clearly visible - high confidence expected
+**SECONDARY: IFPI CODES (smaller, inner ring)**
+- Format: "IFPI" + 4 chars OR "IFPI L" + 3 chars
+- Examples: IFPI 01H3, IFPI L028
+- Located near center hole (5-20% radius)
+- Often stamped/embossed (subtle)
 
 **OUTPUT FORMAT (JSON only):**
 {
   "raw_text": "all text found | separated",
   "clean_text": "cleaned combined text",
   "segments": [
-    {"text": "519 613-2 04", "type": "catalog", "confidence": 0.9},
+    {"text": "50999 50844 02", "type": "catalog", "confidence": 0.9},
     {"text": "IFPI 01H3", "type": "ifpi", "confidence": 0.85}
   ],
   "overall_confidence": 0.0-1.0,
-  "notes": "Describe what you found. MUST mention what you saw in the outer ring (matrix) area."
-}`;
+  "notes": "The COMPLETE matrix number found was X. If only partial found, explain why."
+}
+
+**ANTI-HALLUCINATION:** Only report text you can ACTUALLY read. But DO look carefully at the OUTER ring images for the full matrix number!`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

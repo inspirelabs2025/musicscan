@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info, Camera, Disc } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info, Camera } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,11 +15,6 @@ import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
-import { useParallelMatrixProcessing, EnhancedMatrixData } from '@/hooks/useParallelMatrixProcessing';
-import { detectMatrixPhoto } from '@/utils/matrixPhotoDetector';
-import { ScannerPhotoPreview, MatrixVerificationStep, CDPhotoTips } from '@/components/scanner';
-import type { MatrixVerificationData, MatrixCharacter } from '@/components/scanner';
-import { preprocessImageClient, preprocessCDImageClient } from '@/utils/clientImagePreprocess';
 import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 
 // Simple V2 components for media type and condition selection
@@ -27,12 +22,6 @@ import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 interface UploadedFile {
   file: File;
   preview: string;
-  processedPreview?: string;
-  processingStats?: {
-    contrastApplied: boolean;
-    wasResized: boolean;
-    processingTimeMs: number;
-  };
   id: string;
 }
 interface AnalysisResult {
@@ -49,7 +38,6 @@ interface AnalysisResult {
     ai_description: string;
     image_quality?: string;
     extracted_details?: any;
-    artwork_url?: string | null;
     // Technical identifiers
     matrix_number?: string | null;
     sid_code_mastering?: string | null;
@@ -58,10 +46,6 @@ interface AnalysisResult {
     barcode?: string | null;
     genre?: string | null;
     country?: string | null;
-    // Matrix verification data
-    matrix_characters?: MatrixCharacter[];
-    needs_verification?: boolean;
-    overall_matrix_confidence?: number;
     // Pricing from Discogs (now included in V2 response)
     pricing_stats?: {
       lowest_price: number | null;
@@ -81,126 +65,14 @@ export default function AIScanV2() {
     loading
   } = useAuth();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  
-  // Get params from URL (from Matrix Enhancer)
-  const fromEnhancer = searchParams.get('fromEnhancer') === 'true';
-  const urlMediaType = searchParams.get('mediaType') as 'vinyl' | 'cd' | null;
-  
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | ''>(urlMediaType || '');
+  const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | ''>('');
   const [conditionGrade, setConditionGrade] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
-  
-  // Pre-filled matrix, IFPI codes, and photo from Matrix Enhancer
-  const [prefilledMatrix, setPrefilledMatrix] = useState<string | null>(null);
-  const [prefilledIfpiCodes, setPrefilledIfpiCodes] = useState<string[]>([]);
-  const [fromMatrixEnhancer, setFromMatrixEnhancer] = useState(false);
-  
-  // Matrix verification state
-  const [verificationStep, setVerificationStep] = useState<'pending' | 'verifying' | 'verified' | 'skipped'>('pending');
-  const [verifiedMatrixNumber, setVerifiedMatrixNumber] = useState<string | null>(null);
-  
-  // Parallel matrix processing state
-  const {
-    result: matrixProcessingResult,
-    isProcessing: isMatrixProcessing,
-    startBackgroundProcessing,
-    waitForResult: waitForMatrixResult,
-    reset: resetMatrixProcessing
-  } = useParallelMatrixProcessing();
-  
-  // Track which file is being processed for matrix
-  const [matrixFileId, setMatrixFileId] = useState<string | null>(null);
-  const matrixProcessingPromiseRef = useRef<Promise<EnhancedMatrixData | null> | null>(null);
-  
-  // Load data from Matrix Enhancer via sessionStorage
-  useEffect(() => {
-    if (fromEnhancer) {
-      try {
-        const storedData = sessionStorage.getItem('matrixEnhancerData');
-        if (storedData) {
-          const data = JSON.parse(storedData);
-          // Check if data is recent (within 5 minutes)
-          if (Date.now() - data.timestamp < 5 * 60 * 1000) {
-            setPrefilledMatrix(data.matrix);
-            setFromMatrixEnhancer(true);
-            
-            // Load IFPI codes if available
-            if (data.ifpiCodes && Array.isArray(data.ifpiCodes)) {
-              setPrefilledIfpiCodes(data.ifpiCodes);
-            }
-            
-            // NEW: If Discogs match exists, show it directly (skip re-analysis)
-            if (data.discogsMatch) {
-              setAnalysisResult({
-                scanId: `enhancer-${Date.now()}`,
-                result: {
-                  discogs_id: data.discogsMatch.discogs_id,
-                  discogs_url: data.discogsMatch.discogs_url,
-                  artist: data.discogsMatch.artist,
-                  title: data.discogsMatch.title,
-                  label: data.discogsMatch.label,
-                  catalog_number: data.discogsMatch.catalog_number,
-                  year: data.discogsMatch.year,
-                  confidence_score: data.discogsMatch.match_confidence,
-                  ai_description: `Matrix match via CD Matrix Enhancer`,
-                  matrix_number: data.matrix,
-                  country: data.discogsMatch.country,
-                  genre: data.discogsMatch.genre,
-                  artwork_url: data.discogsMatch.cover_image,
-                },
-                version: 'enhancer-v1'
-              });
-              // Skip verification - already verified in enhancer
-              setVerificationStep('verified');
-              setVerifiedMatrixNumber(data.matrix);
-              
-              toast({
-                title: "✅ Discogs match geladen",
-                description: `${data.discogsMatch.artist} - ${data.discogsMatch.title}`,
-              });
-            }
-            
-            // Convert base64 to File and add to uploadedFiles
-            if (data.photo) {
-              fetch(data.photo)
-                .then(res => res.blob())
-                .then(blob => {
-                  const file = new File([blob], 'matrix-enhancer-photo.jpg', { type: 'image/jpeg' });
-                  const id = Math.random().toString(36).substr(2, 9);
-                  setUploadedFiles([{
-                    file,
-                    preview: data.photo,
-                    id
-                  }]);
-                });
-            }
-            
-            // Only show "selecteer conditie" toast if no Discogs match was loaded
-            if (!data.discogsMatch) {
-              const ifpiText = data.ifpiCodes?.length > 0 ? ` + ${data.ifpiCodes.length} IFPI` : '';
-              toast({
-                title: "Foto en matrix code geladen",
-                description: `Selecteer een conditie om direct te starten${ifpiText}`,
-              });
-            }
-          }
-          // Clear sessionStorage after reading
-          sessionStorage.removeItem('matrixEnhancerData');
-        }
-      } catch (e) {
-        console.error('Failed to load matrix enhancer data:', e);
-      }
-      // Clear URL params
-      setSearchParams({});
-    }
-  }, [fromEnhancer]);
-  
   const {
     checkUsageLimit,
     incrementUsage
@@ -226,156 +98,29 @@ export default function AIScanV2() {
     }
   }, [analysisResult?.result?.discogs_id, searchByDiscogsId]);
 
-  // Auto-trigger matrix verification when analysis completes with uncertain characters
-  useEffect(() => {
-    if (analysisResult && analysisResult.result.needs_verification && verificationStep === 'pending') {
-      console.log('🔍 Matrix needs verification, showing verification step');
-      setVerificationStep('verifying');
-    } else if (analysisResult && !analysisResult.result.needs_verification && verificationStep === 'pending') {
-      // High confidence - skip verification
-      setVerificationStep('verified');
-      setVerifiedMatrixNumber(analysisResult.result.matrix_number || null);
-    }
-  }, [analysisResult, verificationStep]);
-
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!loading && !user) {
       window.location.href = '/auth';
     }
   }, [user, loading]);
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    
-    // FIX: Track starting count + index within this batch to handle closure stale state
-    const startingCount = uploadedFiles.length;
-    let processedInBatch = 0;
-    let batchMatrixFound = false; // Prevent multiple matrix detections in same batch
-    
-    for (const file of files) {
+    files.forEach(file => {
       if (file.type.startsWith('image/')) {
-        const id = Math.random().toString(36).substr(2, 9);
-        const fileIndexInTotal = startingCount + processedInBatch;
-        processedInBatch++;
-        
-        // First, read the file as data URL for original preview
         const reader = new FileReader();
-        reader.onload = async (e) => {
-          const originalPreview = e.target?.result as string;
-          
-          // Add file immediately with original preview
+        reader.onload = e => {
           const newFile: UploadedFile = {
             file,
-            preview: originalPreview,
-            id
+            preview: e.target?.result as string,
+            id: Math.random().toString(36).substr(2, 9)
           };
           setUploadedFiles(prev => [...prev, newFile]);
-          
-          // For CD media type, detect if this is a matrix photo and process in background
-          // Strategy 1: Position-based auto-detection (3rd photo = index 2 is conventionally the matrix photo)
-          // Strategy 2: Visual detection with lowered thresholds as fallback
-          if (mediaType === 'cd' && !matrixFileId && !batchMatrixFound && !matrixProcessingPromiseRef.current) {
-            // Use fileIndexInTotal instead of stale uploadedFiles.length
-            const isConventionalMatrixPosition = fileIndexInTotal === 2; // This will be the 3rd photo (index 2)
-            
-            console.log(`📍 File "${file.name}" at batch index ${fileIndexInTotal}, isMatrixPosition: ${isConventionalMatrixPosition}`);
-            
-            if (isConventionalMatrixPosition) {
-              batchMatrixFound = true; // Prevent other files in batch from also triggering
-              console.log(`📍 Position-based matrix detection: 3rd photo (index 2) auto-detected as matrix`);
-              setMatrixFileId(id);
-              
-              // Start background processing immediately with mediaType
-              const processingPromise = startBackgroundProcessing(file, {
-                skipDetection: true,
-                confidenceThreshold: 0.5,
-                mediaType: mediaType as 'cd' | 'vinyl'
-              });
-              matrixProcessingPromiseRef.current = processingPromise;
-              
-              toast({
-                title: "Matrix foto gedetecteerd",
-                description: "Positie 3: Label/Matrix - Geavanceerde verwerking gestart...",
-              });
-            } else if (!batchMatrixFound) {
-              // Fallback: visual detection with lowered threshold (only if no matrix found yet)
-              try {
-                console.log(`🔍 Checking if "${file.name}" is a matrix photo (visual detection)...`);
-                const detection = await detectMatrixPhoto(file);
-                
-                // Only use visual detection if nothing found yet AND confidence is high enough
-                if (detection.isMatrix && detection.confidence >= 0.25 && !batchMatrixFound && !matrixProcessingPromiseRef.current) {
-                  batchMatrixFound = true;
-                  console.log(`✅ Matrix photo detected: "${file.name}" (${(detection.confidence * 100).toFixed(0)}%)`);
-                  setMatrixFileId(id);
-                  
-                  // Start background processing with mediaType
-                  const processingPromise = startBackgroundProcessing(file, {
-                    skipDetection: true, // Already detected
-                    confidenceThreshold: 0.5,
-                    mediaType: mediaType as 'cd' | 'vinyl'
-                  });
-                  matrixProcessingPromiseRef.current = processingPromise;
-                  
-                  toast({
-                    title: "Matrix foto gedetecteerd",
-                    description: `Visuele detectie: ${(detection.confidence * 100).toFixed(0)}% zekerheid`,
-                  });
-                }
-              } catch (err) {
-                console.warn('Matrix detection failed:', err);
-              }
-            }
-          }
-          
-          // Process with standard preprocessing
-          try {
-            const preprocessResult = mediaType === 'cd' 
-              ? await preprocessCDImageClient(file, {
-                  maxDimension: 1600,
-                  applyContrast: true,
-                  quality: 0.85,
-                  applyCDMatrixFilter: true
-                })
-              : await preprocessImageClient(file, {
-                  maxDimension: 1600,
-                  applyContrast: true,
-                  quality: 0.85
-                });
-            
-            // Update the file with processed preview
-            setUploadedFiles(prev => prev.map(f => 
-              f.id === id 
-                ? {
-                    ...f,
-                    processedPreview: preprocessResult.processedImage,
-                    processingStats: {
-                      contrastApplied: preprocessResult.stats.contrastApplied,
-                      wasResized: preprocessResult.stats.wasResized,
-                      processingTimeMs: preprocessResult.stats.processingTimeMs
-                    }
-                  }
-                : f
-            ));
-            
-            // Show feedback for CD filtering
-            if (mediaType === 'cd' && 'cdFilterStats' in preprocessResult && preprocessResult.cdFilterStats) {
-              const stats = preprocessResult.cdFilterStats as { reflectionPixelsFiltered: number; avgColorVariation: number };
-              if (stats.avgColorVariation > 40) {
-                toast({
-                  title: "Reflecties gedetecteerd",
-                  description: `${stats.reflectionPixelsFiltered.toLocaleString()} pixels gefilterd voor betere matrix herkenning.`,
-                });
-              }
-            }
-          } catch (err) {
-            console.warn('Preprocessing failed, using original:', err);
-          }
         };
         reader.readAsDataURL(file);
       }
-    }
-  }, [mediaType, matrixFileId, startBackgroundProcessing, uploadedFiles.length]);
+    });
+  }, []);
   const removeFile = useCallback((id: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== id));
   }, []);
@@ -475,44 +220,6 @@ export default function AIScanV2() {
 
       // Call the V2 AI analysis function
       console.log('🤖 Calling AI analysis V2 function...');
-      
-      // Wait for background matrix processing if running for CD
-      let enhancedMatrixData: EnhancedMatrixData | null = null;
-      if (mediaType === 'cd' && matrixProcessingPromiseRef.current) {
-        console.log('⏳ Waiting for background matrix enhancement to complete...');
-        setAnalysisProgress(45);
-        
-        try {
-          enhancedMatrixData = await matrixProcessingPromiseRef.current;
-          if (enhancedMatrixData) {
-            console.log('✅ Background matrix processing complete:', enhancedMatrixData);
-            toast({
-              title: "🔬 Matrix verwerking voltooid",
-              description: enhancedMatrixData.matrixNumber 
-                ? `Matrix: ${enhancedMatrixData.matrixNumber}` 
-                : "Verwerking afgerond",
-            });
-          }
-        } catch (err) {
-          console.warn('⚠️ Background matrix processing failed (continuing with normal analysis):', err);
-        }
-      }
-      
-      setAnalysisProgress(50);
-      
-      // Use enhanced matrix data OR prefilled data from manual Matrix Enhancer
-      const finalPrefilledMatrix = enhancedMatrixData?.matrixNumber || prefilledMatrix || undefined;
-      const finalPrefilledIfpiCodes = enhancedMatrixData?.ifpiCodes?.length 
-        ? enhancedMatrixData.ifpiCodes 
-        : (prefilledIfpiCodes.length > 0 ? prefilledIfpiCodes : undefined);
-      
-      if (finalPrefilledMatrix) {
-        console.log('📎 Using matrix from Matrix Enhancer:', finalPrefilledMatrix);
-      }
-      if (finalPrefilledIfpiCodes?.length) {
-        console.log('📎 Using IFPI codes from Matrix Enhancer:', finalPrefilledIfpiCodes);
-      }
-      
       const {
         data,
         error: functionError
@@ -520,25 +227,7 @@ export default function AIScanV2() {
         body: {
           photoUrls,
           mediaType,
-          conditionGrade,
-          prefilledMatrix: finalPrefilledMatrix,
-          prefilledIfpiCodes: finalPrefilledIfpiCodes,
-          // Pass full enhanced matrix data for cross-validation
-          enhancedMatrixData: enhancedMatrixData ? {
-            matrixNumber: enhancedMatrixData.matrixNumber,
-            ifpiCodes: enhancedMatrixData.ifpiCodes,
-            discogsId: enhancedMatrixData.discogsId,
-            discogsUrl: enhancedMatrixData.discogsUrl,
-            artist: enhancedMatrixData.artist,
-            title: enhancedMatrixData.title,
-            catalogNumber: enhancedMatrixData.catalogNumber,
-            label: enhancedMatrixData.label,
-            year: enhancedMatrixData.year,
-            country: enhancedMatrixData.country,
-            genre: enhancedMatrixData.genre,
-            coverImage: enhancedMatrixData.coverImage,
-            matchConfidence: enhancedMatrixData.matchConfidence
-          } : undefined
+          conditionGrade
         }
       });
       console.log('📊 Function response:', {
@@ -562,26 +251,10 @@ export default function AIScanV2() {
       // Increment usage after successful analysis
       await incrementUsage('ai_scans');
       console.log('✅ Analysis completed successfully');
-      
-      // Check for NO_EXACT_MATCH status
-      const searchStatus = data.result?.search_status || data.searchMetadata?.status;
-      if (searchStatus === 'NO_EXACT_MATCH' || (!data.result?.discogs_id && data.result?.confidence_score === 0)) {
-        toast({
-          title: "⚠️ Geen exacte match gevonden",
-          description: `Release met barcode of catalogusnummer niet gevonden in Discogs database.`,
-          variant: "destructive"
-        });
-      } else if (data.result?.discogs_id) {
-        toast({
-          title: "✅ Exacte match gevonden!",
-          description: `${data.result.artist} - ${data.result.title}`,
-        });
-      } else {
-        toast({
-          title: "Analyse voltooid",
-          description: `Vertrouwen: ${Math.round(data.result.confidence_score * 100)}%`
-        });
-      }
+      toast({
+        title: "Analyse voltooid!",
+        description: `V2 analyse succesvol afgerond met ${Math.round(data.result.confidence_score * 100)}% vertrouwen.`
+      });
     } catch (err) {
       console.error('❌ Analysis error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -600,60 +273,8 @@ export default function AIScanV2() {
     setAnalysisResult(null);
     setError(null);
     setAnalysisProgress(0);
-    setVerificationStep('pending');
-    setVerifiedMatrixNumber(null);
-    setPrefilledMatrix(null);
-    setPrefilledIfpiCodes([]);
-    setFromMatrixEnhancer(false);
     resetSearchState();
-    // Reset parallel matrix processing state
-    resetMatrixProcessing();
-    setMatrixFileId(null);
-    matrixProcessingPromiseRef.current = null;
   };
-
-  // Handle matrix verification completion
-  const handleMatrixVerified = useCallback(async (
-    verifiedMatrix: string, 
-    corrections: Array<{ position: number; original: string; corrected: string }>
-  ) => {
-    setVerifiedMatrixNumber(verifiedMatrix);
-    setVerificationStep('verified');
-    
-    // Save corrections to database for training
-    if (corrections.length > 0 && analysisResult?.scanId && user) {
-      try {
-        const { error: saveError } = await supabase
-          .from('matrix_corrections')
-          .insert({
-            scan_id: analysisResult.scanId,
-            original_matrix: analysisResult.result.matrix_number || '',
-            corrected_matrix: verifiedMatrix,
-            character_corrections: corrections,
-            media_type: mediaType,
-            user_id: user.id
-          });
-        
-        if (saveError) {
-          console.error('Failed to save matrix correction:', saveError);
-        } else {
-          console.log('✅ Matrix correction saved for training');
-          toast({
-            title: "Correctie opgeslagen",
-            description: "Bedankt! Je correctie helpt de herkenning te verbeteren."
-          });
-        }
-      } catch (err) {
-        console.error('Error saving correction:', err);
-      }
-    }
-  }, [analysisResult, mediaType, user]);
-
-  // Handle skipping verification
-  const handleSkipVerification = useCallback(() => {
-    setVerificationStep('skipped');
-    setVerifiedMatrixNumber(analysisResult?.result.matrix_number || null);
-  }, [analysisResult]);
 
   // Simulate progress during analysis
   useEffect(() => {
@@ -719,70 +340,6 @@ export default function AIScanV2() {
               </CardContent>
             </Card>
 
-            {/* CD Photo Tips - only shown when CD is selected */}
-            {mediaType === 'cd' && (
-              <div className="space-y-4">
-                <CDPhotoTips />
-                
-                {/* Show prefilled matrix if present */}
-                {prefilledMatrix && (
-                  <Alert className="border-green-500/50 bg-green-500/10">
-                    <Disc className="h-4 w-4 text-green-600" />
-                    <AlertDescription className="flex items-center justify-between">
-                      <span>
-                        <strong>Matrix code ingeladen:</strong> {prefilledMatrix}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setPrefilledMatrix(null)}
-                        className="h-6 px-2 text-xs"
-                      >
-                        Verwijder
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
-                )}
-                
-                {/* Show prefilled IFPI codes if present */}
-                {prefilledIfpiCodes.length > 0 && (
-                  <Alert className="border-blue-500/50 bg-blue-500/10">
-                    <Info className="h-4 w-4 text-blue-600" />
-                    <AlertDescription className="flex items-center justify-between">
-                      <span>
-                        <strong>IFPI codes:</strong> {prefilledIfpiCodes.join(', ')}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setPrefilledIfpiCodes([])}
-                        className="h-6 px-2 text-xs"
-                      >
-                        Verwijder
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
-                )}
-                
-                {/* Directe link naar Matrix Enhancer */}
-                <Card className="border-primary/30 bg-primary/5">
-                  <CardContent className="pt-4">
-                    <Button
-                      variant="outline"
-                      className="w-full gap-2"
-                      onClick={() => navigate('/cd-matrix-enhancer')}
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      {prefilledMatrix ? 'Andere Matrix Detecteren' : 'Open Matrix Enhancer (Geavanceerd)'}
-                    </Button>
-                    <p className="text-xs text-muted-foreground mt-2 text-center">
-                      Handmatige tuning voor moeilijke CD foto's
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
             {/* Condition Grade Selection */}
             <Card>
               <CardHeader>
@@ -806,105 +363,40 @@ export default function AIScanV2() {
               </CardContent>
             </Card>
 
-            {/* From Matrix Enhancer: Show compact preview */}
-            {fromMatrixEnhancer && uploadedFiles.length > 0 && (
-              <Card className="border-green-500/50 bg-green-500/5">
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                    <CheckCircle className="h-5 w-5" />
-                    Foto geladen van Matrix Enhancer
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4">
-                    <img 
-                      src={uploadedFiles[0].preview} 
-                      alt="Matrix foto" 
-                      className="w-24 h-24 object-cover rounded-lg border"
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">
-                        Foto is klaar voor analyse
-                      </p>
-                      {prefilledMatrix && (
-                        <Badge className="mt-2 bg-primary/20 text-primary">
-                          Matrix: {prefilledMatrix}
-                        </Badge>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setFromMatrixEnhancer(false);
-                        setUploadedFiles([]);
-                        setPrefilledMatrix(null);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* File Upload */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Foto's</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                  <Camera className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Klik om foto's toe te voegen
+                  </p>
+                  <input type="file" accept="image/*" capture="environment" multiple onChange={handleFileUpload} className="hidden" id="file-upload-v2" />
+                  <Button asChild variant="outline">
+                    <label htmlFor="file-upload-v2" className="cursor-pointer flex items-center gap-2">
+                      <Camera className="h-4 w-4" />
+                      Foto's
+                    </label>
+                  </Button>
+                </div>
 
-            {/* File Upload - only show if NOT from Matrix Enhancer */}
-            {!fromMatrixEnhancer && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Foto's</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                    <Camera className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Klik om foto's toe te voegen
-                    </p>
-                    <input type="file" accept="image/*" capture="environment" multiple onChange={handleFileUpload} className="hidden" id="file-upload-v2" />
-                    <Button asChild variant="outline">
-                      <label htmlFor="file-upload-v2" className="cursor-pointer flex items-center gap-2">
-                        <Camera className="h-4 w-4" />
-                        Foto's
-                      </label>
-                    </Button>
-                  </div>
-
-                  {/* Uploaded Files Preview with Smart Enhancement Comparison */}
-                  {uploadedFiles.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-muted-foreground">
-                          {uploadedFiles.length} foto{uploadedFiles.length !== 1 ? "'s" : ''} geüpload
+                {/* Uploaded Files Preview */}
+                {uploadedFiles.length > 0 && <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {uploadedFiles.map(file => <div key={file.id} className="relative group">
+                        <img src={file.preview} alt={file.file.name} className="w-full h-32 object-cover rounded-lg border" />
+                        <button onClick={() => removeFile(file.id)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <X className="h-4 w-4" />
+                        </button>
+                        <p className="text-xs text-muted-foreground mt-1 truncate">
+                          {file.file.name}
                         </p>
-                        {uploadedFiles.some(f => f.processedPreview) && (
-                          <Badge variant="outline" className="text-xs">
-                            <Sparkles className="h-3 w-3 mr-1" />
-                            Smart verbeterd
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {uploadedFiles.map(file => (
-                          <ScannerPhotoPreview
-                            key={file.id}
-                            id={file.id}
-                            fileName={file.file.name}
-                            originalPreview={file.preview}
-                            processedPreview={file.processedPreview}
-                            processingStats={file.processingStats}
-                            onRemove={removeFile}
-                            disabled={isAnalyzing}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-xs text-muted-foreground text-center">
-                        💡 Sleep de slider om origineel vs. smart verbeterd te vergelijken
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                      </div>)}
+                  </div>}
+              </CardContent>
+            </Card>
 
             {/* Analysis Button */}
             <Card>
@@ -959,32 +451,12 @@ export default function AIScanV2() {
               </Alert>}
           </>}
 
-        {/* Matrix Verification Step */}
-        {analysisResult && verificationStep === 'verifying' && analysisResult.result.matrix_number && (
-          <MatrixVerificationStep
-            data={{
-              matrixNumber: analysisResult.result.matrix_number,
-              matrixCharacters: analysisResult.result.matrix_characters || [],
-              overallConfidence: analysisResult.result.overall_matrix_confidence || 0.5,
-              needsVerification: analysisResult.result.needs_verification || false,
-              mediaType: mediaType as 'vinyl' | 'cd',
-              photoUrl: uploadedFiles[uploadedFiles.length - 1]?.preview
-            }}
-            onVerified={handleMatrixVerified}
-            onSkip={handleSkipVerification}
-          />
-        )}
-
-        {/* Analysis Results - only show after verification is complete */}
-        {analysisResult && (verificationStep === 'verified' || verificationStep === 'skipped') && <Card>
+        {/* Analysis Results */}
+        {analysisResult && <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  {analysisResult.result.discogs_id ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-5 w-5 text-orange-500" />
-                  )}
+                  <CheckCircle className="h-5 w-5 text-green-500" />
                   V2 Analyse Resultaat
                   <Badge variant="outline">{analysisResult.version}</Badge>
                 </CardTitle>
@@ -994,30 +466,6 @@ export default function AIScanV2() {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* NO EXACT MATCH Warning */}
-              {!analysisResult.result.discogs_id && (
-                <Alert variant="destructive" className="border-orange-500 bg-orange-50 dark:bg-orange-950">
-                  <AlertCircle className="h-4 w-4 text-orange-600" />
-                  <AlertDescription className="text-orange-800 dark:text-orange-200">
-                    <strong>Geen exacte match gevonden.</strong>
-                    <p className="mt-1 text-sm">
-                      De gescande barcode of catalogusnummer staat niet in de Discogs database. 
-                      Dit betekent dat deze specifieke release niet geregistreerd is.
-                    </p>
-                    {analysisResult.result.barcode && (
-                      <p className="mt-1 text-sm">
-                        <strong>Gescande barcode:</strong> {analysisResult.result.barcode}
-                      </p>
-                    )}
-                    {analysisResult.result.catalog_number && (
-                      <p className="text-sm">
-                        <strong>Gescand catalogusnummer:</strong> {analysisResult.result.catalog_number}
-                      </p>
-                    )}
-                  </AlertDescription>
-                </Alert>
-              )}
-
               {/* Confidence Score */}
               <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <span className="font-medium">Vertrouwen Score:</span>
@@ -1052,22 +500,10 @@ export default function AIScanV2() {
                     </Tooltip>
                   </h3>
                   <div className="space-y-1 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span><strong>Matrix Nr:</strong> {analysisResult.result.matrix_number || 'null'}</span>
-                      {!analysisResult.result.matrix_number && mediaType === 'cd' && (
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="h-auto p-0 text-xs text-primary"
-                          onClick={() => navigate('/cd-matrix-enhancer')}
-                        >
-                          🔍 Matrix Enhancer →
-                        </Button>
-                      )}
-                    </div>
-                    <div><strong>IFPI Mastering:</strong> {analysisResult.result.sid_code_mastering || 'null'}</div>
-                    <div><strong>IFPI Mould:</strong> {analysisResult.result.sid_code_mould || 'null'}</div>
-                    <div><strong>Label Code:</strong> {analysisResult.result.label_code || 'null'}</div>
+                    {analysisResult.result.matrix_number && <div><strong>Matrix Nr:</strong> {analysisResult.result.matrix_number}</div>}
+                    {analysisResult.result.sid_code_mastering && <div><strong>IFPI Mastering:</strong> {analysisResult.result.sid_code_mastering}</div>}
+                    {analysisResult.result.sid_code_mould && <div><strong>IFPI Mould:</strong> {analysisResult.result.sid_code_mould}</div>}
+                    {analysisResult.result.label_code && <div><strong>Label Code:</strong> {analysisResult.result.label_code}</div>}
                     {analysisResult.result.barcode && <div><strong>Barcode:</strong> {analysisResult.result.barcode}</div>}
                     {analysisResult.result.genre && <div><strong>Genre:</strong> {analysisResult.result.genre}</div>}
                     {analysisResult.result.country && <div><strong>Land:</strong> {analysisResult.result.country}</div>}
@@ -1075,19 +511,6 @@ export default function AIScanV2() {
                     <div><strong>Scan ID:</strong> {analysisResult.scanId}</div>
                     {analysisResult.result.discogs_id && <div><strong>Discogs ID:</strong> {analysisResult.result.discogs_id}</div>}
                   </div>
-                  
-                  {/* Matrix Enhancer link for poor quality scans */}
-                  {mediaType === 'cd' && analysisResult.result.image_quality === 'poor' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2 gap-2"
-                      onClick={() => navigate('/cd-matrix-enhancer')}
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      Probeer Matrix Enhancer voor betere resultaten
-                    </Button>
-                  )}
                 </div>
               </div>
 
@@ -1197,10 +620,6 @@ export default function AIScanV2() {
                     return;
                   }
                   console.log('🔗 Adding to collection with condition:', conditionGrade);
-                  
-                  // Get pricing data from V2 response or searchResults
-                  const pricing = analysisResult.result.pricing_stats || searchResults[0]?.pricing_stats;
-                  
                   const params = new URLSearchParams({
                     mediaType: mediaType,
                     discogsId: analysisResult.result.discogs_id?.toString() || '',
@@ -1212,14 +631,6 @@ export default function AIScanV2() {
                     condition: conditionGrade,
                     fromAiScan: 'true'
                   });
-                  
-                  // Add pricing if available
-                  if (pricing) {
-                    if (pricing.lowest_price) params.set('lowestPrice', pricing.lowest_price.toString());
-                    if (pricing.median_price) params.set('medianPrice', pricing.median_price.toString());
-                    if (pricing.highest_price) params.set('highestPrice', pricing.highest_price.toString());
-                    if ('num_for_sale' in pricing && pricing.num_for_sale) params.set('numForSale', pricing.num_for_sale.toString());
-                  }
                   console.log('🚀 Navigating to:', `/scanner/discogs?${params.toString()}`);
                   navigate(`/scanner/discogs?${params.toString()}`);
                 }} className="w-full" disabled={!conditionGrade}>

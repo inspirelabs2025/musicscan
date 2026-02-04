@@ -172,13 +172,14 @@ export default function CDMatrixEnhancer() {
         !s.text.toUpperCase().match(/IFPI\s*L[A-Z]?\d/)
       )?.text;
       
-      console.log(`[CDMatrixEnhancer] Discogs lookup: matrix="${matrixText}", ifpiM="${ifpiMastering || ''}", ifpiMould="${ifpiMould || ''}"`);
+      console.log(`[CDMatrixEnhancer] Discogs lookup (CD): matrix="${matrixText}", ifpiM="${ifpiMastering || ''}", ifpiMould="${ifpiMould || ''}"`);
       
       const { data, error } = await supabase.functions.invoke('matrix-discogs-lookup', {
         body: {
           matrixNumber: matrixText,
           ifpiMastering,
           ifpiMould,
+          mediaType: 'cd', // CD Matrix Enhancer always searches for CDs
         }
       });
       

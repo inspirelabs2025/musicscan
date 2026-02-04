@@ -62,6 +62,7 @@ interface LookupResult {
   cover_image: string | null;
   match_confidence: number;
   match_reasons: string[];
+  format?: string; // 'CD' or 'Vinyl'
   all_candidates?: Array<{
     id: number;
     artist: string;
@@ -188,31 +189,30 @@ function calculateMatchScore(
     reasons.push('has_catalog');
   }
   
-  // Is CD format
-  // Note: We can't check format easily from full release, but search filters already do this
-  
   return { score, reasons };
 }
 
-// Check if release is a CD format
+/**
+ * STRICT CD format check - returns true ONLY for CDs, never for vinyl
+ */
 function isCDFormat(formats: string[]): boolean {
   if (!formats || formats.length === 0) return false;
   
-  const cdKeywords = ['CD', 'CD-ROM', 'CDr', 'HDCD', 'SACD', 'CD+G', 'Enhanced CD', 'Mini CD'];
-  const vinylKeywords = ['Vinyl', 'LP', '12"', '7"', '10"', '78 RPM', '45 RPM', '33 RPM'];
-  
   const formatStr = formats.join(' ').toUpperCase();
   
-  // Explicitly reject if it has vinyl keywords
+  // FIRST: Explicitly reject if it has ANY vinyl keywords
+  const vinylKeywords = ['VINYL', 'LP', '12"', '12 "', '7"', '7 "', '10"', '10 "', '78 RPM', '45 RPM', '33 RPM', '33⅓'];
   for (const vinyl of vinylKeywords) {
-    if (formatStr.includes(vinyl.toUpperCase())) {
+    if (formatStr.includes(vinyl)) {
+      console.log(`[isCDFormat] REJECTED: Contains vinyl keyword "${vinyl}"`);
       return false;
     }
   }
   
-  // Accept if it has CD keywords
+  // SECOND: Accept only if it has CD keywords
+  const cdKeywords = ['CD', 'CD-ROM', 'CDR', 'HDCD', 'SACD', 'CD+G', 'ENHANCED CD', 'MINI CD', 'MINIDISC', 'DTS'];
   for (const cd of cdKeywords) {
-    if (formatStr.includes(cd.toUpperCase())) {
+    if (formatStr.includes(cd)) {
       return true;
     }
   }
@@ -220,10 +220,50 @@ function isCDFormat(formats: string[]): boolean {
   return false;
 }
 
-async function searchDiscogs(query: string, token: string): Promise<DiscogsSearchResult[]> {
-  const url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&format=CD&per_page=25`;
+/**
+ * STRICT Vinyl format check - returns true ONLY for vinyl, never for CDs
+ */
+function isVinylFormat(formats: string[]): boolean {
+  if (!formats || formats.length === 0) return false;
   
-  console.log(`[matrix-discogs-lookup] Searching: ${query}`);
+  const formatStr = formats.join(' ').toUpperCase();
+  
+  // FIRST: Explicitly reject if it has ANY CD keywords
+  const cdKeywords = ['CD', 'CD-ROM', 'CDR', 'HDCD', 'SACD', 'CD+G', 'ENHANCED CD', 'MINI CD', 'MINIDISC', 'DTS'];
+  for (const cd of cdKeywords) {
+    if (formatStr.includes(cd)) {
+      console.log(`[isVinylFormat] REJECTED: Contains CD keyword "${cd}"`);
+      return false;
+    }
+  }
+  
+  // SECOND: Accept only if it has vinyl keywords
+  const vinylKeywords = ['VINYL', 'LP', '12"', '12 "', '7"', '7 "', '10"', '10 "', '78 RPM', '45 RPM', '33 RPM', '33⅓', 'ALBUM', 'SINGLE', 'EP', 'MAXI'];
+  for (const vinyl of vinylKeywords) {
+    if (formatStr.includes(vinyl)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Check format based on mediaType parameter
+ */
+function matchesMediaType(formats: string[], mediaType: 'cd' | 'vinyl'): boolean {
+  if (mediaType === 'cd') {
+    return isCDFormat(formats);
+  }
+  return isVinylFormat(formats);
+}
+
+async function searchDiscogs(query: string, token: string, mediaType: 'cd' | 'vinyl'): Promise<DiscogsSearchResult[]> {
+  // Use correct format parameter for Discogs API
+  const formatParam = mediaType === 'vinyl' ? 'Vinyl' : 'CD';
+  const url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&format=${formatParam}&per_page=25`;
+  
+  console.log(`[matrix-discogs-lookup] Searching (${mediaType}): ${query}`);
   
   const response = await fetch(url, {
     headers: {
@@ -241,17 +281,17 @@ async function searchDiscogs(query: string, token: string): Promise<DiscogsSearc
   const data = await response.json();
   const results = data.results || [];
   
-  // Filter to only CD formats - Discogs API format filter isn't always strict
-  const cdResults = results.filter((r: DiscogsSearchResult) => {
-    const isCD = isCDFormat(r.format);
-    if (!isCD) {
-      console.log(`[matrix-discogs-lookup] Filtered out non-CD: ${r.id} - ${r.title} (format: ${r.format?.join(', ')})`);
+  // STRICT filter - Discogs API format filter isn't 100% reliable
+  const filteredResults = results.filter((r: DiscogsSearchResult) => {
+    const matches = matchesMediaType(r.format, mediaType);
+    if (!matches) {
+      console.log(`[matrix-discogs-lookup] FILTERED OUT (${mediaType}): ${r.id} - ${r.title} (format: ${r.format?.join(', ')})`);
     }
-    return isCD;
+    return matches;
   });
   
-  console.log(`[matrix-discogs-lookup] ${results.length} results -> ${cdResults.length} CDs`);
-  return cdResults;
+  console.log(`[matrix-discogs-lookup] ${results.length} results -> ${filteredResults.length} ${mediaType} matches`);
+  return filteredResults;
 }
 
 async function fetchRelease(releaseId: number, token: string): Promise<DiscogsRelease | null> {
@@ -278,7 +318,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { matrixNumber, ifpiMastering, ifpiMould } = await req.json();
+    const { matrixNumber, ifpiMastering, ifpiMould, mediaType = 'cd' } = await req.json();
+    
+    // Validate mediaType
+    const validMediaType: 'cd' | 'vinyl' = mediaType === 'vinyl' ? 'vinyl' : 'cd';
     
     if (!matrixNumber) {
       return new Response(
@@ -287,7 +330,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[matrix-discogs-lookup] Input: matrix="${matrixNumber}", ifpiMastering="${ifpiMastering || ''}", ifpiMould="${ifpiMould || ''}"`);
+    console.log(`[matrix-discogs-lookup] Input: matrix="${matrixNumber}", mediaType="${validMediaType}", ifpiMastering="${ifpiMastering || ''}", ifpiMould="${ifpiMould || ''}"`);
 
     const discogsToken = Deno.env.get('DISCOGS_TOKEN');
     if (!discogsToken) {
@@ -303,7 +346,7 @@ Deno.serve(async (req) => {
     const seenIds = new Set<number>();
     
     for (const term of searchTerms.slice(0, 3)) { // Limit to 3 searches to save API calls
-      const results = await searchDiscogs(term, discogsToken);
+      const results = await searchDiscogs(term, discogsToken, validMediaType);
       
       for (const r of results) {
         if (!seenIds.has(r.id)) {
@@ -319,15 +362,16 @@ Deno.serve(async (req) => {
       if (allResults.length >= 10) break;
     }
     
-    console.log(`[matrix-discogs-lookup] Found ${allResults.length} unique candidates`);
+    console.log(`[matrix-discogs-lookup] Found ${allResults.length} unique candidates (${validMediaType})`);
     
     if (allResults.length === 0) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'No releases found for this matrix',
+          error: `No ${validMediaType.toUpperCase()} releases found for this matrix`,
           match_confidence: 0,
           match_reasons: [],
+          format: validMediaType === 'vinyl' ? 'Vinyl' : 'CD',
         } as LookupResult),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -376,9 +420,10 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: `No confident match found (best: ${(bestMatch?.score * 100 || 0).toFixed(0)}%)`,
+          error: `No confident ${validMediaType.toUpperCase()} match found (best: ${(bestMatch?.score * 100 || 0).toFixed(0)}%)`,
           match_confidence: bestMatch?.score || 0,
           match_reasons: bestMatch?.reasons || [],
+          format: validMediaType === 'vinyl' ? 'Vinyl' : 'CD',
           all_candidates: candidates,
         } as LookupResult),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -405,10 +450,11 @@ Deno.serve(async (req) => {
       cover_image: coverImage,
       match_confidence: bestMatch.score,
       match_reasons: bestMatch.reasons,
+      format: validMediaType === 'vinyl' ? 'Vinyl' : 'CD',
       all_candidates: candidates,
     };
     
-    console.log(`[matrix-discogs-lookup] Match found: ${result.artist} - ${result.title} (${result.catalog_number}) @ ${(result.match_confidence * 100).toFixed(0)}%`);
+    console.log(`[matrix-discogs-lookup] Match found: ${result.artist} - ${result.title} (${result.catalog_number}) @ ${(result.match_confidence * 100).toFixed(0)}% [${result.format}]`);
     
     return new Response(
       JSON.stringify(result),

@@ -285,10 +285,11 @@ export default function AIScanV2() {
               console.log(`📍 Position-based matrix detection: 3rd photo (index 2) auto-detected as matrix`);
               setMatrixFileId(id);
               
-              // Start background processing immediately
+              // Start background processing immediately with mediaType
               const processingPromise = startBackgroundProcessing(file, {
                 skipDetection: true,
-                confidenceThreshold: 0.5
+                confidenceThreshold: 0.5,
+                mediaType: mediaType as 'cd' | 'vinyl'
               });
               matrixProcessingPromiseRef.current = processingPromise;
               
@@ -308,10 +309,11 @@ export default function AIScanV2() {
                   console.log(`✅ Matrix photo detected: "${file.name}" (${(detection.confidence * 100).toFixed(0)}%)`);
                   setMatrixFileId(id);
                   
-                  // Start background processing
+                  // Start background processing with mediaType
                   const processingPromise = startBackgroundProcessing(file, {
                     skipDetection: true, // Already detected
-                    confidenceThreshold: 0.5
+                    confidenceThreshold: 0.5,
+                    mediaType: mediaType as 'cd' | 'vinyl'
                   });
                   matrixProcessingPromiseRef.current = processingPromise;
                   

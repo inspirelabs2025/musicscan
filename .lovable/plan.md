@@ -1,66 +1,113 @@
 
-# Plan: IFPI Code Detectie Verbeteren voor Kleine Binnenste Ring Tekst
+# Plan: Duidelijke Scheiding Matrix / IFPI / Extra Info
 
-## Probleem Analyse
-De IFPI code bevindt zich op de **allerkleinste binnenste ring** (boven "Germany" tekst), en de letters zijn:
-- Veel kleiner dan de matrix/catalogusnummers
-- Mogelijk gestampt/embossed in plaats van gegraveerd
-- In een zeer klein gebied dicht bij het centergat
+## Analyse Huidige Problemen
 
-Huidige IFPI ring crop: 8-40% radius met 3x zoom - dit is te breed en zoomt niet genoeg in op het specifieke IFPI gebied.
+| Wat de AI stuurt | Wat de UI toont | Probleem |
+|------------------|-----------------|----------|
+| type: "other" | "Onbekend" | UI kent "other" niet |
+| type: "catalog" | "Catalogusnummer" | Verwarrende naam |
+| URL als "unknown" | "Onbekend" | AI classificeert verkeerd |
 
-## Technische Oplossing
+## Oplossing: 3 Duidelijke Categorieën
 
-### 1. Nieuwe "Super-Zoom IFPI" Crop Toevoegen
-Maak een extra, veel agressievere zoom specifiek voor de binnenste IFPI-zone:
+```text
+┌─────────────────────────────────────────────────────────┐
+│  📀 MATRIX NUMMER                                       │
+│  ═══════════════                                        │
+│  • Alphanumerieke code voor pressing identificatie      │
+│  • Voorbeelden: "3384732 02 1", "DESCD09", "519 613-2"  │
+│  • ALLEEN cijfers, letters, spaties, streepjes         │
+│  • Meestal 8-15 karakters                               │
+├─────────────────────────────────────────────────────────┤
+│  🔢 IFPI CODE                                           │
+│  ═══════════                                            │
+│  • MOET beginnen met "IFPI"                             │
+│  • Formaten: "IFPI XXXX" of "IFPI LXXX"                │
+├─────────────────────────────────────────────────────────┤
+│  ℹ️  EXTRA INFO                                         │
+│  ══════════                                             │
+│  • URLs: www.megatmotion.com                            │
+│  • Landen: Made in Germany                              │
+│  • Bedrijven: Sony DADC, Sonopress                      │
+│  • NIET belangrijk voor identificatie                   │
+└─────────────────────────────────────────────────────────┘
+```
 
-| Parameter | Huidige IFPI Crop | Nieuwe Super-Zoom |
-|-----------|-------------------|-------------------|
-| Inner radius | 8% | 3% (dichter bij centergat) |
-| Outer radius | 40% | 15% (alleen binnenste ring) |
-| Zoom factor | 3.0x | 5.0x (veel agressiever) |
-| Unsharp radius | 0.4 | 0.3 (scherper voor kleine tekst) |
-| Unsharp amount | 1.5 | 2.0 (sterker contrast) |
+## Technische Wijzigingen
 
-### 2. Contrast Versterking voor Gestampte Tekst
-Gestampte/embossed tekst is vaak alleen zichtbaar door subtiele schaduwen. Toevoegen:
-- Extra CLAHE pass met hogere clip limit (3.5)
-- Directional shadow enhancement voor embossed tekst
-- Inverted versie voor lichte tekst op donkere achtergrond
+### 1. UI Component Update (`MatrixOCRResult.tsx`)
 
-### 3. Bestandswijzigingen
+Aanpassen van de type definities en labels:
 
-**`src/utils/matrixEnhancementPipeline.ts`:**
-- Nieuwe functie `createSuperZoomIfpiCrop()` toevoegen
-- Extra output velden: `superZoomIfpi` en `superZoomIfpiEnhanced`
-- Speciale embossed-text enhancement filter
+- Type enum uitbreiden: `'ifpi' | 'matrix' | 'other'`
+- Verwijderen van verwarrende "catalog" - vervangen door "matrix"
+- Toevoegen van "other" (Extra Info) met grijs/neutraal badge
+- Labels:
+  - `matrix` → "Matrix Nummer" (groen badge)
+  - `ifpi` → "IFPI Code" (blauw badge)  
+  - `other` → "Extra Info" (grijs badge)
 
-**`supabase/functions/matrix-ocr/index.ts`:**
-- Super-zoom afbeeldingen accepteren en prioriteit geven
-- OCR prompt aanpassen om naar zeer kleine tekst te zoeken
+### 2. Edge Function Prompt (`matrix-ocr/index.ts`)
 
-**`src/pages/CDMatrixEnhancer.tsx`:**
-- Super-zoom data meesturen naar OCR functie
+Versimpelen en verduidelijken van de classificatie:
 
-**`src/components/matrix-enhancer/MatrixReviewStep.tsx`:**
-- Nieuwe tab "🔬 Super Zoom IFPI" toevoegen voor preview
+- Type "catalog" vervangen door "matrix" voor consistentie
+- Strengere regels voor wat WEL en NIET een matrix nummer is
+- Expliciet vermelden dat URLs ALTIJD "other" zijn
+- Toevoegen van lengte-check hint (matrix = meestal 8+ karakters)
 
-### 4. Verbeterde OCR Prompt
-Specifieke instructies voor de AI om te zoeken naar:
-- Zeer kleine tekst (< 2mm hoog)
-- Gestampte/embossed karakters met subtiele schaduwen
-- IFPI formaat: "IFPI L" + 3 tekens OF "IFPI" + 4 tekens
-- Tekst die BOVEN andere tekst staat (zoals "Germany")
+### 3. Verbeterde OCR Prompt Structuur
+
+```
+## MATRIX NUMMER (type: "matrix")
+✅ Alphanumeriek, 8-15 karakters
+✅ Bevat vaak spaties of streepjes
+✅ Voorbeelden: "3384732 02 1", "519 613-2 04"
+
+❌ GEEN URLs
+❌ GEEN woorden (Germany, Sony)
+❌ GEEN korte codes (<6 tekens)
+
+## IFPI CODE (type: "ifpi")  
+✅ MOET starten met "IFPI"
+✅ Dan 4-5 karakters
+
+## EXTRA INFO (type: "other")
+Alles wat niet matrix of IFPI is
+```
+
+## Bestanden te Wijzigen
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `src/components/matrix-enhancer/MatrixOCRResult.tsx` | Type definities + labels updaten |
+| `supabase/functions/matrix-ocr/index.ts` | Prompt versimpelen, "catalog"→"matrix" |
 
 ## Verwacht Resultaat
-- 5x zoom op de binnenste 3-15% van de disc
-- Geoptimaliseerde filters voor embossed/gestampte tekst
-- Aparte preview tab om de super-zoom te controleren
-- Betere kans op IFPI detectie door focus op juiste gebied
+
+Na implementatie ziet de UI er zo uit:
+
+```
+┌────────────────────────────────────────┐
+│ 🟢 Matrix Nummer         95%          │
+│    3384732 02 1                        │
+├────────────────────────────────────────┤
+│ 🔵 IFPI Code             90%          │
+│    IFPI L028                           │
+├────────────────────────────────────────┤
+│ ⚪ Extra Info            80%          │
+│    www.megatmotion.com                 │
+├────────────────────────────────────────┤
+│ ⚪ Extra Info            85%          │
+│    Made in Germany                     │
+└────────────────────────────────────────┘
+```
 
 ## Implementatie Volgorde
-1. Super-zoom crop functie in pipeline
-2. UI preview tab toevoegen
-3. Edge function updaten met nieuwe afbeeldingen
-4. OCR prompt verfijnen
-5. Testen en fine-tunen
+
+1. UI types aanpassen (matrix, ifpi, other)
+2. Labels en badges updaten  
+3. Edge function prompt versimpelen
+4. Type "catalog" → "matrix" in alle responses
+5. Testen met dezelfde CD

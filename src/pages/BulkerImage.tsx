@@ -56,6 +56,12 @@ const BulkerImage = () => {
   const urlCatalogNumber = searchParams.get('catalogNumber');
   const urlYear = searchParams.get('year');
   const urlCondition = searchParams.get('condition');
+  
+  // Price data from AI scan
+  const urlLowestPrice = searchParams.get('lowestPrice');
+  const urlMedianPrice = searchParams.get('medianPrice');
+  const urlHighestPrice = searchParams.get('highestPrice');
+  const urlNumForSale = searchParams.get('numForSale');
 
   const { 
     isAnalyzing: isAnalyzingVinyl, 
@@ -131,6 +137,28 @@ const BulkerImage = () => {
     }
     return {};
   }, [state.mediaType]);
+
+  // Effective pricing - use URL prices as fallback when searchResults don't have pricing
+  const effectivePricing = useMemo(() => {
+    const searchPricing = searchResults[0]?.pricing_stats;
+    
+    // If searchResults have pricing, use them
+    if (searchPricing?.lowest_price) {
+      return searchPricing;
+    }
+    
+    // Fallback to URL parameters (from AI scan)
+    if (urlLowestPrice || urlMedianPrice || urlHighestPrice) {
+      return {
+        lowest_price: urlLowestPrice,
+        median_price: urlMedianPrice,
+        highest_price: urlHighestPrice,
+        num_for_sale: urlNumForSale ? parseInt(urlNumForSale) : undefined
+      };
+    }
+    
+    return null;
+  }, [searchResults, urlLowestPrice, urlMedianPrice, urlHighestPrice, urlNumForSale]);
 
   // Auto-populate from AI scan URL parameters and auto-start search
   useEffect(() => {
@@ -235,18 +263,18 @@ const BulkerImage = () => {
   useEffect(() => {
     if (
       state.selectedCondition && 
-      searchResults[0]?.pricing_stats?.lowest_price && 
+      effectivePricing?.lowest_price && 
       !state.calculatedAdvicePrice &&
       !state.useManualAdvicePrice
     ) {
       console.log('🎯 Auto-calculating advice price for condition:', state.selectedCondition);
-      const advicePrice = calculateAdvicePrice(state.selectedCondition, searchResults[0].pricing_stats.lowest_price);
+      const advicePrice = calculateAdvicePrice(state.selectedCondition, effectivePricing.lowest_price);
       if (advicePrice !== null) {
         dispatch({ type: 'SET_CALCULATED_ADVICE_PRICE', payload: advicePrice });
         console.log('💰 Auto-set advice price:', advicePrice);
       }
     }
-  }, [state.selectedCondition, searchResults, state.calculatedAdvicePrice, state.useManualAdvicePrice, calculateAdvicePrice]);
+  }, [state.selectedCondition, effectivePricing, state.calculatedAdvicePrice, state.useManualAdvicePrice, calculateAdvicePrice]);
 
   const checkForDuplicates = useCallback(async (artist: string, title: string, catalogNumber: string) => {
     try {
@@ -811,15 +839,15 @@ const BulkerImage = () => {
           </div>
         )}
 
-        {/* Condition Selector - Only show when Discogs search is complete AND has pricing */}
-        {!isAnalyzing && !isSearching && searchResults.length > 0 && searchResults[0]?.pricing_stats?.lowest_price && (state.discogsIdMode || analysisResult) && (
+        {/* Condition Selector - Only show when Discogs search is complete AND has pricing (from search OR URL) */}
+        {!isAnalyzing && !isSearching && (searchResults.length > 0 || fromAiScan) && effectivePricing?.lowest_price && (state.discogsIdMode || analysisResult || fromAiScan) && (
           <div className="mb-8">
             <ConditionSelector
               mediaType={state.mediaType!}
               selectedCondition={state.selectedCondition}
-              lowestPrice={searchResults[0]?.pricing_stats?.lowest_price}
-              medianPrice={searchResults[0]?.pricing_stats?.median_price}
-              highestPrice={searchResults[0]?.pricing_stats?.highest_price}
+              lowestPrice={effectivePricing.lowest_price}
+              medianPrice={effectivePricing.median_price}
+              highestPrice={effectivePricing.highest_price}
               calculatedAdvicePrice={state.calculatedAdvicePrice}
               manualAdvicePrice={state.manualAdvicePrice}
               useManualAdvicePrice={state.useManualAdvicePrice}
@@ -847,8 +875,8 @@ const BulkerImage = () => {
           </Card>
         )}
 
-        {/* Warning if search results exist but no pricing data */}
-        {!isAnalyzing && !isSearching && searchResults.length > 0 && !searchResults[0]?.pricing_stats?.lowest_price && (
+        {/* Warning if search results exist but no pricing data (neither from search nor URL) */}
+        {!isAnalyzing && !isSearching && (searchResults.length > 0 || fromAiScan) && !effectivePricing?.lowest_price && (
           <Card className="w-full max-w-4xl mb-8 border-amber-200 bg-amber-50">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">

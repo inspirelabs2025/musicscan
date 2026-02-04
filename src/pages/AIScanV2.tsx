@@ -1151,6 +1151,10 @@ export default function AIScanV2() {
                     return;
                   }
                   console.log('🔗 Adding to collection with condition:', conditionGrade);
+                  
+                  // Get pricing data from V2 response or searchResults
+                  const pricing = analysisResult.result.pricing_stats || searchResults[0]?.pricing_stats;
+                  
                   const params = new URLSearchParams({
                     mediaType: mediaType,
                     discogsId: analysisResult.result.discogs_id?.toString() || '',
@@ -1162,6 +1166,14 @@ export default function AIScanV2() {
                     condition: conditionGrade,
                     fromAiScan: 'true'
                   });
+                  
+                  // Add pricing if available
+                  if (pricing) {
+                    if (pricing.lowest_price) params.set('lowestPrice', pricing.lowest_price.toString());
+                    if (pricing.median_price) params.set('medianPrice', pricing.median_price.toString());
+                    if (pricing.highest_price) params.set('highestPrice', pricing.highest_price.toString());
+                    if ('num_for_sale' in pricing && pricing.num_for_sale) params.set('numForSale', pricing.num_for_sale.toString());
+                  }
                   console.log('🚀 Navigating to:', `/scanner/discogs?${params.toString()}`);
                   navigate(`/scanner/discogs?${params.toString()}`);
                 }} className="w-full" disabled={!conditionGrade}>

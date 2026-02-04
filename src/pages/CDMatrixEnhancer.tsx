@@ -393,17 +393,29 @@ export default function CDMatrixEnhancer() {
                 <div className="mt-4">
                   <Button
                     onClick={() => {
-                      const matrixCode = ocrResult.cleanText;
-                      // Store photo data in sessionStorage for V2 scanner
+                      // Extract IFPI codes from segments
+                      const ifpiCodes = ocrResult.segments
+                        .filter(s => s.type === 'ifpi')
+                        .map(s => s.text);
+                      
+                      // Extract catalog/matrix code (prefer catalog type, fallback to cleanText)
+                      const catalogCode = ocrResult.segments
+                        .find(s => s.type === 'catalog')?.text || ocrResult.cleanText;
+                      
+                      // Store all data in sessionStorage for V2 scanner
                       sessionStorage.setItem('matrixEnhancerData', JSON.stringify({
-                        matrix: matrixCode,
+                        matrix: catalogCode,
+                        ifpiCodes: ifpiCodes,
+                        allSegments: ocrResult.segments,
                         photo: originalImage,
                         timestamp: Date.now(),
                       }));
                       navigate(`/ai-scan-v2?fromEnhancer=true&mediaType=cd`);
+                      
+                      const ifpiText = ifpiCodes.length > 0 ? ` + ${ifpiCodes.length} IFPI code(s)` : '';
                       toast({
                         title: 'Doorgaan naar scanner',
-                        description: 'Foto en matrix code overgenomen - selecteer conditie om te starten',
+                        description: `Matrix code${ifpiText} overgenomen - selecteer conditie om te starten`,
                       });
                     }}
                     className="w-full gap-2"

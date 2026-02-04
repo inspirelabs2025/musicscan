@@ -18,6 +18,7 @@ interface AnalysisRequest {
   mediaType: 'vinyl' | 'cd'
   conditionGrade: string
   prefilledMatrix?: string // Matrix code from Matrix Enhancer
+  prefilledIfpiCodes?: string[] // IFPI codes from Matrix Enhancer
 }
 
 interface StructuredAnalysisData {
@@ -107,7 +108,7 @@ serve(async (req) => {
 
     // Skipping direct checks against auth.users (restricted schema). JWT already validated above.
 
-    const { photoUrls, mediaType, conditionGrade, prefilledMatrix }: AnalysisRequest = await req.json()
+    const { photoUrls, mediaType, conditionGrade, prefilledMatrix, prefilledIfpiCodes }: AnalysisRequest = await req.json()
 
     console.log('🤖 Starting AI photo analysis V2 for:', {
       photoCount: photoUrls.length,
@@ -115,7 +116,8 @@ serve(async (req) => {
       conditionGrade,
       userId: user.id,
       userEmail: user.email,
-      prefilledMatrix: prefilledMatrix || 'none'
+      prefilledMatrix: prefilledMatrix || 'none',
+      prefilledIfpiCodes: prefilledIfpiCodes?.length ? prefilledIfpiCodes : 'none'
     })
 
     // Create initial record with version marker and user_id
@@ -249,6 +251,18 @@ serve(async (req) => {
       if (prefilledMatrix) {
         console.log('📎 Using prefilled matrix code from Matrix Enhancer:', prefilledMatrix);
         combinedData.matrixNumber = prefilledMatrix;
+      }
+      
+      // Store IFPI codes from Matrix Enhancer if provided
+      if (prefilledIfpiCodes && prefilledIfpiCodes.length > 0) {
+        console.log('📎 Using prefilled IFPI codes from Matrix Enhancer:', prefilledIfpiCodes);
+        // Store IFPI codes in combined data for potential Discogs matching refinement
+        combinedData.ifpiCodes = prefilledIfpiCodes;
+        // Also merge into extracted text for better search
+        if (!combinedData.extractedText) {
+          combinedData.extractedText = [];
+        }
+        combinedData.extractedText.push(...prefilledIfpiCodes);
       }
 
       // Update with analysis progress

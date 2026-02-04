@@ -59,11 +59,57 @@ Toegestane tekens: A–Z 0–9 - _ . / # ( ) + * ~ spatie
 - Voorbeelden GELDIG: "MADE IN GERMANY BY PMDC 839 274-2 01 #", "Sony Music S0100423456-0101 14 A00"
 - Voorbeelden ONGELDIG: "Compact Disc Digital Audio", "Sony Music Entertainment"
 
-**type: "ifpi"** - IFPI Codes (ABSOLUTE REGELS)
-- IFPI Lxxx → mastering code (bijv. "IFPI L028")
-- IFPI xxxx → mould code (bijv. "IFPI 01H3")
-- MOET letterlijk beginnen met "IFPI" - GEEN UITZONDERINGEN
-- IFPI-codes NOOIT labelen als matrixnummer!
+**type: "ifpi"** - IFPI Codes (STRIKTE HERKENNING)
+
+### IFPI DEFINITIE (bindend)
+Een IFPI-code is een officiële productie-identificatiecode van de International Federation of the Phonographic Industry:
+- Identificeert masteringfaciliteiten OF mould/pressing machines
+- Altijd optioneel, nooit uniek per release
+- Is NOOIT een matrixnummer - altijd apart opslaan!
+
+### IFPI TYPES (verplicht onderscheid)
+
+**1. IFPI Mastering Code** (identificeert mastering/glass mastering facility)
+- Structuur: \`IFPI Lxxx\` of \`IFPI LYxx\`
+- L of LY = mastering code prefix
+- Lengte: 4 of 5 tekens na "IFPI"
+- Voorbeelden GELDIG: "IFPI L003", "IFPI LY12", "IFPI LZ45"
+
+**2. IFPI Mould Code** (identificeert mould/persmachine)
+- Structuur: \`IFPI xxxx\` (exact 4 alfanumerieke tekens)
+- Geen L/LY prefix
+- Voorbeelden GELDIG: "IFPI 94A1", "IFPI 1234", "IFPI AB12"
+
+### IFPI HERKENNINGSREGELS (keihard)
+Een segment mag ALLEEN als IFPI worden gelabeld als:
+✅ Het exact voldoet aan bovenstaande structuren
+✅ Het woord "IFPI" aanwezig is OF patroon exact matcht naast matrixnummer
+
+### ONGELDIGE IFPI VORMEN (weigeren → label als "other")
+- "IFPI L03" (te kort)
+- "IFPI L0033" (te lang)  
+- "IFPI 123" (geen 4 tekens)
+- "IFPI ABCDE" (te lang)
+- "L003" (zonder IFPI prefix, geen context)
+
+### IFPI CONFIDENCE SCORING
+- Exact IFPI-prefix aanwezig: +0.40
+- Geldige lengte: +0.30
+- Geldig type (L/LY of 4 chars): +0.30
+- Score ≥0.70 = geldig | <0.70 = onzeker → label als "other"
+
+### IFPI ABSOLUUT ONDERSCHEID
+| Code | IFPI? |
+|------|-------|
+| IFPI L003 | ✅ |
+| IFPI LY12 | ✅ |
+| IFPI 94A1 | ✅ |
+| ST-A-732783-A | ❌ (matrix) |
+| 839 274-2 01 | ❌ (matrix) |
+
+➡️ Een IFPI-code is NOOIT een matrixnummer
+➡️ Een matrixnummer mag NOOIT als IFPI gelabeld worden
+➡️ IFPI nooit combineren met matrixnummer in output
 
 **type: "other"** - Alles wat NIET matrix of IFPI is:
 - URLs: "www.megatmotion.com"

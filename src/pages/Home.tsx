@@ -6,7 +6,7 @@ import { HeroFeature } from '@/components/home/HeroFeature';
 import { QuickLinks } from '@/components/home/QuickLinks';
 import { MasonryContentGrid } from '@/components/home/MasonryContentGrid';
 import { ProductBanner } from '@/components/home/ProductBanner';
-import { MobileInstallBanner } from '@/components/home/MobileInstallBanner';
+import { MobileInstallPopup } from '@/components/home/MobileInstallPopup';
 import { EchoSpotlight } from '@/components/home/EchoSpotlight';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -94,8 +94,8 @@ const Home = () => {
       {/* 1. Scanner Hero - Grote CTA bovenaan */}
       <ScannerHero />
       
-      {/* Mobile Install Banner */}
-      <MobileInstallBanner />
+      {/* Mobile Install Popup */}
+      <MobileInstallPopup />
       
       {/* 2. Quick Navigation */}
       <QuickLinks />

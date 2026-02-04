@@ -98,8 +98,14 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Try OCR on both normal and inverted layers, pick best result
-    const runOCR = async (imageData: string, layerName: string) => {
+    // Run OCR with multiple images for better results
+    const runMultiImageOCR = async (images: { data: string; name: string }[]) => {
+      // Build content array with all images
+      const imageContent = images.map(img => ({
+        type: "image_url" as const,
+        image_url: { url: img.data }
+      }));
+
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -118,73 +124,83 @@ serve(async (req) => {
               content: [
                 {
                   type: "text",
-                  text: "Extract all matrix codes from this CD inner ring image. Return only valid JSON."
+                  text: `I'm providing ${images.length} different views of the same CD inner ring:
+${images.map((img, i) => `- Image ${i + 1}: ${img.name}`).join('\n')}
+
+Analyze ALL images together and extract ALL text you can find. The CATALOG NUMBER (longest code, usually outer ring) is the MOST IMPORTANT - don't miss it!
+Look especially in the OUTER ring area for the catalog number.
+Combine findings from all images for the best result.
+Return only valid JSON.`
                 },
-                {
-                  type: "image_url",
-                  image_url: { url: imageData }
-                }
+                ...imageContent
               ]
             }
           ],
-          max_tokens: 1000,
-          temperature: 0.1, // Low temperature for deterministic OCR
+          max_tokens: 1500,
+          temperature: 0.1,
         }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`OCR request failed for ${layerName}:`, response.status, errorText);
+        console.error(`Multi-image OCR failed:`, response.status, errorText);
         throw new Error(`OCR failed: ${response.status}`);
       }
 
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content || "";
+      console.log("AI response:", content.substring(0, 500));
       
-      // Parse JSON from response
       let parsed;
       try {
-        // Try to extract JSON from the response
         const jsonMatch = content.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           parsed = JSON.parse(jsonMatch[0]);
-          parsed.layer_used = layerName;
+          parsed.images_analyzed = images.length;
         } else {
           throw new Error("No JSON found in response");
         }
       } catch (parseError) {
-        console.error(`Failed to parse OCR response for ${layerName}:`, content);
+        console.error(`Failed to parse OCR response:`, content);
         parsed = {
           raw_text: content,
           clean_text: content,
           segments: [],
           overall_confidence: 0.1,
-          layer_used: layerName
+          images_analyzed: images.length
         };
       }
       
       return parsed;
     };
 
-    // Run OCR on the OCR layer (or enhanced image as fallback)
-    const primaryImage = ocrLayer || enhancedImage;
-    let result;
+    // Collect all available images
+    const imagesToAnalyze: { data: string; name: string }[] = [];
+    
+    // Always include enhanced image first (best for reading actual text)
+    if (enhancedImage) {
+      imagesToAnalyze.push({ data: enhancedImage, name: "Enhanced preview (contrast-adjusted)" });
+    }
+    
+    // Add OCR layer (edge-detected, good for finding text locations)
+    if (ocrLayer) {
+      imagesToAnalyze.push({ data: ocrLayer, name: "OCR layer (edge-enhanced)" });
+    }
+    
+    // Add inverted OCR layer (sometimes reveals hidden text)
+    if (ocrLayerInverted) {
+      imagesToAnalyze.push({ data: ocrLayerInverted, name: "Inverted OCR layer" });
+    }
 
+    let result;
     try {
-      // Try normal layer first
-      result = await runOCR(primaryImage, "normal");
-      
-      // If confidence is low, try inverted layer
-      if (result.overall_confidence < 0.5 && ocrLayerInverted) {
-        console.log("Trying inverted layer due to low confidence...");
-        const invertedResult = await runOCR(ocrLayerInverted, "inverted");
-        
-        // Use whichever has higher confidence
-        if (invertedResult.overall_confidence > result.overall_confidence) {
-          result = invertedResult;
-          console.log("Using inverted layer result (higher confidence)");
-        }
+      if (imagesToAnalyze.length === 0) {
+        throw new Error("No images provided");
       }
+      
+      console.log(`Running OCR with ${imagesToAnalyze.length} images`);
+      result = await runMultiImageOCR(imagesToAnalyze);
+      
     } catch (ocrError) {
       console.error("OCR error:", ocrError);
       result = {
@@ -192,7 +208,6 @@ serve(async (req) => {
         clean_text: "",
         segments: [],
         overall_confidence: 0,
-        layer_used: "error",
         error: ocrError instanceof Error ? ocrError.message : "OCR failed"
       };
     }

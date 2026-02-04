@@ -65,9 +65,9 @@ export function useParallelMatrixProcessing() {
    */
   const processMatrixPhotoInBackground = useCallback(async (
     file: File,
-    options: { skipDetection?: boolean; confidenceThreshold?: number } = {}
+    options: { skipDetection?: boolean; confidenceThreshold?: number; mediaType?: 'cd' | 'vinyl' } = {}
   ): Promise<EnhancedMatrixData | null> => {
-    const { skipDetection = false, confidenceThreshold = 0.5 } = options;
+    const { skipDetection = false, confidenceThreshold = 0.5, mediaType = 'cd' } = options;
     const startTime = performance.now();
     
     abortRef.current = false;
@@ -190,13 +190,14 @@ export function useParallelMatrixProcessing() {
         !s.text.toUpperCase().match(/IFPI\s*L[A-Z]?\d/)
       )?.text;
       
-      console.log(`🔍 Discogs lookup: matrix="${matrixText}", IFPI="${ifpiMastering || ''}"/"${ifpiMould || ''}"`);
+      console.log(`🔍 Discogs lookup (${mediaType}): matrix="${matrixText}", IFPI="${ifpiMastering || ''}"/"${ifpiMould || ''}"`);
       
       const { data: discogsData, error: discogsError } = await supabase.functions.invoke('matrix-discogs-lookup', {
         body: {
           matrixNumber: matrixText,
           ifpiMastering,
-          ifpiMould
+          ifpiMould,
+          mediaType
         }
       });
       
@@ -264,7 +265,7 @@ export function useParallelMatrixProcessing() {
    */
   const startBackgroundProcessing = useCallback((
     file: File,
-    options?: { skipDetection?: boolean; confidenceThreshold?: number }
+    options?: { skipDetection?: boolean; confidenceThreshold?: number; mediaType?: 'cd' | 'vinyl' }
   ) => {
     resultPromiseRef.current = processMatrixPhotoInBackground(file, options);
     return resultPromiseRef.current;

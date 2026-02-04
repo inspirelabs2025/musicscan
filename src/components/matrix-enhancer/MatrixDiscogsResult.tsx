@@ -19,6 +19,7 @@ export interface DiscogsLookupResult {
   cover_image: string | null;
   match_confidence: number;
   match_reasons: string[];
+  format?: string; // 'CD' or 'Vinyl'
   all_candidates?: Array<{
     id: number;
     artist: string;
@@ -124,9 +125,16 @@ export function MatrixDiscogsResult({ result, isLoading, onRetry, matrixNumber }
   return (
     <Card className={`mt-6 ${confidenceBg}`}>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-          Discogs Match Gevonden
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            Discogs Match Gevonden
+          </div>
+          {/* Format badge */}
+          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+            <Disc className="h-3 w-3 mr-1" />
+            {result.format || 'CD'}
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>

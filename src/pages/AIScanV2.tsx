@@ -265,29 +265,53 @@ export default function AIScanV2() {
           setUploadedFiles(prev => [...prev, newFile]);
           
           // For CD media type, detect if this is a matrix photo and process in background
+          // Strategy 1: Position-based auto-detection (3rd photo = index 2 is conventionally the matrix photo)
+          // Strategy 2: Visual detection with lowered thresholds as fallback
           if (mediaType === 'cd' && !matrixFileId) {
-            try {
-              console.log(`🔍 Checking if "${file.name}" is a matrix photo...`);
-              const detection = await detectMatrixPhoto(file);
+            // Get current count BEFORE this file was added
+            const currentFileCount = uploadedFiles.length;
+            const isConventionalMatrixPosition = currentFileCount === 2; // This will be the 3rd photo (index 2)
+            
+            if (isConventionalMatrixPosition) {
+              console.log(`📍 Position-based matrix detection: 3rd photo (index 2) auto-detected as matrix`);
+              setMatrixFileId(id);
               
-              if (detection.isMatrix && detection.confidence >= 0.40) {
-                console.log(`✅ Matrix photo detected: "${file.name}" (${(detection.confidence * 100).toFixed(0)}%)`);
-                setMatrixFileId(id);
+              // Start background processing immediately
+              const processingPromise = startBackgroundProcessing(file, {
+                skipDetection: true,
+                confidenceThreshold: 0.5
+              });
+              matrixProcessingPromiseRef.current = processingPromise;
+              
+              toast({
+                title: "🔬 Matrix foto gedetecteerd",
+                description: "Positie 3: Label/Matrix - Geavanceerde verwerking gestart...",
+              });
+            } else {
+              // Fallback: visual detection with lowered threshold
+              try {
+                console.log(`🔍 Checking if "${file.name}" is a matrix photo (visual detection)...`);
+                const detection = await detectMatrixPhoto(file);
                 
-                // Start background processing
-                const processingPromise = startBackgroundProcessing(file, {
-                  skipDetection: true, // Already detected
-                  confidenceThreshold: 0.5
-                });
-                matrixProcessingPromiseRef.current = processingPromise;
-                
-                toast({
-                  title: "🔬 Matrix foto gedetecteerd",
-                  description: "Geavanceerde verwerking gestart op de achtergrond...",
-                });
+                if (detection.isMatrix && detection.confidence >= 0.25) {
+                  console.log(`✅ Matrix photo detected: "${file.name}" (${(detection.confidence * 100).toFixed(0)}%)`);
+                  setMatrixFileId(id);
+                  
+                  // Start background processing
+                  const processingPromise = startBackgroundProcessing(file, {
+                    skipDetection: true, // Already detected
+                    confidenceThreshold: 0.5
+                  });
+                  matrixProcessingPromiseRef.current = processingPromise;
+                  
+                  toast({
+                    title: "🔬 Matrix foto gedetecteerd",
+                    description: `Visuele detectie: ${(detection.confidence * 100).toFixed(0)}% zekerheid`,
+                  });
+                }
+              } catch (err) {
+                console.warn('Matrix detection failed:', err);
               }
-            } catch (err) {
-              console.warn('Matrix detection failed:', err);
             }
           }
           

@@ -94,7 +94,7 @@ export async function detectMatrixPhoto(file: File): Promise<MatrixPhotoDetectio
   });
   
   return {
-    isMatrix: score >= 0.40, // Lowered threshold
+    isMatrix: score >= 0.25, // Lowered threshold for real smartphone photos
     confidence: score,
     features: {
       hasHubHole: hasHubHole || hasCentralDarkArea,
@@ -163,7 +163,7 @@ function detectHubHole(imageData: ImageData, width: number, height: number): boo
         const brightness = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
         
         totalPixels++;
-        if (brightness < 60) { // Dark threshold
+        if (brightness < 100) { // Dark threshold - relaxed from 60
           darkPixels++;
         }
       }
@@ -171,7 +171,7 @@ function detectHubHole(imageData: ImageData, width: number, height: number): boo
   }
   
   const darkRatio = totalPixels > 0 ? darkPixels / totalPixels : 0;
-  return darkRatio > 0.5; // >50% dark pixels in center indicates hub hole
+  return darkRatio > 0.25; // >25% dark pixels in center indicates hub hole - relaxed from 0.5
 }
 
 /**
@@ -230,8 +230,8 @@ function detectRainbowReflection(imageData: ImageData, width: number, height: nu
   
   const saturationRatio = sampleCount > 0 ? highSaturationCount / sampleCount : 0;
   
-  // Rainbow = moderate saturation + high hue variance
-  return saturationRatio > 0.2 && hueVariance > 40;
+  // Rainbow = moderate saturation + high hue variance - relaxed thresholds
+  return saturationRatio > 0.1 && hueVariance > 20;
 }
 
 /**
@@ -422,8 +422,8 @@ function detectCentralDarkArea(imageData: ImageData, width: number, height: numb
   const avgCenter = centerBrightness / centerSamples;
   const avgOuter = outerBrightness / outerSamples;
   
-  // Center should be noticeably darker than outer ring
-  return avgCenter < avgOuter * 0.85;
+  // Center should be noticeably darker than outer ring - relaxed from 0.85
+  return avgCenter < avgOuter * 0.95;
 }
 
 /**

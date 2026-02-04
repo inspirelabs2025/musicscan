@@ -1,29 +1,107 @@
 
-# Plan: Strikte Barcode/Catno Verificatie met OCR Behoud - ✅ VOLTOOID
+# Plan: Fallback Discogs Search URL bij NO_EXACT_MATCH
 
-## Geïmplementeerde Wijzigingen
+## Probleem
 
-### 1. Matrix Enhancer Verificatie (regel 1279-1368)
-- Enhanced matrix matches worden nu **geverifieerd** tegen barcode/catno
-- Alleen als barcode OF catno exact matcht wordt de match geaccepteerd
-- Anders valt het door naar de standaard zoekstrategie
+Bij `NO_EXACT_MATCH` wordt `discogsUrl` op `null` gezet, waardoor:
+- De "Bekijk op Discogs" knop niet getoond wordt
+- Gebruikers niet handmatig kunnen zoeken op Discogs
 
-### 2. Database Opslaan - OCR Behoud (regel 342-395)
-- Bij `NO_EXACT_MATCH`: OCR data wordt **altijd behouden**
-- Bij `EXACT_MATCH`: Discogs metadata wordt gebruikt (geverifieerd)
-- Scan status: `completed` voor matches, `no_exact_match` voor geen match
+## Oplossing
 
-### 3. NO_EXACT_MATCH Return Object (regel 1618-1641)
-- Nieuw `ocrData` veld met alle gescande gegevens:
-  - barcode, catalogNumber, artist, title, label, matrixNumber
+Genereer een **search URL** als fallback wanneer er geen exacte release match is.
 
-## Verwacht Gedrag
+**Discogs Search URL formaat:**
+```
+https://www.discogs.com/search/?q=Ella+Fitzgerald+Portrait+SUMCD+4164&type=release&format=CD
+```
 
-| Scenario | Gedrag |
-|----------|--------|
-| Ella Fitzgerald (SUMCD 4164) | `NO_EXACT_MATCH` + OCR behouden |
-| CD met exacte barcode match | `EXACT_MATCH` + Discogs data |
-| Matrix match zonder barcode/catno verificatie | Doorvallen naar zoekstrategie |
+## Wijzigingen
 
-## Kernregel
-**"Discogs metadata mag OCR NOOIT overschrijven zonder exacte barcode of catalogusnummer verificatie."**
+### 1. Edge Function: `ai-photo-analysis-v2/index.ts`
+
+**Toevoegen aan NO_EXACT_MATCH return (regel 1706-1729):**
+
+```typescript
+// Generate search URL for manual lookup
+const searchQuery = [
+  analysisData.artist,
+  analysisData.title,
+  analysisData.catalogNumber
+].filter(Boolean).join(' ');
+
+const discogsSearchUrl = searchQuery 
+  ? `https://www.discogs.com/search/?q=${encodeURIComponent(searchQuery)}&type=release&format=${formatParam}`
+  : null;
+
+return {
+  status: 'NO_EXACT_MATCH',
+  // ... bestaande velden ...
+  discogsUrl: null,              // Geen exacte release URL
+  discogsSearchUrl: discogsSearchUrl,  // NIEUW: Fallback search URL
+  // ...
+};
+```
+
+### 2. Frontend: `AIScanV2.tsx`
+
+**Wijzig de "Bekijk op Discogs" knop logica (regel 1189-1235):**
+
+Van:
+```typescript
+{analysisResult.result.discogs_url && <div className="pt-4 space-y-3">
+  // ... buttons ...
+</div>}
+```
+
+Naar:
+```typescript
+{(analysisResult.result.discogs_url || analysisResult.result.discogs_search_url) && (
+  <div className="pt-4 space-y-3">
+    {/* Toon "Toevoegen" alleen bij exacte match */}
+    {analysisResult.result.discogs_url && (
+      <Button onClick={...}>
+        Toevoegen aan Collectie
+      </Button>
+    )}
+    
+    {/* Discogs link - release of search URL */}
+    <Button asChild variant="outline" className="w-full">
+      <a href={analysisResult.result.discogs_url || analysisResult.result.discogs_search_url} 
+         target="_blank" rel="noopener noreferrer">
+        {analysisResult.result.discogs_url 
+          ? "Bekijk op Discogs" 
+          : "Zoek op Discogs"}
+      </a>
+    </Button>
+  </div>
+)}
+```
+
+### 3. Database Opslag
+
+Update de database update om ook de search URL op te slaan:
+
+```typescript
+discogs_url: isExactMatch 
+  ? (discogsResult.discogsUrl ?? null) 
+  : (discogsResult.discogsSearchUrl ?? null),  // Sla search URL op als fallback
+```
+
+## Verwacht Resultaat
+
+| Status | discogs_url | UI |
+|--------|-------------|-----|
+| EXACT_MATCH | `https://www.discogs.com/release/12345` | "Bekijk op Discogs" |
+| NO_EXACT_MATCH | `https://www.discogs.com/search/?q=...` | "Zoek op Discogs" |
+
+Voor de Ella Fitzgerald scan:
+- URL: `https://www.discogs.com/search/?q=Ella%20Fitzgerald%20Portrait%20SUMCD%204164&type=release&format=CD`
+- Knoptekst: "Zoek op Discogs"
+
+## Bestanden
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `supabase/functions/ai-photo-analysis-v2/index.ts` | Genereer `discogsSearchUrl` bij NO_EXACT_MATCH |
+| `src/pages/AIScanV2.tsx` | Toon search URL knop bij geen exacte match |

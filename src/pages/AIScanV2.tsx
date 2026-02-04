@@ -562,10 +562,26 @@ export default function AIScanV2() {
       // Increment usage after successful analysis
       await incrementUsage('ai_scans');
       console.log('✅ Analysis completed successfully');
-      toast({
-        title: "Analyse voltooid!",
-        description: `V2 analyse succesvol afgerond met ${Math.round(data.result.confidence_score * 100)}% vertrouwen.`
-      });
+      
+      // Check for NO_EXACT_MATCH status
+      const searchStatus = data.result?.search_status || data.searchMetadata?.status;
+      if (searchStatus === 'NO_EXACT_MATCH' || (!data.result?.discogs_id && data.result?.confidence_score === 0)) {
+        toast({
+          title: "⚠️ Geen exacte match gevonden",
+          description: `Release met barcode of catalogusnummer niet gevonden in Discogs database.`,
+          variant: "destructive"
+        });
+      } else if (data.result?.discogs_id) {
+        toast({
+          title: "✅ Exacte match gevonden!",
+          description: `${data.result.artist} - ${data.result.title}`,
+        });
+      } else {
+        toast({
+          title: "Analyse voltooid",
+          description: `Vertrouwen: ${Math.round(data.result.confidence_score * 100)}%`
+        });
+      }
     } catch (err) {
       console.error('❌ Analysis error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -964,7 +980,11 @@ export default function AIScanV2() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  {analysisResult.result.discogs_id ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-orange-500" />
+                  )}
                   V2 Analyse Resultaat
                   <Badge variant="outline">{analysisResult.version}</Badge>
                 </CardTitle>
@@ -974,6 +994,30 @@ export default function AIScanV2() {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* NO EXACT MATCH Warning */}
+              {!analysisResult.result.discogs_id && (
+                <Alert variant="destructive" className="border-orange-500 bg-orange-50 dark:bg-orange-950">
+                  <AlertCircle className="h-4 w-4 text-orange-600" />
+                  <AlertDescription className="text-orange-800 dark:text-orange-200">
+                    <strong>Geen exacte match gevonden.</strong>
+                    <p className="mt-1 text-sm">
+                      De gescande barcode of catalogusnummer staat niet in de Discogs database. 
+                      Dit betekent dat deze specifieke release niet geregistreerd is.
+                    </p>
+                    {analysisResult.result.barcode && (
+                      <p className="mt-1 text-sm">
+                        <strong>Gescande barcode:</strong> {analysisResult.result.barcode}
+                      </p>
+                    )}
+                    {analysisResult.result.catalog_number && (
+                      <p className="text-sm">
+                        <strong>Gescand catalogusnummer:</strong> {analysisResult.result.catalog_number}
+                      </p>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Confidence Score */}
               <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <span className="font-medium">Vertrouwen Score:</span>

@@ -709,7 +709,3 @@ verify_jwt = false
 # Confidence stacking for multi-variant OCR consensus
 [functions.matrix-ocr-confidence-stack]
 verify_jwt = false
-
-# CD Matrix OCR with AI vision
-[functions.matrix-ocr]
-verify_jwt = false

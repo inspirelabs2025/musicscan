@@ -1,29 +1,29 @@
+# ✅ COMPLETED: Automatische Artist/Album Linking na Scan
 
-# Plan: Strikte Barcode/Catno Verificatie met OCR Behoud - ✅ VOLTOOID
+## Status: Geïmplementeerd op 2026-01-28
 
-## Geïmplementeerde Wijzigingen
+### Wat is gedaan:
 
-### 1. Matrix Enhancer Verificatie (regel 1279-1368)
-- Enhanced matrix matches worden nu **geverifieerd** tegen barcode/catno
-- Alleen als barcode OF catno exact matcht wordt de match geaccepteerd
-- Anders valt het door naar de standaard zoekstrategie
+1. **Database migratie** ✅
+   - `release_id` kolom toegevoegd aan `ai_scan_results`
+   - Index `idx_ai_scan_release` aangemaakt
 
-### 2. Database Opslaan - OCR Behoud (regel 342-395)
-- Bij `NO_EXACT_MATCH`: OCR data wordt **altijd behouden**
-- Bij `EXACT_MATCH`: Discogs metadata wordt gebruikt (geverifieerd)
-- Scan status: `completed` voor matches, `no_exact_match` voor geen match
+2. **ai-photo-analysis-v2** ✅
+   - Automatische release linking na Discogs match
+   - `find-or-create-release` wordt aangeroepen na artwork enrichment
+   - Scan record wordt bijgewerkt met `release_id`
 
-### 3. NO_EXACT_MATCH Return Object (regel 1618-1641)
-- Nieuw `ocrData` veld met alle gescande gegevens:
-  - barcode, catalogNumber, artist, title, label, matrixNumber
+3. **Scanner.tsx** ✅
+   - Release linking toegevoegd na succesvolle insert
+   - Werkt voor zowel vinyl2_scan als cd_scan tabellen
 
-## Verwacht Gedrag
+4. **backfill-scan-releases** ✅
+   - Nieuwe edge function gecreëerd
+   - Verwerkt bestaande scans in batches van 100
+   - Koppelt ai_scan_results, vinyl2_scan en cd_scan
 
-| Scenario | Gedrag |
-|----------|--------|
-| Ella Fitzgerald (SUMCD 4164) | `NO_EXACT_MATCH` + OCR behouden |
-| CD met exacte barcode match | `EXACT_MATCH` + Discogs data |
-| Matrix match zonder barcode/catno verificatie | Doorvallen naar zoekstrategie |
-
-## Kernregel
-**"Discogs metadata mag OCR NOOIT overschrijven zonder exacte barcode of catalogusnummer verificatie."**
+### Impact:
+- ✅ Elke nieuwe scan wordt automatisch gekoppeld aan releases tabel
+- ✅ Bestaande scans kunnen via backfill gekoppeld worden
+- ✅ Artist stories en album verhalen zijn vindbaar via scans
+- ✅ Platform-brede statistieken werken correct

@@ -117,10 +117,13 @@ export const useCDAnalysis = () => {
         genre: data.genre || null,
         country: data.country || null,
         matrix_number: data.matrix_number || null,
-        ifpi_code: data.ifpi_code || null,
+        sid_code_mastering: data.ifpi_mastering || null,
+        sid_code_mould: data.ifpi_mould || null,
         confidence: data.confidence || null,
         ocr_notes: data.ocr_notes || null,
         raw_spelling: data.raw_spelling || null,
+        match_confidence: data.match_confidence || null,
+        match_reasons: data.match_reasons || null,
       };
 
       const transformedData = {
@@ -129,6 +132,8 @@ export const useCDAnalysis = () => {
           discogs_id: data.discogs_id || null,
           discogs_url: data.discogs_url || null,
           cover_image: data.cover_image || null,
+          match_confidence: data.match_confidence || null,
+          match_reasons: data.match_reasons || null,
         },
         success: true
       };

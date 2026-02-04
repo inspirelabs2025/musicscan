@@ -131,6 +131,7 @@ const AIScanV2 = lazy(() => import("./pages/AIScanV2"));
 const AIScanV2Overview = lazy(() => import("./pages/AIScanV2Overview"));
 const UnifiedScanOverview = lazy(() => import("./pages/UnifiedScanOverview"));
 const BulkerImage = lazy(() => import("./pages/BulkerImage"));
+const CDMatrixEnhancer = lazy(() => import("./pages/CDMatrixEnhancer"));
 const MarketplaceOverview = lazy(() => import("./pages/MarketplaceOverview"));
 const UserScans = lazy(() => import("./pages/UserScans"));
 const AlbumDetail = lazy(() => import("./pages/AlbumDetail"));
@@ -168,6 +169,7 @@ const Reviews = lazy(() => import("./pages/Reviews"));
 const ReviewDetail = lazy(() => import("./pages/ReviewDetail"));
 const ArtistSpotlights = lazy(() => import("./pages/ArtistSpotlights"));
 const ArtistSpotlight = lazy(() => import("./pages/ArtistSpotlight"));
+const InstallApp = lazy(() => import("./pages/InstallApp"));
 
 // Admin pages - all lazy loaded
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
@@ -315,6 +317,7 @@ const AppContent = () => {
         <Route path="/ai-scan-v2-overview" element={<ProtectedRoute><LazyRoute><AIScanV2Overview /></LazyRoute></ProtectedRoute>} />
         <Route path="/unified-scan-overview" element={<ProtectedRoute><LazyRoute><UnifiedScanOverview /></LazyRoute></ProtectedRoute>} />
         <Route path="/bulkerimage" element={<ProtectedRoute><LazyRoute><BulkerImage /></LazyRoute></ProtectedRoute>} />
+        <Route path="/cd-matrix-enhancer" element={<ProtectedRoute><LazyRoute><CDMatrixEnhancer /></LazyRoute></ProtectedRoute>} />
         
         {/* Collection routes */}
         <Route path="/marketplace-overview" element={<ProtectedRoute><LazyRoute><MarketplaceOverview /></LazyRoute></ProtectedRoute>} />
@@ -451,6 +454,7 @@ const AppContent = () => {
         <Route path="/voorwaarden" element={<LazyRoute><Voorwaarden /></LazyRoute>} />
         <Route path="/feeds/facebook-catalog.csv" element={<LazyRoute><FacebookCatalogFeed /></LazyRoute>} />
         <Route path="/feeds" element={<LazyRoute><Feeds /></LazyRoute>} />
+        <Route path="/install" element={<LazyRoute><InstallApp /></LazyRoute>} />
         <Route path="/prestaties" element={<ProtectedRoute><LazyRoute><Prestaties /></LazyRoute></ProtectedRoute>} />
         <Route path="/spotify/profile" element={<ProtectedRoute><LazyRoute><SpotifyProfile /></LazyRoute></ProtectedRoute>} />
         <Route path="/spotify/callback" element={<LazyRoute><SpotifyCallback /></LazyRoute>} />

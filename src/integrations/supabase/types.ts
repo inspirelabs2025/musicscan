@@ -3666,6 +3666,47 @@ export type Database = {
           },
         ]
       }
+      matrix_corrections: {
+        Row: {
+          character_corrections: Json | null
+          corrected_matrix: string
+          created_at: string | null
+          id: string
+          media_type: string | null
+          original_matrix: string
+          scan_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          character_corrections?: Json | null
+          corrected_matrix: string
+          created_at?: string | null
+          id?: string
+          media_type?: string | null
+          original_matrix: string
+          scan_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          character_corrections?: Json | null
+          corrected_matrix?: string
+          created_at?: string | null
+          id?: string
+          media_type?: string | null
+          original_matrix?: string
+          scan_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matrix_corrections_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "ai_scan_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media_library: {
         Row: {
           ai_context_type: string | null

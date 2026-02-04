@@ -15,7 +15,8 @@ import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
-import { ScannerPhotoPreview } from '@/components/scanner';
+import { ScannerPhotoPreview, MatrixVerificationStep } from '@/components/scanner';
+import type { MatrixVerificationData, MatrixCharacter } from '@/components/scanner';
 import { preprocessImageClient } from '@/utils/clientImagePreprocess';
 import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 
@@ -54,6 +55,10 @@ interface AnalysisResult {
     barcode?: string | null;
     genre?: string | null;
     country?: string | null;
+    // Matrix verification data
+    matrix_characters?: MatrixCharacter[];
+    needs_verification?: boolean;
+    overall_matrix_confidence?: number;
     // Pricing from Discogs (now included in V2 response)
     pricing_stats?: {
       lowest_price: number | null;
@@ -81,6 +86,11 @@ export default function AIScanV2() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
+  // Matrix verification state
+  const [verificationStep, setVerificationStep] = useState<'pending' | 'verifying' | 'verified' | 'skipped'>('pending');
+  const [verifiedMatrixNumber, setVerifiedMatrixNumber] = useState<string | null>(null);
+  
   const {
     checkUsageLimit,
     incrementUsage
@@ -105,6 +115,18 @@ export default function AIScanV2() {
       searchByDiscogsId(analysisResult.result.discogs_id.toString());
     }
   }, [analysisResult?.result?.discogs_id, searchByDiscogsId]);
+
+  // Auto-trigger matrix verification when analysis completes with uncertain characters
+  useEffect(() => {
+    if (analysisResult && analysisResult.result.needs_verification && verificationStep === 'pending') {
+      console.log('🔍 Matrix needs verification, showing verification step');
+      setVerificationStep('verifying');
+    } else if (analysisResult && !analysisResult.result.needs_verification && verificationStep === 'pending') {
+      // High confidence - skip verification
+      setVerificationStep('verified');
+      setVerifiedMatrixNumber(analysisResult.result.matrix_number || null);
+    }
+  }, [analysisResult, verificationStep]);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -314,8 +336,53 @@ export default function AIScanV2() {
     setAnalysisResult(null);
     setError(null);
     setAnalysisProgress(0);
+    setVerificationStep('pending');
+    setVerifiedMatrixNumber(null);
     resetSearchState();
   };
+
+  // Handle matrix verification completion
+  const handleMatrixVerified = useCallback(async (
+    verifiedMatrix: string, 
+    corrections: Array<{ position: number; original: string; corrected: string }>
+  ) => {
+    setVerifiedMatrixNumber(verifiedMatrix);
+    setVerificationStep('verified');
+    
+    // Save corrections to database for training
+    if (corrections.length > 0 && analysisResult?.scanId && user) {
+      try {
+        const { error: saveError } = await supabase
+          .from('matrix_corrections')
+          .insert({
+            scan_id: analysisResult.scanId,
+            original_matrix: analysisResult.result.matrix_number || '',
+            corrected_matrix: verifiedMatrix,
+            character_corrections: corrections,
+            media_type: mediaType,
+            user_id: user.id
+          });
+        
+        if (saveError) {
+          console.error('Failed to save matrix correction:', saveError);
+        } else {
+          console.log('✅ Matrix correction saved for training');
+          toast({
+            title: "Correctie opgeslagen",
+            description: "Bedankt! Je correctie helpt de herkenning te verbeteren."
+          });
+        }
+      } catch (err) {
+        console.error('Error saving correction:', err);
+      }
+    }
+  }, [analysisResult, mediaType, user]);
+
+  // Handle skipping verification
+  const handleSkipVerification = useCallback(() => {
+    setVerificationStep('skipped');
+    setVerifiedMatrixNumber(analysisResult?.result.matrix_number || null);
+  }, [analysisResult]);
 
   // Simulate progress during analysis
   useEffect(() => {
@@ -513,8 +580,24 @@ export default function AIScanV2() {
               </Alert>}
           </>}
 
-        {/* Analysis Results */}
-        {analysisResult && <Card>
+        {/* Matrix Verification Step */}
+        {analysisResult && verificationStep === 'verifying' && analysisResult.result.matrix_number && (
+          <MatrixVerificationStep
+            data={{
+              matrixNumber: analysisResult.result.matrix_number,
+              matrixCharacters: analysisResult.result.matrix_characters || [],
+              overallConfidence: analysisResult.result.overall_matrix_confidence || 0.5,
+              needsVerification: analysisResult.result.needs_verification || false,
+              mediaType: mediaType as 'vinyl' | 'cd',
+              photoUrl: uploadedFiles[uploadedFiles.length - 1]?.preview
+            }}
+            onVerified={handleMatrixVerified}
+            onSkip={handleSkipVerification}
+          />
+        )}
+
+        {/* Analysis Results - only show after verification is complete */}
+        {analysisResult && (verificationStep === 'verified' || verificationStep === 'skipped') && <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">

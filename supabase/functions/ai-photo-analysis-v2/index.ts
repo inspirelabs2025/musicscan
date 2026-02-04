@@ -425,6 +425,10 @@ serve(async (req) => {
             barcode: combinedData.barcode || null,
             genre: combinedData.genre || null,
             country: combinedData.country || null,
+            // Matrix verification data
+            matrix_characters: combinedData.matrixCharacters || [],
+            needs_verification: combinedData.needsVerification || false,
+            overall_matrix_confidence: combinedData.overallMatrixConfidence || 0.5,
             // Pricing data from Discogs
             pricing_stats: pricingStats
           }
@@ -721,6 +725,7 @@ CRITICAL RULES:
 - Do NOT copy example values.
 - Keep spaces, hyphens, stars, dots, and symbols exactly as seen.
 - Look for high-contrast edges where text has been enhanced.
+- For EACH character, provide a confidence score (0-1) based on clarity.
 
 For CDs, carefully distinguish between these DIFFERENT identifiers:
 
@@ -742,12 +747,27 @@ RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
   "matrixNumberFull": "best full continuous reading (use ? for unclear) or null",
   "matrixNumberTopArc": "top arc reading or null",
   "matrixNumberBottomArc": "bottom arc reading or null",
+  "matrixCharacters": [
+    {"char": "5", "confidence": 0.95, "position": 0, "alternatives": ["S"]},
+    {"char": "3", "confidence": 0.98, "position": 1, "alternatives": []},
+    ...for each character in matrixNumberFull
+  ],
   "sidCodeMastering": "IFPI L... code or null",
   "sidCodeMould": "IFPI ... code (not starting with L) or null",
   "labelCode": "LC xxxx code or null",
   "confidence": number between 0-1,
+  "needsVerification": true if any character confidence < 0.9,
   "notes": "brief notes about readability / uncertain parts"
 }
+
+CHARACTER CONFIDENCE GUIDELINES:
+- 0.95-1.0: Crystal clear, unmistakable
+- 0.85-0.94: Clear but could potentially be similar char (O/0, I/1)
+- 0.70-0.84: Somewhat unclear, likely this char but uncertain
+- 0.50-0.69: Very unclear, best guess
+- <0.50: Cannot determine, use "?" 
+
+For "alternatives", list similar-looking characters that could be confused (O/0, I/1, S/5, B/8, etc.)
 
 Prioritize inner-ring text over printed tracklist text.`
     } else {
@@ -761,6 +781,7 @@ CRITICAL RULES:
 - Do NOT copy example values.
 - Keep spaces, hyphens, stars, dots, and symbols exactly as seen.
 - Look for edge-enhanced relief text where embossed characters have been highlighted.
+- For EACH character, provide a confidence score (0-1) based on clarity.
 
 For VINYL, carefully look for these identifiers in the RUNOUT GROOVE / DEAD WAX area:
 
@@ -785,12 +806,27 @@ RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
   "matrixNumberFull": "full matrix number reading (use ? for unclear) or null",
   "matrixNumberSideA": "Side A matrix if visible or null",
   "matrixNumberSideB": "Side B matrix if visible or null",
+  "matrixCharacters": [
+    {"char": "A", "confidence": 0.95, "position": 0, "alternatives": []},
+    {"char": "B", "confidence": 0.72, "position": 1, "alternatives": ["8", "3"]},
+    ...for each character in matrixNumberFull
+  ],
   "stamperCodes": "stamper letter codes or null",
   "pressingPlant": "pressing plant indicators or null",
   "handEtched": "any hand-written/etched text or null",
   "confidence": number between 0-1,
+  "needsVerification": true if any character confidence < 0.9,
   "notes": "brief notes about readability / uncertain parts"
 }
+
+CHARACTER CONFIDENCE GUIDELINES:
+- 0.95-1.0: Crystal clear, unmistakable
+- 0.85-0.94: Clear but could potentially be similar char (O/0, I/1)
+- 0.70-0.84: Somewhat unclear, likely this char but uncertain
+- 0.50-0.69: Very unclear, best guess
+- <0.50: Cannot determine, use "?"
+
+For "alternatives", list similar-looking characters that could be confused (O/0, I/1, S/5, B/8, etc.)
 
 Focus on the dead wax area between the label and the first groove.`
     }
@@ -891,6 +927,14 @@ function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: an
     handEtched: matrixData.handEtched ?? null,
   } : {};
 
+  // Extract character-level confidence data for verification
+  const matrixCharacters = matrixData?.matrixCharacters ?? [];
+  const needsVerification = matrixData?.needsVerification ?? 
+    (matrixCharacters.length > 0 && matrixCharacters.some((c: any) => c.confidence < 0.9));
+  const overallMatrixConfidence = matrixCharacters.length > 0
+    ? matrixCharacters.reduce((sum: number, c: any) => sum + (c.confidence || 0), 0) / matrixCharacters.length
+    : (matrixData?.confidence ?? 0.5);
+
   return {
     // Primary fields from general analysis
     artist: generalData?.artist ?? null,
@@ -925,6 +969,11 @@ function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: an
     
     // Matrix pass notes for debugging
     matrixNotes: matrixData?.notes ?? null,
+
+    // Character-level verification data
+    matrixCharacters,
+    needsVerification,
+    overallMatrixConfidence,
 
     // Enhanced search queries
     searchQueries: [

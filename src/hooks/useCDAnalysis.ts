@@ -122,6 +122,8 @@ export const useCDAnalysis = () => {
         confidence: data.confidence || null,
         ocr_notes: data.ocr_notes || null,
         raw_spelling: data.raw_spelling || null,
+        match_confidence: data.match_confidence || null,
+        match_reasons: data.match_reasons || null,
       };
 
       const transformedData = {
@@ -130,6 +132,8 @@ export const useCDAnalysis = () => {
           discogs_id: data.discogs_id || null,
           discogs_url: data.discogs_url || null,
           cover_image: data.cover_image || null,
+          match_confidence: data.match_confidence || null,
+          match_reasons: data.match_reasons || null,
         },
         success: true
       };

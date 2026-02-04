@@ -246,9 +246,27 @@ Return JSON:
   };
 }
 
-// Discogs search
-async function searchDiscogs(catalogNumber: string | null, artist: string | null, title: string | null, barcode: string | null): Promise<any | null> {
-  console.log('🔍 Discogs search:', { catalogNumber, artist, title, barcode });
+// CD Matching Hierarchy:
+// 1. Matrix number (primary) - most reliable for CD identification
+// 2. Catalog number
+// 3. Barcode
+// 4. Artist + Title (fallback)
+// IFPI codes are used for validation/confidence, NOT as search keys
+
+interface DiscogsSearchParams {
+  matrixNumber: string | null;
+  catalogNumber: string | null;
+  barcode: string | null;
+  artist: string | null;
+  title: string | null;
+  label: string | null;
+  country: string | null;
+  ifpiMastering: string | null;
+  ifpiMould: string | null;
+}
+
+async function searchDiscogsWithMatrix(params: DiscogsSearchParams): Promise<any | null> {
+  console.log('🔍 CD Discogs search (matrix-first):', params);
   
   const token = DISCOGS_TOKEN;
   const key = DISCOGS_CONSUMER_KEY;
@@ -262,35 +280,169 @@ async function searchDiscogs(catalogNumber: string | null, artist: string | null
   const auth = token 
     ? { 'Authorization': `Discogs token=${token}` }
     : { 'Authorization': `Discogs key=${key}, secret=${secret}` };
+  
+  const headers = { ...auth, 'User-Agent': 'MusicScan/3.0' };
 
-  const queries = [];
-  if (barcode) queries.push(`barcode:${barcode}`);
-  if (catalogNumber) queries.push(`catno:${catalogNumber}`);
-  if (artist && title) queries.push(`${artist} ${title}`);
+  // Build search queries in priority order (matrix-first for CDs)
+  const queries: { query: string; type: string; priority: number }[] = [];
+  
+  // Priority 1: Matrix number (primary identifier for CDs)
+  if (params.matrixNumber) {
+    // Clean matrix for search - remove common prefixes/suffixes
+    const cleanMatrix = params.matrixNumber
+      .replace(/[#*~]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    queries.push({ query: cleanMatrix, type: 'matrix', priority: 1 });
+  }
+  
+  // Priority 2: Catalog number
+  if (params.catalogNumber) {
+    queries.push({ query: `catno:${params.catalogNumber}`, type: 'catno', priority: 2 });
+  }
+  
+  // Priority 3: Barcode
+  if (params.barcode) {
+    queries.push({ query: `barcode:${params.barcode}`, type: 'barcode', priority: 3 });
+  }
+  
+  // Priority 4: Artist + Title (fallback)
+  if (params.artist && params.title) {
+    queries.push({ query: `${params.artist} ${params.title}`, type: 'artist_title', priority: 4 });
+  }
 
-  for (const q of queries) {
+  // Sort by priority
+  queries.sort((a, b) => a.priority - b.priority);
+  
+  console.log('📋 Search order:', queries.map(q => `${q.type}: "${q.query}"`));
+
+  let bestMatch: any = null;
+  let matchConfidence = 0;
+
+  for (const { query, type, priority } of queries) {
     try {
-      const url = `https://api.discogs.com/database/search?q=${encodeURIComponent(q)}&type=release&format=CD&per_page=3`;
-      const res = await fetch(url, { headers: { ...auth, 'User-Agent': 'MusicScan/3.0' } });
+      const url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&format=CD&per_page=5`;
+      console.log(`🔎 Trying ${type} search: ${query}`);
+      
+      const res = await fetch(url, { headers });
       
       if (res.ok) {
         const data = await res.json();
+        
         if (data.results?.length > 0) {
-          const match = data.results[0];
-          console.log('✅ Discogs match:', match.id, match.title);
-          return {
-            discogs_id: match.id,
-            discogs_url: `https://www.discogs.com/release/${match.id}`,
-            cover_image: match.cover_image,
-            title: match.title,
-            year: match.year
-          };
+          console.log(`📦 Found ${data.results.length} results for ${type}`);
+          
+          // For matrix search, we need to verify by fetching release details
+          for (const result of data.results.slice(0, 3)) {
+            const releaseData = await fetchReleaseDetails(result.id, headers);
+            await new Promise(r => setTimeout(r, 200)); // Rate limit
+            
+            if (releaseData) {
+              // Calculate match confidence based on available data
+              let confidence = 0;
+              const matchReasons: string[] = [];
+              
+              // Matrix match is strongest signal
+              if (type === 'matrix' && releaseData.identifiers?.some((id: any) => 
+                id.type === 'Matrix / Runout' && 
+                id.value?.toLowerCase().includes(params.matrixNumber?.toLowerCase().slice(0, 8) || '')
+              )) {
+                confidence += 0.5;
+                matchReasons.push('matrix');
+              }
+              
+              // Catalog number match
+              if (params.catalogNumber && releaseData.labels?.some((l: any) => 
+                l.catno?.toLowerCase() === params.catalogNumber?.toLowerCase()
+              )) {
+                confidence += 0.25;
+                matchReasons.push('catno');
+              }
+              
+              // IFPI validation (secondary signal, NOT search key)
+              if (params.ifpiMastering || params.ifpiMould) {
+                const releaseIdentifiers = releaseData.identifiers || [];
+                const hasIfpiMatch = releaseIdentifiers.some((id: any) => {
+                  if (id.type !== 'Mould SID Code' && id.type !== 'Mastering SID Code') return false;
+                  const val = id.value?.toUpperCase() || '';
+                  return (params.ifpiMastering && val.includes(params.ifpiMastering.replace('IFPI ', ''))) ||
+                         (params.ifpiMould && val.includes(params.ifpiMould.replace('IFPI ', '')));
+                });
+                if (hasIfpiMatch) {
+                  confidence += 0.15;
+                  matchReasons.push('ifpi_validated');
+                }
+              }
+              
+              // Label/country match
+              if (params.label && releaseData.labels?.some((l: any) => 
+                l.name?.toLowerCase().includes(params.label?.toLowerCase() || '')
+              )) {
+                confidence += 0.05;
+                matchReasons.push('label');
+              }
+              
+              if (params.country && releaseData.country?.toLowerCase() === params.country?.toLowerCase()) {
+                confidence += 0.05;
+                matchReasons.push('country');
+              }
+              
+              console.log(`🎯 Release ${result.id}: confidence ${confidence.toFixed(2)} (${matchReasons.join(', ')})`);
+              
+              if (confidence > matchConfidence) {
+                matchConfidence = confidence;
+                bestMatch = {
+                  discogs_id: result.id,
+                  discogs_url: `https://www.discogs.com/release/${result.id}`,
+                  cover_image: result.cover_image || releaseData.images?.[0]?.uri,
+                  title: result.title,
+                  year: releaseData.year || result.year,
+                  // Extract catalog number from release details
+                  catalog_number: releaseData.labels?.[0]?.catno || null,
+                  label: releaseData.labels?.[0]?.name || null,
+                  country: releaseData.country || null,
+                  genre: releaseData.genres?.[0] || null,
+                  match_confidence: confidence,
+                  match_reasons: matchReasons
+                };
+                
+                // If we have a very high confidence match, stop searching
+                if (confidence >= 0.7) {
+                  console.log(`✅ High confidence match found: ${result.id}`);
+                  return bestMatch;
+                }
+              }
+            }
+          }
         }
       }
-      await new Promise(r => setTimeout(r, 300));
+      
+      await new Promise(r => setTimeout(r, 300)); // Rate limit between searches
     } catch (e) {
-      console.error('Discogs error:', e);
+      console.error(`Discogs ${type} search error:`, e);
     }
+  }
+  
+  if (bestMatch) {
+    console.log(`✅ Best match: ${bestMatch.discogs_id} (confidence: ${matchConfidence.toFixed(2)})`);
+  } else {
+    console.log('❌ No Discogs match found');
+  }
+  
+  return bestMatch;
+}
+
+// Fetch detailed release info for validation
+async function fetchReleaseDetails(releaseId: number, headers: Record<string, string>): Promise<any | null> {
+  try {
+    const url = `https://api.discogs.com/releases/${releaseId}`;
+    const res = await fetch(url, { headers });
+    
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.error(`Failed to fetch release ${releaseId}:`, e);
   }
   return null;
 }
@@ -333,23 +485,37 @@ serve(async (req) => {
     const ocrResult = await performTwoPassOCR(imageUrls);
     console.log('📝 OCR result:', JSON.stringify(ocrResult));
 
-    // Discogs search
+    // Discogs search with matrix-first hierarchy
     let discogsData = null;
-    if (ocrResult.barcode || ocrResult.catalog_number || (ocrResult.artist && ocrResult.title)) {
-      discogsData = await searchDiscogs(
-        ocrResult.catalog_number,
-        ocrResult.artist,
-        ocrResult.title,
-        ocrResult.barcode
-      );
+    if (ocrResult.matrix_number || ocrResult.barcode || ocrResult.catalog_number || (ocrResult.artist && ocrResult.title)) {
+      discogsData = await searchDiscogsWithMatrix({
+        matrixNumber: ocrResult.matrix_number,
+        catalogNumber: ocrResult.catalog_number,
+        barcode: ocrResult.barcode,
+        artist: ocrResult.artist,
+        title: ocrResult.title,
+        label: ocrResult.label,
+        country: ocrResult.country,
+        ifpiMastering: ocrResult.ifpi_mastering,
+        ifpiMould: ocrResult.ifpi_mould
+      });
     }
 
-    // Merge results
+    // Merge results - Discogs provides catalog number if not found by OCR
     const finalResult = {
       ...ocrResult,
       discogs_id: discogsData?.discogs_id || null,
       discogs_url: discogsData?.discogs_url || null,
       cover_image: discogsData?.cover_image || null,
+      // Use Discogs catalog number if OCR didn't find one
+      catalog_number: ocrResult.catalog_number || discogsData?.catalog_number || null,
+      // Enrich with Discogs data
+      label: ocrResult.label || discogsData?.label || null,
+      country: ocrResult.country || discogsData?.country || null,
+      genre: ocrResult.genre || discogsData?.genre || null,
+      year: ocrResult.year || discogsData?.year || null,
+      match_confidence: discogsData?.match_confidence || null,
+      match_reasons: discogsData?.match_reasons || null,
     };
 
     // If Discogs found a match and OCR wasn't confident, prefer Discogs data
@@ -360,8 +526,8 @@ serve(async (req) => {
         const [artist, title] = discogsData.title.split(' - ', 2);
         finalResult.artist = artist.trim();
         finalResult.title = title.trim();
-        finalResult.confidence.overall = 0.8;
-        finalResult.ocr_notes = `${ocrResult.ocr_notes}\n✅ Bevestigd via Discogs lookup.`;
+        finalResult.confidence.overall = Math.max(0.8, discogsData.match_confidence || 0);
+        finalResult.ocr_notes = `${ocrResult.ocr_notes}\n✅ Bevestigd via Discogs (${discogsData.match_reasons?.join(', ') || 'lookup'}).`;
       }
     }
 

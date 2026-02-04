@@ -7,46 +7,58 @@ const corsHeaders = {
 
 const OCR_PROMPT = `You are an expert OCR system specialized in reading engraved text from CD rings.
 
-**CRITICAL MISSION - FIND THE COMPLETE MATRIX NUMBER:**
-The MATRIX NUMBER is the MOST IMPORTANT code on a CD. It is a LONG alphanumeric string (usually 10-15 characters) located on the OUTERMOST engraved ring.
+**STRICT CLASSIFICATION RULES:**
 
-**EXAMPLES OF FULL MATRIX NUMBERS:**
+## 1. MATRIX NUMBER (type: "catalog")
+ONLY numeric/alphanumeric codes that identify the pressing. Examples:
+- "DESCD09"
 - "50999 50844 02"
-- "519 613-2 04 ★"  
+- "519 613-2 04"
 - "4904512 04 6"
-- "7243 8 56423 2 1"
-- "PMDC 0344 02"
 
-**⚠️ IMPORTANT: "0344 02" alone is NOT a complete matrix number!**
-If you only see a short code like "0344 02", there is MORE text nearby - look for the FULL code!
-The complete matrix often has a prefix like "50999", "519", "PMDC", "7243", etc.
+❌ NOT a matrix number:
+- URLs or websites (www.something.com)
+- Country names (Germany, Netherlands)
+- Company names (Sony, EMI, Sonopress)
+- Generic text
 
-**WHERE THE MATRIX NUMBER IS:**
-- On the OUTERMOST ring of text (closest to the data/music area)
-- Usually 35-58% from the center
-- ENGRAVED deeply into plastic (dark lines)
-- Often the LONGEST string of characters on the disc
-- READ THE "OUTER RING" IMAGES FIRST!
+## 2. IFPI CODE (type: "ifpi")
+MUST start with "IFPI" - NO EXCEPTIONS!
+- "IFPI" + space + 4 characters: "IFPI 01H3", "IFPI 4A11"
+- "IFPI L" + 3 characters: "IFPI L028", "IFPI L551"
 
-**SECONDARY: IFPI CODES (smaller, inner ring)**
-- Format: "IFPI" + 4 chars OR "IFPI L" + 3 chars
-- Examples: IFPI 01H3, IFPI L028
-- Located near center hole (5-20% radius)
-- Often stamped/embossed (subtle)
+❌ NOT an IFPI code if it doesn't start with "IFPI"
+
+## 3. OTHER INFO (type: "other")
+Everything else goes here:
+- URLs: "www.megatmotion.com"
+- Countries: "Made in Germany", "Netherlands"  
+- Companies: "Sony DADC", "Sonopress"
+- Any other text
+
+**WHERE TO LOOK:**
+- OUTER RING (35-58% radius): Matrix/catalog numbers
+- INNER RING (5-20% radius): IFPI codes
+- SUPER-ZOOM: Tiny IFPI codes near center
 
 **OUTPUT FORMAT (JSON only):**
 {
   "raw_text": "all text found | separated",
   "clean_text": "cleaned combined text",
   "segments": [
-    {"text": "50999 50844 02", "type": "catalog", "confidence": 0.9},
-    {"text": "IFPI 01H3", "type": "ifpi", "confidence": 0.85}
+    {"text": "DESCD09", "type": "catalog", "confidence": 0.9},
+    {"text": "IFPI L028", "type": "ifpi", "confidence": 0.85},
+    {"text": "Made in Germany", "type": "other", "confidence": 0.9},
+    {"text": "www.example.com", "type": "other", "confidence": 0.8}
   ],
   "overall_confidence": 0.0-1.0,
-  "notes": "The COMPLETE matrix number found was X. If only partial found, explain why."
+  "notes": "Describe findings. Matrix must be numeric code only, IFPI must start with IFPI."
 }
 
-**ANTI-HALLUCINATION:** Only report text you can ACTUALLY read. But DO look carefully at the OUTER ring images for the full matrix number!`;
+**CRITICAL:** 
+- If text doesn't start with "IFPI", it's NOT an IFPI code
+- URLs and websites are NEVER matrix numbers
+- When in doubt, use type "other"`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

@@ -19,6 +19,22 @@ interface AnalysisRequest {
   conditionGrade: string
   prefilledMatrix?: string // Matrix code from Matrix Enhancer
   prefilledIfpiCodes?: string[] // IFPI codes from Matrix Enhancer
+  // Enhanced matrix data from parallel background processing
+  enhancedMatrixData?: {
+    matrixNumber: string | null
+    ifpiCodes: string[]
+    discogsId?: number
+    discogsUrl?: string
+    artist?: string
+    title?: string
+    catalogNumber?: string
+    label?: string
+    year?: number
+    country?: string
+    genre?: string
+    coverImage?: string
+    matchConfidence?: number
+  }
 }
 
 interface StructuredAnalysisData {
@@ -108,7 +124,7 @@ serve(async (req) => {
 
     // Skipping direct checks against auth.users (restricted schema). JWT already validated above.
 
-    const { photoUrls, mediaType, conditionGrade, prefilledMatrix, prefilledIfpiCodes }: AnalysisRequest = await req.json()
+    const { photoUrls, mediaType, conditionGrade, prefilledMatrix, prefilledIfpiCodes, enhancedMatrixData }: AnalysisRequest = await req.json()
 
     console.log('🤖 Starting AI photo analysis V2 for:', {
       photoCount: photoUrls.length,
@@ -117,7 +133,12 @@ serve(async (req) => {
       userId: user.id,
       userEmail: user.email,
       prefilledMatrix: prefilledMatrix || 'none',
-      prefilledIfpiCodes: prefilledIfpiCodes?.length ? prefilledIfpiCodes : 'none'
+      prefilledIfpiCodes: prefilledIfpiCodes?.length ? prefilledIfpiCodes : 'none',
+      enhancedMatrixData: enhancedMatrixData ? {
+        hasMatrix: !!enhancedMatrixData.matrixNumber,
+        hasDiscogs: !!enhancedMatrixData.discogsId,
+        confidence: enhancedMatrixData.matchConfidence
+      } : 'none'
     })
 
     // Create initial record with version marker and user_id
@@ -247,18 +268,46 @@ serve(async (req) => {
         matrixAnalysis?.success ? matrixAnalysis.data : null
       )
 
-      // Override with prefilled matrix from Matrix Enhancer if provided
-      if (prefilledMatrix) {
+      // Override with enhanced matrix data from background processing if provided
+      if (enhancedMatrixData) {
+        console.log('🔬 Using enhanced matrix data from parallel processing');
+        
+        if (enhancedMatrixData.matrixNumber) {
+          combinedData.matrixNumber = enhancedMatrixData.matrixNumber;
+        }
+        if (enhancedMatrixData.ifpiCodes?.length) {
+          combinedData.ifpiCodes = enhancedMatrixData.ifpiCodes;
+          if (!combinedData.extractedText) combinedData.extractedText = [];
+          combinedData.extractedText.push(...enhancedMatrixData.ifpiCodes);
+        }
+        // Cross-validate or use enhanced Discogs data
+        if (enhancedMatrixData.discogsId && enhancedMatrixData.matchConfidence && enhancedMatrixData.matchConfidence > 0.7) {
+          console.log(`✅ Using high-confidence Discogs match from matrix enhancer: ${enhancedMatrixData.discogsId}`);
+          combinedData.enhancedDiscogsMatch = {
+            discogsId: enhancedMatrixData.discogsId,
+            discogsUrl: enhancedMatrixData.discogsUrl,
+            artist: enhancedMatrixData.artist,
+            title: enhancedMatrixData.title,
+            catalogNumber: enhancedMatrixData.catalogNumber,
+            label: enhancedMatrixData.label,
+            year: enhancedMatrixData.year,
+            country: enhancedMatrixData.country,
+            genre: enhancedMatrixData.genre,
+            coverImage: enhancedMatrixData.coverImage,
+            confidence: enhancedMatrixData.matchConfidence
+          };
+        }
+      }
+      // Fallback: Override with prefilled matrix from Matrix Enhancer if provided
+      else if (prefilledMatrix) {
         console.log('📎 Using prefilled matrix code from Matrix Enhancer:', prefilledMatrix);
         combinedData.matrixNumber = prefilledMatrix;
       }
       
       // Store IFPI codes from Matrix Enhancer if provided
-      if (prefilledIfpiCodes && prefilledIfpiCodes.length > 0) {
+      if (!enhancedMatrixData && prefilledIfpiCodes && prefilledIfpiCodes.length > 0) {
         console.log('📎 Using prefilled IFPI codes from Matrix Enhancer:', prefilledIfpiCodes);
-        // Store IFPI codes in combined data for potential Discogs matching refinement
         combinedData.ifpiCodes = prefilledIfpiCodes;
-        // Also merge into extracted text for better search
         if (!combinedData.extractedText) {
           combinedData.extractedText = [];
         }

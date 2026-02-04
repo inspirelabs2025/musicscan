@@ -12,23 +12,28 @@ const OCR_PROMPT = `You are an OCR system that reads engraved text from CD inner
 - DO NOT invent, guess, or hallucinate any text
 - If you cannot clearly read something, report it with LOW confidence or skip it
 - DO NOT use example codes from this prompt - only report what's IN THE IMAGE
-- Common real matrix codes look like: "4904512 04 6", "538 972-2", "7243 8 56092 2"
 - If unsure, report "unknown" with low confidence rather than guessing
 
-**WHERE TEXT IS LOCATED ON CDs:**
-- OUTER RING (near data area): Usually has CATALOG/MATRIX numbers - long numeric codes
-- MIDDLE RING: IFPI codes (format: "IFPI LXXX" or "IFPI XXXX")  
-- INNER RING (near hole): Additional codes, SID codes
-
-**WHAT TO LOOK FOR:**
-1. CATALOG/MATRIX NUMBER: Long numeric sequence (7-15 digits), often with spaces
-   - Examples of REAL patterns: "4904512 04 6", "538 972-2", "82876 54321 2"
-   - Usually the LONGEST code on the disc
+**CD TEXT LOCATIONS - CHECK ALL AREAS:**
+1. OUTER RING (furthest from hole): CATALOG/MATRIX numbers - long numeric codes
+   - Examples: "4904512 04 6", "538 972-2", "82876 54321 2"
+   - Usually 7-15 digits with spaces/dashes
    
-2. IFPI CODES: "IFPI" followed by L+numbers or 4 digits
-   - Examples: "IFPI L028", "IFPI 0110"
+2. MIDDLE RING: IFPI codes - ALWAYS look for "IFPI" text!
+   - Format: "IFPI L" + 3 digits (mould SID) OR "IFPI" + 4 digits (mastering SID)
+   - Examples: "IFPI L028", "IFPI L551", "IFPI 0110", "IFPI 4A11"
+   - May appear as "IFPI" on one line and code below, or combined
+   - Often STAMPED (raised text) not engraved
+   
+3. INNER RING (closest to center hole): Additional SID codes, stamper marks
+   - May have second IFPI code, date codes, or plant identifiers
 
-3. OTHER TEXT: Country names, dates, stamper codes
+**IFPI DETECTION TIPS:**
+- IFPI codes can be VERY small and hard to read
+- Look for the letters "I F P I" arranged around the ring
+- The code after "IFPI L" is 3 alphanumeric characters
+- The code after just "IFPI" (no L) is 4 alphanumeric characters
+- IFPI codes are SEPARATE from matrix/catalog numbers
 
 **CHARACTER SET:** A-Z 0-9 - / . ( ) + space
 
@@ -40,10 +45,10 @@ const OCR_PROMPT = `You are an OCR system that reads engraved text from CD inner
     {"text": "ACTUAL TEXT FROM IMAGE", "type": "catalog|ifpi|matrix|unknown", "confidence": 0.0-1.0}
   ],
   "overall_confidence": 0.0-1.0,
-  "notes": "describe what you can and cannot read"
+  "notes": "describe what you see in EACH ring area (outer, middle, inner)"
 }
 
-REMEMBER: Only report text you can ACTUALLY SEE. Low confidence is better than hallucination.`;
+REMEMBER: Check ALL ring areas. IFPI codes are often in a DIFFERENT location than matrix numbers.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -51,9 +56,17 @@ serve(async (req) => {
   }
 
   try {
-    const { enhancedImage, ocrLayer, ocrLayerInverted, zoomedRing, zoomedRingEnhanced } = await req.json();
+    const { 
+      enhancedImage, 
+      ocrLayer, 
+      ocrLayerInverted, 
+      zoomedRing, 
+      zoomedRingEnhanced,
+      zoomedIfpiRing,
+      zoomedIfpiRingEnhanced 
+    } = await req.json();
 
-    if (!enhancedImage && !ocrLayer && !zoomedRing) {
+    if (!enhancedImage && !ocrLayer && !zoomedRing && !zoomedIfpiRing) {
       return new Response(
         JSON.stringify({ error: "No image provided" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -144,25 +157,33 @@ Return only valid JSON with what you can ACTUALLY SEE.`
       return parsed;
     };
 
-    // Collect all available images - prioritize zoomed ring (best for matrix text)
+    // Collect all available images - include both matrix and IFPI zones
     const imagesToAnalyze: { data: string; name: string }[] = [];
     
-    // PRIORITY 1: Zoomed ring crops (best for reading small matrix text)
+    // PRIORITY 1: Zoomed IFPI ring crops (inner ring for IFPI codes)
+    if (zoomedIfpiRingEnhanced) {
+      imagesToAnalyze.push({ data: zoomedIfpiRingEnhanced, name: "INNER RING (IFPI zone) - enhanced, 3x zoom - LOOK FOR IFPI CODES HERE" });
+    }
+    if (zoomedIfpiRing) {
+      imagesToAnalyze.push({ data: zoomedIfpiRing, name: "INNER RING (IFPI zone) - original, 3x zoom - CHECK FOR IFPI TEXT" });
+    }
+    
+    // PRIORITY 2: Zoomed matrix ring crops (outer ring for catalog/matrix)
     if (zoomedRingEnhanced) {
-      imagesToAnalyze.push({ data: zoomedRingEnhanced, name: "ZOOMED matrix ring area (enhanced, 2.5x magnification)" });
+      imagesToAnalyze.push({ data: zoomedRingEnhanced, name: "OUTER RING (matrix zone) - enhanced, 2.5x zoom - CATALOG/MATRIX numbers here" });
     }
     if (zoomedRing) {
-      imagesToAnalyze.push({ data: zoomedRing, name: "ZOOMED matrix ring area (original, 2.5x magnification)" });
+      imagesToAnalyze.push({ data: zoomedRing, name: "OUTER RING (matrix zone) - original, 2.5x zoom" });
     }
     
-    // PRIORITY 2: Full enhanced image
+    // PRIORITY 3: Full enhanced image (overview)
     if (enhancedImage) {
-      imagesToAnalyze.push({ data: enhancedImage, name: "Full disc enhanced preview" });
+      imagesToAnalyze.push({ data: enhancedImage, name: "Full disc overview - enhanced" });
     }
     
-    // PRIORITY 3: OCR layers (edge-detected)
+    // PRIORITY 4: OCR layers (edge-detected)
     if (ocrLayer) {
-      imagesToAnalyze.push({ data: ocrLayer, name: "OCR layer (edge-enhanced)" });
+      imagesToAnalyze.push({ data: ocrLayer, name: "OCR edge-detection layer" });
     }
     
     // Add inverted OCR layer (sometimes reveals hidden text)

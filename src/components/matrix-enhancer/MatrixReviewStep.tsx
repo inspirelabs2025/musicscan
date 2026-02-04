@@ -101,7 +101,8 @@ export function MatrixReviewStep({
                 <div className="flex items-center justify-between mb-4">
                   <TabsList>
                     <TabsTrigger value="compare">Vergelijken</TabsTrigger>
-                    <TabsTrigger value="zoomed">🔍 Zoom Ring</TabsTrigger>
+                    <TabsTrigger value="zoomed">🔍 Matrix Ring</TabsTrigger>
+                    <TabsTrigger value="ifpi">🔍 IFPI Ring</TabsTrigger>
                     <TabsTrigger value="enhanced">Verbeterd</TabsTrigger>
                     <TabsTrigger value="ocr">OCR Laag</TabsTrigger>
                   </TabsList>
@@ -140,7 +141,7 @@ export function MatrixReviewStep({
                 <TabsContent value="zoomed" className="mt-0">
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground text-center">
-                      Ingezoomd op de matrix ring (2.5× vergroting)
+                      Matrix ring (buitenste ring) - catalogus/matrix nummers
                     </p>
                     <div 
                       className="aspect-square bg-muted rounded-lg overflow-auto"
@@ -149,6 +150,25 @@ export function MatrixReviewStep({
                       <img
                         src={result.zoomedRingEnhanced}
                         alt="Zoomed Matrix Ring"
+                        className="w-full h-full object-contain transition-transform"
+                        style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="ifpi" className="mt-0">
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground text-center">
+                      IFPI ring (binnenste ring) - IFPI codes staan hier
+                    </p>
+                    <div 
+                      className="aspect-square bg-muted rounded-lg overflow-auto"
+                      style={{ cursor: zoom > 1 ? 'grab' : 'default' }}
+                    >
+                      <img
+                        src={result.zoomedIfpiRingEnhanced}
+                        alt="Zoomed IFPI Ring"
                         className="w-full h-full object-contain transition-transform"
                         style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
                       />

@@ -29,8 +29,10 @@ export interface MatrixProcessingResult {
   enhancedPreview: string;
   ocrLayer: string;
   ocrLayerInverted: string;
-  zoomedRing: string;           // Zoomed crop of the matrix ring area
+  zoomedRing: string;           // Zoomed crop of the matrix ring area (outer - for catalog/matrix)
   zoomedRingEnhanced: string;   // Enhanced version of zoomed ring
+  zoomedIfpiRing: string;       // Zoomed crop of inner ring area (for IFPI codes)
+  zoomedIfpiRingEnhanced: string; // Enhanced version of IFPI ring
   roi: RingDetectionResult | null;
   processingTimeMs: number;
   params: MatrixEnhancementParams;
@@ -151,8 +153,13 @@ export async function processMatrixImage(
   
   const ocrLayerInverted = ocrInvertedCanvas.toDataURL('image/png', 1.0);
   
-  // Step 9: Create zoomed ring crop (focus on matrix text area)
+  // Step 9: Create zoomed ring crop (focus on matrix text area - outer ring)
   const { zoomedRing, zoomedRingEnhanced } = createZoomedRingCrop(
+    canvas, enhancedCanvas, roi, width, height
+  );
+  
+  // Step 10: Create zoomed IFPI ring crop (inner ring closer to center hole)
+  const { zoomedIfpiRing, zoomedIfpiRingEnhanced } = createZoomedIfpiRingCrop(
     canvas, enhancedCanvas, roi, width, height
   );
   
@@ -166,6 +173,8 @@ export async function processMatrixImage(
     ocrLayerInverted,
     zoomedRing,
     zoomedRingEnhanced,
+    zoomedIfpiRing,
+    zoomedIfpiRingEnhanced,
     roi,
     processingTimeMs,
     params: fullParams,
@@ -252,6 +261,85 @@ function createZoomedRingCrop(
   console.log(`🔍 Zoomed ring crop: ${zoomedWidth}x${zoomedHeight} from region (${Math.round(cropX)},${Math.round(cropY)}) size ${Math.round(actualCropWidth)}x${Math.round(actualCropHeight)}`);
   
   return { zoomedRing, zoomedRingEnhanced };
+}
+
+/**
+ * Create a zoomed crop of the IFPI ring area (inner ring, closer to center hole)
+ * IFPI codes are typically located between the center hole and the matrix text
+ */
+function createZoomedIfpiRingCrop(
+  originalCanvas: HTMLCanvasElement,
+  enhancedCanvas: HTMLCanvasElement,
+  roi: RingDetectionResult | null,
+  width: number,
+  height: number
+): { zoomedIfpiRing: string; zoomedIfpiRingEnhanced: string } {
+  const centerX = roi?.center.x ?? width / 2;
+  const centerY = roi?.center.y ?? height / 2;
+  
+  const minSize = Math.min(width, height);
+  
+  // IFPI codes are in the inner ring - smaller area closer to center
+  // Typically between 5-15% of image from center (inside the matrix ring)
+  const innerRadius = minSize * 0.05;  // Start just outside center hole
+  const outerRadius = minSize * 0.18;  // End before matrix codes begin
+  
+  // Create a larger crop to capture the full inner ring
+  const cropSize = outerRadius * 2.5;
+  const cropX = Math.max(0, centerX - cropSize / 2);
+  const cropY = Math.max(0, centerY - cropSize / 2);
+  const actualCropWidth = Math.min(cropSize, width - cropX);
+  const actualCropHeight = Math.min(cropSize, height - cropY);
+  
+  // Higher zoom for tiny IFPI text
+  const zoomFactor = 3.0;
+  const zoomedWidth = Math.round(actualCropWidth * zoomFactor);
+  const zoomedHeight = Math.round(actualCropHeight * zoomFactor);
+  
+  // Create zoomed original
+  const zoomedCanvas = document.createElement('canvas');
+  zoomedCanvas.width = zoomedWidth;
+  zoomedCanvas.height = zoomedHeight;
+  const zoomedCtx = zoomedCanvas.getContext('2d')!;
+  
+  zoomedCtx.imageSmoothingEnabled = true;
+  zoomedCtx.imageSmoothingQuality = 'high';
+  
+  zoomedCtx.drawImage(
+    originalCanvas,
+    cropX, cropY, actualCropWidth, actualCropHeight,
+    0, 0, zoomedWidth, zoomedHeight
+  );
+  
+  const zoomedIfpiRing = zoomedCanvas.toDataURL('image/jpeg', 0.95);
+  
+  // Create zoomed enhanced version
+  const zoomedEnhancedCanvas = document.createElement('canvas');
+  zoomedEnhancedCanvas.width = zoomedWidth;
+  zoomedEnhancedCanvas.height = zoomedHeight;
+  const zoomedEnhancedCtx = zoomedEnhancedCanvas.getContext('2d')!;
+  
+  zoomedEnhancedCtx.imageSmoothingEnabled = true;
+  zoomedEnhancedCtx.imageSmoothingQuality = 'high';
+  
+  zoomedEnhancedCtx.drawImage(
+    enhancedCanvas,
+    cropX, cropY, actualCropWidth, actualCropHeight,
+    0, 0, zoomedWidth, zoomedHeight
+  );
+  
+  // Extra sharpening for tiny IFPI text
+  applyUnsharpMask(zoomedEnhancedCtx, zoomedWidth, zoomedHeight, {
+    radius: 0.4,
+    amount: 1.5,
+    threshold: 1
+  });
+  
+  const zoomedIfpiRingEnhanced = zoomedEnhancedCanvas.toDataURL('image/jpeg', 0.95);
+  
+  console.log(`🔍 Zoomed IFPI ring crop: ${zoomedWidth}x${zoomedHeight} (inner ring for IFPI codes)`);
+  
+  return { zoomedIfpiRing, zoomedIfpiRingEnhanced };
 }
 
 // ============== FILTER IMPLEMENTATIONS ==============

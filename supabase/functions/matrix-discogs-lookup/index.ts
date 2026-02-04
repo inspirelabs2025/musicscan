@@ -194,57 +194,79 @@ function calculateMatchScore(
 
 /**
  * STRICT CD format check - returns true ONLY for CDs, never for vinyl
+ * Uses explicit positive CD indicators, not generic format types
  */
 function isCDFormat(formats: string[]): boolean {
   if (!formats || formats.length === 0) return false;
   
   const formatStr = formats.join(' ').toUpperCase();
   
-  // FIRST: Explicitly reject if it has ANY vinyl keywords
-  const vinylKeywords = ['VINYL', 'LP', '12"', '12 "', '7"', '7 "', '10"', '10 "', '78 RPM', '45 RPM', '33 RPM', '33⅓'];
-  for (const vinyl of vinylKeywords) {
+  // Vinyl-exclusive keywords - if ANY of these are present, it's vinyl
+  const vinylExclusiveKeywords = [
+    'VINYL', 'LP', '12"', '12 "', '7"', '7 "', '10"', '10 "', 
+    '78 RPM', '45 RPM', '33 RPM', '33⅓', '33 1/3',
+    'FLEXI', 'FLEXI-DISC', 'PICTURE DISC', 'SHELLAC',
+    'MONO', 'STEREO', // Often explicit on vinyl
+  ];
+  
+  for (const vinyl of vinylExclusiveKeywords) {
     if (formatStr.includes(vinyl)) {
-      console.log(`[isCDFormat] REJECTED: Contains vinyl keyword "${vinyl}"`);
+      console.log(`[isCDFormat] REJECTED: Contains vinyl-exclusive keyword "${vinyl}"`);
       return false;
     }
   }
   
-  // SECOND: Accept only if it has CD keywords
-  const cdKeywords = ['CD', 'CD-ROM', 'CDR', 'HDCD', 'SACD', 'CD+G', 'ENHANCED CD', 'MINI CD', 'MINIDISC', 'DTS'];
-  for (const cd of cdKeywords) {
-    if (formatStr.includes(cd)) {
+  // CD-exclusive keywords - MUST have one of these to be considered CD
+  const cdExclusiveKeywords = ['CD', 'COMPACT DISC', 'CDR', 'CD-R', 'HDCD', 'SACD', 'CD+G', 'ENHANCED CD', 'MINI CD', 'MINIDISC', 'DTS'];
+  
+  for (const cd of cdExclusiveKeywords) {
+    // Check for exact match to avoid false positives (e.g., "LCD" matching "CD")
+    const regex = new RegExp(`\\b${cd.replace(/[+]/g, '\\+')}\\b`, 'i');
+    if (regex.test(formatStr) || formatStr.includes(cd)) {
+      console.log(`[isCDFormat] ACCEPTED: Contains CD keyword "${cd}"`);
       return true;
     }
   }
   
+  console.log(`[isCDFormat] REJECTED: No CD keywords found in "${formatStr}"`);
   return false;
 }
 
 /**
  * STRICT Vinyl format check - returns true ONLY for vinyl, never for CDs
+ * Uses explicit vinyl indicators only
  */
 function isVinylFormat(formats: string[]): boolean {
   if (!formats || formats.length === 0) return false;
   
   const formatStr = formats.join(' ').toUpperCase();
   
-  // FIRST: Explicitly reject if it has ANY CD keywords
-  const cdKeywords = ['CD', 'CD-ROM', 'CDR', 'HDCD', 'SACD', 'CD+G', 'ENHANCED CD', 'MINI CD', 'MINIDISC', 'DTS'];
-  for (const cd of cdKeywords) {
-    if (formatStr.includes(cd)) {
+  // CD-exclusive keywords - if ANY of these are present, it's CD
+  const cdExclusiveKeywords = ['CD', 'COMPACT DISC', 'CDR', 'CD-R', 'HDCD', 'SACD', 'CD+G', 'ENHANCED CD', 'MINI CD', 'MINIDISC', 'DTS'];
+  
+  for (const cd of cdExclusiveKeywords) {
+    const regex = new RegExp(`\\b${cd.replace(/[+]/g, '\\+')}\\b`, 'i');
+    if (regex.test(formatStr) || formatStr.includes(cd)) {
       console.log(`[isVinylFormat] REJECTED: Contains CD keyword "${cd}"`);
       return false;
     }
   }
   
-  // SECOND: Accept only if it has vinyl keywords
-  const vinylKeywords = ['VINYL', 'LP', '12"', '12 "', '7"', '7 "', '10"', '10 "', '78 RPM', '45 RPM', '33 RPM', '33⅓', 'ALBUM', 'SINGLE', 'EP', 'MAXI'];
-  for (const vinyl of vinylKeywords) {
+  // Vinyl-exclusive keywords - MUST have one of these to be considered vinyl
+  const vinylExclusiveKeywords = [
+    'VINYL', 'LP', '12"', '12 "', '7"', '7 "', '10"', '10 "',
+    '78 RPM', '45 RPM', '33 RPM', '33⅓', '33 1/3',
+    'FLEXI', 'FLEXI-DISC', 'PICTURE DISC', 'SHELLAC',
+  ];
+  
+  for (const vinyl of vinylExclusiveKeywords) {
     if (formatStr.includes(vinyl)) {
+      console.log(`[isVinylFormat] ACCEPTED: Contains vinyl keyword "${vinyl}"`);
       return true;
     }
   }
   
+  console.log(`[isVinylFormat] REJECTED: No vinyl keywords found in "${formatStr}"`);
   return false;
 }
 

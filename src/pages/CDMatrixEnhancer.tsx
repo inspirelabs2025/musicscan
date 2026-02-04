@@ -397,10 +397,23 @@ export default function CDMatrixEnhancer() {
                 <div className="mt-4">
                   <Button
                     onClick={() => {
-                      // Extract IFPI codes from segments
-                      const ifpiCodes = ocrResult.segments
-                        .filter(s => s.type === 'ifpi')
-                        .map(s => s.text);
+                      // Extract IFPI codes with robust fallback
+                      const extractIfpiCodes = (): string[] => {
+                        // Layer 1: Get from segments with type 'ifpi'
+                        const fromSegments = ocrResult.segments
+                          .filter(s => s.type === 'ifpi')
+                          .map(s => s.text);
+                        
+                        // Layer 2: Also search in cleanText for IFPI pattern (always starts with "IFPI")
+                        const ifpiRegex = /IFPI\s*[A-Z0-9]{2,6}/gi;
+                        const fromCleanText = ocrResult.cleanText.match(ifpiRegex) || [];
+                        
+                        // Combine and dedupe
+                        const combined = [...fromSegments, ...fromCleanText];
+                        return [...new Set(combined.map(c => c.toUpperCase().trim()))];
+                      };
+                      
+                      const ifpiCodes = extractIfpiCodes();
                       
                       // Extract pure matrix code with robust filtering
                       const extractPureMatrixCode = (): string | null => {

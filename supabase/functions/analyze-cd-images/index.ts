@@ -1,8 +1,8 @@
-// V3.0 - Two-Pass Verification System to prevent AI hallucination
+// V3.2 - Catalog Validation & IFPI Regex Fallback
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const CD_FUNCTION_VERSION = "V3.0-TWO-PASS-VERIFICATION";
+const CD_FUNCTION_VERSION = "V3.2-CATALOG-VALIDATION";
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const DISCOGS_TOKEN = Deno.env.get('DISCOGS_TOKEN');
 const DISCOGS_CONSUMER_KEY = Deno.env.get('DISCOGS_CONSUMER_KEY');
@@ -15,6 +15,61 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// ============= CATALOG NUMBER VALIDATION =============
+// Rejects matrix-like patterns, IFPI codes, and invalid formats
+function validateCatalogNumber(catno: string | null): string | null {
+  if (!catno) return null;
+  
+  const cleaned = catno.trim();
+  
+  // Reject if too short or too long
+  if (cleaned.length < 3 || cleaned.length > 20) return null;
+  
+  // Reject matrix-like patterns (long alphanumeric codes)
+  if (/^[A-Z]{2,4}\d{6,}/i.test(cleaned)) return null;  // CPG1996002, DIDP10614...
+  if (/^[A-Z]{3,}\d{5,}/i.test(cleaned)) return null;   // PMDC12345, DADC12345...
+  
+  // Reject IFPI codes
+  if (/IFPI/i.test(cleaned)) return null;
+  
+  // Reject SID codes / disc-specific codes
+  if (/^SGL[\s\-]?\d{3}/i.test(cleaned)) return null;   // SGL 034-02
+  if (/^DIDP/i.test(cleaned)) return null;
+  if (/^DADC/i.test(cleaned)) return null;
+  if (/^PMDC/i.test(cleaned)) return null;
+  
+  // Reject pure numeric codes (likely barcodes or matrix parts)
+  if (/^\d{8,}$/.test(cleaned)) return null;
+  
+  // Accept valid catalog patterns (letters + numbers + separators)
+  // Examples: "CDP 7 46208 2", "826 732-2", "MOVLP123", "88875-12345-1"
+  if (/^[A-Z0-9][A-Z0-9\s\-\.\/]+$/i.test(cleaned)) {
+    return cleaned;
+  }
+  
+  return null;
+}
+
+// ============= IFPI REGEX FALLBACK =============
+// Extract IFPI codes from OCR notes when JSON extraction fails
+function extractIfpiFromOcrNotes(notes: string): { mastering: string | null, mould: string | null } {
+  if (!notes) return { mastering: null, mould: null };
+  
+  // IFPI Mastering: "IFPI Lxxx" or "IFPI LYxx" (L/LY prefix)
+  const masteringMatches = notes.match(/IFPI\s*L[A-Z]?\d{2,4}/gi);
+  
+  // IFPI Mould: "IFPI xxxx" (4 alphanumeric, NO L prefix)
+  const mouldMatches = notes.match(/IFPI\s*[A-Z0-9]{4}(?!\d)/gi);
+  
+  // Filter out mastering codes from mould matches
+  const mouldOnly = mouldMatches?.filter(m => !/IFPI\s*L/i.test(m)) || [];
+  
+  return {
+    mastering: masteringMatches?.[0]?.toUpperCase().replace(/\s+/g, ' ') || null,
+    mould: mouldOnly[0]?.toUpperCase().replace(/\s+/g, ' ') || null
+  };
+}
+
 // Two-Pass OCR Analysis
 async function performTwoPassOCR(imageUrls: string[]): Promise<any> {
   if (!LOVABLE_API_KEY) {
@@ -26,7 +81,7 @@ async function performTwoPassOCR(imageUrls: string[]): Promise<any> {
     image_url: { url }
   }));
 
-  // PASS 1: Spelling-based OCR extraction with enhanced data fields
+  // PASS 1: Spelling-based OCR extraction with LOCATION-SPECIFIC RULES
   const pass1Prompt = `YOU ARE A TEXT READER, NOT AN IMAGE RECOGNIZER.
 
 CRITICAL: Do NOT recognize album covers. Do NOT use your knowledge of music.
@@ -39,14 +94,28 @@ SPELLING TASK:
 4. Find the second largest text - this is usually the album title
 5. SPELL IT OUT letter by letter
 
-Then look at the BACK COVER:
+=== CATALOG NUMBER RULES (KRITISCH) ===
+- Catalog numbers staan ALLEEN op BACK COVER of INLAY CARD (papieren inleg)
+- Catalog numbers staan NOOIT op de CD disc zelf!
+- Format voorbeelden: "CDP 7 46208 2", "826 732-2", "MOVLP123", "88875-12345-1"
+- Als je GEEN back cover of inlay ziet, return catalog_number: null
+- NEGEER codes op de CD disc - die zijn GEEN catalog numbers!
+
+=== CD DISC BEVAT ALLEEN (geen catalog numbers!) ===
+- Matrix/mastering codes (DIDP-xxxxx, DADC, PMDC, etc.)
+- IFPI codes
+- Label naam (soms)
+- SGL codes, productie-info
+- Deze zijn GEEN catalog numbers!
+
+Then look at the BACK COVER (if present):
 - Find the barcode number (13 digits near barcode)
-- Find the catalog number (alphanumeric code like "CDP 7 46208 2")
-- Find the matrix/mastering code (often near the inner ring of the CD, like "DIDP-10614" or stamped codes)
+- Find the catalog number (ONLY from back cover/inlay - alphanumeric code)
 
 Look at the CD DISC surface:
 - Find the matrix/mastering code (etched or printed near center hole)
 - Common formats: "DIDP-XXXXX", "DADC", "PMDC", alphanumeric codes
+- NOTE: Matrix codes are NOT catalog numbers!
 
 **IFPI CODE EXTRACTION (CRITICAL - STRIKTE REGELS)**
 Look carefully for IFPI codes on the CD disc inner ring area. There are TWO types:
@@ -67,12 +136,13 @@ IMPORTANT:
 - If you see "NEIL YOUNG" printed, spell it as "N-E-I-L Y-O-U-N-G"
 - Do NOT guess based on what album this looks like
 - ONLY report text you can PHYSICALLY see printed
+- catalog_number: ONLY from back cover/inlay, NEVER from disc!
 
 Return JSON:
 {
   "artist_spelled": "letter-by-letter spelling of artist from front cover",
   "title_spelled": "letter-by-letter spelling of title from front cover", 
-  "catalog_number": "exact catalog code from back",
+  "catalog_number": "exact catalog code from BACK COVER/INLAY ONLY, or null if not visible",
   "barcode": "13 digit barcode number",
   "matrix_number": "matrix/mastering code from CD disc or back cover - EXCLUDE any IFPI codes!",
   "ifpi_mastering": "IFPI mastering code (format: IFPI Lxxx or IFPI LYxx) or null if not found",
@@ -222,16 +292,38 @@ Return JSON:
     verified
   };
 
+  // Apply catalog number validation - reject disc-based codes
+  const validatedCatalogNumber = validateCatalogNumber(pass1Result.catalog_number);
+  if (pass1Result.catalog_number && !validatedCatalogNumber) {
+    console.log(`⚠️ Rejected invalid catalog number: "${pass1Result.catalog_number}" (likely disc code)`);
+  }
+
+  // IFPI regex fallback if JSON extraction failed
+  let ifpiMastering = pass1Result.ifpi_mastering || null;
+  let ifpiMould = pass1Result.ifpi_mould || null;
+  
+  if ((!ifpiMastering || !ifpiMould) && pass1Result.ocr_notes) {
+    const extracted = extractIfpiFromOcrNotes(pass1Result.ocr_notes);
+    if (!ifpiMastering && extracted.mastering) {
+      ifpiMastering = extracted.mastering;
+      console.log(`📝 IFPI mastering extracted via regex: ${ifpiMastering}`);
+    }
+    if (!ifpiMould && extracted.mould) {
+      ifpiMould = extracted.mould;
+      console.log(`📝 IFPI mould extracted via regex: ${ifpiMould}`);
+    }
+  }
+
   return {
     artist: extractedArtist || null,
     title: extractedTitle || null,
     year: pass1Result.year || null,
     label: pass1Result.label || null,
-    catalog_number: pass1Result.catalog_number || null,
+    catalog_number: validatedCatalogNumber,  // Only validated catalog numbers
     barcode: pass1Result.barcode || null,
     matrix_number: pass1Result.matrix_number || null,
-    ifpi_mastering: pass1Result.ifpi_mastering || null,
-    ifpi_mould: pass1Result.ifpi_mould || null,
+    ifpi_mastering: ifpiMastering,
+    ifpi_mould: ifpiMould,
     format: 'CD',
     country: pass1Result.country || null,
     genre: null,
@@ -524,14 +616,30 @@ serve(async (req) => {
       });
     }
 
-    // Merge results - Discogs provides catalog number if not found by OCR
+    // Merge results - DISCOGS CATALOG NUMBER HAS PRIORITY (more reliable than OCR)
+    // OCR catalog is only used for validation, not as primary source
+    const discogsCatalog = discogsData?.catalog_number || null;
+    const ocrCatalog = ocrResult.catalog_number; // Already validated by validateCatalogNumber()
+    
+    // Priority: Discogs > validated OCR > null
+    const finalCatalog = discogsCatalog || ocrCatalog || null;
+    
+    // Log catalog source decision
+    if (discogsCatalog && ocrCatalog && discogsCatalog !== ocrCatalog) {
+      console.log(`📋 Catalog priority: Using Discogs "${discogsCatalog}" over OCR "${ocrCatalog}"`);
+    } else if (discogsCatalog) {
+      console.log(`📋 Catalog source: Discogs "${discogsCatalog}"`);
+    } else if (ocrCatalog) {
+      console.log(`📋 Catalog source: OCR (validated) "${ocrCatalog}"`);
+    }
+
     const finalResult = {
       ...ocrResult,
       discogs_id: discogsData?.discogs_id || null,
       discogs_url: discogsData?.discogs_url || null,
       cover_image: discogsData?.cover_image || null,
-      // Use Discogs catalog number if OCR didn't find one
-      catalog_number: ocrResult.catalog_number || discogsData?.catalog_number || null,
+      // DISCOGS PRIORITY for catalog number
+      catalog_number: finalCatalog,
       // Enrich with Discogs data
       label: ocrResult.label || discogsData?.label || null,
       country: ocrResult.country || discogsData?.country || null,

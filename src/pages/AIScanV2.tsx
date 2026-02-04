@@ -15,6 +15,8 @@ import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
+import { ScannerPhotoPreview } from '@/components/scanner';
+import { preprocessImageClient } from '@/utils/clientImagePreprocess';
 import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 
 // Simple V2 components for media type and condition selection
@@ -22,6 +24,12 @@ import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 interface UploadedFile {
   file: File;
   preview: string;
+  processedPreview?: string;
+  processingStats?: {
+    contrastApplied: boolean;
+    wasResized: boolean;
+    processingTimeMs: number;
+  };
   id: string;
 }
 interface AnalysisResult {
@@ -104,22 +112,55 @@ export default function AIScanV2() {
       window.location.href = '/auth';
     }
   }, [user, loading]);
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    files.forEach(file => {
+    
+    for (const file of files) {
       if (file.type.startsWith('image/')) {
+        const id = Math.random().toString(36).substr(2, 9);
+        
+        // First, read the file as data URL for original preview
         const reader = new FileReader();
-        reader.onload = e => {
+        reader.onload = async (e) => {
+          const originalPreview = e.target?.result as string;
+          
+          // Add file immediately with original preview
           const newFile: UploadedFile = {
             file,
-            preview: e.target?.result as string,
-            id: Math.random().toString(36).substr(2, 9)
+            preview: originalPreview,
+            id
           };
           setUploadedFiles(prev => [...prev, newFile]);
+          
+          // Then process the image asynchronously
+          try {
+            const preprocessResult = await preprocessImageClient(file, {
+              maxDimension: 1600,
+              applyContrast: true,
+              quality: 0.85
+            });
+            
+            // Update the file with processed preview
+            setUploadedFiles(prev => prev.map(f => 
+              f.id === id 
+                ? {
+                    ...f,
+                    processedPreview: preprocessResult.processedImage,
+                    processingStats: {
+                      contrastApplied: preprocessResult.stats.contrastApplied,
+                      wasResized: preprocessResult.stats.wasResized,
+                      processingTimeMs: preprocessResult.stats.processingTimeMs
+                    }
+                  }
+                : f
+            ));
+          } catch (err) {
+            console.warn('Preprocessing failed, using original:', err);
+          }
         };
         reader.readAsDataURL(file);
       }
-    });
+    }
   }, []);
   const removeFile = useCallback((id: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== id));
@@ -383,18 +424,39 @@ export default function AIScanV2() {
                   </Button>
                 </div>
 
-                {/* Uploaded Files Preview */}
-                {uploadedFiles.length > 0 && <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {uploadedFiles.map(file => <div key={file.id} className="relative group">
-                        <img src={file.preview} alt={file.file.name} className="w-full h-32 object-cover rounded-lg border" />
-                        <button onClick={() => removeFile(file.id)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <X className="h-4 w-4" />
-                        </button>
-                        <p className="text-xs text-muted-foreground mt-1 truncate">
-                          {file.file.name}
-                        </p>
-                      </div>)}
-                  </div>}
+                {/* Uploaded Files Preview with Smart Enhancement Comparison */}
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {uploadedFiles.length} foto{uploadedFiles.length !== 1 ? "'s" : ''} geüpload
+                      </p>
+                      {uploadedFiles.some(f => f.processedPreview) && (
+                        <Badge variant="outline" className="text-xs">
+                          <Sparkles className="h-3 w-3 mr-1" />
+                          Smart verbeterd
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {uploadedFiles.map(file => (
+                        <ScannerPhotoPreview
+                          key={file.id}
+                          id={file.id}
+                          fileName={file.file.name}
+                          originalPreview={file.preview}
+                          processedPreview={file.processedPreview}
+                          processingStats={file.processingStats}
+                          onRemove={removeFile}
+                          disabled={isAnalyzing}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">
+                      💡 Sleep de slider om origineel vs. smart verbeterd te vergelijken
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

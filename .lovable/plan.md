@@ -1,139 +1,120 @@
 
-# Plan: Fix Multi-File Upload Matrix Detection Bug
+# Plan: Strikte Format Filtering voor Matrix Discogs Lookup
 
-## Probleem Analyse
+## Probleem
+De `matrix-discogs-lookup` edge function ontvangt geen `mediaType` parameter en zoekt altijd met hardcoded `format=CD`. Hierdoor:
+- Kan de functie niet weten of het een CD of Vinyl scan is
+- Kan de Discogs API filter omzeild worden (die niet 100% waterdicht is)
+- Worden soms verkeerde formaten geretourneerd (LP in plaats van CD)
 
-### Root Cause
-Er is een **React state closure bug** in de file upload handler. Wanneer de gebruiker meerdere foto's tegelijk selecteert:
+## Oplossing
 
-```text
-User selecteert: ella1.jpeg, ella2.jpeg, ella3.jpeg, ella4.jpeg (4 files in één keer)
-     │
-     ├─ for (file of files) loop start
-     │
-     ├─ File 1: uploadedFiles.length = 0 (state nog niet geüpdatet)
-     │   └─ isConventionalMatrixPosition = (0 === 2) = FALSE ❌
-     │   └─ Visual detection: confidence 75% → Matrix Enhancer START
-     │
-     ├─ File 2: uploadedFiles.length = 0 (nog steeds!)
-     │   └─ isConventionalMatrixPosition = (0 === 2) = FALSE ❌
-     │   └─ Visual detection: confidence 100% → Matrix Enhancer OVERSCHRIJFT ⚠️
-     │
-     ├─ File 3: uploadedFiles.length = 0 (nog steeds!)
-     │   └─ isConventionalMatrixPosition = (0 === 2) = FALSE ❌
-     │   └─ Visual detection: confidence 40% → Matrix Enhancer OVERSCHRIJFT ⚠️
-     │
-     └─ React batch update: uploadedFiles.length wordt nu pas 4
-```
+### 1. Edge Function Aanpassen (`supabase/functions/matrix-discogs-lookup/index.ts`)
 
-De `uploadedFiles.length` waarde in de callback is **stale** (uit de closure), waardoor:
-1. Position-based detectie NOOIT werkt (currentFileCount is altijd de oude waarde)
-2. Visual detection kan triggeren voor ALLE foto's
-3. De LAATSTE foto die door visual detection komt overschrijft de matrix promise
-
-### Bewijs uit Logs
-
-```
-matrix-ocr: "SUMCD 4164" (ella1 of ella2 - catalogusnummer)
-matrix-ocr: "2NWCD 4TEA" (ella3 of ella4 - verkeerde matrix)
-matrix-discogs-lookup: Zoekt op "2NWCD 4TEA" → Vindt verkeerde CD!
-```
-
-## Oplossing: Track File Index in Batch
-
-Gebruik een **lokale counter** binnen de for-loop om de correcte positie te bepalen:
-
-### Code Wijziging
-
+**Nieuwe input parameter:**
 ```typescript
-const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-  const files = Array.from(event.target.files || []);
+const { matrixNumber, ifpiMastering, ifpiMould, mediaType = 'cd' } = await req.json();
+```
+
+**Nieuwe Vinyl format filter:**
+```typescript
+function isVinylFormat(formats: string[]): boolean {
+  const vinylKeywords = ['Vinyl', 'LP', '12"', '7"', '10"', 'Album', 'EP', 'Single'];
+  const cdKeywords = ['CD', 'SACD', 'CDr', 'HDCD'];
   
-  // Track starting count + index within this batch
-  const startingCount = uploadedFiles.length;
-  let processedInBatch = 0;
-  let batchMatrixFound = false; // Prevent multiple matrix detections in same batch
+  const formatStr = formats.join(' ').toUpperCase();
   
-  for (const file of files) {
-    if (file.type.startsWith('image/')) {
-      const id = Math.random().toString(36).substr(2, 9);
-      const fileIndexInTotal = startingCount + processedInBatch;
-      processedInBatch++;
-      
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        // ... add file logic ...
-        
-        // For CD media type, detect matrix photo
-        if (mediaType === 'cd' && !matrixFileId && !batchMatrixFound) {
-          // Strategy 1: Position-based (3rd photo = index 2)
-          const isConventionalMatrixPosition = fileIndexInTotal === 2;
-          
-          if (isConventionalMatrixPosition) {
-            batchMatrixFound = true; // Prevent other files from also triggering
-            console.log(`📍 Position-based matrix detection: file at index ${fileIndexInTotal}`);
-            setMatrixFileId(id);
-            // ... start processing ...
-          } else if (!batchMatrixFound) {
-            // Strategy 2: Visual detection as fallback (only if position-based didn't trigger)
-            // ... visual detection ...
-          }
-        }
-      };
-    }
+  // Reject als het CD keywords bevat
+  for (const cd of cdKeywords) {
+    if (formatStr.includes(cd.toUpperCase())) return false;
   }
-}, [mediaType, matrixFileId, startBackgroundProcessing, uploadedFiles.length]);
-```
-
-## Bestanden te Wijzigen
-
-| Bestand | Wijziging |
-|---------|-----------|
-| `src/pages/AIScanV2.tsx` | Fix batch upload index tracking + prevent multiple matrix detections |
-
-## Data Flow Na Fix
-
-```text
-User selecteert: ella1.jpeg, ella2.jpeg, ella3.jpeg, ella4.jpeg
-     │
-     ├─ startingCount = 0, processedInBatch = 0
-     │
-     ├─ File 1: fileIndexInTotal = 0
-     │   └─ isConventionalMatrixPosition = (0 === 2) = FALSE
-     │   └─ Visual detection skipped (wacht op positie 2)
-     │
-     ├─ File 2: fileIndexInTotal = 1
-     │   └─ isConventionalMatrixPosition = (1 === 2) = FALSE
-     │   └─ Visual detection skipped
-     │
-     ├─ File 3: fileIndexInTotal = 2 ✅
-     │   └─ isConventionalMatrixPosition = (2 === 2) = TRUE ✅
-     │   └─ batchMatrixFound = true
-     │   └─ Matrix Enhancer gestart voor correcte foto
-     │
-     └─ File 4: fileIndexInTotal = 3
-         └─ batchMatrixFound = true → SKIP (al gevonden)
-```
-
-## Extra Safeguard
-
-Voeg ook een check toe om te voorkomen dat de matrix promise wordt overschreven:
-
-```typescript
-// Only start if no processing is already running
-if (!matrixProcessingPromiseRef.current) {
-  const processingPromise = startBackgroundProcessing(file, {
-    skipDetection: true,
-    confidenceThreshold: 0.5
-  });
-  matrixProcessingPromiseRef.current = processingPromise;
+  
+  // Accept als het vinyl keywords bevat
+  return vinylKeywords.some(v => formatStr.includes(v.toUpperCase()));
 }
 ```
 
-## Verwachte Resultaat
+**Dynamische Discogs API query:**
+```typescript
+async function searchDiscogs(query: string, token: string, mediaType: 'cd' | 'vinyl') {
+  const formatParam = mediaType === 'vinyl' ? 'Vinyl' : 'CD';
+  const url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&format=${formatParam}&per_page=25`;
+  
+  // Filter resultaten STRIKT op basis van mediaType
+  const filteredResults = results.filter((r) => {
+    if (mediaType === 'cd') return isCDFormat(r.format);
+    return isVinylFormat(r.format);
+  });
+}
+```
 
-Na deze fix:
-1. Bij 4-foto upload wordt ALLEEN foto 3 (index 2) door de Matrix Enhancer verwerkt
-2. De correcte matrix "SUMCD 4164" wordt gelezen
-3. De Discogs lookup vindt "Ella Fitzgerald - Portrait"
-4. De merge met ai-photo-analysis-v2 gebruikt de correcte data
+**Response met format indicator:**
+```typescript
+const result: LookupResult = {
+  // ...bestaande velden...
+  format: mediaType === 'vinyl' ? 'Vinyl' : 'CD', // Nieuw veld
+};
+```
+
+### 2. Callers Aanpassen
+
+**useParallelMatrixProcessing.ts:**
+```typescript
+const processMatrixPhotoInBackground = useCallback(async (
+  file: File,
+  options: { 
+    skipDetection?: boolean; 
+    confidenceThreshold?: number;
+    mediaType?: 'cd' | 'vinyl';  // Nieuwe optie
+  } = {}
+) => {
+  // ...
+  const { data: discogsData } = await supabase.functions.invoke('matrix-discogs-lookup', {
+    body: {
+      matrixNumber: matrixText,
+      ifpiMastering,
+      ifpiMould,
+      mediaType: options.mediaType || 'cd'  // Doorsturen
+    }
+  });
+});
+```
+
+**CDMatrixEnhancer.tsx:**
+Voeg mediaType selectie toe (of default naar 'cd' aangezien het CD Matrix Enhancer heet).
+
+**AIScanV2.tsx:**
+Bij aanroepen van parallel processing, stuur het geselecteerde mediaType mee.
+
+### 3. UI Feedback (MatrixDiscogsResult.tsx)
+
+Toon het gedetecteerde format in de resultaten:
+```tsx
+<Badge variant="outline" className="bg-primary/10">
+  <Disc className="h-3 w-3 mr-1" />
+  {result.format || 'CD'}
+</Badge>
+```
+
+## Technische Details
+
+| Aspect | Wijziging |
+|--------|-----------|
+| Edge Function | Nieuwe `mediaType` parameter, `isVinylFormat()` functie, dynamische API query |
+| Hook | `mediaType` option in `processMatrixPhotoInBackground()` |
+| CDMatrixEnhancer | Default `mediaType: 'cd'` bij aanroep |
+| AIScanV2 | Pass `mediaType` van scan state naar parallel processing |
+| UI Component | Toon format badge in resultaat |
+
+## Bestanden te Wijzigen
+1. `supabase/functions/matrix-discogs-lookup/index.ts` - Edge function met mediaType support
+2. `src/hooks/useParallelMatrixProcessing.ts` - MediaType option toevoegen
+3. `src/pages/CDMatrixEnhancer.tsx` - MediaType meesturen (default cd)
+4. `src/pages/AIScanV2.tsx` - MediaType doorsturen naar parallel processing
+5. `src/components/matrix-enhancer/MatrixDiscogsResult.tsx` - Format badge tonen
+
+## Verwacht Resultaat
+- CD scans retourneren ALLEEN CD releases
+- Vinyl scans retourneren ALLEEN Vinyl releases
+- Format wordt getoond in de UI voor bevestiging
+- Geen cross-format matches meer mogelijk

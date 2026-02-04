@@ -84,19 +84,46 @@ function cleanMatrixForSearch(matrix: string): string {
 // Extract searchable parts from matrix
 function extractSearchTerms(matrix: string): string[] {
   const clean = cleanMatrixForSearch(matrix);
-  const terms: string[] = [clean];
+  const terms: string[] = [];
   
-  // Try first significant portion (often the catalog-related part)
-  const parts = clean.split(/\s+/);
-  if (parts.length > 1) {
-    terms.push(parts[0]);                    // First part only
-    terms.push(parts.slice(0, 2).join(' ')); // First two parts
+  // SONY DADC pattern: "SONY DADC S0100503344-0101 12 A00"
+  // The unique identifier is the S-number (e.g., S0100503344)
+  const sonyDadcMatch = clean.match(/S\d{10,}/i);
+  if (sonyDadcMatch) {
+    terms.push(sonyDadcMatch[0]); // Most specific - the S-number alone
+    console.log(`[matrix-discogs-lookup] SONY DADC detected: ${sonyDadcMatch[0]}`);
   }
   
-  // Remove numbers-only suffix for broader search
-  const alphaNumeric = clean.replace(/\s+\d+$/, '');
-  if (alphaNumeric !== clean) {
-    terms.push(alphaNumeric);
+  // Warner/WEA pattern: numeric codes like "5050466-8723-2-3"
+  const weaMatch = clean.match(/\d{7}-\d{4}-\d/);
+  if (weaMatch) {
+    terms.push(weaMatch[0]);
+    console.log(`[matrix-discogs-lookup] WEA pattern detected: ${weaMatch[0]}`);
+  }
+  
+  // Universal pattern: often has catalog-like codes
+  const catalogMatch = clean.match(/[A-Z]{2,4}[\s-]?\d{4,}/i);
+  if (catalogMatch) {
+    terms.push(catalogMatch[0].replace(/\s+/g, ''));
+  }
+  
+  // Fallback: try parts of the matrix
+  const parts = clean.split(/\s+/);
+  
+  // Skip generic plant names for search
+  const genericParts = ['SONY', 'DADC', 'EMI', 'SWINDON', 'UDEN', 'MPO', 'PMDC'];
+  const significantParts = parts.filter(p => !genericParts.includes(p.toUpperCase()));
+  
+  if (significantParts.length > 0) {
+    terms.push(significantParts[0]); // First non-generic part
+    if (significantParts.length > 1) {
+      terms.push(significantParts.slice(0, 2).join(' ')); // First two significant
+    }
+  }
+  
+  // Full clean matrix as last resort
+  if (terms.length === 0) {
+    terms.push(clean);
   }
   
   return [...new Set(terms)];

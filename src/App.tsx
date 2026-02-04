@@ -169,6 +169,7 @@ const Reviews = lazy(() => import("./pages/Reviews"));
 const ReviewDetail = lazy(() => import("./pages/ReviewDetail"));
 const ArtistSpotlights = lazy(() => import("./pages/ArtistSpotlights"));
 const ArtistSpotlight = lazy(() => import("./pages/ArtistSpotlight"));
+const InstallApp = lazy(() => import("./pages/InstallApp"));
 
 // Admin pages - all lazy loaded
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
@@ -453,6 +454,7 @@ const AppContent = () => {
         <Route path="/voorwaarden" element={<LazyRoute><Voorwaarden /></LazyRoute>} />
         <Route path="/feeds/facebook-catalog.csv" element={<LazyRoute><FacebookCatalogFeed /></LazyRoute>} />
         <Route path="/feeds" element={<LazyRoute><Feeds /></LazyRoute>} />
+        <Route path="/install" element={<LazyRoute><InstallApp /></LazyRoute>} />
         <Route path="/prestaties" element={<ProtectedRoute><LazyRoute><Prestaties /></LazyRoute></ProtectedRoute>} />
         <Route path="/spotify/profile" element={<ProtectedRoute><LazyRoute><SpotifyProfile /></LazyRoute></ProtectedRoute>} />
         <Route path="/spotify/callback" element={<LazyRoute><SpotifyCallback /></LazyRoute>} />

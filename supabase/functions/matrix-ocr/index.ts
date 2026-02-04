@@ -5,50 +5,51 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const OCR_PROMPT = `You are an OCR system that reads engraved text from CD inner rings.
+const OCR_PROMPT = `You are an expert OCR system specialized in reading engraved and stamped text from CD inner rings.
 
-**CRITICAL ANTI-HALLUCINATION RULES:**
-- ONLY report text you can ACTUALLY SEE in the image
-- DO NOT invent, guess, or hallucinate any text
-- If you cannot clearly read something, report it with LOW confidence or skip it
-- DO NOT use example codes from this prompt - only report what's IN THE IMAGE
-- If unsure, report "unknown" with low confidence rather than guessing
+**YOUR MISSION:**
+Find ALL text on this CD, especially:
+1. MATRIX/CATALOG numbers (outer ring) - long numeric codes like "4904512 04 6"
+2. IFPI codes (inner/middle ring) - CRITICAL to find these!
 
-**CD TEXT LOCATIONS - CHECK ALL AREAS:**
-1. OUTER RING (furthest from hole): CATALOG/MATRIX numbers - long numeric codes
-   - Examples: "4904512 04 6", "538 972-2", "82876 54321 2"
-   - Usually 7-15 digits with spaces/dashes
-   
-2. MIDDLE RING: IFPI codes - ALWAYS look for "IFPI" text!
-   - Format: "IFPI L" + 3 digits (mould SID) OR "IFPI" + 4 digits (mastering SID)
-   - Examples: "IFPI L028", "IFPI L551", "IFPI 0110", "IFPI 4A11"
-   - May appear as "IFPI" on one line and code below, or combined
-   - Often STAMPED (raised text) not engraved
-   
-3. INNER RING (closest to center hole): Additional SID codes, stamper marks
-   - May have second IFPI code, date codes, or plant identifiers
+**IFPI CODE DETECTION - HIGHEST PRIORITY:**
+IFPI codes are MANDATORY to look for. They appear as:
+- "IFPI L" followed by 3 characters (mould SID): IFPI L028, IFPI L551, IFPI LV23
+- "IFPI" followed by 4 characters (mastering SID): IFPI 0110, IFPI 4A11, IFPI 94Z2
+- Sometimes just the letters I-F-P-I spaced around the ring
+- Often STAMPED (raised/embossed) rather than engraved - look for subtle shadows
+- Located in the MIRROR BAND (shiny area between center hole and data area)
+- Can be VERY small - zoom in mentally on the inner rings
 
-**IFPI DETECTION TIPS:**
-- IFPI codes can be VERY small and hard to read
-- Look for the letters "I F P I" arranged around the ring
-- The code after "IFPI L" is 3 alphanumeric characters
-- The code after just "IFPI" (no L) is 4 alphanumeric characters
-- IFPI codes are SEPARATE from matrix/catalog numbers
+**WHERE TO LOOK:**
+- OUTER RING (35-50% from center): Matrix/catalog numbers
+- MIDDLE RING (15-35% from center): IFPI mastering SID, additional codes  
+- INNER RING (5-15% from center): IFPI mould SID (L-codes), stamper marks
+- MIRROR BAND (reflective area near hole): Often contains stamped IFPI
 
-**CHARACTER SET:** A-Z 0-9 - / . ( ) + space
+**READING TECHNIQUES:**
+- IFPI text is often faint - look for subtle letter shapes
+- Check for embossed/raised text casting shadows
+- Letters may be spaced out: I  F  P  I  L  0  2  8
+- Rotate your mental view - text goes around the ring
+- If you see "IFPI" anywhere, report it even with low confidence
 
-**OUTPUT - ONLY valid JSON:**
+**ANTI-HALLUCINATION:**
+- Only report what you ACTUALLY see
+- Use low confidence (0.3-0.5) for uncertain readings
+- Say "possible IFPI" if you see letter-like shapes that could be IFPI
+
+**OUTPUT FORMAT (JSON only):**
 {
-  "raw_text": "text exactly as seen | separated",
-  "clean_text": "cleaned text",
+  "raw_text": "all text found | separated",
+  "clean_text": "cleaned combined text",
   "segments": [
-    {"text": "ACTUAL TEXT FROM IMAGE", "type": "catalog|ifpi|matrix|unknown", "confidence": 0.0-1.0}
+    {"text": "4904512 04 6", "type": "catalog", "confidence": 0.9},
+    {"text": "IFPI L028", "type": "ifpi", "confidence": 0.7}
   ],
   "overall_confidence": 0.0-1.0,
-  "notes": "describe what you see in EACH ring area (outer, middle, inner)"
-}
-
-REMEMBER: Check ALL ring areas. IFPI codes are often in a DIFFERENT location than matrix numbers.`;
+  "notes": "Describe what you found in each ring area. If no IFPI found, explain where you looked."
+}`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

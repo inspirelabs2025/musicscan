@@ -1168,17 +1168,54 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
  * Input: "S 2 SUMCD 4164 01"
  * Canonical: "SUMCD 4164 01"
  */
-function normalizeMatrixRaw(matrixRaw: string): { canonical: string; tokens: string[]; raw: string } {
+function normalizeMatrixRaw(matrixRaw: string): { canonical: string; tokens: string[]; raw: string; isValid: boolean; invalidReason?: string } {
   if (!matrixRaw) {
-    return { canonical: '', tokens: [], raw: '' };
+    return { canonical: '', tokens: [], raw: '', isValid: false, invalidReason: 'empty' };
   }
   
   const rawNorm = matrixRaw.toUpperCase().replace(/\s+/g, ' ').trim();
   const tokens = rawNorm.split(' ').filter(Boolean);
   
-  // Find the first token that looks like a valid catalog/matrix identifier
-  // Valid tokens: length >= 3, contains both letters AND numbers (like "SUMCD" or "4164")
-  // OR is a pure number >= 3 digits that comes AFTER a valid catno-like token
+  // === PATCH A: MATRIX SANITY GUARD ===
+  // Check if this looks like a barcode instead of a matrix
+  const allDigits = rawNorm.replace(/[^0-9]/g, '');
+  const hasSignificantAlphaTokens = tokens.some(t => {
+    const hasLetters = /[A-Z]/.test(t);
+    const hasNumbers = /[0-9]/.test(t);
+    // A significant token has BOTH letters and numbers (like "SUMCD4164")
+    // OR is a known catno-like pattern (letters only, 3+ chars)
+    return (hasLetters && hasNumbers && t.length >= 4) || 
+           (hasLetters && !hasNumbers && t.length >= 3);
+  });
+  
+  // Rule 1: If 12+ consecutive digits and no significant alpha tokens → barcode leak
+  if (allDigits.length >= 12 && !hasSignificantAlphaTokens) {
+    console.log(`   ⛔ MATRIX SANITY GUARD: Detected barcode-like pattern`);
+    console.log(`      Digits: ${allDigits} (${allDigits.length} digits)`);
+    console.log(`      No significant alphanumeric tokens found`);
+    return { 
+      canonical: '', 
+      tokens: [], 
+      raw: rawNorm, 
+      isValid: false, 
+      invalidReason: 'barcode_pattern_detected' 
+    };
+  }
+  
+  // Rule 2: If it's purely an EAN-13 pattern (exactly 13 digits, no meaningful letters)
+  if (allDigits.length === 13 && !hasSignificantAlphaTokens) {
+    console.log(`   ⛔ MATRIX SANITY GUARD: Detected EAN-13 pattern`);
+    return { 
+      canonical: '', 
+      tokens: [], 
+      raw: rawNorm, 
+      isValid: false, 
+      invalidReason: 'ean13_pattern_detected' 
+    };
+  }
+  
+  // === LEADING NOISE REMOVAL ===
+  // Find the first token that looks like a real matrix identifier
   let startIndex = 0;
   
   for (let i = 0; i < tokens.length; i++) {
@@ -1216,15 +1253,35 @@ function normalizeMatrixRaw(matrixRaw: string): { canonical: string; tokens: str
   const canonicalTokens = tokens.slice(startIndex);
   const canonical = canonicalTokens.join(' ');
   
+  // Final sanity check on canonical form
+  const canonicalDigits = canonical.replace(/[^0-9]/g, '');
+  const canonicalHasAlpha = /[A-Z]/.test(canonical);
+  
+  // If after cleanup we still have 10+ digits without meaningful letters, it's suspicious
+  if (canonicalDigits.length >= 10 && !canonicalHasAlpha) {
+    console.log(`   ⛔ MATRIX SANITY GUARD: Canonical still looks like barcode`);
+    return { 
+      canonical: '', 
+      tokens: [], 
+      raw: rawNorm, 
+      isValid: false, 
+      invalidReason: 'canonical_barcode_like' 
+    };
+  }
+  
+  const isValid = canonical.length > 0;
+  
   console.log(`   🔧 Matrix Normalization:`);
   console.log(`      Raw: "${rawNorm}"`);
   console.log(`      Canonical: "${canonical}"`);
   console.log(`      Tokens removed: ${startIndex} leading noise token(s)`);
+  console.log(`      Valid: ${isValid ? '✅' : '❌'}`);
   
   return {
     canonical,
     tokens: canonicalTokens,
-    raw: rawNorm
+    raw: rawNorm,
+    isValid
   };
 }
 
@@ -1278,17 +1335,21 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     const matrixNorm = matrixNormalized.canonical;
     const matrixTokens = matrixNormalized.tokens;
     
+    // === PATCH A: MATRIX VALIDITY CHECK ===
+    const matrixValid = matrixNormalized.isValid;
+    
     console.log('📋 GENORMALISEERDE IDENTIFIERS:');
     console.log(`   barcode_digits: ${barcodeDigits || '(geen)'}`);
     console.log(`   catno_norm: ${catnoNorm || '(geen)'}`);
     console.log(`   matrix_norm: ${matrixNorm || '(geen)'}`);
     console.log(`   matrix_tokens: [${matrixTokens.join(', ')}]`);
+    console.log(`   matrix_valid: ${matrixValid ? '✅' : `❌ (${matrixNormalized.invalidReason || 'unknown'})`}`);
     console.log(`   label: ${analysisData.label || '(geen)'}`);
     console.log(`   artist: ${analysisData.artist || '(geen)'}`);
     console.log(`   title: ${analysisData.title || '(geen)'}`);
     
-    // Track of we technische identifiers hebben
-    const hasTechnicalIdentifiers = !!(barcodeDigits || catnoNorm || matrixNorm);
+    // Track of we technische identifiers hebben (alleen geldige matrix meetellen)
+    const hasTechnicalIdentifiers = !!(barcodeDigits || catnoNorm || (matrixNorm && matrixValid));
     console.log(`\n⚡ Technische identifiers aanwezig: ${hasTechnicalIdentifiers ? 'JA' : 'NEE'}`);
     
     // Search metadata voor debugging en output
@@ -1349,7 +1410,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
           if (data.results && data.results.length > 0) {
             // Verify candidates
             for (const candidate of data.results.slice(0, 5)) {
-              const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens);
+              const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
               
               if (verification.points > bestConfidencePoints) {
                 bestConfidencePoints = verification.points;
@@ -1418,7 +1479,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
           
           if (data.results && data.results.length > 0) {
             for (const candidate of data.results.slice(0, 5)) {
-              const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens);
+              const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
               
               if (verification.points > bestConfidencePoints) {
                 bestConfidencePoints = verification.points;
@@ -1484,7 +1545,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
           
           if (data.results && data.results.length > 0) {
             for (const candidate of data.results.slice(0, 5)) {
-              const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens);
+              const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
               
               // HARD GATE: Bij technische identifiers mag fuzzy NIET auto-selecteren
               if (hasTechnicalIdentifiers) {
@@ -1642,7 +1703,8 @@ async function verifyCandidate(
   barcodeDigits: string | null,
   catnoNorm: string | null,
   matrixNorm: string,
-  matrixTokens: string[]
+  matrixTokens: string[],
+  matrixValid: boolean = true  // NEW: Patch A - Matrix Sanity Guard
 ): Promise<{
   points: number;
   matched_on: string[];
@@ -1694,8 +1756,9 @@ async function verifyCandidate(
     console.log(`\n   📀 Verifying candidate: ${candidate.title} (ID: ${candidate.id})`);
     
     // === CHECK MATRIX (50 points) - TOKEN SUBSET MATCHING ===
+    // PATCH A: Only check matrix if matrixValid is true (sanity guard passed)
     // Matrix match is TRUE if all canonical tokens exist in the Discogs candidate matrix
-    if (matrixNorm && matrixTokens.length > 0 && releaseDetails.identifiers) {
+    if (matrixValid && matrixNorm && matrixTokens.length > 0 && releaseDetails.identifiers) {
       for (const identifier of releaseDetails.identifiers) {
         if (identifier.type === 'Matrix / Runout' && identifier.value) {
           const discogsMatrixRaw = identifier.value.toUpperCase();
@@ -1754,6 +1817,10 @@ async function verifyCandidate(
         console.log(`         OCR canonical: "${matrixNorm}"`);
         console.log(`         OCR tokens: [${matrixTokens.join(', ')}]`);
       }
+    } else if (!matrixValid && matrixNorm) {
+      // Matrix was detected but failed sanity guard (barcode-like pattern)
+      console.log(`      ⛔ Matrix SKIPPED (sanity guard: detected as barcode-like)`);
+      console.log(`         Raw: "${matrixNorm}"`);
     }
     
     // === CHECK BARCODE (40 points) ===
@@ -1843,6 +1910,7 @@ async function verifyCandidate(
     console.log(`      📊 Total: ${result.points}/155 points`);
     
     // === LOCK CONDITIONS ===
+    // PATCH B: Added Barcode + Catno lock (even without valid matrix)
     if (result.technical_matches.matrix) {
       if (result.technical_matches.barcode) {
         result.lock_reason = 'Matrix + Barcode match';
@@ -1851,6 +1919,14 @@ async function verifyCandidate(
       } else if (result.technical_matches.label && result.technical_matches.year) {
         result.lock_reason = 'Matrix + Label + Year confirmed';
       }
+    }
+    
+    // NEW LOCK RULE: Barcode + Catno = LOCKED (even without valid matrix)
+    // Rationale: barcode + catno together are unique enough for CDs
+    if (!result.lock_reason && result.technical_matches.barcode && result.technical_matches.catno) {
+      result.lock_reason = 'Barcode + Catalog match';
+      result.explain.push('Barcode and catalog number both matched (no matrix required)');
+      console.log(`      🔒 NEW LOCK: Barcode + Catno = verified`);
     }
     
   } catch (err) {

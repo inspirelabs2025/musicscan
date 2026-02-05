@@ -1549,8 +1549,9 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     
     // === STRATEGY 3: ARTIST + TITLE (SUGGEST ONLY) ===
     // ⚠️ MAG NOOIT AUTOMATISCH SELECTEREN bij aanwezige technische identifiers
-    // ⛔ Wordt NIET gebruikt als barcode/catno al resultaten hadden
+    // ✅ Wordt WEL uitgevoerd om suggesties te tonen bij no_match
     const needsFuzzySearch = !bestMatch && analysisData.artist && analysisData.title && !apiError;
+    let suggestions: any[] = [];
     
     if (needsFuzzySearch) {
       console.log(`\n${'─'.repeat(50)}`);
@@ -1558,58 +1559,69 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       console.log(`   Query: ${analysisData.artist} - ${analysisData.title}`);
       console.log(`   ⚠️ Format filter: ${formatFilter} (alleen voor fuzzy)`);
       
-      if (hasTechnicalIdentifiers) {
-        console.log(`   ⛔ HARD GATE: Technische identifiers aanwezig maar geen match`);
-        console.log(`   ⛔ Fuzzy search mag NIET auto-selecteren → manual_review_required`);
-        searchMetadata.verification_level = 'no_match';
-        // SKIP fuzzy search entirely when technical identifiers exist but didn't match
-      } else {
-        const searchUrl = `https://api.discogs.com/database/search?artist=${encodeURIComponent(analysisData.artist)}&release_title=${encodeURIComponent(analysisData.title)}&type=release&format=${encodeURIComponent(formatFilter)}`;
-        searchMetadata.total_searches++;
+      const searchUrl = `https://api.discogs.com/database/search?artist=${encodeURIComponent(analysisData.artist)}&release_title=${encodeURIComponent(analysisData.title)}&type=release&format=${encodeURIComponent(formatFilter)}`;
+      searchMetadata.total_searches++;
+      
+      try {
+        const response = await fetch(searchUrl, {
+          headers: {
+            'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+            'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
+          }
+        });
         
-        try {
-          const response = await fetch(searchUrl, {
-            headers: {
-              'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
-              'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
-            }
+        if (response.status === 200) {
+          const data = await response.json();
+          const results = Array.isArray(data.results) ? data.results : [];
+          console.log(`   📊 Results: ${results.length} candidates`);
+          
+          searchMetadata.strategies_executed.push({
+            strategy: 3,
+            type: 'artist_title',
+            query: `${analysisData.artist} - ${analysisData.title}`,
+            results: results.length,
+            format_filter: formatFilter,
+            auto_select_blocked: hasTechnicalIdentifiers
           });
           
-          // Note: Strategy 3 failures don't trigger api_error (it's a fallback)
-          if (response.status === 200) {
-            const data = await response.json();
-            const results = Array.isArray(data.results) ? data.results : [];
-            console.log(`   📊 Results: ${results.length} candidates`);
-            
-            searchMetadata.strategies_executed.push({
-              strategy: 3,
-              type: 'artist_title',
-              query: `${analysisData.artist} - ${analysisData.title}`,
-              results: results.length,
-              format_filter: formatFilter,
-              auto_select_blocked: false
-            });
-            
-            if (results.length > 0) {
-              for (const candidate of results.slice(0, 5)) {
-                const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
-                
-                if (verification.points > bestConfidencePoints) {
-                  bestConfidencePoints = verification.points;
-                  bestMatch = candidate;
-                  bestMatchDetails = verification;
-                  searchMetadata.matched_on = verification.matched_on;
-                  searchMetadata.technical_matches = verification.technical_matches;
-                  searchMetadata.explain = verification.explain;
-                }
+          // Store suggestions for manual review
+          suggestions = results.slice(0, 5).map((r: any) => ({
+            id: r.id,
+            title: r.title,
+            catno: r.catno,
+            label: r.label,
+            year: r.year,
+            country: r.country,
+            thumb: r.thumb,
+            url: `https://www.discogs.com/release/${r.id}`
+          }));
+          
+          if (hasTechnicalIdentifiers) {
+            console.log(`   ⛔ HARD GATE: Technische identifiers aanwezig maar geen match`);
+            console.log(`   ⛔ Fuzzy search mag NIET auto-selecteren → manual_review_required`);
+            console.log(`   ✅ ${suggestions.length} suggesties opgeslagen voor manual review`);
+            searchMetadata.verification_level = 'no_match';
+            // NO auto-selection when technical identifiers exist
+          } else if (results.length > 0) {
+            // Only auto-select if NO technical identifiers were present
+            for (const candidate of results.slice(0, 5)) {
+              const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
+              
+              if (verification.points > bestConfidencePoints) {
+                bestConfidencePoints = verification.points;
+                bestMatch = candidate;
+                bestMatchDetails = verification;
+                searchMetadata.matched_on = verification.matched_on;
+                searchMetadata.technical_matches = verification.technical_matches;
+                searchMetadata.explain = verification.explain;
               }
             }
-          } else {
-            console.log(`   ⚠️ API returned ${response.status} (fallback, not blocking)`);
           }
-        } catch (err) {
-          console.log(`   ⚠️ Fetch error: ${err.message} (fallback, not blocking)`);
+        } else {
+          console.log(`   ⚠️ API returned ${response.status} (fallback, not blocking)`);
         }
+      } catch (err) {
+        console.log(`   ⚠️ Fetch error: ${err.message} (fallback, not blocking)`);
       }
     }
     
@@ -1702,6 +1714,9 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       ? 'Technical identifiers present but no Discogs candidates found' 
       : 'No technical identifiers and fuzzy search failed'}`);
     console.log(`   Action: manual_review_required`);
+    if (suggestions.length > 0) {
+      console.log(`   ✅ ${suggestions.length} suggesties beschikbaar voor manual review`);
+    }
     
     return {
       discogsId: null,
@@ -1714,13 +1729,18 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       confidence: 0,
       confidencePoints: 0,
       matrixVerified: false,
+      suggestions: suggestions.length > 0 ? suggestions : undefined,
       searchMetadata: {
         ...searchMetadata,
         status: 'no_match',
         reason: hasTechnicalIdentifiers 
-          ? 'Technical identifiers present but no Discogs candidates found'
-          : 'No match found',
-        action: 'manual_review_required'
+          ? 'Release met deze barcode/catno niet gevonden in Discogs'
+          : 'Geen match gevonden',
+        reason_detail: hasTechnicalIdentifiers
+          ? 'De exacte pressing is niet geregistreerd in de Discogs database. Mogelijk een andere pressing of nog niet toegevoegd.'
+          : null,
+        action: 'manual_review_required',
+        suggestions_available: suggestions.length
       }
     };
 

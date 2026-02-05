@@ -37,6 +37,12 @@ GET /database/search?catno={catno_norm}&type=release
 
 ### ⛔ STRATEGY 3: ARTIST/TITLE
 Never auto-select. Suggestion only for manual review.
+Used ONLY when Strategy 1+2 return 0 results AND technical identifiers exist.
+
+**UI Flow for Strategy 3:**
+1. Show message: "Exacte release niet gevonden (barcode/catno niet geregistreerd in Discogs)"
+2. Show suggestions from artist+title search
+3. User can manually select or mark as "Not in Discogs"
 
 ## 🧪 Verification & Scoring (MAX 160)
 

@@ -382,7 +382,7 @@ Deno.serve(async (req) => {
         similarity_score: 1.0,
         search_strategy: 'Direct Release ID',
         pricing_stats: include_pricing ? { 
-          lowest_price: releaseData.lowest_price || null,
+          lowest_price: releaseData.lowest_price ? Math.round(releaseData.lowest_price * 0.92 * 100) / 100 : null,
           median_price: null,
           highest_price: null,
           have_count: releaseData.num_for_sale || 0,

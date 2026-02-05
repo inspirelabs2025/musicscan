@@ -9,7 +9,15 @@
  * <span class="name_...">Low<!-- -->:</span><span>$0.96</span>
  * <span class="name_...">Median<!-- -->:</span><span>$2.97</span>
  * <span class="name_...">High<!-- -->:</span><span>$11.76</span>
+ * 
+ * IMPORTANT: ScraperAPI/anonymous requests always return USD prices regardless of
+ * ?curr=EUR parameter. We detect the currency and convert to EUR when needed.
  */
+
+// Approximate USD to EUR conversion rate. Updated periodically.
+// This is acceptable because Discogs prices are estimates anyway.
+const USD_TO_EUR = 0.92;
+const GBP_TO_EUR = 1.17;
 
 export interface StatisticsPricing {
   lowest_price: number | null;
@@ -81,10 +89,27 @@ export function extractStatisticsPricing(html: string): StatisticsPricing | null
   const median = parsePrice(medianMatch?.[1]);
   const highest = parsePrice(highMatch?.[1]);
 
-  console.log(`📊 Statistics extraction: Low=${lowest}, Median=${median}, High=${highest}, Currency=${detectedCurrency}`);
+  console.log(`📊 Statistics extraction (raw): Low=${lowest}, Median=${median}, High=${highest}, Currency=${detectedCurrency}`);
 
   if (lowest !== null || median !== null || highest !== null) {
-    return { lowest_price: lowest, median_price: median, highest_price: highest, currency: detectedCurrency };
+    // Convert to EUR if prices are in another currency
+    const convertToEur = (price: number | null): number | null => {
+      if (price === null) return null;
+      if (detectedCurrency === 'EUR') return price;
+      if (detectedCurrency === 'GBP') return Math.round(price * GBP_TO_EUR * 100) / 100;
+      // USD (default)
+      return Math.round(price * USD_TO_EUR * 100) / 100;
+    };
+
+    const result = { 
+      lowest_price: convertToEur(lowest), 
+      median_price: convertToEur(median), 
+      highest_price: convertToEur(highest), 
+      currency: 'EUR' 
+    };
+    
+    console.log(`📊 Statistics extraction (EUR): Low=${result.lowest_price}, Median=${result.median_price}, High=${result.highest_price}`);
+    return result;
   }
 
   console.log('📊 No prices found within Statistics section');

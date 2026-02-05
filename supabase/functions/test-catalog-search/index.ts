@@ -35,11 +35,13 @@ const getDiscogsApiFallback = async (discogsId: string) => {
     }
     
     const releaseData = await response.json();
-    console.log(`✅ Discogs API fallback successful, using lowest_price: ${releaseData.lowest_price}`);
+    // Discogs API lowest_price is always in USD - convert to EUR
+    const lowestPriceEur = releaseData.lowest_price ? Math.round(releaseData.lowest_price * 0.92 * 100) / 100 : null;
+    console.log(`✅ Discogs API fallback successful, lowest_price USD=${releaseData.lowest_price} → EUR=${lowestPriceEur}`);
     
     // Return minimal pricing stats with API fallback data
     return {
-      lowest_price: releaseData.lowest_price || null,
+      lowest_price: lowestPriceEur,
       median_price: null, // API doesn't provide median
       highest_price: null, // API doesn't provide highest
       have_count: releaseData.num_for_sale || 0,

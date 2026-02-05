@@ -1618,18 +1618,24 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     console.log(`📊 FINAL DECISION`);
     console.log(`${'='.repeat(60)}`);
     
-    // HARD GATING RULE 1: Identifier Minimum
+    // HARD GATING RULE 1: TWO-IDENTIFIER MINIMUM (V4 CRITICAL)
+    // Must match at least TWO of {barcode, catno, matrix} to accept
     if (bestMatch && hasTechnicalIdentifiers) {
-      const hasIdentifierMatch = searchMetadata.technical_matches.barcode || 
-                                  searchMetadata.technical_matches.matrix || 
-                                  searchMetadata.technical_matches.catno;
+      const identifierMatchCount = [
+        searchMetadata.technical_matches.barcode,
+        searchMetadata.technical_matches.catno,
+        searchMetadata.technical_matches.matrix
+      ].filter(Boolean).length;
       
-      if (!hasIdentifierMatch) {
-        console.log(`⛔ DISQUALIFIED: Geen match op barcode, matrix of catno`);
-        console.log(`   Technische identifiers waren aanwezig maar niet gematcht`);
+      if (identifierMatchCount < 2) {
+        console.log(`⛔ DISQUALIFIED: Niet genoeg identifier matches (${identifierMatchCount}/2 vereist)`);
+        console.log(`   barcode: ${searchMetadata.technical_matches.barcode ? '✅' : '❌'}`);
+        console.log(`   catno: ${searchMetadata.technical_matches.catno ? '✅' : '❌'}`);
+        console.log(`   matrix: ${searchMetadata.technical_matches.matrix ? '✅' : '❌'}`);
+        console.log(`   → NO_MATCH (mag niet guessen bij technische identifiers)`);
         bestMatch = null;
         bestConfidencePoints = 0;
-        searchMetadata.verification_level = 'DISQUALIFIED';
+        searchMetadata.verification_level = 'no_match';
       }
     }
     

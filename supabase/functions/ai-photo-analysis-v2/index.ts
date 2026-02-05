@@ -1045,9 +1045,11 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
       if (apiResponse.ok) {
         const releaseData = await apiResponse.json();
         if (releaseData.lowest_price) {
-          console.log(`✅ API pricing: lowest_price=${releaseData.lowest_price}, num_for_sale=${releaseData.num_for_sale}`);
+          // Discogs API lowest_price is always in USD - convert to EUR
+          const lowestPriceEur = Math.round(releaseData.lowest_price * 0.92 * 100) / 100;
+          console.log(`✅ API pricing: lowest_price USD=${releaseData.lowest_price} → EUR=${lowestPriceEur}, num_for_sale=${releaseData.num_for_sale}`);
           return {
-            lowest_price: releaseData.lowest_price,
+            lowest_price: lowestPriceEur,
             median_price: null,
             highest_price: null,
             num_for_sale: releaseData.num_for_sale || 0,

@@ -1,74 +1,58 @@
 
-# Fix: Pricing Extraction - Alleen Statistics Sectie
+# Artiest Ontdek-popup na Scan Opslaan
 
-## Probleem
+## Wat wordt gebouwd
 
-De huidige pricing scrapers pakken prijzen van de **hele Discogs pagina** — inclusief marketplace listings, shipping kosten, en andere €-bedragen. Dit levert opgeblazen/incorrecte prijzen op.
+Een dynamische popup/drawer die verschijnt nadat een gebruiker op "Toevoegen aan Collectie" klikt in de scan resultaten. Deze popup toont alle beschikbare MusicScan content over de gescande artiest, gegroepeerd per type.
 
-Voorbeeld Blondie - Blondies Hits (release 5171206):
-- Discogs Statistics: Low €2.00 / Median €3.99 / High €6.39
-- MusicScan resultaat: €3.50 / €4.69 / €7.52 (fout - bevat marketplace listings)
+## Content bronnen
 
-## Oplossing
+De popup doorzoekt 6 tabellen op basis van de artiestnaam uit het scan-resultaat:
 
-Alle drie de pricing-functies aanpassen zodat ze **uitsluitend** de Statistics-sectie lezen. De Statistics-sectie bevat historische verkoopprijzen en is de meest betrouwbare bron.
+| Bron | Tabel | Match-veld | Route |
+|---|---|---|---|
+| Artiest Verhaal | `artist_stories` | `artist_name` (ILIKE) | `/artists/{slug}` |
+| Album Stories | `music_stories` | `artist_name` (ILIKE), `single_name IS NULL` | `/muziek-verhaal/{slug}` |
+| Singles | `music_stories` | `artist_name` (ILIKE), `single_name IS NOT NULL` | `/singles/{slug}` |
+| Anekdotes | `music_anecdotes` | `subject_name` (ILIKE) | `/anekdotes/{slug}` |
+| Nieuws | `news_blog_posts` | `title` (ILIKE op artiestnaam) | `/nieuws/{slug}` |
+| Shop Producten | `platform_products` | `artist` (ILIKE) | `/product/{slug}` |
 
-## Wijzigingen
+## UX Flow
 
-### 1. `ai-photo-analysis-v2/index.ts` (scan-time pricing)
+1. Gebruiker scant een CD/vinyl en krijgt resultaat
+2. Gebruiker klikt "Toevoegen aan Collectie"
+3. **NIEUW**: Popup verschijnt met "Ontdek meer over [Artiest]"
+4. Popup toont per categorie de beschikbare content (met aantallen)
+5. Gebruiker kan items aanklikken (opent in nieuw tabblad) of popup sluiten
+6. Na sluiten gaat de navigatie verder naar `/scanner/discogs` (het bestaande opslaan-proces)
 
-**Verwijderen:**
-- JSON-LD offers parsing (dit zijn marketplace-prijzen, niet statistics)
-- "Last resort" fallback die willekeurige €-bedragen pakt
-- Brede patronen zoals `class="price"`, `data-price`, `from €X`
+## Visueel ontwerp
 
-**Behouden/verbeteren:**
-- Alleen Statistics-sectie patronen: `Low:` / `Median:` / `High:` en `Lowest:` / `Median:` / `Highest:`
-- Eerst de Statistics-sectie isoleren uit de HTML (zoek het blok rond "Statistics" heading), dan pas regexen toepassen
-- Fallback naar Discogs API `lowest_price` (dit is wel betrouwbaar)
+- Desktop: Dialog (modal) met gradient header in artiest-stijl
+- Mobiel: Drawer (bottom sheet) met swipe-to-dismiss
+- Secties met iconen per content-type
+- Lege secties worden niet getoond
+- Als er helemaal geen content is: popup wordt overgeslagen, directe navigatie
 
-### 2. `collect-price-history/index.ts` (dagelijkse cron)
+## Technische aanpak
 
-**Volledig vervangen:** `parsePriceDataFromHTML()` functie die nu alle €/$-bedragen op de pagina pakt met:
-- Gerichte Statistics-sectie extractie (dezelfde patronen als punt 1)
-- Geen brede currency-regex meer
+### 1. Nieuwe hook: `useArtistContent.ts`
+- Accepteert `artistName: string`
+- Voert 6 parallelle queries uit (met `Promise.all`)
+- Returns: `{ artistStory, albumStories, singles, anecdotes, news, products, totalCount, isLoading }`
+- Elke query beperkt tot 5 items
 
-### 3. `test-catalog-search/index.ts` (catalog search pricing)
+### 2. Nieuw component: `ArtistDiscoveryPopup.tsx`
+- Props: `artistName`, `isOpen`, `onClose`, `onContinue` (gaat door naar collectie-opslaan)
+- Gebruikt `useArtistContent` hook
+- Desktop = Dialog, Mobiel = Drawer (zelfde patroon als `SitePopup.tsx`)
+- Gradient header met artiestnaam
+- Per sectie: icoon + titel + items als klikbare links (target="_blank")
+- Footer met twee knoppen: "Later bekijken" (sluit) en "Ga door naar opslaan" (primair)
 
-Deze heeft al betere patronen (Lowest/Low labels) maar mist de Statistics-sectie isolatie. Toevoegen:
-- HTML-sectie isolatie voor de Statistics-blok voordat patronen worden toegepast
-
-### 4. Gedeelde helper functie
-
-Nieuwe gedeelde functie `extractStatisticsPricing(html)` die:
-1. De Statistics-sectie isoleert uit de HTML (zoek naar "Statistics" heading en pak het omringende blok)
-2. Binnen dat blok zoekt naar Low/Lowest, Median, High/Highest labels
-3. Alleen prijzen uit dat blok returnt
-4. Als de sectie niet gevonden wordt: return null (geen fallback naar willekeurige pagina-prijzen)
-
-## Technisch Detail
-
-```text
-Nieuwe extractie-logica:
-
-1. Isoleer Statistics sectie
-   HTML -> zoek "Statistics" heading -> pak 500 chars erna
-
-2. Parse alleen binnen die sectie:
-   /Low(?:est)?:\s*[€$£]?\s*([\d.,]+)/i
-   /Median:\s*[€$£]?\s*([\d.,]+)/i
-   /High(?:est)?:\s*[€$£]?\s*([\d.,]+)/i
-
-3. Als Statistics sectie niet gevonden:
-   -> return null (NIET terugvallen op brede regex)
-   -> Discogs API lowest_price als enige fallback
-```
-
-## Volgorde van implementatie
-
-1. Maak gedeelde helper `extractStatisticsPricing()` aan
-2. Update `ai-photo-analysis-v2` - verwijder JSON-LD en brede fallbacks, gebruik helper
-3. Update `collect-price-history` - vervang `parsePriceDataFromHTML()` door helper
-4. Update `test-catalog-search` - voeg sectie-isolatie toe via helper
-5. Deploy alle drie de functies
-6. Test met Blondie release 5171206 (verwacht: €2.00 / €3.99 / €6.39)
+### 3. Wijziging in `AIScanV2.tsx`
+- State toevoegen: `showArtistPopup: boolean`
+- Bij klik op "Toevoegen aan Collectie": in plaats van direct navigeren, eerst `showArtistPopup = true` zetten
+- De `onContinue` callback van de popup voert de bestaande navigatie uit naar `/scanner/discogs`
+- Als `totalCount === 0`: popup overslaan, direct navigeren (geen lege popup tonen)

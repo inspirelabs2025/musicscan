@@ -154,6 +154,8 @@ async function collectPriceForAlbum(album: AlbumData, supabase: any, scraperApiK
     // Try direct scraping first
     const response = await fetch(discogsUrl, {
       headers: {
+        'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8',
+        'Cookie': 'currency=EUR',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
       }
     });

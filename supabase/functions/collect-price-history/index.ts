@@ -142,7 +142,7 @@ serve(async (req) => {
 });
 
 async function collectPriceForAlbum(album: AlbumData, supabase: any, scraperApiKey?: string) {
-  const discogsUrl = `https://www.discogs.com/release/${album.discogs_id}`;
+  const discogsUrl = `https://www.discogs.com/release/${album.discogs_id}?curr=EUR`;
   
   console.log(`Collecting price data for: ${album.artist} - ${album.title} (${album.discogs_id})`);
 

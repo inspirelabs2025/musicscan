@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
   // Function to check if release is blocked from sale
   const checkIfBlocked = async (discogsId: string, apiKey: string): Promise<{ blocked: boolean; blocked_reason?: string }> => {
     try {
-      const releaseUrl = `https://www.discogs.com/release/${discogsId}`;
+      const releaseUrl = `https://www.discogs.com/release/${discogsId}?curr=EUR`;
       console.log(`🔍 Checking release page for blocked status: ${releaseUrl}`);
       
       // Use render=true to ensure JavaScript content is loaded
@@ -294,7 +294,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      const releasePageUrl = `https://www.discogs.com/release/${discogs_id}`;
+      const releasePageUrl = `https://www.discogs.com/release/${discogs_id}?curr=EUR`;
       console.log(`💰 Retrying pricing for Discogs ID: ${discogs_id}`);
       
       const pricingStats = await scrapePricingStatsWithRetry(releasePageUrl, scraperApiKey, discogs_id.toString());
@@ -329,7 +329,7 @@ Deno.serve(async (req) => {
       }
 
       const discogsUrl = `https://www.discogs.com/release/${direct_discogs_id}`;
-      const releasePageUrl = discogsUrl; // Use release page for Statistics section pricing
+      const releasePageUrl = `${discogsUrl}?curr=EUR`; // Force EUR currency for Statistics section pricing
       const sellUrl = `https://www.discogs.com/sell/release/${direct_discogs_id}`;
       const apiUrl = `https://api.discogs.com/releases/${direct_discogs_id}`;
       

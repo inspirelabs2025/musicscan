@@ -77,6 +77,7 @@ Immediately `LOCKED` if ANY is true:
 - Confidence < 70 → `no_match`
 - Strategy 3 results = suggestion only, never auto-select
 - Must match at least TWO of {barcode, catno, matrix} OR score >= 70
+- Must match at least TWO of {barcode, catno, matrix} OR score >= 70
 
 ## 🌐 HTTP Integrity Rules
 

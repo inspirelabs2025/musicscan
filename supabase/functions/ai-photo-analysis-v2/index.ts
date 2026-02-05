@@ -1173,13 +1173,23 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     // MEDIA-SPECIFIC search strategies
     // CD: Barcode-first (vrijwel altijd barcode sinds jaren '80)
     // Vinyl: Matrix-first (oudere platen hebben vaak geen barcode)
+    
+    // Normalize barcode: remove all spaces for Discogs API compatibility
+    const normalizedBarcode = analysisData.barcode 
+      ? analysisData.barcode.replace(/\s+/g, '') 
+      : null;
+    
+    if (normalizedBarcode && normalizedBarcode !== analysisData.barcode) {
+      console.log(`📊 Barcode normalized: "${analysisData.barcode}" → "${normalizedBarcode}"`);
+    }
+    
     const searchStrategies: Array<{ query: string; type: string; format?: string | null; priority: string }> = 
       mediaType === 'cd' 
         ? [
             // === CD: BARCODE-FIRST STRATEGY ===
             // Strategy 1: Barcode (PRIMARY - 100% unique per pressing)
-            ...(analysisData.barcode ? [{
-              query: analysisData.barcode,
+            ...(normalizedBarcode ? [{
+              query: normalizedBarcode,
               type: 'barcode',
               format: formatFilter,
               priority: 'primary'
@@ -1283,8 +1293,8 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
             }] : []),
             
             // Strategy 5: Barcode (FALLBACK - only modern vinyl has barcode)
-            ...(analysisData.barcode ? [{
-              query: analysisData.barcode,
+            ...(normalizedBarcode ? [{
+              query: normalizedBarcode,
               type: 'barcode',
               format: formatFilter,
               priority: 'fallback'

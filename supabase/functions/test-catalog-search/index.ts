@@ -6,7 +6,7 @@ const corsHeaders = {
 // Discogs API fallback function for pricing when scraping fails
 const getDiscogsApiFallback = async (discogsId: string) => {
   try {
-    console.log(`🔄 Attempting Discogs API fallback for ID: ${discogsId}`);
+    console.log(`🔄 Attempting Discogs API fallback (EUR) for ID: ${discogsId}`);
     
     const discogsToken = Deno.env.get('DISCOGS_TOKEN');
     const discogsConsumerKey = Deno.env.get('DISCOGS_CONSUMER_KEY');
@@ -21,12 +21,35 @@ const getDiscogsApiFallback = async (discogsId: string) => {
       ? { 'Authorization': `Discogs token=${discogsToken}` }
       : { 'Authorization': `Discogs key=${discogsConsumerKey}, secret=${discogsConsumerSecret}` };
     
-    const apiUrl = `https://api.discogs.com/releases/${discogsId}`;
+    const userAgent = 'MusicScan/1.0 +https://musicscan.app';
+    
+    // Use marketplace/stats endpoint with curr=EUR for exact EUR prices
+    const statsUrl = `https://api.discogs.com/marketplace/stats/${discogsId}?curr=EUR`;
+    const statsResponse = await fetch(statsUrl, {
+      headers: { ...authHeaders, 'User-Agent': userAgent }
+    });
+    
+    if (statsResponse.ok) {
+      const statsData = await statsResponse.json();
+      console.log(`✅ Discogs marketplace stats (EUR): lowest=${statsData.lowest_price?.value}, num_for_sale=${statsData.num_for_sale}`);
+      
+      return {
+        lowest_price: statsData.lowest_price?.value || null,
+        median_price: null,
+        highest_price: null,
+        have_count: statsData.num_for_sale || 0,
+        want_count: 0,
+        avg_rating: 0,
+        ratings_count: 0,
+        last_sold: null,
+        fallback_source: 'discogs_api_eur'
+      };
+    }
+    
+    // Fallback to release endpoint with curr=EUR
+    const apiUrl = `https://api.discogs.com/releases/${discogsId}?curr=EUR`;
     const response = await fetch(apiUrl, {
-      headers: {
-        ...authHeaders,
-        'User-Agent': 'VinylScanner/2.0'
-      }
+      headers: { ...authHeaders, 'User-Agent': userAgent }
     });
     
     if (!response.ok) {
@@ -35,21 +58,18 @@ const getDiscogsApiFallback = async (discogsId: string) => {
     }
     
     const releaseData = await response.json();
-    // Discogs API lowest_price is always in USD - convert to EUR
-    const lowestPriceEur = releaseData.lowest_price ? Math.round(releaseData.lowest_price * 0.92 * 100) / 100 : null;
-    console.log(`✅ Discogs API fallback successful, lowest_price USD=${releaseData.lowest_price} → EUR=${lowestPriceEur}`);
+    console.log(`✅ Discogs API release (EUR): lowest_price=${releaseData.lowest_price}`);
     
-    // Return minimal pricing stats with API fallback data
     return {
-      lowest_price: lowestPriceEur,
-      median_price: null, // API doesn't provide median
-      highest_price: null, // API doesn't provide highest
+      lowest_price: releaseData.lowest_price || null,
+      median_price: null,
+      highest_price: null,
       have_count: releaseData.num_for_sale || 0,
-      want_count: 0, // API doesn't provide want count in release endpoint
+      want_count: 0,
       avg_rating: 0,
       ratings_count: 0,
       last_sold: null,
-      fallback_source: 'discogs_api'
+      fallback_source: 'discogs_api_eur'
     };
   } catch (error) {
     console.error(`❌ Discogs API fallback error:`, error);
@@ -74,7 +94,8 @@ Deno.serve(async (req) => {
       
       const response = await fetch(scraperUrl, {
         headers: {
-          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8',
+          'Cookie': 'currency=EUR',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
@@ -170,7 +191,8 @@ Deno.serve(async (req) => {
         
         const response = await fetch(scraperUrl, {
           headers: {
-            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8',
+            'Cookie': 'currency=EUR',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
           }
         });

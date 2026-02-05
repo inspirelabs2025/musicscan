@@ -1,23 +1,15 @@
 /**
  * Shared helper: Extract pricing data exclusively from the Discogs "Statistics" section.
  * 
- * The Statistics section contains historical sale prices (Low/Median/High) which are
- * the most reliable source. We deliberately avoid scraping marketplace listings,
- * shipping costs, or other currency amounts on the page.
- * 
- * Modern Discogs HTML structure (React SPA):
- * <span class="name_...">Low<!-- -->:</span><span>$0.96</span>
- * <span class="name_...">Median<!-- -->:</span><span>$2.97</span>
- * <span class="name_...">High<!-- -->:</span><span>$11.76</span>
- * 
- * IMPORTANT: ScraperAPI/anonymous requests always return USD prices regardless of
- * ?curr=EUR parameter. We detect the currency and convert to EUR when needed.
+ * IMPORTANT: ScraperAPI always returns USD prices. We convert to EUR using Discogs'
+ * internal rate (~0.85) which accounts for their rounding. This is an approximation
+ * since no API endpoint provides the exact EUR Statistics prices.
  */
 
-// Approximate USD to EUR conversion rate. Updated periodically.
-// This is acceptable because Discogs prices are estimates anyway.
-const USD_TO_EUR = 0.92;
-const GBP_TO_EUR = 1.17;
+// Discogs' internal USD→EUR rate (derived from observed price pairs)
+// $2.35→€2, $4.69→€4, $7.52→€7 ≈ 0.85 average
+const DISCOGS_USD_TO_EUR = 0.85;
+const DISCOGS_GBP_TO_EUR = 1.17;
 
 export interface StatisticsPricing {
   lowest_price: number | null;
@@ -28,10 +20,9 @@ export interface StatisticsPricing {
 
 /**
  * Isolates the Statistics section from Discogs HTML and extracts Low/Median/High prices.
- * Returns null if the Statistics section is not found — caller should use Discogs API fallback.
+ * Automatically converts to EUR if USD/GBP is detected.
  */
 export function extractStatisticsPricing(html: string): StatisticsPricing | null {
-  // Step 1: Isolate the Statistics section
   const sectionPatterns = [
     /Statistics\s*<\/h[1-6]>/i,
     /id="statistics"/i,
@@ -44,10 +35,7 @@ export function extractStatisticsPricing(html: string): StatisticsPricing | null
   let sectionStart = -1;
   for (const pattern of sectionPatterns) {
     const match = html.search(pattern);
-    if (match !== -1) {
-      sectionStart = match;
-      break;
-    }
+    if (match !== -1) { sectionStart = match; break; }
   }
 
   if (sectionStart === -1) {
@@ -55,18 +43,14 @@ export function extractStatisticsPricing(html: string): StatisticsPricing | null
     return null;
   }
 
-  // Take a generous chunk after the match (3000 chars)
   const statisticsBlock = html.substring(sectionStart, sectionStart + 3000);
-  console.log(`📊 Found Statistics section at position ${sectionStart}, block length: ${statisticsBlock.length}`);
+  console.log(`📊 Found Statistics section at position ${sectionStart}`);
   
-  // Debug: log first 500 chars of the block (text-only, stripped of tags)
   const textOnly = statisticsBlock.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 500);
-  console.log(`📊 Statistics block text preview: ${textOnly}`);
+  console.log(`📊 Statistics text: ${textOnly}`);
 
-  // Step 2: Strip HTML comments (React inserts <!-- --> between text nodes)
   const cleanBlock = statisticsBlock.replace(/<!--[\s\S]*?-->/g, '');
 
-  // Step 3: Extract prices using patterns that handle HTML tags between label and value
   const parsePrice = (value: string | undefined | null): number | null => {
     if (!value) return null;
     const cleaned = value.replace(',', '.').replace(/\s/g, '');
@@ -74,10 +58,6 @@ export function extractStatisticsPricing(html: string): StatisticsPricing | null
     return (!isNaN(num) && num > 0 && num < 10000) ? num : null;
   };
 
-  // After stripping comments, the HTML looks like:
-  // <span class="name_...">Low:</span><span>$0.96</span>
-  // Match: "Low:" followed by optional HTML tags, then optional currency symbol, then digits
-  // Detect currency from the block
   const currencyMatch = cleanBlock.match(/Low(?:est)?:\s*(?:<[^>]*>\s*)*(?:<[^>]*>)?\s*([\$€£])/i);
   const detectedCurrency = currencyMatch?.[1] === '€' ? 'EUR' : currencyMatch?.[1] === '£' ? 'GBP' : 'USD';
 
@@ -89,26 +69,25 @@ export function extractStatisticsPricing(html: string): StatisticsPricing | null
   const median = parsePrice(medianMatch?.[1]);
   const highest = parsePrice(highMatch?.[1]);
 
-  console.log(`📊 Statistics extraction (raw): Low=${lowest}, Median=${median}, High=${highest}, Currency=${detectedCurrency}`);
+  console.log(`📊 Raw: Low=${lowest}, Median=${median}, High=${highest}, Currency=${detectedCurrency}`);
 
   if (lowest !== null || median !== null || highest !== null) {
-    // Convert to EUR if prices are in another currency
-    const convertToEur = (price: number | null): number | null => {
+    // Convert to EUR using Discogs' internal rate
+    const toEur = (price: number | null): number | null => {
       if (price === null) return null;
       if (detectedCurrency === 'EUR') return price;
-      if (detectedCurrency === 'GBP') return Math.round(price * GBP_TO_EUR * 100) / 100;
-      // USD (default)
-      return Math.round(price * USD_TO_EUR * 100) / 100;
+      const rate = detectedCurrency === 'GBP' ? DISCOGS_GBP_TO_EUR : DISCOGS_USD_TO_EUR;
+      return Math.round(price * rate * 100) / 100;
     };
 
     const result = { 
-      lowest_price: convertToEur(lowest), 
-      median_price: convertToEur(median), 
-      highest_price: convertToEur(highest), 
+      lowest_price: toEur(lowest), 
+      median_price: toEur(median), 
+      highest_price: toEur(highest), 
       currency: 'EUR' 
     };
     
-    console.log(`📊 Statistics extraction (EUR): Low=${result.lowest_price}, Median=${result.median_price}, High=${result.highest_price}`);
+    console.log(`📊 EUR: Low=${result.lowest_price}, Median=${result.median_price}, High=${result.highest_price}`);
     return result;
   }
 

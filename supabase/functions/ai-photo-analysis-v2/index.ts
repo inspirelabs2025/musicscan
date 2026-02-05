@@ -953,13 +953,15 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
     // Try scraping first if ScraperAPI is available
     if (scraperApiKey) {
       const releasePageUrl = `https://www.discogs.com/release/${discogsId}?curr=EUR`;
-      const scraperUrl = `https://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(releasePageUrl)}&render=false`;
+      const scraperUrl = `https://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(releasePageUrl)}&render=false&keep_headers=true`;
       
       console.log(`🌐 Scraping pricing from release page: ${releasePageUrl}`);
       
       try {
         const response = await fetch(scraperUrl, {
           headers: {
+            'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8',
+            'Cookie': 'currency=EUR',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
           }
         });
@@ -998,22 +1000,13 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
           
           if (statisticsPricing && (statisticsPricing.lowest_price || statisticsPricing.median_price || statisticsPricing.highest_price)) {
             // Extract num_for_sale separately
-            const numForSalePatterns = [
-              /(\d+)\s+for sale/i,
-              /(\d+)\s+items?\s+for sale/i,
-              /(\d+)\s+available/i,
-            ];
-            
             let numForSale = 0;
-            for (const pattern of numForSalePatterns) {
+            for (const pattern of [/(\d+)\s+for sale/i, /(\d+)\s+items?\s+for sale/i, /(\d+)\s+available/i]) {
               const match = html.match(pattern);
-              if (match?.[1]) {
-                numForSale = parseInt(match[1]);
-                break;
-              }
+              if (match?.[1]) { numForSale = parseInt(match[1]); break; }
             }
             
-            console.log(`✅ Statistics pricing: lowest=${statisticsPricing.lowest_price}, median=${statisticsPricing.median_price}, highest=${statisticsPricing.highest_price}, for_sale=${numForSale}`);
+            console.log(`✅ Statistics pricing (EUR): lowest=${statisticsPricing.lowest_price}, median=${statisticsPricing.median_price}, highest=${statisticsPricing.highest_price}, for_sale=${numForSale}`);
             return {
               lowest_price: statisticsPricing.lowest_price,
               median_price: statisticsPricing.median_price,
@@ -1030,26 +1023,47 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
       }
     }
     
-    // Fallback: Use Discogs API directly (only provides lowest_price)
+    // Fallback: Use Discogs API with curr=EUR for exact EUR prices
     if (discogsToken) {
-      console.log('🔄 Falling back to Discogs API for pricing...');
-      const apiUrl = `https://api.discogs.com/releases/${discogsId}`;
+      console.log('🔄 Falling back to Discogs API (EUR) for pricing...');
+      const userAgent = 'MusicScan/1.0 +https://musicscan.app';
       
-      const apiResponse = await fetch(apiUrl, {
-        headers: {
-          'Authorization': `Discogs token=${discogsToken}`,
-          'User-Agent': 'VinylScanApp/2.0'
+      // Try marketplace/stats endpoint first (gives exact EUR prices)
+      try {
+        const statsUrl = `https://api.discogs.com/marketplace/stats/${discogsId}?curr=EUR`;
+        const statsResponse = await fetch(statsUrl, {
+          headers: { 'Authorization': `Discogs token=${discogsToken}`, 'User-Agent': userAgent }
+        });
+        
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          if (statsData.lowest_price?.value) {
+            console.log(`✅ Marketplace stats (EUR): lowest=${statsData.lowest_price.value}, num_for_sale=${statsData.num_for_sale}`);
+            return {
+              lowest_price: statsData.lowest_price.value,
+              median_price: null,
+              highest_price: null,
+              num_for_sale: statsData.num_for_sale || 0,
+              currency: 'EUR'
+            };
+          }
         }
+      } catch (e) {
+        console.log('⚠️ Marketplace stats failed, trying release endpoint...');
+      }
+      
+      // Fallback to release endpoint with curr=EUR
+      const apiUrl = `https://api.discogs.com/releases/${discogsId}?curr=EUR`;
+      const apiResponse = await fetch(apiUrl, {
+        headers: { 'Authorization': `Discogs token=${discogsToken}`, 'User-Agent': userAgent }
       });
       
       if (apiResponse.ok) {
         const releaseData = await apiResponse.json();
         if (releaseData.lowest_price) {
-          // Discogs API lowest_price is always in USD - convert to EUR
-          const lowestPriceEur = Math.round(releaseData.lowest_price * 0.92 * 100) / 100;
-          console.log(`✅ API pricing: lowest_price USD=${releaseData.lowest_price} → EUR=${lowestPriceEur}, num_for_sale=${releaseData.num_for_sale}`);
+          console.log(`✅ API pricing (EUR): lowest_price=${releaseData.lowest_price}, num_for_sale=${releaseData.num_for_sale}`);
           return {
-            lowest_price: lowestPriceEur,
+            lowest_price: releaseData.lowest_price,
             median_price: null,
             highest_price: null,
             num_for_sale: releaseData.num_for_sale || 0,

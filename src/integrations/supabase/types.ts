@@ -2320,7 +2320,7 @@ export type Database = {
           success: boolean
           total_prices_found: number | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           artist_name?: string | null
@@ -2345,7 +2345,7 @@ export type Database = {
           success?: boolean
           total_prices_found?: number | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           artist_name?: string | null
@@ -2370,7 +2370,7 @@ export type Database = {
           success?: boolean
           total_prices_found?: number | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

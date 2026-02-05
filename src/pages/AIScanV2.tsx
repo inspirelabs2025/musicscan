@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
 import testCdMatrix from '@/assets/test-cd-matrix.jpg';
+import { ArtistDiscoveryPopup } from '@/components/scan/ArtistDiscoveryPopup';
 
 // Simple V2 components for media type and condition selection
 
@@ -73,6 +74,8 @@ export default function AIScanV2() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [showArtistPopup, setShowArtistPopup] = useState(false);
+  const pendingNavigateRef = useRef<string | null>(null);
   const {
     checkUsageLimit,
     incrementUsage
@@ -631,8 +634,14 @@ export default function AIScanV2() {
                     condition: conditionGrade,
                     fromAiScan: 'true'
                   });
-                  console.log('🚀 Navigating to:', `/scanner/discogs?${params.toString()}`);
-                  navigate(`/scanner/discogs?${params.toString()}`);
+                  pendingNavigateRef.current = `/scanner/discogs?${params.toString()}`;
+
+                  // Show artist discovery popup if artist is known
+                  if (analysisResult.result.artist) {
+                    setShowArtistPopup(true);
+                  } else {
+                    navigate(pendingNavigateRef.current);
+                  }
                 }} className="w-full" disabled={!conditionGrade}>
                     <ShoppingCart className="mr-2 h-4 w-4" />
                     Toevoegen aan Collectie
@@ -660,5 +669,27 @@ export default function AIScanV2() {
 
       {/* Upgrade Prompt Modal */}
       <UpgradePrompt isOpen={showUpgradePrompt} onClose={() => setShowUpgradePrompt(false)} reason="usage_limit" currentPlan={subscription?.plan_slug || 'free'} />
+
+      {/* Artist Discovery Popup */}
+      {analysisResult?.result?.artist && (
+        <ArtistDiscoveryPopup
+          artistName={analysisResult.result.artist}
+          isOpen={showArtistPopup}
+          onClose={() => {
+            setShowArtistPopup(false);
+            if (pendingNavigateRef.current) {
+              navigate(pendingNavigateRef.current);
+              pendingNavigateRef.current = null;
+            }
+          }}
+          onContinue={() => {
+            setShowArtistPopup(false);
+            if (pendingNavigateRef.current) {
+              navigate(pendingNavigateRef.current);
+              pendingNavigateRef.current = null;
+            }
+          }}
+        />
+      )}
     </>;
 }

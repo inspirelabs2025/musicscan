@@ -91,18 +91,15 @@ Deno.serve(async (req) => {
         console.log(`🔍 Found 'blocked' or 'not permitted' keywords in HTML`);
       }
       
-      // Check for blocked sale patterns - more comprehensive
+      // Check for blocked sale patterns - only match explicit block messages
       const blockedPatterns = [
         /blocked from sale/i,
-        /not permitted to sell/i,
+        /not permitted to sell this item/i,
         /This release is blocked/i,
         /It is not permitted to sell this item/i,
-        /sale.*?prohibited/i,
-        /restricted from sale/i,
-        /cannot be sold/i,
-        /blocked.*?marketplace/i,
-        /item.*?blocked/i,
-        /release.*?blocked/i,
+        /sale of this item is prohibited/i,
+        /restricted from sale on Discogs/i,
+        /cannot be sold on Discogs/i,
       ];
       
       for (const pattern of blockedPatterns) {
@@ -166,7 +163,7 @@ Deno.serve(async (req) => {
       console.log(`💰 Pricing attempt ${attempt}/${maxRetries} for: ${sellUrl}`);
       
       try {
-        // Enhanced ScraperAPI URL with better parameters and headers
+        // Enhanced ScraperAPI URL with better parameters
         const scraperUrl = `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(sellUrl)}&keep_headers=true&render=false`;
         
         const response = await fetch(scraperUrl, {
@@ -297,10 +294,10 @@ Deno.serve(async (req) => {
         );
       }
 
-      const sellUrl = `https://www.discogs.com/sell/release/${discogs_id}`;
+      const releasePageUrl = `https://www.discogs.com/release/${discogs_id}`;
       console.log(`💰 Retrying pricing for Discogs ID: ${discogs_id}`);
       
-      const pricingStats = await scrapePricingStatsWithRetry(sellUrl, scraperApiKey, discogs_id.toString());
+      const pricingStats = await scrapePricingStatsWithRetry(releasePageUrl, scraperApiKey, discogs_id.toString());
       
       return new Response(
         JSON.stringify({ pricing_stats: pricingStats }),
@@ -332,6 +329,7 @@ Deno.serve(async (req) => {
       }
 
       const discogsUrl = `https://www.discogs.com/release/${direct_discogs_id}`;
+      const releasePageUrl = discogsUrl; // Use release page for Statistics section pricing
       const sellUrl = `https://www.discogs.com/sell/release/${direct_discogs_id}`;
       const apiUrl = `https://api.discogs.com/releases/${direct_discogs_id}`;
       
@@ -381,7 +379,7 @@ Deno.serve(async (req) => {
         console.log(`🎵 Detected media type: ${mediaType}`);
         
         // Fetch pricing stats with fallback support
-        const pricingStats = await scrapePricingStatsWithRetry(sellUrl, scraperApiKey, direct_discogs_id.toString());
+        const pricingStats = await scrapePricingStatsWithRetry(releasePageUrl, scraperApiKey, direct_discogs_id.toString());
         
         // If no pricing stats and we have API access, ensure we have at least lowest price from API
         let finalPricingStats = pricingStats;
@@ -671,7 +669,7 @@ Deno.serve(async (req) => {
       for (const result of formattedResults) {
         // Extract Discogs ID from result for fallback
         const discogsId = result.discogs_id;
-        const pricingStats = await scrapePricingStatsWithRetry(result.sell_url, scraperApiKey, discogsId);
+        const pricingStats = await scrapePricingStatsWithRetry(result.discogs_url, scraperApiKey, discogsId);
         result.pricing_stats = pricingStats;
         
         // If no pricing stats from scraping, try to get minimal price from Discogs API

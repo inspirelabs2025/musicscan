@@ -952,10 +952,10 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
     
     // Try scraping first if ScraperAPI is available
     if (scraperApiKey) {
-      const sellUrl = `https://www.discogs.com/sell/release/${discogsId}`;
-      const scraperUrl = `https://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(sellUrl)}&render=false`;
+      const releasePageUrl = `https://www.discogs.com/release/${discogsId}`;
+      const scraperUrl = `https://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(releasePageUrl)}&render=false`;
       
-      console.log(`🌐 Scraping pricing from: ${sellUrl}`);
+      console.log(`🌐 Scraping pricing from release page: ${releasePageUrl}`);
       
       try {
         const response = await fetch(scraperUrl, {

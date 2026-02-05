@@ -15,6 +15,7 @@ export interface StatisticsPricing {
   lowest_price: number | null;
   median_price: number | null;
   highest_price: number | null;
+  currency: string;
 }
 
 /**
@@ -49,6 +50,10 @@ export function extractStatisticsPricing(html: string): StatisticsPricing | null
   // Take a generous chunk after the match (3000 chars)
   const statisticsBlock = html.substring(sectionStart, sectionStart + 3000);
   console.log(`📊 Found Statistics section at position ${sectionStart}, block length: ${statisticsBlock.length}`);
+  
+  // Debug: log first 500 chars of the block (text-only, stripped of tags)
+  const textOnly = statisticsBlock.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 500);
+  console.log(`📊 Statistics block text preview: ${textOnly}`);
 
   // Step 2: Strip HTML comments (React inserts <!-- --> between text nodes)
   const cleanBlock = statisticsBlock.replace(/<!--[\s\S]*?-->/g, '');
@@ -64,6 +69,10 @@ export function extractStatisticsPricing(html: string): StatisticsPricing | null
   // After stripping comments, the HTML looks like:
   // <span class="name_...">Low:</span><span>$0.96</span>
   // Match: "Low:" followed by optional HTML tags, then optional currency symbol, then digits
+  // Detect currency from the block
+  const currencyMatch = cleanBlock.match(/Low(?:est)?:\s*(?:<[^>]*>\s*)*(?:<[^>]*>)?\s*([\$€£])/i);
+  const detectedCurrency = currencyMatch?.[1] === '€' ? 'EUR' : currencyMatch?.[1] === '£' ? 'GBP' : 'USD';
+
   const lowMatch = cleanBlock.match(/Low(?:est)?:\s*(?:<[^>]*>\s*)*(?:<[^>]*>)?\s*[\$€£]?\s*([\d.,]+)/i);
   const medianMatch = cleanBlock.match(/Median:\s*(?:<[^>]*>\s*)*(?:<[^>]*>)?\s*[\$€£]?\s*([\d.,]+)/i);
   const highMatch = cleanBlock.match(/High(?:est)?:\s*(?:<[^>]*>\s*)*(?:<[^>]*>)?\s*[\$€£]?\s*([\d.,]+)/i);
@@ -72,10 +81,10 @@ export function extractStatisticsPricing(html: string): StatisticsPricing | null
   const median = parsePrice(medianMatch?.[1]);
   const highest = parsePrice(highMatch?.[1]);
 
-  console.log(`📊 Statistics extraction: Low=${lowest}, Median=${median}, High=${highest}`);
+  console.log(`📊 Statistics extraction: Low=${lowest}, Median=${median}, High=${highest}, Currency=${detectedCurrency}`);
 
   if (lowest !== null || median !== null || highest !== null) {
-    return { lowest_price: lowest, median_price: median, highest_price: highest };
+    return { lowest_price: lowest, median_price: median, highest_price: highest, currency: detectedCurrency };
   }
 
   console.log('📊 No prices found within Statistics section');

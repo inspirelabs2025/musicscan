@@ -1,159 +1,74 @@
 
-# MusicScan Discogs Matching Protocol v4.0 (CANONICAL · NO FALSE NEGATIVES)
+# Fix: Pricing Extraction - Alleen Statistics Sectie
 
-## 🎯 Core Principle
+## Probleem
 
-**Barcode + catalog number define the release. Matrix refines, never blocks.**
+De huidige pricing scrapers pakken prijzen van de **hele Discogs pagina** — inclusief marketplace listings, shipping kosten, en andere €-bedragen. Dit levert opgeblazen/incorrecte prijzen op.
 
-False negatives are unacceptable.
-False positives are worse → choose NO_MATCH over guessing.
+Voorbeeld Blondie - Blondies Hits (release 5171206):
+- Discogs Statistics: Low €2.00 / Median €3.99 / High €6.39
+- MusicScan resultaat: €3.50 / €4.69 / €7.52 (fout - bevat marketplace listings)
 
-## 🔧 Normalization (Mandatory)
+## Oplossing
 
-```
-barcode_digits = digits only (5027626416423)
-catno_norm = uppercase, collapse spaces
-matrix_canonical = remove leading noise tokens (length < 3, purely numeric)
-```
+Alle drie de pricing-functies aanpassen zodat ze **uitsluitend** de Statistics-sectie lezen. De Statistics-sectie bevat historische verkoopprijzen en is de meest betrouwbare bron.
 
-### Matrix Normalization Example
-```
-"S 2 SUMCD 4164 01" → ["SUMCD","4164","01"] → "SUMCD 4164 01"
-```
+## Wijzigingen
 
-## 🔍 Discogs Search Strategy
+### 1. `ai-photo-analysis-v2/index.ts` (scan-time pricing)
 
-### 🥇 STRATEGY 1: BARCODE (PRIMARY)
-```
-GET /database/search?barcode={barcode_digits}&type=release
-```
-❌ FORBIDDEN: `q=`, `format=`, any other filters
+**Verwijderen:**
+- JSON-LD offers parsing (dit zijn marketplace-prijzen, niet statistics)
+- "Last resort" fallback die willekeurige €-bedragen pakt
+- Brede patronen zoals `class="price"`, `data-price`, `from €X`
 
-### 🥈 STRATEGY 2: CATNO (+ optional label)
-```
-GET /database/search?catno={catno_norm}&type=release
-```
-❌ FORBIDDEN: `format=`
+**Behouden/verbeteren:**
+- Alleen Statistics-sectie patronen: `Low:` / `Median:` / `High:` en `Lowest:` / `Median:` / `Highest:`
+- Eerst de Statistics-sectie isoleren uit de HTML (zoek het blok rond "Statistics" heading), dan pas regexen toepassen
+- Fallback naar Discogs API `lowest_price` (dit is wel betrouwbaar)
 
-### ⛔ STRATEGY 3: ARTIST/TITLE
-Never auto-select. Suggestion only for manual review.
-Used ONLY when Strategy 1+2 return 0 results AND technical identifiers exist.
+### 2. `collect-price-history/index.ts` (dagelijkse cron)
 
-**UI Flow for Strategy 3:**
-1. Show message: "Exacte release niet gevonden (barcode/catno niet geregistreerd in Discogs)"
-2. Show suggestions from artist+title search
-3. User can manually select or mark as "Not in Discogs"
+**Volledig vervangen:** `parsePriceDataFromHTML()` functie die nu alle €/$-bedragen op de pagina pakt met:
+- Gerichte Statistics-sectie extractie (dezelfde patronen als punt 1)
+- Geen brede currency-regex meer
 
-## 🧪 Verification & Scoring (MAX 160)
+### 3. `test-catalog-search/index.ts` (catalog search pricing)
 
-| Check | Points |
-|-------|--------|
-| Matrix match (relaxed subset, order-insensitive) | +50 |
-| Barcode exact match | +40 |
-| Catno exact match | +25 |
-| Label exact match | +15 |
-| Year exact match | +10 |
-| Country exact match | +10 |
-| IFPI codes present | +5 |
-| Title similarity | +5 |
-| **Maximum** | **160** |
+Deze heeft al betere patronen (Lowest/Low labels) maar mist de Statistics-sectie isolatie. Toevoegen:
+- HTML-sectie isolatie voor de Statistics-blok voordat patronen worden toegepast
 
-### Matrix Matching (RELAXED BUT SAFE)
-Matrix match = TRUE if ALL canonical tokens appear in candidate matrix tokens.
-- Order-insensitive
-- Subset match
-- Matrix absence does NOT block if barcode + catno match
+### 4. Gedeelde helper functie
 
-## 🔒 Lock Conditions (NON-NEGOTIABLE)
+Nieuwe gedeelde functie `extractStatisticsPricing(html)` die:
+1. De Statistics-sectie isoleert uit de HTML (zoek naar "Statistics" heading en pak het omringende blok)
+2. Binnen dat blok zoekt naar Low/Lowest, Median, High/Highest labels
+3. Alleen prijzen uit dat blok returnt
+4. Als de sectie niet gevonden wordt: return null (geen fallback naar willekeurige pagina-prijzen)
 
-Immediately `LOCKED` if ANY is true:
+## Technisch Detail
 
-1. **Barcode + Catno match** ← HIGHEST PRIORITY
-2. Matrix + Barcode match
-3. Matrix + Catno match
-4. Barcode + Label + Year match
-5. Matrix + Label + Year match
+```text
+Nieuwe extractie-logica:
 
-➡️ Status = `verified`
+1. Isoleer Statistics sectie
+   HTML -> zoek "Statistics" heading -> pak 500 chars erna
 
-## ⛔ Hard Gating Rules
+2. Parse alleen binnen die sectie:
+   /Low(?:est)?:\s*[€$£]?\s*([\d.,]+)/i
+   /Median:\s*[€$£]?\s*([\d.,]+)/i
+   /High(?:est)?:\s*[€$£]?\s*([\d.,]+)/i
 
-- Never require matrix match if barcode + catno match
-- Never drop to fuzzy title matching when barcode exists
-- Confidence < 70 → `no_match`
-- Strategy 3 results = suggestion only, never auto-select
-- Must match at least TWO of {barcode, catno, matrix} OR score >= 70
-- Must match at least TWO of {barcode, catno, matrix} OR score >= 70
-
-## 🌐 HTTP Integrity Rules
-
-For EVERY Discogs API call:
-
-**Required Headers:**
-```
-User-Agent: MusicScan/1.0 +https://musicscan.app
-Authorization: Discogs token=YOUR_TOKEN
+3. Als Statistics sectie niet gevonden:
+   -> return null (NIET terugvallen op brede regex)
+   -> Discogs API lowest_price als enige fallback
 ```
 
-**Response Handling:**
-- HTTP status ≠ 200 → STOP, return `api_error`
-- Parse results ONLY from `json.results` array
-- `results.length === 0` is legitimate empty (not an error)
+## Volgorde van implementatie
 
-## ✅ Regression Test (MANDATORY)
-
-**Input:**
-```
-Barcode: 5027626416423
-Catno: SUMCD 4164
-Matrix: SUMCD 4164 01 (or "S 2 SUMCD 4164 01")
-```
-
-**MUST return:**
-```
-Release: 4381440
-URL: https://www.discogs.com/release/4381440
-Lock: "Barcode + Catalog match"
-Confidence: 65+ points (barcode=40 + catno=25)
-```
-
-## 📤 Output Format
-
-### ✅ Verified
-```json
-{
-  "status": "verified",
-  "discogs_release_id": 4381440,
-  "discogs_url": "https://www.discogs.com/release/4381440",
-  "confidence_score": 155,
-  "matched_on": ["barcode", "catno", "matrix"],
-  "explain": [
-    "Barcode matched exactly",
-    "Catalog number matched",
-    "Matrix canonical match after noise removal"
-  ]
-}
-```
-
-### ❌ API Error
-```json
-{
-  "status": "api_error",
-  "reason": "Discogs API returned non-200 response",
-  "action": "retry_with_backoff_or_manual_review"
-}
-```
-
-### ❌ No Match
-```json
-{
-  "status": "no_match",
-  "reason": "No Discogs release matches barcode and catalog number",
-  "action": "manual_review_required"
-}
-```
-
-## 🧠 Final Principle
-
-> A empty candidate set is acceptable.
-> A incorrect match is never acceptable.
+1. Maak gedeelde helper `extractStatisticsPricing()` aan
+2. Update `ai-photo-analysis-v2` - verwijder JSON-LD en brede fallbacks, gebruik helper
+3. Update `collect-price-history` - vervang `parsePriceDataFromHTML()` door helper
+4. Update `test-catalog-search` - voeg sectie-isolatie toe via helper
+5. Deploy alle drie de functies
+6. Test met Blondie release 5171206 (verwacht: €2.00 / €3.99 / €6.39)

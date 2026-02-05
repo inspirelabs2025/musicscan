@@ -1378,6 +1378,9 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     
     // === STRATEGY 1: BARCODE (PRIMARY, HARD) ===
     // ❌ VERBODEN: format, country, year, fuzzy q
+    // ✅ HTTP INTEGRITY: Bij non-200 → STOP met api_error
+    let apiError: { status: number; message: string } | null = null;
+    
     if (barcodeDigits) {
       console.log(`\n${'─'.repeat(50)}`);
       console.log(`🥇 STRATEGY 1: BARCODE SEARCH (PRIMARY)`);
@@ -1390,26 +1393,32 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       try {
         const response = await fetch(searchUrl, {
           headers: {
-            'User-Agent': 'MusicScanApp/3.0',
+            'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
             'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
           }
         });
         
-        if (response.ok) {
+        // HTTP INTEGRITY RULE: status ≠ 200 → STOP
+        if (response.status !== 200) {
+          console.log(`   🛑 API ERROR: HTTP ${response.status} - STOPPING`);
+          apiError = { status: response.status, message: `Discogs API returned ${response.status}` };
+        } else {
           const data = await response.json();
-          console.log(`   📊 Results: ${data.results?.length || 0} candidates`);
+          // Parse results ONLY from json.results array
+          const results = Array.isArray(data.results) ? data.results : [];
+          console.log(`   📊 Results: ${results.length} candidates`);
           
           searchMetadata.strategies_executed.push({
             strategy: 1,
             type: 'barcode',
             query: barcodeDigits,
-            results: data.results?.length || 0,
+            results: results.length,
             format_filter: false
           });
           
-          if (data.results && data.results.length > 0) {
+          if (results.length > 0) {
             // Verify candidates
-            for (const candidate of data.results.slice(0, 5)) {
+            for (const candidate of results.slice(0, 5)) {
               const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
               
               if (verification.points > bestConfidencePoints) {
@@ -1434,17 +1443,29 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
               console.log(`\n✅ LOCKED MATCH via barcode strategy`);
             }
           }
-        } else {
-          console.log(`   ⚠️ API Error: ${response.status}`);
         }
       } catch (err) {
-        console.log(`   ❌ Fetch error: ${err.message}`);
+        console.log(`   🛑 FETCH ERROR: ${err.message} - STOPPING`);
+        apiError = { status: 0, message: `Network error: ${err.message}` };
       }
+    }
+    
+    // HTTP INTEGRITY: Stop processing if API error occurred
+    if (apiError) {
+      console.log(`\n🛑 API ERROR - Returning error status (no fallback, no fuzzy)`);
+      return {
+        status: 'api_error',
+        reason: apiError.message,
+        action: 'retry_with_backoff_or_manual_review',
+        http_status: apiError.status,
+        search_metadata: searchMetadata
+      };
     }
     
     // === STRATEGY 2: CATNO + LABEL (HIGH) ===
     // ❌ VERBODEN: format filter
-    if (!searchMetadata.verification_level && catnoNorm) {
+    // ✅ HTTP INTEGRITY: Bij non-200 → STOP met api_error
+    if (!searchMetadata.verification_level && catnoNorm && !apiError) {
       console.log(`\n${'─'.repeat(50)}`);
       console.log(`🥈 STRATEGY 2: CATNO SEARCH (HIGH)`);
       console.log(`   Query: catno=${catnoNorm}${analysisData.label ? ` + label=${analysisData.label}` : ''}`);
@@ -1459,26 +1480,32 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       try {
         const response = await fetch(searchUrl, {
           headers: {
-            'User-Agent': 'MusicScanApp/3.0',
+            'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
             'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
           }
         });
         
-        if (response.ok) {
+        // HTTP INTEGRITY RULE: status ≠ 200 → STOP
+        if (response.status !== 200) {
+          console.log(`   🛑 API ERROR: HTTP ${response.status} - STOPPING`);
+          apiError = { status: response.status, message: `Discogs API returned ${response.status}` };
+        } else {
           const data = await response.json();
-          console.log(`   📊 Results: ${data.results?.length || 0} candidates`);
+          // Parse results ONLY from json.results array
+          const results = Array.isArray(data.results) ? data.results : [];
+          console.log(`   📊 Results: ${results.length} candidates`);
           
           searchMetadata.strategies_executed.push({
             strategy: 2,
             type: 'catno',
             query: catnoNorm,
             label: analysisData.label || null,
-            results: data.results?.length || 0,
+            results: results.length,
             format_filter: false
           });
           
-          if (data.results && data.results.length > 0) {
-            for (const candidate of data.results.slice(0, 5)) {
+          if (results.length > 0) {
+            for (const candidate of results.slice(0, 5)) {
               const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
               
               if (verification.points > bestConfidencePoints) {
@@ -1500,13 +1527,27 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
           }
         }
       } catch (err) {
-        console.log(`   ❌ Fetch error: ${err.message}`);
+        console.log(`   🛑 FETCH ERROR: ${err.message} - STOPPING`);
+        apiError = { status: 0, message: `Network error: ${err.message}` };
       }
+    }
+    
+    // HTTP INTEGRITY: Stop processing if API error occurred in Strategy 2
+    if (apiError) {
+      console.log(`\n🛑 API ERROR - Returning error status (no fallback, no fuzzy)`);
+      return {
+        status: 'api_error',
+        reason: apiError.message,
+        action: 'retry_with_backoff_or_manual_review',
+        http_status: apiError.status,
+        search_metadata: searchMetadata
+      };
     }
     
     // === STRATEGY 3: ARTIST + TITLE (SUGGEST ONLY) ===
     // ⚠️ MAG NOOIT AUTOMATISCH SELECTEREN bij aanwezige technische identifiers
-    const needsFuzzySearch = !bestMatch && analysisData.artist && analysisData.title;
+    // ⛔ Wordt NIET gebruikt als barcode/catno al resultaten hadden
+    const needsFuzzySearch = !bestMatch && analysisData.artist && analysisData.title && !apiError;
     
     if (needsFuzzySearch) {
       console.log(`\n${'─'.repeat(50)}`);
@@ -1517,56 +1558,55 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       if (hasTechnicalIdentifiers) {
         console.log(`   ⛔ HARD GATE: Technische identifiers aanwezig maar geen match`);
         console.log(`   ⛔ Fuzzy search mag NIET auto-selecteren → manual_review_required`);
-      }
-      
-      const searchUrl = `https://api.discogs.com/database/search?artist=${encodeURIComponent(analysisData.artist)}&release_title=${encodeURIComponent(analysisData.title)}&type=release&format=${encodeURIComponent(formatFilter)}`;
-      searchMetadata.total_searches++;
-      
-      try {
-        const response = await fetch(searchUrl, {
-          headers: {
-            'User-Agent': 'MusicScanApp/3.0',
-            'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
-          }
-        });
+        searchMetadata.verification_level = 'no_match';
+        // SKIP fuzzy search entirely when technical identifiers exist but didn't match
+      } else {
+        const searchUrl = `https://api.discogs.com/database/search?artist=${encodeURIComponent(analysisData.artist)}&release_title=${encodeURIComponent(analysisData.title)}&type=release&format=${encodeURIComponent(formatFilter)}`;
+        searchMetadata.total_searches++;
         
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`   📊 Results: ${data.results?.length || 0} candidates`);
-          
-          searchMetadata.strategies_executed.push({
-            strategy: 3,
-            type: 'artist_title',
-            query: `${analysisData.artist} - ${analysisData.title}`,
-            results: data.results?.length || 0,
-            format_filter: formatFilter,
-            auto_select_blocked: hasTechnicalIdentifiers
+        try {
+          const response = await fetch(searchUrl, {
+            headers: {
+              'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
+              'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
+            }
           });
           
-          if (data.results && data.results.length > 0) {
-            for (const candidate of data.results.slice(0, 5)) {
-              const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
-              
-              // HARD GATE: Bij technische identifiers mag fuzzy NIET auto-selecteren
-              if (hasTechnicalIdentifiers) {
-                console.log(`   ⛔ Candidate ${candidate.id} DISQUALIFIED (technische identifiers niet gematcht)`);
-                searchMetadata.verification_level = 'manual_review_required';
-                continue;
-              }
-              
-              if (verification.points > bestConfidencePoints) {
-                bestConfidencePoints = verification.points;
-                bestMatch = candidate;
-                bestMatchDetails = verification;
-                searchMetadata.matched_on = verification.matched_on;
-                searchMetadata.technical_matches = verification.technical_matches;
-                searchMetadata.explain = verification.explain;
+          // Note: Strategy 3 failures don't trigger api_error (it's a fallback)
+          if (response.status === 200) {
+            const data = await response.json();
+            const results = Array.isArray(data.results) ? data.results : [];
+            console.log(`   📊 Results: ${results.length} candidates`);
+            
+            searchMetadata.strategies_executed.push({
+              strategy: 3,
+              type: 'artist_title',
+              query: `${analysisData.artist} - ${analysisData.title}`,
+              results: results.length,
+              format_filter: formatFilter,
+              auto_select_blocked: false
+            });
+            
+            if (results.length > 0) {
+              for (const candidate of results.slice(0, 5)) {
+                const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
+                
+                if (verification.points > bestConfidencePoints) {
+                  bestConfidencePoints = verification.points;
+                  bestMatch = candidate;
+                  bestMatchDetails = verification;
+                  searchMetadata.matched_on = verification.matched_on;
+                  searchMetadata.technical_matches = verification.technical_matches;
+                  searchMetadata.explain = verification.explain;
+                }
               }
             }
+          } else {
+            console.log(`   ⚠️ API returned ${response.status} (fallback, not blocking)`);
           }
+        } catch (err) {
+          console.log(`   ⚠️ Fetch error: ${err.message} (fallback, not blocking)`);
         }
-      } catch (err) {
-        console.log(`   ❌ Fetch error: ${err.message}`);
       }
     }
     

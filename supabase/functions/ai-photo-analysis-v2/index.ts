@@ -1156,6 +1156,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     // Determine format filter based on media type
     const formatFilter = mediaType === 'vinyl' ? 'Vinyl' : 'CD';
     console.log(`🔍 Searching Discogs V2 with format filter: ${formatFilter}`);
+    console.log(`🎵 Search strategy mode: ${mediaType === 'cd' ? 'BARCODE-FIRST (CD)' : 'MATRIX-FIRST (Vinyl)'}`);
     
     // Log technical identifiers for debugging
     console.log('📋 Technical identifiers available:', {
@@ -1169,77 +1170,142 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       labelCode: analysisData.labelCode || null
     });
     
-    // BARCODE-FIRST: Prioritized search strategy
-    // Strategy order (by reliability):
-    // 1. Barcode + format (100% unique commercial identifier - PRIMARY)
-    // 2. Matrix number (unique per pressing - CRITICAL)
-    // 3. Catalog number + format (label-specific - HIGH)
-    // 4. Label + Catno + format (combination - MEDIUM)
-    // 5. Artist + Title + format (OCR-dependent - LOW/FALLBACK)
-    // 6. General fallback without format
-    const searchStrategies: Array<{ query: string; type: string; format?: string | null; priority: string }> = [
-      // Strategy 1: Barcode (PRIMARY - 100% unique per pressing)
-      ...(analysisData.barcode ? [{
-        query: analysisData.barcode,
-        type: 'barcode',
-        format: formatFilter,
-        priority: 'primary'
-      }] : []),
-      
-      // Strategy 2: Matrix number (CRITICAL - pressing-specific)
-      ...(analysisData.matrixNumber ? [{ 
-        query: analysisData.matrixNumber, 
-        type: 'matrix', 
-        format: null,
-        priority: 'critical'
-      }] : []),
-      ...(analysisData.matrixNumberFull && analysisData.matrixNumberFull !== analysisData.matrixNumber ? [{ 
-        query: analysisData.matrixNumberFull, 
-        type: 'matrix', 
-        format: null,
-        priority: 'critical'
-      }] : []),
+    // MEDIA-SPECIFIC search strategies
+    // CD: Barcode-first (vrijwel altijd barcode sinds jaren '80)
+    // Vinyl: Matrix-first (oudere platen hebben vaak geen barcode)
+    const searchStrategies: Array<{ query: string; type: string; format?: string | null; priority: string }> = 
+      mediaType === 'cd' 
+        ? [
+            // === CD: BARCODE-FIRST STRATEGY ===
+            // Strategy 1: Barcode (PRIMARY - 100% unique per pressing)
+            ...(analysisData.barcode ? [{
+              query: analysisData.barcode,
+              type: 'barcode',
+              format: formatFilter,
+              priority: 'primary'
+            }] : []),
+            
+            // Strategy 2: Matrix number (CRITICAL - pressing-specific)
+            ...(analysisData.matrixNumber ? [{ 
+              query: analysisData.matrixNumber, 
+              type: 'matrix', 
+              format: null,
+              priority: 'critical'
+            }] : []),
+            ...(analysisData.matrixNumberFull && analysisData.matrixNumberFull !== analysisData.matrixNumber ? [{ 
+              query: analysisData.matrixNumberFull, 
+              type: 'matrix', 
+              format: null,
+              priority: 'critical'
+            }] : []),
 
-      // Strategy 3: Catalog number (HIGH)
-      ...(analysisData.catalogNumber ? [{
-        query: analysisData.catalogNumber,
-        type: 'catno',
-        format: formatFilter,
-        priority: 'high'
-      }] : []),
-      
-      // Strategy 4: Label + Catno (MEDIUM)
-      ...(analysisData.label && analysisData.catalogNumber ? [{
-        query: `${analysisData.label} ${analysisData.catalogNumber}`,
-        type: 'label_catno',
-        format: formatFilter,
-        priority: 'medium'
-      }] : []),
-      
-      // Strategy 5: Artist + Title (LOW - OCR-dependent, can have errors)
-      ...(analysisData.artist && analysisData.title ? [{
-        query: `${analysisData.artist} ${analysisData.title}`,
-        type: 'artist_title_format',
-        format: formatFilter,
-        priority: 'low'
-      }] : []),
-      
-      // Strategy 6: General fallback without format filter
-      ...(analysisData.artist && analysisData.title ? [{
-        query: `${analysisData.artist} ${analysisData.title}`,
-        type: 'general_fallback',
-        format: null,
-        priority: 'fallback'
-      }] : []),
-      
-      // Strategy 7: Additional search terms (FALLBACK)
-      ...(analysisData.searchQueries || []).map((q: string) => ({ 
-        query: q, 
-        type: 'alternative', 
-        format: null,
-        priority: 'fallback'
-      }))
-    ]
+            // Strategy 3: Catalog number (HIGH)
+            ...(analysisData.catalogNumber ? [{
+              query: analysisData.catalogNumber,
+              type: 'catno',
+              format: formatFilter,
+              priority: 'high'
+            }] : []),
+            
+            // Strategy 4: Label + Catno (MEDIUM)
+            ...(analysisData.label && analysisData.catalogNumber ? [{
+              query: `${analysisData.label} ${analysisData.catalogNumber}`,
+              type: 'label_catno',
+              format: formatFilter,
+              priority: 'medium'
+            }] : []),
+            
+            // Strategy 5: Artist + Title (LOW - OCR-dependent, can have errors)
+            ...(analysisData.artist && analysisData.title ? [{
+              query: `${analysisData.artist} ${analysisData.title}`,
+              type: 'artist_title_format',
+              format: formatFilter,
+              priority: 'low'
+            }] : []),
+            
+            // Strategy 6: General fallback without format filter
+            ...(analysisData.artist && analysisData.title ? [{
+              query: `${analysisData.artist} ${analysisData.title}`,
+              type: 'general_fallback',
+              format: null,
+              priority: 'fallback'
+            }] : []),
+            
+            // Strategy 7: Additional search terms (FALLBACK)
+            ...(analysisData.searchQueries || []).map((q: string) => ({ 
+              query: q, 
+              type: 'alternative', 
+              format: null,
+              priority: 'fallback'
+            }))
+          ]
+        : [
+            // === VINYL: MATRIX-FIRST STRATEGY ===
+            // Vinyl records (especially older ones) often don't have barcodes
+            // Matrix number in runout groove is the primary identifier
+            
+            // Strategy 1: Matrix number (PRIMARY for vinyl - always in runout groove)
+            ...(analysisData.matrixNumber ? [{ 
+              query: analysisData.matrixNumber, 
+              type: 'matrix', 
+              format: null,
+              priority: 'primary'
+            }] : []),
+            ...(analysisData.matrixNumberFull && analysisData.matrixNumberFull !== analysisData.matrixNumber ? [{ 
+              query: analysisData.matrixNumberFull, 
+              type: 'matrix', 
+              format: null,
+              priority: 'primary'
+            }] : []),
+            
+            // Strategy 2: Catalog number (HIGH)
+            ...(analysisData.catalogNumber ? [{
+              query: analysisData.catalogNumber,
+              type: 'catno',
+              format: formatFilter,
+              priority: 'high'
+            }] : []),
+            
+            // Strategy 3: Label + Catno (MEDIUM)
+            ...(analysisData.label && analysisData.catalogNumber ? [{
+              query: `${analysisData.label} ${analysisData.catalogNumber}`,
+              type: 'label_catno',
+              format: formatFilter,
+              priority: 'medium'
+            }] : []),
+            
+            // Strategy 4: Artist + Title (MEDIUM for vinyl - more important without barcode)
+            ...(analysisData.artist && analysisData.title ? [{
+              query: `${analysisData.artist} ${analysisData.title}`,
+              type: 'artist_title_format',
+              format: formatFilter,
+              priority: 'medium'
+            }] : []),
+            
+            // Strategy 5: Barcode (FALLBACK - only modern vinyl has barcode)
+            ...(analysisData.barcode ? [{
+              query: analysisData.barcode,
+              type: 'barcode',
+              format: formatFilter,
+              priority: 'fallback'
+            }] : []),
+            
+            // Strategy 6: General fallback without format filter
+            ...(analysisData.artist && analysisData.title ? [{
+              query: `${analysisData.artist} ${analysisData.title}`,
+              type: 'general_fallback',
+              format: null,
+              priority: 'fallback'
+            }] : []),
+            
+            // Strategy 7: Additional search terms (FALLBACK)
+            ...(analysisData.searchQueries || []).map((q: string) => ({ 
+              query: q, 
+              type: 'alternative', 
+              format: null,
+              priority: 'fallback'
+            }))
+          ];
 
     let bestMatch = null
     let highestConfidence = 0
@@ -1424,14 +1490,27 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
             let confidencePoints = 0;
             const totalPossiblePoints = 150;
             
-            // Primary signals (highest weight)
-            if (searchMetadata.technicalMatches.barcode) {
-              confidencePoints += 50;
-              console.log(`📈 Barcode match: +50 points`);
-            }
-            if (matrixMatch) {
-              confidencePoints += 40;
-              console.log(`📈 Matrix match: +40 points`);
+            // MEDIA-SPECIFIC confidence scoring
+            if (mediaType === 'cd') {
+              // CD: Barcode has highest weight (CDs almost always have barcodes)
+              if (searchMetadata.technicalMatches.barcode) {
+                confidencePoints += 50;
+                console.log(`📈 [CD] Barcode match: +50 points (primary)`);
+              }
+              if (matrixMatch) {
+                confidencePoints += 40;
+                console.log(`📈 [CD] Matrix match: +40 points (critical)`);
+              }
+            } else {
+              // VINYL: Matrix has highest weight (older vinyl often lacks barcode)
+              if (matrixMatch) {
+                confidencePoints += 50;
+                console.log(`📈 [Vinyl] Matrix match: +50 points (primary)`);
+              }
+              if (searchMetadata.technicalMatches.barcode) {
+                confidencePoints += 20;
+                console.log(`📈 [Vinyl] Barcode match: +20 points (optional - modern vinyl only)`);
+              }
             }
             
             // Validation signals
@@ -1485,9 +1564,18 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
               searchMetadata.matrixVerified = verifiedByMatrix
             }
             
-            // 🎯 EARLY EXIT: Barcode + Matrix = 100% LOCKED match
-            if (searchMetadata.technicalMatches.barcode && matrixMatch) {
-              console.log('🎯 VERIFIED MATCH: Barcode + Matrix confirmed - LOCKED');
+            // 🎯 MEDIA-SPECIFIC EARLY EXIT for LOCKED verification
+            // CD: Barcode + Matrix = LOCKED (100% verified)
+            if (mediaType === 'cd' && searchMetadata.technicalMatches.barcode && matrixMatch) {
+              console.log('🎯 CD VERIFIED: Barcode + Matrix confirmed - LOCKED');
+              console.log(`   Release: ${bestMatch.title} (ID: ${bestMatch.id})`);
+              searchMetadata.verificationLevel = 'LOCKED';
+              break;
+            }
+            
+            // Vinyl: Matrix + Catno = LOCKED (barcode not required for older vinyl)
+            if (mediaType === 'vinyl' && matrixMatch && catnoMatch) {
+              console.log('🎯 VINYL VERIFIED: Matrix + Catalog confirmed - LOCKED');
               console.log(`   Release: ${bestMatch.title} (ID: ${bestMatch.id})`);
               searchMetadata.verificationLevel = 'LOCKED';
               break;

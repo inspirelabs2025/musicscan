@@ -1,0 +1,1 @@
+ALTER TABLE public.discogs_pricing_sessions ALTER COLUMN user_id DROP NOT NULL;

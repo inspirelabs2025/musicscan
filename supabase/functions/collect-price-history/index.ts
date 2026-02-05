@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { extractStatisticsPricing } from '../_shared/extract-statistics-pricing.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -178,8 +179,11 @@ async function collectPriceForAlbum(album: AlbumData, supabase: any, scraperApiK
       rawResponse = await response.text();
     }
 
-    // Parse price data from HTML
-    priceData = parsePriceDataFromHTML(rawResponse);
+    // Parse price data from Statistics section only
+    const statisticsPricing = extractStatisticsPricing(rawResponse);
+    priceData = statisticsPricing 
+      ? { ...statisticsPricing, num_for_sale: 0, total_prices_found: statisticsPricing.lowest_price ? 3 : 0 }
+      : { lowest_price: null, median_price: null, highest_price: null, num_for_sale: 0, total_prices_found: 0 };
     
     // Check if we got recent price data to avoid duplicates
     const { data: existingData } = await supabase
@@ -243,49 +247,4 @@ async function collectPriceForAlbum(album: AlbumData, supabase: any, scraperApiK
   }
 }
 
-function parsePriceDataFromHTML(html: string) {
-  const prices: number[] = [];
-  
-  // Look for price patterns in various formats
-  const pricePatterns = [
-    /€(\d+[.,]\d{2})/g,
-    /EUR\s*(\d+[.,]\d{2})/g,
-    /\$(\d+[.,]\d{2})/g,
-    /£(\d+[.,]\d{2})/g
-  ];
-
-  for (const pattern of pricePatterns) {
-    let match;
-    while ((match = pattern.exec(html)) !== null) {
-      const price = parseFloat(match[1].replace(',', '.'));
-      if (price > 0 && price < 1000) { // Reasonable price range
-        prices.push(price);
-      }
-    }
-  }
-
-  // Remove duplicates and sort
-  const uniquePrices = [...new Set(prices)].sort((a, b) => a - b);
-  
-  if (uniquePrices.length === 0) {
-    return {
-      lowest_price: null,
-      median_price: null,
-      highest_price: null,
-      num_for_sale: 0,
-      total_prices_found: 0
-    };
-  }
-
-  const median = uniquePrices.length % 2 === 0 
-    ? (uniquePrices[uniquePrices.length / 2 - 1] + uniquePrices[uniquePrices.length / 2]) / 2
-    : uniquePrices[Math.floor(uniquePrices.length / 2)];
-
-  return {
-    lowest_price: uniquePrices[0],
-    median_price: median,
-    highest_price: uniquePrices[uniquePrices.length - 1],
-    num_for_sale: uniquePrices.length,
-    total_prices_found: prices.length
-  };
-}
+// parsePriceDataFromHTML removed — now using shared extractStatisticsPricing helper

@@ -1152,6 +1152,83 @@ async function fetchDiscogsPricing(discogsId: number): Promise<{
 }
 
 /**
+ * MATRIX NORMALIZATION PATCH (CRITICAL)
+ * 
+ * Before any Discogs matching:
+ * 1. Split matrix_raw into tokens by whitespace.
+ * 2. Remove leading tokens that:
+ *    - have length < 3, OR
+ *    - are purely numeric, OR
+ *    - do not contain both letters and numbers.
+ * 3. Rejoin remaining tokens as matrix_canonical.
+ * 4. Use matrix_canonical for all matching and scoring.
+ * 5. Matrix match is TRUE if all canonical tokens exist in the Discogs candidate matrix (subset match).
+ * 
+ * Example:
+ * Input: "S 2 SUMCD 4164 01"
+ * Canonical: "SUMCD 4164 01"
+ */
+function normalizeMatrixRaw(matrixRaw: string): { canonical: string; tokens: string[]; raw: string } {
+  if (!matrixRaw) {
+    return { canonical: '', tokens: [], raw: '' };
+  }
+  
+  const rawNorm = matrixRaw.toUpperCase().replace(/\s+/g, ' ').trim();
+  const tokens = rawNorm.split(' ').filter(Boolean);
+  
+  // Find the first token that looks like a valid catalog/matrix identifier
+  // Valid tokens: length >= 3, contains both letters AND numbers (like "SUMCD" or "4164")
+  // OR is a pure number >= 3 digits that comes AFTER a valid catno-like token
+  let startIndex = 0;
+  
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    
+    // Skip tokens shorter than 3 characters
+    if (token.length < 3) {
+      startIndex = i + 1;
+      continue;
+    }
+    
+    // Check if token has alphanumeric structure (letters AND numbers)
+    const hasLetters = /[A-Z]/.test(token);
+    const hasNumbers = /[0-9]/.test(token);
+    
+    // If token has both letters and numbers, this is likely the start of the real matrix
+    if (hasLetters && hasNumbers) {
+      startIndex = i;
+      break;
+    }
+    
+    // If token is ONLY letters (single char like "S") or ONLY numbers ("2"), skip it as noise
+    if ((hasLetters && !hasNumbers && token.length < 3) || (!hasLetters && hasNumbers && token.length < 3)) {
+      startIndex = i + 1;
+      continue;
+    }
+    
+    // If we hit a token that looks like a real identifier (e.g., pure catno), start here
+    if (hasLetters || (hasNumbers && token.length >= 3)) {
+      startIndex = i;
+      break;
+    }
+  }
+  
+  const canonicalTokens = tokens.slice(startIndex);
+  const canonical = canonicalTokens.join(' ');
+  
+  console.log(`   🔧 Matrix Normalization:`);
+  console.log(`      Raw: "${rawNorm}"`);
+  console.log(`      Canonical: "${canonical}"`);
+  console.log(`      Tokens removed: ${startIndex} leading noise token(s)`);
+  
+  return {
+    canonical,
+    tokens: canonicalTokens,
+    raw: rawNorm
+  };
+}
+
+/**
  * MusicScan Discogs Matching Protocol v3.0
  * 
  * 🎯 KERNPRINCIPE: Technische identifiers bepalen waarheid. Titel/artiest zijn decoratie.
@@ -1194,9 +1271,12 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     const catnoNorm = analysisData.catalogNumber 
       ? analysisData.catalogNumber.toUpperCase().replace(/\s+/g, ' ').trim()
       : null;
-    const matrixNorm = (analysisData.matrixNumber || analysisData.matrixNumberFull || '')
-      .toUpperCase().replace(/\s+/g, ' ').trim();
-    const matrixTokens = matrixNorm ? matrixNorm.split(' ').filter(Boolean) : [];
+    
+    // 🔧 MATRIX NORMALIZATION: Remove leading noise tokens
+    const matrixRaw = analysisData.matrixNumber || analysisData.matrixNumberFull || '';
+    const matrixNormalized = normalizeMatrixRaw(matrixRaw);
+    const matrixNorm = matrixNormalized.canonical;
+    const matrixTokens = matrixNormalized.tokens;
     
     console.log('📋 GENORMALISEERDE IDENTIFIERS:');
     console.log(`   barcode_digits: ${barcodeDigits || '(geen)'}`);
@@ -1613,38 +1693,66 @@ async function verifyCandidate(
     
     console.log(`\n   📀 Verifying candidate: ${candidate.title} (ID: ${candidate.id})`);
     
-    // === CHECK MATRIX (50 points) ===
-    if (matrixNorm && releaseDetails.identifiers) {
+    // === CHECK MATRIX (50 points) - TOKEN SUBSET MATCHING ===
+    // Matrix match is TRUE if all canonical tokens exist in the Discogs candidate matrix
+    if (matrixNorm && matrixTokens.length > 0 && releaseDetails.identifiers) {
       for (const identifier of releaseDetails.identifiers) {
         if (identifier.type === 'Matrix / Runout' && identifier.value) {
-          const discogsMatrix = identifier.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-          const extractedMatrix = matrixNorm.replace(/[^A-Z0-9]/g, '');
+          const discogsMatrixRaw = identifier.value.toUpperCase();
+          const discogsMatrixAlphaNum = discogsMatrixRaw.replace(/[^A-Z0-9]/g, '');
+          const discogsMatrixTokens = discogsMatrixRaw.split(/[\s\-\/]+/).filter(Boolean);
           
-          // Exact match or contains
-          if (discogsMatrix === extractedMatrix || 
-              discogsMatrix.includes(extractedMatrix) || 
-              extractedMatrix.includes(discogsMatrix)) {
+          // Strategy 1: Exact string match (after alphanumeric normalization)
+          const extractedMatrixAlphaNum = matrixNorm.replace(/[^A-Z0-9]/g, '');
+          if (discogsMatrixAlphaNum === extractedMatrixAlphaNum) {
             result.points += 50;
             result.matched_on.push('matrix');
             result.technical_matches.matrix = true;
             result.explain.push(`Matrix '${matrixNorm}' matched exactly`);
-            console.log(`      ✅ Matrix match: +50 points`);
+            console.log(`      ✅ Matrix exact match: +50 points`);
             break;
           }
           
-          // Token match (any significant token found)
-          for (const token of matrixTokens) {
-            if (token.length >= 3 && discogsMatrix.includes(token.replace(/[^A-Z0-9]/g, ''))) {
+          // Strategy 2: Token subset match
+          // All canonical tokens from OCR must exist in the Discogs matrix tokens
+          const significantTokens = matrixTokens.filter(t => t.length >= 3);
+          if (significantTokens.length > 0) {
+            const allTokensFound = significantTokens.every(token => {
+              const tokenAlphaNum = token.replace(/[^A-Z0-9]/g, '');
+              // Check if token exists in Discogs matrix (as substring or exact token match)
+              return discogsMatrixAlphaNum.includes(tokenAlphaNum) ||
+                     discogsMatrixTokens.some(dt => dt.replace(/[^A-Z0-9]/g, '').includes(tokenAlphaNum));
+            });
+            
+            if (allTokensFound) {
               result.points += 50;
               result.matched_on.push('matrix');
               result.technical_matches.matrix = true;
-              result.explain.push(`Matrix token '${token}' matched in '${identifier.value}'`);
-              console.log(`      ✅ Matrix token match: +50 points`);
+              result.explain.push(`Matrix tokens [${significantTokens.join(', ')}] all found in '${identifier.value}'`);
+              console.log(`      ✅ Matrix token subset match: +50 points`);
+              console.log(`         OCR tokens: [${significantTokens.join(', ')}]`);
+              console.log(`         Discogs matrix: "${identifier.value}"`);
               break;
             }
           }
-          if (result.technical_matches.matrix) break;
+          
+          // Strategy 3: Contains match (either direction)
+          if (discogsMatrixAlphaNum.includes(extractedMatrixAlphaNum) || 
+              extractedMatrixAlphaNum.includes(discogsMatrixAlphaNum)) {
+            result.points += 50;
+            result.matched_on.push('matrix');
+            result.technical_matches.matrix = true;
+            result.explain.push(`Matrix '${matrixNorm}' contained in Discogs matrix`);
+            console.log(`      ✅ Matrix contains match: +50 points`);
+            break;
+          }
         }
+      }
+      
+      if (!result.technical_matches.matrix) {
+        console.log(`      ❌ Matrix NOT matched`);
+        console.log(`         OCR canonical: "${matrixNorm}"`);
+        console.log(`         OCR tokens: [${matrixTokens.join(', ')}]`);
       }
     }
     

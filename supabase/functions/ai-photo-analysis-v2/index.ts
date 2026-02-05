@@ -1286,39 +1286,42 @@ function normalizeMatrixRaw(matrixRaw: string): { canonical: string; tokens: str
 }
 
 /**
- * MusicScan Discogs Matching Protocol v3.0
+ * MusicScan Discogs Matching Protocol v4.0 (CANONICAL · NO FALSE NEGATIVES)
  * 
- * 🎯 KERNPRINCIPE: Technische identifiers bepalen waarheid. Titel/artiest zijn decoratie.
+ * 🎯 KERNPRINCIPE: Barcode + catalog number define the release. Matrix refines, never blocks.
  * 
  * HIËRARCHIE (VERPLICHTE VOLGORDE):
  * 1. BARCODE (PRIMARY) - ❌ NOOIT format filter
  * 2. CATNO + LABEL (HIGH) - ❌ NOOIT format filter  
  * 3. ARTIST + TITLE (FALLBACK) - ⚠️ MAG NOOIT AUTO-SELECTEREN
  * 
- * SCORING:
- * - Matrix exact: +50 (DOORSLAGGEVEND)
+ * SCORING (MAX 160):
+ * - Matrix match (relaxed subset): +50
  * - Barcode exact: +40
  * - Catno exact: +25
  * - Label exact: +15
  * - Year exact: +10
  * - Country exact: +10
+ * - IFPI codes present: +5
  * - Title similarity: +5
- * Total: 155 punten
+ * Total: 160 punten
  * 
- * LOCK CONDITIONS (early exit):
+ * LOCK CONDITIONS (NON-NEGOTIABLE):
  * - Matrix + Barcode
  * - Matrix + Catno
- * - Matrix + Label + Year
+ * - Barcode + Catno ← REQUIRED (no matrix needed)
+ * - Barcode + Label + Year
  * 
  * HARD GATING:
  * - Score < 70 → NO_MATCH
+ * - Never require matrix match if barcode + catno match
  * - Fuzzy-only match bij aanwezige identifiers → manual_review_required
  */
 async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'cd') {
   try {
     const formatFilter = mediaType === 'vinyl' ? 'Vinyl' : 'CD';
     console.log(`\n${'='.repeat(60)}`);
-    console.log(`🎯 MusicScan Protocol v3.0 - ${mediaType.toUpperCase()} MATCHING`);
+    console.log(`🎯 MusicScan Protocol v4.0 - ${mediaType.toUpperCase()} MATCHING`);
     console.log(`${'='.repeat(60)}`);
     
     // === NORMALISATIE (ALTIJD UITVOEREN) ===
@@ -1354,7 +1357,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     
     // Search metadata voor debugging en output
     const searchMetadata = {
-      protocol_version: '3.0',
+      protocol_version: '4.0',
       strategies_executed: [] as any[],
       total_searches: 0,
       best_strategy: null as string | null,
@@ -1662,12 +1665,12 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       
       const finalArtist = parsedArtist || analysisData.artist;
       const finalTitle = parsedTitle || analysisData.title;
-      const confidenceNormalized = bestConfidencePoints / 155; // Normalize to 0-1
+      const confidenceNormalized = bestConfidencePoints / 160; // Normalize to 0-1 (V4 max score)
       
       console.log(`\n✅ MATCH FOUND`);
       console.log(`   Release: ${finalArtist} - ${finalTitle}`);
       console.log(`   Discogs ID: ${bestMatch.id}`);
-      console.log(`   Score: ${bestConfidencePoints}/155 (${(confidenceNormalized * 100).toFixed(1)}%)`);
+      console.log(`   Score: ${bestConfidencePoints}/160 (${(confidenceNormalized * 100).toFixed(1)}%)`);
       console.log(`   Verification: ${searchMetadata.verification_level || 'standard'}`);
       console.log(`   Lock Reason: ${searchMetadata.lock_reason || 'N/A'}`);
       console.log(`   Matched On: [${searchMetadata.matched_on.join(', ')}]`);
@@ -1728,7 +1731,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       year: analysisData.year,
       confidence: 0,
       matrixVerified: false,
-      searchMetadata: { error: error.message, protocol_version: '3.0' }
+      searchMetadata: { error: error.message, protocol_version: '4.0' }
     };
   }
 }
@@ -1780,7 +1783,7 @@ async function verifyCandidate(
     // Fetch full release details
     const releaseResponse = await fetch(`https://api.discogs.com/releases/${candidate.id}`, {
       headers: {
-        'User-Agent': 'MusicScanApp/3.0',
+        'User-Agent': 'MusicScan/1.0 +https://musicscan.app',
         'Authorization': `Discogs token=${Deno.env.get('DISCOGS_TOKEN')}`
       }
     });
@@ -1947,11 +1950,31 @@ async function verifyCandidate(
       }
     }
     
-    console.log(`      📊 Total: ${result.points}/155 points`);
+    // === IFPI CODES (5 points) - V4 NEW ===
+    // Check if ANY IFPI codes are present in the candidate (adds confidence)
+    if (releaseDetails.identifiers) {
+      const hasIfpi = releaseDetails.identifiers.some((id: any) => 
+        id.type && (id.type.includes('IFPI') || id.type.includes('Mastering SID Code') || id.type.includes('Mould SID Code'))
+      );
+      if (hasIfpi) {
+        result.points += 5;
+        result.matched_on.push('ifpi');
+        result.explain.push('IFPI codes detected in release');
+        console.log(`      ✅ IFPI codes present: +5 points`);
+      }
+    }
     
-    // === LOCK CONDITIONS ===
-    // PATCH B: Added Barcode + Catno lock (even without valid matrix)
-    if (result.technical_matches.matrix) {
+    console.log(`      📊 Total: ${result.points}/160 points`);
+    
+    // === LOCK CONDITIONS (V4 NON-NEGOTIABLE) ===
+    // Priority 1: Barcode + Catno = LOCKED (most reliable, no matrix needed)
+    if (result.technical_matches.barcode && result.technical_matches.catno) {
+      result.lock_reason = 'Barcode + Catalog match';
+      result.explain.push('Barcode and catalog number both matched (no matrix required)');
+      console.log(`      🔒 LOCK: Barcode + Catno = verified (highest confidence)`);
+    }
+    // Priority 2: Matrix-based locks
+    else if (result.technical_matches.matrix) {
       if (result.technical_matches.barcode) {
         result.lock_reason = 'Matrix + Barcode match';
       } else if (result.technical_matches.catno) {
@@ -1960,13 +1983,10 @@ async function verifyCandidate(
         result.lock_reason = 'Matrix + Label + Year confirmed';
       }
     }
-    
-    // NEW LOCK RULE: Barcode + Catno = LOCKED (even without valid matrix)
-    // Rationale: barcode + catno together are unique enough for CDs
-    if (!result.lock_reason && result.technical_matches.barcode && result.technical_matches.catno) {
-      result.lock_reason = 'Barcode + Catalog match';
-      result.explain.push('Barcode and catalog number both matched (no matrix required)');
-      console.log(`      🔒 NEW LOCK: Barcode + Catno = verified`);
+    // Priority 3: Barcode + Label + Year (when catno missing)
+    else if (result.technical_matches.barcode && result.technical_matches.label && result.technical_matches.year) {
+      result.lock_reason = 'Barcode + Label + Year match';
+      console.log(`      🔒 LOCK: Barcode + Label + Year = verified`);
     }
     
   } catch (err) {

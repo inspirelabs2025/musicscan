@@ -1,114 +1,152 @@
 
-# MusicScan Discogs Matching Protocol v3.0
+# MusicScan Discogs Matching Protocol v4.0 (CANONICAL · NO FALSE NEGATIVES)
 
-## ✅ GEÏMPLEMENTEERD
+## 🎯 Core Principle
 
-### Kernprincipe
-**Technische identifiers bepalen waarheid. Titel en artiest zijn slechts decoratie.**
+**Barcode + catalog number define the release. Matrix refines, never blocks.**
 
-## Zoek Hiërarchie (VERPLICHTE VOLGORDE)
+False negatives are unacceptable.
+False positives are worse → choose NO_MATCH over guessing.
 
-### 🥇 STRATEGY 1: BARCODE (PRIMARY, HARD)
+## 🔧 Normalization (Mandatory)
+
 ```
-Parameters: barcode={barcode_digits}&type=release
-❌ VERBODEN: format, country, year, fuzzy q
-```
-
-### 🥈 STRATEGY 2: CATNO + LABEL (HIGH)
-```
-Parameters: catno={catno_norm}&type=release
-Optioneel: &label={label}
-❌ VERBODEN: format
+barcode_digits = digits only (5027626416423)
+catno_norm = uppercase, collapse spaces
+matrix_canonical = remove leading noise tokens (length < 3, purely numeric)
 ```
 
-### 🥉 STRATEGY 3: ARTIST + TITLE (SUGGEST ONLY)
+### Matrix Normalization Example
 ```
-Parameters: artist={artist}&release_title={title}&type=release&format={CD|Vinyl}
-⚠️ MAG NOOIT automatisch selecteren bij aanwezige technische identifiers
+"S 2 SUMCD 4164 01" → ["SUMCD","4164","01"] → "SUMCD 4164 01"
 ```
 
-## Matrix Sanity Guard (PATCH A - NIEUW)
+## 🔍 Discogs Search Strategy
 
-Voorkomt dat barcode-achtige OCR-output als matrix wordt behandeld.
+### 🥇 STRATEGY 1: BARCODE (PRIMARY)
+```
+GET /database/search?barcode={barcode_digits}&type=release
+```
+❌ FORBIDDEN: `q=`, `format=`, any other filters
 
-**Regels:**
-1. Als `matrix_digits` ≥ 12 cijfers EN geen significante alpha tokens → `matrix_valid = false`
-2. Als EAN-13 patroon (13 digits, geen letters) → `matrix_valid = false`
-3. Als canonical form nog steeds ≥10 digits zonder letters → `matrix_valid = false`
+### 🥈 STRATEGY 2: CATNO (+ optional label)
+```
+GET /database/search?catno={catno_norm}&type=release
+```
+❌ FORBIDDEN: `format=`
 
-**Effect:**
-- Matrix wordt NIET gebruikt voor matching
-- Matrix score = 0
-- Matrix LOCK rules zijn uitgeschakeld
+### ⛔ STRATEGY 3: ARTIST/TITLE
+Never auto-select. Suggestion only for manual review.
 
-## Matrix Normalization
+## 🧪 Verification & Scoring (MAX 160)
 
-Voor matching wordt matrix eerst genormaliseerd:
-1. Verwijder leading noise tokens (< 3 chars, puur numeriek)
-2. Behoud tokens met letters+cijfers (catno-achtig)
-3. Token-subset matching (niet string-exact)
-
-## Confidence Scoring
-
-| Check | Punten |
+| Check | Points |
 |-------|--------|
-| Matrix exact match | +50 (DOORSLAGGEVEND, alleen als matrix_valid=true) |
+| Matrix match (relaxed subset, order-insensitive) | +50 |
 | Barcode exact match | +40 |
 | Catno exact match | +25 |
 | Label exact match | +15 |
 | Year exact match | +10 |
 | Country exact match | +10 |
+| IFPI codes present | +5 |
 | Title similarity | +5 |
-| **Maximum** | **155** |
+| **Maximum** | **160** |
 
-## Lock Conditions (Early Exit)
+### Matrix Matching (RELAXED BUT SAFE)
+Matrix match = TRUE if ALL canonical tokens appear in candidate matrix tokens.
+- Order-insensitive
+- Subset match
+- Matrix absence does NOT block if barcode + catno match
 
-Stop onmiddellijk als één van deze waar is:
+## 🔒 Lock Conditions (NON-NEGOTIABLE)
 
-### Matrix-gebaseerde locks (alleen als matrix_valid=true):
-- ✅ Matrix + Barcode match → `LOCKED`
-- ✅ Matrix + Catno match → `LOCKED`
-- ✅ Matrix + Label + Year match → `LOCKED`
+Immediately `LOCKED` if ANY is true:
 
-### Nieuwe lock (PATCH B):
-- ✅ **Barcode + Catno match → `LOCKED`** (ook zonder geldige matrix!)
+1. **Barcode + Catno match** ← HIGHEST PRIORITY
+2. Matrix + Barcode match
+3. Matrix + Catno match
+4. Barcode + Label + Year match
+5. Matrix + Label + Year match
 
-**Rationale:** Barcode + catno samen zijn uniek genoeg voor CD's.
+➡️ Status = `verified`
 
-## Hard Gating Rules
+## ⛔ Hard Gating Rules
 
-### RULE 1: Identifier Minimum
-Een release MAG NIET gekozen worden als:
-- Geen match op barcode, catno of matrix
-- → DISQUALIFY
+- Never require matrix match if barcode + catno match
+- Never drop to fuzzy title matching when barcode exists
+- Confidence < 70 → `no_match`
+- Strategy 3 results = suggestion only, never auto-select
+- Must match at least TWO of {barcode, catno, matrix} OR score >= 70
 
-### RULE 2: Confidence Threshold
-- Score < 70 → NO_MATCH
-- Score ≥ 70 → eligible
+## 🌐 HTTP Integrity Rules
 
-### RULE 3: Fallback Safety
-Als STRATEGY 3 (fuzzy) is gebruikt bij aanwezige technische identifiers:
-- Auto-selectie = VERBODEN
-- Status = `manual_review_required`
+For EVERY Discogs API call:
 
-## Absoluut Verboden Gedrag
+**Required Headers:**
+```
+User-Agent: MusicScan/1.0 +https://musicscan.app
+Authorization: Discogs token=YOUR_TOKEN
+```
 
-- ❌ NOOIT format filter op barcode of catno searches
-- ❌ NOOIT fuzzy title/artist match kiezen bij aanwezige technische identifiers
-- ❌ NOOIT confidence afronden of ophogen
-- ❌ NOOIT "best guess" selecties
+**Response Handling:**
+- HTTP status ≠ 200 → STOP, return `api_error`
+- Parse results ONLY from `json.results` array
+- `results.length === 0` is legitimate empty (not an error)
 
-## Succescriterium (REGRESSION TEST)
+## ✅ Regression Test (MANDATORY)
 
 **Input:**
-- Barcode: `5027626416423`
-- Catno: `SUMCD 4164`
-- Matrix: `S 027626 416423` (barcode-lek, zal als invalid worden gemarkeerd)
+```
+Barcode: 5027626416423
+Catno: SUMCD 4164
+Matrix: SUMCD 4164 01 (or "S 2 SUMCD 4164 01")
+```
 
-**MOET resulteren in:**
+**MUST return:**
 ```
 Release: 4381440
+URL: https://www.discogs.com/release/4381440
 Lock: "Barcode + Catalog match"
-Confidence: 65+ punten (barcode=40 + catno=25)
+Confidence: 65+ points (barcode=40 + catno=25)
 ```
-Discogs URL: https://www.discogs.com/release/4381440
+
+## 📤 Output Format
+
+### ✅ Verified
+```json
+{
+  "status": "verified",
+  "discogs_release_id": 4381440,
+  "discogs_url": "https://www.discogs.com/release/4381440",
+  "confidence_score": 155,
+  "matched_on": ["barcode", "catno", "matrix"],
+  "explain": [
+    "Barcode matched exactly",
+    "Catalog number matched",
+    "Matrix canonical match after noise removal"
+  ]
+}
+```
+
+### ❌ API Error
+```json
+{
+  "status": "api_error",
+  "reason": "Discogs API returned non-200 response",
+  "action": "retry_with_backoff_or_manual_review"
+}
+```
+
+### ❌ No Match
+```json
+{
+  "status": "no_match",
+  "reason": "No Discogs release matches barcode and catalog number",
+  "action": "manual_review_required"
+}
+```
+
+## 🧠 Final Principle
+
+> A empty candidate set is acceptable.
+> A incorrect match is never acceptable.

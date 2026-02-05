@@ -1496,31 +1496,29 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
               }
             }
             
-            // NEW: Point-based confidence scoring (total: 150 points)
+            // === PROTOCOL CONFIDENCE SCORING (fixed weights - not media-specific) ===
+            // According to MusicScan protocol:
+            // Matrix exact/fuzzy = +50 (highest - DOORSLAGGEVEND)
+            // Barcode exact = +40 (secondary)
+            // Catno exact = +25
+            // Label exact = +15
+            // Year exact = +10
+            // Country exact = +10
+            // Total: 150 points
+            
             let confidencePoints = 0;
             const totalPossiblePoints = 150;
             
-            // MEDIA-SPECIFIC confidence scoring
-            if (mediaType === 'cd') {
-              // CD: Barcode has highest weight (CDs almost always have barcodes)
-              if (searchMetadata.technicalMatches.barcode) {
-                confidencePoints += 50;
-                console.log(`📈 [CD] Barcode match: +50 points (primary)`);
-              }
-              if (matrixMatch) {
-                confidencePoints += 40;
-                console.log(`📈 [CD] Matrix match: +40 points (critical)`);
-              }
-            } else {
-              // VINYL: Matrix has highest weight (older vinyl often lacks barcode)
-              if (matrixMatch) {
-                confidencePoints += 50;
-                console.log(`📈 [Vinyl] Matrix match: +50 points (primary)`);
-              }
-              if (searchMetadata.technicalMatches.barcode) {
-                confidencePoints += 20;
-                console.log(`📈 [Vinyl] Barcode match: +20 points (optional - modern vinyl only)`);
-              }
+            // 🎯 Matrix = ALTIJD HOOGSTE GEWICHT (doorslaggevend voor identificatie)
+            if (matrixMatch) {
+              confidencePoints += 50;
+              console.log(`📈 Matrix match: +50 points (DOORSLAGGEVEND)`);
+            }
+            
+            // 🔢 Barcode = secundair (hard bewijs maar niet per se pressing-specifiek)
+            if (searchMetadata.technicalMatches.barcode) {
+              confidencePoints += 40;
+              console.log(`📈 Barcode match: +40 points (hard bewijs)`);
             }
             
             // Validation signals
@@ -1539,12 +1537,6 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
             if (countryMatch) {
               confidencePoints += 10;
               console.log(`📈 Country match: +10 points`);
-            }
-            
-            // SID bonus (additional verification)
-            if (sidMatch) {
-              confidencePoints += 10;
-              console.log(`📈 SID match: +10 points`);
             }
             
             // Normalize to 0-1 scale
@@ -1574,21 +1566,37 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
               searchMetadata.matrixVerified = verifiedByMatrix
             }
             
-            // 🎯 MEDIA-SPECIFIC EARLY EXIT for LOCKED verification
-            // CD: Barcode + Matrix = LOCKED (100% verified)
-            if (mediaType === 'cd' && searchMetadata.technicalMatches.barcode && matrixMatch) {
-              console.log('🎯 CD VERIFIED: Barcode + Matrix confirmed - LOCKED');
-              console.log(`   Release: ${bestMatch.title} (ID: ${bestMatch.id})`);
-              searchMetadata.verificationLevel = 'LOCKED';
-              break;
+            // 🎯 PROTOCOL: MATRIX IS ALWAYS DOORSLAGGEVEND
+            // Matrix + ANY secondary identifier = LOCKED (100% verified)
+            // Priority: Matrix+Barcode > Matrix+Catno > Matrix+Label
+            if (matrixMatch) {
+              if (searchMetadata.technicalMatches.barcode) {
+                console.log('🎯 LOCKED: Matrix + Barcode confirmed');
+                console.log(`   Release: ${bestMatch.title} (ID: ${bestMatch.id})`);
+                console.log(`   Confidence: ${confidencePoints}/${totalPossiblePoints} = ${(confidence * 100).toFixed(1)}%`);
+                searchMetadata.verificationLevel = 'LOCKED';
+                break;
+              } else if (catnoMatch) {
+                console.log('🎯 LOCKED: Matrix + Catalog confirmed');
+                console.log(`   Release: ${bestMatch.title} (ID: ${bestMatch.id})`);
+                console.log(`   Confidence: ${confidencePoints}/${totalPossiblePoints} = ${(confidence * 100).toFixed(1)}%`);
+                searchMetadata.verificationLevel = 'LOCKED';
+                break;
+              } else if (labelMatch && yearMatch) {
+                console.log('🎯 LOCKED: Matrix + Label + Year confirmed');
+                console.log(`   Release: ${bestMatch.title} (ID: ${bestMatch.id})`);
+                console.log(`   Confidence: ${confidencePoints}/${totalPossiblePoints} = ${(confidence * 100).toFixed(1)}%`);
+                searchMetadata.verificationLevel = 'LOCKED';
+                break;
+              }
             }
             
-            // Vinyl: Matrix + Catno = LOCKED (barcode not required for older vinyl)
-            if (mediaType === 'vinyl' && matrixMatch && catnoMatch) {
-              console.log('🎯 VINYL VERIFIED: Matrix + Catalog confirmed - LOCKED');
+            // 🔢 BARCODE + CATNO = HIGH (barcode is unique per commercial release)
+            if (searchMetadata.technicalMatches.barcode && catnoMatch && !matrixMatch) {
+              console.log('🎯 HIGH: Barcode + Catalog confirmed (matrix pending)');
               console.log(`   Release: ${bestMatch.title} (ID: ${bestMatch.id})`);
-              searchMetadata.verificationLevel = 'LOCKED';
-              break;
+              searchMetadata.verificationLevel = 'HIGH';
+              // Don't break - continue searching for matrix confirmation
             }
           }
         }

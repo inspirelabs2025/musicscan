@@ -190,84 +190,37 @@ export const useDiscogsSearch = () => {
     }, SEARCH_TIMEOUT);
     
     try {
-      // Phase 1: Quick search without pricing for immediate results
+      // Single search with pricing included - no double loading
       const { data: quickData, error: quickError } = await supabase.functions.invoke('optimized-catalog-search', {
         body: {
           catalog_number: catalogNumber.trim(),
           artist: artist?.trim(),
           title: title?.trim(),
-          include_pricing: false // Skip pricing for speed
+          include_pricing: includePricing
         }
       });
 
       if (quickError) throw quickError;
 
-      console.log('⚡ Quick search completed:', quickData);
+      console.log('⚡ Search completed:', quickData);
       
       if (quickData?.results?.length > 0) {
-        const normalizedQuickResults: DiscogsSearchResult[] = quickData.results.map((r: any) => ({
+        const normalizedResults: DiscogsSearchResult[] = quickData.results.map((r: any) => ({
           ...r,
           pricing_stats: normalizePricingStats(r.pricing_stats)
         }));
 
-        // Show results immediately without pricing
-        setSearchResults(normalizedQuickResults);
+        setSearchResults(normalizedResults);
         setSearchStrategies(quickData.search_strategies || []);
         
         toast({
           title: "Gevonden!",
-          description: `${normalizedQuickResults.length} resultaat${normalizedQuickResults.length > 1 ? 'en' : ''} gevonden${includePricing ? ' - prijzen worden geladen...' : ''}`,
+          description: `${normalizedResults.length} resultaat${normalizedResults.length > 1 ? 'en' : ''} gevonden`,
           variant: "default"
         });
         
-        // Cache quick results
-        setCachedResult(searchKey, normalizedQuickResults, quickData.search_strategies || []);
-        
-        // Phase 2: Load pricing asynchronously if requested
-        if (includePricing && quickData.results[0]) {
-          console.log('💰 Loading pricing data asynchronously...');
-          setIsPricingLoading(true);
-          
-          setTimeout(async () => {
-            try {
-              const { data: pricingData, error: pricingError } = await supabase.functions.invoke('test-catalog-search', {
-                body: { 
-                  direct_discogs_id: quickData.results[0].discogs_id || quickData.results[0].id,
-                  include_pricing: true
-                }
-              });
-              
-              if (!pricingError && pricingData?.results?.[0]?.pricing_stats) {
-                const normalizedStats = normalizePricingStats(pricingData.results[0].pricing_stats);
-
-                // Update results with pricing data
-                setSearchResults(prev => {
-                  const updated = [...prev];
-                  if (updated[0]) {
-                    updated[0] = {
-                      ...updated[0],
-                      pricing_stats: normalizedStats
-                    };
-                  }
-                  return updated;
-                });
-                
-                // Update cache with pricing
-                const updatedResults: DiscogsSearchResult[] = [
-                  { ...normalizedQuickResults[0], pricing_stats: normalizedStats },
-                  ...normalizedQuickResults.slice(1)
-                ];
-                setCachedResult(searchKey, updatedResults, quickData.search_strategies || []);
-                
-                console.log('✅ Pricing data loaded and applied');
-              }
-            } catch (pricingError) {
-              console.error('⚠️ Pricing load failed (non-critical):', pricingError);
-            } finally {
-              setIsPricingLoading(false);
-            }
-          }, 100);
-        }
+        // Cache results
+        setCachedResult(searchKey, normalizedResults, quickData.search_strategies || []);
         
         return { results: quickData.results, strategies_used: quickData.search_strategies };
       } else {
@@ -365,11 +318,11 @@ export const useDiscogsSearch = () => {
     try {
       console.log('🆔 Starting optimized Discogs ID search:', discogsId);
       
-      // Phase 1: Get release data immediately (without pricing)
+      // Single search with pricing included - no double loading
       const { data: releaseData, error: releaseError } = await supabase.functions.invoke('optimized-catalog-search', {
         body: { 
           direct_discogs_id: discogsId,
-          include_pricing: false // Skip pricing for immediate results
+          include_pricing: true
         }
       });
 
@@ -403,51 +356,14 @@ export const useDiscogsSearch = () => {
           pricing_stats: normalizePricingStats(result.pricing_stats)
         };
         
-        // Show results immediately
         setSearchResults([formattedResult]);
         setSearchStrategies(['Direct Discogs ID']);
         
         toast({
           title: "Gevonden!",
-          description: `Album gevonden - prijzen worden geladen...`,
+          description: `Album gevonden met prijsinformatie`,
           variant: "default"
         });
-        
-        // Phase 2: Load pricing asynchronously
-        setIsPricingLoading(true);
-        setTimeout(async () => {
-          try {
-            console.log('💰 Loading pricing for Discogs ID:', discogsId);
-            
-            const { data: pricingData, error: pricingError } = await supabase.functions.invoke('test-catalog-search', {
-              body: { 
-                direct_discogs_id: discogsId,
-                include_pricing: true
-              }
-            });
-            
-             if (!pricingError && pricingData?.results?.[0]?.pricing_stats) {
-               const normalizedStats = normalizePricingStats(pricingData.results[0].pricing_stats);
-
-               setSearchResults(prev => {
-                 const updated = [...prev];
-                 if (updated[0]) {
-                   updated[0] = {
-                     ...updated[0],
-                     pricing_stats: normalizedStats
-                   };
-                 }
-                 return updated;
-               });
-              
-              console.log('✅ Pricing data loaded for Discogs ID');
-            }
-          } catch (pricingError) {
-            console.error('⚠️ Pricing load failed (non-critical):', pricingError);
-          } finally {
-            setIsPricingLoading(false);
-          }
-        }, 100);
       }
 
     } catch (error) {

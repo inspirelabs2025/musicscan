@@ -47,7 +47,7 @@ interface AnalysisResult {
     barcode?: string | null;
     genre?: string | null;
     country?: string | null;
-    // Pricing from Discogs (now included in V2 response)
+    // Pricing from Discogs
     pricing_stats?: {
       lowest_price: number | null;
       median_price: number | null;
@@ -57,6 +57,13 @@ interface AnalysisResult {
       blocked?: boolean;
       blocked_reason?: string;
     } | null;
+    // Collector-grade additions
+    match_status?: string;
+    missing_fields?: string[];
+    photo_guidance?: Array<{ field: string; instruction: string }>;
+    collector_audit?: Array<{ step: string; detail: string; timestamp: string }>;
+    suggestions?: Array<{ id: number; title: string; catno?: string; year?: number; country?: string; url?: string }>;
+    search_metadata?: any;
   };
   version: string;
 }
@@ -466,6 +473,13 @@ export default function AIScanV2() {
                   <CheckCircle className="h-5 w-5 text-green-500" />
                   V2 Analyse Resultaat
                   <Badge variant="outline">{analysisResult.version}</Badge>
+                  {analysisResult.result.match_status && analysisResult.result.match_status !== 'single_match' && (
+                    <Badge variant={analysisResult.result.match_status === 'needs_more_photos' ? 'secondary' : 'destructive'}>
+                      {analysisResult.result.match_status === 'needs_more_photos' ? '📸 Meer foto\'s nodig' :
+                       analysisResult.result.match_status === 'multiple_candidates' ? '🔍 Meerdere mogelijkheden' :
+                       analysisResult.result.match_status === 'no_match' ? '❌ Geen match' : analysisResult.result.match_status}
+                    </Badge>
+                  )}
                 </CardTitle>
               </div>
               <Button onClick={resetForm} variant="outline">
@@ -679,6 +693,96 @@ export default function AIScanV2() {
                     </a>
                   </Button>
                 </div>}
+
+              {/* Photo Guidance - when missing fields */}
+              {analysisResult.result.photo_guidance && analysisResult.result.photo_guidance.length > 0 && (
+                <div className="pt-4 border-t">
+                  <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4 space-y-3">
+                    <h3 className="text-sm font-semibold flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                      <Camera className="h-4 w-4" />
+                      Volgende beste foto's
+                    </h3>
+                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                      De volgende velden zijn niet gedetecteerd. Betere foto's kunnen de match verbeteren:
+                    </p>
+                    <div className="space-y-2">
+                      {analysisResult.result.photo_guidance.map((g) => (
+                        <div key={g.field} className="flex gap-2 rounded-md bg-white/60 dark:bg-white/5 p-2.5 text-sm">
+                          <span className="text-lg shrink-0">
+                            {g.field === 'matrix' ? '💿' : g.field === 'ifpi' ? '🔍' : g.field === 'barcode' ? '📊' : '🏷️'}
+                          </span>
+                          <div>
+                            <div className="font-medium text-amber-900 dark:text-amber-200 capitalize">
+                              {g.field === 'ifpi' ? 'IFPI codes' : g.field === 'catno' ? 'Catalogusnummer' : g.field}
+                            </div>
+                            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">{g.instruction}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Suggestions - when no single match */}
+              {analysisResult.result.suggestions && analysisResult.result.suggestions.length > 0 && (
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    🔍 Mogelijke releases ({analysisResult.result.suggestions.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {analysisResult.result.suggestions.map((s, i) => (
+                      <div key={s.id} className="rounded-lg border p-3 text-sm hover:bg-muted/50 transition-colors">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs text-muted-foreground">#{i + 1}</span>
+                              <span className="font-medium truncate">{s.title}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1 text-xs text-muted-foreground">
+                              {s.catno && <span>{s.catno}</span>}
+                              {s.year && <span>· {s.year}</span>}
+                              {s.country && <span>· {s.country}</span>}
+                            </div>
+                          </div>
+                          {s.url && (
+                            <Button variant="ghost" size="sm" className="h-7 px-2 shrink-0" asChild>
+                              <a href={s.url} target="_blank" rel="noopener noreferrer">
+                                Bekijk →
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Collector Audit Log */}
+              {analysisResult.result.collector_audit && analysisResult.result.collector_audit.length > 0 && (
+                <div className="pt-4 border-t">
+                  <details className="group">
+                    <summary className="cursor-pointer flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">
+                      <Info className="h-4 w-4" />
+                      Audit log — Waarom denken wij dit ({analysisResult.result.collector_audit.length} stappen)
+                    </summary>
+                    <div className="mt-2 space-y-1 max-h-60 overflow-y-auto">
+                      {analysisResult.result.collector_audit.map((entry, i) => {
+                        const stepColor = entry.step.includes('rejected') ? 'text-red-600' :
+                          entry.step.includes('match') || entry.step.includes('valid') ? 'text-green-600' :
+                          entry.step.includes('cap') || entry.step.includes('unverified') ? 'text-amber-600' : 'text-muted-foreground';
+                        return (
+                          <div key={i} className="flex gap-2 text-xs font-mono">
+                            <span className={`shrink-0 font-semibold ${stepColor}`}>[{entry.step}]</span>
+                            <span className="text-foreground/80 break-all">{entry.detail}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </details>
+                </div>
+              )}
 
               {/* AI Description */}
               {analysisResult.result.ai_description && <div className="pt-4 border-t">

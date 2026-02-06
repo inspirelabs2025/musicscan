@@ -1,10 +1,38 @@
-import React from 'react';
-import { CheckCircle, Info, Camera, Eye, Euro, TrendingUp, TrendingDown, Loader2, RefreshCw, ShoppingCart } from 'lucide-react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { CheckCircle, Info, Camera, Eye, Euro, TrendingUp, TrendingDown, Loader2, RefreshCw, ShoppingCart, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+// Error boundary to prevent silent crashes
+class ResultsErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('AIScanV2Results crash:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Resultaten konden niet worden weergegeven: {this.state.error?.message}
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface UploadedFile {
   file: File;
@@ -129,6 +157,8 @@ export function AIScanV2Results({
   };
 
   return (
+    <ResultsErrorBoundary>
+    <TooltipProvider>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -395,6 +425,8 @@ export function AIScanV2Results({
         )}
       </CardContent>
     </Card>
+    </TooltipProvider>
+    </ResultsErrorBoundary>
   );
 }
 

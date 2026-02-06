@@ -56,17 +56,17 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
             .limit(1)
             .maybeSingle(),
 
-          // Album stories (music_stories where single_name IS NULL)
+          // Album stories from blog_posts
           supabase
-            .from('music_stories')
-            .select('id, title, slug, artwork_url, single_name')
-            .ilike('artist', name)
-            .is('single_name', null)
+            .from('blog_posts')
+            .select('id, slug, album_cover_url, yaml_frontmatter')
             .eq('is_published', true)
+            .neq('album_type', 'single')
+            .ilike('yaml_frontmatter->>artist', name)
             .order('created_at', { ascending: false })
             .limit(5),
 
-          // Singles (music_stories where single_name IS NOT NULL)
+          // Singles from music_stories (where single_name IS NOT NULL)
           supabase
             .from('music_stories')
             .select('id, title, slug, artwork_url, single_name')
@@ -109,7 +109,10 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
           : null;
 
         const albumStories = (albumStoriesRes.data || []).map(s => ({
-          id: s.id, title: s.title, slug: s.slug, image_url: s.artwork_url,
+          id: s.id,
+          title: (s.yaml_frontmatter as any)?.title || 'Album',
+          slug: s.slug,
+          image_url: s.album_cover_url,
         }));
 
         const singles = (singlesRes.data || []).map(s => ({

@@ -6405,6 +6405,193 @@ export type Database = {
           },
         ]
       }
+      scan_extractions: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          extractor_version: string
+          field_name: string
+          id: string
+          normalized_value: string | null
+          raw_value: string | null
+          scan_session_id: string
+          source_image_id: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          extractor_version?: string
+          field_name: string
+          id?: string
+          normalized_value?: string | null
+          raw_value?: string | null
+          scan_session_id: string
+          source_image_id?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          extractor_version?: string
+          field_name?: string
+          id?: string
+          normalized_value?: string | null
+          raw_value?: string | null
+          scan_session_id?: string
+          source_image_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_extractions_scan_session_id_fkey"
+            columns: ["scan_session_id"]
+            isOneToOne: false
+            referencedRelation: "scan_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scan_extractions_source_image_id_fkey"
+            columns: ["source_image_id"]
+            isOneToOne: false
+            referencedRelation: "scan_images"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scan_images: {
+        Row: {
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["scan_image_kind"]
+          quality_score: number | null
+          scan_session_id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["scan_image_kind"]
+          quality_score?: number | null
+          scan_session_id: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["scan_image_kind"]
+          quality_score?: number | null
+          scan_session_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_images_scan_session_id_fkey"
+            columns: ["scan_session_id"]
+            isOneToOne: false
+            referencedRelation: "scan_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scan_results: {
+        Row: {
+          artist: string | null
+          audit: Json | null
+          barcode: string | null
+          catno: string | null
+          country: string | null
+          created_at: string
+          discogs_candidates: Json | null
+          discogs_match_status: Database["public"]["Enums"]["discogs_match_status"]
+          discogs_release_id: number | null
+          ifpi_master: string | null
+          ifpi_mould: string | null
+          label: string | null
+          matrix: string | null
+          overall_confidence: number | null
+          scan_session_id: string
+          title: string | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          artist?: string | null
+          audit?: Json | null
+          barcode?: string | null
+          catno?: string | null
+          country?: string | null
+          created_at?: string
+          discogs_candidates?: Json | null
+          discogs_match_status?: Database["public"]["Enums"]["discogs_match_status"]
+          discogs_release_id?: number | null
+          ifpi_master?: string | null
+          ifpi_mould?: string | null
+          label?: string | null
+          matrix?: string | null
+          overall_confidence?: number | null
+          scan_session_id: string
+          title?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          artist?: string | null
+          audit?: Json | null
+          barcode?: string | null
+          catno?: string | null
+          country?: string | null
+          created_at?: string
+          discogs_candidates?: Json | null
+          discogs_match_status?: Database["public"]["Enums"]["discogs_match_status"]
+          discogs_release_id?: number | null
+          ifpi_master?: string | null
+          ifpi_mould?: string | null
+          label?: string | null
+          matrix?: string | null
+          overall_confidence?: number | null
+          scan_session_id?: string
+          title?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_results_scan_session_id_fkey"
+            columns: ["scan_session_id"]
+            isOneToOne: true
+            referencedRelation: "scan_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scan_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          media_type: string
+          notes: string | null
+          status: Database["public"]["Enums"]["scan_session_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          media_type?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["scan_session_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          media_type?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["scan_session_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       seo_quality_issues: {
         Row: {
           content_length: number | null
@@ -9884,6 +10071,18 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      discogs_match_status:
+        | "single_match"
+        | "multiple_candidates"
+        | "no_match"
+        | "needs_more_photos"
+      scan_image_kind: "disc_hub" | "back_cover" | "front" | "spine" | "other"
+      scan_session_status:
+        | "draft"
+        | "processing"
+        | "done"
+        | "needs_more_photos"
+        | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -10012,6 +10211,20 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      discogs_match_status: [
+        "single_match",
+        "multiple_candidates",
+        "no_match",
+        "needs_more_photos",
+      ],
+      scan_image_kind: ["disc_hub", "back_cover", "front", "spine", "other"],
+      scan_session_status: [
+        "draft",
+        "processing",
+        "done",
+        "needs_more_photos",
+        "failed",
+      ],
     },
   },
 } as const

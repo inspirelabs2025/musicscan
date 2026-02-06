@@ -622,17 +622,25 @@ export default function AIScanV2() {
                       </div>;
                   }
                   if (analysisResult.result.discogs_id) {
-                    return <div className="text-center py-4">
-                        <p className="text-sm text-muted-foreground mb-2">Geen prijsdata beschikbaar</p>
-                        <Button variant="outline" size="sm" onClick={() => searchByDiscogsId(analysisResult.result.discogs_id!.toString())}>
+                    return <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4 text-center space-y-2">
+                        <div className="flex items-center justify-center gap-2 text-amber-700 dark:text-amber-400">
+                          <Info className="h-5 w-5" />
+                          <span className="font-medium">Geen prijsdata beschikbaar</span>
+                        </div>
+                        <p className="text-xs text-amber-600 dark:text-amber-500">Dit item is nog nooit verkocht op Discogs of er zijn geen actieve aanbiedingen.</p>
+                        <Button variant="outline" size="sm" onClick={() => searchByDiscogsId(analysisResult.result.discogs_id!.toString())} className="mt-1">
                           <RefreshCw className="h-4 w-4 mr-2" />
                           Opnieuw proberen
                         </Button>
                       </div>;
                   }
-                  return <p className="text-sm text-muted-foreground text-center py-4">
-                      Geen Discogs ID gevonden - prijzen niet beschikbaar
-                    </p>;
+                  return <div className="rounded-lg border border-muted bg-muted/30 p-4 text-center space-y-1">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Info className="h-5 w-5" />
+                        <span className="font-medium">Geen Discogs ID gevonden</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Prijsinformatie is niet beschikbaar zonder Discogs-koppeling.</p>
+                    </div>;
                 })()}
               </div>
 

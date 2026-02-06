@@ -93,11 +93,17 @@ export default function AIScanV2() {
     resetSearchState
   } = useDiscogsSearch();
 
-  // Auto-trigger price check when analysis finds a Discogs ID
+  // Auto-trigger price check ONLY when V2 analysis didn't already return pricing
   useEffect(() => {
     if (analysisResult?.result?.discogs_id) {
-      console.log('🔍 Auto-triggering price check for Discogs ID:', analysisResult.result.discogs_id);
-      searchByDiscogsId(analysisResult.result.discogs_id.toString());
+      const hasPricing = analysisResult.result.pricing_stats && 
+        (analysisResult.result.pricing_stats.lowest_price || analysisResult.result.pricing_stats.median_price);
+      if (!hasPricing) {
+        console.log('🔍 Auto-triggering price check for Discogs ID (no pricing from V2):', analysisResult.result.discogs_id);
+        searchByDiscogsId(analysisResult.result.discogs_id.toString());
+      } else {
+        console.log('✅ Using pricing from V2 analysis - skipping extra search');
+      }
     }
   }, [analysisResult?.result?.discogs_id, searchByDiscogsId]);
 

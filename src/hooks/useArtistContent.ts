@@ -97,7 +97,7 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
           // Products
           supabase
             .from('platform_products')
-            .select('id, title, slug, image_url, price')
+            .select('id, title, slug, primary_image, price')
             .ilike('artist', name)
             .eq('status', 'active')
             .order('created_at', { ascending: false })
@@ -128,7 +128,7 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
         }));
 
         const products = (productsRes.data || []).map(p => ({
-          id: p.id, title: p.title, slug: p.slug, image_url: p.image_url,
+          id: p.id, title: p.title, slug: p.slug, image_url: p.primary_image,
         }));
 
         const totalCount =

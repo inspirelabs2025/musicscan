@@ -418,10 +418,11 @@ const BulkerImage = () => {
       });
 
       // Show artist discovery popup after successful save
-      const artistName = searchResults[0]?.artist || urlArtist;
-      if (artistName) {
+      const artistForPopup = searchResults[0]?.artist || urlArtist;
+      console.log('🎭 Artist for discovery popup:', artistForPopup);
+      if (artistForPopup) {
+        setSavedArtistName(artistForPopup);
         setShowArtistPopup(true);
-        setSavedArtistName(artistName);
       }
     } catch (error) {
       console.error('❌ Error inserting scan:', error);

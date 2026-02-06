@@ -130,6 +130,7 @@ const AIScanOverview = lazy(() => import("./pages/AIScanOverview"));
 const AIScanV2 = lazy(() => import("./pages/AIScanV2"));
 const AIScanV2Overview = lazy(() => import("./pages/AIScanV2Overview"));
 const UnifiedScanOverview = lazy(() => import("./pages/UnifiedScanOverview"));
+const CDScanPipeline = lazy(() => import("./pages/CDScanPipeline"));
 const BulkerImage = lazy(() => import("./pages/BulkerImage"));
 const MarketplaceOverview = lazy(() => import("./pages/MarketplaceOverview"));
 const UserScans = lazy(() => import("./pages/UserScans"));
@@ -315,6 +316,7 @@ const AppContent = () => {
         <Route path="/ai-scan-v2-overview" element={<ProtectedRoute><LazyRoute><AIScanV2Overview /></LazyRoute></ProtectedRoute>} />
         <Route path="/unified-scan-overview" element={<ProtectedRoute><LazyRoute><UnifiedScanOverview /></LazyRoute></ProtectedRoute>} />
         <Route path="/bulkerimage" element={<ProtectedRoute><LazyRoute><BulkerImage /></LazyRoute></ProtectedRoute>} />
+        <Route path="/cd-scan-pipeline" element={<ProtectedRoute><LazyRoute><CDScanPipeline /></LazyRoute></ProtectedRoute>} />
         
         {/* Collection routes */}
         <Route path="/marketplace-overview" element={<ProtectedRoute><LazyRoute><MarketplaceOverview /></LazyRoute></ProtectedRoute>} />

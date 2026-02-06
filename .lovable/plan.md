@@ -1,58 +1,37 @@
 
-# Artiest Ontdek-popup na Scan Opslaan
+# ArtistDiscoveryPopup verplaatsen naar na het opslaan
 
-## Wat wordt gebouwd
+## Probleem
+De ArtistDiscoveryPopup zit momenteel op de **AIScanV2** pagina en wordt getoond **voordat** je naar `/scanner/discogs` navigeert. Na klikken op "Ga door naar opslaan" navigeer je weg en de popup verdwijnt. Op de BulkerImage pagina (waar het item daadwerkelijk wordt opgeslagen) is er geen ArtistDiscoveryPopup.
 
-Een dynamische popup/drawer die verschijnt nadat een gebruiker op "Toevoegen aan Collectie" klikt in de scan resultaten. Deze popup toont alle beschikbare MusicScan content over de gescande artiest, gegroepeerd per type.
+## Oplossing
+De popup verplaatsen naar de **BulkerImage** pagina (`/scanner/discogs`) en tonen **na een succesvolle opslag**.
 
-## Content bronnen
+## Stappen
 
-De popup doorzoekt 6 tabellen op basis van de artiestnaam uit het scan-resultaat:
+### 1. BulkerImage.tsx - ArtistDiscoveryPopup toevoegen
+- Importeer `ArtistDiscoveryPopup` component
+- Voeg state toe: `showArtistPopup` (boolean)
+- Na succesvolle opslag in `performSave` (na de toast "Scan Voltooid!"), zet `showArtistPopup` op `true` als er een artiestnaam beschikbaar is
+- Render de `ArtistDiscoveryPopup` onderaan de component met de artiestnaam uit `searchResults[0]?.artist` of de query parameter
 
-| Bron | Tabel | Match-veld | Route |
-|---|---|---|---|
-| Artiest Verhaal | `artist_stories` | `artist_name` (ILIKE) | `/artists/{slug}` |
-| Album Stories | `music_stories` | `artist_name` (ILIKE), `single_name IS NULL` | `/muziek-verhaal/{slug}` |
-| Singles | `music_stories` | `artist_name` (ILIKE), `single_name IS NOT NULL` | `/singles/{slug}` |
-| Anekdotes | `music_anecdotes` | `subject_name` (ILIKE) | `/anekdotes/{slug}` |
-| Nieuws | `news_blog_posts` | `title` (ILIKE op artiestnaam) | `/nieuws/{slug}` |
-| Shop Producten | `platform_products` | `artist` (ILIKE) | `/product/{slug}` |
+### 2. AIScanV2.tsx - Directe navigatie na klik
+- Verwijder de `showArtistPopup` state en `pendingNavigateRef` logica
+- Bij klik op "Toevoegen aan Collectie": navigeer direct naar `/scanner/discogs` zonder popup tussenstap
+- Verwijder de `ArtistDiscoveryPopup` render en import
 
-## UX Flow
+### 3. BulkerImage popup callbacks
+- `onClose`: Sluit popup, gebruiker blijft op de pagina of navigeert terug naar scanner
+- `onContinue`: Sluit popup, optioneel navigeer naar collectie-overzicht
 
-1. Gebruiker scant een CD/vinyl en krijgt resultaat
-2. Gebruiker klikt "Toevoegen aan Collectie"
-3. **NIEUW**: Popup verschijnt met "Ontdek meer over [Artiest]"
-4. Popup toont per categorie de beschikbare content (met aantallen)
-5. Gebruiker kan items aanklikken (opent in nieuw tabblad) of popup sluiten
-6. Na sluiten gaat de navigatie verder naar `/scanner/discogs` (het bestaande opslaan-proces)
+## Technische details
 
-## Visueel ontwerp
+```text
+Huidige flow:
+AIScanV2 -> klik opslaan -> popup (kort zichtbaar) -> navigate -> BulkerImage -> opslaan
 
-- Desktop: Dialog (modal) met gradient header in artiest-stijl
-- Mobiel: Drawer (bottom sheet) met swipe-to-dismiss
-- Secties met iconen per content-type
-- Lege secties worden niet getoond
-- Als er helemaal geen content is: popup wordt overgeslagen, directe navigatie
+Nieuwe flow:
+AIScanV2 -> klik opslaan -> navigate -> BulkerImage -> opslaan -> popup (na succes)
+```
 
-## Technische aanpak
-
-### 1. Nieuwe hook: `useArtistContent.ts`
-- Accepteert `artistName: string`
-- Voert 6 parallelle queries uit (met `Promise.all`)
-- Returns: `{ artistStory, albumStories, singles, anecdotes, news, products, totalCount, isLoading }`
-- Elke query beperkt tot 5 items
-
-### 2. Nieuw component: `ArtistDiscoveryPopup.tsx`
-- Props: `artistName`, `isOpen`, `onClose`, `onContinue` (gaat door naar collectie-opslaan)
-- Gebruikt `useArtistContent` hook
-- Desktop = Dialog, Mobiel = Drawer (zelfde patroon als `SitePopup.tsx`)
-- Gradient header met artiestnaam
-- Per sectie: icoon + titel + items als klikbare links (target="_blank")
-- Footer met twee knoppen: "Later bekijken" (sluit) en "Ga door naar opslaan" (primair)
-
-### 3. Wijziging in `AIScanV2.tsx`
-- State toevoegen: `showArtistPopup: boolean`
-- Bij klik op "Toevoegen aan Collectie": in plaats van direct navigeren, eerst `showArtistPopup = true` zetten
-- De `onContinue` callback van de popup voert de bestaande navigatie uit naar `/scanner/discogs`
-- Als `totalCount === 0`: popup overslaan, direct navigeren (geen lege popup tonen)
+De artiestnaam wordt uit de URL query parameters gehaald (die al meegegeven worden: `artist=Blondie`) of uit `searchResults[0]?.artist`.

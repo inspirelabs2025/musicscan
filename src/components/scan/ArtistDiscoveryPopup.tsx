@@ -92,10 +92,10 @@ export function ArtistDiscoveryPopup({ artistName, isOpen, onClose, onContinue }
   const footer = (
     <div className="flex gap-3 w-full">
       <Button variant="outline" onClick={onClose} className="flex-1">
-        Later bekijken
+        Sluiten
       </Button>
       <Button onClick={onContinue} className="flex-1 gap-2">
-        Ga door naar opslaan
+        Nieuwe scan starten
         <ArrowRight className="h-4 w-4" />
       </Button>
     </div>

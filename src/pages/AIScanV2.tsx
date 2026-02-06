@@ -730,6 +730,9 @@ export default function AIScanV2() {
                   <h3 className="font-semibold mb-2 flex items-center gap-2">
                     🔍 Mogelijke releases ({analysisResult.result.suggestions.length})
                   </h3>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Selecteer de juiste release om deze toe te voegen aan je collectie.
+                  </p>
                   <div className="space-y-2">
                     {analysisResult.result.suggestions.map((s, i) => (
                       <div key={s.id} className="rounded-lg border p-3 text-sm hover:bg-muted/50 transition-colors">
@@ -745,16 +748,78 @@ export default function AIScanV2() {
                               {s.country && <span>· {s.country}</span>}
                             </div>
                           </div>
-                          {s.url && (
-                            <Button variant="ghost" size="sm" className="h-7 px-2 shrink-0" asChild>
-                              <a href={s.url} target="_blank" rel="noopener noreferrer">
-                                Bekijk →
-                              </a>
+                          <div className="flex gap-1 shrink-0">
+                            {s.url && (
+                              <Button variant="ghost" size="sm" className="h-7 px-2" asChild>
+                                <a href={s.url} target="_blank" rel="noopener noreferrer">
+                                  Bekijk
+                                </a>
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => {
+                                // Parse artist/title from suggestion
+                                let sugArtist = '';
+                                let sugTitle = s.title || '';
+                                if (sugTitle.includes(' - ')) {
+                                  const parts = sugTitle.split(' - ');
+                                  sugArtist = parts[0].replace(/\s*\(\d+\)\s*$/, '').trim();
+                                  sugTitle = parts.slice(1).join(' - ').trim();
+                                }
+                                const params = new URLSearchParams({
+                                  mediaType,
+                                  discogsId: s.id?.toString() || '',
+                                  artist: sugArtist || analysisResult!.result.artist || '',
+                                  title: sugTitle || analysisResult!.result.title || '',
+                                  label: analysisResult!.result.label || '',
+                                  catalogNumber: s.catno || '',
+                                  year: s.year?.toString() || '',
+                                  condition: conditionGrade,
+                                  fromAiScan: 'true'
+                                });
+                                navigate(`/scanner/discogs?${params.toString()}`);
+                              }}
+                            >
+                              <ShoppingCart className="h-3 w-3 mr-1" />
+                              Selecteer
                             </Button>
-                          )}
+                          </div>
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Protocol Details */}
+              {analysisResult.result.search_metadata && (
+                <div className="pt-4 border-t">
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {analysisResult.result.search_metadata.lock_reason && (
+                      <Badge variant="default" className="bg-green-600">
+                        🔒 {analysisResult.result.search_metadata.lock_reason}
+                      </Badge>
+                    )}
+                    {analysisResult.result.search_metadata.verification_level && (
+                      <Badge variant="outline">
+                        {analysisResult.result.search_metadata.verification_level === 'LOCKED' ? '✅ Geverifieerd' :
+                         analysisResult.result.search_metadata.verification_level === 'no_match' ? '❌ Geen match' :
+                         analysisResult.result.search_metadata.verification_level}
+                      </Badge>
+                    )}
+                    {analysisResult.result.search_metadata.total_searches > 0 && (
+                      <Badge variant="secondary">
+                        {analysisResult.result.search_metadata.total_searches} zoekopdrachten
+                      </Badge>
+                    )}
+                    {analysisResult.result.search_metadata.matched_on?.length > 0 && (
+                      <Badge variant="outline" className="text-green-600 border-green-300">
+                        Match: {analysisResult.result.search_metadata.matched_on.join(', ')}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               )}

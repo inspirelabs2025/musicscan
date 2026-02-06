@@ -246,20 +246,44 @@ serve(async (req) => {
       // === COLLECTOR-GRADE CROSS-CHECKS ===
       const collectorAudit: Array<{step: string; detail: string; timestamp: string}> = [];
       
-      // 1. Barcode normalization & EAN-13 validation
+      // 1. Barcode normalization: ALWAYS digits-only, never "correct" or add digits
       let barcodeRaw = combinedData.barcode || null;
       let barcodeNormalized = barcodeRaw ? barcodeRaw.replace(/[^0-9]/g, '') : null;
       let barcodeEanValid: boolean | null = null;
+      
       if (barcodeNormalized) {
+        // Accept 12 or 13 digit barcodes as-is. Never pad or infer.
         if (barcodeNormalized.length === 13) {
           let sum = 0;
           for (let i = 0; i < 12; i++) {
             sum += parseInt(barcodeNormalized[i]) * (i % 2 === 0 ? 1 : 3);
           }
           barcodeEanValid = ((10 - (sum % 10)) % 10) === parseInt(barcodeNormalized[12]);
-          collectorAudit.push({ step: 'barcode_ean13', detail: `EAN-13 validation: ${barcodeEanValid ? 'VALID' : 'INVALID'} (${barcodeNormalized})`, timestamp: new Date().toISOString() });
+          collectorAudit.push({ step: 'barcode_ean13', detail: `EAN-13 checksum: ${barcodeEanValid ? 'VALID' : 'INVALID'} (${barcodeNormalized})`, timestamp: new Date().toISOString() });
+          if (!barcodeEanValid) {
+            // Try with leading 0 stripped (UPC inside EAN)
+            const upc = barcodeNormalized.slice(1);
+            collectorAudit.push({ step: 'barcode_upc_fallback', detail: `EAN-13 invalid, keeping as search key. UPC candidate: ${upc}`, timestamp: new Date().toISOString() });
+          }
+        } else if (barcodeNormalized.length === 12) {
+          // 12-digit UPC — valid as-is, optionally test EAN-13 with leading 0
+          const ean13Candidate = '0' + barcodeNormalized;
+          let eanSum = 0;
+          for (let i = 0; i < 12; i++) {
+            eanSum += parseInt(ean13Candidate[i]) * (i % 2 === 0 ? 1 : 3);
+          }
+          const eanCheck = ((10 - (eanSum % 10)) % 10) === parseInt(ean13Candidate[12]);
+          collectorAudit.push({ step: 'barcode_12digit', detail: `12-digit barcode: ${barcodeNormalized}. EAN-13 with leading 0: ${eanCheck ? 'VALID' : 'INVALID'}`, timestamp: new Date().toISOString() });
+        } else if (barcodeNormalized.length < 8) {
+          collectorAudit.push({ step: 'barcode_too_short', detail: `Barcode too short (${barcodeNormalized.length} digits) - REJECTED`, timestamp: new Date().toISOString() });
+          barcodeNormalized = null;
+          combinedData.barcode = null;
         } else {
-          collectorAudit.push({ step: 'barcode_normalized', detail: `Barcode normalized: ${barcodeNormalized} (${barcodeNormalized.length} digits, not EAN-13)`, timestamp: new Date().toISOString() });
+          collectorAudit.push({ step: 'barcode_normalized', detail: `Barcode: ${barcodeNormalized} (${barcodeNormalized.length} digits)`, timestamp: new Date().toISOString() });
+        }
+        // Write back the clean digits-only barcode
+        if (barcodeNormalized) {
+          combinedData.barcode = barcodeNormalized;
         }
       }
       
@@ -267,8 +291,14 @@ serve(async (req) => {
       let catnoValue = combinedData.catalogNumber || null;
       if (catnoValue && barcodeNormalized) {
         const catnoDigits = catnoValue.replace(/[^0-9]/g, '');
-        if (catnoDigits === barcodeNormalized) {
-          collectorAudit.push({ step: 'catno_rejected', detail: `Catno "${catnoValue}" matches barcode digits - REJECTED as barcode misidentification`, timestamp: new Date().toISOString() });
+        // Overlap check: if >80% of catno digits match barcode → reject
+        if (catnoDigits.length >= 8 && barcodeNormalized.includes(catnoDigits)) {
+          collectorAudit.push({ step: 'catno_rejected', detail: `Catno "${catnoValue}" digit overlap >80% with barcode - REJECTED`, timestamp: new Date().toISOString() });
+          console.log(`⛔ CROSS-CHECK: Catno "${catnoValue}" overlaps with barcode - REJECTED`);
+          catnoValue = null;
+          combinedData.catalogNumber = null;
+        } else if (catnoDigits === barcodeNormalized) {
+          collectorAudit.push({ step: 'catno_rejected', detail: `Catno "${catnoValue}" matches barcode digits exactly - REJECTED`, timestamp: new Date().toISOString() });
           console.log(`⛔ CROSS-CHECK: Catno "${catnoValue}" matches barcode - REJECTED`);
           catnoValue = null;
           combinedData.catalogNumber = null;
@@ -282,16 +312,34 @@ serve(async (req) => {
         combinedData.catalogNumber = null;
       }
       
-      // 3. Matrix cross-check: reject if it contains barcode digits
+      // 3. Matrix cross-check: reject if barcode-like pattern
       let matrixValue = combinedData.matrixNumber || null;
-      if (matrixValue && barcodeNormalized) {
+      if (matrixValue) {
         const matrixDigits = matrixValue.replace(/[^0-9]/g, '');
-        if (matrixDigits.length >= 12 && !/[a-zA-Z]/.test(matrixValue)) {
-          collectorAudit.push({ step: 'matrix_rejected', detail: `Matrix "${matrixValue}" is barcode-like (${matrixDigits.length} digits, no alpha) - REJECTED`, timestamp: new Date().toISOString() });
+        const matrixAlpha = matrixValue.replace(/[^a-zA-Z]/g, '');
+        
+        // Regex: optional single letter prefix + digits/spaces (8+ digit sequence) → barcode leak
+        const barcodeLeakPattern = /^[A-Za-z]?\s?\d[\d\s]{8,}$/;
+        
+        if (barcodeLeakPattern.test(matrixValue.trim())) {
+          // Check digit overlap with barcode
+          const overlapPct = barcodeNormalized 
+            ? (matrixDigits.split('').filter((d: string, i: number) => barcodeNormalized![i] === d).length / Math.max(matrixDigits.length, 1))
+            : 0;
+          
+          if (overlapPct > 0.8 || matrixAlpha.length <= 1) {
+            collectorAudit.push({ step: 'matrix_rejected', detail: `Matrix "${matrixValue}" matches barcode-like pattern (^[A-Z]?\\s?\\d[\\d\\s]{8,}$, alpha=${matrixAlpha.length}, overlap=${(overlapPct*100).toFixed(0)}%) - REJECTED. Maak een betere hub-foto.`, timestamp: new Date().toISOString() });
+            console.log(`⛔ CROSS-CHECK: Matrix "${matrixValue}" is barcode-like (overlap ${(overlapPct*100).toFixed(0)}%) - REJECTED`);
+            matrixValue = null;
+            combinedData.matrixNumber = null;
+          }
+        } else if (matrixDigits.length >= 12 && matrixAlpha.length === 0) {
+          // Pure digits >= 12 without any alpha → barcode, not matrix
+          collectorAudit.push({ step: 'matrix_rejected', detail: `Matrix "${matrixValue}" is pure digits (${matrixDigits.length} digits, no alpha) - REJECTED`, timestamp: new Date().toISOString() });
           console.log(`⛔ CROSS-CHECK: Matrix "${matrixValue}" is barcode-like - REJECTED`);
           matrixValue = null;
           combinedData.matrixNumber = null;
-        } else if (matrixDigits === barcodeNormalized || matrixDigits.includes(barcodeNormalized)) {
+        } else if (barcodeNormalized && (matrixDigits === barcodeNormalized || matrixDigits.includes(barcodeNormalized))) {
           collectorAudit.push({ step: 'matrix_rejected', detail: `Matrix "${matrixValue}" contains barcode digits - REJECTED`, timestamp: new Date().toISOString() });
           console.log(`⛔ CROSS-CHECK: Matrix "${matrixValue}" contains barcode - REJECTED`);
           matrixValue = null;
@@ -299,7 +347,18 @@ serve(async (req) => {
         }
       }
       
-      // 4. Year validation: only from explicit copyright lines
+      // 4. Label Code source validation: only trust if OCR-detected
+      if (combinedData.labelCode) {
+        const labelCodeSource = combinedData.labelCodeSource || 'unknown';
+        if (labelCodeSource !== 'ocr') {
+          collectorAudit.push({ step: 'label_code_unverified', detail: `Label code "${combinedData.labelCode}" source=${labelCodeSource} - flagged as unverified (not from OCR)`, timestamp: new Date().toISOString() });
+          // Don't null it out, but flag it in the audit
+        } else {
+          collectorAudit.push({ step: 'label_code_verified', detail: `Label code "${combinedData.labelCode}" source=OCR ✅`, timestamp: new Date().toISOString() });
+        }
+      }
+      
+      // 5. Year validation: only from explicit copyright lines
       if (combinedData.year && !generalAnalysis.data?.yearSource?.includes('copyright') && !generalAnalysis.data?.yearSource?.includes('(P)') && !generalAnalysis.data?.yearSource?.includes('(C)')) {
         collectorAudit.push({ step: 'year_unverified', detail: `Year ${combinedData.year} not from copyright line - flagged as unverified`, timestamp: new Date().toISOString() });
       }
@@ -1003,6 +1062,7 @@ function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: an
     sidCodeMastering: matrixData?.sidCodeMastering ?? detailData?.sidCodeMastering ?? null,
     sidCodeMould: matrixData?.sidCodeMould ?? detailData?.sidCodeMould ?? null,
     labelCode: matrixData?.labelCode ?? detailData?.labelCode ?? null,
+    labelCodeSource: matrixData?.labelCode ? 'ocr' : (detailData?.labelCode ? 'ocr' : null),
     barcode: detailData?.barcode ?? null,
     
     // Vinyl-specific extras
@@ -1610,17 +1670,40 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
             auto_select_blocked: hasTechnicalIdentifiers
           });
           
-          // Store suggestions for manual review
-          suggestions = results.slice(0, 5).map((r: any) => ({
-            id: r.id,
-            title: r.title,
-            catno: r.catno,
-            label: r.label,
-            year: r.year,
-            country: r.country,
-            thumb: r.thumb,
-            url: `https://www.discogs.com/release/${r.id}`
-          }));
+          // Build suggestions with dedup and country gating
+          const countryHint = (analysisData.country || '').toLowerCase();
+          const isEUHint = /holland|netherlands|europe|eu|germany|france|uk|italy|spain|belgium|austria|sweden|denmark|portugal|greece|ireland|finland|norway|switzerland/i.test(countryHint);
+          
+          // Deduplicate by release_id
+          const seenIds = new Set<number>();
+          const rawSuggestions = results.slice(0, 15).map((r: any) => {
+            if (seenIds.has(r.id)) return null;
+            seenIds.add(r.id);
+            return {
+              id: r.id,
+              title: r.title,
+              catno: r.catno,
+              label: r.label,
+              year: r.year,
+              country: r.country,
+              thumb: r.thumb,
+              url: `https://www.discogs.com/release/${r.id}`
+            };
+          }).filter(Boolean);
+          
+          // Country penalty/sort if EU hint detected
+          if (isEUHint && rawSuggestions.length > 1) {
+            const euCountries = /europe|eu|netherlands|holland|germany|france|uk|united kingdom|italy|spain|belgium|austria|sweden|denmark|portugal|greece|ireland|finland|norway|switzerland/i;
+            rawSuggestions.sort((a: any, b: any) => {
+              const aIsEU = euCountries.test(a.country || '');
+              const bIsEU = euCountries.test(b.country || '');
+              if (aIsEU && !bIsEU) return -1;
+              if (!aIsEU && bIsEU) return 1;
+              return 0;
+            });
+          }
+          
+          suggestions = rawSuggestions.slice(0, 5);
           
           if (hasTechnicalIdentifiers) {
             console.log(`   ⛔ HARD GATE: Technische identifiers aanwezig maar geen match`);
@@ -1981,10 +2064,13 @@ async function verifyCandidate(
       }
     }
     
-    // === CHECK COUNTRY (10 points) ===
+    // === CHECK COUNTRY (10 points, or PENALTY for non-EU when EU hint) ===
     if (analysisData.country && releaseDetails.country) {
       const extractedCountry = analysisData.country.toLowerCase();
       const discogsCountry = releaseDetails.country.toLowerCase();
+      const euCountryPattern = /europe|eu|netherlands|holland|germany|france|uk|united kingdom|italy|spain|belgium|austria|sweden|denmark|portugal|greece|ireland|finland|norway|switzerland/i;
+      const isEUHint = euCountryPattern.test(extractedCountry);
+      
       if (extractedCountry === discogsCountry || 
           extractedCountry.includes(discogsCountry) || 
           discogsCountry.includes(extractedCountry)) {
@@ -1992,6 +2078,12 @@ async function verifyCandidate(
         result.matched_on.push('country');
         result.technical_matches.country = true;
         console.log(`      ✅ Country match: +10 points`);
+      } else if (isEUHint && !euCountryPattern.test(discogsCountry)) {
+        // Country hint is EU but candidate is non-EU → penalty
+        const penalty = 25;
+        result.points = Math.max(0, result.points - penalty);
+        result.explain.push(`Country penalty: EU hint "${extractedCountry}" but candidate="${discogsCountry}" (-${penalty})`);
+        console.log(`      ⚠️ Country penalty: -${penalty} (EU hint but candidate is ${discogsCountry})`);
       }
     }
     

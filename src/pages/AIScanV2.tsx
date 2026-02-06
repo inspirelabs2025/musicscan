@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info, Camera } from 'lucide-react';
+import { Upload, X, Brain, CheckCircle, AlertCircle, Clock, Sparkles, ShoppingCart, RefreshCw, Euro, TrendingUp, TrendingDown, Loader2, Info, Camera, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useDiscogsSearch } from '@/hooks/useDiscogsSearch';
 import testCdMatrix from '@/assets/test-cd-matrix.jpg';
 import { ArtistDiscoveryPopup } from '@/components/scan/ArtistDiscoveryPopup';
+import { EnhancedScanPreview } from '@/components/scanner/EnhancedScanPreview';
 
 // Simple V2 components for media type and condition selection
 
@@ -482,6 +483,27 @@ export default function AIScanV2() {
                   {Math.round(analysisResult.result.confidence_score * 100)}%
                 </Badge>
               </div>
+
+              {/* Enhanced Scan Preview - show uploaded photos */}
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    Geüploade foto's
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {uploadedFiles.map((file) => (
+                      <div key={file.id} className="relative rounded-lg overflow-hidden border">
+                        <img 
+                          src={file.preview} 
+                          alt={file.file.name} 
+                          className="w-full h-32 object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Release Information */}
               <div className="grid md:grid-cols-2 gap-4">

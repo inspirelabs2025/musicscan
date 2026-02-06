@@ -243,6 +243,67 @@ serve(async (req) => {
         matrixAnalysis?.success ? matrixAnalysis.data : null
       )
 
+      // === COLLECTOR-GRADE CROSS-CHECKS ===
+      const collectorAudit: Array<{step: string; detail: string; timestamp: string}> = [];
+      
+      // 1. Barcode normalization & EAN-13 validation
+      let barcodeRaw = combinedData.barcode || null;
+      let barcodeNormalized = barcodeRaw ? barcodeRaw.replace(/[^0-9]/g, '') : null;
+      let barcodeEanValid: boolean | null = null;
+      if (barcodeNormalized) {
+        if (barcodeNormalized.length === 13) {
+          let sum = 0;
+          for (let i = 0; i < 12; i++) {
+            sum += parseInt(barcodeNormalized[i]) * (i % 2 === 0 ? 1 : 3);
+          }
+          barcodeEanValid = ((10 - (sum % 10)) % 10) === parseInt(barcodeNormalized[12]);
+          collectorAudit.push({ step: 'barcode_ean13', detail: `EAN-13 validation: ${barcodeEanValid ? 'VALID' : 'INVALID'} (${barcodeNormalized})`, timestamp: new Date().toISOString() });
+        } else {
+          collectorAudit.push({ step: 'barcode_normalized', detail: `Barcode normalized: ${barcodeNormalized} (${barcodeNormalized.length} digits, not EAN-13)`, timestamp: new Date().toISOString() });
+        }
+      }
+      
+      // 2. Catalog number cross-check: reject if it's actually a barcode
+      let catnoValue = combinedData.catalogNumber || null;
+      if (catnoValue && barcodeNormalized) {
+        const catnoDigits = catnoValue.replace(/[^0-9]/g, '');
+        if (catnoDigits === barcodeNormalized) {
+          collectorAudit.push({ step: 'catno_rejected', detail: `Catno "${catnoValue}" matches barcode digits - REJECTED as barcode misidentification`, timestamp: new Date().toISOString() });
+          console.log(`⛔ CROSS-CHECK: Catno "${catnoValue}" matches barcode - REJECTED`);
+          catnoValue = null;
+          combinedData.catalogNumber = null;
+        }
+      }
+      // Also reject catno if it's a pure 12+ digit number (barcode pattern)
+      if (catnoValue && /^\d{12,}$/.test(catnoValue.replace(/\s/g, ''))) {
+        collectorAudit.push({ step: 'catno_rejected', detail: `Catno "${catnoValue}" is 12+ digits (barcode pattern) - REJECTED`, timestamp: new Date().toISOString() });
+        console.log(`⛔ CROSS-CHECK: Catno "${catnoValue}" is barcode-length digits - REJECTED`);
+        catnoValue = null;
+        combinedData.catalogNumber = null;
+      }
+      
+      // 3. Matrix cross-check: reject if it contains barcode digits
+      let matrixValue = combinedData.matrixNumber || null;
+      if (matrixValue && barcodeNormalized) {
+        const matrixDigits = matrixValue.replace(/[^0-9]/g, '');
+        if (matrixDigits.length >= 12 && !/[a-zA-Z]/.test(matrixValue)) {
+          collectorAudit.push({ step: 'matrix_rejected', detail: `Matrix "${matrixValue}" is barcode-like (${matrixDigits.length} digits, no alpha) - REJECTED`, timestamp: new Date().toISOString() });
+          console.log(`⛔ CROSS-CHECK: Matrix "${matrixValue}" is barcode-like - REJECTED`);
+          matrixValue = null;
+          combinedData.matrixNumber = null;
+        } else if (matrixDigits === barcodeNormalized || matrixDigits.includes(barcodeNormalized)) {
+          collectorAudit.push({ step: 'matrix_rejected', detail: `Matrix "${matrixValue}" contains barcode digits - REJECTED`, timestamp: new Date().toISOString() });
+          console.log(`⛔ CROSS-CHECK: Matrix "${matrixValue}" contains barcode - REJECTED`);
+          matrixValue = null;
+          combinedData.matrixNumber = null;
+        }
+      }
+      
+      // 4. Year validation: only from explicit copyright lines
+      if (combinedData.year && !generalAnalysis.data?.yearSource?.includes('copyright') && !generalAnalysis.data?.yearSource?.includes('(P)') && !generalAnalysis.data?.yearSource?.includes('(C)')) {
+        collectorAudit.push({ step: 'year_unverified', detail: `Year ${combinedData.year} not from copyright line - flagged as unverified`, timestamp: new Date().toISOString() });
+      }
+
       // Update with analysis progress
       await supabase
         .from('ai_scan_results')
@@ -255,7 +316,8 @@ serve(async (req) => {
             matrixAnalysis: matrixAnalysis
               ? (matrixAnalysis.success ? matrixAnalysis.data : { error: matrixAnalysis.error })
               : null,
-            combined: combinedData
+            combined: combinedData,
+            collector_audit: collectorAudit
           }
         })
         .eq('id', scanId)
@@ -400,6 +462,33 @@ serve(async (req) => {
         }
       }
 
+      // Build missing fields for photo guidance
+      const missingFields: string[] = [];
+      if (!combinedData.matrixNumber) missingFields.push('matrix');
+      if (!combinedData.sidCodeMastering && !combinedData.sidCodeMould) missingFields.push('ifpi');
+      if (!combinedData.barcode) missingFields.push('barcode');
+      if (!combinedData.catalogNumber) missingFields.push('catno');
+
+      // Build photo guidance
+      const photoGuidance = missingFields.map((field: string) => {
+        switch (field) {
+          case 'matrix': return { field: 'matrix', instruction: 'Fotografeer de spiegelband van de CD (rond het centergat) onder een hoek van 30-45°, met macro, donkere achtergrond. Draai de CD om het licht te vangen.' };
+          case 'ifpi': return { field: 'ifpi', instruction: 'Zoom in op de binnenste ring bij het centergat. Gebruik zijlicht om de kleine IFPI codes zichtbaar te maken.' };
+          case 'barcode': return { field: 'barcode', instruction: 'Fotografeer de achterkant van de hoes met de barcode duidelijk in beeld.' };
+          case 'catno': return { field: 'catno', instruction: 'Zoek het catalogusnummer op de rug of achterkant (bijv. "CDPCSD 167").' };
+          default: return null;
+        }
+      }).filter(Boolean);
+
+      // Determine match status for UI
+      const hasMatrixOrIFPI = !!(combinedData.matrixNumber || combinedData.sidCodeMastering || combinedData.sidCodeMould);
+      let matchStatus = 'single_match';
+      if (!discogsResult.discogsId) {
+        matchStatus = missingFields.length >= 2 ? 'needs_more_photos' : 'no_match';
+      } else if (!hasMatrixOrIFPI && discogsResult.confidence < 0.85) {
+        matchStatus = 'multiple_candidates';
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -426,7 +515,14 @@ serve(async (req) => {
             genre: combinedData.genre || null,
             country: combinedData.country || null,
             // Pricing data from Discogs
-            pricing_stats: pricingStats
+            pricing_stats: pricingStats,
+            // Collector-grade additions
+            match_status: matchStatus,
+            missing_fields: missingFields,
+            photo_guidance: photoGuidance,
+            collector_audit: collectorAudit,
+            suggestions: discogsResult.suggestions || null,
+            search_metadata: discogsResult.searchMetadata || null
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -28,6 +28,7 @@ import { scanReducer, initialScanState } from "@/components/ScanStateReducer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { ArtistDiscoveryPopup } from '@/components/scan/ArtistDiscoveryPopup';
 
 const BulkerImage = () => {
   const navigate = useNavigate();
@@ -45,6 +46,10 @@ const BulkerImage = () => {
   
   // Ref to prevent multiple auto-starts
   const autoStartTriggered = useRef(false);
+  
+  // Artist discovery popup state
+  const [showArtistPopup, setShowArtistPopup] = React.useState(false);
+  const [savedArtistName, setSavedArtistName] = React.useState<string>('');
 
   // Check if we're coming from AI scan with pre-filled data
   const fromAiScan = searchParams.get('fromAiScan') === 'true';
@@ -411,6 +416,13 @@ const BulkerImage = () => {
         description: `${state.mediaType === 'vinyl' ? 'LP' : 'CD'} opgeslagen met adviesprijs: €${advicePrice.toFixed(2)}`,
         variant: "default"
       });
+
+      // Show artist discovery popup after successful save
+      const artistName = searchResults[0]?.artist || urlArtist;
+      if (artistName) {
+        setShowArtistPopup(true);
+        setSavedArtistName(artistName);
+      }
     } catch (error) {
       console.error('❌ Error inserting scan:', error);
       toast({
@@ -917,6 +929,16 @@ const BulkerImage = () => {
           currentPlan={usageInfo?.plan || 'free'}
           usageInfo={usageInfo}
         />
+        
+        {/* Artist Discovery Popup - shown after successful save */}
+        {savedArtistName && (
+          <ArtistDiscoveryPopup
+            artistName={savedArtistName}
+            isOpen={showArtistPopup}
+            onClose={() => setShowArtistPopup(false)}
+            onContinue={() => setShowArtistPopup(false)}
+          />
+        )}
       </div>
     </div>
   );

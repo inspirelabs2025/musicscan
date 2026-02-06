@@ -59,8 +59,8 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
           // Album stories (music_stories where single_name IS NULL)
           supabase
             .from('music_stories')
-            .select('id, title, slug, cover_image_url, single_name')
-            .ilike('artist_name', name)
+            .select('id, title, slug, artwork_url, single_name')
+            .ilike('artist', name)
             .is('single_name', null)
             .eq('is_published', true)
             .order('created_at', { ascending: false })
@@ -69,8 +69,8 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
           // Singles (music_stories where single_name IS NOT NULL)
           supabase
             .from('music_stories')
-            .select('id, title, slug, cover_image_url, single_name')
-            .ilike('artist_name', name)
+            .select('id, title, slug, artwork_url, single_name')
+            .ilike('artist', name)
             .not('single_name', 'is', null)
             .eq('is_published', true)
             .order('created_at', { ascending: false })
@@ -109,11 +109,11 @@ export function useArtistContent(artistName: string | null): ArtistContentResult
           : null;
 
         const albumStories = (albumStoriesRes.data || []).map(s => ({
-          id: s.id, title: s.title, slug: s.slug, image_url: s.cover_image_url,
+          id: s.id, title: s.title, slug: s.slug, image_url: s.artwork_url,
         }));
 
         const singles = (singlesRes.data || []).map(s => ({
-          id: s.id, title: s.single_name || s.title, slug: s.slug, image_url: s.cover_image_url,
+          id: s.id, title: s.single_name || s.title, slug: s.slug, image_url: s.artwork_url,
         }));
 
         const anecdotes = (anecdotesRes.data || []).map(a => ({

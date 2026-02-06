@@ -1562,7 +1562,8 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     
     // HARD GATING RULE 1: TWO-IDENTIFIER MINIMUM (V4 CRITICAL)
     // Must match at least TWO of {barcode, catno, matrix} to accept
-    if (bestMatch && hasTechnicalIdentifiers) {
+    // EXCEPTION: If a LOCK condition was met (e.g. Barcode+Label+Year), bypass this rule
+    if (bestMatch && hasTechnicalIdentifiers && !bestMatchDetails?.lock_reason) {
       const identifierMatchCount = [
         searchMetadata.technical_matches.barcode,
         searchMetadata.technical_matches.catno,
@@ -1579,6 +1580,8 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
         bestConfidencePoints = 0;
         searchMetadata.verification_level = 'no_match';
       }
+    } else if (bestMatch && bestMatchDetails?.lock_reason) {
+      console.log(`🔓 LOCK bypass: Hard gating overruled door "${bestMatchDetails.lock_reason}"`);
     }
     
     // HARD GATING RULE 2: Confidence Threshold

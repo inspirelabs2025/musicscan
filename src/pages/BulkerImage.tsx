@@ -937,7 +937,10 @@ const BulkerImage = () => {
             artistName={savedArtistName}
             isOpen={showArtistPopup}
             onClose={() => setShowArtistPopup(false)}
-            onContinue={() => setShowArtistPopup(false)}
+            onContinue={() => {
+              setShowArtistPopup(false);
+              window.location.href = '/scanner';
+            }}
           />
         )}
       </div>

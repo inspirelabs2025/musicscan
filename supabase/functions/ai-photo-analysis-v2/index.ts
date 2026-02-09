@@ -313,25 +313,32 @@ serve(async (req) => {
       }
       
       // 3. Matrix cross-check: reject if barcode-like pattern
+      // IMPROVED: Don't reject matrices with production structure (e.g. C01 468531-10)
       let matrixValue = combinedData.matrixNumber || null;
       if (matrixValue) {
         const matrixDigits = matrixValue.replace(/[^0-9]/g, '');
         const matrixAlpha = matrixValue.replace(/[^a-zA-Z]/g, '');
         
+        // Check for production structure: hyphens, slashes, hash marks between alphanumeric groups
+        const hasProductionStructure = /[A-Za-z]+\d+[\s\-\/\#]+\d+/i.test(matrixValue.trim()) ||
+                                        /\d+[\s\-\/\#]+\d+[\s\-\/\#]+\d+/.test(matrixValue.trim());
+        
         // Regex: optional single letter prefix + digits/spaces (8+ digit sequence) → barcode leak
         const barcodeLeakPattern = /^[A-Za-z]?\s?\d[\d\s]{8,}$/;
         
-        if (barcodeLeakPattern.test(matrixValue.trim())) {
+        if (barcodeLeakPattern.test(matrixValue.trim()) && !hasProductionStructure) {
           // Check digit overlap with barcode
           const overlapPct = barcodeNormalized 
             ? (matrixDigits.split('').filter((d: string, i: number) => barcodeNormalized![i] === d).length / Math.max(matrixDigits.length, 1))
             : 0;
           
-          if (overlapPct > 0.8 || matrixAlpha.length <= 1) {
-            collectorAudit.push({ step: 'matrix_rejected', detail: `Matrix "${matrixValue}" matches barcode-like pattern (^[A-Z]?\\s?\\d[\\d\\s]{8,}$, alpha=${matrixAlpha.length}, overlap=${(overlapPct*100).toFixed(0)}%) - REJECTED. Maak een betere hub-foto.`, timestamp: new Date().toISOString() });
+          if (overlapPct > 0.8 || (matrixAlpha.length <= 1 && !hasProductionStructure)) {
+            collectorAudit.push({ step: 'matrix_rejected', detail: `Matrix "${matrixValue}" matches barcode-like pattern (alpha=${matrixAlpha.length}, overlap=${(overlapPct*100).toFixed(0)}%) - REJECTED. Maak een betere hub-foto.`, timestamp: new Date().toISOString() });
             console.log(`⛔ CROSS-CHECK: Matrix "${matrixValue}" is barcode-like (overlap ${(overlapPct*100).toFixed(0)}%) - REJECTED`);
             matrixValue = null;
             combinedData.matrixNumber = null;
+          } else {
+            console.log(`✅ Matrix "${matrixValue}" has production structure - KEPT despite barcode-like pattern`);
           }
         } else if (matrixDigits.length >= 12 && matrixAlpha.length === 0) {
           // Pure digits >= 12 without any alpha → barcode, not matrix
@@ -1779,7 +1786,8 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     
     // HARD GATING RULE 1: TWO-IDENTIFIER MINIMUM (V4 CRITICAL)
     // Must match at least TWO of {barcode, catno, matrix} to accept
-    // EXCEPTION: If a LOCK condition was met (e.g. Barcode+Label+Year), bypass this rule
+    // EXCEPTION 1: If a LOCK condition was met (e.g. Barcode+Label+Year), bypass this rule
+    // EXCEPTION 2: If catno matches + label matches + artist/title context → suggested_match
     if (bestMatch && hasTechnicalIdentifiers && !bestMatchDetails?.lock_reason) {
       const identifierMatchCount = [
         searchMetadata.technical_matches.barcode,
@@ -1788,14 +1796,31 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
       ].filter(Boolean).length;
       
       if (identifierMatchCount < 2) {
-        console.log(`⛔ DISQUALIFIED: Niet genoeg identifier matches (${identifierMatchCount}/2 vereist)`);
-        console.log(`   barcode: ${searchMetadata.technical_matches.barcode ? '✅' : '❌'}`);
-        console.log(`   catno: ${searchMetadata.technical_matches.catno ? '✅' : '❌'}`);
-        console.log(`   matrix: ${searchMetadata.technical_matches.matrix ? '✅' : '❌'}`);
-        console.log(`   → NO_MATCH (mag niet guessen bij technische identifiers)`);
-        bestMatch = null;
-        bestConfidencePoints = 0;
-        searchMetadata.verification_level = 'no_match';
+        // NEW: Check for catno + label + artist/title soft match
+        const hasCatnoMatch = searchMetadata.technical_matches.catno;
+        const hasLabelMatch = searchMetadata.technical_matches.label;
+        const hasArtistTitleContext = analysisData.artist && analysisData.title;
+        
+        if (hasCatnoMatch && hasLabelMatch && hasArtistTitleContext) {
+          // Catno + Label + Artist/Title = suggested_match (not locked, but high confidence suggestion)
+          console.log(`🟡 SOFT GATE: catno ✅ + label ✅ + artist/title context → suggested_match`);
+          console.log(`   Downgrading from auto-lock to suggested_match (confidence capped at 0.79)`);
+          searchMetadata.verification_level = 'suggested_match';
+          // Cap confidence to 0.79 (no matrix/IFPI = can't be 100% sure)
+          bestConfidencePoints = Math.min(bestConfidencePoints, Math.floor(160 * 0.79));
+          searchMetadata.matched_on.push('soft_gate_catno_label');
+          searchMetadata.explain.push('Catno + Label match met artist/title context → suggested_match');
+        } else {
+          console.log(`⛔ DISQUALIFIED: Niet genoeg identifier matches (${identifierMatchCount}/2 vereist)`);
+          console.log(`   barcode: ${searchMetadata.technical_matches.barcode ? '✅' : '❌'}`);
+          console.log(`   catno: ${searchMetadata.technical_matches.catno ? '✅' : '❌'}`);
+          console.log(`   matrix: ${searchMetadata.technical_matches.matrix ? '✅' : '❌'}`);
+          console.log(`   label: ${searchMetadata.technical_matches.label ? '✅' : '❌'}`);
+          console.log(`   → NO_MATCH (mag niet guessen bij technische identifiers)`);
+          bestMatch = null;
+          bestConfidencePoints = 0;
+          searchMetadata.verification_level = 'no_match';
+        }
       }
     } else if (bestMatch && bestMatchDetails?.lock_reason) {
       console.log(`🔓 LOCK bypass: Hard gating overruled door "${bestMatchDetails.lock_reason}"`);
@@ -1804,7 +1829,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     // HARD GATING RULE 2: Confidence Threshold
     const CONFIDENCE_THRESHOLD = 70; // Uit 155 punten = ~45%
     
-    if (bestMatch && bestConfidencePoints < CONFIDENCE_THRESHOLD) {
+    if (bestMatch && bestConfidencePoints < CONFIDENCE_THRESHOLD && searchMetadata.verification_level !== 'suggested_match') {
       console.log(`⛔ BELOW THRESHOLD: Score ${bestConfidencePoints}/${CONFIDENCE_THRESHOLD} required`);
       
       if (hasTechnicalIdentifiers) {

@@ -1751,11 +1751,41 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
           suggestions = rawSuggestions.slice(0, 5);
           
           if (hasTechnicalIdentifiers) {
-            console.log(`   ⛔ HARD GATE: Technische identifiers aanwezig maar geen match`);
-            console.log(`   ⛔ Fuzzy search mag NIET auto-selecteren → manual_review_required`);
-            console.log(`   ✅ ${suggestions.length} suggesties opgeslagen voor manual review`);
-            searchMetadata.verification_level = 'no_match';
-            // NO auto-selection when technical identifiers exist
+            console.log(`   ⚠️ HARD GATE: Technische identifiers aanwezig maar geen directe match`);
+            console.log(`   🔍 Verifying strategy 3 candidates against identifiers...`);
+            
+            // Still verify candidates - if label+artist+title match, allow suggested_match
+            for (const candidate of results.slice(0, 10)) {
+              const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
+              
+              // Check for soft match: label + (catno OR year) + artist/title context
+              const hasLabel = verification.technical_matches?.label;
+              const hasCatno = verification.technical_matches?.catno;
+              const hasYear = verification.technical_matches?.year;
+              const hasAnyTechnical = hasCatno || verification.technical_matches?.barcode || verification.technical_matches?.matrix;
+              const softMatch = hasLabel && (hasCatno || (hasYear && !hasAnyTechnical));
+              
+              console.log(`   📋 Candidate ${candidate.id}: ${candidate.title} | label=${hasLabel} catno=${hasCatno} year=${hasYear} points=${verification.points} soft=${softMatch}`);
+              
+              if (softMatch && verification.points > bestConfidencePoints) {
+                bestConfidencePoints = verification.points;
+                bestMatch = candidate;
+                bestMatchDetails = verification;
+                searchMetadata.matched_on = verification.matched_on || [];
+                searchMetadata.technical_matches = verification.technical_matches;
+                searchMetadata.explain = verification.explain || [];
+                searchMetadata.explain.push('Strategy 3 candidate verified via soft match (label + context)');
+                console.log(`   ✅ SOFT MATCH: ${candidate.title} (${verification.points} pts)`);
+              }
+            }
+            
+            if (!bestMatch) {
+              console.log(`   ❌ No candidates passed soft verification`);
+              searchMetadata.verification_level = 'no_match';
+            } else {
+              console.log(`   🟡 Best soft match: ${bestMatch.title} (${bestConfidencePoints} pts)`);
+            }
+            console.log(`   ✅ ${suggestions.length} suggesties opgeslagen voor review`);
           } else if (results.length > 0) {
             // Only auto-select if NO technical identifiers were present
             for (const candidate of results.slice(0, 5)) {

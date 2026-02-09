@@ -1,37 +1,60 @@
 
-# ArtistDiscoveryPopup verplaatsen naar na het opslaan
 
 ## Probleem
-De ArtistDiscoveryPopup zit momenteel op de **AIScanV2** pagina en wordt getoond **voordat** je naar `/scanner/discogs` navigeert. Na klikken op "Ga door naar opslaan" navigeer je weg en de popup verdwijnt. Op de BulkerImage pagina (waar het item daadwerkelijk wordt opgeslagen) is er geen ArtistDiscoveryPopup.
 
-## Oplossing
-De popup verplaatsen naar de **BulkerImage** pagina (`/scanner/discogs`) en tonen **na een succesvolle opslag**.
+De scanner vindt de juiste Discogs-release (Mariah Carey - Emotions, ID 6042141, 80 punten) maar gooit deze weg door twee samenhangende logische fouten:
 
-## Stappen
+1. **Soft match sluit matrix-matches uit**: De formule `hasYear && !hasAnyTechnical` betekent dat kandidaten MET matrix-match ironisch genoeg worden uitgesloten van de soft match
+2. **Hard gating herkent matrix niet als voldoende**: De hard gate vereist 2 van {barcode, catno, matrix}, maar matrix + label + year telt niet als LOCK-conditie
 
-### 1. BulkerImage.tsx - ArtistDiscoveryPopup toevoegen
-- Importeer `ArtistDiscoveryPopup` component
-- Voeg state toe: `showArtistPopup` (boolean)
-- Na succesvolle opslag in `performSave` (na de toast "Scan Voltooid!"), zet `showArtistPopup` op `true` als er een artiestnaam beschikbaar is
-- Render de `ArtistDiscoveryPopup` onderaan de component met de artiestnaam uit `searchResults[0]?.artist` of de query parameter
+## Oplossing: Slimmere Decision Logic
 
-### 2. AIScanV2.tsx - Directe navigatie na klik
-- Verwijder de `showArtistPopup` state en `pendingNavigateRef` logica
-- Bij klik op "Toevoegen aan Collectie": navigeer direct naar `/scanner/discogs` zonder popup tussenstap
-- Verwijder de `ArtistDiscoveryPopup` render en import
+### Wijziging 1: Fix soft match in Strategy 3 verificatie (regel ~1758-1780)
 
-### 3. BulkerImage popup callbacks
-- `onClose`: Sluit popup, gebruiker blijft op de pagina of navigeert terug naar scanner
-- `onContinue`: Sluit popup, optioneel navigeer naar collectie-overzicht
+De soft match conditie wordt vervangen door een puntgebaseerde selectie:
+- Verwijder de `softMatch` boolean-check
+- Selecteer simpelweg de kandidaat met de **hoogste punten** uit de verificatie
+- Minimale drempel: 30 punten (label + year + title)
 
-## Technische details
+```
+// OUD (broken):
+const softMatch = hasLabel && (hasCatno || (hasYear && !hasAnyTechnical));
+if (softMatch && verification.points > bestConfidencePoints) { ... }
 
-```text
-Huidige flow:
-AIScanV2 -> klik opslaan -> popup (kort zichtbaar) -> navigate -> BulkerImage -> opslaan
-
-Nieuwe flow:
-AIScanV2 -> klik opslaan -> navigate -> BulkerImage -> opslaan -> popup (na succes)
+// NIEUW (simpel, effectief):
+if (verification.points >= 30 && verification.points > bestConfidencePoints) {
+  bestMatch = candidate;
+  bestConfidencePoints = verification.points;
+  ...
+}
 ```
 
-De artiestnaam wordt uit de URL query parameters gehaald (die al meegegeven worden: `artist=Blondie`) of uit `searchResults[0]?.artist`.
+### Wijziging 2: Voeg matrix + label toe als LOCK-pad (regel ~1821-1854)
+
+Naast de bestaande catno+label soft gate, voeg een matrix+label pad toe:
+
+```
+// Matrix + Label = suggested_match (matrix is sterkste identifier na barcode)
+if (hasMatrixMatch && hasLabelMatch && hasArtistTitleContext) {
+  searchMetadata.verification_level = 'suggested_match';
+  bestConfidencePoints = Math.min(bestConfidencePoints, Math.floor(160 * 0.79));
+}
+```
+
+### Wijziging 3: Voeg matrix toe aan identifierMatchCount
+
+Matrix hoort mee te tellen in de identifier count:
+- Matrix match + label match = voldoende voor suggested_match
+- Matrix match + catno of barcode = voldoende voor verified
+
+### Verwacht resultaat
+
+De Mariah Carey scan zou nu:
+- Candidate 6042141 selecteren (matrix ✅ + label ✅ + year ✅ = 80 pts)
+- Status: `suggested_match` met confidence ~0.50 (80/160)
+- Discogs URL: https://www.discogs.com/release/6042141
+
+### Bestanden die wijzigen
+
+- `supabase/functions/ai-photo-analysis-v2/index.ts` — drie blokken in de decision logic
+

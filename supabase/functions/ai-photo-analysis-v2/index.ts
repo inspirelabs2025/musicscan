@@ -1758,23 +1758,22 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
             for (const candidate of results.slice(0, 10)) {
               const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
               
-              // Check for soft match: label + (catno OR year) + artist/title context
+              // Point-based selection: pick highest-scoring candidate above threshold
               const hasLabel = verification.technical_matches?.label;
               const hasCatno = verification.technical_matches?.catno;
               const hasYear = verification.technical_matches?.year;
-              const hasAnyTechnical = hasCatno || verification.technical_matches?.barcode || verification.technical_matches?.matrix;
-              const softMatch = hasLabel && (hasCatno || (hasYear && !hasAnyTechnical));
+              const hasMatrix = verification.technical_matches?.matrix;
               
-              console.log(`   📋 Candidate ${candidate.id}: ${candidate.title} | label=${hasLabel} catno=${hasCatno} year=${hasYear} points=${verification.points} soft=${softMatch}`);
+              console.log(`   📋 Candidate ${candidate.id}: ${candidate.title} | label=${hasLabel} catno=${hasCatno} year=${hasYear} matrix=${hasMatrix} points=${verification.points}`);
               
-              if (softMatch && verification.points > bestConfidencePoints) {
+              if (verification.points >= 30 && verification.points > bestConfidencePoints) {
                 bestConfidencePoints = verification.points;
                 bestMatch = candidate;
                 bestMatchDetails = verification;
                 searchMetadata.matched_on = verification.matched_on || [];
                 searchMetadata.technical_matches = verification.technical_matches;
                 searchMetadata.explain = verification.explain || [];
-                searchMetadata.explain.push('Strategy 3 candidate verified via soft match (label + context)');
+                searchMetadata.explain.push(`Strategy 3 candidate verified via point-based selection (${verification.points} pts)`);
                 console.log(`   ✅ SOFT MATCH: ${candidate.title} (${verification.points} pts)`);
               }
             }
@@ -1831,15 +1830,22 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
         const hasLabelMatch = searchMetadata.technical_matches.label;
         const hasArtistTitleContext = analysisData.artist && analysisData.title;
         
+        const hasMatrixMatch = searchMetadata.technical_matches.matrix;
+        
         if (hasCatnoMatch && hasLabelMatch && hasArtistTitleContext) {
-          // Catno + Label + Artist/Title = suggested_match (not locked, but high confidence suggestion)
+          // Catno + Label + Artist/Title = suggested_match
           console.log(`🟡 SOFT GATE: catno ✅ + label ✅ + artist/title context → suggested_match`);
-          console.log(`   Downgrading from auto-lock to suggested_match (confidence capped at 0.79)`);
           searchMetadata.verification_level = 'suggested_match';
-          // Cap confidence to 0.79 (no matrix/IFPI = can't be 100% sure)
           bestConfidencePoints = Math.min(bestConfidencePoints, Math.floor(160 * 0.79));
           searchMetadata.matched_on.push('soft_gate_catno_label');
           searchMetadata.explain.push('Catno + Label match met artist/title context → suggested_match');
+        } else if (hasMatrixMatch && hasLabelMatch && hasArtistTitleContext) {
+          // Matrix + Label + Artist/Title = suggested_match (matrix is sterkste identifier na barcode)
+          console.log(`🟡 SOFT GATE: matrix ✅ + label ✅ + artist/title context → suggested_match`);
+          searchMetadata.verification_level = 'suggested_match';
+          bestConfidencePoints = Math.min(bestConfidencePoints, Math.floor(160 * 0.79));
+          searchMetadata.matched_on.push('soft_gate_matrix_label');
+          searchMetadata.explain.push('Matrix + Label match met artist/title context → suggested_match');
         } else {
           console.log(`⛔ DISQUALIFIED: Niet genoeg identifier matches (${identifierMatchCount}/2 vereist)`);
           console.log(`   barcode: ${searchMetadata.technical_matches.barcode ? '✅' : '❌'}`);

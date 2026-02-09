@@ -846,23 +846,36 @@ function getSystemPrompt(mediaType: string, analysisType: 'general' | 'details' 
   if (analysisType === 'general') {
     return basePrompt + `Your task is to identify the main release information from the provided images.
 
+ABSOLUTE RULES — VIOLATION = FAILURE:
+1. ONLY report text you can LITERALLY READ in the images. 
+2. If you cannot clearly read a catalog number, barcode, or any code → return null for that field. NEVER guess or fill in from memory.
+3. Do NOT use your training knowledge to "fill in" missing information. If the photo shows "Columbia" but no catalog number is visible, catalogNumber MUST be null.
+4. You MAY use your knowledge to identify the artist/title from album artwork recognition, but ALL codes/numbers MUST come from OCR of the actual images.
+5. Confidence should reflect how much you actually READ vs recognized/guessed.
+
+CRITICAL DISTINCTION:
+- artist, title, genre: May use visual recognition + knowledge (e.g., recognizing an album cover)
+- label: May use visual recognition IF logo/text is visible on the media
+- catalogNumber, year, country: ONLY from text clearly visible in the images. If not readable → null.
+- searchQueries: Include both the identified artist/title AND any codes you actually read
+
 RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
 {
   "artist": "artist name or null",
   "title": "album/release title or null", 
   "label": "record label name or null",
-  "catalogNumber": "catalog number or null",
-  "year": number or null,
+  "catalogNumber": "catalog number ONLY if clearly readable in image, otherwise null",
+  "year": number ONLY if clearly printed/visible in image, otherwise null,
   "genre": "genre or null",
   "format": "format details or null",
-  "country": "country of release or null",
-  "confidence": number between 0-1,
-  "description": "detailed analysis description",
-  "searchQueries": ["array", "of", "search", "terms"],
+  "country": "country ONLY if printed on media (e.g., 'Made in Holland'), otherwise null",
+  "confidence": number between 0-1 (how much is OCR-verified vs guessed),
+  "description": "detailed analysis of what you see",
+  "searchQueries": ["array", "of", "search", "terms", "including", "any", "readable", "codes"],
   "imageQuality": "excellent|good|fair|poor"
 }
 
-Focus on the primary release identification. Be extremely accurate with text extraction.`
+Remember: A null field is ALWAYS better than a hallucinated value. Wrong catalog numbers cause failed Discogs lookups.`
   }
 
   if (analysisType === 'matrix') {
@@ -954,10 +967,18 @@ Focus on the dead wax area between the label and the first groove.`
   // details
   return basePrompt + `Your task is to extract detailed technical information and small text details.
 
+ABSOLUTE RULES — VIOLATION = FAILURE:
+1. ONLY report codes/numbers you can LITERALLY READ in the images.
+2. If a code is partially visible or unclear, use "?" for unclear characters or return null.
+3. NEVER fabricate IFPI codes, label codes, barcodes, or matrix numbers. If you cannot read them → null.
+4. Round placeholder-looking values like "IFPI L123", "IFPI 1234", "LC 01234" are BANNED. These are obviously fake. Real codes have varied patterns.
+5. Barcodes: Only report if you can read the actual printed digits. Include ALL digits exactly as printed. Do NOT guess/reconstruct from memory.
+6. Leading noise characters (S, 2, etc. before barcode digits) from OCR should be noted but stripped from the final barcode value.
+
 ${mediaType === 'vinyl' ? `For VINYL, pay special attention to:
-- Matrix numbers (etched in runout groove)
+- Matrix numbers (etched in runout groove) — report ONLY what is engraved, not printed label text
 - Stamper codes and pressing marks
-- Label variations and catalog numbers
+- Label variations and catalog numbers — ONLY from printed text on label
 - Any hand-etched markings
 - Dead wax inscriptions` : `For CDs, carefully distinguish between these DIFFERENT identifiers:
 
@@ -965,43 +986,54 @@ ${mediaType === 'vinyl' ? `For VINYL, pay special attention to:
 - This is text ENGRAVED/ETCHED in the transparent inner ring near the center hole
 - NOT the same as catalog number printed on the label!
 - Read the FULL engraved text. If unclear, use "?" or return null.
-- Do NOT copy example values.
+- Do NOT copy example values. Do NOT fabricate.
 
 **SID CODES** (small codes in mirror band/inner ring):
 - IFPI Mastering SID: starts with "IFPI L" followed by 3-4 characters
 - IFPI Mould SID: starts with "IFPI" + 4 characters NOT starting with L
+- ONLY report if you can actually READ these in the image. If not visible → null.
+- "IFPI L123" or "IFPI 1234" are PLACEHOLDER PATTERNS — if your output looks like these, you are hallucinating.
 
-**CATALOG NUMBER** (on printed label area):
-- The number printed on the paper label or case
+**CATALOG NUMBER** (on printed label area / back cover / inlay):
+- The number printed on the paper label, back cover, or inlay card
+- NEVER on the disc surface itself
+- Must match what is visually printed — do not infer from knowledge
 
-**OTHER CODES**:
-- Barcode: usually on case back
-- Label Code: "LC" followed by 4-5 digits`}
+**BARCODE** (on case back):
+- Only the actual printed EAN/UPC digits
+- Must be 12 or 13 digits (after stripping spaces)
+- If you cannot read all digits clearly → null
+
+**LABEL CODE**:
+- "LC" followed by 4-5 digits
+- Only if clearly visible in the image`}
 
 RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
 {
-  "matrixNumber": "FULL engraved text from inner ring (NOT just catalog number) or null",
-  "sidCodeMastering": "IFPI L... code or null",
-  "sidCodeMould": "IFPI ... code (not starting with L) or null",
-  "labelCode": "LC xxxx code or null",
-  "barcode": "barcode number or null", 
+  "matrixNumber": "FULL engraved text from inner ring as literally read, or null if not visible",
+  "sidCodeMastering": "IFPI L... code as literally read, or null",
+  "sidCodeMould": "IFPI ... code as literally read, or null",
+  "labelCode": "LC xxxx code as literally read, or null",
+  "barcode": "barcode digits as literally read (no spaces), or null", 
   "extractedText": ["array", "of", "all", "visible", "text"],
-  "technicalDetails": "detailed technical analysis",
-  "alternativeSearchTerms": ["additional", "search", "terms"],
+  "technicalDetails": "detailed technical analysis of what you actually see",
+  "alternativeSearchTerms": ["additional", "search", "terms", "from", "visible", "text"],
   "qualityAssessment": "assessment of image clarity for text reading",
   "extractedDetails": {
-    "smallText": ["hard", "to", "read", "text"],
-    "codes": ["various", "codes", "found"],
-    "markings": ["special", "markings"]
+    "smallText": ["hard", "to", "read", "text", "actually", "visible"],
+    "codes": ["only", "codes", "you", "can", "read"],
+    "markings": ["special", "markings", "actually", "visible"]
   }
 }
 
-Use OCR-like precision for reading small text and codes.`
+REMEMBER: null is ALWAYS better than fabricated data. A wrong barcode or catalog number will cause a failed Discogs match. Only report what you SEE.`
 }
 
 function getUserPrompt(mediaType: string, analysisType: 'general' | 'details' | 'matrix'): string {
   if (analysisType === 'general') {
-    return `Analyze these ${mediaType} images and identify the music release. Extract the main information like artist, title, label, and catalog number. Provide multiple search terms that would help find this exact release on Discogs. Assess image quality for text readability.`
+    return `Analyze these ${mediaType} images and identify the music release. 
+CRITICAL: For catalog number, barcode, year, and country — ONLY report what is clearly PRINTED and READABLE in the images. If you cannot literally read the catalog number from the photo, set it to null. Do NOT fill in from your training knowledge. 
+You MAY identify artist/title from visual recognition. Provide multiple search terms including any codes you can actually read. Assess image quality for text readability.`
   }
 
   if (analysisType === 'matrix') {
@@ -1012,7 +1044,13 @@ function getUserPrompt(mediaType: string, analysisType: 'general' | 'details' | 
     }
   }
 
-  return `Examine these ${mediaType} images for detailed technical information. Look for small text, codes, matrix numbers, barcodes, and any markings that might help with precise identification. Extract ALL visible text, even if partially obscured.`
+  return `Examine these ${mediaType} images for detailed technical information. Look for small text, codes, matrix numbers, barcodes, and any markings.
+CRITICAL RULES:
+- ONLY report codes you can LITERALLY READ in the images. 
+- If a barcode, IFPI code, label code, or catalog number is not clearly visible → return null.
+- NEVER output placeholder-looking values like "IFPI L123", "IFPI 1234", "LC 01234" — these are obvious hallucinations.
+- A wrong code is FAR WORSE than a missing code. When in doubt → null.
+- For barcodes: strip any leading non-digit noise characters (like "S") but report the raw reading in notes.`
 }
 
 function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: any) {

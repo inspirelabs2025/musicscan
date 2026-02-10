@@ -1,39 +1,60 @@
 
 
-## Extracted Fields in V2 Scanner Results
+## Bevestigingen & Uitsluiters: Rights Society Gating
 
-### What changes
-Add a prominent "Geextraheerde velden" (Extracted Fields) section to the V2 scanner results, showing all data collected from the photos with confidence indicators -- similar to the CD Pipeline's `ExtractionFields` component.
+### Probleem
+BIEM/STEMRA op de disc betekent dat het een Europese (Nederlandse) persing is. De huidige scoring geeft alleen een -25 penalty op basis van "Made in" tekst, maar negeert harde juridische markers zoals rechtenorganisaties. Hierdoor kan een Japanse release toch winnen als die op andere punten hoog scoort.
 
-### Current situation
-The V2 scanner (`AIScanV2Results.tsx`) buries technical identifiers in a plain text list under "Technische Details". There are no confidence indicators, no "detected / not detected" status, and no visual feedback on what was found vs. what is missing.
+### Oplossing: Twee nieuwe mechanismen
 
-### Plan
+**1. Rights Society Region Map (harde uitsluiter)**
 
-**1. Build extraction data from V2 results**
+Een mapping van rechtenorganisaties naar hun regio:
 
-In `AIScanV2Results.tsx`, transform the existing result fields (barcode, matrix_number, catalog_number, sid_code_mastering, sid_code_mould, label_code, label, country, year, genre) into a structured extraction array that the `ExtractionFields` component can render.
+```text
+BIEM/STEMRA, STEMRA     --> NL/EU
+GEMA                     --> DE/EU  
+SACEM                    --> FR/EU
+PRS, MCPS               --> UK/EU
+JASRAC                   --> JP
+ASCAP, BMI               --> US
+SOCAN                    --> CA
+APRA, AMCOS              --> AU/NZ
+```
 
-Each field gets:
-- **field name** (barcode, matrix, catno, ifpi_master, ifpi_mould, label_code, label, country, year, genre)
-- **raw/normalized value** from the result
-- **confidence** derived from: 1.0 if present + verified match, 0.8 if present but unverified, 0 if missing
-- Status from the `collector_audit` log (rejected, verified, unverified)
+Als STEMRA gedetecteerd is en de kandidaat-release komt uit Japan --> **hard exclude** (score naar 0, skip).
 
-**2. Add ExtractionFields section to results UI**
+**2. Twee-laags logica in de scoring-functie**
 
-Place the extraction fields section directly after the confidence score and before the release information section. This makes the "what did we find in your photos" data the first thing the user sees.
+Stap A - **Exclude**: Als de gedetecteerde rechtenorganisatie een regio impliceert die NIET compatibel is met het land van de kandidaat, dan wordt de kandidaat volledig uitgesloten (score = 0). Dit is geen penalty maar een eliminatie.
 
-**3. Reuse existing ExtractionFields component**
+Stap B - **Confirm**: Als de rechtenorganisatie WEL past bij het kandidaat-land, geeft dit +15 bevestigingspunten. STEMRA + "Netherlands" = sterke bevestiging.
 
-Import and use the existing `ExtractionFields` component from `src/components/scan-pipeline/ExtractionFields.tsx` -- no need to create a new component.
+### Wat verandert er concreet
 
-### Technical details
+**File: `supabase/functions/ai-photo-analysis-v2/index.ts`**
 
-- File to edit: `src/components/scanner/AIScanV2Results.tsx`
-- Import: `ExtractionFields` from `@/components/scan-pipeline/ExtractionFields`
-- Import: `ScanExtraction` type from `@/hooks/useCDScanPipeline`
-- Build a `buildExtractions(result, collectorAudit)` helper function that maps V2 result fields to `ScanExtraction[]`
-- Parse the `collector_audit` entries to determine if fields were rejected/verified, adjusting confidence accordingly (rejected = 0.3, verified = 1.0)
-- Render between the confidence score bar and the release information grid
+1. **Nieuwe constante**: `RIGHTS_SOCIETY_REGIONS` -- map van society-naam naar compatible landen/regio's
+2. **Nieuwe helper**: `detectRightsSocieties(text)` -- zoekt in alle geextraheerde tekst naar bekende rechtenorganisaties
+3. **Aanpassing scoring-functie** (`verifyAndScoreCandidate` rond regel 2652):
+   - Voeg een check toe VOOR de bestaande country-check
+   - Als een rights society is gedetecteerd:
+     - Kandidaat-land valt BUITEN de society-regio --> `points = 0`, `excluded = true`, explain: "STEMRA detected: excludes Japan"
+     - Kandidaat-land valt BINNEN de society-regio --> `points += 15`, explain: "STEMRA confirms Netherlands origin"
+4. **`analysisData` uitbreiden**: Het bestaande `rights_societies` veld wordt doorgegeven aan de scoring-functie zodat het beschikbaar is voor de exclude/confirm logica
+5. **Audit trail**: Elke exclude/confirm wordt gelogd in de `explain` array zodat het zichtbaar is in de Audit Log UI
+
+### Voorbeeld flow (jouw CBS CD)
+
+```text
+Gedetecteerd: BIEM/STEMRA
+Kandidaat 1: Japan (35DP-93) --> EXCLUDED (STEMRA = EU only)
+Kandidaat 2: Netherlands (CBS 450227 2) --> +15 confirm, totaal hoger
+Resultaat: Nederlandse persing wint
+```
+
+### Impact op bestaande logica
+- De EU country penalty (-25) blijft bestaan als fallback voor "Made in" tekst
+- Rights society gating heeft HOGERE prioriteit en is een harde exclude (niet alleen penalty)
+- Geen impact op scans zonder rechtenorganisatie-detectie
 

@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check } from 'lucide-react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -102,6 +102,82 @@ const cleanDisplayText = (text: string): string => {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 };
+// ─── Suggestion pools ──────────────────────────────────────
+const DISCOVERY_SUGGESTIONS = [
+  { emoji: '📖', text: 'Wat is het verhaal achter deze release?' },
+  { emoji: '🎤', text: 'Vertel me meer over deze artiest' },
+  { emoji: '😄', text: 'Ken je leuke anekdotes over dit album?' },
+  { emoji: '🎶', text: 'Welke andere albums zijn vergelijkbaar?' },
+  { emoji: '🏭', text: 'In welke studio is dit opgenomen?' },
+  { emoji: '📅', text: 'Wat gebeurde er nog meer in het jaar van release?' },
+  { emoji: '💎', text: 'Is dit een zeldzame persing?' },
+  { emoji: '🌍', text: 'Zijn er andere persingen van deze release?' },
+  { emoji: '🎵', text: 'Wat zijn de beste nummers op dit album?' },
+  { emoji: '🏆', text: 'Heeft dit album prijzen gewonnen?' },
+];
+
+const SAVED_SUGGESTIONS = [
+  { emoji: '📸', text: 'Scan nog een CD of LP' },
+  { emoji: '🎤', text: 'Vertel me meer over deze artiest' },
+  { emoji: '😄', text: 'Ken je leuke anekdotes?' },
+  { emoji: '💎', text: 'Is dit een zeldzame persing?' },
+  { emoji: '🌍', text: 'Bestaan er andere versies van deze release?' },
+];
+
+function pickRandom<T>(arr: T[], count: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+interface SuggestionChipsProps {
+  verifiedResult: V2PipelineResult | null;
+  savedToCollection: boolean;
+  isStreaming: boolean;
+  isRunningV2: boolean;
+  onSave: () => void;
+  onSend: (text: string) => void;
+}
+
+const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
+  verifiedResult, savedToCollection, isStreaming, isRunningV2, onSave, onSend,
+}) => {
+  const suggestions = useMemo(() => {
+    if (!verifiedResult?.discogs_id) return [];
+    const pool = savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
+    return pickRandom(pool, 3);
+  }, [verifiedResult?.discogs_id, savedToCollection]);
+
+  if (!verifiedResult?.discogs_id || isStreaming || isRunningV2) return null;
+
+  return (
+    <div className="flex flex-wrap gap-2 my-2 px-1">
+      {!savedToCollection && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs gap-1.5 rounded-full border-primary/30 hover:bg-primary/10"
+          onClick={onSave}
+        >
+          <Save className="h-3 w-3" />
+          Opslaan in catalogus
+        </Button>
+      )}
+      {suggestions.map((sug, i) => (
+        <Button
+          key={i}
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs gap-1.5 rounded-full border-muted-foreground/20 hover:bg-muted"
+          onClick={() => onSend(sug.text)}
+        >
+          <span>{sug.emoji}</span>
+          {sug.text}
+        </Button>
+      ))}
+    </div>
+  );
+});
+SuggestionChips.displayName = 'SuggestionChips';
 
 export function ScanChatTab() {
   const { user } = useAuth();
@@ -866,6 +942,16 @@ export function ScanChatTab() {
             </Button>
           </div>
         )}
+
+        {/* Suggestion chips after release found */}
+        <SuggestionChips
+          verifiedResult={verifiedResult}
+          savedToCollection={savedToCollection}
+          isStreaming={isStreaming}
+          isRunningV2={isRunningV2}
+          onSave={saveToCollection}
+          onSend={(text) => sendMessage(text)}
+        />
 
         {/* Pending files preview */}
         {pendingFiles.length > 0 && (

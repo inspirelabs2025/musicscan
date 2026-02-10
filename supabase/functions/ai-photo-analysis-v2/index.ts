@@ -1090,17 +1090,24 @@ function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: an
     pressingPlant: matrixData.pressingPlant ?? null,
     handEtched: matrixData.handEtched ?? null,
   } : {};
+  // 🔧 FIX: Sanitize string "null"/"undefined" from AI responses
+  const sanitize = (val: any): string | null => {
+    if (val == null) return null;
+    const s = String(val).trim();
+    if (/^(null|undefined|none|n\/a)$/i.test(s) || s === '') return null;
+    return s;
+  };
 
   return {
     // Primary fields from general analysis
-    artist: generalData?.artist ?? null,
-    title: generalData?.title ?? null,
-    label: generalData?.label ?? null,
-    catalogNumber: generalData?.catalogNumber ?? null,
+    artist: sanitize(generalData?.artist),
+    title: sanitize(generalData?.title),
+    label: sanitize(generalData?.label),
+    catalogNumber: sanitize(generalData?.catalogNumber),
     year: generalData?.year ?? null,
-    genre: generalData?.genre ?? null,
-    format: generalData?.format ?? null,
-    country: generalData?.country ?? null,
+    genre: sanitize(generalData?.genre),
+    format: sanitize(generalData?.format),
+    country: sanitize(generalData?.country),
 
     // Technical details (prefer dedicated matrix pass)
     matrixNumber: matrixFromMatrixPass || detailData?.matrixNumber || null,
@@ -1459,7 +1466,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     const barcodeDigits = analysisData.barcode 
       ? analysisData.barcode.replace(/[^0-9]/g, '') 
       : null;
-    const catnoNorm = analysisData.catalogNumber 
+    let catnoNorm = analysisData.catalogNumber 
       ? analysisData.catalogNumber.toUpperCase().replace(/\s+/g, ' ').trim()
       : null;
     
@@ -1471,6 +1478,20 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
     
     // === PATCH A: MATRIX VALIDITY CHECK ===
     const matrixValid = matrixNormalized.isValid;
+    
+    // 🔧 FIX 2: Matrix-als-catno fallback
+    // Als catno ontbreekt maar matrix een catno-achtig patroon bevat (letters+cijfers, <12 chars),
+    // gebruik het eerste token als catno-zoekopdracht
+    if (!catnoNorm && matrixNorm && matrixValid) {
+      const matrixFirstToken = matrixTokens[0] || matrixNorm.split(/\s+/)[0];
+      const hasLetters = /[A-Z]/i.test(matrixFirstToken);
+      const hasDigits = /\d/.test(matrixFirstToken);
+      const totalLen = matrixFirstToken.replace(/[^A-Z0-9]/gi, '').length;
+      if (hasLetters && hasDigits && totalLen >= 4 && totalLen <= 15) {
+        catnoNorm = matrixFirstToken.toUpperCase().trim();
+        console.log(`🔧 MATRIX→CATNO FALLBACK: Using "${catnoNorm}" from matrix as catno search`);
+      }
+    }
     
     console.log('📋 GENORMALISEERDE IDENTIFIERS:');
     console.log(`   barcode_digits: ${barcodeDigits || '(geen)'}`);

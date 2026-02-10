@@ -172,8 +172,10 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
       const pool = savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
       return pickRandom(pool, 3);
     }
-    // After any AI response (but not the welcome message), show general follow-ups
-    if (lastAssistantContent && !lastAssistantContent.includes('Hey, ik ben Magic Mike')) {
+    // After any AI response, show general follow-ups — but NOT during scan setup (welcome, photo upload prompt, ask prompt)
+    const skipPhrases = ['Hey, ik ben Magic Mike', 'Upload je foto', 'Kies hieronder', 'Typ je vraag hieronder'];
+    const isSetupMessage = skipPhrases.some(p => lastAssistantContent?.includes(p));
+    if (lastAssistantContent && !isSetupMessage) {
       return pickRandom(FOLLOWUP_SUGGESTIONS, 3);
     }
     return [];

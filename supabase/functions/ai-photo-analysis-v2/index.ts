@@ -73,6 +73,7 @@ interface AnalysisRequest {
   mediaType: 'vinyl' | 'cd'
   conditionGrade?: string
   skipSave?: boolean
+  externalRightsSocieties?: string[]
 }
 
 interface StructuredAnalysisData {
@@ -162,7 +163,7 @@ serve(async (req) => {
 
     // Skipping direct checks against auth.users (restricted schema). JWT already validated above.
 
-    const { photoUrls, mediaType, conditionGrade: rawConditionGrade, skipSave }: AnalysisRequest = await req.json()
+    const { photoUrls, mediaType, conditionGrade: rawConditionGrade, skipSave, externalRightsSocieties }: AnalysisRequest = await req.json()
     const conditionGrade = rawConditionGrade || 'Not Graded'
 
     console.log('🤖 Starting AI photo analysis V2 for:', {
@@ -309,6 +310,16 @@ serve(async (req) => {
         matrixAnalysis?.success ? matrixAnalysis.data : null
       )
 
+      // Merge external rights societies (e.g., from Magic Mike chat detection) into combined data
+      if (externalRightsSocieties && externalRightsSocieties.length > 0) {
+        console.log(`🏛️ Merging ${externalRightsSocieties.length} external rights societies:`, externalRightsSocieties);
+        combinedData.rightsSocieties = [
+          ...(combinedData.rightsSocieties || []),
+          ...externalRightsSocieties,
+        ];
+        // Also inject into externalRightsSocieties for scoring function access
+        (combinedData as any).externalRightsSocieties = externalRightsSocieties;
+      }
       // === POST-PROCESSING: Extract missed fields from raw text ===
       // The AI often reads text but fails to classify it into structured fields.
       // Parse extractedText and extractedDetails to fill gaps.
@@ -2719,7 +2730,10 @@ async function verifyCandidate(
     
     // === RIGHTS SOCIETY GATING (HARD EXCLUDE / CONFIRM) ===
     // Must run BEFORE country check — overrides country scoring
-    const rightsSocieties = analysisData.rightsSocieties || analysisData.rights_societies || [];
+    const rightsSocieties = [
+      ...(analysisData.rightsSocieties || analysisData.rights_societies || []),
+      ...(analysisData.externalRightsSocieties || []),
+    ];
     const allRawTexts = [
       ...(analysisData.extractedText || []),
       ...(analysisData.copyrightLines || []),

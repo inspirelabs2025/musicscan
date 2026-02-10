@@ -1,43 +1,24 @@
 
 
-## Fix: Chat V2 Pipeline - Ontbrekende `conditionGrade`
+## Fix: Chat gebruikt knowledge base niet - Herdeployment nodig
 
-### Oorzaak
+### Probleem
 
-De edge function logs tonen het probleem:
+De code in `scan-chat/index.ts` is correct: de `loadAgentPrompt()` functie laadt het profiel + kennisbronnen uit de database. De database bevat ook de juiste data:
 
-```
-null value in column "condition_grade" of relation "ai_scan_results" 
-violates not-null constraint
-```
+- **Profiel**: `magic_mike` (actief, 1761 chars system prompt)
+- **Kennisbron**: "Discogs Anti-Patterns" (3517 chars, actief)
 
-De chat roept `ai-photo-analysis-v2` aan ZONDER `conditionGrade`:
+Maar de edge function logs tonen GEEN "Loaded agent prompt" regel, wat betekent dat de oude versie (zonder `loadAgentPrompt`) nog draait. De functie moet opnieuw gedeployed worden.
 
-```js
-// Chat stuurt:
-{ photoUrls: urls, mediaType: mType, skipSave: true }
+### Oplossing
 
-// Scanner stuurt:
-{ photoUrls, mediaType, conditionGrade }  // <-- dit werkt
-```
+1. **Redeploy `scan-chat`** edge function zodat de huidige code (met `loadAgentPrompt()` en knowledge base injectie) actief wordt.
 
-De edge function probeert altijd een database-record aan te maken met `condition_grade`, wat crasht als dit veld `null` is.
+2. **Verificatie**: Na deploy controleren we de logs op de regel:
+   ```
+   [scan-chat] Loaded agent prompt (XXXX chars) with 1 knowledge sources
+   ```
 
-### Oplossing (2 wijzigingen)
-
-**1. `ScanChatTab.tsx` — `conditionGrade` meesturen**
-
-De chat stuurt een default waarde mee (`"Not Graded"` of `"unknown"`) omdat de conditie pas later in de flow wordt bepaald. Het belangrijkste is dat de V2 pipeline draait voor de identificatie.
-
-**2. `supabase/functions/ai-photo-analysis-v2/index.ts` — `skipSave` ondersteunen**
-
-Voeg een `skipSave` optie toe zodat de chat-flow GEEN database-record aanmaakt. De chat wil alleen het match-resultaat, niet een apart scan-record.
-
-Concreet:
-- Lees `skipSave` uit de request body (default `false`)
-- Als `skipSave === true`: sla de database insert over, sla de database update over, maar voer WEL de volledige analyse + matching + rights society gating uit
-- Retourneer het resultaat direct zonder DB-side-effects
-- `conditionGrade` wordt optioneel (default `"Not Graded"`) wanneer `skipSave` actief is
-
-Dit zorgt ervoor dat de chat exact dezelfde matching-logica gebruikt als de scanner, inclusief barcode-zoeken, scoring, rights society gating en local-first lookup.
+Dit is een deploy-only fix — er zijn geen codewijzigingen nodig.
 

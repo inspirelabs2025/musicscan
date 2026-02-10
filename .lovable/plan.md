@@ -1,72 +1,91 @@
 
-# Fix: Chat follow-up vragen triggeren geen nieuwe scan
+# Marketplace Listings ophalen voor gescande releases
 
-## Probleem
-Na een succesvolle scan met geverifieerd resultaat, stuurt elke vervolgvraag de volledige V2-pipeline opnieuw. Dit is onnodig en verwarrend -- de gebruiker wil alleen een extra vraag stellen over de al gevonden release.
+## Wat verandert er?
+Na een succesvolle scan toont Mike niet alleen de prijsstatistieken (laag/mediaan/hoog), maar ook een overzicht van de actuele aanbiedingen op de Discogs Marketplace -- hoeveel exemplaren, tegen welke prijs en in welke conditie.
 
-## Oplossing
-Een `hasVerifiedResult` state toevoegen die bijhoudt of er al een geverifieerd resultaat is. De V2-pipeline draait alleen opnieuw als:
-1. Het de eerste scan is (nog geen resultaat)
-2. De gebruiker expliciet aangeeft dat de release niet klopt (detectie via keywords)
+## Aanpak
 
-Alle andere vervolgvragen gaan alleen naar de chat-AI, inclusief de context van het gevonden resultaat.
+### 1. Nieuwe edge function: `fetch-discogs-marketplace-listings`
+Haalt de actuele marketplace listings op voor een release ID via de Discogs API.
+
+**Endpoint:** `GET https://api.discogs.com/marketplace/listings?release_id={id}&curr=EUR&sort=price,asc&per_page=10`
+
+Alternatief (als het officiele API endpoint geen release-filter ondersteunt): scrapen van `https://www.discogs.com/sell/release/{id}?curr=EUR` via ScraperAPI, met extractie van:
+- Aantal te koop
+- Per listing: prijs, conditie (media + sleeve), verkoper, land
+
+**Response format:**
+```json
+{
+  "total_for_sale": 4,
+  "listings": [
+    {
+      "price": 25.00,
+      "currency": "EUR",
+      "condition_media": "Very Good Plus (VG+)",
+      "condition_sleeve": "Very Good (VG)",
+      "seller": "VinylShopNL",
+      "ships_from": "Netherlands"
+    }
+  ]
+}
+```
+
+### 2. Integratie in de V2-pipeline (ScanChatTab.tsx)
+Na een succesvolle scan (wanneer `discogs_id` beschikbaar is), een extra call doen naar de nieuwe edge function. De resultaten worden opgeslagen in de `pricingData` (uitgebreid met `marketplace_listings`).
+
+### 3. UI: Marketplace overzicht in chat resultaat
+Onder de bestaande prijskaart een compact overzicht tonen:
+
+```
+🏪 4 exemplaren te koop op Discogs
+┌─────────┬──────────────┬────────────┐
+│ €25.00  │ VG+ / VG     │ Nederland  │
+│ €30.00  │ NM / VG+     │ Duitsland  │
+│ €35.00  │ NM / NM      │ UK         │
+│ €45.00  │ M / M        │ Frankrijk  │
+└─────────┴──────────────┴────────────┘
+```
+
+Met een "Bekijk alle aanbiedingen" link naar `https://www.discogs.com/sell/release/{id}`.
 
 ---
 
 ## Technische details
 
-### Bestand: `src/components/scanner/ScanChatTab.tsx`
+### Nieuwe edge function: `supabase/functions/fetch-discogs-marketplace-listings/index.ts`
 
-**1. Nieuwe state toevoegen:**
-```typescript
-const [verifiedResult, setVerifiedResult] = useState<V2PipelineResult | null>(null);
-```
+- Accepteert `{ discogs_id }` als POST body
+- Strategie 1: Discogs API `GET /marketplace/listings?release_id={id}&curr=EUR&sort=price,asc&per_page=10` (met DISCOGS_TOKEN)
+- Strategie 2 (fallback): ScraperAPI scraping van `/sell/release/{id}?curr=EUR` met HTML parsing
+- Retourneert gestructureerde listings array + totaal aantal
 
-**2. Bij succesvolle V2 match, resultaat opslaan:**
-Na de regel waar `setMessages` het resultaat toont (rond lijn 447), ook:
-```typescript
-setVerifiedResult(v2Result);
-```
+### Wijzigingen in `src/components/scanner/ScanChatTab.tsx`
 
-**3. In `sendMessage`, V2-pipeline conditioneel maken:**
-De huidige check op lijn 376:
+1. **Interface uitbreiden:**
 ```typescript
-if (activeUrls.length > 0 && mediaType) {
-```
-Wordt:
-```typescript
-const shouldRunV2 = activeUrls.length > 0 && mediaType && !verifiedResult;
-```
+interface MarketplaceListing {
+  price: number;
+  currency: string;
+  condition_media: string;
+  condition_sleeve: string;
+  seller: string;
+  ships_from: string;
+}
 
-**4. "Release is fout" detectie toevoegen:**
-Bij `handleSend`, check of de gebruiker aangeeft dat het resultaat niet klopt. Als dat zo is, reset `verifiedResult` zodat de V2-pipeline opnieuw draait:
-```typescript
-const rejectKeywords = ['niet juist', 'niet correct', 'verkeerde', 'fout', 'klopt niet', 
-  'andere release', 'niet goed', 'opnieuw zoeken', 'wrong', 'incorrect'];
-
-const isRejection = rejectKeywords.some(kw => input.toLowerCase().includes(kw));
-if (isRejection) {
-  setVerifiedResult(null);
+interface PricingData {
+  lowest_price: number | null;
+  median_price: number | null;
+  highest_price: number | null;
+  num_for_sale: number | null;
+  marketplace_listings?: MarketplaceListing[];
 }
 ```
 
-**5. Verified context meesturen naar chat-AI:**
-Wanneer `verifiedResult` bestaat, het als context meesturen in het bericht naar de AI zodat Mike weet welke release al gevonden is en er inhoudelijk over kan praten:
-```typescript
-// In sendMessage, voor de fetch call:
-if (verifiedResult) {
-  // Voeg context toe zodat Mike weet welke release actief is
-  const contextNote = `[CONTEXT: Release al geidentificeerd - ${verifiedResult.artist} - ${verifiedResult.title}, Discogs ID: ${verifiedResult.discogs_id}. Beantwoord de vraag van de gebruiker zonder opnieuw te scannen.]`;
-  // Prepend aan het user message in de messages array
-}
-```
+2. **Na V2 pipeline succes:** Extra fetch naar `fetch-discogs-marketplace-listings` met het `discogs_id`, resultaat toevoegen aan `pricingData`.
 
-**6. Reset bij `resetChat`:**
-```typescript
-setVerifiedResult(null);
-```
+3. **UI rendering:** Onder de prijskaart een compacte tabel met max 5 listings (prijs, conditie, land). Plus een link naar de volledige Discogs sell-pagina.
 
-### Resultaat
-- Eerste scan: foto's uploaden -> AI analyseert -> V2 pipeline draait -> resultaat getoond
-- Vervolgvraag: "Welk jaar is dit album uitgebracht?" -> alleen chat-AI antwoordt, geen nieuwe scan
-- Gebruiker zegt "Dit klopt niet": -> `verifiedResult` wordt gereset -> volgende bericht triggert V2 opnieuw
+### Bestaande `fetch-discogs-pricing` functie
+Blijft ongewijzigd -- die haalt statistieken (historische verkoopdata). De nieuwe functie haalt actuele aanbiedingen.

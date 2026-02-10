@@ -325,9 +325,21 @@ export default function AIScanV2() {
             <p className="text-muted-foreground">
               Ontdek supersnel de juiste release ID - verbeterde analyse met GPT-4.1 en multi-pass technologie
             </p>
-            {user && <p className="text-sm text-muted-foreground">
-                Ingelogd als: {user.email}
-              </p>}
+            <div className="flex items-center justify-center gap-3">
+              {user && <p className="text-sm text-muted-foreground">
+                  Ingelogd als: {user.email}
+                </p>}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.location.reload()}
+                title="Hard refresh — herlaad pagina en edge functions"
+                className="text-muted-foreground hover:text-primary"
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Refresh
+              </Button>
+            </div>
           </div>
 
         {!analysisResult && <>

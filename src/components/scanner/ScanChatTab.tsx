@@ -107,24 +107,15 @@ const cleanDisplayText = (text: string): string => {
 };
 // ─── Suggestion pools ──────────────────────────────────────
 const DISCOVERY_SUGGESTIONS = [
-  { emoji: '📖', text: 'Wat is het verhaal achter deze release?' },
-  { emoji: '🎤', text: 'Vertel me meer over deze artiest' },
-  { emoji: '😄', text: 'Ken je leuke anekdotes over dit album?' },
-  { emoji: '🎶', text: 'Welke andere albums zijn vergelijkbaar?' },
-  { emoji: '🏭', text: 'In welke studio is dit opgenomen?' },
-  { emoji: '📅', text: 'Wat gebeurde er nog meer in het jaar van release?' },
-  { emoji: '💎', text: 'Is dit een zeldzame persing?' },
-  { emoji: '🌍', text: 'Zijn er andere persingen van deze release?' },
-  { emoji: '🎵', text: 'Wat zijn de beste nummers op dit album?' },
-  { emoji: '🏆', text: 'Heeft dit album prijzen gewonnen?' },
+  { emoji: '🎉', text: 'Leuke feitjes over dit album' },
+  { emoji: '🎤', text: 'Vertel me meer over de artiest' },
+  { emoji: '📸', text: 'Scan nog een CD of LP' },
 ];
 
 const SAVED_SUGGESTIONS = [
+  { emoji: '🎉', text: 'Leuke feitjes over dit album' },
+  { emoji: '🎤', text: 'Vertel me meer over de artiest' },
   { emoji: '📸', text: 'Scan nog een CD of LP' },
-  { emoji: '🎤', text: 'Vertel me meer over deze artiest' },
-  { emoji: '😄', text: 'Ken je leuke anekdotes?' },
-  { emoji: '💎', text: 'Is dit een zeldzame persing?' },
-  { emoji: '🌍', text: 'Bestaan er andere versies van deze release?' },
 ];
 
 // Contextual follow-ups based on last assistant message content
@@ -169,8 +160,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
   const suggestions = useMemo(() => {
     if (hasNoMatch) return pickRandom(NO_MATCH_SUGGESTIONS, 3);
     if (verifiedResult?.discogs_id) {
-      const pool = savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
-      return pickRandom(pool, 3);
+      return savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
     }
     // After any AI response, show general follow-ups — but NOT during scan setup (welcome, photo upload prompt, ask prompt)
     const skipPhrases = ['Hey, ik ben Magic Mike', 'Upload je foto', 'Kies hieronder', 'Typ je vraag hieronder'];

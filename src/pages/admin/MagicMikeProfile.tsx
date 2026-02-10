@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Bot, Save, Plus, Trash2, Globe, FileText, MessageSquare, Loader2, ExternalLink } from "lucide-react";
+import { Bot, Save, Plus, Trash2, Globe, FileText, MessageSquare, Loader2, ExternalLink, Pencil, X } from "lucide-react";
 
 interface AgentProfile {
   id: string;
@@ -45,6 +45,11 @@ export default function MagicMikeProfile() {
   const [newContent, setNewContent] = useState("");
   const [addingSource, setAddingSource] = useState(false);
   const [scrapingUrl, setScrapingUrl] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editUrl, setEditUrl] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -199,6 +204,54 @@ export default function MagicMikeProfile() {
     }
   };
 
+  const startEditing = (source: KnowledgeSource) => {
+    setEditingId(source.id);
+    setEditTitle(source.title);
+    setEditContent(source.content || "");
+    setEditUrl(source.source_url || "");
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditTitle("");
+    setEditContent("");
+    setEditUrl("");
+  };
+
+  const saveEdit = async () => {
+    if (!editingId || !editTitle.trim() || !editContent.trim()) {
+      toast.error('Titel en content zijn verplicht');
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from('ai_agent_knowledge')
+        .update({
+          title: editTitle.trim(),
+          content: editContent.trim(),
+          source_url: editUrl.trim() || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingId);
+
+      if (error) throw error;
+      setKnowledge(prev => prev.map(k => k.id === editingId ? {
+        ...k,
+        title: editTitle.trim(),
+        content: editContent.trim(),
+        source_url: editUrl.trim() || null,
+      } : k));
+      cancelEditing();
+      toast.success('Kennisbron bijgewerkt!');
+    } catch (error) {
+      console.error('Error saving knowledge:', error);
+      toast.error('Fout bij opslaan');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -344,56 +397,100 @@ export default function MagicMikeProfile() {
                 knowledge.map((source) => (
                   <Card key={source.id} className={!source.is_active ? 'opacity-50' : ''}>
                     <CardContent className="pt-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            {source.source_type === 'website' ? (
-                              <Globe className="w-4 h-4 text-blue-500 shrink-0" />
-                            ) : (
-                              <FileText className="w-4 h-4 text-green-500 shrink-0" />
-                            )}
-                            <span className="font-medium truncate">{source.title}</span>
-                            <Badge variant={source.is_active ? 'default' : 'secondary'} className="text-xs">
-                              {source.is_active ? 'Actief' : 'Inactief'}
-                            </Badge>
-                          </div>
-                          
-                          {source.source_url && (
-                            <a 
-                              href={source.source_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-500 hover:underline flex items-center gap-1 mb-1"
-                            >
-                              {source.source_url} <ExternalLink className="w-3 h-3" />
-                            </a>
+                      {editingId === source.id ? (
+                        <div className="space-y-3">
+                          <Input
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            placeholder="Titel"
+                          />
+                          {source.source_type === 'website' && (
+                            <Input
+                              value={editUrl}
+                              onChange={(e) => setEditUrl(e.target.value)}
+                              placeholder="https://..."
+                            />
                           )}
-                          
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {source.content?.substring(0, 200)}...
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {source.content?.length || 0} karakters · {new Date(source.created_at).toLocaleDateString('nl-NL')}
-                          </p>
+                          <Textarea
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            className="min-h-[300px] font-mono text-sm"
+                            placeholder="Content..."
+                          />
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-muted-foreground">
+                              {editContent.length} karakters
+                            </p>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm" onClick={cancelEditing}>
+                                <X className="w-4 h-4 mr-1" /> Annuleren
+                              </Button>
+                              <Button size="sm" onClick={saveEdit} disabled={savingEdit}>
+                                {savingEdit ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+                                Opslaan
+                              </Button>
+                            </div>
+                          </div>
                         </div>
+                      ) : (
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              {source.source_type === 'website' ? (
+                                <Globe className="w-4 h-4 text-primary shrink-0" />
+                              ) : (
+                                <FileText className="w-4 h-4 text-primary shrink-0" />
+                              )}
+                              <span className="font-medium truncate">{source.title}</span>
+                              <Badge variant={source.is_active ? 'default' : 'secondary'} className="text-xs">
+                                {source.is_active ? 'Actief' : 'Inactief'}
+                              </Badge>
+                            </div>
+                            
+                            {source.source_url && (
+                              <a 
+                                href={source.source_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-primary hover:underline flex items-center gap-1 mb-1"
+                              >
+                                {source.source_url} <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                            
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {source.content?.substring(0, 200)}...
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {source.content?.length || 0} karakters · {new Date(source.created_at).toLocaleDateString('nl-NL')}
+                            </p>
+                          </div>
 
-                        <div className="flex gap-1 shrink-0">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleKnowledgeActive(source.id, source.is_active)}
-                          >
-                            {source.is_active ? 'Deactiveer' : 'Activeer'}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteKnowledgeSource(source.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
+                          <div className="flex gap-1 shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => startEditing(source)}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => toggleKnowledgeActive(source.id, source.is_active)}
+                            >
+                              {source.is_active ? 'Deactiveer' : 'Activeer'}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteKnowledgeSource(source.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))

@@ -1,96 +1,36 @@
 
-# Conditie-beoordeling en prijsadvies na scan
 
-## Wat verandert er?
-Na het vinden van een release toont de chat twee dropdown-selectors: **Staat van de media** (CD/vinyl) en **Staat van de hoes** (sleeve), beide volgens de officiele Discogs Grading richtlijnen. Op basis van de gekozen conditie wordt een **adviesprijs** berekend, afgeleid van de marketplace-prijsdata. Dit wordt ook meegenomen bij het opslaan in de catalogus.
+## Camera-functie toevoegen aan Magic Mike Chat
 
-## Hoe werkt het prijsadvies?
+### Probleem
+De huidige file input in de chat (`<input type="file" accept="image/*">`) opent op mobiel alleen de bestandskiezer. Er ontbreekt een `capture="environment"` attribuut en een aparte camera-knop, waardoor gebruikers niet direct een foto kunnen maken.
 
-De mediaan-prijs wordt gecorrigeerd met een conditie-factor:
+### Oplossing
+Twee aanpassingen in `src/components/scanner/ScanChatTab.tsx`:
 
-```text
-Conditie           Factor
-Mint (M)            1.20
-Near Mint (NM)      1.00  (= mediaan)
-Very Good Plus      0.75
-Very Good (VG)      0.50
-Good Plus (G+)      0.35
-Good (G)            0.20
-Fair / Poor         0.10
-```
+1. **Aparte camera-knop** naast de bestaande foto-knop in de input bar (onderaan de chat). De bestaande knop blijft voor het uploaden van bestanden uit de galerij; de nieuwe knop opent direct de camera.
 
-Als er marketplace listings zijn, wordt ook gekeken naar listings met vergelijkbare conditie voor een nauwkeuriger advies.
+2. **Twee hidden file inputs**:
+   - De bestaande `fileInputRef` (galerij/bestanden kiezen, zonder `capture`)
+   - Een nieuwe `cameraInputRef` met `capture="environment"` die direct de camera opent op mobiel
 
----
+3. **UI aanpassing input bar**: Twee knoppen naast het tekstveld:
+   - Camera-icoon (`Camera`) -- opent de camera direct
+   - Galerij-icoon (`ImagePlus`) -- opent bestandskiezer
 
-## Technische details
+4. **Zelfde aanpassing in de pending-files preview**: De "+" knop voor extra foto's krijgt ook een camera-optie.
 
-### Bestand: `src/components/scanner/ScanChatTab.tsx`
+### Technische details
 
-**1. Nieuwe state variabelen:**
-```typescript
-const [conditionMedia, setConditionMedia] = useState<string>('');
-const [conditionSleeve, setConditionSleeve] = useState<string>('');
-```
+**Bestand:** `src/components/scanner/ScanChatTab.tsx`
 
-**2. Conditie-opties (Discogs standaard):**
-```typescript
-const DISCOGS_CONDITIONS = [
-  { value: 'Mint (M)', label: 'Mint (M)', desc: 'Absoluut perfect, nooit afgespeeld' },
-  { value: 'Near Mint (NM or M-)', label: 'Near Mint (NM)', desc: 'Vrijwel perfect' },
-  { value: 'Very Good Plus (VG+)', label: 'Very Good Plus (VG+)', desc: 'Lichte gebruikssporen' },
-  { value: 'Very Good (VG)', label: 'Very Good (VG)', desc: 'Duidelijke gebruikssporen, speelt goed' },
-  { value: 'Good Plus (G+)', label: 'Good Plus (G+)', desc: 'Zichtbare slijtage' },
-  { value: 'Good (G)', label: 'Good (G)', desc: 'Veel slijtage, speelt nog' },
-  { value: 'Fair (F)', label: 'Fair (F)', desc: 'Beschadigd' },
-  { value: 'Poor (P)', label: 'Poor (P)', desc: 'Nauwelijks afspeelbaar' },
-];
-```
+- Nieuwe `useRef`: `const cameraInputRef = useRef<HTMLInputElement>(null);`
+- Tweede hidden input:
+  ```html
+  <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFilesSelected} className="hidden" />
+  ```
+- Input bar wordt aangepast van 1 knop naar 2 knoppen:
+  - `Camera` icoon -> `cameraInputRef.current?.click()`
+  - `ImagePlus` icoon -> `fileInputRef.current?.click()`
+- In de pending-files preview-area: extra camera-knop naast de bestaande "+" knop
 
-**3. Adviesprijs-berekening:**
-```typescript
-const CONDITION_FACTORS: Record<string, number> = {
-  'Mint (M)': 1.20,
-  'Near Mint (NM or M-)': 1.00,
-  'Very Good Plus (VG+)': 0.75,
-  'Very Good (VG)': 0.50,
-  'Good Plus (G+)': 0.35,
-  'Good (G)': 0.20,
-  'Fair (F)': 0.10,
-  'Poor (P)': 0.05,
-};
-
-function calculateAdvicePrice(
-  pricing: PricingData | null,
-  conditionMedia: string,
-  conditionSleeve: string
-): number | null {
-  if (!pricing?.median_price || !conditionMedia) return null;
-  const mediaFactor = CONDITION_FACTORS[conditionMedia] ?? 0.5;
-  const sleeveFactor = CONDITION_FACTORS[conditionSleeve] ?? 0.5;
-  // Media weegt zwaarder (70%) dan hoes (30%)
-  const combinedFactor = (mediaFactor * 0.7) + (sleeveFactor * 0.3);
-  return Math.round(pricing.median_price * combinedFactor * 100) / 100;
-}
-```
-
-**4. UI: Conditie-panel na match (inline in chat, onder prijskaart):**
-Na de marketplace listings en voor de "Opslaan" knop, een compact panel tonen met:
-- Select dropdown "Staat Media" (CD/Vinyl)
-- Select dropdown "Staat Hoes"
-- Berekend adviesprijs badge
-- Beide volgens Discogs grading met korte beschrijving per optie
-
-**5. Opslaan met conditie:**
-De `saveToCollection` functie wordt uitgebreid:
-```typescript
-record.condition_grade = conditionMedia || 'Not Graded';
-record.sleeve_condition = conditionSleeve || 'Not Graded';
-record.calculated_advice_price = advicePrice ?? pricing?.median_price ?? null;
-```
-
-**6. Reset:**
-Bij `resetChat` worden `conditionMedia` en `conditionSleeve` teruggezet naar `''`.
-
-### Resultaat
-- Release gevonden -> prijsdata getoond -> gebruiker kiest conditie media + hoes -> adviesprijs berekend -> opslaan met juiste conditie en prijs

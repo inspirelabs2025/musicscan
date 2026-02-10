@@ -141,16 +141,17 @@ export function ScanChatTab() {
   }, []);
 
   // ─── Run V2 Pipeline (deterministic matching) ───────────────
-  const runV2Pipeline = async (urls: string[], mType: string): Promise<V2PipelineResult | null> => {
+  const runV2Pipeline = async (urls: string[], mType: string, rightsSocieties?: string[]): Promise<V2PipelineResult | null> => {
     try {
-      console.log(`🔍 Running V2 pipeline with ${urls.length} photos, mediaType: ${mType}`);
+      console.log(`🔍 Running V2 pipeline with ${urls.length} photos, mediaType: ${mType}, externalRightsSocieties:`, rightsSocieties);
       
       const { data, error } = await supabase.functions.invoke('ai-photo-analysis-v2', {
         body: {
           photoUrls: urls,
           mediaType: mType,
           conditionGrade: 'Not Graded',
-          skipSave: true, // Don't save to ai_scan_results, just return the match
+          skipSave: true,
+          ...(rightsSocieties && rightsSocieties.length > 0 ? { externalRightsSocieties: rightsSocieties } : {}),
         }
       });
 
@@ -375,12 +376,19 @@ export function ScanChatTab() {
       if (activeUrls.length > 0 && mediaType) {
         setIsRunningV2(true);
         
+        // Extract rights_societies from Magic Mike's SCAN_DATA to forward to V2 pipeline
+        const lastScanData = extractScanData(assistantSoFar);
+        const chatRightsSocieties = lastScanData?.rights_societies || [];
+        if (chatRightsSocieties.length > 0) {
+          console.log('🏛️ Magic Mike detected rights societies:', chatRightsSocieties);
+        }
+
         setMessages(prev => [...prev, {
           role: 'assistant',
           content: `🔍 **Scanner-pipeline gestart...** De deterministische matcher zoekt nu de juiste release met barcode, matrix en rechtenorganisatie-gating...`,
         }]);
 
-        const v2Result = await runV2Pipeline(activeUrls, mediaType);
+        const v2Result = await runV2Pipeline(activeUrls, mediaType, chatRightsSocieties);
 
         // Remove loading message
         setMessages(prev => prev.filter(m => !m.content.includes('Scanner-pipeline gestart')));

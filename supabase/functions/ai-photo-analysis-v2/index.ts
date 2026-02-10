@@ -1999,7 +1999,7 @@ async function searchDiscogsV2(analysisData: any, mediaType: 'vinyl' | 'cd' = 'c
           if (results.length > 0) {
             // Verify candidates
             for (const candidate of results.slice(0, 5)) {
-              const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid);
+              const verification = await verifyCandidate(candidate, analysisData, barcodeDigits, catnoNorm, matrixNorm, matrixTokens, matrixValid, true);
               
               if (verification.points > bestConfidencePoints) {
                 bestConfidencePoints = verification.points;
@@ -2508,7 +2508,8 @@ async function verifyCandidate(
   catnoNorm: string | null,
   matrixNorm: string,
   matrixTokens: string[],
-  matrixValid: boolean = true  // NEW: Patch A - Matrix Sanity Guard
+  matrixValid: boolean = true,  // Patch A - Matrix Sanity Guard
+  foundViaBarcode: boolean = false  // NEW: candidate was found via barcode search strategy
 ): Promise<{
   points: number;
   matched_on: string[];
@@ -2628,20 +2629,30 @@ async function verifyCandidate(
     }
     
     // === CHECK BARCODE (40 points) ===
+    let barcodeMatched = false;
     if (barcodeDigits && releaseDetails.identifiers) {
       for (const identifier of releaseDetails.identifiers) {
         if (identifier.type === 'Barcode' && identifier.value) {
           const discogsBarcode = identifier.value.replace(/[^0-9]/g, '');
           if (discogsBarcode === barcodeDigits) {
-            result.points += 40;
-            result.matched_on.push('barcode');
-            result.technical_matches.barcode = true;
-            result.explain.push('Barcode matched exactly');
-            console.log(`      ✅ Barcode match: +40 points`);
+            barcodeMatched = true;
             break;
           }
         }
       }
+    }
+    // If candidate was found via barcode search but identifiers don't list the barcode,
+    // still count it as a match — Discogs itself matched it
+    if (!barcodeMatched && foundViaBarcode && barcodeDigits) {
+      console.log(`      🔄 Barcode not in identifiers but candidate found via barcode search → counting as match`);
+      barcodeMatched = true;
+    }
+    if (barcodeMatched) {
+      result.points += 40;
+      result.matched_on.push('barcode');
+      result.technical_matches.barcode = true;
+      result.explain.push('Barcode matched exactly');
+      console.log(`      ✅ Barcode match: +40 points`);
     }
     
     // === CHECK CATNO (25 points) ===

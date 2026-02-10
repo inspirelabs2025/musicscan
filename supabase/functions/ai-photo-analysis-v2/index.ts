@@ -13,6 +13,61 @@ const openaiApiKey = Deno.env.get('OPENAI_API_KEY')!
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+// ============= RIGHTS SOCIETY GATING =============
+// Maps rights societies to compatible country/region patterns
+// Used for hard exclusion (incompatible region → score 0) and confirmation (+15 pts)
+const RIGHTS_SOCIETY_REGIONS: Record<string, { regions: string[]; label: string }> = {
+  'STEMRA':     { regions: ['netherlands', 'holland', 'europe', 'eu', 'germany', 'france', 'uk', 'united kingdom', 'italy', 'spain', 'belgium', 'austria', 'sweden', 'denmark', 'portugal', 'greece', 'ireland', 'finland', 'norway', 'switzerland', 'czech republic', 'poland', 'hungary'], label: 'NL/EU' },
+  'BIEM':       { regions: ['netherlands', 'holland', 'europe', 'eu', 'germany', 'france', 'uk', 'united kingdom', 'italy', 'spain', 'belgium', 'austria', 'sweden', 'denmark', 'portugal', 'greece', 'ireland', 'finland', 'norway', 'switzerland', 'czech republic', 'poland', 'hungary'], label: 'EU' },
+  'BUMA':       { regions: ['netherlands', 'holland', 'europe', 'eu'], label: 'NL/EU' },
+  'GEMA':       { regions: ['germany', 'europe', 'eu', 'austria', 'switzerland', 'netherlands', 'holland', 'france', 'uk', 'united kingdom', 'italy', 'spain', 'belgium', 'sweden', 'denmark', 'portugal', 'greece', 'ireland', 'finland', 'norway', 'czech republic', 'poland', 'hungary'], label: 'DE/EU' },
+  'SACEM':      { regions: ['france', 'europe', 'eu', 'belgium', 'switzerland', 'netherlands', 'holland', 'germany', 'uk', 'united kingdom', 'italy', 'spain', 'austria', 'sweden', 'denmark', 'portugal', 'greece', 'ireland', 'finland', 'norway', 'czech republic', 'poland', 'hungary'], label: 'FR/EU' },
+  'PRS':        { regions: ['uk', 'united kingdom', 'europe', 'eu', 'ireland', 'netherlands', 'holland', 'germany', 'france', 'italy', 'spain', 'belgium', 'austria', 'sweden', 'denmark', 'portugal', 'greece', 'finland', 'norway', 'switzerland', 'czech republic', 'poland', 'hungary'], label: 'UK/EU' },
+  'MCPS':       { regions: ['uk', 'united kingdom', 'europe', 'eu', 'ireland', 'netherlands', 'holland', 'germany', 'france', 'italy', 'spain', 'belgium', 'austria', 'sweden', 'denmark', 'portugal', 'greece', 'finland', 'norway', 'switzerland', 'czech republic', 'poland', 'hungary'], label: 'UK/EU' },
+  'JASRAC':     { regions: ['japan'], label: 'JP' },
+  'ASCAP':      { regions: ['us', 'usa', 'united states'], label: 'US' },
+  'BMI':        { regions: ['us', 'usa', 'united states'], label: 'US' },
+  'SOCAN':      { regions: ['canada'], label: 'CA' },
+  'APRA':       { regions: ['australia', 'new zealand'], label: 'AU/NZ' },
+  'AMCOS':      { regions: ['australia', 'new zealand'], label: 'AU/NZ' },
+  'SABAM':      { regions: ['belgium', 'europe', 'eu', 'netherlands', 'holland', 'germany', 'france', 'uk', 'united kingdom', 'italy', 'spain', 'austria', 'sweden', 'denmark', 'portugal', 'greece', 'ireland', 'finland', 'norway', 'switzerland', 'czech republic', 'poland', 'hungary'], label: 'BE/EU' },
+  'SIAE':       { regions: ['italy', 'europe', 'eu', 'netherlands', 'holland', 'germany', 'france', 'uk', 'united kingdom', 'spain', 'belgium', 'austria', 'sweden', 'denmark', 'portugal', 'greece', 'ireland', 'finland', 'norway', 'switzerland', 'czech republic', 'poland', 'hungary'], label: 'IT/EU' },
+  'SGAE':       { regions: ['spain', 'europe', 'eu', 'portugal', 'netherlands', 'holland', 'germany', 'france', 'uk', 'united kingdom', 'italy', 'belgium', 'austria', 'sweden', 'denmark', 'greece', 'ireland', 'finland', 'norway', 'switzerland', 'czech republic', 'poland', 'hungary'], label: 'ES/EU' },
+};
+
+/**
+ * Detect rights societies from extracted text arrays
+ * Returns array of detected society names (normalized to uppercase keys)
+ */
+function detectRightsSocieties(rightsSocietiesField: string[], allTexts: string[]): string[] {
+  const detected = new Set<string>();
+  
+  // First check the explicitly extracted rights_societies field
+  for (const rs of rightsSocietiesField) {
+    const upper = rs.toUpperCase();
+    for (const society of Object.keys(RIGHTS_SOCIETY_REGIONS)) {
+      if (upper.includes(society)) {
+        detected.add(society);
+      }
+    }
+  }
+  
+  // Also scan all raw text for rights society mentions
+  const allTextJoined = allTexts.join(' ').toUpperCase();
+  for (const society of Object.keys(RIGHTS_SOCIETY_REGIONS)) {
+    if (allTextJoined.includes(society)) {
+      detected.add(society);
+    }
+  }
+  
+  // Handle compound "BIEM/STEMRA" pattern
+  if (detected.has('BIEM') && detected.has('STEMRA')) {
+    // Both detected, keep both — STEMRA is the stronger NL indicator
+  }
+  
+  return [...detected];
+}
+
 interface AnalysisRequest {
   photoUrls: string[]
   mediaType: 'vinyl' | 'cd'
@@ -2646,6 +2701,55 @@ async function verifyCandidate(
         result.matched_on.push('year');
         result.technical_matches.year = true;
         console.log(`      ✅ Year match: +10 points`);
+      }
+    }
+    
+    // === RIGHTS SOCIETY GATING (HARD EXCLUDE / CONFIRM) ===
+    // Must run BEFORE country check — overrides country scoring
+    const rightsSocieties = analysisData.rightsSocieties || analysisData.rights_societies || [];
+    const allRawTexts = [
+      ...(analysisData.extractedText || []),
+      ...(analysisData.copyrightLines || []),
+      ...(analysisData.discLabelText || []),
+      ...(analysisData.backCoverText || []),
+      analysisData.madeInText || '',
+    ].filter(Boolean);
+    const detectedSocieties = detectRightsSocieties(rightsSocieties, allRawTexts);
+    
+    if (detectedSocieties.length > 0 && releaseDetails.country) {
+      const candidateCountry = releaseDetails.country.toLowerCase();
+      let excluded = false;
+      let confirmed = false;
+      
+      for (const society of detectedSocieties) {
+        const mapping = RIGHTS_SOCIETY_REGIONS[society];
+        if (!mapping) continue;
+        
+        const isCompatible = mapping.regions.some(r => 
+          candidateCountry.includes(r) || r.includes(candidateCountry)
+        );
+        
+        if (!isCompatible) {
+          // HARD EXCLUDE: rights society region incompatible with candidate country
+          result.points = 0;
+          excluded = true;
+          result.explain.push(`⛔ ${society} (${mapping.label}) detected → excludes "${releaseDetails.country}"`);
+          console.log(`      ⛔ RIGHTS SOCIETY EXCLUDE: ${society} (${mapping.label}) incompatible with ${releaseDetails.country} → score=0`);
+          break;
+        } else if (!confirmed) {
+          // CONFIRM: rights society matches candidate region
+          result.points += 15;
+          confirmed = true;
+          result.matched_on.push('rights_society');
+          result.explain.push(`✅ ${society} (${mapping.label}) confirms "${releaseDetails.country}" origin (+15)`);
+          console.log(`      ✅ RIGHTS SOCIETY CONFIRM: ${society} confirms ${releaseDetails.country} → +15 points`);
+        }
+      }
+      
+      // If excluded, skip remaining checks and return early
+      if (excluded) {
+        console.log(`      📊 Total: 0/160 points (EXCLUDED by rights society)`);
+        return result;
       }
     }
     

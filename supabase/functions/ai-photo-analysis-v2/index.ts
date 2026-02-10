@@ -388,8 +388,32 @@ serve(async (req) => {
         })
         .eq('id', scanId)
 
-      // Search Discogs with improved strategy (now includes format filtering)
-      const discogsResult = await searchDiscogsV2(combinedData, mediaType)
+      // ─── LOCAL-FIRST LOOKUP: Check own database before Discogs API ───
+      let discogsResult: any = null;
+      const localMatch = await localFirstLookup(combinedData, collectorAudit);
+      
+      if (localMatch) {
+        console.log(`🏠 Local-first hit! Discogs ID ${localMatch.discogs_id} from own database`);
+        collectorAudit.push({ step: 'local_first_hit', detail: `Found in own DB: Discogs ${localMatch.discogs_id} (${localMatch.match_type})`, timestamp: new Date().toISOString() });
+        
+        // Build discogsResult from local data
+        discogsResult = {
+          discogsId: localMatch.discogs_id,
+          discogsUrl: `https://www.discogs.com/release/${localMatch.discogs_id}`,
+          artist: localMatch.artist || combinedData.artist,
+          title: localMatch.title || combinedData.title,
+          label: localMatch.labels?.[0]?.name || combinedData.label,
+          catalogNumber: localMatch.labels?.[0]?.catno || combinedData.catalogNumber,
+          year: localMatch.year || combinedData.year,
+          confidence: Math.min(localMatch.verification_score >= 2 ? 0.95 : 0.80, 1.0),
+          searchMetadata: { source: 'local_database', match_type: localMatch.match_type },
+          suggestions: [],
+        };
+      } else {
+        // No local match — fall back to Discogs API
+        collectorAudit.push({ step: 'local_first_miss', detail: 'No match in own database, searching Discogs API', timestamp: new Date().toISOString() });
+        discogsResult = await searchDiscogsV2(combinedData, mediaType);
+      }
 
       // Update record with final results
       const normalizedYear = typeof discogsResult.year === 'string'
@@ -667,6 +691,117 @@ serve(async (req) => {
     )
   }
 })
+
+// ─── LOCAL-FIRST LOOKUP: Search own database before Discogs API ──────
+async function localFirstLookup(combinedData: any, audit: any[]): Promise<any | null> {
+  try {
+    const barcode = combinedData.barcode?.replace(/\D/g, '') || null;
+    const catno = combinedData.catalogNumber?.trim() || null;
+    const matrix = combinedData.matrixNumber?.trim() || null;
+
+    if (!barcode && !catno && !matrix) {
+      console.log('🏠 Local-first: No identifiers to search');
+      return null;
+    }
+
+    // Strategy 1: Barcode search (highest priority)
+    if (barcode && barcode.length >= 8) {
+      console.log(`🏠 Local-first: Searching by barcode ${barcode}...`);
+      const { data: barcodeHits } = await supabase
+        .from('release_enrichments')
+        .select('*')
+        .contains('barcodes', [barcode])
+        .limit(3);
+
+      if (barcodeHits && barcodeHits.length > 0) {
+        const best = barcodeHits[0];
+        return { ...best, match_type: 'barcode' };
+      }
+    }
+
+    // Strategy 2: Catalog number search
+    if (catno) {
+      console.log(`🏠 Local-first: Searching by catno ${catno}...`);
+      // Search in labels jsonb array for matching catno
+      const { data: catnoHits } = await supabase
+        .from('release_enrichments')
+        .select('*')
+        .filter('labels', 'cs', JSON.stringify([{ catno }]))
+        .limit(3);
+
+      if (catnoHits && catnoHits.length > 0) {
+        return { ...catnoHits[0], match_type: 'catno' };
+      }
+
+      // Fallback: search releases table directly
+      const { data: releaseHits } = await supabase
+        .from('releases')
+        .select('id, discogs_id, artist, title, label, catalog_number, year, country')
+        .ilike('catalog_number', catno)
+        .not('discogs_id', 'is', null)
+        .limit(3);
+
+      if (releaseHits && releaseHits.length > 0) {
+        const r = releaseHits[0];
+        // Check if enrichment exists for this release
+        const { data: enrichment } = await supabase
+          .from('release_enrichments')
+          .select('*')
+          .eq('discogs_id', r.discogs_id)
+          .maybeSingle();
+
+        if (enrichment) {
+          return { ...enrichment, match_type: 'catno_via_releases' };
+        }
+        // Return basic info
+        return {
+          discogs_id: r.discogs_id,
+          artist: r.artist,
+          title: r.title,
+          year: r.year,
+          country: r.country,
+          labels: [{ name: r.label, catno: r.catalog_number }],
+          verification_score: 1,
+          match_type: 'catno_releases_only',
+        };
+      }
+    }
+
+    // Strategy 3: Matrix token search (lowest priority, most fuzzy)
+    if (matrix && matrix.length >= 4) {
+      console.log(`🏠 Local-first: Searching by matrix tokens...`);
+      const tokens = matrix.toUpperCase().split(/[\s\-\/]+/).filter((t: string) => t.length >= 3);
+      
+      if (tokens.length > 0) {
+        // Search matrix_variants jsonb for token overlap
+        const { data: matrixHits } = await supabase
+          .from('release_enrichments')
+          .select('*')
+          .not('matrix_variants', 'is', null)
+          .limit(50);
+
+        if (matrixHits) {
+          for (const hit of matrixHits) {
+            const variants = hit.matrix_variants || [];
+            for (const variant of variants) {
+              const variantValue = (variant.value || '').toUpperCase();
+              const matchedTokens = tokens.filter((t: string) => variantValue.includes(t));
+              if (matchedTokens.length >= 2 || (matchedTokens.length >= 1 && tokens.length === 1)) {
+                return { ...hit, match_type: 'matrix' };
+              }
+            }
+          }
+        }
+      }
+    }
+
+    console.log('🏠 Local-first: No match found in own database');
+    return null;
+  } catch (err) {
+    console.log('⚠️ Local-first lookup error (non-fatal):', err.message);
+    return null;
+  }
+}
 
 function toSupabaseRenderImageUrl(url: string, width = 1600, quality = 70): string {
   // Convert Supabase public object URLs into resized render URLs to avoid huge image downloads/timeouts.

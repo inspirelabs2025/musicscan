@@ -590,6 +590,119 @@ function disambiguate(
   return { status: "no_match", releaseId: null, candidates: [], confidence: 0 };
 }
 
+// ─── LOCAL-FIRST LOOKUP for CD Pipeline ──────────────────────────
+async function localFirstLookupCD(
+  extractions: Extraction[],
+  audit: AuditEntry[]
+): Promise<any | null> {
+  try {
+    const getField = (name: string) => extractions.find((e) => e.field_name === name)?.normalized_value || null;
+    const barcode = getField("barcode");
+    const catno = getField("catno");
+    const matrix = getField("matrix");
+
+    if (!barcode && !catno && !matrix) {
+      console.log("🏠 Local-first: No identifiers to search");
+      return null;
+    }
+
+    // Strategy 1: Barcode search
+    if (barcode && barcode.length >= 8) {
+      console.log(`🏠 Local-first: Searching by barcode ${barcode}...`);
+      const { data: hits } = await supabase
+        .from("release_enrichments")
+        .select("*")
+        .contains("barcodes", [barcode])
+        .limit(3);
+
+      if (hits && hits.length > 0) {
+        audit.push({ step: "local_barcode_hit", detail: `Found Discogs ${hits[0].discogs_id} via barcode`, timestamp: new Date().toISOString() });
+        return { ...hits[0], match_type: "barcode" };
+      }
+    }
+
+    // Strategy 2: Catalog number search
+    if (catno) {
+      console.log(`🏠 Local-first: Searching by catno ${catno}...`);
+      const { data: hits } = await supabase
+        .from("release_enrichments")
+        .select("*")
+        .filter("labels", "cs", JSON.stringify([{ catno }]))
+        .limit(3);
+
+      if (hits && hits.length > 0) {
+        audit.push({ step: "local_catno_hit", detail: `Found Discogs ${hits[0].discogs_id} via catno`, timestamp: new Date().toISOString() });
+        return { ...hits[0], match_type: "catno" };
+      }
+
+      // Fallback: releases table
+      const { data: releaseHits } = await supabase
+        .from("releases")
+        .select("id, discogs_id, artist, title, label, catalog_number, year, country")
+        .ilike("catalog_number", catno)
+        .not("discogs_id", "is", null)
+        .limit(3);
+
+      if (releaseHits && releaseHits.length > 0) {
+        const r = releaseHits[0];
+        const { data: enrichment } = await supabase
+          .from("release_enrichments")
+          .select("*")
+          .eq("discogs_id", r.discogs_id)
+          .maybeSingle();
+
+        if (enrichment) {
+          audit.push({ step: "local_catno_releases_hit", detail: `Found Discogs ${r.discogs_id} via releases table`, timestamp: new Date().toISOString() });
+          return { ...enrichment, match_type: "catno_via_releases" };
+        }
+        return {
+          discogs_id: r.discogs_id,
+          artist: r.artist,
+          title: r.title,
+          year: r.year,
+          country: r.country,
+          labels: [{ name: r.label, catno: r.catalog_number }],
+          verification_score: 1,
+          match_type: "catno_releases_only",
+        };
+      }
+    }
+
+    // Strategy 3: Matrix token search
+    if (matrix && matrix.length >= 4) {
+      console.log(`🏠 Local-first: Searching by matrix tokens...`);
+      const tokens = matrix.toUpperCase().split(/[\s\-\/]+/).filter((t: string) => t.length >= 3);
+
+      if (tokens.length > 0) {
+        const { data: hits } = await supabase
+          .from("release_enrichments")
+          .select("*")
+          .not("matrix_variants", "is", null)
+          .limit(50);
+
+        if (hits) {
+          for (const hit of hits) {
+            for (const variant of (hit.matrix_variants || [])) {
+              const variantValue = (variant.value || "").toUpperCase();
+              const matched = tokens.filter((t: string) => variantValue.includes(t));
+              if (matched.length >= 2 || (matched.length >= 1 && tokens.length === 1)) {
+                audit.push({ step: "local_matrix_hit", detail: `Found Discogs ${hit.discogs_id} via matrix tokens`, timestamp: new Date().toISOString() });
+                return { ...hit, match_type: "matrix" };
+              }
+            }
+          }
+        }
+      }
+    }
+
+    console.log("🏠 Local-first: No match in own database");
+    return null;
+  } catch (err) {
+    console.log("⚠️ Local-first lookup error (non-fatal):", err.message);
+    return null;
+  }
+}
+
 // ─── Main Handler ────────────────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -657,14 +770,48 @@ serve(async (req) => {
     }));
     await supabase.from("scan_extractions").insert(extractionRecords);
 
-    // Step 4: Find Discogs candidates
-    console.log("🔎 Searching Discogs for candidates...");
-    const candidates = await findCandidates(extractions, artist, title, audit);
-    console.log(`📦 Found ${candidates.length} candidates`);
+    // Step 3.5: LOCAL-FIRST LOOKUP — check own database before Discogs API
+    console.log("🏠 Checking local database first...");
+    const localMatch = await localFirstLookupCD(extractions, audit);
+    
+    let result: any;
+    let candidates: DiscogsCandidate[] = [];
+    
+    if (localMatch) {
+      console.log(`🏠 Local-first hit! Discogs ID ${localMatch.discogs_id} (${localMatch.match_type})`);
+      audit.push({ step: "local_first_hit", detail: `Found in own DB: Discogs ${localMatch.discogs_id} (${localMatch.match_type})`, timestamp: new Date().toISOString() });
+      
+      candidates = [{
+        release_id: localMatch.discogs_id,
+        score: localMatch.verification_score >= 2 ? 0.95 : 0.80,
+        reason: [`local_db_${localMatch.match_type}`],
+        title: `${localMatch.artist || ''} - ${localMatch.title || ''}`,
+        year: localMatch.year,
+        country: localMatch.country,
+        label: localMatch.labels?.[0]?.name,
+        catno: localMatch.labels?.[0]?.catno,
+        barcode: localMatch.barcodes || [],
+      }];
+      
+      result = {
+        status: "single_match" as const,
+        releaseId: localMatch.discogs_id,
+        candidates,
+        confidence: localMatch.verification_score >= 2 ? 0.95 : 0.80,
+      };
+    } else {
+      // No local match — fall back to Discogs API
+      audit.push({ step: "local_first_miss", detail: "No match in own database, searching Discogs API", timestamp: new Date().toISOString() });
+      
+      // Step 4: Find Discogs candidates
+      console.log("🔎 Searching Discogs for candidates...");
+      candidates = await findCandidates(extractions, artist, title, audit);
+      console.log(`📦 Found ${candidates.length} candidates`);
 
-    // Step 5: Disambiguate and score
-    console.log("⚖️ Disambiguating...");
-    const result = disambiguate(candidates, extractions, audit);
+      // Step 5: Disambiguate and score
+      console.log("⚖️ Disambiguating...");
+      result = disambiguate(candidates, extractions, audit);
+    }
     console.log(`✅ Status: ${result.status}, confidence: ${result.confidence.toFixed(2)}, releaseId: ${result.releaseId}`);
 
     // Determine missing fields for "next best photo" guidance

@@ -31,6 +31,10 @@ const fieldLabels: Record<string, string> = {
   country: "Land",
   year_hint: "Jaar",
   genre: "Genre",
+  format: "Formaat",
+  stamper_codes: "Stamper Codes",
+  pressing_plant: "Pressing Plant",
+  hand_etched: "Hand-gegraveerd",
 };
 
 export const ExtractionFields = React.memo(({ extractions }: ExtractionFieldsProps) => {

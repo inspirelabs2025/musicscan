@@ -46,7 +46,7 @@ export const ScannerHero = () => {
           </h1>
           
           <p className="text-lg md:text-xl lg:text-2xl text-white/80 max-w-2xl mx-auto mb-10">
-            Maak een foto en ontdek direct artiest, album én marktwaarde
+            Chat met Magic Mike 🎩 — maak een foto en ontdek direct artiest, album én marktwaarde
           </p>
           
           {/* Big Scanner Button */}

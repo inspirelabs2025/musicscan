@@ -1,222 +1,88 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { Music, RefreshCw, TrendingUp, Search, Filter, Settings, Disc3, Calendar, Star, Eye, EyeOff, ShoppingCart, Check, X, MoreHorizontal, Menu, Euro, Scan, Globe, ExternalLink, Store, Package, Sparkles } from "lucide-react";
-import { useMyActualCollection } from "@/hooks/useMyActualCollection";
-import { useUserShop } from "@/hooks/useUserShop";
-
-import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Music, Search, X, Disc3, Disc, Euro, ShoppingCart, ScanLine, TrendingUp, Eye, EyeOff, Package } from "lucide-react";
+import { useMyCollection, CollectionItem } from "@/hooks/useMyCollection";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
-import { CollectionGridSkeleton } from "@/components/ui/skeletons";
+import { Link } from "react-router-dom";
 import { ErrorBoundary, CollectionErrorFallback } from "@/components/ErrorBoundary";
-import { OfflineIndicator } from "@/components/ProgressiveEnhancement";
-import { useMobileOptimized, usePullToRefresh } from "@/hooks/useMobileOptimized";
-import { CollectionItem } from "@/hooks/useMyActualCollection";
-import { ItemStatusBadge, isItemReadyForShop } from "@/components/ItemStatusBadge";
-import { QuickScanOptions } from "@/components/QuickScanOptions";
 
-// Enhanced collection item card for unified scans
-const CollectionItemCard = ({ 
-  item, 
-  onUpdate, 
-  isUpdating, 
-  showControls = true,
-  isSelected,
-  onToggleSelection,
-  onAddToCollection
-}: {
-  item: CollectionItem;
-  onUpdate?: (itemId: string, mediaType: "cd" | "vinyl", updates: any) => void;
-  isUpdating?: boolean;
-  showControls?: boolean;
-  isSelected?: boolean;
-  onToggleSelection?: (itemId: string) => void;
-  onAddToCollection?: (item: CollectionItem) => void;
-}) => {
-  const isCollectionItem = item.source_table === 'cd_scan' || item.source_table === 'vinyl2_scan';
-  const isAIScan = item.source_table === 'ai_scan_results';
-
-  const handleUpdate = (updates: any) => {
-    if (isCollectionItem && onUpdate) {
-      const mediaType = item.source_table === 'cd_scan' ? 'cd' : 'vinyl';
-      onUpdate(item.id, mediaType, updates);
-    }
-  };
-
-  const getSourceBadge = () => {
-    if (isAIScan) {
-      return <Badge variant="secondary" className="text-xs"><Scan className="w-3 h-3 mr-1" />Scan</Badge>;
-    }
-    return <Badge variant="outline" className="text-xs">Collectie Item</Badge>;
-  };
-
+const CollectionCard = ({ item }: { item: CollectionItem }) => {
+  const imageUrl = item.front_image || item.catalog_image || item.back_image || item.matrix_image;
+  
   return (
-    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50 hover:border-primary/30">
-      {showControls && onToggleSelection && (
-        <div className="absolute top-3 left-3 z-10">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => onToggleSelection(item.id)}
-            className="bg-background/80 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+    <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 border-border/50 hover:border-primary/30">
+      {/* Cover Image */}
+      <div className="aspect-square bg-muted relative overflow-hidden">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={`${item.artist} - ${item.title}`}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
           />
-        </div>
-      )}
-      
-      <div className="p-4 space-y-3">
-        {/* Image placeholder */}
-        <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
-          {/* Prioritize artwork_url for AI scans, fallback to photo_urls */}
-          {(() => {
-            const imageUrl = isAIScan && item.artwork_url 
-              ? item.artwork_url 
-              : (item.photo_urls && item.photo_urls.length > 0 ? item.photo_urls[0] : null);
-            
-            return imageUrl ? (
-              <img 
-                src={imageUrl} 
-                alt={`${item.artist} - ${item.title}`}
-                className="w-full h-full object-cover rounded-lg"
-              />
-            ) : (
-              <Music className="w-12 h-12 text-muted-foreground" />
-            );
-          })()}
-        </div>
-
-          {/* Content */}
-          <div className="space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <h3 className="font-medium text-sm leading-tight truncate">
-                  {item.title || 'Onbekende titel'}
-                </h3>
-                <p className="text-xs text-muted-foreground truncate">
-                  {item.artist || 'Onbekende artiest'}
-                </p>
-              </div>
-              <Badge variant="outline" className="text-xs capitalize">
-                {item.media_type}
-              </Badge>
-            </div>
-
-            {/* Status and condition */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <ItemStatusBadge item={item} />
-              {item.condition_grade && (
-                <Badge variant="secondary" className="text-xs">
-                  {item.condition_grade}
-                </Badge>
-              )}
-            </div>
-
-            {/* Price */}
-            {item.calculated_advice_price && (
-              <div className="text-lg font-semibold text-primary">
-                €{item.calculated_advice_price.toFixed(2)}
-              </div>
-            )}
-
-          {/* Status indicator */}
-          {isCollectionItem && (
-            <div className="flex items-center gap-1">
-              {item.calculated_advice_price ? (
-                item.is_for_sale ? (
-                  <Badge variant="default" className="text-xs bg-green-500 hover:bg-green-600">
-                    Te koop
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
-                    Winkel-klaar
-                  </Badge>
-                )
-              ) : (
-                <Badge variant="secondary" className="text-xs">
-                  Onvolledig
-                </Badge>
-              )}
-            </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+            <Music className="w-10 h-10 text-muted-foreground/40" />
+          </div>
+        )}
+        
+        {/* Media type badge */}
+        <Badge variant="secondary" className="absolute top-2 right-2 text-xs backdrop-blur-sm bg-background/70">
+          {item.media_type === 'cd' ? (
+            <><Disc className="w-3 h-3 mr-1" />CD</>
+          ) : (
+            <><Disc3 className="w-3 h-3 mr-1" />Vinyl</>
           )}
+        </Badge>
+        
+        {/* Price overlay */}
+        {item.calculated_advice_price != null && item.calculated_advice_price > 0 && (
+          <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground px-2 py-1 rounded-md text-sm font-semibold backdrop-blur-sm">
+            €{item.calculated_advice_price.toFixed(2)}
+          </div>
+        )}
+      </div>
 
-          {/* Controls for collection items only */}
-          {showControls && isCollectionItem && (
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleUpdate({ is_public: !item.is_public })}
-                disabled={isUpdating}
-                className="text-xs"
-              >
-                {item.is_public ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-              </Button>
-              
-              {/* Quick shop action for ready items */}
-              {isItemReadyForShop(item) ? (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => handleUpdate({ 
-                    is_for_sale: true,
-                    is_public: true,
-                    marketplace_price: item.calculated_advice_price
-                  })}
-                  disabled={isUpdating}
-                  className="text-xs bg-green-600 hover:bg-green-700"
-                  title="Voeg direct toe aan winkel met gescande prijs"
-                >
-                  <ShoppingCart className="w-3 h-3 mr-1" />
-                  Naar winkel
-                </Button>
-              ) : item.is_for_sale ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleUpdate({ is_for_sale: false })}
-                  disabled={isUpdating}
-                  className="text-xs"
-                >
-                  Uit winkel
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleUpdate({ 
-                    is_for_sale: true,
-                    is_public: true 
-                  })}
-                  disabled={isUpdating}
-                  className="text-xs"
-                  title="Voeg toe aan winkel (prijs handmatig instellen)"
-                >
-                  Te koop
-                </Button>
-              )}
-            </div>
+      {/* Info */}
+      <div className="p-3 space-y-1.5">
+        <h3 className="font-medium text-sm leading-tight line-clamp-1">
+          {item.title || 'Onbekende titel'}
+        </h3>
+        <p className="text-xs text-muted-foreground line-clamp-1">
+          {item.artist || 'Onbekende artiest'}
+        </p>
+        
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {item.condition_grade && item.condition_grade !== 'Not Graded' && (
+            <Badge variant="outline" className="text-xs px-1.5 py-0">
+              {item.condition_grade}
+            </Badge>
           )}
-
-          {/* AI Scan action */}
-          {showControls && isAIScan && onAddToCollection && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full text-xs"
-              onClick={() => onAddToCollection(item)}
-              disabled={!item.discogs_id}
-              title={item.discogs_id ? "Bereken de waarde van dit item" : "Discogs ID vereist"}
-            >
-              Bereken de waarde
-            </Button>
+          {item.is_for_sale && (
+            <Badge className="text-xs px-1.5 py-0 bg-green-600 hover:bg-green-700">
+              <ShoppingCart className="w-2.5 h-2.5 mr-0.5" />Te koop
+            </Badge>
+          )}
+          {item.year && (
+            <span className="text-xs text-muted-foreground">{item.year}</span>
           )}
         </div>
+        
+        {/* Price range */}
+        {(item.lowest_price || item.highest_price) && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <TrendingUp className="w-3 h-3" />
+            <span>
+              {item.lowest_price ? `€${item.lowest_price.toFixed(2)}` : '?'}
+              {' – '}
+              {item.highest_price ? `€${item.highest_price.toFixed(2)}` : '?'}
+            </span>
+          </div>
+        )}
       </div>
     </Card>
   );
@@ -224,547 +90,189 @@ const CollectionItemCard = ({
 
 export default function MyCollection() {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [mediaTypeFilter, setMediaTypeFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [isBatchFetching, setIsBatchFetching] = useState(false);
-  const [inputValue, setInputValue] = useState<string>("");
-  const [activeSearchTerm, setActiveSearchTerm] = useState<string>("");
-  
-  const { 
-    data, 
-    isLoading, 
-    hasNextPage, 
-    fetchNextPage, 
-    isFetchingNextPage 
-  } = useMyActualCollection({
-    mediaTypeFilter: mediaTypeFilter === "all" ? undefined : mediaTypeFilter,
-    statusFilter: statusFilter === "all" ? undefined : statusFilter,
-    searchTerm: activeSearchTerm || undefined,
-  });
-  
-  const handleSearch = () => {
-    setActiveSearchTerm(inputValue);
-  };
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
+  const [mediaFilter, setMediaFilter] = useState<"all" | "cd" | "vinyl">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "public" | "for_sale" | "private" | "ready_for_shop">("all");
 
+  const { items, isLoading } = useMyCollection(statusFilter === "all" ? "all" : statusFilter);
+
+  // Client-side filtering for search and media type
+  const filteredItems = items.filter(item => {
+    if (mediaFilter !== "all" && item.media_type !== mediaFilter) return false;
+    if (activeSearch) {
+      const q = activeSearch.toLowerCase();
+      const match = [item.artist, item.title, item.label, item.catalog_number]
+        .some(f => f?.toLowerCase().includes(q));
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  // Stats
+  const totalValue = items
+    .filter(i => i.calculated_advice_price && i.calculated_advice_price > 0)
+    .reduce((sum, i) => sum + (i.calculated_advice_price || 0), 0);
+  const cdCount = items.filter(i => i.media_type === 'cd').length;
+  const vinylCount = items.filter(i => i.media_type === 'vinyl').length;
+  const forSaleCount = items.filter(i => i.is_for_sale).length;
+
+  const handleSearch = () => setActiveSearch(searchTerm);
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-    if (e.key === 'Escape') {
-      setInputValue("");
-      setActiveSearchTerm("");
-    }
-  };
-  // Mobile and UX enhancements
-  const { isMobile } = useMobileOptimized();
-  const { 
-    isPulling, 
-    pullDistance, 
-    isRefreshing,
-    onTouchStart,
-    onTouchMove,
-    onTouchEnd
-  } = usePullToRefresh(async () => {
-    // Refresh collection data
-    window.location.reload();
-  });
-
-  // Flatten all items from all pages
-  const allItems = data?.pages.flatMap(page => page.data) || [];
-  const firstPage = data?.pages?.[0];
-  const stats = firstPage?.stats;
-  
-  // Use server-side statistics when available, fallback to client-side
-  const totalItems = stats?.totalCount ?? allItems.length;
-  const aiScans = stats?.aiScans ?? allItems.filter(item => item.source_table === 'ai_scan_results').length;
-  const physicalScans = stats?.physicalTotal ?? allItems.filter(item => item.source_table === 'cd_scan' || item.source_table === 'vinyl2_scan').length;
-  const itemsWithValue = stats?.withValue ?? allItems.filter(item => item.calculated_advice_price && item.calculated_advice_price > 0).length;
-  const totalValue = stats?.totalValue ?? allItems
-    .filter(item => item.calculated_advice_price && item.calculated_advice_price > 0)
-    .reduce((sum, item) => sum + (item.calculated_advice_price || 0), 0);
-
-  // Auto-load more content when scrolling near bottom
-  const handleScroll = useCallback(() => {
-    if (
-      hasNextPage &&
-      !isFetchingNextPage &&
-      window.innerHeight + document.documentElement.scrollTop >=
-      document.documentElement.offsetHeight - 1000 // Load when 1000px from bottom
-    ) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
-
-  const handleItemUpdate = (itemId: string, mediaType: "cd" | "vinyl", updates: any) => {
-    // We'll need to implement this for the unified scans
-    // For now, just show a toast
-    toast({
-      title: "Item bijgewerkt",
-      description: "De wijzigingen zijn opgeslagen.",
-    });
-  };
-
-  const handleBulkAddToShop = async () => {
-    if (selectedItems.size === 0) return;
-
-    // Only work with collection items that are ready for shop
-    const readyItems = Array.from(selectedItems)
-      .map(itemId => allItems.find(i => i.id === itemId))
-      .filter(item => 
-        item && 
-        (item.source_table === 'cd_scan' || item.source_table === 'vinyl2_scan') &&
-        item.calculated_advice_price &&
-        !item.is_for_sale
-      );
-
-    if (readyItems.length === 0) {
-      toast({
-        title: "Geen winkel-klare items geselecteerd",
-        description: "Alleen items met pricing die nog niet te koop staan kunnen worden toegevoegd aan de winkel.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsBatchFetching(true);
-    let successCount = 0;
-
-    try {
-      for (const item of readyItems) {
-        const mediaType = item.source_table === 'cd_scan' ? 'cd' : 'vinyl';
-        handleItemUpdate(item.id, mediaType, {
-          is_for_sale: true,
-          is_public: true,
-          marketplace_price: item.calculated_advice_price
-        });
-        successCount++;
-      }
-
-      toast({
-        title: "Items toegevoegd aan winkel!",
-        description: `${successCount} item${successCount !== 1 ? 's' : ''} succesvol toegevoegd aan je winkel.`,
-      });
-      
-      setSelectedItems(new Set());
-    } catch (error) {
-      toast({
-        title: "Fout bij toevoegen",
-        description: "Er is een fout opgetreden bij het toevoegen van items aan de winkel.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsBatchFetching(false);
-    }
-  };
-
-  const toggleItemSelection = (itemId: string) => {
-    const newSelection = new Set(selectedItems);
-    if (newSelection.has(itemId)) {
-      newSelection.delete(itemId);
-    } else {
-      newSelection.add(itemId);
-    }
-    setSelectedItems(newSelection);
-  };
-
-  const selectAll = () => {
-    if (selectedItems.size === allItems.length) {
-      setSelectedItems(new Set());
-    } else {
-      setSelectedItems(new Set(allItems.map(item => item.id)));
-    }
-  };
-
-  const handleAddToCollection = (item: CollectionItem) => {
-    if (!item.discogs_id) {
-      toast({
-        title: "Geen Discogs ID",
-        description: "Er is een Discogs ID nodig om toe te voegen aan de collectie.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    console.log('🔗 Adding to collection with condition:', item.condition_grade);
-    const params = new URLSearchParams({
-      mediaType: item.media_type || 'vinyl',
-      discogsId: item.discogs_id.toString(),
-      artist: item.artist || '',
-      title: item.title || '',
-      label: item.label || '',
-      catalogNumber: item.catalog_number || '',
-      ...(item.year && { year: item.year.toString() }),
-      ...(item.condition_grade && { condition: item.condition_grade }),
-      fromAiScan: 'true'
-    });
-
-    navigate(`/scanner/discogs?${params.toString()}`);
-  };
-
-  // Updated statistics using server-side data
-  const collectionStats = {
-    totalCount: totalItems,
-    withValue: itemsWithValue,
-    physicalTotal: physicalScans,
-    aiScans: aiScans,
-    readyForShop: stats?.readyForShop ?? allItems.filter(item => !item.is_for_sale && item.calculated_advice_price).length,
-    public: stats?.public ?? allItems.filter(item => item.is_public).length,
-    forSale: stats?.forSale ?? allItems.filter(item => item.is_for_sale).length,
-    totalValue: totalValue,
+    if (e.key === 'Enter') handleSearch();
+    if (e.key === 'Escape') { setSearchTerm(""); setActiveSearch(""); }
   };
 
   if (isLoading) {
     return (
-      <ErrorBoundary fallback={<CollectionErrorFallback />}>
-        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
-          <OfflineIndicator />
-          <div className="container mx-auto px-4 py-8">
-            {/* Header Skeleton */}
-            <Card className="p-8 mb-8 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-              <div className="text-center space-y-4">
-                <div className="h-8 bg-muted animate-pulse rounded-lg mx-auto w-64" />
-                <div className="h-4 bg-muted animate-pulse rounded mx-auto w-96" />
-                <div className="flex justify-center gap-3">
-                  <div className="h-10 bg-muted animate-pulse rounded w-48" />
-                  <div className="h-10 bg-muted animate-pulse rounded w-40" />
-                </div>
-              </div>
-            </Card>
-            
-            {/* Stats Skeleton */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Card key={i} className="p-4">
-                  <div className="space-y-2">
-                    <div className="h-5 bg-muted animate-pulse rounded mx-auto w-5" />
-                    <div className="h-6 bg-muted animate-pulse rounded mx-auto w-8" />
-                    <div className="h-3 bg-muted animate-pulse rounded mx-auto w-12" />
-                  </div>
-                </Card>
-              ))}
-            </div>
-            
-            {/* Collection Grid Skeleton */}
-            <CollectionGridSkeleton count={isMobile ? 6 : 12} />
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="h-8 bg-muted animate-pulse rounded-lg mx-auto w-48 mb-8" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="p-4"><div className="h-12 bg-muted animate-pulse rounded" /></Card>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <Card key={i}><div className="aspect-square bg-muted animate-pulse" /><div className="p-3 space-y-2"><div className="h-4 bg-muted animate-pulse rounded w-3/4" /><div className="h-3 bg-muted animate-pulse rounded w-1/2" /></div></Card>
+            ))}
           </div>
         </div>
-      </ErrorBoundary>
+      </div>
     );
   }
 
   return (
     <ErrorBoundary fallback={<CollectionErrorFallback />}>
-      <div 
-        className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        style={{
-          transform: `translateY(${pullDistance * 0.5}px)`,
-          transition: isPulling ? 'none' : 'transform 0.3s ease-out'
-        }}
-      >
-        <OfflineIndicator />
-        
-        {/* Pull to refresh indicator */}
-        {isPulling && (
-          <div 
-            className="fixed top-0 left-1/2 transform -translate-x-1/2 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-b-lg transition-all duration-200"
-            style={{ opacity: Math.min(pullDistance / 80, 1) }}
-          >
-            <div className="flex items-center gap-2">
-              <RefreshCw className={`w-4 h-4 ${pullDistance > 80 ? 'animate-spin' : ''}`} />
-              {pullDistance > 80 ? 'Loslaten om te vernieuwen' : 'Trek naar beneden om te vernieuwen'}
-            </div>
-          </div>
-        )}
-        
-        {isRefreshing && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-lg">
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              Vernieuwen...
-            </div>
-          </div>
-        )}
-        
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
-         {/* Header */}
-         <Card className="p-8 mb-8 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-           <div className="text-center space-y-4">
-             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
-               Mijn Collectie
-             </h1>
-             <p className="text-muted-foreground max-w-2xl mx-auto">
-               Overzicht van alle scans en collectie-items. Inclusief slimme scans zonder waarde en voltooide items met prijzen.
-             </p>
-             
-             <div className="flex flex-wrap justify-center gap-3">
-               <Button asChild variant="default">
-                 <Link to="/ai-scan-v2" className="flex items-center gap-2">
-                   <Scan className="w-4 h-4" />
-                   Nieuwe Slimme Scan
-                 </Link>
-               </Button>
-               
-               <Button asChild variant="outline">
-                 <Link to="/collection-overview" className="flex items-center gap-2">
-                   <Package className="w-4 h-4" />
-                   Beheer Collectie Items
-                 </Link>
-               </Button>
-             </div>
-           </div>
-         </Card>
-
-         {/* Quick Scan Options */}
-         <QuickScanOptions context="collection" className="mb-8" />
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
-          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-            <div className="flex items-center justify-center mb-2">
-              <Music className="w-5 h-5 text-primary" />
-            </div>
-            <div className="text-2xl font-bold">{collectionStats.totalCount}</div>
-            <div className="text-sm text-muted-foreground">Totaal</div>
-          </Card>
           
-          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-            <div className="flex items-center justify-center mb-2">
-              <Euro className="w-5 h-5 text-green-500" />
-            </div>
-            <div className="text-2xl font-bold">{collectionStats.withValue}</div>
-            <div className="text-sm text-muted-foreground">Items met Waarde</div>
-          </Card>
-          
-          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-            <div className="flex items-center justify-center mb-2">
-              <Package className="w-5 h-5 text-purple-500" />
-            </div>
-            <div className="text-2xl font-bold">{collectionStats.physicalTotal}</div>
-            <div className="text-sm text-muted-foreground">Fysiek</div>
-          </Card>
-          
-          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-            <div className="flex items-center justify-center mb-2">
-              <Sparkles className="w-5 h-5 text-blue-500" />
-            </div>
-            <div className="text-2xl font-bold">{collectionStats.aiScans}</div>
-            <div className="text-sm text-muted-foreground">AI Scans</div>
-          </Card>
-          
-          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-            <div className="flex items-center justify-center mb-2">
-              <ShoppingCart className="w-5 h-5 text-amber-500" />
-            </div>
-            <div className="text-2xl font-bold">{collectionStats.readyForShop}</div>
-            <div className="text-sm text-muted-foreground">Winkel-klaar</div>
-          </Card>
-          
-          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-            <div className="flex items-center justify-center mb-2">
-              <Eye className="w-5 h-5 text-green-500" />
-            </div>
-            <div className="text-2xl font-bold">{collectionStats.public}</div>
-            <div className="text-sm text-muted-foreground">Publiek</div>
-          </Card>
-          
-          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-            <div className="flex items-center justify-center mb-2">
-              <ShoppingCart className="w-5 h-5 text-orange-500" />
-            </div>
-            <div className="text-2xl font-bold">{collectionStats.forSale}</div>
-            <div className="text-sm text-muted-foreground">Te koop</div>
-          </Card>
-          
-          <Card className="p-4 text-center bg-gradient-to-br from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-            <div className="flex items-center justify-center mb-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-            </div>
-            <div className="text-lg font-semibold">€{collectionStats.totalValue.toFixed(2)}</div>
-            <div className="text-sm text-muted-foreground">Totale Waarde</div>
-          </Card>
-        </div>
-
-        {/* Filters and Controls */}
-        <Card className="p-6 mb-6 bg-gradient-to-r from-card/50 to-background/80 backdrop-blur-sm border-border/50">
-          {/* Search Bar */}
-          <div className="mb-4">
-            <div className="flex gap-2 max-w-md">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Zoek op artiest, titel, label of catalogusnummer..."
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="pl-10 pr-8 bg-background/60 border-border/60 focus:bg-background focus:border-primary/50"
-                />
-                {activeSearchTerm && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setInputValue("");
-                      setActiveSearchTerm("");
-                    }}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-                    aria-label="Wis zoekopdracht"
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                )}
-              </div>
-              <Button
-                onClick={handleSearch}
-                variant="outline"
-                size="default"
-                className="px-3 bg-background/60 border-border/60 hover:bg-background hover:border-primary/50"
-                aria-label="Zoeken"
-              >
-                <Search className="w-4 h-4" />
-              </Button>
-            </div>
-            {activeSearchTerm && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Zoekt naar: "{activeSearchTerm}"
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-2xl font-bold">Mijn Collectie</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {items.length} items{totalValue > 0 ? ` · Totale waarde €${totalValue.toFixed(2)}` : ''}
               </p>
-            )}
-          </div>
-          
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            {/* Filters */}
-            <div className="flex flex-wrap gap-4 flex-1">
-              <Select value={mediaTypeFilter} onValueChange={setMediaTypeFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Media type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle types</SelectItem>
-                  <SelectItem value="vinyl">Vinyl</SelectItem>
-                  <SelectItem value="cd">CD</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle items</SelectItem>
-                  <SelectItem value="met_waarde">Met waarde</SelectItem>
-                  <SelectItem value="zonder_waarde">Zonder waarde</SelectItem>
-                  <SelectItem value="ready_for_shop">Winkel-klaar</SelectItem>
-                  <SelectItem value="for_sale">Te koop</SelectItem>
-                  <SelectItem value="public">Publiek</SelectItem>
-                  <SelectItem value="private">Privé</SelectItem>
-                  <SelectItem value="cd_scan">Fysieke CD's</SelectItem>
-                  <SelectItem value="vinyl2_scan">Fysieke Vinyl</SelectItem>
-                  <SelectItem value="ai_scan_results">AI Scans</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
-
-            {/* Selection controls */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {selectedItems.size} geselecteerd
-              </span>
-              <Button variant="outline" size="sm" onClick={selectAll}>
-                {selectedItems.size === allItems.length ? 'Deselecteer alles' : 'Selecteer alles'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Bulk actions */}
-          {selectedItems.size > 0 && (
-            <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-border/50">
-              <Button 
-                onClick={handleBulkAddToShop}
-                disabled={isBatchFetching}
-                variant="default"
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {isBatchFetching ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    Toevoegen...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart className="w-4 h-4" />
-                    Winkel-klare naar winkel
-                  </div>
-                )}
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={() => setSelectedItems(new Set())}
-                size="sm"
-              >
-                Deselecteren
-              </Button>
-            </div>
-          )}
-        </Card>
-
-        {/* Collection Grid */}
-        {allItems.length === 0 ? (
-          <Card className="p-8 text-center">
-            <Music className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Geen collectie items</h3>
-            <p className="text-muted-foreground mb-4">
-              Je hebt nog geen items met waardering in je collectie. Scan items en laat ze verwerken om je collectie op te bouwen!
-            </p>
             <Button asChild>
-              <Link to="/ai-scan-v2">Start met scannen</Link>
+              <Link to="/ai-scan-v2" className="flex items-center gap-2">
+                <ScanLine className="w-4 h-4" />
+                Scan toevoegen
+              </Link>
             </Button>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {allItems.map((item) => (
-                <CollectionItemCard
-                  key={item.id}
-                  item={item}
-                  onUpdate={handleItemUpdate}
-                  showControls={true}
-                  isSelected={selectedItems.has(item.id)}
-                  onToggleSelection={toggleItemSelection}
-                  onAddToCollection={handleAddToCollection}
-                />
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <Card className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Music className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <div className="text-xl font-bold">{items.length}</div>
+                <div className="text-xs text-muted-foreground">Totaal</div>
+              </div>
+            </Card>
+            <Card className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <Euro className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <div className="text-xl font-bold">€{totalValue.toFixed(0)}</div>
+                <div className="text-xs text-muted-foreground">Waarde</div>
+              </div>
+            </Card>
+            <Card className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <Disc className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="text-xl font-bold">{cdCount}</div>
+                <div className="text-xs text-muted-foreground">CD's</div>
+              </div>
+            </Card>
+            <Card className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-500/10">
+                <Disc3 className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <div className="text-xl font-bold">{vinylCount}</div>
+                <div className="text-xs text-muted-foreground">Vinyl</div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Search & Filters */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Zoek op artiest, titel..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pl-9"
+              />
+              {activeSearch && (
+                <Button variant="ghost" size="sm" onClick={() => { setSearchTerm(""); setActiveSearch(""); }} className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0">
+                  <X className="w-3 h-3" />
+                </Button>
+              )}
+            </div>
+            <Select value={mediaFilter} onValueChange={(v) => setMediaFilter(v as any)}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alles</SelectItem>
+                <SelectItem value="cd">CD</SelectItem>
+                <SelectItem value="vinyl">Vinyl</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle items</SelectItem>
+                <SelectItem value="for_sale">Te koop</SelectItem>
+                <SelectItem value="public">Publiek</SelectItem>
+                <SelectItem value="private">Privé</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Collection Grid */}
+          {filteredItems.length === 0 ? (
+            <Card className="p-12 text-center">
+              <Music className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">
+                {activeSearch ? 'Geen resultaten' : 'Nog geen items in je collectie'}
+              </h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                {activeSearch 
+                  ? `Geen items gevonden voor "${activeSearch}"`
+                  : 'Scan je eerste CD of LP met Magic Mike en sla het op om je collectie te starten.'
+                }
+              </p>
+              {!activeSearch && (
+                <Button asChild>
+                  <Link to="/ai-scan-v2">
+                    <ScanLine className="w-4 h-4 mr-2" />
+                    Start met scannen
+                  </Link>
+                </Button>
+              )}
+            </Card>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {filteredItems.map((item) => (
+                <CollectionCard key={item.id} item={item} />
               ))}
             </div>
-
-            {/* Auto-loading indicator */}
-            {isFetchingNextPage && (
-              <div className="text-center py-4">
-                <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Meer items laden...</span>
-                </div>
-              </div>
-            )}
-            
-            {/* End of results indicator */}
-            {!hasNextPage && allItems.length > 0 && (
-              <div className="text-center py-4">
-                <div className="text-sm text-muted-foreground">
-                  Alle {totalItems} items geladen ({allItems.length} weergegeven)
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+          )}
         </div>
       </div>
     </ErrorBoundary>

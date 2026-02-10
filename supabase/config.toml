@@ -713,3 +713,7 @@ verify_jwt = false
 # Discogs release verification & data enrichment
 [functions.verify-and-enrich-release]
 verify_jwt = false
+
+# Scan Chat - release identification via AI chat
+[functions.scan-chat]
+verify_jwt = false

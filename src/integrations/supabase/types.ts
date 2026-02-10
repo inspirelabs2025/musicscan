@@ -6187,6 +6187,113 @@ export type Database = {
         }
         Relationships: []
       }
+      release_enrichments: {
+        Row: {
+          artist: string | null
+          artwork_url: string | null
+          barcodes: string[] | null
+          community_have: number | null
+          community_rating: number | null
+          community_want: number | null
+          companies: Json | null
+          country: string | null
+          created_at: string
+          credits: Json | null
+          discogs_id: number
+          enriched_at: string
+          format: Json | null
+          id: string
+          identifiers: Json | null
+          images: Json | null
+          labels: Json | null
+          matrix_variants: Json | null
+          notes: string | null
+          pricing_highest: number | null
+          pricing_lowest: number | null
+          pricing_median: number | null
+          release_id: string | null
+          title: string | null
+          tracklist: Json | null
+          updated_at: string
+          verification_details: Json | null
+          verification_score: number | null
+          verification_status: string
+          year: number | null
+        }
+        Insert: {
+          artist?: string | null
+          artwork_url?: string | null
+          barcodes?: string[] | null
+          community_have?: number | null
+          community_rating?: number | null
+          community_want?: number | null
+          companies?: Json | null
+          country?: string | null
+          created_at?: string
+          credits?: Json | null
+          discogs_id: number
+          enriched_at?: string
+          format?: Json | null
+          id?: string
+          identifiers?: Json | null
+          images?: Json | null
+          labels?: Json | null
+          matrix_variants?: Json | null
+          notes?: string | null
+          pricing_highest?: number | null
+          pricing_lowest?: number | null
+          pricing_median?: number | null
+          release_id?: string | null
+          title?: string | null
+          tracklist?: Json | null
+          updated_at?: string
+          verification_details?: Json | null
+          verification_score?: number | null
+          verification_status?: string
+          year?: number | null
+        }
+        Update: {
+          artist?: string | null
+          artwork_url?: string | null
+          barcodes?: string[] | null
+          community_have?: number | null
+          community_rating?: number | null
+          community_want?: number | null
+          companies?: Json | null
+          country?: string | null
+          created_at?: string
+          credits?: Json | null
+          discogs_id?: number
+          enriched_at?: string
+          format?: Json | null
+          id?: string
+          identifiers?: Json | null
+          images?: Json | null
+          labels?: Json | null
+          matrix_variants?: Json | null
+          notes?: string | null
+          pricing_highest?: number | null
+          pricing_lowest?: number | null
+          pricing_median?: number | null
+          release_id?: string | null
+          title?: string | null
+          tracklist?: Json | null
+          updated_at?: string
+          verification_details?: Json | null
+          verification_score?: number | null
+          verification_status?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_enrichments_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       releases: {
         Row: {
           artist: string

@@ -778,6 +778,39 @@ serve(async (req) => {
 
     console.log(`✅ [${PIPELINE_VERSION}] Complete: ${result.status}`);
 
+    // ─── Auto-verify & enrich if we have a match ──────────────
+    if (result.releaseId && (result.status === "single_match" || result.confidence >= 0.6)) {
+      try {
+        console.log(`🔐 Auto-verifying release ${result.releaseId}...`);
+        const verifyRes = await fetch(`${supabaseUrl}/functions/v1/verify-and-enrich-release`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${supabaseServiceKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            discogs_id: result.releaseId,
+            scan_data: {
+              barcode: getField("barcode"),
+              catno: getField("catno"),
+              matrix: getField("matrix"),
+            },
+          }),
+        });
+        if (verifyRes.ok) {
+          const verifyData = await verifyRes.json();
+          console.log(`✅ Enrichment: ${verifyData.verification?.status} (${verifyData.verification?.score} confirmations)`);
+          // Add verification info to response
+          responseBody.result.verification = verifyData.verification;
+          responseBody.result.enrichment_action = verifyData.action;
+        } else {
+          console.log(`⚠️ Enrichment failed: ${verifyRes.status}`);
+        }
+      } catch (enrichErr) {
+        console.log(`⚠️ Enrichment error (non-fatal):`, enrichErr.message);
+      }
+    }
+
     return new Response(JSON.stringify(responseBody), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

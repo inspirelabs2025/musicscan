@@ -696,7 +696,7 @@ export function ScanChatTab() {
         condition_grade: conditionMedia || 'Not Graded',
         is_public: false,
         is_for_sale: false,
-        calculated_advice_price: calculateAdvicePrice(pricing?.median_price, conditionMedia, conditionSleeve) ?? pricing?.median_price ?? null,
+        calculated_advice_price: calculateAdvicePrice(pricing?.median_price, conditionMedia, conditionSleeve, pricing?.lowest_price, pricing?.highest_price) ?? pricing?.median_price ?? null,
         lowest_price: pricing?.lowest_price ?? null,
         median_price: pricing?.median_price ?? null,
         highest_price: pricing?.highest_price ?? null,
@@ -905,6 +905,8 @@ export function ScanChatTab() {
                   conditionMedia={conditionMedia}
                   conditionSleeve={conditionSleeve}
                   medianPrice={msg.pricingData.median_price}
+                  lowestPrice={msg.pricingData.lowest_price}
+                  highestPrice={msg.pricingData.highest_price}
                   onConditionMediaChange={setConditionMedia}
                   onConditionSleeveChange={setConditionSleeve}
                 />

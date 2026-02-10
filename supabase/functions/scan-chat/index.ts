@@ -54,15 +54,21 @@ serve(async (req) => {
       { role: "system", content: SYSTEM_PROMPT },
     ];
 
-    // Process each message - first message gets photos injected
+    // Find the LAST user message index to inject photos there
+    let lastUserIndex = -1;
+    if (photoUrls?.length > 0) {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === "user") { lastUserIndex = i; break; }
+      }
+    }
+
+    // Process each message - last user message gets photos injected
     for (let i = 0; i < messages.length; i++) {
       const msg = messages[i];
 
-      if (msg.role === "user" && i === 0 && photoUrls?.length > 0) {
-        // First user message: inject photos as image_url content parts
+      if (i === lastUserIndex && photoUrls?.length > 0) {
         const content: any[] = [];
 
-        // Add media type context
         if (mediaType) {
           content.push({
             type: "text",
@@ -72,7 +78,6 @@ serve(async (req) => {
           content.push({ type: "text", text: msg.content });
         }
 
-        // Add each photo as image URL
         for (const url of photoUrls) {
           content.push({
             type: "image_url",

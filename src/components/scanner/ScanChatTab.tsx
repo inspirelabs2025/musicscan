@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
+import { ConditionGradingPanel, calculateAdvicePrice } from '@/components/scanner/ConditionGradingPanel';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -121,6 +122,8 @@ export function ScanChatTab() {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [verifiedResult, setVerifiedResult] = useState<V2PipelineResult | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [conditionMedia, setConditionMedia] = useState<string>('');
+  const [conditionSleeve, setConditionSleeve] = useState<string>('');
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -577,6 +580,8 @@ export function ScanChatTab() {
     setInput('');
     setVerifiedResult(null);
     setSavedToCollection(false);
+    setConditionMedia('');
+    setConditionSleeve('');
   };
 
   const saveToCollection = async () => {
@@ -604,14 +609,19 @@ export function ScanChatTab() {
         genre: verifiedResult.genre,
         barcode_number: verifiedResult.barcode,
         matrix_number: verifiedResult.matrix_number,
-        condition_grade: 'Not Graded',
+        condition_grade: conditionMedia || 'Not Graded',
         is_public: false,
         is_for_sale: false,
-        calculated_advice_price: pricing?.median_price ?? null,
+        calculated_advice_price: calculateAdvicePrice(pricing?.median_price, conditionMedia, conditionSleeve) ?? pricing?.median_price ?? null,
         lowest_price: pricing?.lowest_price ?? null,
         median_price: pricing?.median_price ?? null,
         highest_price: pricing?.highest_price ?? null,
       };
+
+      // Add sleeve condition for cd_scan table
+      if (mediaType === 'cd' && conditionSleeve) {
+        record.marketplace_sleeve_condition = conditionSleeve;
+      }
 
       // Add first photo as image
       if (photoUrls.length > 0) {
@@ -802,6 +812,18 @@ export function ScanChatTab() {
                     </a>
                   )}
                 </div>
+              )}
+
+              {/* Condition grading panel - shown after pricing for verified results */}
+              {msg.v2Result?.discogs_id && msg.pricingData && !savedToCollection && (
+                <ConditionGradingPanel
+                  mediaType={mediaType}
+                  conditionMedia={conditionMedia}
+                  conditionSleeve={conditionSleeve}
+                  medianPrice={msg.pricingData.median_price}
+                  onConditionMediaChange={setConditionMedia}
+                  onConditionSleeveChange={setConditionSleeve}
+                />
               )}
 
               {/* V2 Suggestions buttons */}

@@ -1,36 +1,39 @@
 
-# Magic Mike - Direct Foto Analyse & Gespreksstarter
 
-## Probleem
-Magic Mike vraagt gebruikers om handmatig tekst over te typen van hun foto's, terwijl hij de foto's gewoon kan zien en analyseren via het vision model. Hij moet ZELF de OCR doen en direct bevestigen wat hij ziet.
+## Extracted Fields in V2 Scanner Results
 
-## Aanpassingen
+### What changes
+Add a prominent "Geextraheerde velden" (Extracted Fields) section to the V2 scanner results, showing all data collected from the photos with confidence indicators -- similar to the CD Pipeline's `ExtractionFields` component.
 
-### 1. System Prompt herschrijven (`scan-chat/index.ts`)
-De prompt wordt aangescherpt met deze kernregels:
-- **REGEL 1**: Als je foto's ontvangt, LEES ze zelf. Vraag NOOIT de gebruiker om tekst over te typen die op de foto's staat.
-- **REGEL 2**: Begin altijd met bevestiging: "Ik zie [Artiest] - [Titel]" en ga dan verder.
-- **REGEL 3**: Zoek zelf naar matrix-nummers, barcodes, catalogusnummers op de foto's.
-- **REGEL 4**: Als je iets niet kunt lezen, vraag dan om een betere foto van dat specifieke deel.
+### Current situation
+The V2 scanner (`AIScanV2Results.tsx`) buries technical identifiers in a plain text list under "Technische Details". There are no confidence indicators, no "detected / not detected" status, and no visual feedback on what was found vs. what is missing.
 
-Nieuwe flow in de prompt:
-1. Ontvang foto's
-2. Bevestig artiest en titel
-3. Benoem welke technische identifiers je hebt gevonden (matrix, barcode, catno)
-4. Geef Discogs kandidaten
-5. Vraag eventueel om extra foto's van specifieke delen die onduidelijk zijn
+### Plan
 
-### 2. Eerste bericht van Magic Mike aanpassen (`ScanChatTab.tsx`)
-Het automatische eerste bericht wanneer foto's worden verstuurd wijzigt van:
-- "Bekijk ze en vertel me wat je ziet" (te passief)
-Naar:
-- "Analyseer deze foto's. Bevestig eerst de artiest en titel. Zoek dan naar barcode, catalogusnummer en matrix-nummer op de foto's. Geef je bevindingen."
+**1. Build extraction data from V2 results**
 
-Dit is het verborgen instructie-bericht dat mee wordt gestuurd - niet zichtbaar voor de gebruiker.
+In `AIScanV2Results.tsx`, transform the existing result fields (barcode, matrix_number, catalog_number, sid_code_mastering, sid_code_mould, label_code, label, country, year, genre) into a structured extraction array that the `ExtractionFields` component can render.
 
-### Bestanden
+Each field gets:
+- **field name** (barcode, matrix, catno, ifpi_master, ifpi_mould, label_code, label, country, year, genre)
+- **raw/normalized value** from the result
+- **confidence** derived from: 1.0 if present + verified match, 0.8 if present but unverified, 0 if missing
+- Status from the `collector_audit` log (rejected, verified, unverified)
 
-| Actie | Bestand |
-|-------|---------|
-| Wijzig | `supabase/functions/scan-chat/index.ts` - System prompt aanscherpen |
-| Wijzig | `src/components/scanner/ScanChatTab.tsx` - Instructie-bericht bij foto upload |
+**2. Add ExtractionFields section to results UI**
+
+Place the extraction fields section directly after the confidence score and before the release information section. This makes the "what did we find in your photos" data the first thing the user sees.
+
+**3. Reuse existing ExtractionFields component**
+
+Import and use the existing `ExtractionFields` component from `src/components/scan-pipeline/ExtractionFields.tsx` -- no need to create a new component.
+
+### Technical details
+
+- File to edit: `src/components/scanner/AIScanV2Results.tsx`
+- Import: `ExtractionFields` from `@/components/scan-pipeline/ExtractionFields`
+- Import: `ScanExtraction` type from `@/hooks/useCDScanPipeline`
+- Build a `buildExtractions(result, collectorAudit)` helper function that maps V2 result fields to `ScanExtraction[]`
+- Parse the `collector_audit` entries to determine if fields were rejected/verified, adjusting confidence accordingly (rejected = 0.3, verified = 1.0)
+- Render between the confidence score bar and the release information grid
+

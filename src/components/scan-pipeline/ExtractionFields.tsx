@@ -26,9 +26,11 @@ const fieldLabels: Record<string, string> = {
   matrix: "Matrix code",
   ifpi_master: "IFPI Master",
   ifpi_mould: "IFPI Mould",
+  label_code: "Label Code",
   label: "Label",
   country: "Land",
   year_hint: "Jaar",
+  genre: "Genre",
 };
 
 export const ExtractionFields = React.memo(({ extractions }: ExtractionFieldsProps) => {

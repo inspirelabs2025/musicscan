@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode, useMemo } from 'react';
 import { CheckCircle, Info, Camera, Eye, Euro, TrendingUp, TrendingDown, Loader2, RefreshCw, ShoppingCart, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ExtractionFields } from '@/components/scan-pipeline/ExtractionFields';
+import type { ScanExtraction } from '@/hooks/useCDScanPipeline';
 
 // Error boundary to prevent silent crashes
 class ResultsErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -126,6 +128,54 @@ const fieldEmoji: Record<string, string> = {
   catno: '🏷️',
 };
 
+function buildExtractions(
+  result: AnalysisResultData['result'],
+  audit: AuditEntry[] | undefined
+): ScanExtraction[] {
+  const auditSteps = audit || [];
+  
+  const getAuditStatus = (field: string): 'verified' | 'rejected' | 'unverified' => {
+    for (const entry of auditSteps) {
+      const step = entry.step.toLowerCase();
+      const detail = entry.detail.toLowerCase();
+      if (step.includes(field) || detail.includes(field)) {
+        if (step.includes('rejected') || step.includes('invalid')) return 'rejected';
+        if (step.includes('match') || step.includes('verified') || step.includes('lock')) return 'verified';
+      }
+    }
+    return 'unverified';
+  };
+
+  const getConfidence = (value: any, field: string): number => {
+    if (!value) return 0;
+    const status = getAuditStatus(field);
+    if (status === 'verified') return 1.0;
+    if (status === 'rejected') return 0.3;
+    return 0.8;
+  };
+
+  const fields: { field: string; key: string; value: any }[] = [
+    { field: 'barcode', key: 'barcode', value: result.barcode },
+    { field: 'catno', key: 'catno', value: result.catalog_number },
+    { field: 'matrix', key: 'matrix', value: result.matrix_number },
+    { field: 'ifpi_master', key: 'ifpi_master', value: result.sid_code_mastering },
+    { field: 'ifpi_mould', key: 'ifpi_mould', value: result.sid_code_mould },
+    { field: 'label_code', key: 'label_code', value: result.label_code },
+    { field: 'label', key: 'label', value: result.label },
+    { field: 'country', key: 'country', value: result.country },
+    { field: 'year_hint', key: 'year', value: result.year?.toString() || null },
+    { field: 'genre', key: 'genre', value: result.genre },
+  ];
+
+  return fields.map(({ field, key, value }) => ({
+    field,
+    raw: value || null,
+    normalized: value || null,
+    confidence: getConfidence(value, key),
+    source: value ? 'ocr' : null,
+  }));
+}
+
 export function AIScanV2Results({
   analysisResult,
   uploadedFiles,
@@ -140,6 +190,11 @@ export function AIScanV2Results({
   const navigate = useNavigate();
   const { result } = analysisResult;
   const pricing = result.pricing_stats || searchResults[0]?.pricing_stats;
+
+  const extractions = useMemo(
+    () => buildExtractions(result, result.collector_audit),
+    [result]
+  );
 
   const navigateToDiscogs = (discogsId: string, artist: string, title: string, label: string, catalogNumber: string, year: string) => {
     const params = new URLSearchParams({
@@ -185,6 +240,9 @@ export function AIScanV2Results({
             {Math.round(result.confidence_score * 100)}%
           </Badge>
         </div>
+
+        {/* Extracted Fields */}
+        <ExtractionFields extractions={extractions} />
 
         {/* Uploaded photos */}
         {uploadedFiles.length > 0 && (

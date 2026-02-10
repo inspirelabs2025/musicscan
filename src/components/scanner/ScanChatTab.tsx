@@ -68,10 +68,16 @@ const extractScanData = (text: string): ScanData | null => {
   }
 };
 
-// Remove hidden tags from display text
+// Remove hidden tags and hallucinated Discogs URLs/IDs from display text
 const cleanDisplayText = (text: string): string => {
   return text
     .replace(/\[\[SCAN_DATA:.*?\]\]/g, '')
+    // Strip hallucinated Discogs URLs (markdown links and plain URLs)
+    .replace(/\[([^\]]*)\]\(https?:\/\/(?:www\.)?discogs\.com\/release\/\d+[^)]*\)/g, '')
+    .replace(/https?:\/\/(?:www\.)?discogs\.com\/release\/\d+\S*/g, '')
+    // Strip lines mentioning "Discogs ID" or "Release ID" with a number (hallucinated)
+    .replace(/^.*(?:Discogs|Release)\s*(?:ID|nummer|#)\s*[:=]?\s*\d+.*$/gim, '')
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
 };
 
@@ -140,18 +146,24 @@ export function ScanChatTab() {
 
       if (error) throw error;
 
+      // Edge function returns { success, result: { discogs_id, ... } }
+      const result = data?.result || data;
+
       return {
-        discogs_id: data?.discogs_id || null,
-        status: data?.status || 'no_match',
-        confidence_score: data?.confidence_score || null,
-        artist: data?.artist || null,
-        title: data?.title || null,
-        artwork_url: data?.artwork_url || null,
-        country: data?.country || null,
-        year: data?.year || null,
-        suggestions: data?.suggestions || [],
-        rights_society_exclusions: data?.rights_society_exclusions || [],
-        audit_entries: data?.audit_log || [],
+        discogs_id: result?.discogs_id || null,
+        status: result?.match_status || result?.status || 'no_match',
+        confidence_score: result?.confidence_score || null,
+        artist: result?.artist || null,
+        title: result?.title || null,
+        artwork_url: result?.artwork_url || null,
+        country: result?.country || null,
+        year: result?.year || null,
+        suggestions: result?.suggestions || [],
+        rights_society_exclusions: result?.rights_society_exclusions || 
+          (result?.collector_audit || [])
+            .filter((a: any) => a.step?.includes('rights_society') || a.detail?.includes('⛔'))
+            .map((a: any) => a.detail),
+        audit_entries: result?.collector_audit || [],
       };
     } catch (err) {
       console.error('V2 pipeline error:', err);
@@ -348,10 +360,10 @@ export function ScanChatTab() {
         // Remove loading message
         setMessages(prev => prev.filter(m => !m.content.includes('Scanner-pipeline gestart')));
 
-        if (v2Result && v2Result.discogs_id && (v2Result.status === 'verified' || v2Result.status === 'likely' || v2Result.status === 'suggested_match')) {
+        if (v2Result && v2Result.discogs_id && (v2Result.status === 'single_match' || v2Result.status === 'verified' || v2Result.status === 'likely' || v2Result.status === 'suggested_match' || v2Result.status === 'multiple_candidates')) {
           // ── MATCH FOUND ──
-          const statusEmoji = v2Result.status === 'verified' ? '✅' : v2Result.status === 'likely' ? '🟡' : '🔵';
-          const statusLabel = v2Result.status === 'verified' ? 'Geverifieerd' : v2Result.status === 'likely' ? 'Waarschijnlijk correct' : 'Voorgestelde match';
+          const statusEmoji = (v2Result.status === 'single_match' || v2Result.status === 'verified') ? '✅' : v2Result.status === 'likely' ? '🟡' : '🔵';
+          const statusLabel = (v2Result.status === 'single_match' || v2Result.status === 'verified') ? 'Geverifieerd' : v2Result.status === 'likely' ? 'Waarschijnlijk correct' : 'Voorgestelde match';
 
           let resultMsg = `${statusEmoji} **${statusLabel}** — **${v2Result.artist} - ${v2Result.title}**\n`;
           if (v2Result.country || v2Result.year) {

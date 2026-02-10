@@ -591,6 +591,21 @@ export function ScanChatTab() {
                 </>
               )}
 
+              {/* Discogs link */}
+              {msg.v2Result?.discogs_id && (
+                <div className="mt-2">
+                  <a
+                    href={`https://www.discogs.com/release/${msg.v2Result.discogs_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Bekijk op Discogs
+                  </a>
+                </div>
+              )}
+
               {/* Pricing card inline */}
               {msg.pricingData && (msg.pricingData.lowest_price || msg.pricingData.median_price || msg.pricingData.highest_price) && (
                 <div className="mt-3 p-3 bg-background/60 rounded-lg border border-border/50">

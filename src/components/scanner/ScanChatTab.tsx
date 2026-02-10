@@ -127,6 +127,26 @@ const SAVED_SUGGESTIONS = [
   { emoji: '🌍', text: 'Bestaan er andere versies van deze release?' },
 ];
 
+// Contextual follow-ups based on last assistant message content
+const FOLLOWUP_SUGGESTIONS = [
+  { emoji: '🤔', text: 'Vertel daar meer over' },
+  { emoji: '🎵', text: 'Welke nummers raad je aan?' },
+  { emoji: '📚', text: 'Nog meer weetjes hierover?' },
+  { emoji: '🎤', text: 'Hoe zit het met de artiest zelf?' },
+  { emoji: '💿', text: 'Welke andere albums moet ik kennen?' },
+  { emoji: '🏆', text: 'Is dit album iconisch geworden?' },
+  { emoji: '🎸', text: 'Wie hebben er aan meegewerkt?' },
+  { emoji: '📅', text: 'Hoe was de muziekscene in die tijd?' },
+  { emoji: '🔍', text: 'Zijn er bijzondere feiten over de opnames?' },
+  { emoji: '💰', text: 'Hoe staat het met de waarde van dit album?' },
+];
+
+const NO_MATCH_SUGGESTIONS = [
+  { emoji: '📸', text: 'Ik upload extra foto\'s' },
+  { emoji: '🔍', text: 'Kun je nog eens goed naar de matrix kijken?' },
+  { emoji: '💬', text: 'Ik typ de artiest en titel zelf in' },
+];
+
 function pickRandom<T>(arr: T[], count: number): T[] {
   const shuffled = [...arr].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
@@ -137,24 +157,33 @@ interface SuggestionChipsProps {
   savedToCollection: boolean;
   isStreaming: boolean;
   isRunningV2: boolean;
+  lastAssistantContent: string;
+  hasNoMatch: boolean;
   onSave: () => void;
   onSend: (text: string) => void;
 }
 
 const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
-  verifiedResult, savedToCollection, isStreaming, isRunningV2, onSave, onSend,
+  verifiedResult, savedToCollection, isStreaming, isRunningV2, lastAssistantContent, hasNoMatch, onSave, onSend,
 }) => {
   const suggestions = useMemo(() => {
-    if (!verifiedResult?.discogs_id) return [];
-    const pool = savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
-    return pickRandom(pool, 3);
-  }, [verifiedResult?.discogs_id, savedToCollection]);
+    if (hasNoMatch) return pickRandom(NO_MATCH_SUGGESTIONS, 3);
+    if (verifiedResult?.discogs_id) {
+      const pool = savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
+      return pickRandom(pool, 3);
+    }
+    // After any AI response, show general follow-ups
+    if (lastAssistantContent) {
+      return pickRandom(FOLLOWUP_SUGGESTIONS, 3);
+    }
+    return [];
+  }, [verifiedResult?.discogs_id, savedToCollection, lastAssistantContent, hasNoMatch]);
 
-  if (!verifiedResult?.discogs_id || isStreaming || isRunningV2) return null;
+  if (isStreaming || isRunningV2 || suggestions.length === 0) return null;
 
   return (
     <div className="flex flex-wrap gap-2 my-2 px-1">
-      {!savedToCollection && (
+      {verifiedResult?.discogs_id && !savedToCollection && (
         <Button
           variant="outline"
           size="sm"
@@ -954,12 +983,20 @@ export function ScanChatTab() {
           </div>
         )}
 
-        {/* Suggestion chips after release found */}
+        {/* Suggestion chips - context aware */}
         <SuggestionChips
           verifiedResult={verifiedResult}
           savedToCollection={savedToCollection}
           isStreaming={isStreaming}
           isRunningV2={isRunningV2}
+          lastAssistantContent={(() => {
+            const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+            return lastAssistant?.content || '';
+          })()}
+          hasNoMatch={(() => {
+            const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+            return !!(lastAssistant?.content?.includes('Geen match gevonden') || lastAssistant?.content?.includes('Geen eenduidige match'));
+          })()}
           onSave={saveToCollection}
           onSend={(text) => sendMessage(text)}
         />

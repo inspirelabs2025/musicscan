@@ -625,7 +625,7 @@ export function ScanChatTab() {
                     {msg.pricingData.highest_price && (
                       <div>
                         <div className="text-xs text-muted-foreground">Hoogste</div>
-                        <div className="text-base font-bold text-accent-foreground">€{Number(msg.pricingData.highest_price).toFixed(2)}</div>
+                        <div className="text-base font-bold text-foreground">€{Number(msg.pricingData.highest_price).toFixed(2)}</div>
                       </div>
                     )}
                   </div>

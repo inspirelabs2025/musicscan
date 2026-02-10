@@ -1,91 +1,96 @@
 
-# Marketplace Listings ophalen voor gescande releases
+# Conditie-beoordeling en prijsadvies na scan
 
 ## Wat verandert er?
-Na een succesvolle scan toont Mike niet alleen de prijsstatistieken (laag/mediaan/hoog), maar ook een overzicht van de actuele aanbiedingen op de Discogs Marketplace -- hoeveel exemplaren, tegen welke prijs en in welke conditie.
+Na het vinden van een release toont de chat twee dropdown-selectors: **Staat van de media** (CD/vinyl) en **Staat van de hoes** (sleeve), beide volgens de officiele Discogs Grading richtlijnen. Op basis van de gekozen conditie wordt een **adviesprijs** berekend, afgeleid van de marketplace-prijsdata. Dit wordt ook meegenomen bij het opslaan in de catalogus.
 
-## Aanpak
+## Hoe werkt het prijsadvies?
 
-### 1. Nieuwe edge function: `fetch-discogs-marketplace-listings`
-Haalt de actuele marketplace listings op voor een release ID via de Discogs API.
+De mediaan-prijs wordt gecorrigeerd met een conditie-factor:
 
-**Endpoint:** `GET https://api.discogs.com/marketplace/listings?release_id={id}&curr=EUR&sort=price,asc&per_page=10`
-
-Alternatief (als het officiele API endpoint geen release-filter ondersteunt): scrapen van `https://www.discogs.com/sell/release/{id}?curr=EUR` via ScraperAPI, met extractie van:
-- Aantal te koop
-- Per listing: prijs, conditie (media + sleeve), verkoper, land
-
-**Response format:**
-```json
-{
-  "total_for_sale": 4,
-  "listings": [
-    {
-      "price": 25.00,
-      "currency": "EUR",
-      "condition_media": "Very Good Plus (VG+)",
-      "condition_sleeve": "Very Good (VG)",
-      "seller": "VinylShopNL",
-      "ships_from": "Netherlands"
-    }
-  ]
-}
+```text
+Conditie           Factor
+Mint (M)            1.20
+Near Mint (NM)      1.00  (= mediaan)
+Very Good Plus      0.75
+Very Good (VG)      0.50
+Good Plus (G+)      0.35
+Good (G)            0.20
+Fair / Poor         0.10
 ```
 
-### 2. Integratie in de V2-pipeline (ScanChatTab.tsx)
-Na een succesvolle scan (wanneer `discogs_id` beschikbaar is), een extra call doen naar de nieuwe edge function. De resultaten worden opgeslagen in de `pricingData` (uitgebreid met `marketplace_listings`).
-
-### 3. UI: Marketplace overzicht in chat resultaat
-Onder de bestaande prijskaart een compact overzicht tonen:
-
-```
-🏪 4 exemplaren te koop op Discogs
-┌─────────┬──────────────┬────────────┐
-│ €25.00  │ VG+ / VG     │ Nederland  │
-│ €30.00  │ NM / VG+     │ Duitsland  │
-│ €35.00  │ NM / NM      │ UK         │
-│ €45.00  │ M / M        │ Frankrijk  │
-└─────────┴──────────────┴────────────┘
-```
-
-Met een "Bekijk alle aanbiedingen" link naar `https://www.discogs.com/sell/release/{id}`.
+Als er marketplace listings zijn, wordt ook gekeken naar listings met vergelijkbare conditie voor een nauwkeuriger advies.
 
 ---
 
 ## Technische details
 
-### Nieuwe edge function: `supabase/functions/fetch-discogs-marketplace-listings/index.ts`
+### Bestand: `src/components/scanner/ScanChatTab.tsx`
 
-- Accepteert `{ discogs_id }` als POST body
-- Strategie 1: Discogs API `GET /marketplace/listings?release_id={id}&curr=EUR&sort=price,asc&per_page=10` (met DISCOGS_TOKEN)
-- Strategie 2 (fallback): ScraperAPI scraping van `/sell/release/{id}?curr=EUR` met HTML parsing
-- Retourneert gestructureerde listings array + totaal aantal
-
-### Wijzigingen in `src/components/scanner/ScanChatTab.tsx`
-
-1. **Interface uitbreiden:**
+**1. Nieuwe state variabelen:**
 ```typescript
-interface MarketplaceListing {
-  price: number;
-  currency: string;
-  condition_media: string;
-  condition_sleeve: string;
-  seller: string;
-  ships_from: string;
-}
+const [conditionMedia, setConditionMedia] = useState<string>('');
+const [conditionSleeve, setConditionSleeve] = useState<string>('');
+```
 
-interface PricingData {
-  lowest_price: number | null;
-  median_price: number | null;
-  highest_price: number | null;
-  num_for_sale: number | null;
-  marketplace_listings?: MarketplaceListing[];
+**2. Conditie-opties (Discogs standaard):**
+```typescript
+const DISCOGS_CONDITIONS = [
+  { value: 'Mint (M)', label: 'Mint (M)', desc: 'Absoluut perfect, nooit afgespeeld' },
+  { value: 'Near Mint (NM or M-)', label: 'Near Mint (NM)', desc: 'Vrijwel perfect' },
+  { value: 'Very Good Plus (VG+)', label: 'Very Good Plus (VG+)', desc: 'Lichte gebruikssporen' },
+  { value: 'Very Good (VG)', label: 'Very Good (VG)', desc: 'Duidelijke gebruikssporen, speelt goed' },
+  { value: 'Good Plus (G+)', label: 'Good Plus (G+)', desc: 'Zichtbare slijtage' },
+  { value: 'Good (G)', label: 'Good (G)', desc: 'Veel slijtage, speelt nog' },
+  { value: 'Fair (F)', label: 'Fair (F)', desc: 'Beschadigd' },
+  { value: 'Poor (P)', label: 'Poor (P)', desc: 'Nauwelijks afspeelbaar' },
+];
+```
+
+**3. Adviesprijs-berekening:**
+```typescript
+const CONDITION_FACTORS: Record<string, number> = {
+  'Mint (M)': 1.20,
+  'Near Mint (NM or M-)': 1.00,
+  'Very Good Plus (VG+)': 0.75,
+  'Very Good (VG)': 0.50,
+  'Good Plus (G+)': 0.35,
+  'Good (G)': 0.20,
+  'Fair (F)': 0.10,
+  'Poor (P)': 0.05,
+};
+
+function calculateAdvicePrice(
+  pricing: PricingData | null,
+  conditionMedia: string,
+  conditionSleeve: string
+): number | null {
+  if (!pricing?.median_price || !conditionMedia) return null;
+  const mediaFactor = CONDITION_FACTORS[conditionMedia] ?? 0.5;
+  const sleeveFactor = CONDITION_FACTORS[conditionSleeve] ?? 0.5;
+  // Media weegt zwaarder (70%) dan hoes (30%)
+  const combinedFactor = (mediaFactor * 0.7) + (sleeveFactor * 0.3);
+  return Math.round(pricing.median_price * combinedFactor * 100) / 100;
 }
 ```
 
-2. **Na V2 pipeline succes:** Extra fetch naar `fetch-discogs-marketplace-listings` met het `discogs_id`, resultaat toevoegen aan `pricingData`.
+**4. UI: Conditie-panel na match (inline in chat, onder prijskaart):**
+Na de marketplace listings en voor de "Opslaan" knop, een compact panel tonen met:
+- Select dropdown "Staat Media" (CD/Vinyl)
+- Select dropdown "Staat Hoes"
+- Berekend adviesprijs badge
+- Beide volgens Discogs grading met korte beschrijving per optie
 
-3. **UI rendering:** Onder de prijskaart een compacte tabel met max 5 listings (prijs, conditie, land). Plus een link naar de volledige Discogs sell-pagina.
+**5. Opslaan met conditie:**
+De `saveToCollection` functie wordt uitgebreid:
+```typescript
+record.condition_grade = conditionMedia || 'Not Graded';
+record.sleeve_condition = conditionSleeve || 'Not Graded';
+record.calculated_advice_price = advicePrice ?? pricing?.median_price ?? null;
+```
 
-### Bestaande `fetch-discogs-pricing` functie
-Blijft ongewijzigd -- die haalt statistieken (historische verkoopdata). De nieuwe functie haalt actuele aanbiedingen.
+**6. Reset:**
+Bij `resetChat` worden `conditionMedia` en `conditionSleeve` teruggezet naar `''`.
+
+### Resultaat
+- Release gevonden -> prijsdata getoond -> gebruiker kiest conditie media + hoes -> adviesprijs berekend -> opslaan met juiste conditie en prijs

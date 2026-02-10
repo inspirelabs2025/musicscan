@@ -338,7 +338,15 @@ export function ScanChatTab() {
             }`}>
               {msg.role === 'assistant' ? (
                 <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <ReactMarkdown>{cleanDisplayText(msg.content) || '...'}</ReactMarkdown>
+                  <ReactMarkdown
+                    components={{
+                      a: ({ href, children }) => (
+                        <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80 break-all">
+                          {children}
+                        </a>
+                      ),
+                    }}
+                  >{cleanDisplayText(msg.content) || '...'}</ReactMarkdown>
                 </div>
               ) : (
                 <>

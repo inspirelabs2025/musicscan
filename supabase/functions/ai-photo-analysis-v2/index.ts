@@ -71,7 +71,8 @@ function detectRightsSocieties(rightsSocietiesField: string[], allTexts: string[
 interface AnalysisRequest {
   photoUrls: string[]
   mediaType: 'vinyl' | 'cd'
-  conditionGrade: string
+  conditionGrade?: string
+  skipSave?: boolean
 }
 
 interface StructuredAnalysisData {
@@ -161,52 +162,60 @@ serve(async (req) => {
 
     // Skipping direct checks against auth.users (restricted schema). JWT already validated above.
 
-    const { photoUrls, mediaType, conditionGrade }: AnalysisRequest = await req.json()
+    const { photoUrls, mediaType, conditionGrade: rawConditionGrade, skipSave }: AnalysisRequest = await req.json()
+    const conditionGrade = rawConditionGrade || 'Not Graded'
 
     console.log('🤖 Starting AI photo analysis V2 for:', {
       photoCount: photoUrls.length,
       mediaType,
       conditionGrade,
+      skipSave: !!skipSave,
       userId: user.id,
       userEmail: user.email
     })
 
-    // Create initial record with version marker and user_id
-    console.log('📝 Creating scan record in database...')
-    console.log('🔍 User ID being inserted:', user.id)
-    console.log('🔍 User ID type:', typeof user.id)
+    let scanId: string | null = null;
 
-    const insertData = {
-      user_id: user.id,
-      photo_urls: photoUrls,
-      media_type: mediaType,
-      condition_grade: conditionGrade,
-      status: 'pending',
-      analysis_data: { version: 'v2', phase: 'initialization' }
+    if (!skipSave) {
+      // Create initial record with version marker and user_id
+      console.log('📝 Creating scan record in database...')
+      console.log('🔍 User ID being inserted:', user.id)
+      console.log('🔍 User ID type:', typeof user.id)
+
+      const insertData = {
+        user_id: user.id,
+        photo_urls: photoUrls,
+        media_type: mediaType,
+        condition_grade: conditionGrade,
+        status: 'pending',
+        analysis_data: { version: 'v2', phase: 'initialization' }
+      }
+
+      console.log('📦 Insert data being sent:', insertData)
+
+      const { data: scanRecord, error: insertError } = await supabase
+        .from('ai_scan_results')
+        .insert(insertData)
+        .select()
+        .single()
+
+      if (insertError) {
+        console.error('❌ Database insert error:', {
+          error: insertError,
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+          userId: user.id
+        })
+        throw new Error(`Failed to create scan record: ${insertError.message}`)
+      }
+
+      console.log('✅ Scan record created successfully:', scanRecord.id)
+      scanId = scanRecord.id
+    } else {
+      console.log('⏭️ skipSave=true — skipping database record creation')
     }
-
-    console.log('📦 Insert data being sent:', insertData)
-
-    const { data: scanRecord, error: insertError } = await supabase
-      .from('ai_scan_results')
-      .insert(insertData)
-      .select()
-      .single()
-
-    if (insertError) {
-      console.error('❌ Database insert error:', {
-        error: insertError,
-        code: insertError.code,
-        message: insertError.message,
-        details: insertError.details,
-        hint: insertError.hint,
-        userId: user.id
-      })
-      throw new Error(`Failed to create scan record: ${insertError.message}`)
-    }
-
-    console.log('✅ Scan record created successfully:', scanRecord.id)
-    const scanId = scanRecord.id
 
     try {
       // Multi-pass analysis
@@ -216,13 +225,15 @@ serve(async (req) => {
       const generalAnalysis = await analyzePhotosWithOpenAI(photoUrls, mediaType, 'general')
 
       if (!generalAnalysis.success) {
-        await supabase
-          .from('ai_scan_results')
-          .update({
-            status: 'failed',
-            error_message: generalAnalysis.error
-          })
-          .eq('id', scanId)
+        if (!skipSave && scanId) {
+          await supabase
+            .from('ai_scan_results')
+            .update({
+              status: 'failed',
+              error_message: generalAnalysis.error
+            })
+            .eq('id', scanId)
+        }
 
         return new Response(
           JSON.stringify({
@@ -549,22 +560,24 @@ serve(async (req) => {
       }
 
       // Update with analysis progress
-      await supabase
-        .from('ai_scan_results')
-        .update({
-          analysis_data: {
-            version: 'v2',
-            phase: 'analysis_complete',
-            generalAnalysis: generalAnalysis.data,
-            detailAnalysis: detailAnalysis.success ? detailAnalysis.data : { error: detailAnalysis.error },
-            matrixAnalysis: matrixAnalysis
-              ? (matrixAnalysis.success ? matrixAnalysis.data : { error: matrixAnalysis.error })
-              : null,
-            combined: combinedData,
-            collector_audit: collectorAudit
-          }
-        })
-        .eq('id', scanId)
+      if (!skipSave && scanId) {
+        await supabase
+          .from('ai_scan_results')
+          .update({
+            analysis_data: {
+              version: 'v2',
+              phase: 'analysis_complete',
+              generalAnalysis: generalAnalysis.data,
+              detailAnalysis: detailAnalysis.success ? detailAnalysis.data : { error: detailAnalysis.error },
+              matrixAnalysis: matrixAnalysis
+                ? (matrixAnalysis.success ? matrixAnalysis.data : { error: matrixAnalysis.error })
+                : null,
+              combined: combinedData,
+              collector_audit: collectorAudit
+            }
+          })
+          .eq('id', scanId)
+      }
 
       // ─── LOCAL-FIRST LOOKUP: Check own database before Discogs API ───
       let discogsResult: any = null;
@@ -598,58 +611,59 @@ serve(async (req) => {
         ? parseInt(discogsResult.year, 10)
         : (discogsResult.year ?? (typeof combinedData.year === 'string' ? parseInt(combinedData.year, 10) : (combinedData.year ?? null)))
 
-      const { error: finalUpdateError } = await supabase
-        .from('ai_scan_results')
-        .update({
-          discogs_id: discogsResult.discogsId ?? null,
-          discogs_url: discogsResult.discogsUrl ?? null,
-          artist: discogsResult.artist ?? combinedData.artist ?? null,
-          title: discogsResult.title ?? combinedData.title ?? null,
-          label: discogsResult.label ?? combinedData.label ?? null,
-          catalog_number: discogsResult.catalogNumber ?? combinedData.catalogNumber ?? null,
-          year: Number.isFinite(normalizedYear as number) ? (normalizedYear as number) : null,
-          confidence_score: discogsResult.confidence ?? combinedData.confidence ?? null,
-          // Also persist key technical identifiers
-          barcode: combinedData.barcode ?? null,
-          matrix_number: combinedData.matrixNumber ?? null,
-          analysis_data: {
-            version: 'v2',
-            phase: 'completed',
-            generalAnalysis: generalAnalysis.data,
-            detailAnalysis: detailAnalysis.data,
-            combined: combinedData,
-            discogsSearch: discogsResult.searchMetadata
-          },
-          ai_description: combinedData.description ?? null,
-          search_queries: combinedData.searchQueries ?? null,
-          status: 'completed'
-        })
-        .eq('id', scanId)
+      if (!skipSave && scanId) {
+        const { error: finalUpdateError } = await supabase
+          .from('ai_scan_results')
+          .update({
+            discogs_id: discogsResult.discogsId ?? null,
+            discogs_url: discogsResult.discogsUrl ?? null,
+            artist: discogsResult.artist ?? combinedData.artist ?? null,
+            title: discogsResult.title ?? combinedData.title ?? null,
+            label: discogsResult.label ?? combinedData.label ?? null,
+            catalog_number: discogsResult.catalogNumber ?? combinedData.catalogNumber ?? null,
+            year: Number.isFinite(normalizedYear as number) ? (normalizedYear as number) : null,
+            confidence_score: discogsResult.confidence ?? combinedData.confidence ?? null,
+            // Also persist key technical identifiers
+            barcode: combinedData.barcode ?? null,
+            matrix_number: combinedData.matrixNumber ?? null,
+            analysis_data: {
+              version: 'v2',
+              phase: 'completed',
+              generalAnalysis: generalAnalysis.data,
+              detailAnalysis: detailAnalysis.data,
+              combined: combinedData,
+              discogsSearch: discogsResult.searchMetadata
+            },
+            ai_description: combinedData.description ?? null,
+            search_queries: combinedData.searchQueries ?? null,
+            status: 'completed'
+          })
+          .eq('id', scanId)
 
-      if (finalUpdateError) {
-        console.error('❌ Final database update failed:', { finalUpdateError, scanId })
-        throw new Error(`Final database update failed: ${finalUpdateError.message}`)
+        if (finalUpdateError) {
+          console.error('❌ Final database update failed:', { finalUpdateError, scanId })
+          throw new Error(`Final database update failed: ${finalUpdateError.message}`)
+        }
+
+        console.log('✅ AI analysis V2 completed for scan:', scanId)
+
+        // Increment usage counter for successful scan
+        console.log('📈 Incrementing AI scan usage for user:', user.id)
+        const { error: usageError } = await supabase.rpc('increment_usage', {
+          p_user_id: user.id,
+          p_usage_type: 'ai_scans',
+          p_increment: 1
+        });
+
+        if (usageError) {
+          console.error('⚠️ Failed to increment usage counter:', usageError);
+        } else {
+          console.log('✅ Usage counter incremented successfully');
+        }
       }
 
-      console.log('✅ AI analysis V2 completed for scan:', scanId)
-
-      // Increment usage counter for successful scan
-      console.log('📈 Incrementing AI scan usage for user:', user.id)
-      const { error: usageError } = await supabase.rpc('increment_usage', {
-        p_user_id: user.id,
-        p_usage_type: 'ai_scans',
-        p_increment: 1
-      });
-
-      if (usageError) {
-        console.error('⚠️ Failed to increment usage counter:', usageError);
-        // Don't fail the whole request for usage tracking errors
-      } else {
-        console.log('✅ Usage counter incremented successfully');
-      }
-
-      // Automatic artwork enrichment after successful scan
-      if (discogsResult?.discogsUrl || (combinedData.artist && combinedData.title)) {
+      // Automatic artwork enrichment after successful scan (skip if skipSave)
+      if (!skipSave && scanId && (discogsResult?.discogsUrl || (combinedData.artist && combinedData.title))) {
         try {
           console.log('🎨 Starting automatic artwork enrichment...');
           const { data: artworkData } = await supabase.functions.invoke('fetch-album-artwork', {
@@ -659,16 +673,14 @@ serve(async (req) => {
               title: discogsResult?.title || combinedData.title,
               media_type: mediaType,
               item_id: scanId,
-              item_type: 'ai_scan' // Flag to indicate this is for ai_scan_results table
+              item_type: 'ai_scan'
             }
           });
 
           if (artworkData?.artwork_url) {
-            // Update scan record with artwork
             await supabase.from('ai_scan_results')
               .update({ artwork_url: artworkData.artwork_url })
               .eq('id', scanId);
-
             console.log('✅ Artwork enrichment completed:', artworkData.artwork_url);
           } else {
             console.log('ℹ️ No artwork found during enrichment');
@@ -678,9 +690,9 @@ serve(async (req) => {
         }
       }
 
-      // 🔗 Automatic release linking - connect scan to central releases table
+      // 🔗 Automatic release linking - connect scan to central releases table (skip if skipSave)
       let releaseId = null;
-      if (discogsResult?.discogsId) {
+      if (!skipSave && scanId && discogsResult?.discogsId) {
         try {
           console.log('🔗 Linking to releases table for Discogs ID:', discogsResult.discogsId);
           const { data: releaseData, error: releaseError } = await supabase.functions.invoke('find-or-create-release', {
@@ -702,7 +714,6 @@ serve(async (req) => {
             console.log('⚠️ Release linking function error:', releaseError);
           } else if (releaseData?.release_id) {
             releaseId = releaseData.release_id;
-            // Update scan record with release_id
             await supabase.from('ai_scan_results')
               .update({ release_id: releaseId })
               .eq('id', scanId);
@@ -848,14 +859,16 @@ serve(async (req) => {
     } catch (error) {
       console.error('❌ Error during V2 analysis:', error)
 
-      await supabase
-        .from('ai_scan_results')
-        .update({
-          status: 'failed',
-          error_message: error.message,
-          analysis_data: { version: 'v2', phase: 'error', error: error.message }
-        })
-        .eq('id', scanId)
+      if (!skipSave && scanId) {
+        await supabase
+          .from('ai_scan_results')
+          .update({
+            status: 'failed',
+            error_message: error.message,
+            analysis_data: { version: 'v2', phase: 'error', error: error.message }
+          })
+          .eq('id', scanId)
+      }
 
       return new Response(
         JSON.stringify({

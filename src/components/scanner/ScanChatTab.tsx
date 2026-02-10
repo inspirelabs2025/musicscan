@@ -133,6 +133,7 @@ export function ScanChatTab() {
         body: {
           photoUrls: urls,
           mediaType: mType,
+          conditionGrade: 'Not Graded',
           skipSave: true, // Don't save to ai_scan_results, just return the match
         }
       });

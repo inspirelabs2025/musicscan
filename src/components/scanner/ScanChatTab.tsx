@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles } from 'lucide-react';
+import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check, Sparkles, MessageCircle, ScanLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -216,9 +216,10 @@ export function ScanChatTab() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets **scannen** of iets **vragen** over een artiest of album?\n\nKies hieronder wat je hebt 👇`,
+      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets **scannen** of iets **vragen** over een artiest of album?`,
     },
   ]);
+  const [showWelcomeActions, setShowWelcomeActions] = useState(true);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isRunningV2, setIsRunningV2] = useState(false);
@@ -244,6 +245,7 @@ export function ScanChatTab() {
 
   const pickMediaType = (type: 'vinyl' | 'cd') => {
     setMediaType(type);
+    setShowWelcomeActions(false);
     const label = type === 'vinyl' ? 'vinyl plaat' : 'CD';
     setMessages(prev => [
       ...prev,
@@ -251,6 +253,31 @@ export function ScanChatTab() {
       {
         role: 'assistant',
         content: `Top, een ${label}! 📸\n\nUpload je foto's — hoe meer hoe beter! Voorkant, achterkant, label, matrix... Alles helpt.\n\nKlik op het 📷 icoon hieronder om foto's te selecteren.`,
+      },
+    ]);
+  };
+
+  const pickScanAction = () => {
+    setShowWelcomeActions(false);
+    setMessages(prev => [
+      ...prev,
+      { role: 'user', content: '🔍 Scannen' },
+      {
+        role: 'assistant',
+        content: `Wat wil je scannen? Kies hieronder 👇`,
+      },
+    ]);
+  };
+
+  const pickAskAction = () => {
+    setShowWelcomeActions(false);
+    setMediaType('cd'); // Set any media type to skip picker, won't actually scan
+    setMessages(prev => [
+      ...prev,
+      { role: 'user', content: '💬 Stel een vraag' },
+      {
+        role: 'assistant',
+        content: `Leuk! Vraag me alles over artiesten, albums, genres, muziekgeschiedenis... Ik weet er alles van! 🎶\n\nTyp je vraag hieronder.`,
       },
     ]);
   };
@@ -685,8 +712,9 @@ export function ScanChatTab() {
   const resetChat = () => {
     setMessages([{
       role: 'assistant',
-      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets **scannen** of iets **vragen** over een artiest of album?\n\nKies hieronder wat je hebt 👇`,
+      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets **scannen** of iets **vragen** over een artiest of album?`,
     }]);
+    setShowWelcomeActions(true);
     setMediaType('');
     setPendingFiles([]);
     setPhotoUrls([]);
@@ -969,8 +997,22 @@ export function ScanChatTab() {
           </div>
         ))}
 
-        {/* Media type picker */}
-        {!mediaType && (
+        {/* Welcome action buttons */}
+        {showWelcomeActions && !mediaType && messages.length === 1 && (
+          <div className="flex gap-3 justify-center my-3">
+            <Button variant="outline" size="lg" onClick={pickScanAction} className="h-16 px-8 flex flex-col gap-1.5 border-primary/30 hover:border-primary hover:bg-primary/5">
+              <ScanLine className="h-6 w-6 text-primary" />
+              <span className="text-sm font-medium">Scannen</span>
+            </Button>
+            <Button variant="outline" size="lg" onClick={pickAskAction} className="h-16 px-8 flex flex-col gap-1.5 border-primary/30 hover:border-primary hover:bg-primary/5">
+              <MessageCircle className="h-6 w-6 text-primary" />
+              <span className="text-sm font-medium">Stel een vraag</span>
+            </Button>
+          </div>
+        )}
+
+        {/* Media type picker - shown after choosing "Scannen" */}
+        {!showWelcomeActions && !mediaType && (
           <div className="flex gap-3 justify-center my-2">
             <Button variant="outline" size="lg" onClick={() => pickMediaType('vinyl')} className="h-14 px-6 flex flex-col gap-1">
               <Disc3 className="h-5 w-5" />

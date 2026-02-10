@@ -172,8 +172,8 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = React.memo(({
       const pool = savedToCollection ? SAVED_SUGGESTIONS : DISCOVERY_SUGGESTIONS;
       return pickRandom(pool, 3);
     }
-    // After any AI response, show general follow-ups
-    if (lastAssistantContent) {
+    // After any AI response (but not the welcome message), show general follow-ups
+    if (lastAssistantContent && !lastAssistantContent.includes('Hey, ik ben Magic Mike')) {
       return pickRandom(FOLLOWUP_SUGGESTIONS, 3);
     }
     return [];
@@ -216,7 +216,7 @@ export function ScanChatTab() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets weten over een **CD** of **LP**?\n\nKies hieronder wat je hebt 👇`,
+      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets **scannen** of iets **vragen** over een artiest of album?\n\nKies hieronder wat je hebt 👇`,
     },
   ]);
   const [input, setInput] = useState('');
@@ -685,7 +685,7 @@ export function ScanChatTab() {
   const resetChat = () => {
     setMessages([{
       role: 'assistant',
-      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets weten over een **CD** of **LP**?\n\nKies hieronder wat je hebt 👇`,
+      content: `🎩 **Hey, ik ben Magic Mike!** Je persoonlijke muziek-detective.\n\nWil je iets **scannen** of iets **vragen** over een artiest of album?\n\nKies hieronder wat je hebt 👇`,
     }]);
     setMediaType('');
     setPendingFiles([]);

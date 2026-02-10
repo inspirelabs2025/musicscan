@@ -90,7 +90,7 @@ export function ScanChatTab() {
     setPendingFiles(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  // Fetch pricing from Discogs via existing optimized-catalog-search
+  // Fetch pricing from Discogs via dedicated pricing scraper (low/median/high)
   const fetchPricing = async (discogsId: string) => {
     setIsFetchingPrice(true);
     setConfirmedDiscogsId(discogsId);
@@ -99,23 +99,17 @@ export function ScanChatTab() {
     setMessages(prev => [...prev, { role: 'user', content: '✅ Ja, dat klopt! Haal de prijzen op.' }]);
 
     try {
-      const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
-        body: { direct_discogs_id: discogsId, include_pricing: true }
+      const { data, error } = await supabase.functions.invoke('fetch-discogs-pricing', {
+        body: { discogs_id: discogsId }
       });
 
       if (error) throw error;
 
-      const result = data?.results?.[0];
-      const pricing = result?.pricing_stats;
-
       const pricingData: PricingData = {
-        lowest_price: pricing?.lowest_price || null,
-        median_price: pricing?.median_price || null,
-        highest_price: pricing?.highest_price || null,
-        num_for_sale: pricing?.num_for_sale || null,
-        artist: result?.artist,
-        title: result?.title,
-        cover_image: result?.release_metadata?.thumb || result?.cover_image,
+        lowest_price: data?.lowest_price || null,
+        median_price: data?.median_price || null,
+        highest_price: data?.highest_price || null,
+        num_for_sale: data?.num_for_sale || null,
       };
 
       // Build pricing message

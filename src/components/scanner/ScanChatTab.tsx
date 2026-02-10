@@ -245,7 +245,7 @@ export function ScanChatTab() {
       { role: 'user', content: type === 'vinyl' ? '🎵 Vinyl' : '💿 CD' },
       {
         role: 'assistant',
-        content: `Top, een ${label}! 📸\n\nUpload je foto's — hoe meer hoe beter! Voorkant, achterkant, label, matrix... Alles helpt.\n\nKlik op het 📷 icoon hieronder om foto's te selecteren.`,
+        content: `Top, een ${label}! 📸\n\nUpload je foto's — hoe meer hoe beter! Voorkant, achterkant, label, matrix... Alles helpt.\n\n📷 Gebruik de camera-knop om direct een foto te maken\n📁 Gebruik de upload-knop om foto's uit je galerij te kiezen`,
       },
     ]);
   };

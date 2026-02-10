@@ -95,6 +95,83 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_agent_knowledge: {
+        Row: {
+          agent_id: string
+          content: string | null
+          created_at: string
+          file_url: string | null
+          id: string
+          is_active: boolean
+          source_type: string
+          source_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          is_active?: boolean
+          source_type: string
+          source_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          is_active?: boolean
+          source_type?: string
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_knowledge_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agent_profiles: {
+        Row: {
+          agent_name: string
+          created_at: string
+          display_name: string
+          id: string
+          is_active: boolean
+          system_prompt: string
+          updated_at: string
+        }
+        Insert: {
+          agent_name: string
+          created_at?: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          system_prompt?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_name?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          system_prompt?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_scan_results: {
         Row: {
           ai_description: string | null

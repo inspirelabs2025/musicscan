@@ -231,6 +231,7 @@ const PopupManager = lazy(() => import("./pages/admin/PopupManager"));
 const AdminYearOverview = lazy(() => import("./pages/admin/AdminYearOverview"));
 const DiscogsLookup = lazy(() => import("./pages/admin/DiscogsLookup"));
 const AutoComments = lazy(() => import("./pages/admin/AutoComments"));
+const MagicMikeProfile = lazy(() => import("./pages/admin/MagicMikeProfile"));
 const TestAnecdoteGeneration = lazy(() => import("./pages/admin/TestAnecdoteGeneration"));
 const StudioStoriesPage = lazy(() => import("./pages/admin/StudioStoriesPage"));
 const TestMusicNews = lazy(() => import("./pages/TestMusicNews"));
@@ -491,6 +492,7 @@ const AppContent = () => {
         <Route path="/admin/discogs-lookup" element={<ProtectedRoute><LazyRoute><DiscogsLookup /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/photo-moderation" element={<ProtectedRoute><LazyRoute><PhotoModeration /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/auto-comments" element={<ProtectedRoute><LazyRoute><AutoComments /></LazyRoute></ProtectedRoute>} />
+        <Route path="/admin/magic-mike" element={<ProtectedRoute><LazyRoute><MagicMikeProfile /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/statistics" element={<ProtectedRoute><LazyRoute><Statistics /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/seo-monitoring" element={<ProtectedRoute><LazyRoute><SEOMonitoring /></LazyRoute></ProtectedRoute>} />
         <Route path="/admin/sitemap-management" element={<ProtectedRoute><LazyRoute><SitemapManagement /></LazyRoute></ProtectedRoute>} />

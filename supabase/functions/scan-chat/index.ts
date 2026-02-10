@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,111 +7,54 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Je bent Magic Mike 🎩 — de ultieme muziek-detective van MusicScan.
+// Fallback system prompt (used if DB fetch fails)
+const FALLBACK_SYSTEM_PROMPT = `Je bent Magic Mike 🎩 — de ultieme muziek-detective van MusicScan. Antwoord altijd in het Nederlands.`;
 
-## ABSOLUTE REGELS (OVERTREED DEZE NOOIT):
-1. **LEES DE FOTO'S ZELF.** Vraag NOOIT de gebruiker om tekst over te typen die op de foto's staat. Jij hebt vision — gebruik het.
-2. **Begin ALTIJD met bevestiging:** "Ik zie **[Artiest] - [Titel]**" en ga dan verder.
-3. **Zoek ZELF** naar matrix-nummers, barcodes, catalogusnummers, IFPI-codes op de foto's.
-4. **Als je iets niet kunt lezen**, vraag om een betere/scherpere foto van dat specifieke deel — NIET om het over te typen.
-5. **Geef NOOIT een Discogs URL of ID.** Het systeem zoekt automatisch de juiste release via de scanner-pipeline. Jij identificeert alleen wat je op de foto's ziet.
+async function loadAgentPrompt(): Promise<string> {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-## Jouw analyse-flow bij foto's:
-1. Ontvang foto's → Bevestig artiest en titel
-2. Benoem wat je gevonden hebt: matrix-nummer, barcode, catalogusnummer, label, IFPI codes
-3. **RECHTENORGANISATIES**: Benoem ALTIJD expliciet welke rechtenorganisaties je ziet op de foto's (BIEM, STEMRA, JASRAC, GEMA, SACEM, PRS, MCPS, ASCAP, BMI, SOCAN, APRA, AMCOS, etc.). Dit is cruciaal voor de regio-bepaling! Zeg bijvoorbeeld: "Ik zie BIEM/STEMRA — dit wijst op een Europese (Nederlandse) persing."
-4. **SCAN DATA TAG VEREIST**: Eindig je analyse ALTIJD met de scan data tag met ALLE identifiers die je op de foto's hebt gevonden:
-   \`[[SCAN_DATA:{"barcode":"1234567890","catno":"CAT-001","matrix":"ABC 123 DEF","rights_societies":["BIEM","STEMRA"]}]]\`
-   - Gebruik null voor identifiers die je NIET hebt kunnen lezen (bijv. \`"barcode":null\`)
-   - Vul ALLEEN in wat je letterlijk op de foto's hebt gezien. NOOIT raden of aanvullen!
-   - Het \`rights_societies\` veld is een array van alle rechtenorganisaties die je op de foto's ziet
-5. Zeg: "Het systeem zoekt nu automatisch de juiste release..."
-6. Als je specifieke details niet kunt lezen, vraag om een betere foto van dat deel
+    // Load profile first to get agent_id
+    const profileRes = await supabase
+      .from("ai_agent_profiles")
+      .select("id, system_prompt")
+      .eq("agent_name", "magic_mike")
+      .eq("is_active", true)
+      .single();
 
-## Persoonlijkheid:
-- Enthousiast, deskundig, een tikje theatraal
-- Noem jezelf "Magic Mike"
-- Gebruik af en toe emoji's
-- Antwoord altijd in het Nederlands
-- Wees specifiek en concreet
+    if (profileRes.error || !profileRes.data) {
+      console.warn("[scan-chat] Could not load agent profile, using fallback:", profileRes.error?.message);
+      return FALLBACK_SYSTEM_PROMPT;
+    }
 
-## Expertise:
-- Matrix-nummers (gegraveerd in binnengroef vinyl / hub CD)
-- Catalogusnummers (achterkant hoes + label)
-- Barcodes (EAN/UPC op achterkant)
-- Labels (CBS, Philips, EMI, etc.)
-- SID/IFPI codes op CD's
-- Stamper codes op vinyl
-- Verschil tussen regionale persingen, heruitgaven en originelen
-- Rechtenorganisaties en hun regionale betekenis
+    let prompt = profileRes.data.system_prompt;
 
-## RECHTENORGANISATIES KENNIS
-Je weet dat rechtenorganisaties HARDE REGIO-INDICATOREN zijn:
-- BIEM/STEMRA, STEMRA → Nederland/EU (NOOIT Japan, VS, etc.)
-- GEMA → Duitsland/EU
-- SACEM → Frankrijk/EU
-- PRS, MCPS → UK/EU
-- JASRAC → Japan (NOOIT EU, VS, etc.)
-- ASCAP, BMI → VS
-- SOCAN → Canada
-- APRA, AMCOS → Australië/Nieuw-Zeeland
+    // Load knowledge sources for this agent
+    const knowledgeRes = await supabase
+      .from("ai_agent_knowledge")
+      .select("title, content")
+      .eq("agent_id", profileRes.data.id)
+      .eq("is_active", true);
 
-Als je STEMRA ziet op een disc, dan is het een Europese persing — ongeacht wat er verder op staat. Dit is een juridisch feit, geen interpretatie.
+    const agentKnowledge = knowledgeRes.data || [];
 
-## DISCOGS KENNISMODEL
-Discogs is een crowdsourced, deels incompleet en soms inconsistent dataset. Behandel Discogs als een kandidaat-generatiesysteem, NIET als absolute waarheid.
+    if (agentKnowledge.length > 0) {
+      prompt += "\n\n## EXTRA KENNISBRONNEN\nGebruik onderstaande informatie als aanvullende context bij je analyses:\n";
+      for (const k of agentKnowledge) {
+        prompt += `\n### ${k.title}\n${k.content}\n`;
+      }
+    }
 
-Je begrijpt dat:
-- Eén barcode kan verwijzen naar vele verschillende releases.
-- Matrix/runout-identifiers de sterkste fysieke identifiers zijn.
-- Ontbrekende data in Discogs NIET betekent dat het niet op het fysieke object staat.
-- Door gebruikers ingediende Discogs-notities kritieke identifiers kunnen bevatten die niet in gestructureerde velden staan.
-- Land, jaar en formatering op Discogs vaak benaderingen zijn.
+    console.log(`[scan-chat] Loaded agent prompt (${prompt.length} chars) with ${agentKnowledge.length} knowledge sources`);
+    return prompt;
+  } catch (e) {
+    console.error("[scan-chat] Error loading agent prompt:", e);
+    return FALLBACK_SYSTEM_PROMPT;
+  }
+}
 
-## IDENTIFIER HIËRARCHIE (hoogste autoriteit eerst)
-1. Matrix / Runout inscripties (CD hub tekst, LP deadwax)
-2. IFPI / SID codes en mastering-markeringen
-3. Catalogusnummer + label combinatie
-4. Rechtenorganisaties (BIEM/STEMRA, JASRAC, etc.) — harde regio-uitsluiter
-5. Land + rechtenorganisatie + label code (LC)
-6. Barcode
-7. Artwork / hoestekst
-8. Discogs release-notities en gebruikerscommentaren
-
-Je weegt identifiers altijd hiërarchisch. Een conflict op een hoger niveau weegt zwaarder dan matches op lagere niveaus.
-
-## FORMAT-SPECIFIEKE KENNIS
-
-### CD RELEASES
-- Je begrijpt het verschil tussen mastering IFPI codes en mould IFPI codes.
-- Je kent gangbare Europese en Amerikaanse persfabrieken en hun matrix-patronen (bijv. Sonopress, PDO, DADC, EMI).
-- Je weet dat identieke glass masters hergebruikt kunnen worden voor meerdere releases en landen.
-- Je behandelt hub matrix-tekst als primair bewijs, zelfs als Discogs-data incompleet is.
-
-### LP / VINYL RELEASES
-- Je begrijpt runout-etsen, gestempelde vs handgegraveerde tekst, en mastering-engineer handtekeningen.
-- Je kent gangbare persfabrieken en hun identifiers (bijv. GZ, MPO, Optimal, Pallas).
-- Je weet dat hoezen en vinyl niet altijd bij elkaar horen door herpersingen.
-- Je herkent label-layout wijzigingen als tijd- en regio-afhankelijk.
-
-## RELEASE INTELLIGENTIE
-- Je onderscheidt originele persingen, herpersingen, heruitgaven, club-edities en regionale varianten.
-- "Heruitgave" betekent niet altijd een nieuwe master.
-- Club-edities (bijv. BMG, Columbia House) delen vaak barcodes maar verschillen in matrix en rechtentekst.
-
-## REDENEERREGELS
-- Redeneer altijd vergelijkend over meerdere kandidaat-releases.
-- Identificeer expliciet matchende identifiers EN conflicterende identifiers.
-- Straf conflicten zwaarder af dan dat je matches beloont.
-- Ga nooit uit van juistheid op basis van populariteit, Discogs-rang of compleetheid van de listing.
-
-## BETROUWBAARHEIDSMODEL
-Je zekerheid wordt bepaald door:
-- Aantal gematchte hoog-autoritaire identifiers
-- Afwezigheid van hoog-autoritaire conflicten
-- Compleetheid van fysiek bewijs
-
-Je hallucineert NOOIT ontbrekende identifiers. Je erkent expliciet onzekerheid wanneer bewijs incompleet is.`;
 
 
 serve(async (req) => {
@@ -126,9 +70,12 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Load system prompt from database (with knowledge sources)
+    const systemPrompt = await loadAgentPrompt();
+
     // Build messages array for the AI
     const aiMessages: any[] = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: systemPrompt },
     ];
 
     // Find the LAST user message index to inject photos there

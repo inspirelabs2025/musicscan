@@ -97,17 +97,19 @@ export default function MyCollection() {
 
   const { items, isLoading } = useMyCollection(statusFilter === "all" ? "all" : statusFilter);
 
-  // Client-side filtering for search and media type
-  const filteredItems = items.filter(item => {
-    if (mediaFilter !== "all" && item.media_type !== mediaFilter) return false;
-    if (activeSearch) {
-      const q = activeSearch.toLowerCase();
-      const match = [item.artist, item.title, item.label, item.catalog_number]
-        .some(f => f?.toLowerCase().includes(q));
-      if (!match) return false;
-    }
-    return true;
-  });
+  // Client-side filtering for search and media type, sorted newest first
+  const filteredItems = items
+    .filter(item => {
+      if (mediaFilter !== "all" && item.media_type !== mediaFilter) return false;
+      if (activeSearch) {
+        const q = activeSearch.toLowerCase();
+        const match = [item.artist, item.title, item.label, item.catalog_number]
+          .some(f => f?.toLowerCase().includes(q));
+        if (!match) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   // Stats
   const totalValue = items

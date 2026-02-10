@@ -771,6 +771,9 @@ serve(async (req) => {
             spine_text: combinedData.spineText || null,
             disc_label_text: combinedData.discLabelText || [],
             back_cover_text: combinedData.backCoverText || [],
+            rights_societies: combinedData.rightsSocieties || [],
+            production_credits: combinedData.productionCredits || [],
+            manufacturing_info: combinedData.manufacturingInfo || [],
             // Pricing data from Discogs
             pricing_stats: pricingStats,
             // Collector-grade additions
@@ -1179,6 +1182,9 @@ ALSO CAPTURE:
 - **spineText**: All text visible on the spine/rug of the case
 - **discLabelText**: All text printed on the disc label (NOT engraved in ring)
 - **backCoverText**: Key text from the back cover (track titles, credits, codes)
+- **rightsSocieties**: Rights societies/collecting organizations visible (e.g., "BUMA/STEMRA", "GEMA", "JASRAC", "ASCAP", "BMI", "SACEM", "SABAM")
+- **productionCredits**: Producer, engineer, studio names visible (e.g., "Produced by Mark Knopfler", "Recorded at Power Station")
+- **manufacturingInfo**: Manufacturing/pressing info (e.g., "Manufactured by CBS/Sony", "DADC Austria")
 
 RESPOND ONLY IN VALID JSON FORMAT:
 {
@@ -1200,7 +1206,10 @@ RESPOND ONLY IN VALID JSON FORMAT:
   "madeInText": "Made in Japan" or null,
   "spineText": "text from spine" or null,
   "discLabelText": ["text", "from", "disc", "label"],
-  "backCoverText": ["text", "from", "back", "cover"]
+  "backCoverText": ["text", "from", "back", "cover"],
+  "rightsSocieties": ["BUMA/STEMRA", "GEMA"] or [],
+  "productionCredits": ["Produced by...", "Recorded at..."] or [],
+  "manufacturingInfo": ["CBS/Sony Inc.", "DADC"] or []
 }
 
 A null code field is better than a wrong one. But DO extract everything you CAN read.`
@@ -1458,6 +1467,9 @@ function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: an
     spineText: sanitize(generalData?.spineText),
     discLabelText: generalData?.discLabelText || [],
     backCoverText: generalData?.backCoverText || [],
+    rightsSocieties: generalData?.rightsSocieties || [],
+    productionCredits: generalData?.productionCredits || [],
+    manufacturingInfo: generalData?.manufacturingInfo || [],
 
     // Combined metadata
     confidence: Math.max(generalData?.confidence || 0, 0.1),

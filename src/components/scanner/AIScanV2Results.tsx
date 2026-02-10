@@ -115,6 +115,9 @@ interface AnalysisResultData {
     spine_text?: string | null;
     disc_label_text?: string[];
     back_cover_text?: string[];
+    rights_societies?: string[];
+    production_credits?: string[];
+    manufacturing_info?: string[];
   };
   version: string;
 }
@@ -224,6 +227,40 @@ export function AIScanV2Results({
     [result]
   );
 
+  // Build "Overige info" from all extracted text that isn't already in structured fields
+  const extraInfo = useMemo(() => {
+    const structuredValues = new Set(
+      [result.barcode, result.catalog_number, result.matrix_number, result.label,
+       result.sid_code_mastering, result.sid_code_mould, result.label_code,
+       result.artist, result.title, result.genre, result.format, result.country,
+       result.year?.toString()].filter(Boolean).map(v => v!.toLowerCase())
+    );
+
+    const allTexts: string[] = [
+      ...(result.copyright_lines || []),
+      ...(result.disc_label_text || []),
+      ...(result.back_cover_text || []),
+      ...(result.extracted_details?.smallText || []),
+      ...(result.extracted_details?.markings || []),
+      ...(result.rights_societies || []),
+      ...(result.production_credits || []),
+      ...(result.manufacturing_info || []),
+      result.made_in_text,
+      result.spine_text,
+    ].filter(Boolean) as string[];
+
+    // Deduplicate and filter out already-structured values
+    const seen = new Set<string>();
+    return allTexts.filter(t => {
+      const lower = t.toLowerCase().trim();
+      if (!lower || lower.length < 2) return false;
+      if (seen.has(lower)) return false;
+      if (structuredValues.has(lower)) return false;
+      seen.add(lower);
+      return true;
+    });
+  }, [result]);
+
   const navigateToDiscogs = (discogsId: string, artist: string, title: string, label: string, catalogNumber: string, year: string) => {
     const params = new URLSearchParams({
       mediaType,
@@ -270,7 +307,7 @@ export function AIScanV2Results({
         </div>
 
         {/* Extracted Fields */}
-        <ExtractionFields extractions={extractions} />
+        <ExtractionFields extractions={extractions} extraInfo={extraInfo} />
 
         {/* Matrix Notes */}
         {result.matrix_notes && (

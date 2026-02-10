@@ -5,6 +5,7 @@ import type { ScanExtraction } from "@/hooks/useCDScanPipeline";
 
 interface ExtractionFieldsProps {
   extractions: ScanExtraction[];
+  extraInfo?: string[];
 }
 
 const confidenceColor = (c: number) => {
@@ -37,7 +38,7 @@ const fieldLabels: Record<string, string> = {
   hand_etched: "Hand-gegraveerd",
 };
 
-export const ExtractionFields = React.memo(({ extractions }: ExtractionFieldsProps) => {
+export const ExtractionFields = React.memo(({ extractions, extraInfo }: ExtractionFieldsProps) => {
   return (
     <div className="space-y-2">
       <h3 className="text-sm font-semibold text-foreground">Geëxtraheerde velden</h3>
@@ -66,6 +67,20 @@ export const ExtractionFields = React.memo(({ extractions }: ExtractionFieldsPro
           </div>
         ))}
       </div>
+
+      {/* Extra info section - rights societies, production notes, etc. */}
+      {extraInfo && extraInfo.length > 0 && (
+        <div className="mt-3">
+          <h4 className="text-xs font-semibold text-muted-foreground mb-1.5">Overige info</h4>
+          <div className="flex flex-wrap gap-1.5">
+            {extraInfo.map((info, i) => (
+              <Badge key={i} variant="secondary" className="font-mono text-xs">
+                {info}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 });

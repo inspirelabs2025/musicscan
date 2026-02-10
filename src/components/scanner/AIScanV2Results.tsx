@@ -233,29 +233,34 @@ export function AIScanV2Results({
       [result.barcode, result.catalog_number, result.matrix_number, result.label,
        result.sid_code_mastering, result.sid_code_mould, result.label_code,
        result.artist, result.title, result.genre, result.format, result.country,
-       result.year?.toString()].filter(Boolean).map(v => v!.toLowerCase())
+       result.year?.toString()].filter(Boolean).map(v => v!.toLowerCase().trim())
     );
+
+    // Also exclude track listing items (lines starting with a number + dot)
+    const isTrackListing = (t: string) => /^\d+[\.\)]\s/.test(t.trim());
 
     const allTexts: string[] = [
       ...(result.copyright_lines || []),
       ...(result.disc_label_text || []),
-      ...(result.back_cover_text || []),
       ...(result.extracted_details?.smallText || []),
+      ...(result.extracted_details?.codes || []),
       ...(result.extracted_details?.markings || []),
       ...(result.rights_societies || []),
       ...(result.production_credits || []),
       ...(result.manufacturing_info || []),
+      ...(result.extracted_text || []),
       result.made_in_text,
       result.spine_text,
     ].filter(Boolean) as string[];
 
-    // Deduplicate and filter out already-structured values
+    // Deduplicate and filter out already-structured values and track listings
     const seen = new Set<string>();
     return allTexts.filter(t => {
       const lower = t.toLowerCase().trim();
       if (!lower || lower.length < 2) return false;
       if (seen.has(lower)) return false;
       if (structuredValues.has(lower)) return false;
+      if (isTrackListing(t)) return false;
       seen.add(lower);
       return true;
     });

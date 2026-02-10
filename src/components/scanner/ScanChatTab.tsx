@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink } from 'lucide-react';
+import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, ExternalLink, Save, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
@@ -102,6 +103,7 @@ const cleanDisplayText = (text: string): string => {
 };
 
 export function ScanChatTab() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
@@ -111,6 +113,8 @@ export function ScanChatTab() {
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isRunningV2, setIsRunningV2] = useState(false);
+  const [isSavingToCollection, setIsSavingToCollection] = useState(false);
+  const [savedToCollection, setSavedToCollection] = useState(false);
 
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | ''>('');
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
@@ -572,6 +576,70 @@ export function ScanChatTab() {
     setPhotoUrls([]);
     setInput('');
     setVerifiedResult(null);
+    setSavedToCollection(false);
+  };
+
+  const saveToCollection = async () => {
+    if (!user || !verifiedResult || !verifiedResult.discogs_id) {
+      toast({ title: "Kan niet opslaan", description: "Je moet ingelogd zijn en een geverifieerde release hebben.", variant: "destructive" });
+      return;
+    }
+
+    setIsSavingToCollection(true);
+    try {
+      const table = mediaType === 'cd' ? 'cd_scan' : 'vinyl2_scan';
+      const pricing = verifiedResult.pricing_stats;
+
+      const record: Record<string, any> = {
+        user_id: user.id,
+        artist: verifiedResult.artist,
+        title: verifiedResult.title,
+        label: verifiedResult.label,
+        catalog_number: verifiedResult.catalog_number,
+        year: verifiedResult.year,
+        discogs_id: verifiedResult.discogs_id,
+        discogs_url: `https://www.discogs.com/release/${verifiedResult.discogs_id}`,
+        country: verifiedResult.country,
+        format: verifiedResult.format,
+        genre: verifiedResult.genre,
+        barcode_number: verifiedResult.barcode,
+        matrix_number: verifiedResult.matrix_number,
+        condition_grade: 'Not Graded',
+        is_public: false,
+        is_for_sale: false,
+        calculated_advice_price: pricing?.median_price ?? null,
+        lowest_price: pricing?.lowest_price ?? null,
+        median_price: pricing?.median_price ?? null,
+        highest_price: pricing?.highest_price ?? null,
+      };
+
+      // Add first photo as image
+      if (photoUrls.length > 0) {
+        if (mediaType === 'cd') {
+          record.front_image = photoUrls[0];
+          if (photoUrls[1]) record.back_image = photoUrls[1];
+        } else {
+          record.catalog_image = photoUrls[0];
+          if (photoUrls[1]) record.matrix_image = photoUrls[1];
+        }
+      }
+
+      const { error } = await supabase.from(table).insert(record);
+      if (error) throw error;
+
+      setSavedToCollection(true);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `✅ **Opgeslagen!** ${verifiedResult.artist} - ${verifiedResult.title} staat nu in je catalogus.\n\nJe kunt de conditie, prijs en winkelstatus later aanpassen in je collectie.`,
+      }]);
+
+      toast({ title: "Opgeslagen in catalogus", description: `${verifiedResult.artist} - ${verifiedResult.title}` });
+    } catch (err) {
+      console.error('Save to collection error:', err);
+      toast({ title: "Opslaan mislukt", description: err instanceof Error ? err.message : "Fout", variant: "destructive" });
+    } finally {
+      setIsSavingToCollection(false);
+    }
   };
 
   return (
@@ -637,9 +705,9 @@ export function ScanChatTab() {
                 </>
               )}
 
-              {/* Discogs link */}
+              {/* Discogs link + Save button */}
               {msg.v2Result?.discogs_id && (
-                <div className="mt-2">
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
                   <a
                     href={`https://www.discogs.com/release/${msg.v2Result.discogs_id}`}
                     target="_blank"
@@ -649,6 +717,28 @@ export function ScanChatTab() {
                     <ExternalLink className="h-3 w-3" />
                     Bekijk op Discogs
                   </a>
+                  {msg.pricingData && !savedToCollection && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={saveToCollection}
+                      disabled={isSavingToCollection || !user}
+                    >
+                      {isSavingToCollection ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Save className="h-3 w-3" />
+                      )}
+                      Opslaan in catalogus
+                    </Button>
+                  )}
+                  {msg.pricingData && savedToCollection && (
+                    <span className="inline-flex items-center gap-1 text-xs text-primary">
+                      <Check className="h-3 w-3" />
+                      Opgeslagen
+                    </span>
+                  )}
                 </div>
               )}
 

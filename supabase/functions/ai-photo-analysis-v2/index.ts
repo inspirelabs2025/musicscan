@@ -627,6 +627,7 @@ serve(async (req) => {
             ai_description: combinedData.description,
             image_quality: combinedData.imageQuality,
             extracted_details: combinedData.extractedDetails,
+            extracted_text: combinedData.extractedText || [],
             // Technical identifiers from OCR
             matrix_number: combinedData.matrixNumber || null,
             sid_code_mastering: combinedData.sidCodeMastering || null,
@@ -635,6 +636,12 @@ serve(async (req) => {
             barcode: combinedData.barcode || null,
             genre: combinedData.genre || null,
             country: combinedData.country || null,
+            format: combinedData.format || null,
+            // Vinyl-specific extras
+            stamper_codes: combinedData.stamperCodes || null,
+            pressing_plant: combinedData.pressingPlant || null,
+            hand_etched: combinedData.handEtched || null,
+            matrix_notes: combinedData.matrixNotes || null,
             // Pricing data from Discogs
             pricing_stats: pricingStats,
             // Collector-grade additions

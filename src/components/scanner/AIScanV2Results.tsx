@@ -92,6 +92,11 @@ interface AnalysisResultData {
     barcode?: string | null;
     genre?: string | null;
     country?: string | null;
+    format?: string | null;
+    stamper_codes?: string | null;
+    pressing_plant?: string | null;
+    hand_etched?: string | null;
+    matrix_notes?: string | null;
     pricing_stats?: PricingStats | null;
     match_status?: string;
     missing_fields?: string[];
@@ -99,6 +104,12 @@ interface AnalysisResultData {
     collector_audit?: AuditEntry[];
     suggestions?: Suggestion[];
     search_metadata?: any;
+    extracted_text?: string[];
+    extracted_details?: {
+      smallText?: string[];
+      codes?: string[];
+      markings?: string[];
+    };
   };
   version: string;
 }
@@ -165,7 +176,19 @@ function buildExtractions(
     { field: 'country', key: 'country', value: result.country },
     { field: 'year_hint', key: 'year', value: result.year?.toString() || null },
     { field: 'genre', key: 'genre', value: result.genre },
+    { field: 'format', key: 'format', value: result.format },
   ];
+
+  // Add vinyl-specific fields if present
+  if (result.stamper_codes) {
+    fields.push({ field: 'stamper_codes', key: 'stamper', value: result.stamper_codes });
+  }
+  if (result.pressing_plant) {
+    fields.push({ field: 'pressing_plant', key: 'pressing', value: result.pressing_plant });
+  }
+  if (result.hand_etched) {
+    fields.push({ field: 'hand_etched', key: 'hand_etched', value: result.hand_etched });
+  }
 
   return fields.map(({ field, key, value }) => ({
     field,
@@ -243,6 +266,66 @@ export function AIScanV2Results({
 
         {/* Extracted Fields */}
         <ExtractionFields extractions={extractions} />
+
+        {/* Matrix Notes */}
+        {result.matrix_notes && (
+          <div className="text-xs text-muted-foreground italic px-1">
+            💿 Matrix notities: {result.matrix_notes}
+          </div>
+        )}
+
+        {/* All Extracted Text from photos */}
+        {((result.extracted_text && result.extracted_text.length > 0) || 
+          (result.extracted_details && (result.extracted_details.smallText?.length || result.extracted_details.codes?.length || result.extracted_details.markings?.length))) && (
+          <details className="group rounded-lg border p-3">
+            <summary className="cursor-pointer flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">
+              <Eye className="h-4 w-4" />
+              Alle gelezen tekst uit foto's
+            </summary>
+            <div className="mt-2 space-y-2 text-xs">
+              {result.extracted_details?.codes && result.extracted_details.codes.length > 0 && (
+                <div>
+                  <span className="font-semibold text-foreground">Codes:</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {result.extracted_details.codes.map((code, i) => (
+                      <Badge key={i} variant="outline" className="font-mono text-xs">{code}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {result.extracted_details?.markings && result.extracted_details.markings.length > 0 && (
+                <div>
+                  <span className="font-semibold text-foreground">Markeringen:</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {result.extracted_details.markings.map((m, i) => (
+                      <Badge key={i} variant="secondary" className="font-mono text-xs">{m}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {result.extracted_details?.smallText && result.extracted_details.smallText.length > 0 && (
+                <div>
+                  <span className="font-semibold text-foreground">Kleine tekst:</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {result.extracted_details.smallText.map((t, i) => (
+                      <span key={i} className="text-muted-foreground">{t}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {result.extracted_text && result.extracted_text.length > 0 && (
+                <div>
+                  <span className="font-semibold text-foreground">Zoektermen:</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {result.extracted_text.filter((t, i, arr) => arr.indexOf(t) === i).map((t, i) => (
+                      <Badge key={i} variant="outline" className="text-xs">{t}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </details>
+        )}
 
         {/* Uploaded photos */}
         {uploadedFiles.length > 0 && (

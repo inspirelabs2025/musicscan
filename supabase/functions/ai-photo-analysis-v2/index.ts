@@ -511,7 +511,38 @@ serve(async (req) => {
         }
       }
 
-      // Fetch pricing data if Discogs ID is available
+      // ─── Auto-verify & enrich release ──────────────────────────
+      let verificationResult = null;
+      if (discogsResult?.discogsId) {
+        try {
+          console.log(`🔐 Auto-verifying release ${discogsResult.discogsId}...`);
+          const verifyRes = await fetch(`${supabaseUrl}/functions/v1/verify-and-enrich-release`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${supabaseServiceKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              discogs_id: discogsResult.discogsId,
+              release_id: releaseId,
+              scan_data: {
+                barcode: combinedData.barcode || null,
+                catno: combinedData.catalogNumber || null,
+                matrix: combinedData.matrixNumber || null,
+              },
+            }),
+          });
+          if (verifyRes.ok) {
+            verificationResult = await verifyRes.json();
+            console.log(`✅ Enrichment: ${verificationResult.verification?.status} (${verificationResult.verification?.score} confirmations)`);
+          } else {
+            console.log(`⚠️ Enrichment failed: ${verifyRes.status}`);
+          }
+        } catch (enrichErr) {
+          console.log(`⚠️ Enrichment error (non-fatal):`, enrichErr.message);
+        }
+      }
+
       let pricingStats = null;
       if (discogsResult?.discogsId) {
         try {
@@ -588,7 +619,9 @@ serve(async (req) => {
             photo_guidance: photoGuidance,
             collector_audit: collectorAudit,
             suggestions: discogsResult.suggestions || null,
-            search_metadata: discogsResult.searchMetadata || null
+            search_metadata: discogsResult.searchMetadata || null,
+            verification: verificationResult?.verification || null,
+            enrichment_action: verificationResult?.action || null
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

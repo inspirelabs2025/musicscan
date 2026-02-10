@@ -345,10 +345,10 @@ export default function AIScanV2() {
           </div>
 
           {/* Tabs: Foto Scanner | Chat */}
-          <Tabs defaultValue="scanner" className="w-full">
+          <Tabs defaultValue="chat" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="scanner">📷 Foto Scanner</TabsTrigger>
               <TabsTrigger value="chat">🎩 Scan met Mike</TabsTrigger>
+              <TabsTrigger value="scanner">📷 Foto Scanner</TabsTrigger>
             </TabsList>
 
             <TabsContent value="scanner" className="space-y-6 mt-4">

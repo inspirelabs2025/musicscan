@@ -20,6 +20,8 @@ const stepColors: Record<string, string> = {
   single_match: "text-green-700",
   multiple_candidates: "text-amber-700",
   no_candidates: "text-red-600",
+  rights_society_exclude: "text-red-700",
+  rights_society_confirm: "text-green-600",
 };
 
 export const AuditLog = React.memo(({ entries }: AuditLogProps) => {

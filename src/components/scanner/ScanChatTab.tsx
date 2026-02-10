@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus } from 'lucide-react';
+import { Send, Loader2, Disc3, Disc, RotateCcw, Camera, X, ImagePlus, DollarSign, Check, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,10 +11,33 @@ import magicMikeAvatar from '@/assets/magic-mike-avatar.png';
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
-  images?: string[]; // preview URLs for display
+  images?: string[];
+  discogsId?: string; // extracted from [[DISCOGS:ID]]
+  pricingData?: PricingData | null;
+}
+
+interface PricingData {
+  lowest_price: number | null;
+  median_price: number | null;
+  highest_price: number | null;
+  num_for_sale: number | null;
+  artist?: string;
+  title?: string;
+  cover_image?: string;
 }
 
 const SUPABASE_URL = "https://ssxbpyqnjfiyubsuonar.supabase.co";
+
+// Extract [[DISCOGS:123456]] from message text
+const extractDiscogsId = (text: string): string | null => {
+  const match = text.match(/\[\[DISCOGS:(\d+)\]\]/);
+  return match ? match[1] : null;
+};
+
+// Remove the [[DISCOGS:ID]] tag from display text
+const cleanDisplayText = (text: string): string => {
+  return text.replace(/\[\[DISCOGS:\d+\]\]/g, '').trim();
+};
 
 export function ScanChatTab() {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -25,11 +48,13 @@ export function ScanChatTab() {
   ]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isFetchingPrice, setIsFetchingPrice] = useState(false);
 
   const [mediaType, setMediaType] = useState<'vinyl' | 'cd' | ''>('');
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [confirmedDiscogsId, setConfirmedDiscogsId] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -65,6 +90,70 @@ export function ScanChatTab() {
     setPendingFiles(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  // Fetch pricing from Discogs via existing optimized-catalog-search
+  const fetchPricing = async (discogsId: string) => {
+    setIsFetchingPrice(true);
+    setConfirmedDiscogsId(discogsId);
+
+    // Add user confirmation message
+    setMessages(prev => [...prev, { role: 'user', content: '✅ Ja, dat klopt! Haal de prijzen op.' }]);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('optimized-catalog-search', {
+        body: { direct_discogs_id: discogsId, include_pricing: true }
+      });
+
+      if (error) throw error;
+
+      const result = data?.results?.[0];
+      const pricing = result?.pricing_stats;
+
+      const pricingData: PricingData = {
+        lowest_price: pricing?.lowest_price || null,
+        median_price: pricing?.median_price || null,
+        highest_price: pricing?.highest_price || null,
+        num_for_sale: pricing?.num_for_sale || null,
+        artist: result?.artist,
+        title: result?.title,
+        cover_image: result?.release_metadata?.thumb || result?.cover_image,
+      };
+
+      // Build pricing message
+      let priceMsg = `💰 **Prijsinformatie** voor Discogs #${discogsId}:\n\n`;
+      if (pricingData.lowest_price || pricingData.median_price || pricingData.highest_price) {
+        if (pricingData.lowest_price) priceMsg += `📉 **Laagste:** €${Number(pricingData.lowest_price).toFixed(2)}\n`;
+        if (pricingData.median_price) priceMsg += `📊 **Mediaan:** €${Number(pricingData.median_price).toFixed(2)}\n`;
+        if (pricingData.highest_price) priceMsg += `📈 **Hoogste:** €${Number(pricingData.highest_price).toFixed(2)}\n`;
+        if (pricingData.num_for_sale) priceMsg += `\n🏪 **${pricingData.num_for_sale}** exemplaren te koop op Discogs`;
+      } else {
+        priceMsg += `⚠️ Geen prijsdata beschikbaar voor deze release. Dit kan betekenen dat er nog nooit een exemplaar verkocht is op Discogs.`;
+      }
+
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: priceMsg,
+        pricingData,
+      }]);
+
+    } catch (err) {
+      console.error('Pricing fetch error:', err);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `⚠️ Kon de prijzen niet ophalen. Probeer het later opnieuw of vraag me om een andere release te zoeken.`,
+      }]);
+    } finally {
+      setIsFetchingPrice(false);
+    }
+  };
+
+  const declineMatch = () => {
+    setMessages(prev => [
+      ...prev,
+      { role: 'user', content: '❌ Nee, dit is niet de juiste release.' },
+      { role: 'assistant', content: '🔍 Geen probleem! Kun je extra foto\'s uploaden van het matrix-nummer of de achterkant? Dan zoek ik opnieuw.' },
+    ]);
+  };
+
   // Upload pending files and send to Magic Mike
   const uploadAndSend = async () => {
     if (pendingFiles.length === 0 || !mediaType) return;
@@ -82,7 +171,6 @@ export function ScanChatTab() {
         urls.push(publicUrl);
       }
 
-      // Show thumbnails in user message
       const previews = pendingFiles.map(f => URL.createObjectURL(f));
       const allUrls = [...photoUrls, ...urls];
       setPhotoUrls(allUrls);
@@ -110,12 +198,18 @@ export function ScanChatTab() {
     let assistantSoFar = '';
     const upsertAssistant = (chunk: string) => {
       assistantSoFar += chunk;
+      const discogsId = extractDiscogsId(assistantSoFar);
       setMessages(prev => {
         const last = prev[prev.length - 1];
+        const msgData: ChatMessage = {
+          role: 'assistant',
+          content: assistantSoFar,
+          ...(discogsId ? { discogsId } : {}),
+        };
         if (last?.role === 'assistant') {
-          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+          return prev.map((m, i) => (i === prev.length - 1 ? msgData : m));
         }
-        return [...prev, { role: 'assistant', content: assistantSoFar }];
+        return [...prev, msgData];
       });
     };
 
@@ -203,7 +297,13 @@ export function ScanChatTab() {
     setPendingFiles([]);
     setPhotoUrls([]);
     setInput('');
+    setConfirmedDiscogsId(null);
   };
+
+  // Find the latest unconfirmed Discogs ID in messages
+  const pendingDiscogsId = !confirmedDiscogsId && !isStreaming
+    ? messages.filter(m => m.role === 'assistant' && m.discogsId).slice(-1)[0]?.discogsId || null
+    : null;
 
   return (
     <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-220px)]">
@@ -244,7 +344,7 @@ export function ScanChatTab() {
             }`}>
               {msg.role === 'assistant' ? (
                 <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <ReactMarkdown>{msg.content || '...'}</ReactMarkdown>
+                  <ReactMarkdown>{cleanDisplayText(msg.content) || '...'}</ReactMarkdown>
                 </div>
               ) : (
                 <>
@@ -258,9 +358,63 @@ export function ScanChatTab() {
                   )}
                 </>
               )}
+
+              {/* Pricing card inline */}
+              {msg.pricingData && (msg.pricingData.lowest_price || msg.pricingData.median_price) && (
+                <div className="mt-3 p-3 bg-background/60 rounded-lg border border-border/50">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    {msg.pricingData.lowest_price && (
+                      <div>
+                        <div className="text-xs text-muted-foreground">Laagste</div>
+                        <div className="text-base font-bold text-primary">€{Number(msg.pricingData.lowest_price).toFixed(2)}</div>
+                      </div>
+                    )}
+                    {msg.pricingData.median_price && (
+                      <div>
+                        <div className="text-xs text-muted-foreground">Mediaan</div>
+                        <div className="text-base font-bold text-foreground">€{Number(msg.pricingData.median_price).toFixed(2)}</div>
+                      </div>
+                    )}
+                    {msg.pricingData.highest_price && (
+                      <div>
+                        <div className="text-xs text-muted-foreground">Hoogste</div>
+                        <div className="text-base font-bold text-accent-foreground">€{Number(msg.pricingData.highest_price).toFixed(2)}</div>
+                      </div>
+                    )}
+                  </div>
+                  {msg.pricingData.num_for_sale && (
+                    <div className="text-xs text-muted-foreground text-center mt-2">
+                      {msg.pricingData.num_for_sale} exemplaren te koop op Discogs
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}
+
+        {/* Confirm/Decline buttons when Discogs ID detected */}
+        {pendingDiscogsId && (
+          <div className="flex gap-2 justify-center my-3">
+            <Button
+              onClick={() => fetchPricing(pendingDiscogsId)}
+              disabled={isFetchingPrice}
+              variant="default"
+              size="sm"
+              className="gap-1"
+            >
+              {isFetchingPrice ? (
+                <><Loader2 className="h-4 w-4 animate-spin" />Prijzen ophalen...</>
+              ) : (
+                <><Check className="h-4 w-4" />Ja, klopt! Haal prijzen op</>
+              )}
+            </Button>
+            <Button onClick={declineMatch} variant="outline" size="sm" className="gap-1">
+              <XCircle className="h-4 w-4" />
+              Nee, niet juist
+            </Button>
+          </div>
+        )}
 
         {/* Media type picker */}
         {!mediaType && (
@@ -318,15 +472,6 @@ export function ScanChatTab() {
           </div>
         )}
       </div>
-
-      {/* Quick prompts */}
-      {photoUrls.length > 0 && messages.length <= 5 && !isStreaming && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          {["Zoek op barcode", "Welke persing is dit?", "Wat is de waarde?", "Heb je meer foto's nodig?"].map(p => (
-            <Button key={p} variant="outline" size="sm" onClick={() => sendMessage(p)} className="text-xs">{p}</Button>
-          ))}
-        </div>
-      )}
 
       {/* Input bar */}
       {mediaType && (

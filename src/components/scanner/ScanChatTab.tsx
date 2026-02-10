@@ -225,10 +225,10 @@ export function ScanChatTab() {
       });
 
       const pricing: PricingData = {
-        lowest_price: pricingResp?.lowest_price || null,
-        median_price: pricingResp?.median_price || null,
-        highest_price: pricingResp?.highest_price || null,
-        num_for_sale: pricingResp?.num_for_sale || null,
+        lowest_price: pricingResp?.lowest_price ?? null,
+        median_price: pricingResp?.median_price ?? null,
+        highest_price: pricingResp?.highest_price ?? null,
+        num_for_sale: pricingResp?.num_for_sale ?? null,
       };
 
       // Remove loading message
@@ -425,10 +425,10 @@ export function ScanChatTab() {
 
           // Use pricing_stats from V2 response (already fetched by the edge function)
           const pricing: PricingData = {
-            lowest_price: v2Result.pricing_stats?.lowest_price || null,
-            median_price: v2Result.pricing_stats?.median_price || null,
-            highest_price: v2Result.pricing_stats?.highest_price || null,
-            num_for_sale: v2Result.pricing_stats?.num_for_sale || null,
+            lowest_price: v2Result.pricing_stats?.lowest_price ?? null,
+            median_price: v2Result.pricing_stats?.median_price ?? null,
+            highest_price: v2Result.pricing_stats?.highest_price ?? null,
+            num_for_sale: v2Result.pricing_stats?.num_for_sale ?? null,
           };
 
           if (pricing.lowest_price || pricing.median_price || pricing.highest_price) {
@@ -592,7 +592,7 @@ export function ScanChatTab() {
               )}
 
               {/* Pricing card inline */}
-              {msg.pricingData && (msg.pricingData.lowest_price || msg.pricingData.median_price) && (
+              {msg.pricingData && (msg.pricingData.lowest_price || msg.pricingData.median_price || msg.pricingData.highest_price) && (
                 <div className="mt-3 p-3 bg-background/60 rounded-lg border border-border/50">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     {msg.pricingData.lowest_price && (
@@ -614,7 +614,7 @@ export function ScanChatTab() {
                       </div>
                     )}
                   </div>
-                  {msg.pricingData.num_for_sale && (
+                  {msg.pricingData.num_for_sale != null && msg.pricingData.num_for_sale > 0 && (
                     <div className="text-xs text-muted-foreground text-center mt-2">
                       {msg.pricingData.num_for_sale} exemplaren te koop op Discogs
                     </div>

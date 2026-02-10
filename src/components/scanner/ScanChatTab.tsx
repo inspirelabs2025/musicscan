@@ -42,10 +42,13 @@ interface PricingData {
 
 const SUPABASE_URL = "https://ssxbpyqnjfiyubsuonar.supabase.co";
 
-// Extract [[DISCOGS:123456]] from message text
+// Extract Discogs ID from [[DISCOGS:123456]] OR from discogs.com/release/123456 URLs
 const extractDiscogsId = (text: string): string | null => {
-  const match = text.match(/\[\[DISCOGS:(\d+)\]\]/);
-  return match ? match[1] : null;
+  const tagMatch = text.match(/\[\[DISCOGS:(\d+)\]\]/);
+  if (tagMatch) return tagMatch[1];
+  // Also detect from Discogs URLs in the text
+  const urlMatch = text.match(/discogs\.com\/release\/(\d+)/);
+  return urlMatch ? urlMatch[1] : null;
 };
 
 // Extract [[SCAN_DATA:{...}]] from message text
@@ -289,7 +292,7 @@ export function ScanChatTab() {
     }
   };
 
-  // Stream message to AI
+  // Stream message to AI, then auto-verify any detected Discogs ID
   const sendMessage = async (text: string, urls?: string[], customUserMsg?: ChatMessage) => {
     const userMsg: ChatMessage = customUserMsg || { role: 'user', content: text };
     setMessages(prev => [...prev, userMsg]);
@@ -369,6 +372,117 @@ export function ScanChatTab() {
         if (j === '[DONE]') continue;
         try { const p = JSON.parse(j); const c = p.choices?.[0]?.delta?.content; if (c) upsertAssistant(c); } catch {}
       }
+
+      // ─── AUTO-VERIFY after stream completes ────────────────────
+      const detectedId = extractDiscogsId(assistantSoFar);
+      const detectedScanData = extractScanData(assistantSoFar);
+      
+      if (detectedId && !confirmedDiscogsId) {
+        console.log(`🔐 Auto-verifying Discogs ID ${detectedId} with scan_data:`, detectedScanData);
+        
+        // Show verification in progress
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `🔍 **Automatische verificatie...** Release #${detectedId} wordt gecontroleerd tegen de Discogs-database...`,
+        }]);
+
+        try {
+          const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-and-enrich-release', {
+            body: {
+              discogs_id: parseInt(detectedId, 10),
+              scan_data: detectedScanData ? {
+                barcode: detectedScanData.barcode || null,
+                catno: detectedScanData.catno || null,
+                matrix: detectedScanData.matrix || null,
+              } : null,
+            }
+          });
+
+          if (verifyError) throw verifyError;
+
+          const verification = verifyData?.verification;
+          const enrichment = verifyData?.enrichment;
+          const vStatus = verification?.status || 'unverified';
+          const vScore = verification?.score || 0;
+          const vArtist = enrichment?.artist || '';
+          const vTitle = enrichment?.title || '';
+
+          // Remove the "verificatie..." loading message
+          setMessages(prev => prev.filter(m => !m.content.includes('Automatische verificatie...')));
+
+          if (vStatus === 'needs_review' && detectedScanData && (detectedScanData.barcode || detectedScanData.catno || detectedScanData.matrix)) {
+            // FAILED — identifiers don't match
+            const checks = verification?.details?.checks || [];
+            let failMsg = `⚠️ **Verificatie MISLUKT** — Release #${detectedId} komt **niet overeen** met de gescande identifiers!\n\n`;
+            
+            for (const check of checks) {
+              const icon = check.matched ? '✅' : '❌';
+              failMsg += `${icon} **${check.type.toUpperCase()}**: \`${check.scan_value || 'niet gevonden'}\``;
+              if (!check.matched && check.release_values?.length) {
+                failMsg += ` → Discogs: \`${check.release_values.filter(Boolean).join(', ') || 'leeg'}\``;
+              }
+              failMsg += '\n';
+            }
+
+            failMsg += `\n🔄 Upload extra foto's van het **matrix-nummer** of de **achterkant** zodat ik opnieuw kan zoeken.`;
+
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: failMsg,
+              verificationResult: { status: vStatus, score: vScore, artist: vArtist, title: vTitle },
+            }]);
+            // Don't set confirmedDiscogsId — allow retry
+          } else {
+            // PASSED or no scan data to compare
+            const statusEmoji = vStatus === 'verified' ? '✅' : vStatus === 'likely' ? '🟡' : '🔵';
+            const statusLabel = vStatus === 'verified' ? 'Geverifieerd' : vStatus === 'likely' ? 'Waarschijnlijk correct' : 'Geen identifiers om te checken';
+            
+            setConfirmedDiscogsId(detectedId);
+
+            let verifyMsg = `${statusEmoji} **${statusLabel}** — **${vArtist} - ${vTitle}**\n`;
+            verifyMsg += `📊 Score: ${vScore} bevestiging(en)\n`;
+
+            // Auto-fetch pricing
+            const { data: pricingResp } = await supabase.functions.invoke('fetch-discogs-pricing', {
+              body: { discogs_id: detectedId }
+            });
+
+            const pricing: PricingData = {
+              lowest_price: pricingResp?.lowest_price || null,
+              median_price: pricingResp?.median_price || null,
+              highest_price: pricingResp?.highest_price || null,
+              num_for_sale: pricingResp?.num_for_sale || null,
+            };
+
+            if (pricing.lowest_price || pricing.median_price || pricing.highest_price) {
+              verifyMsg += `\n💰 **Prijsinformatie:**\n`;
+              if (pricing.lowest_price) verifyMsg += `📉 **Laagste:** €${Number(pricing.lowest_price).toFixed(2)}\n`;
+              if (pricing.median_price) verifyMsg += `📊 **Mediaan:** €${Number(pricing.median_price).toFixed(2)}\n`;
+              if (pricing.highest_price) verifyMsg += `📈 **Hoogste:** €${Number(pricing.highest_price).toFixed(2)}\n`;
+              if (pricing.num_for_sale) verifyMsg += `\n🏪 **${pricing.num_for_sale}** exemplaren te koop op Discogs`;
+            } else {
+              verifyMsg += `\n⚠️ Geen prijsdata beschikbaar voor deze release.`;
+            }
+
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: verifyMsg,
+              pricingData: pricing,
+              verificationResult: { status: vStatus, score: vScore, artist: vArtist, title: vTitle },
+            }]);
+          }
+        } catch (verifyErr) {
+          console.error('Auto-verify error:', verifyErr);
+          setMessages(prev => {
+            const filtered = prev.filter(m => !m.content.includes('Automatische verificatie...'));
+            return [...filtered, {
+              role: 'assistant',
+              content: `⚠️ Kon de release niet automatisch verifiëren. Klik hieronder om handmatig te verifiëren.`,
+            }];
+          });
+        }
+      }
+
     } catch (err) {
       console.error('Chat error:', err);
       toast({ title: "Chat fout", description: err instanceof Error ? err.message : "Fout", variant: "destructive" });
@@ -403,8 +517,9 @@ export function ScanChatTab() {
     setConfirmedDiscogsId(null);
   };
 
-  // Find the latest unconfirmed Discogs ID and its scan data
-  const pendingMessage = !confirmedDiscogsId && !isStreaming
+  // Manual fallback: only show buttons if auto-verify failed (message contains "handmatig te verifiëren")
+  const hasManualFallback = messages.some(m => m.content.includes('handmatig te verifiëren'));
+  const pendingMessage = hasManualFallback && !confirmedDiscogsId && !isStreaming
     ? messages.filter(m => m.role === 'assistant' && m.discogsId).slice(-1)[0] || null
     : null;
   const pendingDiscogsId = pendingMessage?.discogsId || null;

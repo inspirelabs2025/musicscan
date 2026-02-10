@@ -243,6 +243,102 @@ serve(async (req) => {
         matrixAnalysis?.success ? matrixAnalysis.data : null
       )
 
+      // === POST-PROCESSING: Extract missed fields from raw text ===
+      // The AI often reads text but fails to classify it into structured fields.
+      // Parse extractedText and extractedDetails to fill gaps.
+      const allText = [
+        ...(combinedData.extractedText || []),
+        ...(combinedData.extractedDetails?.codes || []),
+        ...(combinedData.extractedDetails?.smallText || []),
+        ...(combinedData.extractedDetails?.markings || []),
+      ].join(' ');
+
+      // Known label names to detect from extracted text
+      const knownLabels = [
+        'CBS', 'Columbia', 'Sony', 'Warner', 'Atlantic', 'Polydor', 'Philips', 'Decca',
+        'EMI', 'RCA', 'Mercury', 'Motown', 'Island', 'Virgin', 'A&M', 'Elektra',
+        'Capitol', 'Geffen', 'Epic', 'Arista', 'MCA', 'Reprise', 'Asylum', 'Chrysalis',
+        'Vertigo', 'Harvest', 'Parlophone', 'Apple', 'Stax', 'Chess', 'Blue Note',
+        'Def Jam', 'Interscope', 'Sub Pop', 'Rough Trade', 'Factory', '4AD',
+        'Fontana', 'London', 'Brunswick', 'Ariola', 'CNR', 'Bovema', 'Negram',
+        'Dureco', 'Red Bullet', 'Arcade', 'Telstar', 'Roadrunner',
+      ];
+
+      if (!combinedData.label) {
+        for (const label of knownLabels) {
+          // Match as whole word (case-insensitive)
+          const regex = new RegExp(`\\b${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          if (regex.test(allText)) {
+            combinedData.label = label;
+            console.log(`🔧 POST-PROCESS: Detected label "${label}" from extracted text`);
+            break;
+          }
+        }
+      }
+
+      // Catalog number: look for patterns like "35DP-93", "CDPCSD 167", etc. in codes
+      if (!combinedData.catalogNumber) {
+        const codes = combinedData.extractedDetails?.codes || [];
+        const searchQueries = combinedData.searchQueries || [];
+        const allCodes = [...codes, ...searchQueries];
+        
+        for (const code of allCodes) {
+          // Catalog pattern: letters + numbers with optional hyphens, NOT a barcode
+          const catnoMatch = code.match(/\b([A-Za-z]{1,6}[\s\-]?\d{1,6}(?:[\-\/]\d{1,4})?)\b/);
+          if (catnoMatch) {
+            const candidate = catnoMatch[1].trim();
+            // Skip if it looks like a barcode (12+ digits) or matrix (already captured)
+            const digits = candidate.replace(/[^0-9]/g, '');
+            if (digits.length <= 10 && candidate !== combinedData.matrixNumber) {
+              combinedData.catalogNumber = candidate;
+              console.log(`🔧 POST-PROCESS: Detected catno "${candidate}" from codes/search`);
+              break;
+            }
+          }
+        }
+      }
+
+      // Country: detect from text patterns like "Made in Japan", "Printed in Holland"
+      if (!combinedData.country) {
+        const countryPatterns: [RegExp, string][] = [
+          [/Made\s+in\s+(Japan|Netherlands|Holland|Germany|UK|USA|France|Italy|Spain|Sweden|Austria|Belgium|Canada|Australia)/i, '$1'],
+          [/Printed\s+in\s+(Japan|Netherlands|Holland|Germany|UK|USA|France|Italy|Spain|Sweden|Austria|Belgium|Canada|Australia)/i, '$1'],
+          [/Manufactured\s+in\s+(Japan|Netherlands|Holland|Germany|UK|USA|France|Italy|Spain)/i, '$1'],
+        ];
+        for (const [pattern, _] of countryPatterns) {
+          const match = allText.match(pattern);
+          if (match) {
+            combinedData.country = match[1];
+            console.log(`🔧 POST-PROCESS: Detected country "${match[1]}" from extracted text`);
+            break;
+          }
+        }
+      }
+
+      // Year: look for (P) or (C) followed by 4-digit year
+      if (!combinedData.year) {
+        const yearMatch = allText.match(/[©℗(P)(C)]\s*(19[5-9]\d|20[0-2]\d)/);
+        if (yearMatch) {
+          combinedData.year = parseInt(yearMatch[1]);
+          console.log(`🔧 POST-PROCESS: Detected year ${yearMatch[1]} from copyright line`);
+        }
+      }
+
+      // Genre: detect from known genre keywords in text
+      if (!combinedData.genre) {
+        const genreKeywords: [RegExp, string][] = [
+          [/\b(Rock|Pop|Jazz|Blues|Classical|Folk|Country|Soul|Funk|Reggae|Hip[\s-]?Hop|Electronic|Dance|Metal|Punk|R&B|Gospel)\b/i, '$1'],
+        ];
+        for (const [pattern, _] of genreKeywords) {
+          const match = allText.match(pattern);
+          if (match) {
+            combinedData.genre = match[1];
+            console.log(`🔧 POST-PROCESS: Detected genre "${match[1]}" from extracted text`);
+            break;
+          }
+        }
+      }
+
       // === COLLECTOR-GRADE CROSS-CHECKS ===
       const collectorAudit: Array<{step: string; detail: string; timestamp: string}> = [];
       

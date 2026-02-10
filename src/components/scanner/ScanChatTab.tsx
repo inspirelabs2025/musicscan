@@ -13,8 +13,24 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   images?: string[];
-  discogsId?: string; // extracted from [[DISCOGS:ID]]
+  discogsId?: string;
+  scanData?: ScanData | null;
   pricingData?: PricingData | null;
+  verificationResult?: VerificationResult | null;
+}
+
+interface ScanData {
+  barcode?: string | null;
+  catno?: string | null;
+  matrix?: string | null;
+}
+
+interface VerificationResult {
+  status: string; // verified, likely, needs_review
+  score: number;
+  artist?: string;
+  title?: string;
+  artwork_url?: string;
 }
 
 interface PricingData {
@@ -22,9 +38,6 @@ interface PricingData {
   median_price: number | null;
   highest_price: number | null;
   num_for_sale: number | null;
-  artist?: string;
-  title?: string;
-  cover_image?: string;
 }
 
 const SUPABASE_URL = "https://ssxbpyqnjfiyubsuonar.supabase.co";
@@ -35,9 +48,23 @@ const extractDiscogsId = (text: string): string | null => {
   return match ? match[1] : null;
 };
 
-// Remove the [[DISCOGS:ID]] tag from display text
+// Extract [[SCAN_DATA:{...}]] from message text
+const extractScanData = (text: string): ScanData | null => {
+  const match = text.match(/\[\[SCAN_DATA:(.*?)\]\]/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[1]);
+  } catch {
+    return null;
+  }
+};
+
+// Remove hidden tags from display text
 const cleanDisplayText = (text: string): string => {
-  return text.replace(/\[\[DISCOGS:\d+\]\]/g, '').trim();
+  return text
+    .replace(/\[\[DISCOGS:\d+\]\]/g, '')
+    .replace(/\[\[SCAN_DATA:.*?\]\]/g, '')
+    .trim();
 };
 
 export function ScanChatTab() {
@@ -91,51 +118,130 @@ export function ScanChatTab() {
     setPendingFiles(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  // Fetch pricing from Discogs via dedicated pricing scraper (low/median/high)
-  const fetchPricing = async (discogsId: string) => {
+  // Verify release via V2 pipeline, then fetch pricing
+  const fetchPricing = async (discogsId: string, scanData?: ScanData | null) => {
     setIsFetchingPrice(true);
     setConfirmedDiscogsId(discogsId);
 
     // Add user confirmation message
-    setMessages(prev => [...prev, { role: 'user', content: '✅ Ja, dat klopt! Haal de prijzen op.' }]);
+    setMessages(prev => [...prev, { role: 'user', content: '✅ Ja, dat klopt! Verifieer en haal de prijzen op.' }]);
 
     try {
-      const { data, error } = await supabase.functions.invoke('fetch-discogs-pricing', {
+      // Step 1: Verify via verify-and-enrich-release (same as V2 scanner)
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `🔍 **Bezig met verificatie...** Ik controleer release #${discogsId} via onze database met barcode, catalogusnummer en matrix-check...`,
+      }]);
+
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-and-enrich-release', {
+        body: {
+          discogs_id: parseInt(discogsId, 10),
+          scan_data: scanData ? {
+            barcode: scanData.barcode || null,
+            catno: scanData.catno || null,
+            matrix: scanData.matrix || null,
+          } : null,
+        }
+      });
+
+      if (verifyError) throw verifyError;
+
+      const verification = verifyData?.verification;
+      const enrichment = verifyData?.enrichment;
+      const verificationStatus = verification?.status || 'unverified';
+      const verificationScore = verification?.score || 0;
+
+      // Remove the "bezig met verificatie" message and add result
+      setMessages(prev => prev.filter(m => !m.content.includes('Bezig met verificatie')));
+
+      // Build verification result message
+      const verifiedArtist = enrichment?.artist || '';
+      const verifiedTitle = enrichment?.title || '';
+      const verifiedArtwork = enrichment?.artwork_url || '';
+
+      const verificationResult: VerificationResult = {
+        status: verificationStatus,
+        score: verificationScore,
+        artist: verifiedArtist,
+        title: verifiedTitle,
+        artwork_url: verifiedArtwork,
+      };
+
+      if (verificationStatus === 'needs_review' && scanData && (scanData.barcode || scanData.catno || scanData.matrix)) {
+        // Verification FAILED — identifiers don't match
+        const checks = verification?.details?.checks || [];
+        let failMsg = `⚠️ **Verificatie mislukt** voor release #${discogsId}\n\n`;
+        failMsg += `De door mij gevonden identifiers komen **niet overeen** met de Discogs-data:\n\n`;
+        
+        for (const check of checks) {
+          const icon = check.matched ? '✅' : '❌';
+          failMsg += `${icon} **${check.type.toUpperCase()}**: ${check.scan_value || 'niet gevonden'}`;
+          if (!check.matched && check.release_values?.length) {
+            failMsg += ` (Discogs: ${check.release_values.filter(Boolean).join(', ') || 'leeg'})`;
+          }
+          failMsg += '\n';
+        }
+
+        failMsg += `\n🔄 Dit is waarschijnlijk een **andere persing** of release. Upload extra foto's (matrix, achterkant) zodat ik opnieuw kan zoeken.`;
+
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: failMsg,
+          verificationResult,
+        }]);
+        setConfirmedDiscogsId(null); // Reset so user can try again
+        return;
+      }
+
+      // Verification passed or no scan_data to verify against
+      const statusEmoji = verificationStatus === 'verified' ? '✅' : verificationStatus === 'likely' ? '🟡' : '🔵';
+      const statusLabel = verificationStatus === 'verified' ? 'Geverifieerd' : verificationStatus === 'likely' ? 'Waarschijnlijk correct' : 'Niet geverifieerd (geen identifiers)';
+
+      let verifyMsg = `${statusEmoji} **${statusLabel}** — ${verifiedArtist} - ${verifiedTitle}\n`;
+      verifyMsg += `📊 Verificatiescore: ${verificationScore} bevestigingen\n\n`;
+
+      // Step 2: Fetch full pricing
+      const { data: pricingData, error: pricingError } = await supabase.functions.invoke('fetch-discogs-pricing', {
         body: { discogs_id: discogsId }
       });
 
-      if (error) throw error;
+      if (pricingError) throw pricingError;
 
-      const pricingData: PricingData = {
-        lowest_price: data?.lowest_price || null,
-        median_price: data?.median_price || null,
-        highest_price: data?.highest_price || null,
-        num_for_sale: data?.num_for_sale || null,
+      const pricing: PricingData = {
+        lowest_price: pricingData?.lowest_price || null,
+        median_price: pricingData?.median_price || null,
+        highest_price: pricingData?.highest_price || null,
+        num_for_sale: pricingData?.num_for_sale || null,
       };
 
-      // Build pricing message
-      let priceMsg = `💰 **Prijsinformatie** voor Discogs #${discogsId}:\n\n`;
-      if (pricingData.lowest_price || pricingData.median_price || pricingData.highest_price) {
-        if (pricingData.lowest_price) priceMsg += `📉 **Laagste:** €${Number(pricingData.lowest_price).toFixed(2)}\n`;
-        if (pricingData.median_price) priceMsg += `📊 **Mediaan:** €${Number(pricingData.median_price).toFixed(2)}\n`;
-        if (pricingData.highest_price) priceMsg += `📈 **Hoogste:** €${Number(pricingData.highest_price).toFixed(2)}\n`;
-        if (pricingData.num_for_sale) priceMsg += `\n🏪 **${pricingData.num_for_sale}** exemplaren te koop op Discogs`;
+      if (pricing.lowest_price || pricing.median_price || pricing.highest_price) {
+        verifyMsg += `💰 **Prijsinformatie:**\n`;
+        if (pricing.lowest_price) verifyMsg += `📉 **Laagste:** €${Number(pricing.lowest_price).toFixed(2)}\n`;
+        if (pricing.median_price) verifyMsg += `📊 **Mediaan:** €${Number(pricing.median_price).toFixed(2)}\n`;
+        if (pricing.highest_price) verifyMsg += `📈 **Hoogste:** €${Number(pricing.highest_price).toFixed(2)}\n`;
+        if (pricing.num_for_sale) verifyMsg += `\n🏪 **${pricing.num_for_sale}** exemplaren te koop op Discogs`;
       } else {
-        priceMsg += `⚠️ Geen prijsdata beschikbaar voor deze release. Dit kan betekenen dat er nog nooit een exemplaar verkocht is op Discogs.`;
+        verifyMsg += `⚠️ Geen prijsdata beschikbaar voor deze release.`;
       }
 
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: priceMsg,
-        pricingData,
+        content: verifyMsg,
+        pricingData: pricing,
+        verificationResult,
       }]);
 
     } catch (err) {
-      console.error('Pricing fetch error:', err);
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `⚠️ Kon de prijzen niet ophalen. Probeer het later opnieuw of vraag me om een andere release te zoeken.`,
-      }]);
+      console.error('Verify/pricing error:', err);
+      setMessages(prev => {
+        // Remove loading message if present
+        const filtered = prev.filter(m => !m.content.includes('Bezig met verificatie'));
+        return [...filtered, {
+          role: 'assistant',
+          content: `⚠️ Kon de release niet verifiëren. Probeer het later opnieuw of upload extra foto's.`,
+        }];
+      });
+      setConfirmedDiscogsId(null);
     } finally {
       setIsFetchingPrice(false);
     }
@@ -194,12 +300,14 @@ export function ScanChatTab() {
     const upsertAssistant = (chunk: string) => {
       assistantSoFar += chunk;
       const discogsId = extractDiscogsId(assistantSoFar);
+      const scanData = extractScanData(assistantSoFar);
       setMessages(prev => {
         const last = prev[prev.length - 1];
         const msgData: ChatMessage = {
           role: 'assistant',
           content: assistantSoFar,
           ...(discogsId ? { discogsId } : {}),
+          ...(scanData ? { scanData } : {}),
         };
         if (last?.role === 'assistant') {
           return prev.map((m, i) => (i === prev.length - 1 ? msgData : m));
@@ -295,10 +403,12 @@ export function ScanChatTab() {
     setConfirmedDiscogsId(null);
   };
 
-  // Find the latest unconfirmed Discogs ID in messages
-  const pendingDiscogsId = !confirmedDiscogsId && !isStreaming
-    ? messages.filter(m => m.role === 'assistant' && m.discogsId).slice(-1)[0]?.discogsId || null
+  // Find the latest unconfirmed Discogs ID and its scan data
+  const pendingMessage = !confirmedDiscogsId && !isStreaming
+    ? messages.filter(m => m.role === 'assistant' && m.discogsId).slice(-1)[0] || null
     : null;
+  const pendingDiscogsId = pendingMessage?.discogsId || null;
+  const pendingScanData = pendingMessage?.scanData || null;
 
   return (
     <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-220px)]">
@@ -401,16 +511,16 @@ export function ScanChatTab() {
         {pendingDiscogsId && (
           <div className="flex gap-2 justify-center my-3">
             <Button
-              onClick={() => fetchPricing(pendingDiscogsId)}
+              onClick={() => fetchPricing(pendingDiscogsId!, pendingScanData)}
               disabled={isFetchingPrice}
               variant="default"
               size="sm"
               className="gap-1"
             >
               {isFetchingPrice ? (
-                <><Loader2 className="h-4 w-4 animate-spin" />Prijzen ophalen...</>
+                <><Loader2 className="h-4 w-4 animate-spin" />Verifiëren...</>
               ) : (
-                <><Check className="h-4 w-4" />Ja, klopt! Haal prijzen op</>
+                <><Check className="h-4 w-4" />Ja, verifieer &amp; haal prijzen op</>
               )}
             </Button>
             <Button onClick={declineMatch} variant="outline" size="sm" className="gap-1">

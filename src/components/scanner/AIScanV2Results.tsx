@@ -110,6 +110,11 @@ interface AnalysisResultData {
       codes?: string[];
       markings?: string[];
     };
+    copyright_lines?: string[];
+    made_in_text?: string | null;
+    spine_text?: string | null;
+    disc_label_text?: string[];
+    back_cover_text?: string[];
   };
   version: string;
 }
@@ -275,57 +280,94 @@ export function AIScanV2Results({
         )}
 
         {/* All Extracted Text from photos */}
-        {((result.extracted_text && result.extracted_text.length > 0) || 
-          (result.extracted_details && (result.extracted_details.smallText?.length || result.extracted_details.codes?.length || result.extracted_details.markings?.length))) && (
-          <details className="group rounded-lg border p-3">
-            <summary className="cursor-pointer flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">
-              <Eye className="h-4 w-4" />
-              Alle gelezen tekst uit foto's
-            </summary>
-            <div className="mt-2 space-y-2 text-xs">
-              {result.extracted_details?.codes && result.extracted_details.codes.length > 0 && (
-                <div>
-                  <span className="font-semibold text-foreground">Codes:</span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {result.extracted_details.codes.map((code, i) => (
-                      <Badge key={i} variant="outline" className="font-mono text-xs">{code}</Badge>
-                    ))}
-                  </div>
+        <details className="group rounded-lg border p-3">
+          <summary className="cursor-pointer flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">
+            <Eye className="h-4 w-4" />
+            Alle gelezen tekst uit foto's
+          </summary>
+          <div className="mt-2 space-y-3 text-xs">
+            {/* Copyright lines */}
+            {result.copyright_lines && result.copyright_lines.length > 0 && (
+              <div>
+                <span className="font-semibold text-foreground">Copyright regels:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {result.copyright_lines.map((line, i) => (
+                    <Badge key={i} variant="outline" className="font-mono text-xs">{line}</Badge>
+                  ))}
                 </div>
-              )}
-              {result.extracted_details?.markings && result.extracted_details.markings.length > 0 && (
-                <div>
-                  <span className="font-semibold text-foreground">Markeringen:</span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {result.extracted_details.markings.map((m, i) => (
-                      <Badge key={i} variant="secondary" className="font-mono text-xs">{m}</Badge>
-                    ))}
-                  </div>
+              </div>
+            )}
+            {/* Made in text */}
+            {result.made_in_text && (
+              <div>
+                <span className="font-semibold text-foreground">Herkomst:</span>
+                <Badge variant="outline" className="ml-1 font-mono text-xs">{result.made_in_text}</Badge>
+              </div>
+            )}
+            {/* Spine text */}
+            {result.spine_text && (
+              <div>
+                <span className="font-semibold text-foreground">Rug/Spine:</span>
+                <span className="ml-1 text-muted-foreground font-mono">{result.spine_text}</span>
+              </div>
+            )}
+            {/* Disc label text */}
+            {result.disc_label_text && result.disc_label_text.length > 0 && (
+              <div>
+                <span className="font-semibold text-foreground">Disc label:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {result.disc_label_text.map((t, i) => (
+                    <Badge key={i} variant="secondary" className="font-mono text-xs">{t}</Badge>
+                  ))}
                 </div>
-              )}
-              {result.extracted_details?.smallText && result.extracted_details.smallText.length > 0 && (
-                <div>
-                  <span className="font-semibold text-foreground">Kleine tekst:</span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {result.extracted_details.smallText.map((t, i) => (
-                      <span key={i} className="text-muted-foreground">{t}</span>
-                    ))}
-                  </div>
+              </div>
+            )}
+            {/* Back cover text */}
+            {result.back_cover_text && result.back_cover_text.length > 0 && (
+              <div>
+                <span className="font-semibold text-foreground">Achterkant:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {result.back_cover_text.map((t, i) => (
+                    <Badge key={i} variant="outline" className="text-xs">{t}</Badge>
+                  ))}
                 </div>
-              )}
-              {result.extracted_text && result.extracted_text.length > 0 && (
-                <div>
-                  <span className="font-semibold text-foreground">Zoektermen:</span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {result.extracted_text.filter((t, i, arr) => arr.indexOf(t) === i).map((t, i) => (
-                      <Badge key={i} variant="outline" className="text-xs">{t}</Badge>
-                    ))}
-                  </div>
+              </div>
+            )}
+            {/* Codes from details pass */}
+            {result.extracted_details?.codes && result.extracted_details.codes.length > 0 && (
+              <div>
+                <span className="font-semibold text-foreground">Codes:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {result.extracted_details.codes.map((code, i) => (
+                    <Badge key={i} variant="outline" className="font-mono text-xs">{code}</Badge>
+                  ))}
                 </div>
-              )}
-            </div>
-          </details>
-        )}
+              </div>
+            )}
+            {/* Markings */}
+            {result.extracted_details?.markings && result.extracted_details.markings.length > 0 && (
+              <div>
+                <span className="font-semibold text-foreground">Markeringen:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {result.extracted_details.markings.map((m, i) => (
+                    <Badge key={i} variant="secondary" className="font-mono text-xs">{m}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* All other text */}
+            {result.extracted_text && result.extracted_text.length > 0 && (
+              <div>
+                <span className="font-semibold text-foreground">Overige tekst:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {result.extracted_text.filter((t, i, arr) => arr.indexOf(t) === i).map((t, i) => (
+                    <Badge key={i} variant="outline" className="text-xs">{t}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </details>
 
         {/* Uploaded photos */}
         {uploadedFiles.length > 0 && (

@@ -251,7 +251,12 @@ serve(async (req) => {
         ...(combinedData.extractedDetails?.codes || []),
         ...(combinedData.extractedDetails?.smallText || []),
         ...(combinedData.extractedDetails?.markings || []),
-      ].join(' ');
+        ...(combinedData.copyrightLines || []),
+        ...(combinedData.discLabelText || []),
+        ...(combinedData.backCoverText || []),
+        combinedData.spineText || '',
+        combinedData.madeInText || '',
+      ].filter(Boolean).join(' ');
 
       // Known label names to detect from extracted text
       const knownLabels = [
@@ -315,12 +320,34 @@ serve(async (req) => {
         }
       }
 
-      // Year: look for (P) or (C) followed by 4-digit year
+      // Year: look for copyright symbols followed by 4-digit year
       if (!combinedData.year) {
-        const yearMatch = allText.match(/[©℗(P)(C)]\s*(19[5-9]\d|20[0-2]\d)/);
-        if (yearMatch) {
-          combinedData.year = parseInt(yearMatch[1]);
-          console.log(`🔧 POST-PROCESS: Detected year ${yearMatch[1]} from copyright line`);
+        // First try explicit copyright lines from general pass
+        const copyrightText = (combinedData.copyrightLines || []).join(' ') + ' ' + allText;
+        const yearPatterns = [
+          /[©℗]\s*(19[5-9]\d|20[0-2]\d)/,
+          /\(P\)\s*(19[5-9]\d|20[0-2]\d)/,
+          /\(C\)\s*(19[5-9]\d|20[0-2]\d)/,
+          /℗\s*(19[5-9]\d|20[0-2]\d)/,
+          /©\s*(19[5-9]\d|20[0-2]\d)/,
+        ];
+        for (const pattern of yearPatterns) {
+          const yearMatch = copyrightText.match(pattern);
+          if (yearMatch) {
+            combinedData.year = parseInt(yearMatch[1]);
+            combinedData.yearSource = `copyright: ${yearMatch[0]}`;
+            console.log(`🔧 POST-PROCESS: Detected year ${yearMatch[1]} from copyright line`);
+            break;
+          }
+        }
+      }
+
+      // Country: also use madeInText from general pass
+      if (!combinedData.country && combinedData.madeInText) {
+        const madeIn = combinedData.madeInText.match(/(?:Made|Printed|Manufactured)\s+in\s+(\w+)/i);
+        if (madeIn) {
+          combinedData.country = madeIn[1];
+          console.log(`🔧 POST-PROCESS: Country from madeInText: "${madeIn[1]}"`);
         }
       }
 
@@ -738,6 +765,12 @@ serve(async (req) => {
             pressing_plant: combinedData.pressingPlant || null,
             hand_etched: combinedData.handEtched || null,
             matrix_notes: combinedData.matrixNotes || null,
+            // Structured text from photos
+            copyright_lines: combinedData.copyrightLines || [],
+            made_in_text: combinedData.madeInText || null,
+            spine_text: combinedData.spineText || null,
+            disc_label_text: combinedData.discLabelText || [],
+            back_cover_text: combinedData.backCoverText || [],
             // Pricing data from Discogs
             pricing_stats: pricingStats,
             // Collector-grade additions
@@ -1122,38 +1155,55 @@ function getSystemPrompt(mediaType: string, analysisType: 'general' | 'details' 
   const basePrompt = `You are an expert music release identification specialist with deep knowledge of ${mediaType === 'vinyl' ? 'vinyl records, LPs, and vinyl production' : 'CDs and optical disc production'}. `
 
   if (analysisType === 'general') {
-    return basePrompt + `Your task is to identify the main release information from the provided images.
+    return basePrompt + `Your task is to identify the release AND extract ALL readable text from the provided images.
 
-ABSOLUTE RULES — VIOLATION = FAILURE:
-1. ONLY report text you can LITERALLY READ in the images. 
-2. If you cannot clearly read a catalog number, barcode, or any code → return null for that field. NEVER guess or fill in from memory.
-3. Do NOT use your training knowledge to "fill in" missing information. If the photo shows "Columbia" but no catalog number is visible, catalogNumber MUST be null.
-4. You MAY use your knowledge to identify the artist/title from album artwork recognition, but ALL codes/numbers MUST come from OCR of the actual images.
-5. Confidence should reflect how much you actually READ vs recognized/guessed.
+RULES:
+1. ONLY report text you can LITERALLY READ in the images.
+2. If you cannot clearly read a code → return null. NEVER guess codes from memory.
+3. You MAY identify artist/title from artwork recognition, but ALL codes/numbers MUST come from OCR.
 
-CRITICAL DISTINCTION:
-- artist, title, genre: May use visual recognition + knowledge (e.g., recognizing an album cover)
-- label: May use visual recognition IF logo/text is visible on the media
-- catalogNumber, year, country: ONLY from text clearly visible in the images. If not readable → null.
-- searchQueries: Include both the identified artist/title AND any codes you actually read
+READ EVERYTHING — specifically look for:
+- **Artist & Title**: From front cover artwork/text
+- **Label**: Read the label NAME printed on the disc, spine, or back. Also identify label LOGOS (e.g., CBS eye logo, Columbia, EMI).
+- **Catalog Number**: Look on the SPINE (rug), back cover, and disc label. Format examples: "35DP-93", "CDPCSD 167", "468 884-2". It is NOT a barcode.
+- **Year**: Read copyright lines: "© 1983", "℗ 1983", "(P) 1983", "(C) 1983". Also read "Originally released: 1983". Report the OLDEST year if multiple are shown.
+- **Country**: Read "Made in Japan", "Made in Holland", "Printed in Germany", "Made in Austria", "Manufactured in the USA", etc.
+- **Barcode**: Read the EAN/UPC digits printed below the barcode bars on the back cover. Must be 12-13 digits.
+- **Genre**: Read genre text if printed, or identify from context.
+- **Format**: CD, LP, 12", 7", Cassette, etc.
 
-RESPOND ONLY IN VALID JSON FORMAT with this exact structure:
+ALSO CAPTURE:
+- **allReadableText**: List ALL distinct text strings you can read from ALL photos. Every line of text, every code, every name. This is critical.
+- **copyrightLines**: List all copyright/publishing lines verbatim (e.g., "℗ 1983 CBS Inc.", "© 1983 CBS Records")
+- **madeInText**: The exact "Made in..." or "Printed in..." text if present
+- **spineText**: All text visible on the spine/rug of the case
+- **discLabelText**: All text printed on the disc label (NOT engraved in ring)
+- **backCoverText**: Key text from the back cover (track titles, credits, codes)
+
+RESPOND ONLY IN VALID JSON FORMAT:
 {
   "artist": "artist name or null",
-  "title": "album/release title or null", 
+  "title": "album/release title or null",
   "label": "record label name or null",
-  "catalogNumber": "catalog number ONLY if clearly readable in image, otherwise null",
-  "year": number ONLY if clearly printed/visible in image, otherwise null,
+  "catalogNumber": "catalog number ONLY if clearly readable, otherwise null",
+  "year": number ONLY if clearly printed/visible (from copyright lines preferred), otherwise null,
+  "yearSource": "exact text where year was found, e.g. '℗ 1983 CBS Inc.' or null",
   "genre": "genre or null",
   "format": "format details or null",
-  "country": "country ONLY if printed on media (e.g., 'Made in Holland'), otherwise null",
-  "confidence": number between 0-1 (how much is OCR-verified vs guessed),
-  "description": "detailed analysis of what you see",
-  "searchQueries": ["array", "of", "search", "terms", "including", "any", "readable", "codes"],
-  "imageQuality": "excellent|good|fair|poor"
+  "country": "country from 'Made in...' text, or null",
+  "confidence": number between 0-1,
+  "description": "detailed analysis",
+  "searchQueries": ["array", "of", "search", "terms"],
+  "imageQuality": "excellent|good|fair|poor",
+  "allReadableText": ["every", "distinct", "readable", "text", "from", "all", "photos"],
+  "copyrightLines": ["℗ 1983 CBS Inc.", "© 1983 CBS Records"],
+  "madeInText": "Made in Japan" or null,
+  "spineText": "text from spine" or null,
+  "discLabelText": ["text", "from", "disc", "label"],
+  "backCoverText": ["text", "from", "back", "cover"]
 }
 
-Remember: A null field is ALWAYS better than a hallucinated value. Wrong catalog numbers cause failed Discogs lookups.`
+A null code field is better than a wrong one. But DO extract everything you CAN read.`
   }
 
   if (analysisType === 'matrix') {
@@ -1309,9 +1359,13 @@ REMEMBER: null is ALWAYS better than fabricated data. A wrong barcode or catalog
 
 function getUserPrompt(mediaType: string, analysisType: 'general' | 'details' | 'matrix'): string {
   if (analysisType === 'general') {
-    return `Analyze these ${mediaType} images and identify the music release. 
-CRITICAL: For catalog number, barcode, year, and country — ONLY report what is clearly PRINTED and READABLE in the images. If you cannot literally read the catalog number from the photo, set it to null. Do NOT fill in from your training knowledge. 
-You MAY identify artist/title from visual recognition. Provide multiple search terms including any codes you can actually read. Assess image quality for text readability.`
+    return `Analyze these ${mediaType} images. Read ALL text from every photo:
+- Front cover: artist, title
+- Back cover: track listing, barcode digits, catalog number, copyright lines (℗/© year), "Made in..." text, label name, credits
+- Spine: catalog number, label name
+- Disc label: label name, catalog number, copyright year
+List EVERYTHING readable in allReadableText. Extract year from copyright lines, country from "Made in" text, label from printed name/logo.
+For codes: ONLY report what you can READ. Never guess. null is better than wrong.`
   }
 
   if (analysisType === 'matrix') {
@@ -1376,6 +1430,7 @@ function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: an
     label: sanitize(generalData?.label),
     catalogNumber: sanitize(generalData?.catalogNumber),
     year: generalData?.year ?? null,
+    yearSource: sanitize(generalData?.yearSource),
     genre: sanitize(generalData?.genre),
     format: sanitize(generalData?.format),
     country: sanitize(generalData?.country),
@@ -1391,10 +1446,18 @@ function mergeAnalysisResults(generalData: any, detailData: any, matrixData?: an
     // Vinyl-specific extras
     ...vinylExtras,
 
+    // All readable text from general pass + detail pass
     extractedText: [
-      ...(generalData?.searchQueries || []),
+      ...(generalData?.allReadableText || generalData?.searchQueries || []),
       ...(detailData?.extractedText || [])
     ],
+    
+    // Structured text extractions from general pass
+    copyrightLines: generalData?.copyrightLines || [],
+    madeInText: sanitize(generalData?.madeInText),
+    spineText: sanitize(generalData?.spineText),
+    discLabelText: generalData?.discLabelText || [],
+    backCoverText: generalData?.backCoverText || [],
 
     // Combined metadata
     confidence: Math.max(generalData?.confidence || 0, 0.1),
